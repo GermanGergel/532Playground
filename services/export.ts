@@ -2,6 +2,7 @@
 
 
 
+import html2canvas from 'html2canvas';
 import { Session, EventType, GoalPayload, SubPayload, StartRoundPayload } from '../types';
 
 // Data Export Utilities
@@ -83,9 +84,9 @@ export const exportSessionAsJson = async (session: Session) => {
 
 
 export const shareOrDownloadImages = async (elementRefs: HTMLElement[], sessionName: string, date: string, sectionName?: string) => {
-    if (!elementRefs || elementRefs.length === 0 || typeof (window as any).html2canvas === 'undefined') {
-        console.error('Could not find the export library (html2canvas) or the elements to export.');
-        alert('Image export failed: library or elements not found.');
+    if (!elementRefs || elementRefs.length === 0) {
+        console.error('Could not find the elements to export.');
+        alert('Image export failed: elements not found.');
         return;
     }
 
@@ -96,7 +97,7 @@ export const shareOrDownloadImages = async (elementRefs: HTMLElement[], sessionN
         const element = elementRefs[i];
         
         try {
-            const canvas = await (window as any).html2canvas(element, {
+            const canvas = await html2canvas(element, {
                 backgroundColor: null, // CRITICAL: Allows transparency for rounded corners
                 scale: 6, // 6x scale for ultra-high quality
                 useCORS: true,

@@ -78,29 +78,6 @@
       background: linear-gradient(90deg, #00F2FE, #4CFF5F);
       background-size: 200% 200%;
     }
-    /* Updated for sharper export: Reduced blur radius */
-    .neon-text-glow {
-      text-shadow: 0 0 2px rgba(0, 242, 254, 0.8), 0 0 5px rgba(76, 255, 95, 0.5);
-    }
-    .accent-text-glow {
-      text-shadow: 0 0 3px #00F2FE;
-    }
-    .key-stat-glow {
-      color: #FFD700;
-      text-shadow: 0 0 3px rgba(255, 215, 0, 0.9);
-    }
-    .badge-glow-gold {
-      color: #FFD700;
-      filter: drop-shadow(0 0 2px rgba(255, 215, 0, 0.8));
-    }
-    .badge-glow-turquoise {
-      color: #00F2FE;
-      filter: drop-shadow(0 0 2px rgba(0, 242, 254, 0.8));
-    }
-    .badge-glow-white {
-      color: #F0F2F5;
-      filter: drop-shadow(0 0 2px rgba(240, 242, 245, 0.8));
-    }
     /* Hide spin buttons on number inputs */
     input[type=number]::-webkit-inner-spin-button,
     input[type=number]::-webkit-outer-spin-button {
@@ -111,7 +88,6 @@
         -moz-appearance: textfield; /* Firefox */
     }
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoVBL5gI9kDXrd3NBQMzEVihSXgIag==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script type="importmap">
 {
   "imports": {
@@ -120,7 +96,8 @@
     "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.5",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "idb-keyval": "https://cdn.jsdelivr.net/npm/idb-keyval@6/+esm",
-    "@supabase/supabase-js": "https://aistudiocdn.com/@supabase/supabase-js@^2.86.0"
+    "@supabase/supabase-js": "https://aistudiocdn.com/@supabase/supabase-js@^2.86.0",
+    "html2canvas": "https://aistudiocdn.com/html2canvas@^1.4.1"
   }
 }
 </script>

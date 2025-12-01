@@ -1,6 +1,7 @@
 
 
 
+
 import React from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -24,11 +25,9 @@ export const PlayerDatabaseScreen: React.FC = () => {
     
     const [isAddModalOpen, setIsAddModalOpen] = React.useState(false);
     
-    const playersToList = allPlayers.filter(p => p.status === statusToShow).sort((a,b) => {
-        if (a.id === 'test-player-showcase') return -1; // Always keep showcase player at the top
-        if (b.id === 'test-player-showcase') return 1;
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
+    const playersToList = allPlayers
+        .filter(p => p.status === statusToShow)
+        .sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     const handleAddPlayer = (nickname: string) => {
         const newPlayer: Player = {

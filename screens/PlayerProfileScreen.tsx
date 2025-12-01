@@ -1,5 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import html2canvas from 'html2canvas';
 import { useApp } from '../context';
 // FIX: Imported BadgeIcon component.
 // FIX: Import directly from component files instead of barrel file to avoid import errors.
@@ -97,7 +98,7 @@ export const PlayerProfileScreen: React.FC = () => {
                 }
             }
 
-            const canvas = await (window as any).html2canvas(wrapper, {
+            const canvas = await html2canvas(wrapper, {
                 backgroundColor: '#1A1D24',
                 scale: 5, // Render at 5x resolution for max quality
                 useCORS: true,
