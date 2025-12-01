@@ -49,9 +49,9 @@ export const TeamAvatar: React.FC<TeamAvatarProps> = ({ team, size = 'sm', onCli
                 <div className="relative w-full h-full">
                     <div 
                         className={`${baseClasses} w-full h-full`}
-                        style={{ boxShadow: `0 0 10px ${teamColor}` }}
+                        style={{ border: `2px solid ${teamColor}` }}
                     >
-                         <svg width="80%" height="80%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: teamColor, filter: `drop-shadow(0 0 2px ${teamColor})` }}>
+                         <svg width="80%" height="80%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: teamColor }}>
                             <path d="M20.38 3.46L16 2a4 4 0 0 0-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99 .84H6v10c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" stroke={teamColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                          </svg>
                     </div>
@@ -60,7 +60,7 @@ export const TeamAvatar: React.FC<TeamAvatarProps> = ({ team, size = 'sm', onCli
                           <defs>
                             <path id="circlePath" d="M -2 50 a 52 52 0 1 1 104 0" />
                           </defs>
-                          <text transform="translate(0, -4)" fill={teamColor} style={{ filter: `drop-shadow(0 0 2px ${teamColor})` }} className="text-[11px] font-bold uppercase tracking-wider">
+                          <text transform="translate(0, -4)" fill={teamColor} className="text-[11px] font-bold uppercase tracking-wider">
                             <textPath href="#circlePath" startOffset="50%" textAnchor="middle">
                               532 Playground
                             </textPath>

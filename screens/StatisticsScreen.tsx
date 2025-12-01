@@ -166,7 +166,7 @@ export const BrandedShareableReport = React.forwardRef<
         >
             {/* Header Section - Only displayed if includeHeader is true (Standings) */}
             {includeHeader && (
-                <div className="shrink-0 mb-4 text-left">
+                <div className="shrink-0 mb-8 text-left">
                         <h1 className="text-6xl font-black uppercase leading-none" style={{ color: '#00F2FE', textShadow: '0 0 20px rgba(0, 242, 254, 0.6)' }}>
                         532
                     </h1>

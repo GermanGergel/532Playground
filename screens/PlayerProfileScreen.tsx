@@ -55,10 +55,9 @@ export const PlayerProfileScreen: React.FC = () => {
 
         const wrapper = document.createElement('div');
         wrapper.style.position = 'fixed';
-        wrapper.style.top = '0';
+        wrapper.style.top = '-9999px'; // Position off-screen
         wrapper.style.left = '0';
-        wrapper.style.zIndex = '-1';
-        wrapper.style.visibility = 'hidden';
+        wrapper.style.zIndex = '100'; // Ensure it's rendered, even if off-screen
         wrapper.style.pointerEvents = 'none';
         wrapper.style.width = '540px'; // Force a wider width for high-res export
         wrapper.style.padding = '1rem';
