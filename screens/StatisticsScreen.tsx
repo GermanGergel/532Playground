@@ -1,0 +1,2 @@
+// Screen for statistics
+export {};

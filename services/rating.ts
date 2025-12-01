@@ -1,0 +1,2 @@
+// Rating service
+export {};

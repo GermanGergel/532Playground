@@ -1,0 +1,2 @@
+// Avatar components
+export {};

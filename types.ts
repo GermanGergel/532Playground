@@ -1,0 +1,2 @@
+// Global TypeScript types
+export {};
