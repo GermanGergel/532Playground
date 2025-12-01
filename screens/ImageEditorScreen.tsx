@@ -5,8 +5,6 @@ import { Page, Button, Card, useTranslation, PageHeader } from '../components';
 import { Upload } from '../components';
 import { PlayerStatus } from '../types';
 import { cropImageToAvatar } from '../lib';
-// FIX: The correct package for the Gemini API is '@google/genai'.
-import { GoogleGenAI } from '@google/genai';
 import { resizeImage } from './utils';
 
 export const ImageEditorScreen: React.FC = () => {
@@ -15,28 +13,16 @@ export const ImageEditorScreen: React.FC = () => {
     const navigate = useNavigate();
     const t = useTranslation();
     
-    // Image State
-    const [baseImage, setBaseImage] = React.useState<string | null>(null);
-    const [editedImage, setEditedImage] = React.useState<string | null>(null);
-    const [isLoading, setIsLoading] = React.useState(false);
-    const [error, setError] = React.useState<string | null>(null);
-    const [cooldown, setCooldown] = React.useState(0);
+    // Simplified state for managing the uploaded image
+    const [image, setImage] = React.useState<string | null>(null);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
-    const [bodyType, setBodyType] = React.useState<'Slim' | 'Average' | 'Stocky'>('Average');
 
     const player = allPlayers.find(p => p.id === playerId);
     
-    React.useEffect(() => {
-        if (cooldown > 0) {
-            const timer = setInterval(() => setCooldown(c => c - 1), 1000);
-            return () => clearInterval(timer);
-        }
-    }, [cooldown]);
-    
+    // Load player's current card image on component mount
     React.useEffect(() => {
         if (player) {
-            setBaseImage(player.photo || null);
-            setEditedImage(null);
+            setImage(player.playerCard || player.photo || null);
         }
     }, [player]);
 
@@ -45,115 +31,21 @@ export const ImageEditorScreen: React.FC = () => {
         const file = e.target.files?.[0];
         if (file) {
             const reader = new FileReader();
-            reader.onload = (event) => {
-                setBaseImage(event.target?.result as string);
-                setEditedImage(null);
+            reader.onload = async (event) => {
+                const base64 = event.target?.result as string;
+                // Resize to prevent storing excessively large images
+                const resized = await resizeImage(base64, 1080);
+                setImage(resized);
             };
             reader.readAsDataURL(file);
         }
     };
     
-    const handleGenerate = async () => {
-        if (!baseImage) {
-            alert(t.uploadImageFirst);
-            return;
-        }
-        
-        const apiKey = process.env.API_KEY;
-        if (!apiKey) {
-            console.error("API Key is missing!");
-            setError("API Key is missing!");
-            return;
-        }
-
-        setIsLoading(true);
-        setError(null);
-        
-        try {
-            const resizedBase64 = await resizeImage(baseImage);
-            
-            const ai = new GoogleGenAI({ apiKey });
-
-            const base64Data = resizedBase64.split(',')[1];
-            const mimeType = resizedBase64.match(/data:(.*);base64,/)?.[1] || 'image/png';
-            
-            const imagePart = { inlineData: { data: base64Data, mimeType } };
-            
-            let buildDescription = `a ${bodyType.toLowerCase()} build`;
-            if (bodyType === 'Stocky') {
-                buildDescription = 'a powerfully built, athletic physique, around 80-90kg, typical for a professional European footballer, strong but not overly muscular like an American football player';
-            }
-
-            const promptText = `
-Create an ultra-realistic, cinematic football player portrait card in a cutting-edge, professional sports photography style.
-
-**ABSOLUTE CRITICAL INSTRUCTION: The player's unique facial features, hairstyle, and identity from the provided photo must be preserved with maximum fidelity. Any corrections must be minimal and almost unnoticeable. The goal is to enhance, not replace.**
-
-PLAYER:
-A male footballer with ${buildDescription}, posed in a strictly front-facing portrait from the waist up. **His hands must be held behind his back, completely out of view.** He must have a **serious, focused expression**. **ABSOLUTE REQUIREMENT: The player must look directly into the camera, with their head facing forward without any tilt or rotation.**
-
-JERSEY & LOGO:
-The player wears a sleek, modern football jersey made from a high-tech, matte black fabric. The fabric features a **subtle yet distinct geometric carbon fiber weave pattern** that is visible across the entire jersey, catching the light dynamically and giving it a technological, high-end look.
-**MOST CRITICAL INSTRUCTION: A '532' logo MUST BE PLACED directly in the CENTER OF THE CHEST. The logo should be significantly smaller than a standard club crest, maintaining a minimalist and refined aesthetic.** The logo must be made from a **hyper-realistic, high-gloss, jet-black polymer**, appearing as if it's a separate, polished piece seamlessly bonded to the matte carbon fabric. The glossy black of the logo should create a sophisticated 'black-on-black' tonal contrast with the matte texture of the jersey.
-
-BACKGROUND:
-The background must be completely minimalist and clean, with **absolutely no objects or distracting elements**. It should be a deep, cinematic gradient transitioning from a dark **charcoal grey** to near-black.
-
-LIGHTING:
-A sophisticated and dramatic three-point lighting setup is essential.
-1.  **Key Light:** A soft, directional light from the side that sculpts the player's features, creating depth and subtle shadows.
-2.  **Rim Light:** A crisp but subtle **bright, neutral white or very light grey light** from behind. This light should trace the silhouette of the player's shoulders and torso, creating separation from the dark background. **CRITICAL LIGHTING NOTE: This light MUST NOT illuminate the player's hands behind his back.**
-3.  **Fill Light:** A very subtle, diffused light from the front-bottom to gently lift the darkest shadows on the jersey, ensuring its texture is visible without flattening the image.
-
-TECHNICAL:
-8K ultra-high resolution, photorealistic quality. Shot with an 85mm portrait lens effect for a shallow depth of field, with tack-sharp focus on the player's face. Cinematic color grading.
-
-STYLE:
-An epic, powerful, and premium mood. The aesthetic should be clean and professional, inspired by high-end Nike or Adidas athlete campaigns.
-`.trim();
-
-            const textPart = { text: promptText };
-
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash-image',
-                contents: { parts: [imagePart, textPart] },
-            });
-
-            const imagePartResponse = response.candidates?.[0]?.content?.parts.find(p => p.inlineData);
-
-            if (imagePartResponse?.inlineData) {
-                const newImageBase64 = imagePartResponse.inlineData.data;
-                const newMimeType = imagePartResponse.inlineData.mimeType;
-                setEditedImage(`data:${newMimeType};base64,${newImageBase64}`);
-            } else {
-                const textResponse = response.text;
-                console.log(textResponse);
-                throw new Error("No image data found in response. " + (textResponse || ''));
-            }
-        } catch (err: any) {
-            console.error(err);
-            const isQuota = 
-                err.status === 429 || 
-                (err.message && (err.message.includes('429') || err.message.includes('Quota') || err.message.includes('quota') || err.message.includes('RESOURCE_EXHAUSTED'))) ||
-                (err.response && err.response.status === 429) ||
-                (err.error && err.error.code === 429);
-
-            if (isQuota) {
-                setError(t.quotaExceeded);
-                setCooldown(60); // Start 60s cooldown
-            } else {
-                setError(t.errorGenerating);
-            }
-        } finally {
-            setIsLoading(false);
-        }
-    };
-    
     const handleDownload = async () => {
-        if (!editedImage || !player) return;
+        if (!image || !player) return;
 
         try {
-            const blob = await (await fetch(editedImage)).blob();
+            const blob = await (await fetch(image)).blob();
             const filename = `532_Playground_${player.nickname.replace(/\s/g, '_')}_Card.png`;
             const file = new File([blob], filename, { type: 'image/png' });
 
@@ -164,7 +56,7 @@ An epic, powerful, and premium mood. The aesthetic should be clean and professio
                 });
             } else {
                 const link = document.createElement('a');
-                link.href = editedImage;
+                link.href = image;
                 link.download = filename;
                 document.body.appendChild(link);
                 link.click();
@@ -180,22 +72,18 @@ An epic, powerful, and premium mood. The aesthetic should be clean and professio
 
 
     const handleSaveToProfile = async () => {
-        if (!playerId || !player) return;
-
-        const imageToSave = editedImage || baseImage;
-
-        if (!imageToSave) {
+        if (!playerId || !player || !image) {
             navigate(`/player/${playerId}`, { replace: true });
             return;
         }
 
-        const avatarDataUrl = await cropImageToAvatar(imageToSave);
+        const avatarDataUrl = await cropImageToAvatar(image);
             
         setAllPlayers(prev => prev.map(p => 
             p.id === playerId ? { 
                 ...p, 
                 photo: avatarDataUrl,
-                playerCard: imageToSave,
+                playerCard: image,
                 status: PlayerStatus.Confirmed 
             } : p
         ));
@@ -208,40 +96,22 @@ An epic, powerful, and premium mood. The aesthetic should be clean and professio
              <PageHeader title={t.imageEditorTitle} />
              <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
              
-            <div className="space-y-3">
+            <div className="space-y-4">
                  <Card className="!p-4 shadow-lg shadow-dark-accent-start/20 border border-dark-accent-start/40">
-                    <div className="min-h-[320px] flex items-center justify-center rounded-lg bg-dark-bg/50 mb-3">
-                        {baseImage ? (
-                            <img src={editedImage || baseImage} alt="Preview" className="max-h-[320px] object-contain rounded-lg" />
+                    <div className="min-h-[320px] flex items-center justify-center rounded-lg bg-dark-bg/50 mb-4">
+                        {image ? (
+                            <img src={image} alt="Preview" className="max-h-[320px] w-auto object-contain rounded-lg" />
                         ) : (
                             <span className="text-dark-text-secondary text-center p-4">{t.uploadPrompt}</span>
                         )}
                     </div>
-                    <Button variant="secondary" onClick={() => fileInputRef.current?.click()} className="w-full !py-2.5 flex items-center justify-center gap-3 !text-base">
-                        <Upload className="w-5 h-5" /> {baseImage ? t.changeImage : t.uploadImage}
+                    <Button variant="secondary" onClick={() => fileInputRef.current?.click()} className="w-full !py-3 flex items-center justify-center gap-3 !text-base">
+                        <Upload className="w-5 h-5" /> {image ? t.changeImage : t.uploadImage}
                     </Button>
                 </Card>
                 
-                {baseImage && (
-                    <Card className="!p-2 shadow-lg shadow-dark-accent-start/20 border border-dark-accent-start/40">
-                        <div className="flex justify-around bg-dark-bg rounded-lg overflow-hidden">
-                            <button onClick={() => setBodyType('Slim')} className={`flex-1 text-sm py-2 font-bold transition-all duration-300 rounded-lg ${bodyType === 'Slim' ? 'gradient-bg text-dark-bg' : 'text-dark-text-secondary hover:bg-dark-surface'}`}>{t.bodySlim}</button>
-                            <button onClick={() => setBodyType('Average')} className={`flex-1 text-sm py-2 font-bold transition-all duration-300 rounded-lg ${bodyType === 'Average' ? 'gradient-bg text-dark-bg' : 'text-dark-text-secondary hover:bg-dark-surface'}`}>{t.bodyAverage}</button>
-                            <button onClick={() => setBodyType('Stocky')} className={`flex-1 text-sm py-2 font-bold transition-all duration-300 rounded-lg ${bodyType === 'Stocky' ? 'gradient-bg text-dark-bg' : 'text-dark-text-secondary hover:bg-dark-surface'}`}>{t.bodyStocky}</button>
-                        </div>
-                    </Card>
-                )}
-
-                {baseImage && (
-                    <Button onClick={handleGenerate} disabled={!baseImage || isLoading || cooldown > 0} variant="secondary" className="w-full !py-2.5 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">
-                        {isLoading ? t.generating : (cooldown > 0 ? `Wait ${cooldown}s...` : `GENERATE PRO CARD`)}
-                    </Button>
-                )}
-                 {isLoading && <div className="text-center p-1 text-sm text-dark-accent-start animate-pulse">Creating 532 Professional Player...</div>}
-                 {error && <div className="text-center p-1 text-sm text-dark-danger">{error}</div>}
-                
                 <div className="pt-2 space-y-3">
-                    {editedImage && (
+                    {image && (
                         <Button 
                             onClick={handleDownload} 
                             variant="secondary" 
@@ -254,7 +124,7 @@ An epic, powerful, and premium mood. The aesthetic should be clean and professio
                     <Button 
                         variant="secondary" 
                         onClick={handleSaveToProfile} 
-                        disabled={!editedImage && !baseImage} 
+                        disabled={!image} 
                         className="w-full !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
                     >
                         {t.saveToProfile}
