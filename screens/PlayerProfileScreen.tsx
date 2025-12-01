@@ -48,6 +48,7 @@ export const PlayerProfileScreen: React.FC = () => {
         const sourceElement = document.getElementById(`player-card-container-${player.id}`);
         if (!sourceElement) {
             console.error('Player card container element not found for download.');
+            alert(t.failedToExportCard);
             return;
         }
 
@@ -58,22 +59,46 @@ export const PlayerProfileScreen: React.FC = () => {
         wrapper.style.zIndex = '-1';
         wrapper.style.visibility = 'hidden';
         wrapper.style.pointerEvents = 'none';
-        wrapper.style.width = '540px'; // Force a wider width
-        wrapper.style.padding = '1rem'; // Add some padding to match original look
-        wrapper.style.backgroundColor = '#1A1D24'; // Match body background
+        wrapper.style.width = '540px'; // Force a wider width for high-res export
+        wrapper.style.padding = '1rem';
+        wrapper.style.backgroundColor = '#1A1D24';
 
         const clone = sourceElement.cloneNode(true) as HTMLElement;
 
-        // Remove action buttons from the clone to prevent them from appearing in the image
         const buttonsToRemove = clone.querySelectorAll('.player-card-actions');
         buttonsToRemove.forEach(btn => btn.remove());
 
         wrapper.appendChild(clone);
         document.body.appendChild(wrapper);
 
+        // Helper to convert image URLs to data URLs to prevent canvas tainting from CORS
+        const imageToDataUrl = async (url: string): Promise<string> => {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result as string);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+            } catch (error) {
+                console.warn(`Could not convert image to data URL, falling back to original: ${url}`, error);
+                return url;
+            }
+        };
+
         try {
+            // Pre-process all external images in the clone
+            const images = Array.from(clone.getElementsByTagName('img'));
+            for (const img of images) {
+                if (img.src && img.src.startsWith('http')) {
+                    img.src = await imageToDataUrl(img.src);
+                }
+            }
+
             const canvas = await (window as any).html2canvas(wrapper, {
-                backgroundColor: '#1A1D24', // Explicitly set background
+                backgroundColor: '#1A1D24',
                 scale: 5, // Render at 5x resolution for max quality
                 useCORS: true,
                 logging: false,
@@ -97,11 +122,13 @@ export const PlayerProfileScreen: React.FC = () => {
                     document.body.removeChild(link);
                     URL.revokeObjectURL(dataUrl);
                 }
+            } else {
+                 alert(`${t.failedToExportCard} (Could not create image blob)`);
             }
         } catch (error: any) {
             if (error.name !== 'AbortError') {
                 console.error("Error exporting player card:", error);
-                alert('Failed to export player card.');
+                alert(`${t.failedToExportCard} ${error.message}`);
             }
         } finally {
             document.body.removeChild(wrapper);
