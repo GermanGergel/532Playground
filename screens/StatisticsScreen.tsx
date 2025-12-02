@@ -36,7 +36,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
 
     return (
         <div className="bg-transparent text-dark-text font-sans w-full" style={isExport ? { width: '100%', margin: 0, padding: 0 } : undefined}>
-            <div className="space-y-6 w-full" style={isExport ? { width: '100%', margin: 0, padding: 0, spaceY: 0, gap: '24px', display: 'flex', flexDirection: 'column' } : undefined}>
+            <div className="space-y-6 w-full" style={isExport ? { width: '100%', margin: 0, padding: 0, gap: '24px', display: 'flex', flexDirection: 'column' } : undefined}>
                 {/* Team Standings */}
                 {(!visibleSection || visibleSection === 'standings') && (
                 <div 
