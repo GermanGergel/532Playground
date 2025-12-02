@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -644,7 +645,7 @@ export const LiveMatchScreen: React.FC = () => {
                 <div className="relative my-4">
                     {isGamePaused && (
                         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                            <p className="font-saira text-5xl tracking-widest font-bold text-dark-accent-start/50 uppercase select-none" style={{ textShadow: '0 0 15px rgba(0, 242, 254, 0.3)' }}>
+                            <p className="font-russo text-6xl md:text-7xl font-black text-dark-accent-start uppercase select-none" style={{ textShadow: '0 0 5px rgba(0, 242, 254, 0.6), 0 0 10px rgba(76, 255, 95, 0.4)' }}>
                                 {t.paused}
                             </p>
                         </div>

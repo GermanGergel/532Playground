@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Team, Player } from '../types';
 import { User } from '../icons';
@@ -34,22 +35,29 @@ export const TeamAvatar: React.FC<TeamAvatarProps> = ({ team, size = 'sm', onCli
     
     const clickableProps = onClick ? { onClick, role: 'button', tabIndex: 0, onKeyDown: (e: React.KeyboardEvent) => e.key === 'Enter' && onClick() } : {};
 
+    // --- UNIFIED BORDER LOGIC ---
+    // Apply a border to all avatars, scaling its thickness with size for better visuals.
+    const borderWidth = size === 'xxs' ? '1px' : '2px';
+    const containerStyle = { border: `${borderWidth} solid ${teamColor}` };
+    const imgStyle = {}; // The border is now on the container, not the image itself.
+
     return (
-        <div {...clickableProps} className={`relative ${selectedSize.container} ${className} ${onClick ? 'cursor-pointer' : ''}`}>
+        <div 
+            {...clickableProps} 
+            className={`relative ${selectedSize.container} ${className} ${onClick ? 'cursor-pointer' : ''} rounded-full`}
+            style={containerStyle}
+        >
             {team.logo ? (
                  <img 
                     src={team.logo} 
                     alt={team.name || 'Team logo'} 
                     className={`${baseClasses} w-full h-full object-cover`}
-                    style={{
-                      border: `2px solid ${teamColor}`
-                    }}
+                    style={imgStyle}
                 />
             ) : (
                 <div className="relative w-full h-full">
                     <div 
                         className={`${baseClasses} w-full h-full`}
-                        style={{ border: `2px solid ${teamColor}` }}
                     >
                          <svg width="80%" height="80%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: teamColor }}>
                             <path d="M20.38 3.46L16 2a4 4 0 0 0-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99 .84H6v10c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" stroke={teamColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>

@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { Button, Modal, useTranslation, ToggleSwitch } from '../ui';
 import { Player, SkillType, PlayerStatus, PlayerTier } from '../types';

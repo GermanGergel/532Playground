@@ -1,6 +1,5 @@
 
 
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -11,9 +10,9 @@ import { shareOrDownloadImages } from '../services/export';
 import { StarIcon } from '../icons';
 
 const NewsCardItem: React.FC<{ item: NewsItem; onClickProfile: () => void }> = ({ item, onClickProfile }) => {
+    // We export the inner specific card content to ensure rounded corners are respected
     const exportRef = React.useRef<HTMLDivElement>(null);
-    const t = useTranslation();
-
+    
     const handleShare = (e: React.MouseEvent) => {
         e.stopPropagation();
         if (exportRef.current) {
@@ -29,34 +28,6 @@ const NewsCardItem: React.FC<{ item: NewsItem; onClickProfile: () => void }> = (
         if (hours < 24) return `${hours}h ago`;
         return `${Math.floor(hours / 24)}d ago`;
     };
-
-    const formatMessage = (key: string | undefined, fallback: string, params?: { [key: string]: any }) => {
-        if (!key) return fallback;
-
-        let message = t[key as keyof typeof t] || fallback;
-
-        // FIX: Explicitly type `allParams` to allow adding new properties like `title`
-        // and re-assigning existing ones like `badgeName` for translation.
-        const allParams: { [key: string]: any } = { ...params, playerName: item.playerName };
-        
-        if(params?.titleKey) {
-            allParams.title = t[params.titleKey as keyof typeof t] || "MILESTONE";
-        }
-        if(params?.badgeName) {
-            const badgeKey = `badge_${params.badgeName.toLowerCase().replace(/ /g, '_').replace(/[()]/g, '')}` as keyof typeof t;
-            allParams.badgeName = t[badgeKey] || params.badgeName;
-        }
-
-
-        for (const p_key in allParams) {
-            message = message.replace(new RegExp(`\\{${p_key}\\}`, 'g'), allParams[p_key]);
-        }
-        return message;
-    };
-
-    const mainMessage = formatMessage(item.messageKey, item.message, item.params);
-    const subMessage = formatMessage(item.subMessageKey, item.subMessage || '', item.params);
-
 
     return (
         <div className="w-full mb-3 bg-transparent font-oxanium">
@@ -94,7 +65,7 @@ const NewsCardItem: React.FC<{ item: NewsItem; onClickProfile: () => void }> = (
 
                         {/* Content Grid */}
                         <div className="flex gap-3 items-start">
-                            <div className="shrink-0 cursor-pointer pt-1" onClick={onClickProfile}>
+                            <div className="shrink-0 cursor-pointer flex flex-col items-center gap-1" onClick={onClickProfile}>
                                 <PlayerAvatar 
                                     player={{ 
                                         id: item.playerId, 
@@ -104,7 +75,7 @@ const NewsCardItem: React.FC<{ item: NewsItem; onClickProfile: () => void }> = (
                                     size="md" 
                                 />
                                 {item.statsSnapshot && (
-                                    <div className="mt-1 text-center font-sans">
+                                    <div className="text-center font-sans">
                                         <div className="inline-flex items-center gap-1 bg-dark-bg/80 px-1.5 py-px rounded text-[10px] font-bold border border-white/10">
                                             <span className="text-dark-accent-start">{item.statsSnapshot.rating}</span>
                                         </div>
@@ -114,11 +85,11 @@ const NewsCardItem: React.FC<{ item: NewsItem; onClickProfile: () => void }> = (
 
                             <div className="flex-grow">
                                 <h3 className="text-lg font-bold leading-tight mb-1 text-white uppercase tracking-tight">
-                                    {mainMessage}
+                                    {item.message}
                                 </h3>
-                                {subMessage && (
+                                {item.subMessage && (
                                     <p className={`text-xs font-bold tracking-wide ${item.isHot ? 'text-orange-400' : 'text-dark-accent-start/80'}`}>
-                                        {subMessage}
+                                        {item.subMessage}
                                     </p>
                                 )}
                             </div>

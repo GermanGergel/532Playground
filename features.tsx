@@ -27,32 +27,36 @@ interface PlayerCardProps {
 
 export const BadgeIcon: React.FC<{ badge: BadgeType; count?: number; className?: string }> = ({ badge, count, className }) => {
     const badgeConfig: Record<BadgeType, { Icon: React.FC<any>, colorClass: string }> = {
-        goleador: { Icon: GoleadorBadgeIcon, colorClass: 'text-yellow-400' },
-        perfect_finish: { Icon: PerfectFinishBadgeIcon, colorClass: 'text-yellow-400' },
-        dynasty: { Icon: DynastyBadgeIcon, colorClass: 'text-yellow-400' },
-        sniper: { Icon: SniperBadgeIcon, colorClass: 'text-yellow-400' },
-        assistant: { Icon: AssistantBadgeIcon, colorClass: 'text-yellow-400' },
-        mvp: { Icon: MvpBadgeIcon, colorClass: 'text-yellow-400' },
-        decisive_factor: { Icon: DecisiveFactorBadgeIcon, colorClass: 'text-yellow-400' },
-        unsung_hero: { Icon: UnsungHeroBadgeIcon, colorClass: 'text-yellow-400' },
-        first_blood: { Icon: FirstBloodBadgeIcon, colorClass: 'text-yellow-400' },
-        duplet: { Icon: DupletBadgeIcon, colorClass: 'text-yellow-400' },
-        maestro: { Icon: MaestroBadgeIcon, colorClass: 'text-yellow-400' },
-        comeback_kings: { Icon: ComebackKingsBadgeIcon, colorClass: 'text-yellow-400' },
-        fortress: { Icon: FortressBadgeIcon, colorClass: 'text-yellow-400' },
-        club_legend_goals: { Icon: ClubLegendBadgeIcon, colorClass: 'text-yellow-400' },
-        club_legend_assists: { Icon: ClubLegendBadgeIcon, colorClass: 'text-yellow-400' },
-        veteran: { Icon: VeteranBadgeIcon, colorClass: 'text-yellow-400' },
+        goleador: { Icon: GoleadorBadgeIcon, colorClass: 'badge-glow-gold' },
+        perfect_finish: { Icon: PerfectFinishBadgeIcon, colorClass: 'badge-glow-gold' },
+        dynasty: { Icon: DynastyBadgeIcon, colorClass: 'badge-glow-gold' },
+        sniper: { Icon: SniperBadgeIcon, colorClass: 'badge-glow-gold' },
+        assistant: { Icon: AssistantBadgeIcon, colorClass: 'badge-glow-gold' },
+        mvp: { Icon: MvpBadgeIcon, colorClass: 'badge-glow-gold' },
+        decisive_factor: { Icon: DecisiveFactorBadgeIcon, colorClass: 'badge-glow-gold' },
+        unsung_hero: { Icon: UnsungHeroBadgeIcon, colorClass: 'badge-glow-gold' },
+        first_blood: { Icon: FirstBloodBadgeIcon, colorClass: 'badge-glow-gold' },
+        duplet: { Icon: DupletBadgeIcon, colorClass: 'badge-glow-gold' },
+        maestro: { Icon: MaestroBadgeIcon, colorClass: 'badge-glow-gold' },
+        comeback_kings: { Icon: ComebackKingsBadgeIcon, colorClass: 'badge-glow-gold' },
+        fortress: { Icon: FortressBadgeIcon, colorClass: 'badge-glow-gold' },
+        club_legend_goals: { Icon: ClubLegendBadgeIcon, colorClass: 'badge-glow-gold' },
+        club_legend_assists: { Icon: ClubLegendBadgeIcon, colorClass: 'badge-glow-gold' },
+        veteran: { Icon: VeteranBadgeIcon, colorClass: 'badge-glow-gold' },
     };
 
-    const { Icon, colorClass } = badgeConfig[badge] || { Icon: MvpBadgeIcon, colorClass: 'text-yellow-400' };
+    const { Icon, colorClass } = badgeConfig[badge] || { Icon: MvpBadgeIcon, colorClass: 'badge-glow-gold' };
 
     return (
         <div className="relative inline-block">
             <Icon className={`${colorClass} ${className}`} />
             {count && count > 1 && (
                 <span
-                    className="absolute -top-1 -right-2 bg-black/70 px-1 rounded-full text-[10px] font-black leading-none text-yellow-400"
+                    className="absolute -top-1 -right-2 text-[10px] font-black leading-none"
+                    style={{ 
+                        color: '#FFD700', 
+                        textShadow: '0 0 2px rgba(0,0,0,1)' 
+                    }}
                 >
                     x{count}
                 </span>
@@ -166,7 +170,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
 
     const StatItem: React.FC<{ label: string; value: string | number; isKeyStat?: boolean }> = ({ label, value, isKeyStat }) => (
         <div>
-            <p className={`text-base font-bold ${isKeyStat ? 'text-yellow-400' : ''}`}>{value}</p>
+            <p className={`text-base font-bold ${isKeyStat ? 'key-stat-glow' : ''}`}>{value}</p>
             <p className="text-[10px] text-dark-text-secondary uppercase">{label}</p>
         </div>
     );
@@ -197,7 +201,8 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
         );
     };
 
-    const cardClass = "border border-white/10";
+    // FIXED: Removed colored border, kept shadow (glow) and standard subtle border
+    const cardClass = "border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)]";
 
     return (
         <div id={`player-card-container-${player.id}`}>
@@ -241,17 +246,17 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                                 <img 
                                     src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`}
                                     alt={`${player.countryCode} flag`}
-                                    className="w-6 h-auto mt-2 rounded-sm"
+                                    className="w-6 h-auto mt-3 rounded-sm"
                                 />
                             )}
                         </div>
                          {/* Rating, Form & Badges */}
                         <div className="flex flex-col items-center">
                             {/* KEEP FLAT: No text-shadow on the rating number for clean export */}
-                            <div className="text-4xl font-black" style={{color: '#00F2FE', textShadow: 'none' }}>
+                            <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>
                                 {player.rating}
                             </div>
-                            <p className="font-bold text-white tracking-widest text-sm -mt-1">OVG</p>
+                            <p className="font-bold text-white tracking-widest text-sm">OVG</p>
                             <div className="mt-1">
                                 <FormArrowIndicator form={player.form} />
                             </div>
@@ -280,7 +285,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
 
                     {/* Bottom section for name */}
                     <div className="text-center">
-                        <h1 className="text-4xl font-black uppercase tracking-tight">{player.nickname} {player.surname}</h1>
+                        <h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg">{player.nickname} {player.surname}</h1>
                     </div>
                 </div>
             </div>

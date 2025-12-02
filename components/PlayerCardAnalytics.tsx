@@ -2,16 +2,22 @@ import React from 'react';
 import { Player, PlayerStatus } from '../types';
 import { Card, useTranslation } from '../ui';
 import { useApp } from '../context';
+import { BootIcon, HandshakeIcon, CrownIcon } from '../icons';
 
-const BreakdownPill: React.FC<{ value: number, label: string }> = ({ value, label }) => {
+const RatingChangePill: React.FC<{ value: number, label: string }> = ({ value, label }) => {
     if (value === 0) return null;
     const isPositive = value > 0;
     const text = `${isPositive ? '+' : ''}${value.toFixed(1)}`;
-    const colorClasses = isPositive ? 'text-green-400' : 'text-red-400';
+    const colorClasses = isPositive 
+        ? 'bg-green-500/30 text-green-300' 
+        : 'bg-red-500/30 text-red-300';
+    
     return (
-        <div className="text-center">
-            <p className={`text-sm font-bold ${colorClasses}`}>{text}</p>
-            <p className="text-[9px] font-semibold uppercase text-dark-text-secondary -mt-1">{label}</p>
+        <div className="flex flex-col items-center">
+            <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${colorClasses}`}>
+                {text}
+            </span>
+            <span className="text-[8px] text-dark-text-secondary uppercase mt-0.5">{label}</span>
         </div>
     );
 };
@@ -19,36 +25,54 @@ const BreakdownPill: React.FC<{ value: number, label: string }> = ({ value, labe
 export const LastSessionBreakdown: React.FC<{ player: Player }> = ({ player }) => {
     const t = useTranslation();
     const breakdown = player.lastRatingChange;
-    if (!breakdown || breakdown.finalChange === 0) return null;
+
+    if (!breakdown) return null;
+
+    // FIXED: Removed colored border, kept shadow (glow) and standard subtle border
+    const cardClass = "border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)]";
+    
+    // Updated design: Label is outside the circle, container has fixed width (w-20) for symmetry
+    const RatingCircle: React.FC<{ rating: number, isNew?: boolean }> = ({ rating, isNew }) => (
+        <div className="flex flex-col items-center gap-1 w-20">
+            <div className={`
+                w-16 h-16 rounded-full flex items-center justify-center shrink-0
+                ${isNew 
+                    ? 'bg-dark-accent-start/10 border-2 border-[#00F2FE]' // Keep border but avoid heavy blur on the circle itself
+                    : 'bg-dark-surface border-2 border-dark-text-secondary/50'
+                }
+            `}>
+                {/* KEEP FLAT: No text-shadow on the rating number */}
+                <span className={`font-black text-3xl leading-none ${isNew ? 'text-[#00F2FE]' : 'text-dark-text'}`} style={{ textShadow: 'none' }}>
+                    {rating.toFixed(0)}
+                </span>
+            </div>
+            <span className={`text-[9px] font-bold uppercase text-center leading-none tracking-tight ${isNew ? 'text-[#00F2FE]' : 'text-dark-text-secondary'}`}>
+                {isNew ? t.newRating : t.previousRating}
+            </span>
+        </div>
+    );
 
     return (
-        <Card title={t.lastSessionAnalysis} className="border border-white/10">
-            <div className="flex items-center justify-between text-center py-1">
-                {/* Before */}
-                <div className="flex flex-col items-center space-y-1 w-[60px]">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-dark-surface border-2 border-white text-white font-black text-xl">
-                        {breakdown.previousRating}
+        <Card className={cardClass}>
+            <div className="flex items-center justify-between px-1">
+                <RatingCircle rating={breakdown.previousRating} />
+                
+                <div className="flex flex-col items-center justify-center gap-1.5 flex-grow px-2 -mt-3">
+                     <div className="flex items-start justify-center gap-2 text-center">
+                        <RatingChangePill value={breakdown.teamPerformance} label={t.lastSessionAnalysis_team} />
+                        <RatingChangePill value={breakdown.individualPerformance} label={t.lastSessionAnalysis_indiv} />
+                        <RatingChangePill value={breakdown.badgeBonus} label={t.lastSessionAnalysis_badge} />
                     </div>
-                    <span className="text-[7px] uppercase text-dark-text-secondary font-medium">{t.previousRating}</span>
+                     <div className="w-full h-px bg-gradient-to-r from-transparent via-dark-accent-start to-transparent opacity-50 my-0.5"></div>
+                     <div className="flex flex-col items-center justify-center text-center">
+                        <p className={`text-base font-bold leading-tight ${breakdown.finalChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                           {breakdown.finalChange >= 0 ? '+' : ''}{breakdown.finalChange.toFixed(1)}
+                        </p>
+                        <p className="text-[9px] text-dark-text-secondary uppercase leading-none mt-0.5">{t.finalChange}</p>
+                     </div>
                 </div>
 
-                {/* Connector */}
-                <div className="flex-grow px-1 relative h-12 flex items-center">
-                    <div className="absolute -top-3 left-0 right-0 flex justify-center gap-2 w-full">
-                        <BreakdownPill value={breakdown.teamPerformance} label={t.lastSessionAnalysis_team} />
-                        <BreakdownPill value={breakdown.individualPerformance} label={t.lastSessionAnalysis_indiv} />
-                        <BreakdownPill value={breakdown.badgeBonus} label={t.lastSessionAnalysis_badge} />
-                    </div>
-                    <div className="h-0.5 w-full bg-dark-accent-start"></div>
-                </div>
-
-                {/* After */}
-                <div className="flex flex-col items-center space-y-1 w-[60px]">
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center bg-dark-surface border-2 border-dark-accent-start text-dark-accent-start font-black text-xl">
-                        {breakdown.newRating}
-                    </div>
-                    <span className="text-[7px] uppercase text-dark-text-secondary font-medium">{t.newRating}</span>
-                </div>
+                <RatingCircle rating={breakdown.newRating} isNew />
             </div>
         </Card>
     );
@@ -57,50 +81,46 @@ export const LastSessionBreakdown: React.FC<{ player: Player }> = ({ player }) =
 export const ClubRankings: React.FC<{ player: Player }> = ({ player }) => {
     const t = useTranslation();
     const { allPlayers } = useApp();
-
-    const confirmedPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed && p.totalGames > 0);
     
-    // Sort by goals/game
-    const scorers = [...confirmedPlayers].sort((a, b) => {
-        const scoreA = a.totalGames > 0 ? a.totalGoals / a.totalGames : 0;
-        const scoreB = b.totalGames > 0 ? b.totalGoals / b.totalGames : 0;
-        return scoreB - scoreA;
-    });
-    const scorerRank = scorers.findIndex(p => p.id === player.id) + 1;
+    // FIXED: Removed colored border, kept shadow (glow) and standard subtle border
+    const cardClass = "border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)]";
 
-    // Sort by assists/game
-    const assistants = [...confirmedPlayers].sort((a, b) => {
-        const scoreA = a.totalGames > 0 ? a.totalAssists / a.totalGames : 0;
-        const scoreB = b.totalGames > 0 ? b.totalAssists / b.totalGames : 0;
-        return scoreB - scoreA;
-    });
-    const assistantRank = assistants.findIndex(p => p.id === player.id) + 1;
+    const rankings = React.useMemo(() => {
+        const confirmedPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
+        
+        if (confirmedPlayers.length < 2) return null;
 
-    // Sort by rating
-    const topRated = [...confirmedPlayers].sort((a, b) => b.rating - a.rating);
-    const ratingRank = topRated.findIndex(p => p.id === player.id) + 1;
+        const sortedByGoals = [...confirmedPlayers].sort((a, b) => b.totalGoals - a.totalGoals);
+        const sortedByAssists = [...confirmedPlayers].sort((a, b) => b.totalAssists - a.totalAssists);
+        const sortedByRating = [...confirmedPlayers].sort((a, b) => b.rating - a.rating);
 
-    if (confirmedPlayers.length < 1) return null;
+        const goalRank = sortedByGoals.findIndex(p => p.id === player.id) + 1;
+        const assistRank = sortedByAssists.findIndex(p => p.id === player.id) + 1;
+        const ratingRank = sortedByRating.findIndex(p => p.id === player.id) + 1;
+
+        return { goalRank, assistRank, ratingRank, total: confirmedPlayers.length };
+    }, [allPlayers, player.id]);
     
-    const RankItem: React.FC<{ rank: number, total: number, label: string }> = ({ rank, total, label }) => {
-        if (rank <= 0) return null;
-        return (
-            <div className="flex flex-col items-center">
-                <p className="font-bold text-base leading-tight">
-                    <span className="text-dark-accent-start text-lg">{rank}</span>
-                    <span className="text-dark-text-secondary"> / {total}</span>
-                </p>
-                <p className="text-[9px] uppercase text-dark-text-secondary font-semibold">{label}</p>
+    // Removed Icon prop and the # symbol
+    // Replaced gradient-text and neon-text-glow with solid color
+    const RankItem: React.FC<{ label: string; rank: number; total: number }> = ({ label, rank, total }) => (
+        <div className="flex flex-col items-center gap-1 text-center py-1">
+            <div className="flex items-baseline gap-1">
+                <p className="text-lg font-bold text-[#00F2FE]">{rank}</p>
+                <p className="text-[10px] text-dark-text-secondary font-medium">/ {total}</p>
             </div>
-        );
-    };
+            <p className="text-[9px] text-dark-text-secondary uppercase font-semibold">{label}</p>
+        </div>
+    );
+    
+    if (!rankings) return null;
 
     return (
-        <Card title={t.clubRankings} className="border border-white/10">
-            <div className="flex justify-around text-center py-0.5">
-                <RankItem rank={scorerRank} total={confirmedPlayers.length} label={t.topScorer} />
-                <RankItem rank={assistantRank} total={confirmedPlayers.length} label={t.topAssistant} />
-                <RankItem rank={ratingRank} total={confirmedPlayers.length} label={t.rating} />
+        <Card className={`${cardClass} !py-1`}>
+            <div className="grid grid-cols-3 gap-2 divide-x divide-white/10">
+                <RankItem label={t.topScorer} rank={rankings.goalRank} total={rankings.total} />
+                <RankItem label={t.topAssistant} rank={rankings.assistRank} total={rankings.total} />
+                <RankItem label={t.rating} rank={rankings.ratingRank} total={rankings.total} />
             </div>
         </Card>
     );

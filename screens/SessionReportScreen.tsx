@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -66,7 +67,7 @@ export const SessionReportScreen: React.FC = () => {
             </Modal>
             <div className="w-full max-w-4xl mx-auto">
                  <BrandedHeader className="mb-4" />
-                 <p className="text-dark-text-secondary mb-6">{new Date(session.date).toLocaleDateString()}</p>
+                 <p className="text-dark-text-secondary mb-6">{new Date(session.date).toLocaleDateString('en-GB')}</p>
                 
                 <div className="space-y-6">
                     <ShareableReport session={session} visibleSection="standings" />
@@ -80,11 +81,11 @@ export const SessionReportScreen: React.FC = () => {
                 </div>
             </div>
 
-           {/* Hidden elements for branded export - Positioned to be invisible but renderable */}
-            <div style={{ position: 'fixed', top: 0, left: 0, zIndex: -1, visibility: 'hidden', pointerEvents: 'none' }}>
-                <BrandedShareableReport ref={standingsRef} session={session} visibleSection="standings" />
-                <BrandedShareableReport ref={playersRef} session={session} visibleSection="players" includeHeader={false} />
-                <BrandedShareableReport ref={roundsRef} session={session} visibleSection="rounds" includeHeader={false} />
+           {/* Hidden elements for branded export - Positioned off-screen to ensure rendering without visibility issues */}
+            <div style={{ position: 'fixed', top: 0, left: '-10000px', pointerEvents: 'none' }}>
+                <BrandedShareableReport ref={standingsRef} session={session} visibleSection="standings" isExport={true} />
+                <BrandedShareableReport ref={playersRef} session={session} visibleSection="players" includeHeader={false} isExport={true} />
+                <BrandedShareableReport ref={roundsRef} session={session} visibleSection="rounds" includeHeader={false} isExport={true} />
             </div>
         </Page>
     );

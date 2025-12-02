@@ -212,11 +212,8 @@ export interface NewsItem {
     playerName: string;
     playerPhoto?: string;
     type: NewsType;
-    message: string; // Kept for backward compatibility
-    messageKey?: string; // Key for translation
-    subMessage?: string; // Kept for backward compatibility
-    subMessageKey?: string; // Key for translation
-    params?: { [key: string]: string | number }; // Dynamic parts of the message
+    message: string;
+    subMessage?: string; // For hashtags or extra context
     timestamp: string;
     isHot: boolean; // Triggers the fire emoji and special styling
     statsSnapshot?: { // Snapshot for the visual card

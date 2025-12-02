@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { Session, Player, GameStatus, RotationMode, Team, Game, Goal, SessionStatus, EventLogEntry, EventType, StartRoundPayload, GoalPayload, PlayerStatus, PlayerTier, BadgeType, NewsItem, PlayerForm } from './types';
+import { Session, Player, GameStatus, RotationMode, Team, Game, Goal, SessionStatus, EventLogEntry, EventType, StartRoundPayload, GoalPayload, PlayerStatus, PlayerTier, BadgeType, NewsItem } from './types';
 import { Language } from './translations';
 import { 
     loadPlayersFromDB, savePlayersToDB, 

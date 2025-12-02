@@ -1,9 +1,10 @@
 
-
 import { Player, NewsItem, NewsType, PlayerTier, BadgeType } from '../types';
 import { newId } from '../screens/utils';
 
 // --- NEWS GENERATOR SERVICE ---
+
+const STANDARD_HASHTAGS = "#532Playground #ClubNews";
 
 // Determines if a change is significant enough to be news
 export const generateNewsUpdates = (oldPlayers: Player[], newPlayers: Player[]): NewsItem[] => {
@@ -18,10 +19,10 @@ export const generateNewsUpdates = (oldPlayers: Player[], newPlayers: Player[]):
         if (!oldPlayer) return; // New player added, skip for now to avoid spam
 
         // 1. MILESTONES (Goals/Assists/Wins)
-        checkMilestone(news, newPlayer, oldPlayer.totalGoals, newPlayer.totalGoals, [50, 100, 150, 200, 300, 400, 500], 'Goals');
-        checkMilestone(news, newPlayer, oldPlayer.totalAssists, newPlayer.totalAssists, [50, 100, 150, 200, 300], 'Assists');
-        checkMilestone(news, newPlayer, oldPlayer.totalWins, newPlayer.totalWins, [50, 100, 200], 'Wins');
-        checkMilestone(news, newPlayer, oldPlayer.totalSessionsPlayed, newPlayer.totalSessionsPlayed, [50, 100], 'Sessions');
+        checkMilestone(news, newPlayer, oldPlayer.totalGoals, newPlayer.totalGoals, [50, 100, 150, 200, 300, 400, 500], 'Goals', 'GOAL MACHINE');
+        checkMilestone(news, newPlayer, oldPlayer.totalAssists, newPlayer.totalAssists, [50, 100, 150, 200, 300], 'Assists', 'THE ARCHITECT');
+        checkMilestone(news, newPlayer, oldPlayer.totalWins, newPlayer.totalWins, [50, 100, 200], 'Wins', 'BORN WINNER');
+        checkMilestone(news, newPlayer, oldPlayer.totalSessionsPlayed, newPlayer.totalSessionsPlayed, [50, 100], 'Sessions', 'CLUB VETERAN');
 
         // 2. TIER CHANGE (Promotion only)
         if (getTierRank(newPlayer.tier) > getTierRank(oldPlayer.tier)) {
@@ -31,10 +32,8 @@ export const generateNewsUpdates = (oldPlayers: Player[], newPlayers: Player[]):
                 playerName: newPlayer.nickname,
                 playerPhoto: newPlayer.photo,
                 type: 'tier_up',
-                message: '', // Backward compatibility
-                messageKey: 'news_tier_up_message',
-                subMessageKey: 'news_tier_up_sub',
-                params: { tier: newPlayer.tier.toUpperCase() },
+                message: `${newPlayer.nickname} has been promoted to ${newPlayer.tier.toUpperCase()} tier!`,
+                subMessage: `${STANDARD_HASHTAGS} #LevelUp #${newPlayer.tier} #532Elite`,
                 timestamp,
                 isHot: newPlayer.tier === PlayerTier.Legend || newPlayer.tier === PlayerTier.Elite,
                 statsSnapshot: { rating: newPlayer.rating, tier: newPlayer.tier }
@@ -50,10 +49,8 @@ export const generateNewsUpdates = (oldPlayers: Player[], newPlayers: Player[]):
                 playerName: newPlayer.nickname,
                 playerPhoto: newPlayer.photo,
                 type: 'rating_surge',
-                message: '',
-                messageKey: 'news_rating_surge_message',
-                subMessageKey: 'news_rating_surge_sub',
-                params: { ratingDiff: ratingDiff.toFixed(1) },
+                message: `${newPlayer.nickname} creates chaos! Rating skyrocketed by +${ratingDiff.toFixed(1)} in one session.`,
+                subMessage: `${STANDARD_HASHTAGS} #OnFire #Unstoppable #RatingBoost`,
                 timestamp,
                 isHot: true,
                 statsSnapshot: { rating: newPlayer.rating, tier: newPlayer.tier }
@@ -77,10 +74,8 @@ export const generateNewsUpdates = (oldPlayers: Player[], newPlayers: Player[]):
                         playerName: newPlayer.nickname,
                         playerPhoto: newPlayer.photo,
                         type: 'badge',
-                        message: '',
-                        messageKey: 'news_badge_message',
-                        subMessageKey: config.subMessageKey,
-                        params: { badgeName: config.name },
+                        message: `${newPlayer.nickname} unlocked the ${config.name} badge!`,
+                        subMessage: `${STANDARD_HASHTAGS} ${config.hashtags}`,
                         timestamp,
                         isHot: config.isHot,
                         statsSnapshot: { rating: newPlayer.rating, tier: newPlayer.tier }
@@ -97,9 +92,8 @@ export const generateNewsUpdates = (oldPlayers: Player[], newPlayers: Player[]):
                 playerName: newPlayer.nickname,
                 playerPhoto: newPlayer.photo,
                 type: 'hot_streak',
-                message: '',
-                messageKey: 'news_hot_streak_message',
-                subMessageKey: 'news_hot_streak_sub',
+                message: `${newPlayer.nickname} is heating up! Currently on a HOT STREAK.`,
+                subMessage: `${STANDARD_HASHTAGS} #HotStreak #InForm`,
                 timestamp,
                 isHot: false, // Standard news
                 statsSnapshot: { rating: newPlayer.rating, tier: newPlayer.tier }
@@ -141,25 +135,19 @@ const checkMilestone = (
     oldVal: number, 
     newVal: number, 
     milestones: number[], 
-    label: string
+    label: string, 
+    title: string
 ) => {
     milestones.forEach(m => {
         if (oldVal < m && newVal >= m) {
-            const lowerLabel = label.toLowerCase();
             news.push({
                 id: newId(),
                 playerId: player.id,
                 playerName: player.nickname,
                 playerPhoto: player.photo,
                 type: 'milestone',
-                message: '', // backward compatibility
-                messageKey: 'news_milestone_message',
-                subMessageKey: 'news_milestone_sub',
-                params: {
-                    titleKey: `news_milestone_title_${lowerLabel}`,
-                    milestone: m,
-                    label: lowerLabel,
-                },
+                message: `${title}: ${player.nickname} reached ${m} career ${label}!`,
+                subMessage: `${STANDARD_HASHTAGS} #Milestone #${m}${label}`,
                 timestamp: new Date().toISOString(),
                 isHot: m >= 100, // 100+ is hot
                 statsSnapshot: { rating: player.rating, tier: player.tier }
@@ -179,14 +167,14 @@ const getTierRank = (tier: PlayerTier): number => {
     }
 };
 
-const getBadgeNewsConfig = (badge: BadgeType): { name: string, subMessageKey: string, isHot: boolean } | null => {
-    const map: Partial<Record<BadgeType, { name: string, subMessageKey: string, isHot: boolean }>> = {
-        dynasty: { name: "DYNASTY", subMessageKey: "news_badge_dynasty_sub", isHot: true },
-        mvp: { name: "MVP", subMessageKey: "news_badge_mvp_sub", isHot: false },
-        club_legend_goals: { name: "CLUB LEGEND (Goals)", subMessageKey: "news_badge_club_legend_goals_sub", isHot: true },
-        club_legend_assists: { name: "CLUB LEGEND (Assists)", subMessageKey: "news_badge_club_legend_assists_sub", isHot: true },
-        perfect_finish: { name: "Perfect Finish", subMessageKey: "news_badge_perfect_finish_sub", isHot: false },
-        comeback_kings: { name: "Comeback King", subMessageKey: "news_badge_comeback_kings_sub", isHot: true },
+const getBadgeNewsConfig = (badge: BadgeType): { name: string, hashtags: string, isHot: boolean } | null => {
+    const map: Partial<Record<BadgeType, { name: string, hashtags: string, isHot: boolean }>> = {
+        dynasty: { name: "DYNASTY", hashtags: "#Invincible #Dynasty", isHot: true },
+        mvp: { name: "MVP", hashtags: "#MVP #SessionBest", isHot: false },
+        club_legend_goals: { name: "CLUB LEGEND (Goals)", hashtags: "#Legend #Goals", isHot: true },
+        club_legend_assists: { name: "CLUB LEGEND (Assists)", hashtags: "#Legend #Assists", isHot: true },
+        perfect_finish: { name: "Perfect Finish", hashtags: "#Clinical", isHot: false },
+        comeback_kings: { name: "Comeback King", hashtags: "#NeverGiveUp", isHot: true },
     };
     return map[badge] || null;
 };

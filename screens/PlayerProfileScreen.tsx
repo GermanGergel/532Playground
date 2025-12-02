@@ -1,14 +1,15 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import html2canvas from 'html2canvas';
 import { useApp } from '../context';
 // FIX: Imported BadgeIcon component.
 // FIX: Import directly from component files instead of barrel file to avoid import errors.
-import { Button, Modal, useTranslation, PageHeader } from '../ui';
+import { Button, Modal, useTranslation, PageHeader, Page } from '../ui';
 import { PlayerCard, BadgeIcon } from '../features';
 import { InfoIcon } from '../icons';
 import { Player, BadgeType, SkillType, PlayerStatus } from '../types';
 import { getTierForRating } from '../services/rating';
+import { formatDate } from '../services/export';
 import { PlayerEditModal } from '../modals';
 import { cropImageToAvatar } from '../lib';
 
@@ -49,56 +50,29 @@ export const PlayerProfileScreen: React.FC = () => {
         const sourceElement = document.getElementById(`player-card-container-${player.id}`);
         if (!sourceElement) {
             console.error('Player card container element not found for download.');
-            alert(t.failedToExportCard);
             return;
         }
 
         const wrapper = document.createElement('div');
         wrapper.style.position = 'fixed';
-        wrapper.style.top = '-9999px'; // Position off-screen
-        wrapper.style.left = '0';
-        wrapper.style.zIndex = '100'; // Ensure it's rendered, even if off-screen
-        wrapper.style.pointerEvents = 'none';
-        wrapper.style.width = '540px'; // Force a wider width for high-res export
-        wrapper.style.padding = '1rem';
-        wrapper.style.backgroundColor = '#1A1D24';
+        wrapper.style.left = '-9999px';
+        wrapper.style.top = '0';
+        wrapper.style.width = '540px'; // Force a wider width
+        wrapper.style.padding = '1rem'; // Add some padding to match original look
+        wrapper.style.backgroundColor = '#1A1D24'; // Match body background
 
         const clone = sourceElement.cloneNode(true) as HTMLElement;
 
+        // Remove action buttons from the clone to prevent them from appearing in the image
         const buttonsToRemove = clone.querySelectorAll('.player-card-actions');
         buttonsToRemove.forEach(btn => btn.remove());
 
         wrapper.appendChild(clone);
         document.body.appendChild(wrapper);
 
-        // Helper to convert image URLs to data URLs to prevent canvas tainting from CORS
-        const imageToDataUrl = async (url: string): Promise<string> => {
-            try {
-                const response = await fetch(url);
-                const blob = await response.blob();
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result as string);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(blob);
-                });
-            } catch (error) {
-                console.warn(`Could not convert image to data URL, falling back to original: ${url}`, error);
-                return url;
-            }
-        };
-
         try {
-            // Pre-process all external images in the clone
-            const images = Array.from(clone.getElementsByTagName('img'));
-            for (const img of images) {
-                if (img.src && img.src.startsWith('http')) {
-                    img.src = await imageToDataUrl(img.src);
-                }
-            }
-
-            const canvas = await html2canvas(wrapper, {
-                backgroundColor: '#1A1D24',
+            const canvas = await (window as any).html2canvas(wrapper, {
+                backgroundColor: '#1A1D24', // Explicitly set background
                 scale: 5, // Render at 5x resolution for max quality
                 useCORS: true,
                 logging: false,
@@ -122,38 +96,43 @@ export const PlayerProfileScreen: React.FC = () => {
                     document.body.removeChild(link);
                     URL.revokeObjectURL(dataUrl);
                 }
-            } else {
-                 alert(`${t.failedToExportCard} (Could not create image blob)`);
             }
         } catch (error: any) {
             if (error.name !== 'AbortError') {
                 console.error("Error exporting player card:", error);
-                alert(`${t.failedToExportCard} ${error.message}`);
+                alert('Failed to export player card.');
             }
         } finally {
             document.body.removeChild(wrapper);
         }
     };
 
+    const handleUploadClick = () => {
+        fileInputRef.current?.click();
+    };
+
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!player) return;
         const file = e.target.files?.[0];
-        if (file) {
+        if (file && player) {
             const reader = new FileReader();
             reader.onload = async (event) => {
-                const base64 = event.target?.result as string;
-                if (base64) {
-                    const avatar = await cropImageToAvatar(base64);
-                    setAllPlayers(prev => prev.map(p => 
-                        p.id === player.id 
-                            ? { ...p, playerCard: base64, photo: avatar, status: PlayerStatus.Confirmed } 
-                            : p
+                const base64Image = event.target?.result as string;
+                if (base64Image) {
+                    const avatarDataUrl = await cropImageToAvatar(base64Image);
+                    setAllPlayers(prev => prev.map(p =>
+                        p.id === player.id ? {
+                            ...p,
+                            photo: avatarDataUrl,
+                            playerCard: base64Image,
+                            status: PlayerStatus.Confirmed
+                        } : p
                     ));
                 }
             };
             reader.readAsDataURL(file);
         }
     };
+
 
     const handleSavePlayer = (updatedPlayer: Player) => {
         setAllPlayers(prev => prev.map(p => p.id === updatedPlayer.id ? updatedPlayer : p));
@@ -177,8 +156,14 @@ export const PlayerProfileScreen: React.FC = () => {
     };
 
     return (
-        <div className="pb-28">
-            <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
+        <Page>
+            <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                className="hidden"
+            />
             <PageHeader title={t.playerProfile} />
             <PlayerEditModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} onSave={handleSavePlayer} playerToEdit={player} />
 
@@ -222,18 +207,14 @@ export const PlayerProfileScreen: React.FC = () => {
                 </div>
             </Modal>
             
-            <div className="max-w-sm mx-auto mt-4">
-                <div className="max-w-sm mx-auto">
-                    <PlayerCard 
-                        player={player} 
-                        onEdit={() => setIsEditModalOpen(true)}
-                        onDelete={() => setIsDeleteModalOpen(true)}
-                        onUploadCard={() => fileInputRef.current?.click()}
-                        onConfirmInitialRating={handleConfirmInitialRating}
-                        onDownloadCard={handleDownloadCard}
-                    />
-                </div>
-            </div>
-        </div>
+            <PlayerCard 
+                player={player} 
+                onEdit={() => setIsEditModalOpen(true)}
+                onDelete={() => setIsDeleteModalOpen(true)}
+                onUploadCard={handleUploadClick}
+                onConfirmInitialRating={handleConfirmInitialRating}
+                onDownloadCard={handleDownloadCard}
+            />
+        </Page>
     );
 };
