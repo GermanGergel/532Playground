@@ -99,7 +99,7 @@ export const NewGameSetupScreen: React.FC = () => {
                             </div>
                             {numTeams === 3 && (
                                 <div className="flex items-center justify-between pt-4">
-                                    <div className="pr-4">
+                                    <div className="pr-4 flex-1">
                                         <label className="font-bold">{t.autoRotate}</label>
                                         <p className="text-sm text-dark-text-secondary">
                                             {rotationMode === RotationMode.AutoRotate ? t.autoRotateDesc : t.playUntilLossDesc}

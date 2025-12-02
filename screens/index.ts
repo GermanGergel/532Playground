@@ -11,7 +11,6 @@ export { SettingsScreen } from './SettingsScreen';
 export { PlayerHubScreen } from './PlayerHubScreen';
 export { PlayerDatabaseScreen } from './PlayerDatabaseScreen';
 export { PlayerProfileScreen } from './PlayerProfileScreen';
-export { ImageEditorScreen } from './ImageEditorScreen';
 export { NewsFeedScreen } from './NewsFeedScreen';
 export { BrandedHeader, hexToRgba, newId, resizeImage } from './utils';
 export type { ShareableReportProps } from './StatisticsScreen';

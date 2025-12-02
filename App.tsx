@@ -5,7 +5,7 @@ import { BottomNav } from './components';
 import { 
     HomeScreen, NewGameSetupScreen, AssignPlayersScreen, LiveMatchScreen, 
     StatisticsScreen, HistoryScreen, SessionReportScreen, SettingsScreen, 
-    PlayerHubScreen, PlayerDatabaseScreen, PlayerProfileScreen, ImageEditorScreen,
+    PlayerHubScreen, PlayerDatabaseScreen, PlayerProfileScreen,
     NewsFeedScreen
 } from './screens';
 import { useApp } from './context';
@@ -57,7 +57,6 @@ const App: React.FC = () => {
           <Route path="/player-hub" element={<PlayerHubScreen />} />
           <Route path="/player-database" element={<PlayerDatabaseScreen />} />
           <Route path="/player/:id" element={<PlayerProfileScreen />} />
-          <Route path="/player/:id/edit-card" element={<ImageEditorScreen />} />
           <Route path="/news-feed" element={<NewsFeedScreen />} />
         </Routes>
         <BottomNav />

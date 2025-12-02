@@ -134,6 +134,21 @@ export const AssignPlayersScreen: React.FC = () => {
         });
     };
 
+    const handleRemovePlayerFromPool = (playerId: string) => {
+        setActiveSession(s => {
+            if (!s) return null;
+            
+            const updatedPlayerPool = s.playerPool.filter(p => p.id !== playerId);
+
+            const updatedTeams = s.teams.map(team => ({
+                ...team,
+                playerIds: team.playerIds.filter(pid => pid !== playerId)
+            }));
+            
+            return { ...s, playerPool: updatedPlayerPool, teams: updatedTeams };
+        });
+    };
+
     const handleColorChange = (color: string) => {
         if (selectedTeam) {
             setActiveSession(s => {
@@ -377,6 +392,9 @@ export const AssignPlayersScreen: React.FC = () => {
                                                         className={team.playerIds.includes(player.id) ? 'ring-2 ring-white' : ''}
                                                     />
                                                 ))}
+                                                <button onClick={() => handleRemovePlayerFromPool(player.id)} className="text-dark-text-secondary hover:text-dark-danger transition-colors ml-2">
+                                                    <XCircle className="w-5 h-5" />
+                                                </button>
                                             </div>
                                         </div>
                                     ))}

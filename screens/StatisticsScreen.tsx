@@ -28,7 +28,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
     const effectiveCardClasses = isExport ? "rounded-2xl bg-dark-surface border border-dark-accent-start/30" : cardClasses;
     const cardTitleClasses = "font-bold text-xl mb-4 text-dark-text";
     
-    const sortedPlayers = allPlayersStats.sort((a,b) => (b.goals + b.assists) - (a.goals + b.assists));
+    const sortedPlayers = allPlayersStats.sort((a,b) => (b.goals + b.assists) - (a.goals + a.assists));
     const activePlayers = sortedPlayers;
     
     const finishedGames = session.games.filter(g => g.status === 'finished');
@@ -244,17 +244,17 @@ export const StatisticsScreen: React.FC = () => {
     if (!activeSession) return null;
     
     const handleExportStandings = () => {
-         if(standingsRef.current) shareOrDownloadImages([standingsRef.current], activeSession.sessionName, activeSession.date, 'Standings');
+         shareOrDownloadImages([standingsRef.current], activeSession.sessionName, activeSession.date, 'Standings');
          setIsDownloadModalOpen(false);
     };
     
     const handleExportPlayers = () => {
-        if(playersRef.current) shareOrDownloadImages([playersRef.current], activeSession.sessionName, activeSession.date, 'Players');
+        shareOrDownloadImages([playersRef.current], activeSession.sessionName, activeSession.date, 'Players');
         setIsDownloadModalOpen(false);
     };
     
     const handleExportRounds = () => {
-         if(roundsRef.current) shareOrDownloadImages([roundsRef.current], activeSession.sessionName, activeSession.date, 'Rounds');
+         shareOrDownloadImages([roundsRef.current], activeSession.sessionName, activeSession.date, 'Rounds');
          setIsDownloadModalOpen(false);
     };
 
@@ -289,8 +289,8 @@ export const StatisticsScreen: React.FC = () => {
                 <Button variant="secondary" onClick={() => exportSessionAsJson(activeSession)} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.exportJson}</Button>
             </div>
 
-            {/* Hidden elements for branded export - Rigid container */}
-            <div style={{ position: 'fixed', top: 0, left: '-10000px', pointerEvents: 'none', display: 'flex', flexDirection: 'column' }}>
+            {/* Hidden elements for branded export - More robust hiding method */}
+            <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -1, opacity: 0, pointerEvents: 'none' }}>
                 <BrandedShareableReport ref={standingsRef} session={activeSession} visibleSection="standings" isExport={true} />
                 <BrandedShareableReport ref={playersRef} session={activeSession} visibleSection="players" includeHeader={false} isExport={true} />
                 <BrandedShareableReport ref={roundsRef} session={activeSession} visibleSection="rounds" includeHeader={false} isExport={true} />

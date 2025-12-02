@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Team, Player } from '../types';
 import { User } from '../icons';
@@ -37,7 +36,7 @@ export const TeamAvatar: React.FC<TeamAvatarProps> = ({ team, size = 'sm', onCli
 
     // --- UNIFIED BORDER LOGIC ---
     // Apply a border to all avatars, scaling its thickness with size for better visuals.
-    const borderWidth = size === 'xxs' ? '1px' : '2px';
+    const borderWidth = size === 'xxs' ? '2px' : '3px';
     const containerStyle = { border: `${borderWidth} solid ${teamColor}` };
     const imgStyle = {}; // The border is now on the container, not the image itself.
 

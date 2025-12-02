@@ -2,7 +2,7 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-import { Page, Button, Card, useTranslation, PageHeader } from '../components';
+import { Page, Button, Card, useTranslation, PageHeader } from '../ui';
 import { Upload } from '../components';
 import { PlayerStatus } from '../types';
 import { cropImageToAvatar } from '../lib';
@@ -60,15 +60,6 @@ export const ImageEditorScreen: React.FC = () => {
             alert(t.uploadImageFirst);
             return;
         }
-        
-        // Use the standard Vite env var access method
-        // @ts-ignore
-        const apiKey = typeof import.meta !== 'undefined' ? import.meta.env.API_KEY : process.env.API_KEY;
-        if (!apiKey) {
-            console.error("API Key is missing!");
-            setError("API Key is missing!");
-            return;
-        }
 
         setIsLoading(true);
         setError(null);
@@ -77,7 +68,7 @@ export const ImageEditorScreen: React.FC = () => {
             const resizedBase64 = await resizeImage(baseImage);
             
             // CORRECTED: Use the right SDK class and initialization
-            const genAI = new GoogleGenAI({ apiKey });
+            const genAI = new GoogleGenAI({ apiKey: process.env.API_KEY });
             // FIX: Using models.generateContent as per guidelines, with explicit model name.
             // Using "gemini-3-pro-image-preview" for high-quality image generation.
             const model = "gemini-3-pro-image-preview";
@@ -122,11 +113,10 @@ An epic, powerful, and premium mood. The aesthetic should be clean and professio
 `.trim();
 
             // CORRECTED: API call syntax for the generative-ai SDK
-            const result = await genAI.models.generateContent({
+            const response = await genAI.models.generateContent({
                 model: model,
                 contents: { parts: [prompt, imagePart] },
             });
-            const response = await result.response;
 
             // FIX: Accessing candidates directly from response as per guidelines
             const imagePartResponse = response.candidates?.[0]?.content?.parts.find(p => p.inlineData);

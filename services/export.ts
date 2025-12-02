@@ -79,27 +79,25 @@ export const exportSessionAsJson = async (session: Session) => {
 };
 
 
-export const shareOrDownloadImages = async (elementRefs: HTMLElement[], sessionName: string, date: string, sectionName?: string) => {
-    // Check if html2canvas is available as a module import.
-    // If elementRefs is empty, it means the elements to export were not rendered or found.
-    if (!elementRefs || elementRefs.length === 0) {
+export const shareOrDownloadImages = async (elementRefs: (HTMLElement | null)[], sessionName: string, date: string, sectionName?: string) => {
+    const validElements = elementRefs.filter((el): el is HTMLElement => el !== null);
+
+    if (validElements.length === 0) {
         console.error('Could not find the elements to export.');
-        alert('Image export failed: elements not found.');
+        alert('Image export failed: library or elements not found.');
         return;
     }
-    // Perform a separate check for html2canvas availability to provide a more specific error message if needed.
-    // However, with direct import, it should always be available if the build succeeded.
     
     const files: File[] = [];
 
     // Process each element sequentially
-    for (let i = 0; i < elementRefs.length; i++) {
-        const element = elementRefs[i];
+    for (let i = 0; i < validElements.length; i++) {
+        const element = validElements[i];
         
         try {
-            const canvas = await html2canvas(element, { // Use imported html2canvas
+            const canvas = await html2canvas(element, {
                 backgroundColor: null, // Transparent corners if container has them
-                scale: 2, // 2x resolution is good balance of quality and speed
+                scale: 2, // 2x resolution is a good balance of quality and speed
                 useCORS: true,
                 logging: false,
                 windowWidth: 1200, // Force desktop-like rendering width
@@ -117,7 +115,7 @@ export const shareOrDownloadImages = async (elementRefs: HTMLElement[], sessionN
             const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png', 1.0)); // Use max quality PNG
             
             if (blob) {
-                const partSuffix = elementRefs.length > 1 ? `_Part${i + 1}` : '';
+                const partSuffix = validElements.length > 1 ? `_Part${i + 1}` : '';
                 const sectionSuffix = sectionName ? `_${sectionName}` : '';
                 const filename = `532_Playground_${sessionName.replace(/\s/g, '_')}_${date}${sectionSuffix}${partSuffix}.png`;
                 files.push(new File([blob], filename, { type: 'image/png' }));

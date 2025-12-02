@@ -35,17 +35,17 @@ export const SessionReportScreen: React.FC = () => {
     }
 
      const handleExportStandings = () => {
-         if(standingsRef.current) shareOrDownloadImages([standingsRef.current], session.sessionName, session.date, 'Standings');
+         shareOrDownloadImages([standingsRef.current], session.sessionName, session.date, 'Standings');
          setIsDownloadModalOpen(false);
     };
     
     const handleExportPlayers = () => {
-        if(playersRef.current) shareOrDownloadImages([playersRef.current], session.sessionName, session.date, 'Players');
+        shareOrDownloadImages([playersRef.current], session.sessionName, session.date, 'Players');
         setIsDownloadModalOpen(false);
     };
     
     const handleExportRounds = () => {
-         if(roundsRef.current) shareOrDownloadImages([roundsRef.current], session.sessionName, session.date, 'Rounds');
+         shareOrDownloadImages([roundsRef.current], session.sessionName, session.date, 'Rounds');
          setIsDownloadModalOpen(false);
     };
     
@@ -81,8 +81,8 @@ export const SessionReportScreen: React.FC = () => {
                 </div>
             </div>
 
-           {/* Hidden elements for branded export - Positioned off-screen to ensure rendering without visibility issues */}
-            <div style={{ position: 'fixed', top: 0, left: '-10000px', pointerEvents: 'none' }}>
+           {/* Hidden elements for branded export - More robust hiding method */}
+            <div style={{ position: 'absolute', top: 0, left: 0, zIndex: -1, opacity: 0, pointerEvents: 'none' }}>
                 <BrandedShareableReport ref={standingsRef} session={session} visibleSection="standings" isExport={true} />
                 <BrandedShareableReport ref={playersRef} session={session} visibleSection="players" includeHeader={false} isExport={true} />
                 <BrandedShareableReport ref={roundsRef} session={session} visibleSection="rounds" includeHeader={false} isExport={true} />
