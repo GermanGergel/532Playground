@@ -213,18 +213,6 @@ export const translations = {
     lastSessionAnalysis_team: "Team",
     lastSessionAnalysis_indiv: "Individual",
     lastSessionAnalysis_badge: "Badges",
-    // FIX: Added missing keys for Image Editor
-    imageEditorTitle: "AI Player Card Generator",
-    uploadImageFirst: "Please upload an image first.",
-    quotaExceeded: "API quota exceeded. Please try again after the cooldown.",
-    errorGenerating: "An error occurred while generating the image.",
-    uploadPrompt: "Upload a clear, front-facing portrait photo to begin.",
-    changeImage: "Change Image",
-    uploadImage: "Upload Image",
-    bodySlim: "Slim",
-    bodyAverage: "Average",
-    bodyStocky: "Stocky",
-    generating: "Generating...",
 
     // Skills
     skill_goalkeeper: "Goalkeeper",
@@ -481,18 +469,6 @@ export const translations = {
     lastSessionAnalysis_team: "Команда",
     lastSessionAnalysis_indiv: "Личное",
     lastSessionAnalysis_badge: "Награды",
-    // FIX: Added missing keys for Image Editor
-    imageEditorTitle: "AI Генератор Карточек Игрока",
-    uploadImageFirst: "Пожалуйста, сначала загрузите изображение.",
-    quotaExceeded: "Квота API превышена. Пожалуйста, попробуйте позже.",
-    errorGenerating: "Произошла ошибка при генерации изображения.",
-    uploadPrompt: "Загрузите четкое портретное фото анфас, чтобы начать.",
-    changeImage: "Изменить фото",
-    uploadImage: "Загрузить фото",
-    bodySlim: "Худощавый",
-    bodyAverage: "Средний",
-    bodyStocky: "Крепкий",
-    generating: "Генерация...",
 
     // Skills
     skill_goalkeeper: "Вратарь",
@@ -751,18 +727,6 @@ export const translations = {
     lastSessionAnalysis_team: "Đội",
     lastSessionAnalysis_indiv: "Cá nhân",
     lastSessionAnalysis_badge: "Huy hiệu",
-    // FIX: Added missing keys for Image Editor
-    imageEditorTitle: "Tạo thẻ cầu thủ bằng AI",
-    uploadImageFirst: "Vui lòng tải ảnh lên trước.",
-    quotaExceeded: "Đã vượt quá hạn ngạch API. Vui lòng thử lại sau.",
-    errorGenerating: "Đã xảy ra lỗi khi tạo ảnh.",
-    uploadPrompt: "Tải lên ảnh chân dung rõ nét, chụp chính diện để bắt đầu.",
-    changeImage: "Đổi ảnh",
-    uploadImage: "Tải ảnh lên",
-    bodySlim: "Mảnh khảnh",
-    bodyAverage: "Trung bình",
-    bodyStocky: "Chắc nịch",
-    generating: "Đang tạo...",
 
     // Skills
     skill_goalkeeper: "Thủ môn",
