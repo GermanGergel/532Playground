@@ -6,8 +6,6 @@ import { Page, Button, Card, useTranslation, PageHeader } from '../components';
 import { Upload } from '../components';
 import { PlayerStatus } from '../types';
 import { cropImageToAvatar } from '../lib';
-// FIX: Updated to use the correct GoogleGenAI import from @google/genai as per guidelines.
-import { GoogleGenAI } from '@google/genai';
 import { resizeImage } from './utils';
 import html2canvas from 'html2canvas'; // Import html2canvas
 
@@ -77,7 +75,7 @@ export const ImageEditorScreen: React.FC = () => {
             const resizedBase64 = await resizeImage(baseImage);
             
             // CORRECTED: Use the right SDK class and initialization
-            const genAI = new GoogleGenAI({ apiKey });
+            // const genAI = new GoogleGenAI({ apiKey });
             // FIX: Using models.generateContent as per guidelines, with explicit model name.
             // Using "gemini-3-pro-image-preview" for high-quality image generation.
             const model = "gemini-3-pro-image-preview";
@@ -121,26 +119,28 @@ STYLE:
 An epic, powerful, and premium mood. The aesthetic should be clean and professional, inspired by high-end Nike or Adidas athlete campaigns.
 `.trim();
 
-            // CORRECTED: API call syntax for the generative-ai SDK
-            const result = await genAI.models.generateContent({
-                model: model,
-                contents: { parts: [prompt, imagePart] },
-            });
-            const response = await result.response;
+            // This part of the code would normally call the Gemini API, but it's commented out
+            // because the feature is being removed.
+            // const result = await genAI.models.generateContent({
+            //     model: model,
+            //     contents: { parts: [prompt, imagePart] },
+            // });
+            // const response = await result.response;
 
-            // FIX: Accessing candidates directly from response as per guidelines
-            const imagePartResponse = response.candidates?.[0]?.content?.parts.find(p => p.inlineData);
+            // // FIX: Accessing candidates directly from response as per guidelines
+            // const imagePartResponse = response.candidates?.[0]?.content?.parts.find(p => p.inlineData);
 
-            if (imagePartResponse?.inlineData) {
-                const newImageBase64 = imagePartResponse.inlineData.data;
-                const newMimeType = imagePartResponse.inlineData.mimeType;
-                setEditedImage(`data:${newMimeType};base64,${newImageBase64}`);
-            } else {
-                // FIX: Accessing text directly from response as per guidelines
-                const textResponse = response.text;
-                console.log(textResponse);
-                throw new Error("No image data found in response. " + (textResponse || ''));
-            }
+            // if (imagePartResponse?.inlineData) {
+            //     const newImageBase64 = imagePartResponse.inlineData.data;
+            //     const newMimeType = imagePartResponse.inlineData.mimeType;
+            //     setEditedImage(`data:${newMimeType};base64,${newImageBase64}`);
+            // } else {
+            //     // FIX: Accessing text directly from response as per guidelines
+            //     const textResponse = response.text;
+            //     console.log(textResponse);
+            //     throw new Error("No image data found in response. " + (textResponse || ''));
+            // }
+            throw new Error("AI image generation is currently disabled."); // Simulate an error since the functionality is removed.
         } catch (err: any) {
             console.error(err);
             const isQuota = 
@@ -203,6 +203,8 @@ An epic, powerful, and premium mood. The aesthetic should be clean and professio
                     </Button>
                 </Card>
                 
+                {/* Removed AI generation related UI elements */}
+                {/* 
                 {baseImage && (
                     <Card className="!p-2 shadow-lg shadow-dark-accent-start/20 border border-dark-accent-start/40">
                         <div className="flex justify-around bg-dark-bg rounded-lg overflow-hidden">
@@ -220,6 +222,7 @@ An epic, powerful, and premium mood. The aesthetic should be clean and professio
                 )}
                  {isLoading && <div className="text-center p-1 text-sm text-dark-accent-start animate-pulse">Creating 532 Professional Player...</div>}
                  {error && <div className="text-center p-1 text-sm text-dark-danger">{error}</div>}
+                */}
                 
                 <div className="pt-2">
                     <Button variant="secondary" onClick={handleSaveToProfile} disabled={!editedImage && !baseImage} className="w-full !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">
