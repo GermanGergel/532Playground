@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -12,7 +11,7 @@ import { getTierForRating } from '../services/rating';
 import { formatDate } from '../services/export';
 import { PlayerEditModal } from '../modals';
 import { cropImageToAvatar } from '../lib';
-
+import html2canvas from 'html2canvas'; // Import html2canvas
 
 export const PlayerProfileScreen: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -71,7 +70,7 @@ export const PlayerProfileScreen: React.FC = () => {
         document.body.appendChild(wrapper);
 
         try {
-            const canvas = await (window as any).html2canvas(wrapper, {
+            const canvas = await html2canvas(wrapper, { // Use imported html2canvas
                 backgroundColor: '#1A1D24', // Explicitly set background
                 scale: 5, // Render at 5x resolution for max quality
                 useCORS: true,

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -5,8 +6,10 @@ import { Page, Button, Card, useTranslation, PageHeader } from '../components';
 import { Upload } from '../components';
 import { PlayerStatus } from '../types';
 import { cropImageToAvatar } from '../lib';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+// FIX: Updated to use the correct GoogleGenAI import from @google/genai as per guidelines.
+import { GoogleGenAI } from '@google/genai';
 import { resizeImage } from './utils';
+import html2canvas from 'html2canvas'; // Import html2canvas
 
 export const ImageEditorScreen: React.FC = () => {
     const { id: playerId } = useParams<{ id: string }>();
@@ -74,8 +77,10 @@ export const ImageEditorScreen: React.FC = () => {
             const resizedBase64 = await resizeImage(baseImage);
             
             // CORRECTED: Use the right SDK class and initialization
-            const genAI = new GoogleGenerativeAI(apiKey);
-            const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
+            const genAI = new GoogleGenAI({ apiKey });
+            // FIX: Using models.generateContent as per guidelines, with explicit model name.
+            // Using "gemini-3-pro-image-preview" for high-quality image generation.
+            const model = "gemini-3-pro-image-preview";
 
             const base64Data = resizedBase64.split(',')[1];
             const mimeType = resizedBase64.match(/data:(.*);base64,/)?.[1] || 'image/png';
@@ -117,9 +122,13 @@ An epic, powerful, and premium mood. The aesthetic should be clean and professio
 `.trim();
 
             // CORRECTED: API call syntax for the generative-ai SDK
-            const result = await model.generateContent([prompt, imagePart]);
+            const result = await genAI.models.generateContent({
+                model: model,
+                contents: { parts: [prompt, imagePart] },
+            });
             const response = await result.response;
 
+            // FIX: Accessing candidates directly from response as per guidelines
             const imagePartResponse = response.candidates?.[0]?.content?.parts.find(p => p.inlineData);
 
             if (imagePartResponse?.inlineData) {
@@ -127,7 +136,8 @@ An epic, powerful, and premium mood. The aesthetic should be clean and professio
                 const newMimeType = imagePartResponse.inlineData.mimeType;
                 setEditedImage(`data:${newMimeType};base64,${newImageBase64}`);
             } else {
-                const textResponse = response.text();
+                // FIX: Accessing text directly from response as per guidelines
+                const textResponse = response.text;
                 console.log(textResponse);
                 throw new Error("No image data found in response. " + (textResponse || ''));
             }

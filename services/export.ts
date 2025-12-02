@@ -1,7 +1,5 @@
-
-
-
 import { Session, EventType, GoalPayload, SubPayload, StartRoundPayload } from '../types';
+import html2canvas from 'html2canvas'; // Import html2canvas
 
 // Data Export Utilities
 export const formatDate = (date: Date) => date.toISOString().split('T')[0];
@@ -82,12 +80,16 @@ export const exportSessionAsJson = async (session: Session) => {
 
 
 export const shareOrDownloadImages = async (elementRefs: HTMLElement[], sessionName: string, date: string, sectionName?: string) => {
-    if (!elementRefs || elementRefs.length === 0 || typeof (window as any).html2canvas === 'undefined') {
-        console.error('Could not find the export library (html2canvas) or the elements to export.');
-        alert('Image export failed: library or elements not found.');
+    // Check if html2canvas is available as a module import.
+    // If elementRefs is empty, it means the elements to export were not rendered or found.
+    if (!elementRefs || elementRefs.length === 0) {
+        console.error('Could not find the elements to export.');
+        alert('Image export failed: elements not found.');
         return;
     }
-
+    // Perform a separate check for html2canvas availability to provide a more specific error message if needed.
+    // However, with direct import, it should always be available if the build succeeded.
+    
     const files: File[] = [];
 
     // Process each element sequentially
@@ -95,7 +97,7 @@ export const shareOrDownloadImages = async (elementRefs: HTMLElement[], sessionN
         const element = elementRefs[i];
         
         try {
-            const canvas = await (window as any).html2canvas(element, {
+            const canvas = await html2canvas(element, { // Use imported html2canvas
                 backgroundColor: null, // Transparent corners if container has them
                 scale: 2, // 2x resolution is good balance of quality and speed
                 useCORS: true,
