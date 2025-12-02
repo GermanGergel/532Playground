@@ -250,8 +250,8 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                                 />
                             )}
                         </div>
-                         {/* Rating, Form & Badges - SYNTAX FIX & LAYOUT REVERT */}
-                        <div className="flex flex-col items-end text-right">
+                         {/* Rating, Form & Badges */}
+                        <div className="flex flex-col items-center">
                             {/* KEEP FLAT: No text-shadow on the rating number for clean export */}
                             <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>
                                 {player.rating}
@@ -261,12 +261,23 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                                 <FormArrowIndicator form={player.form} />
                             </div>
                             {badgeList.length > 0 && (
-                                <div className="mt-2 flex flex-row-reverse flex-wrap gap-1 items-center justify-end">
-                                    {badgeList.map(badge => (
-                                        <div key={badge} title={t[`badge_${badge}` as keyof typeof t] || ''}>
-                                            <BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-7 h-7" />
+                                <div className="mt-4 flex flex-row-reverse items-center gap-x-2">
+                                    <div className="flex flex-col space-y-2 items-center">
+                                        {badgeList.slice(0, 8).map(badge => (
+                                            <div key={badge} title={t[`badge_${badge}` as keyof typeof t] || ''}>
+                                                <BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-7 h-7" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {badgeList.length > 8 && (
+                                        <div className="flex flex-col space-y-2 items-center">
+                                            {badgeList.slice(8).map(badge => (
+                                                <div key={badge} title={t[`badge_${badge}` as keyof typeof t] || ''}>
+                                                    <BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-7 h-7" />
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
+                                    )}
                                 </div>
                             )}
                         </div>
