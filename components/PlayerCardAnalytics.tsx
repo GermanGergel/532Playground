@@ -35,7 +35,7 @@ export const LastSessionBreakdown: React.FC<{ player: Player }> = ({ player }) =
     const RatingCircle: React.FC<{ rating: number, isNew?: boolean }> = ({ rating, isNew }) => (
         <div className="flex flex-col items-center gap-1.5 w-[72px]"> {/* Increased width for more room, gap-1.5 for spacing */}
             <div className={`
-                w-[68px] h-[68px] rounded-full flex items-center justify-center shrink-0 {/* Increased size */}
+                w-[68px] h-[68px] rounded-full flex items-center justify-center shrink-0 
                 ${isNew 
                     ? 'bg-dark-accent-start/10 border-2 border-[#00F2FE]' // Keep border but avoid heavy blur on the circle itself
                     : 'bg-dark-surface border-2 border-dark-text-secondary/50'
