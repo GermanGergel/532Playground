@@ -5,7 +5,7 @@ import { useApp } from '../context';
 // FIX: Import directly from component files instead of barrel file to avoid import errors.
 import { Button, Modal, useTranslation, PageHeader, Page } from '../ui';
 import { PlayerCard, BadgeIcon } from '../features';
-import { InfoIcon } from '../icons';
+import { InfoIcon, StarIcon, XCircle } from '../icons';
 import { Player, BadgeType, SkillType, PlayerStatus } from '../types';
 import { getTierForRating } from '../services/rating';
 import { formatDate } from '../services/export';
@@ -15,7 +15,7 @@ import html2canvas from 'html2canvas'; // Import html2canvas
 
 export const PlayerProfileScreen: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-    const { allPlayers, setAllPlayers } = useApp();
+    const { allPlayers, setAllPlayers, isLoading } = useApp();
     const t = useTranslation();
     const navigate = useNavigate();
 
@@ -26,14 +26,32 @@ export const PlayerProfileScreen: React.FC = () => {
     
     const player = allPlayers.find(p => p.id === id);
 
-    React.useEffect(() => {
-        if (!player) {
-            navigate('/player-database', { replace: true });
-        }
-    }, [player, navigate]);
+    // --- LOADING AND DATA VALIDATION ---
 
+    if (isLoading) {
+        return (
+            <Page>
+                <div className="flex items-center justify-center h-[calc(100vh-10rem)]">
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="w-10 h-10 border-4 border-dark-accent-start border-t-transparent rounded-full animate-spin"></div>
+                        <div className="font-bold text-dark-text animate-pulse">{t.loading}</div>
+                    </div>
+                </div>
+            </Page>
+        );
+    }
+    
     if (!player) {
-        return null;
+        return (
+            <Page>
+                <PageHeader title={t.playerProfile} />
+                <div className="text-center mt-16">
+                    <p className="text-xl font-bold text-dark-danger mb-4">Player Not Found</p>
+                    <p className="text-dark-text-secondary mb-8">The player you are looking for does not exist or has been deleted.</p>
+                    <Button variant="secondary" onClick={() => navigate('/player-hub')}>Back to Player Hub</Button>
+                </div>
+            </Page>
+        )
     }
 
     const ALL_BADGES: BadgeType[] = [
@@ -163,7 +181,11 @@ export const PlayerProfileScreen: React.FC = () => {
                 accept="image/*"
                 className="hidden"
             />
-            <PageHeader title={t.playerProfile} />
+            <PageHeader title={t.playerProfile}>
+                <Button variant="ghost" className="!p-2 -mr-2" onClick={() => setIsInfoModalOpen(true)}>
+                    <InfoIcon className="w-6 h-6" />
+                </Button>
+            </PageHeader>
             <PlayerEditModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} onSave={handleSavePlayer} playerToEdit={player} />
 
             <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} size="sm">
@@ -174,33 +196,41 @@ export const PlayerProfileScreen: React.FC = () => {
                     <Button variant="danger" onClick={handleDeletePlayer}>{t.delete}</Button>
                 </div>
             </Modal>
-
-            <Modal isOpen={isInfoModalOpen} onClose={() => setIsInfoModalOpen(false)} size="md">
-                 <div className="space-y-4">
-                    <div>
-                        <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
-                           <InfoIcon className="w-5 h-5" /> {t.badges}
-                        </h3>
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                            {ALL_BADGES.map(badge => (
-                                <div key={badge} className="flex items-start gap-2">
-                                    <BadgeIcon badge={badge} className="w-6 h-6 mt-0.5 flex-shrink-0" />
-                                    <div>
-                                        <p className="text-sm font-semibold">{t[`badge_${badge}` as keyof typeof t]}</p>
-                                        <p className="text-xs text-dark-text-secondary">{t[`badge_${badge}_desc` as keyof typeof t]}</p>
+            
+            <Modal isOpen={isInfoModalOpen} onClose={() => setIsInfoModalOpen(false)} size="xs" containerClassName="!p-0" hideCloseButton>
+                <button onClick={() => setIsInfoModalOpen(false)} className="absolute top-3 right-3 z-20 text-dark-text-secondary hover:text-white transition-colors">
+                    <XCircle className="w-6 h-6" />
+                </button>
+                <div className="p-4 max-h-[75vh] overflow-y-auto">
+                    <div className="space-y-6">
+                        <div>
+                            <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+                                <InfoIcon className="w-5 h-5" /> {t.badges}
+                            </h3>
+                            <div className="space-y-4 pt-2">
+                                {ALL_BADGES.map(badge => (
+                                    <div key={badge} className="flex items-start gap-3">
+                                        <BadgeIcon badge={badge} className="w-8 h-8 flex-shrink-0" />
+                                        <div>
+                                            <p className="text-sm font-semibold leading-tight">{t[`badge_${badge}` as keyof typeof t]}</p>
+                                            <p className="text-xs text-dark-text-secondary leading-snug mt-0.5">{t[`badge_${badge}_desc` as keyof typeof t]}</p>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                     <div className="pt-4 border-t border-white/10">
-                        <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
-                             <InfoIcon className="w-5 h-5" /> {t.keySkills}
-                        </h3>
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                            {ALL_SKILLS_INFO.map(skill => (
-                                <p key={skill} className="text-sm">{t[`skill_${skill}` as keyof typeof t]}</p>
-                            ))}
+                        <div className="pt-4 border-t border-white/10">
+                             <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+                                <InfoIcon className="w-5 h-5" /> {t.keySkills}
+                            </h3>
+                            <div className="grid grid-cols-1 gap-x-4 gap-y-2 pt-2">
+                                {ALL_SKILLS_INFO.map(skill => (
+                                    <div key={skill} className="flex items-center gap-2">
+                                        <StarIcon className="w-3 h-3 text-dark-accent-start flex-shrink-0" />
+                                        <p className="text-sm">{t[`skill_${skill}` as keyof typeof t]}</p>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
