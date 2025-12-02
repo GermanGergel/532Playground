@@ -26,33 +26,23 @@ export const PlayerProfileScreen: React.FC = () => {
     
     const player = allPlayers.find(p => p.id === id);
 
-    // --- LOADING AND DATA VALIDATION ---
+    // --- DATA VALIDATION & RACE CONDITION FIX ---
+    React.useEffect(() => {
+        // This effect runs after rendering. If data loading is finished (`!isLoading`)
+        // and the player is still not found in the list, it's a genuine "not found" case.
+        // We can then safely navigate away.
+        if (!isLoading && !player) {
+            navigate('/player-database', { replace: true });
+        }
+    }, [isLoading, player, navigate]);
 
-    if (isLoading) {
-        return (
-            <Page>
-                <div className="flex items-center justify-center h-[calc(100vh-10rem)]">
-                    <div className="flex flex-col items-center gap-4">
-                        <div className="w-10 h-10 border-4 border-dark-accent-start border-t-transparent rounded-full animate-spin"></div>
-                        <div className="font-bold text-dark-text animate-pulse">{t.loading}</div>
-                    </div>
-                </div>
-            </Page>
-        );
-    }
-    
+    // If the player isn't found during the initial render cycles (while data might still be propagating from context),
+    // render nothing (`null`). This prevents a premature "Not Found" message and allows React to
+    // process the state update for `allPlayers` and re-render with the correct data.
     if (!player) {
-        return (
-            <Page>
-                <PageHeader title={t.playerProfile} />
-                <div className="text-center mt-16">
-                    <p className="text-xl font-bold text-dark-danger mb-4">Player Not Found</p>
-                    <p className="text-dark-text-secondary mb-8">The player you are looking for does not exist or has been deleted.</p>
-                    <Button variant="secondary" onClick={() => navigate('/player-hub')}>Back to Player Hub</Button>
-                </div>
-            </Page>
-        )
+        return null;
     }
+
 
     const ALL_BADGES: BadgeType[] = [
         'goleador', 'perfect_finish', 'dynasty', 'sniper', 'assistant', 'mvp', 
