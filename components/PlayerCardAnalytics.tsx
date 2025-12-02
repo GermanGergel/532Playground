@@ -26,11 +26,13 @@ export const LastSessionBreakdown: React.FC<{ player: Player }> = ({ player }) =
     const t = useTranslation();
     const breakdown = player.lastRatingChange;
 
-    if (!breakdown) return null;
+    // CRITICAL FIX: Enhanced validation. Check for existence AND ensure it's an object before proceeding.
+    // This prevents "Cannot read properties of..." errors if data is malformed (e.g., a string or number).
+    if (!breakdown || typeof breakdown !== 'object') {
+        return null;
+    }
 
-    // CRITICAL FIX: Add back the data validation check to prevent crashes
-    // This ensures that if any part of the rating breakdown data is missing or not a number,
-    // the component will not render, thus preventing the entire page from crashing.
+    // Secondary validation for data integrity.
     const isValidBreakdown = 
         typeof breakdown.previousRating === 'number' &&
         typeof breakdown.teamPerformance === 'number' &&
