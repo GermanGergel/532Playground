@@ -17,7 +17,7 @@ const RatingChangePill: React.FC<{ value: number, label: string }> = ({ value, l
             <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${colorClasses}`}>
                 {text}
             </span>
-            <span className="text-[8px] text-dark-text-secondary uppercase mt-0.5">{label}</span>
+            <span className="text-[9px] text-dark-text-secondary uppercase mt-0.5">{label}</span> {/* Changed text-[8px] to text-[9px] */}
         </div>
     );
 };
@@ -33,9 +33,9 @@ export const LastSessionBreakdown: React.FC<{ player: Player }> = ({ player }) =
     
     // Updated design: Label is outside the circle, container has fixed width (w-20) for symmetry
     const RatingCircle: React.FC<{ rating: number, isNew?: boolean }> = ({ rating, isNew }) => (
-        <div className="flex flex-col items-center gap-1 w-20">
+        <div className="flex flex-col items-center gap-1.5 w-[72px]"> {/* Increased width for more room, gap-1.5 for spacing */}
             <div className={`
-                w-16 h-16 rounded-full flex items-center justify-center shrink-0
+                w-[68px] h-[68px] rounded-full flex items-center justify-center shrink-0 {/* Increased size */}
                 ${isNew 
                     ? 'bg-dark-accent-start/10 border-2 border-[#00F2FE]' // Keep border but avoid heavy blur on the circle itself
                     : 'bg-dark-surface border-2 border-dark-text-secondary/50'
@@ -46,7 +46,7 @@ export const LastSessionBreakdown: React.FC<{ player: Player }> = ({ player }) =
                     {rating.toFixed(0)}
                 </span>
             </div>
-            <span className={`text-[9px] font-bold uppercase text-center leading-none tracking-tight ${isNew ? 'text-[#00F2FE]' : 'text-dark-text-secondary'}`}>
+            <span className={`text-[10px] font-bold uppercase text-center leading-normal tracking-tight ${isNew ? 'text-[#00F2FE]' : 'text-dark-text-secondary'}`}> {/* Changed text-[9px] to text-[10px], leading-none to normal */}
                 {isNew ? t.newRating : t.previousRating}
             </span>
         </div>
@@ -57,18 +57,18 @@ export const LastSessionBreakdown: React.FC<{ player: Player }> = ({ player }) =
             <div className="flex items-center justify-between px-1">
                 <RatingCircle rating={breakdown.previousRating} />
                 
-                <div className="flex flex-col items-center justify-center gap-1.5 flex-grow px-2 -mt-3">
-                     <div className="flex items-start justify-center gap-2 text-center">
+                <div className="flex flex-col items-center justify-center gap-2 flex-grow px-2"> {/* Removed -mt-3, adjusted gap */}
+                     <div className="flex items-start justify-center gap-3 text-center"> {/* Adjusted gap-2 to gap-3 */}
                         <RatingChangePill value={breakdown.teamPerformance} label={t.lastSessionAnalysis_team} />
                         <RatingChangePill value={breakdown.individualPerformance} label={t.lastSessionAnalysis_indiv} />
                         <RatingChangePill value={breakdown.badgeBonus} label={t.lastSessionAnalysis_badge} />
                     </div>
-                     <div className="w-full h-px bg-gradient-to-r from-transparent via-dark-accent-start to-transparent opacity-50 my-0.5"></div>
+                     <div className="w-full h-px bg-gradient-to-r from-transparent via-dark-accent-start to-transparent opacity-50 my-1"></div> {/* Adjusted my-0.5 to my-1 */}
                      <div className="flex flex-col items-center justify-center text-center">
                         <p className={`text-base font-bold leading-tight ${breakdown.finalChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                            {breakdown.finalChange >= 0 ? '+' : ''}{breakdown.finalChange.toFixed(1)}
                         </p>
-                        <p className="text-[9px] text-dark-text-secondary uppercase leading-none mt-0.5">{t.finalChange}</p>
+                        <p className="text-[10px] text-dark-text-secondary uppercase leading-none mt-0.5">{t.finalChange}</p> {/* Changed text-[9px] to text-[10px] */}
                      </div>
                 </div>
 
