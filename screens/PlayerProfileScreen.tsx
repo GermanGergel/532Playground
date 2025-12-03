@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -12,6 +13,7 @@ import { formatDate } from '../services/export';
 import { PlayerEditModal } from '../modals';
 import { cropImageToAvatar } from '../lib';
 import html2canvas from 'html2canvas'; // Import html2canvas
+import { saveSinglePlayerToDB, uploadPlayerImage, deletePlayerImage } from '../db';
 
 export const PlayerProfileScreen: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -128,28 +130,44 @@ export const PlayerProfileScreen: React.FC = () => {
             const reader = new FileReader();
             reader.onload = async (event) => {
                 const base64Image = event.target?.result as string;
-                if (base64Image) {
-                    const avatarDataUrl = await cropImageToAvatar(base64Image);
-                    setAllPlayers(prev => prev.map(p =>
-                        p.id === player.id ? {
-                            ...p,
-                            photo: avatarDataUrl,
-                            playerCard: base64Image,
-                            status: PlayerStatus.Confirmed
-                        } : p
-                    ));
-                }
+                if (!base64Image) return;
+
+                // 1. Crop for avatar
+                const avatarDataUrl = await cropImageToAvatar(base64Image);
+
+                // 2. Upload both images to Supabase Storage
+                const avatarUrl = await uploadPlayerImage(player.id, avatarDataUrl, 'avatar');
+                const cardUrl = await uploadPlayerImage(player.id, base64Image, 'card');
+
+                // 3. Delete old images if they exist
+                if (player.photo) await deletePlayerImage(player.photo);
+                if (player.playerCard) await deletePlayerImage(player.playerCard);
+
+                // 4. Update player object with new URLs
+                const updatedPlayer = {
+                    ...player,
+                    photo: avatarUrl || player.photo,
+                    playerCard: cardUrl || player.playerCard,
+                    status: PlayerStatus.Confirmed,
+                };
+                
+                // 5. Update state and save to DB
+                setAllPlayers(prev => prev.map(p => p.id === player.id ? updatedPlayer : p));
+                await saveSinglePlayerToDB(updatedPlayer);
             };
             reader.readAsDataURL(file);
         }
     };
 
 
-    const handleSavePlayer = (updatedPlayer: Player) => {
+    const handleSavePlayer = async (updatedPlayer: Player) => {
         setAllPlayers(prev => prev.map(p => p.id === updatedPlayer.id ? updatedPlayer : p));
+        await saveSinglePlayerToDB(updatedPlayer);
     };
     
-    const handleDeletePlayer = () => {
+    const handleDeletePlayer = async () => {
+        // In a real-world scenario, you might also want to delete from Supabase here.
+        // For now, it's just removed from local state.
         setAllPlayers(prev => prev.filter(p => p.id !== player.id));
         setIsDeleteModalOpen(false);
         navigate('/player-database', { replace: true });
@@ -163,7 +181,7 @@ export const PlayerProfileScreen: React.FC = () => {
             status: PlayerStatus.Confirmed,
             tier: tier,
         };
-        setAllPlayers(prev => prev.map(p => p.id === player.id ? updatedPlayer : p));
+        handleSavePlayer(updatedPlayer);
     };
 
     return (

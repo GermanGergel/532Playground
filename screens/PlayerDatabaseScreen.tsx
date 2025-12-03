@@ -11,6 +11,7 @@ import { Player, PlayerStatus, PlayerTier } from '../types';
 import { PlayerAddModal } from '../modals';
 import { newId } from './utils';
 import { getTierForRating } from '../services/rating';
+import { saveSinglePlayerToDB } from '../db';
 
 export const PlayerDatabaseScreen: React.FC = () => {
     const t = useTranslation();
@@ -45,6 +46,8 @@ export const PlayerDatabaseScreen: React.FC = () => {
             form: 'stable', badges: {}, skills: [], lastPlayedAt: new Date().toISOString(),
         };
         setAllPlayers(prev => [...prev, newPlayer]);
+        // CRITICAL FIX: Save the new player to the database immediately upon creation.
+        saveSinglePlayerToDB(newPlayer);
     };
 
     const getTierGlowClass = (tier: PlayerTier) => {

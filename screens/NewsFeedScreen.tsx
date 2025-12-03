@@ -10,13 +10,23 @@ import { shareOrDownloadImages } from '../services/export';
 import { StarIcon } from '../icons';
 
 const NewsCardItem: React.FC<{ item: NewsItem; onClickProfile: () => void }> = ({ item, onClickProfile }) => {
-    // We export the inner specific card content to ensure rounded corners are respected
     const exportRef = React.useRef<HTMLDivElement>(null);
+    const [isSharing, setIsSharing] = React.useState(false);
     
-    const handleShare = (e: React.MouseEvent) => {
+    const handleShare = async (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (exportRef.current) {
-            shareOrDownloadImages([exportRef.current], `News_${item.playerName}`, item.timestamp.split('T')[0]);
+        if (isSharing || !exportRef.current) return;
+
+        setIsSharing(true);
+        // Wait for UI to update with loading state
+        await new Promise(res => setTimeout(res, 50)); 
+
+        try {
+            await shareOrDownloadImages(exportRef.current.id, `News_${item.playerName}`, item.timestamp.split('T')[0]);
+        } catch (error) {
+            console.error("News sharing failed:", error);
+        } finally {
+            setIsSharing(false);
         }
     };
 
@@ -31,16 +41,10 @@ const NewsCardItem: React.FC<{ item: NewsItem; onClickProfile: () => void }> = (
 
     return (
         <div className="w-full mb-3 bg-transparent font-oxanium">
-            {/* Wrapper Card (invisible layout container) */}
             <div className="bg-transparent">
-                {/* 
-                   Content Container - This is what gets exported. 
-                   We ensure it has the background, borders, and radius so html2canvas captures it correctly.
-                   CRITICAL: The background color must be set here, not on a parent, for corners to be transparent in PNG.
-                   UPDATED: Changed background to a much darker, almost solid black (#050505) for better text contrast.
-                */}
                 <div 
                     ref={exportRef}
+                    id={`news-card-export-${item.id}`}
                     data-export-target="true"
                     className={`
                         relative overflow-hidden rounded-xl bg-[#050505]
@@ -48,14 +52,12 @@ const NewsCardItem: React.FC<{ item: NewsItem; onClickProfile: () => void }> = (
                         ${item.isHot ? 'border-orange-500/50 shadow-[0_0_15px_rgba(249,115,22,0.2)]' : 'border-dark-accent-start/30 shadow-[0_0_10px_rgba(0,242,254,0.1)]'}
                     `}
                 >
-                    {/* Header Strip */}
                     <div className={`
                         h-1 w-full
                         ${item.isHot ? 'bg-gradient-to-r from-red-500 via-yellow-500 to-red-500 animate-pulse' : 'bg-dark-accent-start/50'}
                     `}></div>
                     
                     <div className="p-3">
-                        {/* Timestamp & Type */}
                         <div className="flex justify-between items-center mb-1.5">
                             <span className="text-[10px] text-dark-text-secondary font-bold tracking-widest uppercase font-sans">
                                 {timeAgo(item.timestamp)} • CLUB NEWS
@@ -63,24 +65,28 @@ const NewsCardItem: React.FC<{ item: NewsItem; onClickProfile: () => void }> = (
                             {item.isHot && <span className="text-lg animate-bounce">🔥</span>}
                         </div>
 
-                        {/* Content Grid */}
                         <div className="flex gap-3 items-start">
-                            <div className="shrink-0 cursor-pointer flex flex-col items-center gap-1" onClick={onClickProfile}>
-                                <PlayerAvatar 
-                                    player={{ 
-                                        id: item.playerId, 
-                                        nickname: item.playerName, 
-                                        photo: item.playerPhoto 
-                                    } as any} 
-                                    size="md" 
-                                />
-                                {item.statsSnapshot && (
-                                    <div className="text-center font-sans">
-                                        <div className="inline-flex items-center gap-1 bg-dark-bg/80 px-1.5 py-px rounded text-[10px] font-bold border border-white/10">
-                                            <span className="text-dark-accent-start">{item.statsSnapshot.rating}</span>
+                             <div className="shrink-0 cursor-pointer" onClick={onClickProfile}>
+                                <div className="relative"> {/* Wrapper for positioning context */}
+                                    <PlayerAvatar 
+                                        player={{ 
+                                            id: item.playerId, 
+                                            nickname: item.playerName, 
+                                            photo: item.playerPhoto 
+                                        } as any} 
+                                        size="md" 
+                                    />
+                                    {item.statsSnapshot && (
+                                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2">
+                                            <span 
+                                                className="text-lg font-black text-dark-accent-start" 
+                                                style={{ textShadow: '0 1px 4px rgba(0,0,0,0.7)' }}
+                                            >
+                                                {item.statsSnapshot.rating}
+                                            </span>
                                         </div>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
                             </div>
 
                             <div className="flex-grow">
@@ -95,12 +101,12 @@ const NewsCardItem: React.FC<{ item: NewsItem; onClickProfile: () => void }> = (
                             </div>
                         </div>
 
-                        {/* Actions Footer - Hidden during export */}
                         <div className="mt-2 pt-2 border-t border-white/5 flex justify-end gap-2 font-sans" data-html2canvas-ignore="true">
                             <Button 
                                 variant="ghost" 
                                 className="!py-1 !px-2 !text-xs font-bold text-dark-text-secondary hover:text-white"
                                 onClick={onClickProfile}
+                                disabled={isSharing}
                             >
                                 PROFILE
                             </Button>
@@ -108,8 +114,9 @@ const NewsCardItem: React.FC<{ item: NewsItem; onClickProfile: () => void }> = (
                                 variant="secondary" 
                                 className={`!py-1 !px-3 !text-xs font-bold !rounded-lg ${item.isHot ? '!border-orange-500/40 text-orange-200' : ''}`}
                                 onClick={handleShare}
+                                disabled={isSharing}
                             >
-                                SHARE NEWS
+                                {isSharing ? 'SHARING...' : 'SHARE NEWS'}
                             </Button>
                         </div>
                     </div>
@@ -124,7 +131,6 @@ export const NewsFeedScreen: React.FC = () => {
     const t = useTranslation();
     const navigate = useNavigate();
 
-    // Sort news by date descending
     const sortedNews = [...newsFeed].sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
     return (
@@ -152,7 +158,6 @@ export const NewsFeedScreen: React.FC = () => {
                 </div>
             )}
             
-            {/* Back Button specifically for this page flow */}
             <div className="fixed bottom-24 left-4 z-50">
                  <Button variant="secondary" onClick={() => navigate(-1)} className="!rounded-full !p-3 !bg-dark-surface/80 shadow-lg border border-white/10">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>

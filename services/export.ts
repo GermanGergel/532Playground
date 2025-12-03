@@ -79,51 +79,77 @@ export const exportSessionAsJson = async (session: Session) => {
 };
 
 
-export const shareOrDownloadImages = async (elementRefs: (HTMLElement | null)[], sessionName: string, date: string, sectionName?: string) => {
-    const validElements = elementRefs.filter((el): el is HTMLElement => el !== null);
+// NEW HELPER FUNCTION TO FIX RACE CONDITION
+const waitForImages = (container: HTMLElement): Promise<void[]> => {
+    const images = Array.from(container.getElementsByTagName('img'));
+    return Promise.all(
+        images.map(img => {
+            return new Promise<void>((resolve, reject) => {
+                // If the image is already loaded (e.g., from cache), resolve immediately.
+                if (img.complete) {
+                    resolve();
+                } else {
+                    // Otherwise, wait for it to load.
+                    img.onload = () => resolve();
+                    // Or reject if it fails to load.
+                    img.onerror = () => reject(new Error(`Could not load image: ${img.src}`));
+                }
+            });
+        })
+    );
+};
 
-    if (validElements.length === 0) {
-        console.error('Could not find the elements to export.');
-        alert('Image export failed: library or elements not found.');
+
+export const shareOrDownloadImages = async (elementId: string, sessionName: string, date: string, sectionName?: string) => {
+    const element = document.getElementById(elementId);
+
+    if (!element) {
+        console.error(`Could not find the element with ID #${elementId} to export.`);
+        alert('Image export failed: element not found.');
         return;
     }
     
+    // FIX: Wait for all images inside the element to load before capturing.
+    // This prevents race conditions where the capture happens before an image is downloaded.
+    try {
+        await waitForImages(element);
+    } catch (error) {
+        console.error("Error waiting for images to load before export:", error);
+        // We can choose to proceed anyway, but it might result in a broken image.
+    }
+
     const files: File[] = [];
 
-    // Process each element sequentially
-    for (let i = 0; i < validElements.length; i++) {
-        const element = validElements[i];
-        
-        try {
-            const canvas = await html2canvas(element, {
-                backgroundColor: null, // Transparent corners if container has them
-                scale: 2, // 2x resolution is a good balance of quality and speed
-                useCORS: true,
-                logging: false,
-                windowWidth: 1200, // Force desktop-like rendering width
-                onclone: (clonedDoc: Document) => {
-                    const clonedElement = clonedDoc.body.querySelector('[data-export-target="true"]');
-                    if (clonedElement) {
-                        (clonedElement as HTMLElement).style.visibility = 'visible';
-                    }
-                    // Hide specific elements marked to be ignored during export
-                    const ignoredElements = clonedDoc.body.querySelectorAll('[data-html2canvas-ignore="true"]');
-                    ignoredElements.forEach(el => (el as HTMLElement).style.display = 'none');
+    try {
+        const canvas = await html2canvas(element, {
+            backgroundColor: null, // Transparent corners if container has them
+            scale: 3, // OPTIMIZED: Increased for maximum quality exports.
+            useCORS: true,
+            logging: false,
+            windowWidth: 1200, // Force desktop-like rendering width
+            onclone: (clonedDoc: Document) => {
+                // Since we are cloning a specific ID, we can find it again
+                const clonedElement = clonedDoc.getElementById(elementId);
+                if (clonedElement) {
+                    // This element is already visible by nature of being cloned, so this might be redundant, but safe.
+                    clonedElement.style.visibility = 'visible';
                 }
-            });
-
-            const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png', 1.0)); // Use max quality PNG
-            
-            if (blob) {
-                const partSuffix = validElements.length > 1 ? `_Part${i + 1}` : '';
-                const sectionSuffix = sectionName ? `_${sectionName}` : '';
-                const filename = `532_Playground_${sessionName.replace(/\s/g, '_')}_${date}${sectionSuffix}${partSuffix}.png`;
-                files.push(new File([blob], filename, { type: 'image/png' }));
+                // Hide specific elements marked to be ignored during export
+                const ignoredElements = clonedDoc.body.querySelectorAll('[data-html2canvas-ignore="true"]');
+                ignoredElements.forEach(el => (el as HTMLElement).style.display = 'none');
             }
+        });
 
-        } catch (error) {
-            console.error(`Failed to capture image part ${i + 1}:`, error);
+        const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png', 1.0)); // Use max quality PNG
+        
+        if (blob) {
+            const sectionSuffix = sectionName ? `_${sectionName}` : '';
+            const filename = `532_Playground_${sessionName.replace(/\s/g, '_')}_${date}${sectionSuffix}.png`;
+            files.push(new File([blob], filename, { type: 'image/png' }));
         }
+
+    } catch (error) {
+        console.error(`Failed to capture image for element #${elementId}:`, error);
     }
 
     if (files.length === 0) return;

@@ -67,7 +67,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                         {teamStats.map(({ team, gamesPlayed, wins, draws, losses, goalDifference, points }, index) => (
                             <tr key={team.id} className="border-t border-white/10">
                                 <td className="py-2 px-1 text-left">{index + 1}</td>
-                                <td className={`py-2 px-1 flex justify-center`}><TeamAvatar team={team} size="xxs" /></td>
+                                <td className={`py-2 px-1 flex justify-center`}><TeamAvatar team={team} size="xxs" className={isExport ? 'translate-y-2' : ''} /></td>
                                 <td className="py-2 px-1">{gamesPlayed}</td>
                                 <td className="py-2 px-1">{wins}</td>
                                 <td className="py-2 px-1">{draws}</td>
@@ -105,7 +105,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                              <tr key={stats.player.id} className="border-t border-white/10">
                                 <td className="py-2 px-1 text-left">{index + 1}</td>
                                 <td className="py-2 px-1 text-left font-semibold truncate">{stats.player.nickname}</td>
-                                <td className="py-2 px-1"><TeamAvatar team={stats.team} size="xxs" className="mx-auto" /></td>
+                                <td className="py-2 px-1"><TeamAvatar team={stats.team} size="xxs" className={`mx-auto ${isExport ? 'translate-y-2' : ''}`} /></td>
                                 <td className="py-2 px-1">{stats.gamesPlayed}</td>
                                 <td className="py-2 px-1">{stats.goals}</td>
                                 <td className="py-2 px-1">{stats.assists}</td>
@@ -132,10 +132,10 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                         return (
                              <li key={game.id} className="flex items-center justify-between py-2 border-t border-white/10 first:border-t-0">
                                 <span className="text-dark-text-secondary text-sm">{t.round} {game.gameNumber}</span>
-                                <div className="flex items-center justify-end gap-3 flex-grow">
-                                    <TeamAvatar team={team1} size="xxs" />
-                                    <span className="font-bold text-sm">{game.team1Score} : {game.team2Score}</span>
-                                    <TeamAvatar team={team2} size="xxs" />
+                                <div className="flex items-center justify-end gap-2 flex-grow">
+                                    <TeamAvatar team={team1} size="xxs" className={isExport ? 'translate-y-2' : ''} />
+                                    <span className={`font-bold tabular-nums w-16 text-center ${isExport ? 'text-lg' : 'text-sm'}`}>{game.team1Score} : {game.team2Score}</span>
+                                    <TeamAvatar team={team2} size="xxs" className={isExport ? 'translate-y-2' : ''} />
                                 </div>
                             </li>
                         )
@@ -183,6 +183,7 @@ export const StatisticsScreen: React.FC = () => {
     const t = useTranslation();
     const navigate = useNavigate();
     const [isDownloadModalOpen, setIsDownloadModalOpen] = React.useState(false);
+    const [isExporting, setIsExporting] = React.useState(false);
     const exportContainerRef = React.useRef<HTMLDivElement>(null);
     
     React.useEffect(() => {
@@ -191,15 +192,29 @@ export const StatisticsScreen: React.FC = () => {
 
     if (!activeSession) return null;
     
-    const handleExport = (section: 'standings' | 'players' | 'rounds') => {
-        if (!exportContainerRef.current) return;
-        
+    const handleExport = async (section: 'standings' | 'players' | 'rounds') => {
+        if (isExporting || !exportContainerRef.current) return;
+        setIsExporting(true);
+
+        // Wait for UI to update with loading state
+        await new Promise(res => setTimeout(res, 50));
+
         const targetElement = exportContainerRef.current.querySelector(`[data-export-section="${section}"]`) as HTMLElement | null;
+        const exportId = `export-target-${section}-${newId()}`;
 
         if (targetElement) {
-            shareOrDownloadImages([targetElement], activeSession.sessionName, activeSession.date, section.charAt(0).toUpperCase() + section.slice(1));
+            targetElement.id = exportId;
+            try {
+                await shareOrDownloadImages(exportId, activeSession.sessionName, activeSession.date, section.charAt(0).toUpperCase() + section.slice(1));
+            } finally {
+                targetElement.id = ''; // Cleanup ID
+                setIsExporting(false);
+                setIsDownloadModalOpen(false);
+            }
+        } else {
+            console.error(`Export target for section "${section}" not found.`);
+            setIsExporting(false);
         }
-        setIsDownloadModalOpen(false);
     };
 
     const displayDate = new Date(activeSession.date).toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -214,10 +229,10 @@ export const StatisticsScreen: React.FC = () => {
                 containerClassName="border border-dark-accent-start/40 shadow-[0_0_20px_rgba(0,242,254,0.3)]"
             >
                 <div className="flex flex-col gap-3">
-                    <Button variant="secondary" onClick={() => handleExport('standings')} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.exportStandings}</Button>
-                    <Button variant="secondary" onClick={() => handleExport('players')} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.exportPlayers}</Button>
-                    <Button variant="secondary" onClick={() => handleExport('rounds')} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.exportRounds}</Button>
-                    <Button variant="secondary" onClick={() => setIsDownloadModalOpen(false)} className="w-full mt-2 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.cancel}</Button>
+                    <Button variant="secondary" onClick={() => handleExport('standings')} disabled={isExporting} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{isExporting ? 'Exporting...' : t.exportStandings}</Button>
+                    <Button variant="secondary" onClick={() => handleExport('players')} disabled={isExporting} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{isExporting ? 'Exporting...' : t.exportPlayers}</Button>
+                    <Button variant="secondary" onClick={() => handleExport('rounds')} disabled={isExporting} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{isExporting ? 'Exporting...' : t.exportRounds}</Button>
+                    <Button variant="secondary" onClick={() => setIsDownloadModalOpen(false)} disabled={isExporting} className="w-full mt-2 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.cancel}</Button>
                 </div>
             </Modal>
             <header className="text-center shrink-0 pt-4 mb-6">

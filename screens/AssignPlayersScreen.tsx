@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -9,6 +10,7 @@ import { Team, Player, Game, GameStatus, EventLogEntry, EventType, StartRoundPay
 import { TeamColorPickerModal } from '../modals';
 import { newId, hexToRgba } from './utils';
 import { getTierForRating } from '../services/rating';
+import { saveSinglePlayerToDB } from '../db';
 
 const COLORS = [
   '#FF5733', '#33FF57', '#3357FF', '#FF33A1', '#A133FF', '#33FFA1',
@@ -98,6 +100,7 @@ export const AssignPlayersScreen: React.FC = () => {
                     form: 'stable', badges: {}, skills: [], lastPlayedAt: new Date().toISOString(),
                 };
                 setAllPlayers(prev => [...prev, playerToAdd]);
+                saveSinglePlayerToDB(playerToAdd); // Save new player to DB immediately
             }
         }
         

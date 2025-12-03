@@ -76,6 +76,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     totalSessionsPlayed: (p.totalSessionsPlayed ?? Math.round(p.totalGames / 15)) || 0,
                     monthlySessionsPlayed: (p.monthlySessionsPlayed ?? Math.round(p.monthlyGames / 15)) || 0,
                     lastRatingChange: p.lastRatingChange || undefined,
+                    sessionHistory: p.sessionHistory || [], // CRITICAL FIX: Ensure sessionHistory is always an array to prevent crashes.
                 };
             });
             
@@ -127,11 +128,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [activeSession, isLoading]);
 
+  // CRITICAL FIX: Removed the inefficient useEffect that saved the entire player list on any change.
+  // This prevents hitting Supabase payload size limits with large base64 photos.
+  // Saving is now handled atomically where data is modified (e.g., PlayerProfileScreen, AssignPlayersScreen).
+  /*
   React.useEffect(() => {
     if(!isLoading) {
         savePlayersToDB(allPlayers);
     }
   }, [allPlayers, isLoading]);
+  */
 
   React.useEffect(() => {
     if(!isLoading) {

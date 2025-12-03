@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import { Player, Session, NewsItem } from './types';
 import { Language } from './translations';
@@ -49,7 +50,96 @@ const logStorageMode = () => {
     }
 };
 
-// --- PLAYERS ---
+// --- BASE64 to Blob HELPER ---
+const base64ToBlob = (base64: string, contentType: string = 'image/png'): Blob => {
+    const byteCharacters = atob(base64.split(',')[1]);
+    const byteArrays = [];
+    for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+        const slice = byteCharacters.slice(offset, offset + 512);
+        const byteNumbers = new Array(slice.length);
+        for (let i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        byteArrays.push(byteArray);
+    }
+    return new Blob(byteArrays, { type: contentType });
+};
+
+
+// --- PLAYER IMAGES (Supabase Storage) ---
+const BUCKET_NAME = 'player_images';
+
+export const uploadPlayerImage = async (playerId: string, base64Image: string, type: 'avatar' | 'card'): Promise<string | null> => {
+    if (!isSupabaseConfigured()) return null;
+
+    try {
+        const blob = base64ToBlob(base64Image);
+        const filePath = `${playerId}/${type}_${Date.now()}.png`;
+
+        const { error: uploadError } = await supabase!.storage
+            .from(BUCKET_NAME)
+            .upload(filePath, blob, {
+                cacheControl: '3600',
+                upsert: true, 
+            });
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase!.storage.from(BUCKET_NAME).getPublicUrl(filePath);
+        return data.publicUrl;
+
+    } catch (error) {
+        console.error('Error uploading image:', error);
+        return null;
+    }
+};
+
+export const deletePlayerImage = async (imageUrl: string) => {
+    if (!isSupabaseConfigured() || !imageUrl) return;
+
+    try {
+        // Only attempt to delete if it's a Supabase URL, not a local base64 string
+        if (!imageUrl.startsWith('https://')) return;
+
+        const url = new URL(imageUrl);
+        const path = url.pathname.split(`/${BUCKET_NAME}/`)[1];
+        if (!path) return;
+
+        await supabase!.storage.from(BUCKET_NAME).remove([path]);
+    } catch (error) {
+        console.error("Error deleting old image:", error);
+    }
+};
+
+// --- SINGLE PLAYER SAVE (ATOMIC) ---
+export const saveSinglePlayerToDB = async (player: Player) => {
+    if (!isSupabaseConfigured()) {
+        // Fallback for local-only mode: load all, update one, save all
+        const allPlayers = await get<Player[]>('players') || [];
+        const playerIndex = allPlayers.findIndex(p => p.id === player.id);
+        if (playerIndex > -1) {
+            allPlayers[playerIndex] = player;
+        } else {
+            allPlayers.push(player);
+        }
+        await set('players', allPlayers);
+        return;
+    }
+
+    // Supabase Mode
+    try {
+        const { error } = await supabase!
+            .from('players')
+            .upsert(player, { onConflict: 'id' });
+        if (error) throw error;
+    } catch (error) {
+        console.error("Supabase Save Single Player Error:", error);
+    }
+};
+
+
+// --- PLAYERS (Legacy bulk save, not recommended for frequent use) ---
 export const savePlayersToDB = async (players: Player[]) => {
     logStorageMode();
     

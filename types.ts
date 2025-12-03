@@ -49,8 +49,8 @@ export interface Player {
   id: string;
   nickname: string;
   surname: string;
-  photo?: string; // base64 string for avatar
-  playerCard?: string; // base64 string for the full card
+  photo?: string; // URL to avatar in Supabase Storage
+  playerCard?: string; // URL to the full card image in Supabase Storage
   createdAt: string; // ISO string
   countryCode?: string; // e.g., 'RU', 'US', 'BR'
   

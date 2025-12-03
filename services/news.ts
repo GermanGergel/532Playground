@@ -1,4 +1,3 @@
-
 import { Player, NewsItem, NewsType, PlayerTier, BadgeType } from '../types';
 import { newId } from '../screens/utils';
 
@@ -6,77 +5,70 @@ import { newId } from '../screens/utils';
 
 const STANDARD_HASHTAGS = "#532Playground #ClubNews";
 
+// Helper to assign a priority to a news item
+const getNewsPriority = (item: Omit<NewsItem, 'id' | 'timestamp'>): number => {
+    switch(item.type) {
+        case 'tier_up':
+            return (item.statsSnapshot?.tier === PlayerTier.Legend || item.statsSnapshot?.tier === PlayerTier.Elite) ? 10 : 9;
+        case 'badge':
+            return item.isHot ? 8 : 7;
+        case 'milestone':
+            const milestoneValue = parseInt(item.message.match(/\d+/)?.[0] || '0', 10);
+            return milestoneValue >= 100 ? 7 : 6;
+        case 'hot_streak':
+            return 5;
+        default:
+            return 0;
+    }
+}
+
 // Determines if a change is significant enough to be news
 export const generateNewsUpdates = (oldPlayers: Player[], newPlayers: Player[]): NewsItem[] => {
-    const news: NewsItem[] = [];
+    const potentialNews: Omit<NewsItem, 'id' | 'timestamp'>[] = [];
     const timestamp = new Date().toISOString();
 
-    // Map old players for easy lookup
     const oldPlayerMap = new Map(oldPlayers.map(p => [p.id, p]));
 
     newPlayers.forEach(newPlayer => {
         const oldPlayer = oldPlayerMap.get(newPlayer.id);
-        if (!oldPlayer) return; // New player added, skip for now to avoid spam
+        if (!oldPlayer) return;
 
-        // 1. MILESTONES (Goals/Assists/Wins)
-        checkMilestone(news, newPlayer, oldPlayer.totalGoals, newPlayer.totalGoals, [50, 100, 150, 200, 300, 400, 500], 'Goals', 'GOAL MACHINE');
-        checkMilestone(news, newPlayer, oldPlayer.totalAssists, newPlayer.totalAssists, [50, 100, 150, 200, 300], 'Assists', 'THE ARCHITECT');
-        checkMilestone(news, newPlayer, oldPlayer.totalWins, newPlayer.totalWins, [50, 100, 200], 'Wins', 'BORN WINNER');
-        checkMilestone(news, newPlayer, oldPlayer.totalSessionsPlayed, newPlayer.totalSessionsPlayed, [50, 100], 'Sessions', 'CLUB VETERAN');
+        // 1. MILESTONES
+        checkMilestone(potentialNews, newPlayer, oldPlayer.totalGoals, newPlayer.totalGoals, [50, 100, 150, 200, 300, 400, 500], 'Goals', 'GOAL MACHINE');
+        checkMilestone(potentialNews, newPlayer, oldPlayer.totalAssists, newPlayer.totalAssists, [50, 100, 150, 200, 300], 'Assists', 'THE ARCHITECT');
+        checkMilestone(potentialNews, newPlayer, oldPlayer.totalWins, newPlayer.totalWins, [50, 100, 200], 'Wins', 'BORN WINNER');
+        checkMilestone(potentialNews, newPlayer, oldPlayer.totalSessionsPlayed, newPlayer.totalSessionsPlayed, [50, 100], 'Sessions', 'CLUB VETERAN');
 
         // 2. TIER CHANGE (Promotion only)
         if (getTierRank(newPlayer.tier) > getTierRank(oldPlayer.tier)) {
-            news.push({
-                id: newId(),
+            potentialNews.push({
                 playerId: newPlayer.id,
                 playerName: newPlayer.nickname,
                 playerPhoto: newPlayer.photo,
                 type: 'tier_up',
                 message: `${newPlayer.nickname} has been promoted to ${newPlayer.tier.toUpperCase()} tier!`,
                 subMessage: `${STANDARD_HASHTAGS} #LevelUp #${newPlayer.tier} #532Elite`,
-                timestamp,
                 isHot: newPlayer.tier === PlayerTier.Legend || newPlayer.tier === PlayerTier.Elite,
                 statsSnapshot: { rating: newPlayer.rating, tier: newPlayer.tier }
             });
         }
 
-        // 3. RATING SURGE (Big jump in one session)
-        const ratingDiff = newPlayer.rating - oldPlayer.rating;
-        if (ratingDiff >= 1.5) {
-             news.push({
-                id: newId(),
-                playerId: newPlayer.id,
-                playerName: newPlayer.nickname,
-                playerPhoto: newPlayer.photo,
-                type: 'rating_surge',
-                message: `${newPlayer.nickname} creates chaos! Rating skyrocketed by +${ratingDiff.toFixed(1)} in one session.`,
-                subMessage: `${STANDARD_HASHTAGS} #OnFire #Unstoppable #RatingBoost`,
-                timestamp,
-                isHot: true,
-                statsSnapshot: { rating: newPlayer.rating, tier: newPlayer.tier }
-            });
-        }
-
-        // 4. RARE BADGES EARNED
+        // 3. RARE BADGES EARNED
         const oldBadges = Object.keys(oldPlayer.badges || {}).length;
         const newBadges = Object.keys(newPlayer.badges || {}).length;
         
         if (newBadges > oldBadges) {
-            // Find which badges are new
             const earned = (Object.keys(newPlayer.badges || {}) as BadgeType[]).filter(b => !(oldPlayer.badges || {})[b]);
-            
             earned.forEach(badge => {
                 const config = getBadgeNewsConfig(badge);
                 if (config) {
-                    news.push({
-                        id: newId(),
+                    potentialNews.push({
                         playerId: newPlayer.id,
                         playerName: newPlayer.nickname,
                         playerPhoto: newPlayer.photo,
                         type: 'badge',
                         message: `${newPlayer.nickname} unlocked the ${config.name} badge!`,
                         subMessage: `${STANDARD_HASHTAGS} ${config.hashtags}`,
-                        timestamp,
                         isHot: config.isHot,
                         statsSnapshot: { rating: newPlayer.rating, tier: newPlayer.tier }
                     });
@@ -84,24 +76,31 @@ export const generateNewsUpdates = (oldPlayers: Player[], newPlayers: Player[]):
             });
         }
 
-        // 5. FORM CHANGE (Cold -> Hot)
+        // 4. FORM CHANGE (Cold -> Hot)
         if (oldPlayer.form !== 'hot_streak' && newPlayer.form === 'hot_streak') {
-             news.push({
-                id: newId(),
+             potentialNews.push({
                 playerId: newPlayer.id,
                 playerName: newPlayer.nickname,
                 playerPhoto: newPlayer.photo,
                 type: 'hot_streak',
                 message: `${newPlayer.nickname} is heating up! Currently on a HOT STREAK.`,
                 subMessage: `${STANDARD_HASHTAGS} #HotStreak #InForm`,
-                timestamp,
-                isHot: false, // Standard news
+                isHot: false,
                 statsSnapshot: { rating: newPlayer.rating, tier: newPlayer.tier }
             });
         }
     });
 
-    return news;
+    // Sort by priority and take the top 5
+    const sortedNews = potentialNews
+        .map(item => ({ ...item, priority: getNewsPriority(item) }))
+        .sort((a, b) => b.priority - a.priority);
+        
+    return sortedNews.slice(0, 5).map(item => ({
+        ...item,
+        id: newId(),
+        timestamp: timestamp
+    }));
 };
 
 // --- FEED MANAGEMENT (Cleanup) ---
@@ -130,7 +129,7 @@ export const manageNewsFeedSize = (currentFeed: NewsItem[]): NewsItem[] => {
 
 // Helper for milestones
 const checkMilestone = (
-    news: NewsItem[], 
+    news: Omit<NewsItem, 'id' | 'timestamp'>[], 
     player: Player, 
     oldVal: number, 
     newVal: number, 
@@ -141,14 +140,12 @@ const checkMilestone = (
     milestones.forEach(m => {
         if (oldVal < m && newVal >= m) {
             news.push({
-                id: newId(),
                 playerId: player.id,
                 playerName: player.nickname,
                 playerPhoto: player.photo,
                 type: 'milestone',
                 message: `${title}: ${player.nickname} reached ${m} career ${label}!`,
                 subMessage: `${STANDARD_HASHTAGS} #Milestone #${m}${label}`,
-                timestamp: new Date().toISOString(),
                 isHot: m >= 100, // 100+ is hot
                 statsSnapshot: { rating: player.rating, tier: player.tier }
             });
