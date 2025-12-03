@@ -15,7 +15,7 @@ import html2canvas from 'html2canvas'; // Import html2canvas
 
 export const PlayerProfileScreen: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-    const { allPlayers, setAllPlayers, isLoading } = useApp();
+    const { allPlayers, setAllPlayers } = useApp();
     const t = useTranslation();
     const navigate = useNavigate();
 
@@ -26,19 +26,23 @@ export const PlayerProfileScreen: React.FC = () => {
     
     const player = allPlayers.find(p => p.id === id);
 
-    // --- DATA VALIDATION & RACE CONDITION FIX ---
     React.useEffect(() => {
-        // This effect runs after rendering. If data loading is finished (`!isLoading`)
-        // and the player is still not found in the list, it's a genuine "not found" case.
-        // We can then safely navigate away.
-        if (!isLoading && !player) {
-            navigate('/player-database', { replace: true });
+        // This is the restored, working logic.
+        // If the component renders and the player isn't found (even after data loading),
+        // it navigates away. If data is still loading, it simply returns null and waits for a re-render.
+        if (!player) {
+            const timer = setTimeout(() => {
+                // Check again after a short delay to ensure data has had a chance to load.
+                if (allPlayers.length > 0 && !allPlayers.find(p => p.id === id)) {
+                    navigate('/player-database', { replace: true });
+                }
+            }, 500); // A small delay to prevent navigating away during data load.
+            return () => clearTimeout(timer);
         }
-    }, [isLoading, player, navigate]);
+    }, [player, allPlayers, id, navigate]);
 
-    // If the player isn't found during the initial render cycles (while data might still be propagating from context),
-    // render nothing (`null`). This prevents a premature "Not Found" message and allows React to
-    // process the state update for `allPlayers` and re-render with the correct data.
+    // If the player isn't available on the first render, return null and let the useEffect handle it.
+    // This prevents rendering an empty state and avoids crashes.
     if (!player) {
         return null;
     }

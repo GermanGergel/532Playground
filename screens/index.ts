@@ -1,10 +1,12 @@
 
 
+
 export { HomeScreen } from './HomeScreen';
 export { NewGameSetupScreen } from './NewGameSetupScreen';
 export { AssignPlayersScreen } from './AssignPlayersScreen';
 export { LiveMatchScreen } from './LiveMatchScreen';
-export { StatisticsScreen, BrandedShareableReport } from './StatisticsScreen';
+// FIX: Corrected typo from BrandedShareableReport to the actually exported ShareableReport.
+export { StatisticsScreen, ShareableReport } from './StatisticsScreen';
 export { SessionReportScreen } from './SessionReportScreen';
 export { HistoryScreen } from './HistoryScreen';
 export { SettingsScreen } from './SettingsScreen';
