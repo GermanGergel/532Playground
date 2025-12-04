@@ -6,11 +6,6 @@ import { Page, Button, Modal, useTranslation } from '../ui';
 import { shareOrDownloadImages, exportSessionAsJson } from '../services/export';
 import { BrandedHeader, newId } from './utils';
 import { ShareableReport } from './StatisticsScreen';
-import { calculateAllStats } from '../services/statistics';
-import { calculateEarnedBadges, calculateRatingUpdate, getTierForRating } from '../services/rating';
-import { generateNewsUpdates, manageNewsFeedSize } from '../services/news';
-import { savePlayersToDB, saveNewsToDB, saveHistoryToDB } from '../db';
-import { Player, BadgeType, RatingBreakdown } from '../types';
 
 // Re-defining BrandedShareableReport locally to avoid import issues
 const BrandedShareableReport: React.FC<{
@@ -47,12 +42,11 @@ const BrandedShareableReport: React.FC<{
 
 export const SessionReportScreen: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-    const { history, isLoading, setAllPlayers, setNewsFeed, setHistory, allPlayers: currentGlobalPlayers, newsFeed: currentNews } = useApp();
+    const { history, isLoading } = useApp();
     const t = useTranslation();
     const navigate = useNavigate();
     const [isDownloadModalOpen, setIsDownloadModalOpen] = React.useState(false);
     const [isExporting, setIsExporting] = React.useState(false);
-    const [isRecovering, setIsRecovering] = React.useState(false);
     const exportContainerRef = React.useRef<HTMLDivElement>(null);
 
     const session = history.find(s => s.id === id);
@@ -71,117 +65,6 @@ export const SessionReportScreen: React.FC = () => {
     if (!session) {
         return null;
     }
-    
-    // --- RESTORED RECOVERY FUNCTIONALITY ---
-    const handleRecoverStats = async () => {
-        if (!session || isRecovering || !window.confirm("⚠️ This will RECALCULATE all stats for players in this session and save to database. Use only if data was lost. Continue?")) return;
-        setIsRecovering(true);
-
-        try {
-            // 1. Calculate Stats based on this session
-            const { allPlayersStats } = calculateAllStats(session);
-            
-            // 2. Map updates to current global players
-            const updatedPlayers: Player[] = [];
-            const playersToSaveToDB: Player[] = [];
-
-            const newPlayersList = currentGlobalPlayers.map(player => {
-                const sessionStats = allPlayersStats.find(s => s.player.id === player.id);
-                
-                // If player didn't play in this session, skip update
-                if (!sessionStats || sessionStats.gamesPlayed === 0) return player;
-
-                // Re-apply stats addition (Note: this adds ON TOP of current. 
-                // If data is already correct in memory, this will double count.
-                // Assuming user uses this when data is MISSING).
-                
-                // However, to be safe, we should probably just re-save the current state if it's correct?
-                // No, the user asked for the RECOVER function.
-                // Standard logic:
-                
-                const updatedPlayer: Player = {
-                    ...player,
-                    totalGames: player.totalGames + sessionStats.gamesPlayed,
-                    totalGoals: player.totalGoals + sessionStats.goals,
-                    totalAssists: player.totalAssists + sessionStats.assists,
-                    totalWins: player.totalWins + sessionStats.wins,
-                    totalDraws: player.totalDraws + sessionStats.draws,
-                    totalLosses: player.totalLosses + sessionStats.losses,
-                    totalSessionsPlayed: (player.totalSessionsPlayed || 0) + 1,
-                    // Basic Month logic (assume current month for recovery)
-                    monthlyGames: player.monthlyGames + sessionStats.gamesPlayed,
-                    monthlyGoals: player.monthlyGoals + sessionStats.goals,
-                    monthlyAssists: player.monthlyAssists + sessionStats.assists,
-                    monthlyWins: player.monthlyWins + sessionStats.wins,
-                    monthlySessionsPlayed: (player.monthlySessionsPlayed || 0) + 1,
-                    lastPlayedAt: new Date().toISOString(),
-                };
-
-                // Recalculate Badges & Rating
-                const badgesEarnedThisSession = calculateEarnedBadges(player, sessionStats, session, allPlayersStats);
-                const currentBadges = player.badges || {};
-                const badgesNewThisSession = badgesEarnedThisSession.filter(b => !currentBadges[b]);
-
-                const { delta, breakdown } = calculateRatingUpdate(player, sessionStats, session, badgesNewThisSession);
-                const newRating = Math.round(player.rating + delta);
-                const newTier = getTierForRating(newRating);
-                
-                let newForm: 'hot_streak' | 'stable' | 'cold_streak' = 'stable';
-                if (delta >= 0.5) newForm = 'hot_streak';
-                else if (delta <= -0.5) newForm = 'cold_streak';
-
-                const updatedBadges: Partial<Record<BadgeType, number>> = { ...currentBadges };
-                badgesEarnedThisSession.forEach(badge => {
-                    updatedBadges[badge] = (updatedBadges[badge] || 0) + 1;
-                });
-
-                const sessionHistory = [...(player.sessionHistory || [])];
-                if (sessionStats.gamesPlayed > 0) {
-                    sessionHistory.push({ winRate: Math.round((sessionStats.wins / sessionStats.gamesPlayed) * 100) });
-                }
-                if (sessionHistory.length > 5) sessionHistory.shift();
-
-                const finalPlayer = {
-                    ...updatedPlayer,
-                    rating: newRating,
-                    tier: newTier,
-                    form: newForm,
-                    badges: updatedBadges,
-                    sessionHistory,
-                    lastRatingChange: breakdown
-                };
-                
-                updatedPlayers.push(finalPlayer);
-                playersToSaveToDB.push(finalPlayer); // Add to save list
-                return finalPlayer;
-            });
-
-            // 3. Update State
-            setAllPlayers(newPlayersList);
-
-            // 4. SAVE TO DB (Force)
-            if (playersToSaveToDB.length > 0) {
-                await savePlayersToDB(playersToSaveToDB); // Now uses chunking from db.ts
-            }
-
-            // 5. Generate News
-            const newNewsItems = generateNewsUpdates(currentGlobalPlayers, newPlayersList);
-            if (newNewsItems.length > 0) {
-                const updatedFeed = manageNewsFeedSize([...newNewsItems, ...currentNews]);
-                setNewsFeed(updatedFeed);
-                await saveNewsToDB(updatedFeed);
-            }
-            
-            alert("✅ Stats recovered and saved to Cloud Database!");
-
-        } catch (error) {
-            console.error("Recovery failed:", error);
-            alert("❌ Recovery failed. Check console.");
-        } finally {
-            setIsRecovering(false);
-        }
-    };
-
     
     const handleExport = async (section: 'standings' | 'players') => {
         if (isExporting || !exportContainerRef.current || !session) return;
@@ -235,19 +118,6 @@ export const SessionReportScreen: React.FC = () => {
                 <div className="mt-auto pt-6 w-full flex flex-col gap-3">
                     <Button variant="secondary" onClick={() => setIsDownloadModalOpen(true)} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 uppercase">{t.saveTable}</Button>
                     <Button variant="secondary" onClick={() => exportSessionAsJson(session)} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 uppercase">{t.exportJson}</Button>
-                    
-                    {/* RESTORED RECOVERY BUTTON */}
-                    <div className="pt-8 text-center">
-                        <p className="text-[10px] text-dark-text-secondary mb-2 uppercase tracking-widest">Danger Zone</p>
-                        <Button 
-                            variant="danger" 
-                            onClick={handleRecoverStats} 
-                            disabled={isRecovering}
-                            className="w-full !py-2 !text-xs opacity-70 hover:opacity-100"
-                        >
-                            {isRecovering ? 'RECOVERING...' : '🛠️ RECOVER MISSING STATS'}
-                        </Button>
-                    </div>
                 </div>
             </div>
 
