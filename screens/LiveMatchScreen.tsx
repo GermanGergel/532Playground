@@ -13,6 +13,7 @@ import { calculateEarnedBadges, calculateRatingUpdate, getTierForRating } from '
 import { generateNewsUpdates, manageNewsFeedSize } from '../services/news';
 import { GoalModal, EditGoalModal, EndSessionModal, SelectWinnerModal, SubstitutionModal } from '../modals';
 import { hexToRgba, newId } from './utils';
+import { savePlayersToDB, saveNewsToDB, saveHistoryToDB } from '../db'; // Added explicit DB save functions
 
 const GameIndicators: React.FC<{ count: number; color: string }> = ({ count, color }) => {
     return (
@@ -92,6 +93,7 @@ export const LiveMatchScreen: React.FC = () => {
     const [isEndSessionModalOpen, setIsEndSessionModalOpen] = React.useState(false);
     const [isSelectWinnerModalOpen, setIsSelectWinnerModalOpen] = React.useState(false);
     const [goalToEdit, setGoalToEdit] = React.useState<Goal | null>(null);
+    const [isSaving, setIsSaving] = React.useState(false); // Added loading state for save operation
     const [subModalState, setSubModalState] = React.useState<{
         isOpen: boolean;
         teamId?: string;
@@ -474,104 +476,134 @@ export const LiveMatchScreen: React.FC = () => {
         setSubModalState({ isOpen: false });
     };
     
-    const handleFinishSession = () => {
-        setIsEndSessionModalOpen(false);
-        if (!activeSession) return;
+    // UPDATED: Now Async to explicitly handle saving to DB
+    const handleFinishSession = async () => {
+        if (!activeSession || isSaving) return;
+        setIsSaving(true); // Start loading state
         
-        if (silentAudioRef.current) {
-            silentAudioRef.current.pause();
-        }
-
-        const { allPlayersStats } = calculateAllStats(activeSession);
-        
-        let calculatedNewPlayers: Player[] = [];
-
-        setAllPlayers(currentAllPlayers => {
-            const playerStatsMap = new Map(allPlayersStats.map(stat => [stat.player.id, stat]));
+        try {
+            setIsEndSessionModalOpen(false);
             
-            let updatedPlayers = currentAllPlayers.map(player => {
-                const sessionStats = playerStatsMap.get(player.id);
-                if (sessionStats) {
-                    const updatedPlayer: Player = {
-                        ...player,
-                        totalGames: player.totalGames + sessionStats.gamesPlayed,
-                        totalGoals: player.totalGoals + sessionStats.goals,
-                        totalAssists: player.totalAssists + sessionStats.assists,
-                        totalWins: player.totalWins + sessionStats.wins,
-                        totalDraws: player.totalDraws + sessionStats.draws,
-                        totalLosses: player.totalLosses + sessionStats.losses,
-                        totalSessionsPlayed: (player.totalSessionsPlayed || 0) + 1,
-                        monthlyGames: player.monthlyGames + sessionStats.gamesPlayed,
-                        monthlyGoals: player.monthlyGoals + sessionStats.goals,
-                        monthlyAssists: player.monthlyAssists + sessionStats.assists,
-                        monthlyWins: player.monthlyWins + sessionStats.wins,
-                        monthlySessionsPlayed: (player.monthlySessionsPlayed || 0) + 1,
-                        lastPlayedAt: new Date().toISOString(),
-                    };
-                    return updatedPlayer;
-                }
-                return player;
-            });
-
-            updatedPlayers = updatedPlayers.map(player => {
-                const sessionStats = playerStatsMap.get(player.id);
-                if (sessionStats) {
-                    const badgesEarnedThisSession = calculateEarnedBadges(player, sessionStats, activeSession, allPlayersStats);
-                    const currentBadges = player.badges || {};
-                    const badgesNewThisSession = badgesEarnedThisSession.filter(b => !currentBadges[b]);
-
-                    const { delta, breakdown } = calculateRatingUpdate(player, sessionStats, activeSession, badgesNewThisSession);
-                    const newRating = Math.round(player.rating + delta);
-                    
-                    let newForm: 'hot_streak' | 'stable' | 'cold_streak' = 'stable';
-                    if (delta >= 0.5) newForm = 'hot_streak';
-                    else if (delta <= -0.5) newForm = 'cold_streak';
-                    
-                    const newTier = getTierForRating(newRating);
-
-                    const updatedBadges: Partial<Record<BadgeType, number>> = { ...currentBadges };
-                    badgesEarnedThisSession.forEach(badge => {
-                        updatedBadges[badge] = (updatedBadges[badge] || 0) + 1;
-                    });
-                    
-                    const sessionHistory = [...(player.sessionHistory || [])];
-                    if (sessionStats.gamesPlayed > 0) {
-                        sessionHistory.push({ winRate: Math.round((sessionStats.wins / sessionStats.gamesPlayed) * 100) });
-                    }
-                    if (sessionHistory.length > 5) sessionHistory.shift();
-
-                    return { 
-                        ...player, 
-                        rating: newRating, 
-                        tier: newTier, 
-                        form: newForm,
-                        badges: updatedBadges,
-                        sessionHistory: sessionHistory,
-                        lastRatingChange: breakdown,
-                    };
-                }
-                return player;
-            });
-            
-            calculatedNewPlayers = updatedPlayers;
-            return updatedPlayers;
-        });
-
-        if (calculatedNewPlayers.length > 0) {
-            const newNewsItems = generateNewsUpdates(oldPlayersState, calculatedNewPlayers);
-            if (newNewsItems.length > 0) {
-                setNewsFeed(prev => manageNewsFeedSize([...newNewsItems, ...prev]));
+            if (silentAudioRef.current) {
+                silentAudioRef.current.pause();
             }
-        }
 
-        const finalSession: Session = { 
-            ...activeSession, 
-            status: SessionStatus.Completed,
-        };
-        
-        setHistory(prev => [finalSession, ...prev]);
-        setActiveSession(null);
-        navigate('/');
+            const { allPlayersStats } = calculateAllStats(activeSession);
+            
+            let calculatedNewPlayers: Player[] = [];
+
+            // 1. Calculate new player stats (in memory)
+            setAllPlayers(currentAllPlayers => {
+                const playerStatsMap = new Map(allPlayersStats.map(stat => [stat.player.id, stat]));
+                
+                let updatedPlayers = currentAllPlayers.map(player => {
+                    const sessionStats = playerStatsMap.get(player.id);
+                    if (sessionStats) {
+                        const updatedPlayer: Player = {
+                            ...player,
+                            totalGames: player.totalGames + sessionStats.gamesPlayed,
+                            totalGoals: player.totalGoals + sessionStats.goals,
+                            totalAssists: player.totalAssists + sessionStats.assists,
+                            totalWins: player.totalWins + sessionStats.wins,
+                            totalDraws: player.totalDraws + sessionStats.draws,
+                            totalLosses: player.totalLosses + sessionStats.losses,
+                            totalSessionsPlayed: (player.totalSessionsPlayed || 0) + 1,
+                            monthlyGames: player.monthlyGames + sessionStats.gamesPlayed,
+                            monthlyGoals: player.monthlyGoals + sessionStats.goals,
+                            monthlyAssists: player.monthlyAssists + sessionStats.assists,
+                            monthlyWins: player.monthlyWins + sessionStats.wins,
+                            monthlySessionsPlayed: (player.monthlySessionsPlayed || 0) + 1,
+                            lastPlayedAt: new Date().toISOString(),
+                        };
+                        return updatedPlayer;
+                    }
+                    return player;
+                });
+
+                updatedPlayers = updatedPlayers.map(player => {
+                    const sessionStats = playerStatsMap.get(player.id);
+                    if (sessionStats) {
+                        const badgesEarnedThisSession = calculateEarnedBadges(player, sessionStats, activeSession, allPlayersStats);
+                        const currentBadges = player.badges || {};
+                        const badgesNewThisSession = badgesEarnedThisSession.filter(b => !currentBadges[b]);
+
+                        const { delta, breakdown } = calculateRatingUpdate(player, sessionStats, activeSession, badgesNewThisSession);
+                        const newRating = Math.round(player.rating + delta);
+                        
+                        let newForm: 'hot_streak' | 'stable' | 'cold_streak' = 'stable';
+                        if (delta >= 0.5) newForm = 'hot_streak';
+                        else if (delta <= -0.5) newForm = 'cold_streak';
+                        
+                        const newTier = getTierForRating(newRating);
+
+                        const updatedBadges: Partial<Record<BadgeType, number>> = { ...currentBadges };
+                        badgesEarnedThisSession.forEach(badge => {
+                            updatedBadges[badge] = (updatedBadges[badge] || 0) + 1;
+                        });
+                        
+                        const sessionHistory = [...(player.sessionHistory || [])];
+                        if (sessionStats.gamesPlayed > 0) {
+                            sessionHistory.push({ winRate: Math.round((sessionStats.wins / sessionStats.gamesPlayed) * 100) });
+                        }
+                        if (sessionHistory.length > 5) sessionHistory.shift();
+
+                        return { 
+                            ...player, 
+                            rating: newRating, 
+                            tier: newTier, 
+                            form: newForm,
+                            badges: updatedBadges,
+                            sessionHistory: sessionHistory,
+                            lastRatingChange: breakdown,
+                        };
+                    }
+                    return player;
+                });
+                
+                calculatedNewPlayers = updatedPlayers;
+                return updatedPlayers;
+            });
+
+            // 2. Explicitly Save PLAYERS to DB (Supabase)
+            // This is critical because automatic saving was disabled in context.tsx
+            if (calculatedNewPlayers.length > 0) {
+                await savePlayersToDB(calculatedNewPlayers);
+            }
+
+            // 3. Generate & Save NEWS
+            if (calculatedNewPlayers.length > 0) {
+                const newNewsItems = generateNewsUpdates(oldPlayersState, calculatedNewPlayers);
+                if (newNewsItems.length > 0) {
+                    setNewsFeed(prev => {
+                        const updatedFeed = manageNewsFeedSize([...newNewsItems, ...prev]);
+                        // Asynchronously save to DB
+                        saveNewsToDB(updatedFeed);
+                        return updatedFeed;
+                    });
+                }
+            }
+
+            // 4. Save HISTORY
+            const finalSession: Session = { 
+                ...activeSession, 
+                status: SessionStatus.Completed,
+            };
+            
+            setHistory(prev => {
+                const newHistory = [finalSession, ...prev];
+                saveHistoryToDB(newHistory); // Explicitly save history
+                return newHistory;
+            });
+            setActiveSession(null);
+            
+            // 5. Navigate home only after everything is processed
+            navigate('/');
+        } catch (error) {
+            console.error("Error ending session:", error);
+            alert("Error saving data. Please check your connection.");
+        } finally {
+            setIsSaving(false);
+        }
     };
     
     const handleFinishGameManually = () => {
@@ -624,7 +656,20 @@ export const LiveMatchScreen: React.FC = () => {
         <div className="pb-28 flex flex-col min-h-screen">
             <GoalModal isOpen={!!scoringTeamForModal} onClose={() => setScoringTeamForModal(null)} onSave={handleGoalSave} game={currentGame} session={activeSession} scoringTeamId={scoringTeamForModal} />
             <EditGoalModal isOpen={!!goalToEdit} onClose={() => setGoalToEdit(null)} onSave={handleGoalUpdate} goal={goalToEdit} game={currentGame} session={activeSession} />
-            <EndSessionModal isOpen={isEndSessionModalOpen} onClose={() => setIsEndSessionModalOpen(false)} onConfirm={handleFinishSession} />
+            {/* Pass isSaving to disable the confirm button while data is writing */}
+            <EndSessionModal 
+                isOpen={isEndSessionModalOpen} 
+                onClose={() => setIsEndSessionModalOpen(false)} 
+                onConfirm={handleFinishSession} 
+            />
+            {isSaving && (
+                <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="w-12 h-12 border-4 border-dark-accent-start border-t-transparent rounded-full animate-spin"></div>
+                        <p className="text-white font-bold animate-pulse">SAVING TO CLOUD...</p>
+                    </div>
+                </div>
+            )}
             <SelectWinnerModal isOpen={isSelectWinnerModalOpen} onClose={() => setIsSelectWinnerModalOpen(false)} onSelect={finishCurrentGameAndSetupNext} team1={team1} team2={team2}/>
             {subModalState.isOpen && teamForSub && playerOutForSub && (
                 <SubstitutionModal 

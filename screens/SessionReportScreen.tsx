@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -6,6 +7,10 @@ import { shareOrDownloadImages, exportSessionAsJson } from '../services/export';
 import { BrandedHeader, newId } from './utils';
 import { ShareableReport } from './StatisticsScreen';
 import { calculateAllStats } from '../services/statistics';
+import { calculateEarnedBadges, calculateRatingUpdate, getTierForRating } from '../services/rating';
+import { generateNewsUpdates, manageNewsFeedSize } from '../services/news';
+import { savePlayersToDB, saveNewsToDB } from '../db';
+import { Player, BadgeType } from '../types';
 
 // Re-defining BrandedShareableReport locally to avoid import issues
 const BrandedShareableReport: React.FC<{
@@ -42,11 +47,12 @@ const BrandedShareableReport: React.FC<{
 
 export const SessionReportScreen: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-    const { history, isLoading } = useApp();
+    const { history, isLoading, allPlayers, setAllPlayers, setNewsFeed } = useApp();
     const t = useTranslation();
     const navigate = useNavigate();
     const [isDownloadModalOpen, setIsDownloadModalOpen] = React.useState(false);
     const [isExporting, setIsExporting] = React.useState(false);
+    const [isRecovering, setIsRecovering] = React.useState(false);
     const exportContainerRef = React.useRef<HTMLDivElement>(null);
 
     const session = history.find(s => s.id === id);
@@ -89,6 +95,103 @@ export const SessionReportScreen: React.FC = () => {
             setIsExporting(false);
         }
     };
+
+    // --- RECOVERY LOGIC ---
+    const handleRecoverStats = async () => {
+        if (isRecovering || !session) return;
+        
+        const confirm = window.confirm("Use this ONLY if statistics for this session were lost/not saved. This will recalculate stats and add them to the players database. Continue?");
+        if (!confirm) return;
+
+        setIsRecovering(true);
+
+        try {
+            const { allPlayersStats } = calculateAllStats(session);
+            let calculatedNewPlayers: Player[] = [];
+
+            // 1. Update Player Objects in Memory
+            const updatedPlayers = allPlayers.map(player => {
+                const sessionStats = allPlayersStats.find(s => s.player.id === player.id);
+                if (sessionStats) {
+                    // Base Stat Updates
+                    const updatedPlayer: Player = {
+                        ...player,
+                        totalGames: player.totalGames + sessionStats.gamesPlayed,
+                        totalGoals: player.totalGoals + sessionStats.goals,
+                        totalAssists: player.totalAssists + sessionStats.assists,
+                        totalWins: player.totalWins + sessionStats.wins,
+                        totalDraws: player.totalDraws + sessionStats.draws,
+                        totalLosses: player.totalLosses + sessionStats.losses,
+                        totalSessionsPlayed: (player.totalSessionsPlayed || 0) + 1,
+                        monthlyGames: player.monthlyGames + sessionStats.gamesPlayed,
+                        monthlyGoals: player.monthlyGoals + sessionStats.goals,
+                        monthlyAssists: player.monthlyAssists + sessionStats.assists,
+                        monthlyWins: player.monthlyWins + sessionStats.wins,
+                        monthlySessionsPlayed: (player.monthlySessionsPlayed || 0) + 1,
+                        lastPlayedAt: new Date().toISOString(),
+                    };
+
+                    // Rating & Badges Logic
+                    const badgesEarnedThisSession = calculateEarnedBadges(updatedPlayer, sessionStats, session, allPlayersStats);
+                    const currentBadges = updatedPlayer.badges || {};
+                    const badgesNewThisSession = badgesEarnedThisSession.filter(b => !currentBadges[b]);
+
+                    const { delta, breakdown } = calculateRatingUpdate(updatedPlayer, sessionStats, session, badgesNewThisSession);
+                    const newRating = Math.round(updatedPlayer.rating + delta);
+                    
+                    let newForm: 'hot_streak' | 'stable' | 'cold_streak' = 'stable';
+                    if (delta >= 0.5) newForm = 'hot_streak';
+                    else if (delta <= -0.5) newForm = 'cold_streak';
+                    
+                    const newTier = getTierForRating(newRating);
+
+                    const updatedBadges: Partial<Record<BadgeType, number>> = { ...currentBadges };
+                    badgesEarnedThisSession.forEach(badge => {
+                        updatedBadges[badge] = (updatedBadges[badge] || 0) + 1;
+                    });
+                    
+                    const sessionHistory = [...(updatedPlayer.sessionHistory || [])];
+                    if (sessionStats.gamesPlayed > 0) {
+                        sessionHistory.push({ winRate: Math.round((sessionStats.wins / sessionStats.gamesPlayed) * 100) });
+                    }
+                    if (sessionHistory.length > 5) sessionHistory.shift();
+
+                    return { 
+                        ...updatedPlayer, 
+                        rating: newRating, 
+                        tier: newTier, 
+                        form: newForm,
+                        badges: updatedBadges,
+                        sessionHistory: sessionHistory,
+                        lastRatingChange: breakdown,
+                    };
+                }
+                return player;
+            });
+
+            // 2. Save to DB
+            await savePlayersToDB(updatedPlayers);
+            setAllPlayers(updatedPlayers);
+
+            // 3. Generate & Save News
+            const newNewsItems = generateNewsUpdates(allPlayers, updatedPlayers);
+            if (newNewsItems.length > 0) {
+                setNewsFeed(prev => {
+                    const updatedFeed = manageNewsFeedSize([...newNewsItems, ...prev]);
+                    saveNewsToDB(updatedFeed);
+                    return updatedFeed;
+                });
+            }
+
+            alert("Statistics and News successfully recovered and saved to database!");
+
+        } catch (error) {
+            console.error("Recovery failed:", error);
+            alert("Failed to recover stats. Check console for details.");
+        } finally {
+            setIsRecovering(false);
+        }
+    };
     
     const displayDate = new Date(session.date).toLocaleString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
     
@@ -118,6 +221,21 @@ export const SessionReportScreen: React.FC = () => {
                 <div className="mt-auto pt-6 w-full flex flex-col gap-3">
                     <Button variant="secondary" onClick={() => setIsDownloadModalOpen(true)} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 uppercase">{t.saveTable}</Button>
                     <Button variant="secondary" onClick={() => exportSessionAsJson(session)} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 uppercase">{t.exportJson}</Button>
+                    
+                    {/* RECOVERY BUTTON */}
+                    <div className="pt-8 border-t border-white/10 mt-4">
+                        <Button 
+                            variant="danger" 
+                            onClick={handleRecoverStats} 
+                            disabled={isRecovering}
+                            className="w-full text-sm py-3 opacity-80 hover:opacity-100 transition-opacity"
+                        >
+                            {isRecovering ? 'RECOVERING...' : '🛠️ RECOVER MISSING STATS'}
+                        </Button>
+                        <p className="text-[10px] text-dark-text-secondary text-center mt-2 px-4">
+                            Use this if the session finished but stats/news were not saved to the database.
+                        </p>
+                    </div>
                 </div>
             </div>
 
