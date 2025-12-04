@@ -1,3 +1,4 @@
+
 // Text-to-Speech Utility for Voice Assistant
 let ASSISTANT_VOICE: SpeechSynthesisVoice | null = null;
 
@@ -107,7 +108,8 @@ export const processPlayerImageFile = (file: File): Promise<{ cardImage: string;
                 cardCanvas.width = width;
                 cardCanvas.height = height;
                 cardCtx?.drawImage(img, 0, 0, width, height);
-                // UPDATED: Use JPEG with 0.95 quality (Highest reasonable quality for storage)
+                
+                // UPDATED: Use JPEG with 0.95 quality for MAXIMUM FIDELITY as requested
                 const cardImage = cardCanvas.toDataURL('image/jpeg', 0.95);
 
                 // --- 2. Create Avatar from the RESIZED Card Image for memory safety ---
@@ -139,4 +141,10 @@ export const processPlayerImageFile = (file: File): Promise<{ cardImage: string;
         };
 
         img.onerror = () => {
-            URL.revokeObjectURL
+            URL.revokeObjectURL(objectUrl);
+            reject(new Error("Failed to load image file. It might be corrupted or in an unsupported format."));
+        };
+        
+        img.src = objectUrl;
+    });
+};

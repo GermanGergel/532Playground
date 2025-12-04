@@ -70,10 +70,9 @@
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       background-color: #1A1D24; /* Ensure bg color matches splash */
-      overscroll-behavior-y: none; /* Prevents pull-to-refresh bounce on iOS PWA */
+      overscroll-behavior-y: none; /* Disables pull-to-refresh / bounce effect on mobile */
     }
-    
-    /* --- HIDE SCROLLBARS GLOBALLY FOR PWA FEEL --- */
+    /* Hide Scrollbar Globally for Native Feel */
     ::-webkit-scrollbar {
         width: 0px;
         background: transparent;
@@ -83,7 +82,6 @@
         -ms-overflow-style: none;  /* IE and Edge */
         scrollbar-width: none;  /* Firefox */
     }
-    /* --------------------------------------------- */
 
     .gradient-text {
       background: linear-gradient(90deg, #00F2FE, #4CFF5F);
