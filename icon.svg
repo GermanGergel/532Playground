@@ -1,14 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" preserveAspectRatio="xMidYMid meet">
-  <!-- Solid Background: Full 512x512 Square -->
-  <rect width="512" height="512" fill="#1A1D24"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Solid Background -->
+  <rect x="0" y="0" width="512" height="512" fill="#1A1D24"/>
   
-  <!-- Content Group: Drastically scaled down to center 50% of the canvas. 
-       This huge padding prevents iOS from cropping the text when generating the home screen icon. -->
-  <g transform="translate(256, 256)">
-      <!-- Main Number: Reduced font size from 110 to 80 -->
-      <text x="0" y="-10" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-weight="900" font-size="80" fill="#00F2FE" style="text-shadow: 0 0 15px rgba(0,242,254,0.5);">532</text>
-      
-      <!-- Subtitle: Reduced font size and adjusted Y position -->
-      <text x="0" y="55" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="20" letter-spacing="4" fill="#F0F2F5">PLAYGROUND</text>
-  </g>
+  <!-- Text "532" - Absolute Positioning (No transforms) -->
+  <text x="256" y="240" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-weight="900" font-size="160" fill="#00F2FE">532</text>
+  
+  <!-- Text "PLAYGROUND" - Absolute Positioning (No transforms) -->
+  <text x="256" y="340" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-weight="bold" font-size="40" letter-spacing="8" fill="#F0F2F5">PLAYGROUND</text>
 </svg>
