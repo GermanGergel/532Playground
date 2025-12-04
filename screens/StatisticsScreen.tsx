@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -6,9 +7,41 @@ import { Page, Button, Modal, useTranslation } from '../ui';
 import { TeamAvatar } from '../components/avatars';
 import { Session } from '../types';
 import { calculateAllStats } from '../services/statistics';
-import { shareOrDownloadImages, exportSessionAsJson } from '../services/export';
-import { BrandedHeader, hexToRgba, newId } from './utils';
+import { shareOrDownloadImages } from '../services/export';
+import { BrandedHeader, newId } from './utils';
 import { homeScreenBackground } from '../assets';
+
+// --- Local Component Definition for Exports ---
+const BrandedShareableReport: React.FC<{
+    session: Session;
+    children: React.ReactNode;
+    className?: string;
+    style?: React.CSSProperties;
+    [key: string]: any;
+}> = ({ session, children, className, style, ...props }) => {
+    // Default padding, can be overridden by style prop
+    const defaultPadding = 40;
+
+    const containerStyle: React.CSSProperties = {
+        padding: `${defaultPadding}px`,
+        backgroundImage: `url("${homeScreenBackground}")`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        boxSizing: 'border-box',
+        ...style
+    };
+
+    return (
+        <div 
+            className={`flex flex-col items-center text-dark-text ${className}`} 
+            style={containerStyle}
+            data-export-target="true"
+            {...props}
+        >
+            {children}
+        </div>
+    );
+};
 
 // --- Statistics & Report Screen Components ---
 export interface ShareableReportProps {
@@ -42,7 +75,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
     const roundsToDisplay = itemLimit ? finishedGames.slice(0, itemLimit) : finishedGames;
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 w-full">
             {/* Team Standings */}
             {(!visibleSection || visibleSection === 'standings') && (
             <div 
@@ -67,7 +100,9 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                         {teamStats.map(({ team, gamesPlayed, wins, draws, losses, goalDifference, points }, index) => (
                             <tr key={team.id} className="border-t border-white/10">
                                 <td className="py-2 px-1 text-left">{index + 1}</td>
-                                <td className={`py-2 px-1 flex justify-center`}><TeamAvatar team={team} size="xxs" className={isExport ? 'translate-y-2' : ''} /></td>
+                                <td className={`py-2 px-1 flex justify-center items-center`}>
+                                    <TeamAvatar team={team} size="xxs" className={isExport ? 'translate-y-2' : ''} />
+                                </td>
                                 <td className="py-2 px-1">{gamesPlayed}</td>
                                 <td className="py-2 px-1">{wins}</td>
                                 <td className="py-2 px-1">{draws}</td>
@@ -104,7 +139,10 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                         {sortedPlayers.map((stats, index) => (
                              <tr key={stats.player.id} className="border-t border-white/10">
                                 <td className="py-2 px-1 text-left">{index + 1}</td>
-                                <td className="py-2 px-1 text-left font-semibold truncate">{stats.player.nickname}</td>
+                                {/* Truncate fix: max-w-0 forces the cell to respect the column width and use ellipsis for long names */}
+                                <td className="py-2 px-1 text-left font-semibold whitespace-nowrap overflow-hidden text-ellipsis max-w-0">
+                                    {stats.player.nickname}
+                                </td>
                                 <td className="py-2 px-1"><TeamAvatar team={stats.team} size="xxs" className={`mx-auto ${isExport ? 'translate-y-2' : ''}`} /></td>
                                 <td className="py-2 px-1">{stats.gamesPlayed}</td>
                                 <td className="py-2 px-1">{stats.goals}</td>
@@ -134,7 +172,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                                 <span className="text-dark-text-secondary text-sm">{t.round} {game.gameNumber}</span>
                                 <div className="flex items-center justify-end gap-2 flex-grow">
                                     <TeamAvatar team={team1} size="xxs" className={isExport ? 'translate-y-2' : ''} />
-                                    <span className={`font-bold tabular-nums w-16 text-center ${isExport ? 'text-lg' : 'text-sm'}`}>{game.team1Score} : {game.team2Score}</span>
+                                    <span className={`font-bold tabular-nums w-16 text-center text-sm`}>{game.team1Score} : {game.team2Score}</span>
                                     <TeamAvatar team={team2} size="xxs" className={isExport ? 'translate-y-2' : ''} />
                                 </div>
                             </li>
@@ -146,37 +184,6 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
         </div>
     );
 };
-
-const BrandedShareableReport: React.FC<{
-    session: Session;
-    children: React.ReactNode;
-    className?: string;
-    style?: React.CSSProperties;
-    [key: string]: any;
-}> = ({ session, children, className, style, ...props }) => {
-    const PADDING = 40;
-
-    const containerStyle: React.CSSProperties = {
-        padding: `${PADDING}px`,
-        backgroundImage: `url("${homeScreenBackground}")`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        boxSizing: 'border-box',
-        ...style
-    };
-
-    return (
-        <div 
-            className={`flex flex-col items-center text-dark-text ${className}`} 
-            style={containerStyle}
-            data-export-target="true"
-            {...props}
-        >
-            {children}
-        </div>
-    );
-};
-
 
 export const StatisticsScreen: React.FC = () => {
     const { activeSession } = useApp();
@@ -243,44 +250,44 @@ export const StatisticsScreen: React.FC = () => {
             
             <div className="mt-auto pt-6 w-full flex flex-col gap-3">
                 <Button variant="secondary" onClick={() => setIsDownloadModalOpen(true)} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.saveTable}</Button>
-                <Button variant="secondary" onClick={() => exportSessionAsJson(activeSession)} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.exportJson}</Button>
             </div>
 
-            {/* Hidden elements for branded export */}
+            {/* Hidden elements for branded export - STRICTLY SEPARATED */}
             <div 
                 style={{ position: 'absolute', top: 0, left: 0, zIndex: -1, opacity: 0, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '2rem', alignItems: 'flex-start' }} 
                 ref={exportContainerRef}
             >
+                {/* 1. STANDINGS - Full Header (Standard) */}
                 <BrandedShareableReport session={activeSession} data-export-section="standings" style={{ width: '600px' }}>
                     <div className="mb-4 text-left w-full">
                         <BrandedHeader isExport={true} />
                         <p className="font-chakra text-dark-text mt-8 text-xl font-medium tracking-wider uppercase">{displayDate}</p>
                     </div>
-                    <div className="p-4">
+                    <div className="p-4 w-full">
                         <ShareableReport session={activeSession} visibleSection="standings" isExport={true} />
                     </div>
                 </BrandedShareableReport>
                 
+                {/* 2. PLAYERS - Compact (No Header) */}
                 <BrandedShareableReport 
                     session={activeSession} 
                     data-export-section="players"
-                    style={{ width: '600px' }}
+                    style={{ width: '500px', padding: '20px' }}
                 >
-                    <div className="mb-4 text-left w-full">
-                        <BrandedHeader isExport={true} />
-                        <p className="font-chakra text-dark-text mt-8 text-xl font-medium tracking-wider uppercase">{displayDate}</p>
+                    <div className="mb-2 text-center w-full border-b border-white/10 pb-2">
+                        <p className="font-chakra text-dark-text text-lg font-bold tracking-widest uppercase">{displayDate}</p>
                     </div>
                     <ShareableReport session={activeSession} visibleSection="players" isExport={true} />
                 </BrandedShareableReport>
                 
+                {/* 3. ROUNDS - Compact (No Header) */}
                 <BrandedShareableReport 
                     session={activeSession} 
                     data-export-section="rounds"
-                    style={{ width: '600px' }}
+                    style={{ width: '500px', padding: '20px' }}
                 >
-                     <div className="mb-4 text-left w-full">
-                        <BrandedHeader isExport={true} />
-                        <p className="font-chakra text-dark-text mt-8 text-xl font-medium tracking-wider uppercase">{displayDate}</p>
+                     <div className="mb-2 text-center w-full border-b border-white/10 pb-2">
+                        <p className="font-chakra text-dark-text text-lg font-bold tracking-widest uppercase">{displayDate}</p>
                     </div>
                     <ShareableReport session={activeSession} visibleSection="rounds" isExport={true} />
                 </BrandedShareableReport>

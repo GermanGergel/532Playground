@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { Player, Session, NewsItem } from './types';
 import { Language } from './translations';
@@ -50,9 +49,14 @@ const logStorageMode = () => {
     }
 };
 
-// --- BASE64 to Blob HELPER ---
-const base64ToBlob = (base64: string, contentType: string = 'image/png'): Blob => {
-    const byteCharacters = atob(base64.split(',')[1]);
+// --- BASE64 to Blob HELPER (Improved) ---
+const base64ToBlob = (base64: string): Blob => {
+    const parts = base64.split(';base64,');
+    if (parts.length !== 2) {
+        throw new Error('Invalid base64 string provided');
+    }
+    const contentType = parts[0].split(':')[1];
+    const byteCharacters = atob(parts[1]);
     const byteArrays = [];
     for (let offset = 0; offset < byteCharacters.length; offset += 512) {
         const slice = byteCharacters.slice(offset, offset + 512);
@@ -71,11 +75,12 @@ const base64ToBlob = (base64: string, contentType: string = 'image/png'): Blob =
 const BUCKET_NAME = 'player_images';
 
 export const uploadPlayerImage = async (playerId: string, base64Image: string, type: 'avatar' | 'card'): Promise<string | null> => {
-    if (!isSupabaseConfigured()) return null;
+    if (!isSupabaseConfigured() || !base64Image) return null;
 
     try {
         const blob = base64ToBlob(base64Image);
-        const filePath = `${playerId}/${type}_${Date.now()}.png`;
+        const fileExtension = blob.type.split('/')[1] || 'jpeg'; // e.g., 'jpeg'
+        const filePath = `${playerId}/${type}_${Date.now()}.${fileExtension}`;
 
         const { error: uploadError } = await supabase!.storage
             .from(BUCKET_NAME)
@@ -89,8 +94,20 @@ export const uploadPlayerImage = async (playerId: string, base64Image: string, t
         const { data } = supabase!.storage.from(BUCKET_NAME).getPublicUrl(filePath);
         return data.publicUrl;
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error uploading image:', error);
+        
+        // Detailed help for the user if they see the specific RLS error
+        if (error.message && error.message.includes('row-level security policy')) {
+            console.warn(
+                "⚠️ UPLOAD BLOCKED BY SUPABASE POLICIES:\n" +
+                "1. Go to Supabase Dashboard -> Storage -> player_images\n" +
+                "2. Click 'Policies'\n" +
+                "3. Add a new policy allowing INSERT/UPDATE/SELECT for 'anon' (public) role.\n" +
+                "This is required for the app to save images."
+            );
+        }
+        
         return null;
     }
 };

@@ -1,19 +1,17 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-// FIX: Imported BadgeIcon component.
-// FIX: Import directly from component files instead of barrel file to avoid import errors.
 import { Button, Modal, useTranslation, PageHeader, Page } from '../ui';
 import { PlayerCard, BadgeIcon } from '../features';
 import { InfoIcon, StarIcon, XCircle } from '../icons';
 import { Player, BadgeType, SkillType, PlayerStatus } from '../types';
 import { getTierForRating } from '../services/rating';
-import { formatDate } from '../services/export';
 import { PlayerEditModal } from '../modals';
-import { cropImageToAvatar } from '../lib';
-import html2canvas from 'html2canvas'; // Import html2canvas
+import { processPlayerImageFile } from '../lib';
 import { saveSinglePlayerToDB, uploadPlayerImage, deletePlayerImage } from '../db';
+import html2canvas from 'html2canvas';
+import { ExportPlayerCard } from '../components/ExportPlayerCard';
+
 
 export const PlayerProfileScreen: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -24,31 +22,110 @@ export const PlayerProfileScreen: React.FC = () => {
     const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
     const [isInfoModalOpen, setIsInfoModalOpen] = React.useState(false);
+    const [isExporting, setIsExporting] = React.useState(false);
+    const [playerForExport, setPlayerForExport] = React.useState<Player | null>(null);
+    const exportCardRef = React.useRef<HTMLDivElement>(null);
+
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     
     const player = allPlayers.find(p => p.id === id);
 
     React.useEffect(() => {
-        // This is the restored, working logic.
-        // If the component renders and the player isn't found (even after data loading),
-        // it navigates away. If data is still loading, it simply returns null and waits for a re-render.
         if (!player) {
             const timer = setTimeout(() => {
-                // Check again after a short delay to ensure data has had a chance to load.
                 if (allPlayers.length > 0 && !allPlayers.find(p => p.id === id)) {
                     navigate('/player-database', { replace: true });
                 }
-            }, 500); // A small delay to prevent navigating away during data load.
+            }, 500);
             return () => clearTimeout(timer);
         }
     }, [player, allPlayers, id, navigate]);
 
-    // If the player isn't available on the first render, return null and let the useEffect handle it.
-    // This prevents rendering an empty state and avoids crashes.
+    const handleDownloadCard = async () => {
+        if (!player || isExporting) return;
+        setIsExporting(true);
+
+        try {
+            let exportablePlayer = { ...player };
+            if (player.playerCard && player.playerCard.startsWith('http')) {
+                const response = await fetch(player.playerCard);
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch player card image. Status: ${response.status}`);
+                }
+                const blob = await response.blob();
+                const dataUrl = await new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result as string);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+                exportablePlayer.playerCard = dataUrl;
+            }
+            setPlayerForExport(exportablePlayer);
+        } catch (error) {
+            console.error("Error preparing card for export:", error);
+            alert('Failed to prepare card image for export. The image might be inaccessible.');
+            setIsExporting(false);
+        }
+    };
+
+    React.useEffect(() => {
+        const exportImage = async () => {
+            if (!playerForExport || !exportCardRef.current) return;
+
+            // Give the browser a moment to render the off-screen component and its background image
+            await new Promise(resolve => setTimeout(resolve, 250));
+
+            try {
+                const elementToCapture = exportCardRef.current.querySelector('#export-card-to-capture');
+                if (!elementToCapture) throw new Error("Export element not found");
+                
+                const canvas = await html2canvas(elementToCapture as HTMLElement, {
+                  backgroundColor: '#1A1D24',
+                  scale: 7, // High quality scale as requested
+                  useCORS: true,
+                  logging: false,
+                });
+        
+                const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
+                
+                if (blob) {
+                    const filename = `532_Playground_${playerForExport.nickname.replace(/\s/g, '_')}_Card.png`;
+                    const file = new File([blob], filename, { type: 'image/png' });
+        
+                    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                        await navigator.share({ files: [file] });
+                    } else {
+                        const dataUrl = URL.createObjectURL(file);
+                        const link = document.createElement('a');
+                        link.download = file.name;
+                        link.href = dataUrl;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(dataUrl);
+                    }
+                }
+            } catch (error: any) {
+                if (error.name !== 'AbortError') {
+                  console.error("Error exporting player card:", error);
+                  alert('Failed to export player card.');
+                }
+            } finally {
+                setIsExporting(false);
+                setPlayerForExport(null);
+            }
+        };
+
+        if (playerForExport && isExporting) {
+            exportImage();
+        }
+    }, [playerForExport, isExporting]);
+    
+
     if (!player) {
         return null;
     }
-
 
     const ALL_BADGES: BadgeType[] = [
         'goleador', 'perfect_finish', 'dynasty', 'sniper', 'assistant', 'mvp', 
@@ -57,105 +134,46 @@ export const PlayerProfileScreen: React.FC = () => {
     ];
     const ALL_SKILLS_INFO: SkillType[] = ['goalkeeper', 'power_shot', 'technique', 'defender', 'playmaker', 'finisher', 'versatile', 'tireless_motor', 'leader'];
 
-    const handleDownloadCard = async () => {
-        if (!player) return;
-        
-        const sourceElement = document.getElementById(`player-card-container-${player.id}`);
-        if (!sourceElement) {
-            console.error('Player card container element not found for download.');
-            return;
-        }
-
-        const wrapper = document.createElement('div');
-        wrapper.style.position = 'fixed';
-        wrapper.style.left = '-9999px';
-        wrapper.style.top = '0';
-        wrapper.style.width = '540px'; // Force a wider width
-        wrapper.style.padding = '1rem'; // Add some padding to match original look
-        wrapper.style.backgroundColor = '#1A1D24'; // Match body background
-
-        const clone = sourceElement.cloneNode(true) as HTMLElement;
-
-        // Remove action buttons from the clone to prevent them from appearing in the image
-        const buttonsToRemove = clone.querySelectorAll('.player-card-actions');
-        buttonsToRemove.forEach(btn => btn.remove());
-
-        wrapper.appendChild(clone);
-        document.body.appendChild(wrapper);
-
-        try {
-            const canvas = await html2canvas(wrapper, { // Use imported html2canvas
-                backgroundColor: '#1A1D24', // Explicitly set background
-                scale: 5, // Render at 5x resolution for max quality
-                useCORS: true,
-                logging: false,
-            });
-
-            const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
-            
-            if (blob) {
-                const filename = `532_Playground_${player.nickname.replace(/\s/g, '_')}_Card.png`;
-                const file = new File([blob], filename, { type: 'image/png' });
-
-                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({ files: [file] });
-                } else {
-                    const dataUrl = URL.createObjectURL(file);
-                    const link = document.createElement('a');
-                    link.download = file.name;
-                    link.href = dataUrl;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(dataUrl);
-                }
-            }
-        } catch (error: any) {
-            if (error.name !== 'AbortError') {
-                console.error("Error exporting player card:", error);
-                alert('Failed to export player card.');
-            }
-        } finally {
-            document.body.removeChild(wrapper);
-        }
-    };
-
     const handleUploadClick = () => {
         fileInputRef.current?.click();
     };
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file && player) {
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                const base64Image = event.target?.result as string;
-                if (!base64Image) return;
+        if (!file || !player) return;
 
-                // 1. Crop for avatar
-                const avatarDataUrl = await cropImageToAvatar(base64Image);
+        try {
+            const { cardImage, avatarImage } = await processPlayerImageFile(file);
+            const uploadPromises = [
+                uploadPlayerImage(player.id, avatarImage, 'avatar'),
+                uploadPlayerImage(player.id, cardImage, 'card'),
+            ];
+            
+            const deletePromises = [
+                player.photo ? deletePlayerImage(player.photo) : Promise.resolve(),
+                player.playerCard ? deletePlayerImage(player.playerCard) : Promise.resolve(),
+            ];
 
-                // 2. Upload both images to Supabase Storage
-                const avatarUrl = await uploadPlayerImage(player.id, avatarDataUrl, 'avatar');
-                const cardUrl = await uploadPlayerImage(player.id, base64Image, 'card');
+            const [avatarUrl, cardUrl] = await Promise.all(uploadPromises);
+            await Promise.all(deletePromises);
 
-                // 3. Delete old images if they exist
-                if (player.photo) await deletePlayerImage(player.photo);
-                if (player.playerCard) await deletePlayerImage(player.playerCard);
-
-                // 4. Update player object with new URLs
-                const updatedPlayer = {
-                    ...player,
-                    photo: avatarUrl || player.photo,
-                    playerCard: cardUrl || player.playerCard,
-                    status: PlayerStatus.Confirmed,
-                };
-                
-                // 5. Update state and save to DB
-                setAllPlayers(prev => prev.map(p => p.id === player.id ? updatedPlayer : p));
-                await saveSinglePlayerToDB(updatedPlayer);
+            const updatedPlayer: Player = {
+                ...player,
+                photo: avatarUrl || player.photo,
+                playerCard: cardUrl || player.playerCard,
+                status: PlayerStatus.Confirmed,
             };
-            reader.readAsDataURL(file);
+            
+            setAllPlayers(prev => prev.map(p => p.id === player.id ? updatedPlayer : p));
+            await saveSinglePlayerToDB(updatedPlayer);
+
+        } catch (error) {
+            console.error("Image processing or upload failed:", error);
+            alert("Failed to upload image. It might be too large or in an unsupported format.");
+        } finally {
+            if (e.target) {
+                e.target.value = '';
+            }
         }
     };
 
@@ -166,8 +184,6 @@ export const PlayerProfileScreen: React.FC = () => {
     };
     
     const handleDeletePlayer = async () => {
-        // In a real-world scenario, you might also want to delete from Supabase here.
-        // For now, it's just removed from local state.
         setAllPlayers(prev => prev.filter(p => p.id !== player.id));
         setIsDeleteModalOpen(false);
         navigate('/player-database', { replace: true });
@@ -255,7 +271,17 @@ export const PlayerProfileScreen: React.FC = () => {
                 onUploadCard={handleUploadClick}
                 onConfirmInitialRating={handleConfirmInitialRating}
                 onDownloadCard={handleDownloadCard}
+                isDownloading={isExporting}
             />
+
+            {playerForExport && (
+                <div ref={exportCardRef} style={{ position: 'fixed', left: '-9999px', top: 0, zIndex: -10 }}>
+                    <ExportPlayerCard 
+                        player={playerForExport} 
+                        allPlayers={allPlayers}
+                    />
+                </div>
+            )}
         </Page>
     );
 };

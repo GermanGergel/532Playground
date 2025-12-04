@@ -21,6 +21,7 @@ interface PlayerCardProps {
     onUploadCard: () => void;
     onConfirmInitialRating: (rating: number) => void;
     onDownloadCard: () => void;
+    isDownloading?: boolean;
 }
 
 // Removed InitialRatingSetup component as it is no longer used
@@ -159,7 +160,7 @@ const SessionTrendChart: React.FC<{ history?: Player['sessionHistory'] }> = ({ h
 };
 
 
-export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete, onUploadCard, onConfirmInitialRating, onDownloadCard }) => {
+export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete, onUploadCard, onConfirmInitialRating, onDownloadCard, isDownloading }) => {
     const t = useTranslation();
     const keyStats = React.useMemo(() => getPlayerKeyStats(player), [player]);
     const countryCodeAlpha2 = React.useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
@@ -326,7 +327,9 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                     <Button variant="secondary" onClick={onEdit} className={`!py-3.5 !px-4 !text-base ${cardClass}`}>{t.editData}</Button>
                     <Button variant="secondary" onClick={onUploadCard} className={`!py-3.5 !px-4 !text-base ${cardClass}`}>{t.uploadPhoto}</Button>
                 </div>
-                <Button variant="secondary" className={`w-full ${cardClass} player-card-actions`} onClick={onDownloadCard}>{t.downloadCard}</Button>
+                <Button variant="secondary" className={`w-full ${cardClass} player-card-actions`} onClick={onDownloadCard} disabled={isDownloading}>
+                    {isDownloading ? 'EXPORTING...' : t.downloadCard}
+                </Button>
                 <Button variant="secondary" className={`w-full ${cardClass} player-card-actions`} onClick={onDelete}>{t.deletePlayer}</Button>
             </div>
         </div>

@@ -1,6 +1,3 @@
-
-
-
 // Text-to-Speech Utility for Voice Assistant
 let ASSISTANT_VOICE: SpeechSynthesisVoice | null = null;
 
@@ -84,33 +81,67 @@ export const speak = (text: string) => {
   }
 };
 
-// Image Cropping Utility for Avatars
-export const cropImageToAvatar = (base64Str: string): Promise<string> => {
-    return new Promise((resolve) => {
-        const img = new (window as any).Image();
-        img.src = base64Str;
+// Image Processing Utility
+// REPLACED `cropImageToAvatar` with a unified, memory-safe function
+export const processPlayerImageFile = (file: File): Promise<{ cardImage: string; avatarImage: string }> => {
+    return new Promise((resolve, reject) => {
+        // Use URL.createObjectURL to avoid reading the entire file into memory as a base64 string,
+        // which causes crashes in memory-constrained environments with large files.
+        const objectUrl = URL.createObjectURL(file);
+        const img = new Image();
+
         img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const side = Math.min(img.width, img.height);
-            canvas.width = side;
-            canvas.height = side;
-            const ctx = canvas.getContext('2d');
-            if (!ctx) {
-                resolve(base64Str); // fallback
-                return;
+            try {
+                // --- 1. Create Resized Card Image (JPEG for quality/size balance) ---
+                const cardCanvas = document.createElement('canvas');
+                const cardCtx = cardCanvas.getContext('2d');
+                const maxWidth = 1080; // Optimal web resolution
+                let { width, height } = img;
+                
+                if (width > maxWidth) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                }
+
+                cardCanvas.width = width;
+                cardCanvas.height = height;
+                cardCtx?.drawImage(img, 0, 0, width, height);
+                // Use JPEG with high quality for photos, it's much smaller than PNG for the same visual quality.
+                const cardImage = cardCanvas.toDataURL('image/jpeg', 0.92);
+
+                // --- 2. Create Avatar from the RESIZED Card Image for memory safety ---
+                const avatarCanvas = document.createElement('canvas');
+                const avatarCtx = avatarCanvas.getContext('2d');
+                
+                // The avatar is now cropped from the already resized cardCanvas, not the full-res `img`
+                const side = Math.min(cardCanvas.width, cardCanvas.height);
+                avatarCanvas.width = side;
+                avatarCanvas.height = side;
+                if (!avatarCtx) throw new Error("Could not create avatar canvas context");
+
+                const sx = (cardCanvas.width - side) / 2;
+                // Top-weighted crop for headshots
+                const sy = (cardCanvas.height - side) / 8; 
+                
+                avatarCtx.drawImage(cardCanvas, sx, sy, side, side, 0, 0, side, side);
+                // Avatar can be smaller, also JPEG is fine and more performant.
+                const avatarImage = avatarCanvas.toDataURL('image/jpeg', 0.90);
+
+                resolve({ cardImage, avatarImage });
+
+            } catch (error) {
+                reject(error);
+            } finally {
+                // IMPORTANT: Clean up the object URL to free memory
+                URL.revokeObjectURL(objectUrl);
             }
-            const sx = (img.width - side) / 2;
-            
-            // ADJUSTED CROP: Previously sy was centered ((img.height - side) / 2).
-            // Now we divide by 8 to bias the crop upwards (top-weighted).
-            // This ensures heads/hair are not cut off in portrait photos.
-            const sy = (img.height - side) / 8; 
-            
-            ctx.drawImage(img, sx, sy, side, side, 0, 0, side, side);
-            resolve(canvas.toDataURL('image/png')); // Use PNG for better quality
         };
+
         img.onerror = () => {
-            resolve(base64Str); // Fail safe
+            URL.revokeObjectURL(objectUrl);
+            reject(new Error("Failed to load image file. It might be corrupted or in an unsupported format."));
         };
+        
+        img.src = objectUrl;
     });
 };
