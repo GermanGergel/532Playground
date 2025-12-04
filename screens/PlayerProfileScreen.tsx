@@ -74,7 +74,7 @@ export const PlayerProfileScreen: React.FC = () => {
             if (!playerForExport || !exportCardRef.current) return;
 
             // Give the browser a moment to render the off-screen component and its background image
-            await new Promise(resolve => setTimeout(resolve, 250));
+            await new Promise(resolve => setTimeout(resolve, 500)); // Increased wait time for large images
 
             try {
                 const elementToCapture = exportCardRef.current.querySelector('#export-card-to-capture');
@@ -82,8 +82,10 @@ export const PlayerProfileScreen: React.FC = () => {
                 
                 const canvas = await html2canvas(elementToCapture as HTMLElement, {
                   backgroundColor: '#1A1D24',
-                  scale: 7, // High quality scale as requested
+                  scale: 7, // High quality scale
                   useCORS: true,
+                  allowTaint: true,
+                  imageTimeout: 0, // Wait indefinitely for images to load
                   logging: false,
                 });
         

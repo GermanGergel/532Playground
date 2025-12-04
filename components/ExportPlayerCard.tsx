@@ -122,7 +122,8 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
                         )}
                     </div>
                     <div className="text-right">
-                        <p className="font-orbitron font-bold text-6xl text-dark-accent-start accent-text-glow" style={{ textShadow: '0 0 8px rgba(0, 242, 254, 0.8)' }}>
+                        {/* UPDATED: Reduced font size from 6xl to 5xl for better proportions */}
+                        <p className="font-orbitron font-bold text-5xl text-dark-accent-start accent-text-glow" style={{ textShadow: '0 0 8px rgba(0, 242, 254, 0.8)' }}>
                             {player.rating}
                         </p>
                         <div className="mt-2">
@@ -149,7 +150,8 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
                 <div className="flex-grow" />
 
                 {/* Player Name */}
-                <section className="text-center mb-1">
+                {/* UPDATED: Increased margin-bottom (mb-5) to lift name higher above the line */}
+                <section className="text-center mb-5">
                     <h1 className="font-audiowide text-4xl uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] leading-tight">
                         {player.nickname} {player.surname}
                     </h1>
@@ -162,7 +164,7 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
                     <Stat value={winRate} label={t.winRate} />
                 </section>
 
-                {/* Club Rankings (Moved higher with margin-bottom and increased padding) */}
+                {/* Club Rankings */}
                 {rankings && (
                     <section className="mt-2 mb-5 py-3 border-y-2 border-dark-accent-start/30">
                         <div className="grid grid-cols-3 gap-2 divide-x divide-white/10 items-center">

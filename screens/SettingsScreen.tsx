@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useApp } from '../context';
 import { Page, Card, useTranslation } from '../ui';

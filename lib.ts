@@ -95,7 +95,8 @@ export const processPlayerImageFile = (file: File): Promise<{ cardImage: string;
                 // --- 1. Create Resized Card Image (JPEG for quality/size balance) ---
                 const cardCanvas = document.createElement('canvas');
                 const cardCtx = cardCanvas.getContext('2d');
-                const maxWidth = 1080; // Optimal web resolution
+                // UPDATED: Increased from 1080 to 2560 to support high-quality exports (Scale 7x)
+                const maxWidth = 2560; 
                 let { width, height } = img;
                 
                 if (width > maxWidth) {
@@ -106,8 +107,8 @@ export const processPlayerImageFile = (file: File): Promise<{ cardImage: string;
                 cardCanvas.width = width;
                 cardCanvas.height = height;
                 cardCtx?.drawImage(img, 0, 0, width, height);
-                // Use JPEG with high quality for photos, it's much smaller than PNG for the same visual quality.
-                const cardImage = cardCanvas.toDataURL('image/jpeg', 0.92);
+                // UPDATED: Use JPEG with 0.85 quality to balance high resolution with file size (storage limits)
+                const cardImage = cardCanvas.toDataURL('image/jpeg', 0.85);
 
                 // --- 2. Create Avatar from the RESIZED Card Image for memory safety ---
                 const avatarCanvas = document.createElement('canvas');
@@ -125,7 +126,7 @@ export const processPlayerImageFile = (file: File): Promise<{ cardImage: string;
                 
                 avatarCtx.drawImage(cardCanvas, sx, sy, side, side, 0, 0, side, side);
                 // Avatar can be smaller, also JPEG is fine and more performant.
-                const avatarImage = avatarCanvas.toDataURL('image/jpeg', 0.90);
+                const avatarImage = avatarCanvas.toDataURL('image/jpeg', 0.85);
 
                 resolve({ cardImage, avatarImage });
 
