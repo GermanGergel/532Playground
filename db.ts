@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import { Player, Session, NewsItem } from './types';
 import { Language } from './translations';
@@ -35,7 +36,7 @@ const supabase = (supabaseUrl && supabaseAnonKey)
     ? createClient(supabaseUrl, supabaseAnonKey) 
     : null;
 
-const isSupabaseConfigured = () => !!supabase;
+export const isSupabaseConfigured = () => !!supabase;
 
 // Helper to log storage mode (once per session to avoid spam)
 let hasLoggedMode = false;

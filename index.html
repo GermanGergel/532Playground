@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>532 Playground</title>
+    
+    <!-- PWA / iOS Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="532 P">
+    <meta name="mobile-web-app-capable" content="yes">
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Aldrich&family=Audiowide&family=Black+Ops+One&family=Chakra+Petch:wght@400;500;600;700&family=Michroma&family=Orbitron:wght@400;700&family=Oxanium:wght@400;700&family=Russo+One&family=Saira+Stencil+One&family=Teko:wght@400;600&display=swap" rel="stylesheet">
@@ -63,7 +70,21 @@
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       background-color: #1A1D24; /* Ensure bg color matches splash */
+      overscroll-behavior-y: none; /* Prevents pull-to-refresh bounce on iOS PWA */
     }
+    
+    /* --- HIDE SCROLLBARS GLOBALLY FOR PWA FEEL --- */
+    ::-webkit-scrollbar {
+        width: 0px;
+        background: transparent;
+        display: none;
+    }
+    * {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+    }
+    /* --------------------------------------------- */
+
     .gradient-text {
       background: linear-gradient(90deg, #00F2FE, #4CFF5F);
       -webkit-background-clip: text;

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -74,7 +75,7 @@ export const PlayerProfileScreen: React.FC = () => {
             if (!playerForExport || !exportCardRef.current) return;
 
             // Give the browser a moment to render the off-screen component and its background image
-            await new Promise(resolve => setTimeout(resolve, 500)); // Increased wait time for large images
+            await new Promise(resolve => setTimeout(resolve, 500)); // Wait for render
 
             try {
                 const elementToCapture = exportCardRef.current.querySelector('#export-card-to-capture');
@@ -82,10 +83,11 @@ export const PlayerProfileScreen: React.FC = () => {
                 
                 const canvas = await html2canvas(elementToCapture as HTMLElement, {
                   backgroundColor: '#1A1D24',
-                  scale: 7, // High quality scale
+                  // Scale 4 creates ~2800px height. Scale 7 creates ~5000px height which crashes iOS Safari canvas.
+                  scale: 4, 
                   useCORS: true,
                   allowTaint: true,
-                  imageTimeout: 0, // Wait indefinitely for images to load
+                  imageTimeout: 0,
                   logging: false,
                 });
         

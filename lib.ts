@@ -107,8 +107,8 @@ export const processPlayerImageFile = (file: File): Promise<{ cardImage: string;
                 cardCanvas.width = width;
                 cardCanvas.height = height;
                 cardCtx?.drawImage(img, 0, 0, width, height);
-                // UPDATED: Use JPEG with 0.85 quality to balance high resolution with file size (storage limits)
-                const cardImage = cardCanvas.toDataURL('image/jpeg', 0.85);
+                // UPDATED: Use JPEG with 0.95 quality (Highest reasonable quality for storage)
+                const cardImage = cardCanvas.toDataURL('image/jpeg', 0.95);
 
                 // --- 2. Create Avatar from the RESIZED Card Image for memory safety ---
                 const avatarCanvas = document.createElement('canvas');
@@ -126,7 +126,7 @@ export const processPlayerImageFile = (file: File): Promise<{ cardImage: string;
                 
                 avatarCtx.drawImage(cardCanvas, sx, sy, side, side, 0, 0, side, side);
                 // Avatar can be smaller, also JPEG is fine and more performant.
-                const avatarImage = avatarCanvas.toDataURL('image/jpeg', 0.85);
+                const avatarImage = avatarCanvas.toDataURL('image/jpeg', 0.95);
 
                 resolve({ cardImage, avatarImage });
 
@@ -139,10 +139,4 @@ export const processPlayerImageFile = (file: File): Promise<{ cardImage: string;
         };
 
         img.onerror = () => {
-            URL.revokeObjectURL(objectUrl);
-            reject(new Error("Failed to load image file. It might be corrupted or in an unsupported format."));
-        };
-        
-        img.src = objectUrl;
-    });
-};
+            URL.revokeObjectURL
