@@ -153,23 +153,35 @@ export const saveSinglePlayerToDB = async (player: Player) => {
         if (error) throw error;
     } catch (error) {
         console.error("Supabase Save Single Player Error:", error);
+        throw error;
     }
 };
 
 
-// --- PLAYERS (Legacy bulk save, not recommended for frequent use) ---
+// --- PLAYERS (Legacy bulk save, updated with CHUNKING) ---
 export const savePlayersToDB = async (players: Player[]) => {
     logStorageMode();
     
     // Mode 1: Cloud
     if (isSupabaseConfigured()) {
         try {
-            const { error } = await supabase!
-                .from('players')
-                .upsert(players, { onConflict: 'id' });
-            if (error) throw error;
+            // CRITICAL FIX: Split into VERY small chunks (2) to avoid Supabase payload size limits 
+            // especially with high-res base64 images. 
+            // Previous limit of 5 was still occasionally causing timeouts.
+            const CHUNK_SIZE = 2; 
+            for (let i = 0; i < players.length; i += CHUNK_SIZE) {
+                const chunk = players.slice(i, i + CHUNK_SIZE);
+                const { error } = await supabase!
+                    .from('players')
+                    .upsert(chunk, { onConflict: 'id' });
+                
+                if (error) throw error;
+                // Small delay to be nice to the database and prevent rate limits
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
         } catch (error) {
-            console.error("Supabase Save Error:", error);
+            console.error("Supabase Save Error (Batch):", error);
+            throw error;
         }
     } 
     // Mode 2: Local Fallback
@@ -241,6 +253,7 @@ export const saveHistoryToDB = async (history: Session[]) => {
             if (error) throw error;
         } catch (error) {
             console.error("Supabase Save History Error:", error);
+            throw error;
         }
     } 
     // Mode 2: Local Fallback
@@ -288,6 +301,7 @@ export const saveNewsToDB = async (news: NewsItem[]) => {
             if (error) throw error;
         } catch (error) {
             console.error("Supabase Save News Error:", error);
+            throw error;
         }
     } 
     // Mode 2: Local Fallback

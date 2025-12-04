@@ -2,13 +2,14 @@
 import React from 'react';
 import { useApp } from '../context';
 import { Page, Card, useTranslation, Button } from '../ui';
-import { loadPlayersFromDB, isSupabaseConfigured } from '../db';
-import { LightbulbIcon } from '../icons';
+import { loadPlayersFromDB, isSupabaseConfigured, savePlayersToDB, saveHistoryToDB, saveNewsToDB } from '../db';
+import { LightbulbIcon, Upload } from '../icons';
 
 export const SettingsScreen: React.FC = () => {
     const t = useTranslation();
-    const { language, setLanguage, allPlayers } = useApp();
+    const { language, setLanguage, allPlayers, history, newsFeed } = useApp();
     const [cloudStatus, setCloudStatus] = React.useState<{ status: 'loading' | 'connected' | 'error' | 'local_only', count?: number, message?: string }>({ status: 'loading' });
+    const [isSyncing, setIsSyncing] = React.useState(false);
 
     React.useEffect(() => {
         const checkConnection = async () => {
@@ -32,6 +33,32 @@ export const SettingsScreen: React.FC = () => {
 
         checkConnection();
     }, []);
+
+    const handleForceSync = async () => {
+        if (!isSupabaseConfigured() || isSyncing) return;
+        if (!window.confirm("This will overwrite Supabase data with your current local App data. Continue?")) return;
+
+        setIsSyncing(true);
+        try {
+            await Promise.all([
+                savePlayersToDB(allPlayers),
+                saveHistoryToDB(history),
+                saveNewsToDB(newsFeed)
+            ]);
+            alert("✅ Cloud Sync Complete! Supabase has been updated.");
+            
+            // Refresh diagnostic status
+            const players = await loadPlayersFromDB();
+            if (players) {
+                setCloudStatus({ status: 'connected', count: players.length });
+            }
+        } catch (error) {
+            console.error("Force sync failed:", error);
+            alert("❌ Sync Failed. Check console for details.");
+        } finally {
+            setIsSyncing(false);
+        }
+    };
 
     const langClasses = (lang: string) => `px-6 py-2 rounded-full font-bold transition-colors text-lg ${language === lang ? 'gradient-bg text-dark-bg' : 'bg-dark-surface hover:bg-white/10'}`;
 
@@ -78,6 +105,32 @@ export const SettingsScreen: React.FC = () => {
                             <span className="text-sm">Local App Players:</span>
                             <span className="text-sm font-bold">{allPlayers.length}</span>
                         </div>
+
+                        {cloudStatus.status === 'connected' && (
+                            <div className="mt-4 pt-4 border-t border-white/10">
+                                <Button 
+                                    variant="secondary" 
+                                    onClick={handleForceSync} 
+                                    disabled={isSyncing}
+                                    className={`w-full text-sm !py-2.5 flex items-center justify-center gap-2 ${isSyncing ? 'opacity-50' : ''}`}
+                                >
+                                    {isSyncing ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            Syncing...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Upload className="w-4 h-4" />
+                                            Force Cloud Sync
+                                        </>
+                                    )}
+                                </Button>
+                                <p className="text-[10px] text-dark-text-secondary text-center mt-2">
+                                    Use this if App data is correct but Cloud is old.
+                                </p>
+                            </div>
+                        )}
 
                         {cloudStatus.status === 'connected' && cloudStatus.count === 0 && allPlayers.length === 0 && (
                             <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
