@@ -134,7 +134,8 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
                 </header>
                 
                 {/* Skills on the left */}
-                <div className="absolute top-1/2 -translate-y-1/2 left-4 z-30">
+                {/* UPDATED: Changed positioning from absolute centered (top-1/2) to fixed from top (top-40) to sit below the flag */}
+                <div className="absolute top-40 left-4 z-30">
                     <div className="space-y-3">
                         {(player.skills || []).slice(0, 5).map(skill => (
                             <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
