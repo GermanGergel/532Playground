@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Page, PageHeader, Card, Button, useTranslation } from '../ui';
-import { loadCustomAudio, saveCustomAudio, deleteCustomAudio } from '../db';
+import { loadCustomAudio, saveCustomAudio, deleteCustomAudio, isSupabaseConfigured } from '../db';
 import { playAnnouncement, initAudioContext } from '../lib';
 import { Upload, Trash2, Play } from '../icons';
 
@@ -32,7 +32,7 @@ export const VoiceSettingsScreen: React.FC = () => {
     const t = useTranslation();
     const [customAudioStatus, setCustomAudioStatus] = useState<Record<string, boolean>>({});
     const [isLoading, setIsLoading] = useState(true);
-    const [isUploading, setIsUploading] = useState(false);
+    const [isProcessing, setIsProcessing] = useState<AnnouncementKey | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [keyToUpload, setKeyToUpload] = useState<AnnouncementKey | null>(null);
 
@@ -58,27 +58,39 @@ export const VoiceSettingsScreen: React.FC = () => {
         const file = event.target.files?.[0];
         if (!file || !keyToUpload) return;
 
-        setIsUploading(true);
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const base64 = e.target?.result as string;
-            if (base64) {
-                await saveCustomAudio(keyToUpload, base64);
-                setCustomAudioStatus(prev => ({ ...prev, [keyToUpload]: true }));
+        setIsProcessing(keyToUpload);
+        try {
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const base64 = e.target?.result as string;
+                if (base64) {
+                    await saveCustomAudio(keyToUpload, base64);
+                    setCustomAudioStatus(prev => ({ ...prev, [keyToUpload]: true }));
+                }
+                setIsProcessing(null);
+                setKeyToUpload(null);
+            };
+            reader.readAsDataURL(file);
+        } catch (error) {
+            alert('Upload failed. Please check connection and try again.');
+            setIsProcessing(null);
+        } finally {
+            if (event.target) {
+                event.target.value = '';
             }
-            setIsUploading(false);
-            setKeyToUpload(null);
-        };
-        reader.readAsDataURL(file);
-        
-        if (event.target) {
-            event.target.value = '';
         }
     };
 
     const handleDelete = async (key: AnnouncementKey) => {
-        await deleteCustomAudio(key);
-        setCustomAudioStatus(prev => ({ ...prev, [key]: false }));
+        setIsProcessing(key);
+        try {
+            await deleteCustomAudio(key);
+            setCustomAudioStatus(prev => ({ ...prev, [key]: false }));
+        } catch (error) {
+            alert('Failed to delete. Please check connection.');
+        } finally {
+            setIsProcessing(null);
+        }
     };
 
     const handlePreview = (key: AnnouncementKey, fallbackText: string) => {
@@ -89,6 +101,8 @@ export const VoiceSettingsScreen: React.FC = () => {
     if (isLoading) {
         return <Page><p className="text-center">{t.loading}</p></Page>;
     }
+    
+    const canUseCloud = isSupabaseConfigured();
 
     return (
         <Page>
@@ -100,11 +114,18 @@ export const VoiceSettingsScreen: React.FC = () => {
                 className="hidden"
             />
             <PageHeader title={t.manageAnnouncements} />
+             {!canUseCloud && (
+                <Card className="mb-4 bg-yellow-900/50 border-yellow-500/50">
+                    <p className="text-yellow-300 text-center text-sm">
+                        Cloud database not configured. Audio files will be saved only on this device and will not sync.
+                    </p>
+                </Card>
+            )}
             <Card className="!p-0 bg-dark-surface/80 border border-dark-accent-start/30 shadow-[0_0_20px_rgba(0,242,254,0.1)]">
                 <ul className="divide-y divide-white/10">
                     {ANNOUNCEMENTS.map(({ key, fallbackText }) => {
                         const hasCustomAudio = customAudioStatus[key];
-                        const isThisOneUploading = isUploading && keyToUpload === key;
+                        const isThisOneProcessing = isProcessing === key;
                         return (
                             <li key={key} className="flex items-center justify-between p-3 transition-colors hover:bg-white/5">
                                 <div className="flex-1">
@@ -116,14 +137,14 @@ export const VoiceSettingsScreen: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <Button variant="ghost" className="!p-2" onClick={() => handlePreview(key, fallbackText)} disabled={isUploading}>
+                                    <Button variant="ghost" className="!p-2" onClick={() => handlePreview(key, fallbackText)} disabled={!!isProcessing}>
                                         <Play className="w-5 h-5" />
                                     </Button>
-                                    <Button variant="ghost" className="!p-2" onClick={() => handleUploadClick(key)} disabled={isUploading}>
-                                        {isThisOneUploading ? <Spinner /> : <Upload className="w-5 h-5" />}
+                                    <Button variant="ghost" className="!p-2" onClick={() => handleUploadClick(key)} disabled={!!isProcessing}>
+                                        {isThisOneProcessing ? <Spinner /> : <Upload className="w-5 h-5" />}
                                     </Button>
                                     {hasCustomAudio && (
-                                        <Button variant="ghost" className="!p-2 text-red-400" onClick={() => handleDelete(key)} disabled={isUploading}>
+                                        <Button variant="ghost" className="!p-2 text-red-400" onClick={() => handleDelete(key)} disabled={!!isProcessing}>
                                             <Trash2 className="w-5 h-5" />
                                         </Button>
                                     )}

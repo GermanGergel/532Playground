@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Session, Player, GameStatus, RotationMode, Team, Game, Goal, SessionStatus, EventLogEntry, EventType, StartRoundPayload, GoalPayload, PlayerStatus, PlayerTier, BadgeType, NewsItem } from './types';
 import { Language } from './translations';
@@ -7,7 +6,8 @@ import {
     loadActiveSessionFromDB, saveActiveSessionToDB, 
     loadHistoryFromDB, saveHistoryToDB,
     loadLanguageFromDB, saveLanguageToDB,
-    loadNewsFromDB, saveNewsToDB
+    loadNewsFromDB, saveNewsToDB,
+    syncAndCacheAudioAssets // Import the new sync function
 } from './db';
 import { useGlobalTimer } from './hooks/useGlobalTimer';
 
@@ -42,6 +42,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   React.useEffect(() => {
     const initApp = async () => {
         try {
+            // Run audio sync in the background
+            syncAndCacheAudioAssets();
+
             // 1. Load Active Session
             let loadedSession = await loadActiveSessionFromDB();
             if (loadedSession) {

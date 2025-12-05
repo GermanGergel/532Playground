@@ -1,8 +1,7 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { Player, Session, NewsItem } from './types';
 import { Language } from './translations';
-import { get, set, del } from 'idb-keyval';
+import { get, set, del, keys } from 'idb-keyval';
 
 // --- SUPABASE CONFIGURATION ---
 // Universal environment variable access (works in Vite, Next.js, and standard Node)
@@ -355,30 +354,109 @@ export const loadLanguageFromDB = async (): Promise<Language | undefined> => {
     }
 };
 
-// --- AUDIO ASSETS (IndexedDB) ---
+// --- HYBRID AUDIO ASSETS (Supabase Storage + IndexedDB Cache) ---
+const AUDIO_BUCKET = 'audio_assets';
 const AUDIO_KEY_PREFIX = 'audio_';
+type CachedAudio = { data: string; lastModified: string };
 
+// 1. Save: Upload to cloud, then cache locally
 export const saveCustomAudio = async (key: string, base64: string): Promise<void> => {
+    if (!isSupabaseConfigured()) {
+        await set(`${AUDIO_KEY_PREFIX}${key}`, { data: base64, lastModified: new Date().toISOString() });
+        return;
+    }
     try {
-        await set(`${AUDIO_KEY_PREFIX}${key}`, base64);
+        const blob = base64ToBlob(base64);
+        const filePath = `${key}.mp3`;
+        const { error } = await supabase!.storage.from(AUDIO_BUCKET).upload(filePath, blob, { upsert: true });
+        if (error) throw error;
+        
+        // After successful upload, cache it locally
+        await set(`${AUDIO_KEY_PREFIX}${key}`, { data: base64, lastModified: new Date().toISOString() });
     } catch (error) {
-        console.error("Failed to save custom audio:", error);
+        console.error("Failed to save/upload custom audio:", error);
+        throw error; // Re-throw to be caught by UI
     }
 };
 
+// 2. Load: Always read from local cache for speed
 export const loadCustomAudio = async (key: string): Promise<string | undefined> => {
     try {
-        return await get(`${AUDIO_KEY_PREFIX}${key}`);
+        const cached = await get<CachedAudio>(`${AUDIO_KEY_PREFIX}${key}`);
+        return cached?.data;
     } catch (error) {
-        console.error("Failed to load custom audio:", error);
+        console.error("Failed to load custom audio from cache:", error);
         return undefined;
     }
 };
 
+// 3. Delete: Remove from cloud and local cache
 export const deleteCustomAudio = async (key: string): Promise<void> => {
+    if (isSupabaseConfigured()) {
+        try {
+            const filePath = `${key}.mp3`;
+            await supabase!.storage.from(AUDIO_BUCKET).remove([filePath]);
+        } catch (error) {
+            console.error("Failed to delete custom audio from cloud:", error);
+            // Don't re-throw, still try to delete locally
+        }
+    }
     try {
         await del(`${AUDIO_KEY_PREFIX}${key}`);
     } catch (error) {
-        console.error("Failed to delete custom audio:", error);
+        console.error("Failed to delete custom audio from cache:", error);
+    }
+};
+
+const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+};
+
+// 4. Sync: On app start, sync cloud to local cache
+export const syncAndCacheAudioAssets = async () => {
+    if (!isSupabaseConfigured()) return;
+
+    try {
+        console.log("Syncing audio assets from cloud...");
+        const { data: cloudFiles, error } = await supabase!.storage.from(AUDIO_BUCKET).list();
+        if (error) throw error;
+        if (!cloudFiles) return;
+
+        const localKeys = (await keys()).filter(k => typeof k === 'string' && k.startsWith(AUDIO_KEY_PREFIX));
+        const localKeyMap = new Map(localKeys.map(k => [(k as string).replace(AUDIO_KEY_PREFIX, ''), true]));
+
+        for (const cloudFile of cloudFiles) {
+            const key = cloudFile.name.replace('.mp3', '');
+            localKeyMap.delete(key); // Remove from map as it exists in cloud
+
+            const localAsset = await get<CachedAudio>(`${AUDIO_KEY_PREFIX}${key}`);
+            const cloudLastModified = new Date(cloudFile.metadata.last_modified).getTime();
+            const localLastModified = localAsset ? new Date(localAsset.lastModified).getTime() : 0;
+
+            // If local is missing or cloud is newer, download and cache
+            if (!localAsset || cloudLastModified > localLastModified) {
+                console.log(`Downloading new/updated audio: ${key}`);
+                const { data: blob, error: downloadError } = await supabase!.storage.from(AUDIO_BUCKET).download(cloudFile.name);
+                if (downloadError) throw downloadError;
+                if (blob) {
+                    const base64 = await blobToBase64(blob);
+                    await set(`${AUDIO_KEY_PREFIX}${key}`, { data: base64, lastModified: cloudFile.metadata.last_modified });
+                }
+            }
+        }
+        
+        // Clean up: remove local assets that no longer exist in the cloud
+        for (const keyToDelete of localKeyMap.keys()) {
+            console.log(`Removing stale local audio: ${keyToDelete}`);
+            await del(`${AUDIO_KEY_PREFIX}${keyToDelete}`);
+        }
+
+    } catch (error) {
+        console.error("Failed to sync audio assets:", error);
     }
 };
