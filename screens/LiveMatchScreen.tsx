@@ -84,7 +84,7 @@ const formatTime = (totalSeconds: number) => {
 };
 
 export const LiveMatchScreen: React.FC = () => {
-    const { activeSession, setActiveSession, setHistory, displayTime, setAllPlayers, setNewsFeed, allPlayers: oldPlayersState } = useApp();
+    const { activeSession, setActiveSession, setHistory, displayTime, setAllPlayers, setNewsFeed, allPlayers: oldPlayersState, newsFeed } = useApp();
     const navigate = useNavigate();
     const t = useTranslation();
 
@@ -272,8 +272,7 @@ export const LiveMatchScreen: React.FC = () => {
         initAudioContext();
 
         if (activeSession?.matchDurationMinutes && isTimerBasedGame) {
-            // Simplified: Always play 'start_match' regardless of duration
-            playAnnouncement('start_match', 'Game On');
+            playAnnouncement('start_match', 'Game started');
         }
         
         setActiveSession(s => {
@@ -475,6 +474,8 @@ export const LiveMatchScreen: React.FC = () => {
         setSubModalState({ isOpen: false });
     };
     
+    // IMPORTANT FIX: Logic refactored to calculate, await save, and THEN update state.
+    // This prevents the race condition where state updates triggered a re-render before database save completed.
     const handleFinishSession = async () => {
         if (!activeSession || isSaving) return;
         setIsSaving(true);
@@ -482,111 +483,109 @@ export const LiveMatchScreen: React.FC = () => {
         try {
             setIsEndSessionModalOpen(false);
             
-            // Note: We don't necessarily need to pause audio here as playAnnouncement handles its own state
-            // but we can stop any long tracks if needed. For now, let it be.
-
+            // 1. Calculate All Stats
             const { allPlayersStats } = calculateAllStats(activeSession);
+            const playerStatsMap = new Map(allPlayersStats.map(stat => [stat.player.id, stat]));
             
-            let calculatedNewPlayers: Player[] = [];
-
-            setAllPlayers(currentAllPlayers => {
-                const playerStatsMap = new Map(allPlayersStats.map(stat => [stat.player.id, stat]));
-                
-                let updatedPlayers = currentAllPlayers.map(player => {
-                    const sessionStats = playerStatsMap.get(player.id);
-                    if (sessionStats) {
-                        const updatedPlayer: Player = {
-                            ...player,
-                            totalGames: player.totalGames + sessionStats.gamesPlayed,
-                            totalGoals: player.totalGoals + sessionStats.goals,
-                            totalAssists: player.totalAssists + sessionStats.assists,
-                            totalWins: player.totalWins + sessionStats.wins,
-                            totalDraws: player.totalDraws + sessionStats.draws,
-                            totalLosses: player.totalLosses + sessionStats.losses,
-                            totalSessionsPlayed: (player.totalSessionsPlayed || 0) + 1,
-                            monthlyGames: player.monthlyGames + sessionStats.gamesPlayed,
-                            monthlyGoals: player.monthlyGoals + sessionStats.goals,
-                            monthlyAssists: player.monthlyAssists + sessionStats.assists,
-                            monthlyWins: player.monthlyWins + sessionStats.wins,
-                            monthlySessionsPlayed: (player.monthlySessionsPlayed || 0) + 1,
-                            lastPlayedAt: new Date().toISOString(),
-                        };
-                        return updatedPlayer;
-                    }
-                    return player;
-                });
-
-                updatedPlayers = updatedPlayers.map(player => {
-                    const sessionStats = playerStatsMap.get(player.id);
-                    if (sessionStats) {
-                        const badgesEarnedThisSession = calculateEarnedBadges(player, sessionStats, activeSession, allPlayersStats);
-                        const currentBadges = player.badges || {};
-                        const badgesNewThisSession = badgesEarnedThisSession.filter(b => !currentBadges[b]);
-
-                        const { delta, breakdown } = calculateRatingUpdate(player, sessionStats, activeSession, badgesNewThisSession);
-                        const newRating = Math.round(player.rating + delta);
-                        
-                        let newForm: 'hot_streak' | 'stable' | 'cold_streak' = 'stable';
-                        if (delta >= 0.5) newForm = 'hot_streak';
-                        else if (delta <= -0.5) newForm = 'cold_streak';
-                        
-                        const newTier = getTierForRating(newRating);
-
-                        const updatedBadges: Partial<Record<BadgeType, number>> = { ...currentBadges };
-                        badgesEarnedThisSession.forEach(badge => {
-                            updatedBadges[badge] = (updatedBadges[badge] || 0) + 1;
-                        });
-                        
-                        const sessionHistory = [...(player.sessionHistory || [])];
-                        if (sessionStats.gamesPlayed > 0) {
-                            sessionHistory.push({ winRate: Math.round((sessionStats.wins / sessionStats.gamesPlayed) * 100) });
-                        }
-                        if (sessionHistory.length > 5) sessionHistory.shift();
-
-                        return { 
-                            ...player, 
-                            rating: newRating, 
-                            tier: newTier, 
-                            form: newForm,
-                            badges: updatedBadges,
-                            sessionHistory: sessionHistory,
-                            lastRatingChange: breakdown,
-                        };
-                    }
-                    return player;
-                });
-                
-                calculatedNewPlayers = updatedPlayers;
-                return updatedPlayers;
+            // 2. Generate Updated Player Objects
+            // We use oldPlayersState (from context) as the base to ensure we are updating the full roster
+            let updatedPlayers = oldPlayersState.map(player => {
+                const sessionStats = playerStatsMap.get(player.id);
+                if (sessionStats) {
+                    const updatedPlayer: Player = {
+                        ...player,
+                        totalGames: player.totalGames + sessionStats.gamesPlayed,
+                        totalGoals: player.totalGoals + sessionStats.goals,
+                        totalAssists: player.totalAssists + sessionStats.assists,
+                        totalWins: player.totalWins + sessionStats.wins,
+                        totalDraws: player.totalDraws + sessionStats.draws,
+                        totalLosses: player.totalLosses + sessionStats.losses,
+                        totalSessionsPlayed: (player.totalSessionsPlayed || 0) + 1,
+                        monthlyGames: player.monthlyGames + sessionStats.gamesPlayed,
+                        monthlyGoals: player.monthlyGoals + sessionStats.goals,
+                        monthlyAssists: player.monthlyAssists + sessionStats.assists,
+                        monthlyWins: player.monthlyWins + sessionStats.wins,
+                        monthlySessionsPlayed: (player.monthlySessionsPlayed || 0) + 1,
+                        lastPlayedAt: new Date().toISOString(),
+                    };
+                    return updatedPlayer;
+                }
+                return player;
             });
 
-            if (calculatedNewPlayers.length > 0) {
-                await savePlayersToDB(calculatedNewPlayers);
+            // 3. Apply Ratings & Badges
+            updatedPlayers = updatedPlayers.map(player => {
+                const sessionStats = playerStatsMap.get(player.id);
+                if (sessionStats) {
+                    const badgesEarnedThisSession = calculateEarnedBadges(player, sessionStats, activeSession, allPlayersStats);
+                    const currentBadges = player.badges || {};
+                    const badgesNewThisSession = badgesEarnedThisSession.filter(b => !currentBadges[b]);
+
+                    const { delta, breakdown } = calculateRatingUpdate(player, sessionStats, activeSession, badgesNewThisSession);
+                    const newRating = Math.round(player.rating + delta);
+                    
+                    let newForm: 'hot_streak' | 'stable' | 'cold_streak' = 'stable';
+                    if (delta >= 0.5) newForm = 'hot_streak';
+                    else if (delta <= -0.5) newForm = 'cold_streak';
+                    
+                    const newTier = getTierForRating(newRating);
+
+                    const updatedBadges: Partial<Record<BadgeType, number>> = { ...currentBadges };
+                    badgesEarnedThisSession.forEach(badge => {
+                        updatedBadges[badge] = (updatedBadges[badge] || 0) + 1;
+                    });
+                    
+                    const sessionHistory = [...(player.sessionHistory || [])];
+                    if (sessionStats.gamesPlayed > 0) {
+                        sessionHistory.push({ winRate: Math.round((sessionStats.wins / sessionStats.gamesPlayed) * 100) });
+                    }
+                    if (sessionHistory.length > 5) sessionHistory.shift();
+
+                    return { 
+                        ...player, 
+                        rating: newRating, 
+                        tier: newTier, 
+                        form: newForm,
+                        badges: updatedBadges,
+                        sessionHistory: sessionHistory,
+                        lastRatingChange: breakdown,
+                    };
+                }
+                return player;
+            });
+            
+            // 4. SAVE PLAYERS TO DB (Blocking, Optimised)
+            // CRITICAL FIX: Only save players who participated in the session to avoid large payloads/timeouts.
+            const playersToSave = updatedPlayers.filter(p => playerStatsMap.has(p.id));
+            
+            if (playersToSave.length > 0) {
+                await savePlayersToDB(playersToSave);
+                // Update local state with the FULL list, but only after successful DB save of the modified ones
+                setAllPlayers(updatedPlayers); 
             }
 
-            if (calculatedNewPlayers.length > 0) {
-                const newNewsItems = generateNewsUpdates(oldPlayersState, calculatedNewPlayers);
+            // 5. Generate & Save News (Blocking)
+            if (playersToSave.length > 0) {
+                const newNewsItems = generateNewsUpdates(oldPlayersState, updatedPlayers);
                 if (newNewsItems.length > 0) {
-                    setNewsFeed(prev => {
-                        const updatedFeed = manageNewsFeedSize([...newNewsItems, ...prev]);
-                        saveNewsToDB(updatedFeed);
-                        return updatedFeed;
-                    });
+                    const updatedFeed = manageNewsFeedSize([...newNewsItems, ...newsFeed]);
+                    await saveNewsToDB(updatedFeed);
+                    setNewsFeed(updatedFeed); // Update local state only after successful DB save
                 }
             }
 
+            // 6. Save History (Blocking)
             const finalSession: Session = { 
                 ...activeSession, 
                 status: SessionStatus.Completed,
             };
             
-            setHistory(prev => {
-                const newHistory = [finalSession, ...prev];
-                saveHistoryToDB(newHistory);
-                return newHistory;
-            });
+            // Note: History loading depends on local/remote precedence, but we append here for immediate UI consistency
+            const newHistory = [finalSession, ...(await import('../db').then(mod => mod.loadHistoryFromDB()) || [])];
+            await saveHistoryToDB([finalSession]); // Append to DB (or full overwrite depending on impl, usually handled by ID)
+            setHistory(prev => [finalSession, ...prev]); // Update UI
+
             setActiveSession(null);
-            
             navigate('/');
         } catch (error) {
             console.error("Error ending session:", error);

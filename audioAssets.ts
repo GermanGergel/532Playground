@@ -5,20 +5,28 @@
 
 export const AUDIO_ASSETS: Record<string, string> = {
     // --- TIME ANNOUNCEMENTS ---
-    'three_minutes': "", // "Three minutes left"
+    'five_minutes': "", // "Five minutes remaining"
+    'three_minutes': "", // "Three minutes remaining"
+    'two_minutes': "", // "Two minutes warning"
     'one_minute': "", // "Last minute"
     'thirty_seconds': "", // "Thirty seconds"
     
-    // --- COUNTDOWN (5 Seconds only) ---
-    'sound_5': "",
-    'sound_4': "",
-    'sound_3': "",
-    'sound_2': "",
-    'sound_1': "",
+    // --- COUNTDOWN ---
+    'ten': "",
+    'nine': "",
+    'eight': "",
+    'seven': "",
+    'six': "",
+    'five': "",
+    'four': "",
+    'three': "",
+    'two': "",
+    'one': "",
     
     // --- MATCH EVENTS ---
-    'start_match': "", // "Game On."
-    'finish_match': "", // "Station." or "Last Play."
+    'start_match': "", // "Game on!" or Whistle
+    'finish_match': "", // "Time is up!" or Whistle
+    'session_start': "", // "Session started"
     
     // --- SYSTEM ---
     // Short silent track to keep Bluetooth alive (Keep this one!)

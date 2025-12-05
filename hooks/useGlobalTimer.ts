@@ -53,7 +53,7 @@ export const useGlobalTimer = (
         };
     }, [activeSession, currentGame]);
 
-    // --- GLOBAL VOICE ASSISTANT LOGIC (SIMPLIFIED) ---
+    // --- GLOBAL VOICE ASSISTANT LOGIC (UPDATED FOR AUDIO ASSETS) ---
     React.useEffect(() => {
         if (!activeSession || !currentGame || currentGame.status !== GameStatus.Active || !isTimerBasedGame) {
             return;
@@ -72,17 +72,24 @@ export const useGlobalTimer = (
 
         const alreadyAnnounced = currentGame.announcedMilestones || [];
 
-        // Simplified Milestones: 3m -> 1m -> 30s -> Countdown (5-1) -> Finish
+        // Map seconds to { key: string, fallback: string }
         const milestones: Record<number, { key: string, text: string }> = {
-            180: { key: 'three_minutes', text: 'Three minutes left' },
+            300: { key: 'five_minutes', text: 'Five minutes remaining' },
+            180: { key: 'three_minutes', text: 'Three minutes remaining' },
+            120: { key: 'two_minutes', text: 'Two minutes warning' },
             60:  { key: 'one_minute', text: 'Last minute' },
             30:  { key: 'thirty_seconds', text: 'Thirty seconds' },
-            5:   { key: 'sound_5', text: 'Five' },
-            4:   { key: 'sound_4', text: 'Four' },
-            3:   { key: 'sound_3', text: 'Three' },
-            2:   { key: 'sound_2', text: 'Two' },
-            1:   { key: 'sound_1', text: 'One' },
-            0:   { key: 'finish_match', text: 'Last Play' }
+            10:  { key: 'ten', text: 'Ten' },
+            9:   { key: 'nine', text: 'Nine' },
+            8:   { key: 'eight', text: 'Eight' },
+            7:   { key: 'seven', text: 'Seven' },
+            6:   { key: 'six', text: 'Six' },
+            5:   { key: 'five', text: 'Five' },
+            4:   { key: 'four', text: 'Four' },
+            3:   { key: 'three', text: 'Three' },
+            2:   { key: 'two', text: 'Two' },
+            1:   { key: 'one', text: 'One' },
+            0:   { key: 'finish_match', text: 'Time is up' }
         };
 
         const milestone = milestones[remainingSeconds];

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Player, BadgeType, PlayerStatus, SkillType } from '../types';
 import { useTranslation } from '../ui';
@@ -122,6 +123,7 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
                         )}
                     </div>
                     <div className="text-right">
+                        {/* UPDATED: Reduced font size from 6xl to 5xl for better proportions */}
                         <p className="font-orbitron font-bold text-5xl text-dark-accent-start accent-text-glow" style={{ textShadow: '0 0 8px rgba(0, 242, 254, 0.8)' }}>
                             {player.rating}
                         </p>
@@ -133,13 +135,14 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
                 </header>
                 
                 {/* Skills on the left */}
+                {/* UPDATED: Fixed position top-40, improved vertical alignment of text with star */}
                 <div className="absolute top-40 left-4 z-30">
                     <div className="space-y-3">
                         {(player.skills || []).slice(0, 5).map(skill => (
                             <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
                                 <StarIcon className="w-4 h-4 text-[#00F2FE]" style={{ filter: 'drop-shadow(0 0 3px #00F2FE)'}} />
-                                {/* Precise visual alignment: Lift text slightly to align middle of letters with star center */}
-                                <span className="font-bold text-xs text-white tracking-wider leading-none relative -top-[1.5px]" style={{ textShadow: '0 1px 3px #000' }}>
+                                {/* Added leading-none and -top-[2px] to lift text to star center */}
+                                <span className="font-bold text-xs text-white tracking-wider leading-none relative -top-[2px]" style={{ textShadow: '0 1px 3px #000' }}>
                                     {skillAbbreviations[skill]}
                                 </span>
                             </div>
@@ -150,6 +153,7 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
                 <div className="flex-grow" />
 
                 {/* Player Name */}
+                {/* UPDATED: Increased margin-bottom (mb-5) to lift name higher above the line */}
                 <section className="text-center mb-5">
                     <h1 className="font-audiowide text-4xl uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] leading-tight">
                         {player.nickname} {player.surname}
