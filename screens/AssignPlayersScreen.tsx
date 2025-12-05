@@ -69,7 +69,9 @@ export const AssignPlayersScreen: React.FC = () => {
     if (!activeSession) return null;
     
     const sessionPlayerIds = new Set(activeSession.playerPool.map(p => p.id));
-    const searchResults = playerSearch
+    
+    // In test mode, don't show search results from the main player database.
+    const searchResults = playerSearch && !activeSession.isTestMode
         ? allPlayers.filter(p => 
             !sessionPlayerIds.has(p.id) &&
             p.nickname.toLowerCase().includes(playerSearch.toLowerCase())
@@ -79,10 +81,12 @@ export const AssignPlayersScreen: React.FC = () => {
     const handleAddPlayer = (player: Player | { nickname: string }) => {
         let playerToAdd: Player;
 
-        if ('id' in player) {
+        if ('id' in player && !activeSession.isTestMode) {
             playerToAdd = player;
         } else {
-            const existingPlayer = allPlayers.find(p => p.nickname.toLowerCase() === player.nickname.toLowerCase());
+            // In Test Mode, never look for an existing player, always create a temporary one.
+            const existingPlayer = !activeSession.isTestMode ? allPlayers.find(p => p.nickname.toLowerCase() === player.nickname.toLowerCase()) : undefined;
+            
             if (existingPlayer) {
                 playerToAdd = existingPlayer;
             } else {
@@ -100,9 +104,11 @@ export const AssignPlayersScreen: React.FC = () => {
                     monthlySessionsPlayed: 0,
                     form: 'stable', badges: {}, skills: [], lastPlayedAt: new Date().toISOString(),
                 };
-                setAllPlayers(prev => [...prev, playerToAdd]);
+                
+                // Only add to global players list and save to DB if it's not a test session.
                 if (!activeSession.isTestMode) {
-                    saveSinglePlayerToDB(playerToAdd); // Save new player to DB immediately only if not in test mode
+                    setAllPlayers(prev => [...prev, playerToAdd]);
+                    saveSinglePlayerToDB(playerToAdd);
                 }
             }
         }

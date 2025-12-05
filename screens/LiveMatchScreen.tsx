@@ -98,8 +98,12 @@ export const LiveMatchScreen: React.FC = () => {
         playerOutId?: string;
     }>({ isOpen: false });
     
-    // UPDATED: Use playAnnouncement('silence') instead of manual Audio element for consistency
     React.useEffect(() => {
+        // Only initialize audio for 3-team, timer-based games.
+        if (activeSession?.numTeams !== 3) {
+            return;
+        }
+
         // Initialize Audio Context on first interaction
         const handleInteraction = () => {
             initAudioContext();
@@ -115,7 +119,7 @@ export const LiveMatchScreen: React.FC = () => {
             window.removeEventListener('click', handleInteraction);
             window.removeEventListener('touchstart', handleInteraction);
         };
-    }, []);
+    }, [activeSession?.numTeams]);
     
     const currentGame = activeSession?.games[activeSession.games.length - 1];
     const isTimerBasedGame = activeSession?.numTeams === 3;
@@ -267,11 +271,12 @@ export const LiveMatchScreen: React.FC = () => {
     }, [setActiveSession, setIsSelectWinnerModalOpen]);
     
      const handleStartGame = () => {
-        // Initialize audio context on start button click to be safe
-        initAudioContext();
-
-        if (activeSession?.matchDurationMinutes && isTimerBasedGame) {
-            playAnnouncement('start_match', 'Game started', activeVoicePack);
+        // Only initialize audio and play announcements for timer-based games (3 teams)
+        if (isTimerBasedGame) {
+            initAudioContext();
+            if (activeSession?.matchDurationMinutes) {
+                playAnnouncement('start_match', 'Game started', activeVoicePack);
+            }
         }
         
         setActiveSession(s => {
