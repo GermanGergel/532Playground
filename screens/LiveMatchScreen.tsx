@@ -5,15 +5,14 @@ import { useApp } from '../context';
 import { Button, Modal, Page, useTranslation } from '../ui';
 import { TeamAvatar } from '../components/avatars';
 import { StarIcon, Plus, Pause, Play, Edit3 } from '../icons';
-import { silentAudioMp3 } from '../assets';
 import { Session, Game, GameStatus, Goal, GoalPayload, SubPayload, EventLogEntry, EventType, StartRoundPayload, Player, BadgeType, RotationMode, Team, SessionStatus } from '../types';
-import { speak } from '../lib';
+import { playAnnouncement, initAudioContext } from '../lib'; // UPDATED IMPORTS
 import { calculateAllStats } from '../services/statistics';
 import { calculateEarnedBadges, calculateRatingUpdate, getTierForRating } from '../services/rating';
 import { generateNewsUpdates, manageNewsFeedSize } from '../services/news';
 import { GoalModal, EditGoalModal, EndSessionModal, SelectWinnerModal, SubstitutionModal } from '../modals';
 import { hexToRgba, newId } from './utils';
-import { savePlayersToDB, saveNewsToDB, saveHistoryToDB } from '../db'; // Added explicit DB save functions
+import { savePlayersToDB, saveNewsToDB, saveHistoryToDB } from '../db';
 
 const GameIndicators: React.FC<{ count: number; color: string }> = ({ count, color }) => {
     return (
@@ -93,25 +92,29 @@ export const LiveMatchScreen: React.FC = () => {
     const [isEndSessionModalOpen, setIsEndSessionModalOpen] = React.useState(false);
     const [isSelectWinnerModalOpen, setIsSelectWinnerModalOpen] = React.useState(false);
     const [goalToEdit, setGoalToEdit] = React.useState<Goal | null>(null);
-    const [isSaving, setIsSaving] = React.useState(false); // Added loading state for save operation
+    const [isSaving, setIsSaving] = React.useState(false);
     const [subModalState, setSubModalState] = React.useState<{
         isOpen: boolean;
         teamId?: string;
         playerOutId?: string;
     }>({ isOpen: false });
     
-    const silentAudioRef = React.useRef<HTMLAudioElement | null>(null);
-
+    // UPDATED: Use playAnnouncement('silence') instead of manual Audio element for consistency
     React.useEffect(() => {
-        silentAudioRef.current = new Audio(silentAudioMp3);
-        silentAudioRef.current.loop = true;
-        silentAudioRef.current.volume = 0.01;
+        // Initialize Audio Context on first interaction
+        const handleInteraction = () => {
+            initAudioContext();
+            playAnnouncement('silence', ''); // Wake up audio
+            window.removeEventListener('click', handleInteraction);
+            window.removeEventListener('touchstart', handleInteraction);
+        };
+        
+        window.addEventListener('click', handleInteraction);
+        window.addEventListener('touchstart', handleInteraction);
 
         return () => {
-            if (silentAudioRef.current) {
-                silentAudioRef.current.pause();
-                silentAudioRef.current = null;
-            }
+            window.removeEventListener('click', handleInteraction);
+            window.removeEventListener('touchstart', handleInteraction);
         };
     }, []);
     
@@ -265,18 +268,14 @@ export const LiveMatchScreen: React.FC = () => {
     }, [setActiveSession, setIsSelectWinnerModalOpen]);
     
      const handleStartGame = () => {
-        if (silentAudioRef.current) {
-            const audio = silentAudioRef.current;
-            if (audio.paused) {
-                audio.play().catch(() => {});
-            }
-        }
+        // Initialize audio context on start button click to be safe
+        initAudioContext();
 
         if (activeSession?.matchDurationMinutes && isTimerBasedGame) {
-            const minutes = activeSession.matchDurationMinutes;
-            if (minutes === 5) speak('Five minutes go');
-            else if (minutes === 7) speak('Seven minutes go');
+            // Simplified: Always play 'start_match' regardless of duration
+            playAnnouncement('start_match', 'Game On');
         }
+        
         setActiveSession(s => {
             if (!s) return null;
             const games = [...s.games];
@@ -476,23 +475,20 @@ export const LiveMatchScreen: React.FC = () => {
         setSubModalState({ isOpen: false });
     };
     
-    // UPDATED: Now Async to explicitly handle saving to DB
     const handleFinishSession = async () => {
         if (!activeSession || isSaving) return;
-        setIsSaving(true); // Start loading state
+        setIsSaving(true);
         
         try {
             setIsEndSessionModalOpen(false);
             
-            if (silentAudioRef.current) {
-                silentAudioRef.current.pause();
-            }
+            // Note: We don't necessarily need to pause audio here as playAnnouncement handles its own state
+            // but we can stop any long tracks if needed. For now, let it be.
 
             const { allPlayersStats } = calculateAllStats(activeSession);
             
             let calculatedNewPlayers: Player[] = [];
 
-            // 1. Calculate new player stats (in memory)
             setAllPlayers(currentAllPlayers => {
                 const playerStatsMap = new Map(allPlayersStats.map(stat => [stat.player.id, stat]));
                 
@@ -564,26 +560,21 @@ export const LiveMatchScreen: React.FC = () => {
                 return updatedPlayers;
             });
 
-            // 2. Explicitly Save PLAYERS to DB (Supabase)
-            // This is critical because automatic saving was disabled in context.tsx
             if (calculatedNewPlayers.length > 0) {
                 await savePlayersToDB(calculatedNewPlayers);
             }
 
-            // 3. Generate & Save NEWS
             if (calculatedNewPlayers.length > 0) {
                 const newNewsItems = generateNewsUpdates(oldPlayersState, calculatedNewPlayers);
                 if (newNewsItems.length > 0) {
                     setNewsFeed(prev => {
                         const updatedFeed = manageNewsFeedSize([...newNewsItems, ...prev]);
-                        // Asynchronously save to DB
                         saveNewsToDB(updatedFeed);
                         return updatedFeed;
                     });
                 }
             }
 
-            // 4. Save HISTORY
             const finalSession: Session = { 
                 ...activeSession, 
                 status: SessionStatus.Completed,
@@ -591,12 +582,11 @@ export const LiveMatchScreen: React.FC = () => {
             
             setHistory(prev => {
                 const newHistory = [finalSession, ...prev];
-                saveHistoryToDB(newHistory); // Explicitly save history
+                saveHistoryToDB(newHistory);
                 return newHistory;
             });
             setActiveSession(null);
             
-            // 5. Navigate home only after everything is processed
             navigate('/');
         } catch (error) {
             console.error("Error ending session:", error);
@@ -656,7 +646,6 @@ export const LiveMatchScreen: React.FC = () => {
         <div className="pb-28 flex flex-col min-h-screen">
             <GoalModal isOpen={!!scoringTeamForModal} onClose={() => setScoringTeamForModal(null)} onSave={handleGoalSave} game={currentGame} session={activeSession} scoringTeamId={scoringTeamForModal} />
             <EditGoalModal isOpen={!!goalToEdit} onClose={() => setGoalToEdit(null)} onSave={handleGoalUpdate} goal={goalToEdit} game={currentGame} session={activeSession} />
-            {/* Pass isSaving to disable the confirm button while data is writing */}
             <EndSessionModal 
                 isOpen={isEndSessionModalOpen} 
                 onClose={() => setIsEndSessionModalOpen(false)} 

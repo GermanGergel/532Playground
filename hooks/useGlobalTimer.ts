@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Session, GameStatus } from '../types';
-import { speak } from '../lib';
+import { playAnnouncement } from '../lib';
 
 export const useGlobalTimer = (
     activeSession: Session | null,
@@ -52,7 +53,7 @@ export const useGlobalTimer = (
         };
     }, [activeSession, currentGame]);
 
-    // --- GLOBAL VOICE ASSISTANT LOGIC (OPTIMIZED) ---
+    // --- GLOBAL VOICE ASSISTANT LOGIC (SIMPLIFIED) ---
     React.useEffect(() => {
         if (!activeSession || !currentGame || currentGame.status !== GameStatus.Active || !isTimerBasedGame) {
             return;
@@ -71,22 +72,30 @@ export const useGlobalTimer = (
 
         const alreadyAnnounced = currentGame.announcedMilestones || [];
 
-        const milestones = activeSession.matchDurationMinutes === 7
-            ? { 300: 'Five minutes', 180: 'Three minutes', 120: 'Two minutes', 60: 'One minute', 30: 'Thirty seconds', 5: 'Five', 4: 'Four', 3: 'Three', 2: 'Two', 1: 'One', 0: 'Last action' }
-            : { 180: 'Three minutes', 60: 'One minute', 30: 'Thirty seconds', 5: 'Five', 4: 'Four', 3: 'Three', 2: 'Two', 1: 'One', 0: 'Last action' };
+        // Simplified Milestones: 3m -> 1m -> 30s -> Countdown (5-1) -> Finish
+        const milestones: Record<number, { key: string, text: string }> = {
+            180: { key: 'three_minutes', text: 'Three minutes left' },
+            60:  { key: 'one_minute', text: 'Last minute' },
+            30:  { key: 'thirty_seconds', text: 'Thirty seconds' },
+            5:   { key: 'sound_5', text: 'Five' },
+            4:   { key: 'sound_4', text: 'Four' },
+            3:   { key: 'sound_3', text: 'Three' },
+            2:   { key: 'sound_2', text: 'Two' },
+            1:   { key: 'sound_1', text: 'One' },
+            0:   { key: 'finish_match', text: 'Last Play' }
+        };
 
-        const milestoneToAnnounce = Object.keys(milestones)
-            .map(Number)
-            .find(sec => remainingSeconds === sec && !alreadyAnnounced.includes(sec));
+        const milestone = milestones[remainingSeconds];
 
-        if (milestoneToAnnounce !== undefined) {
-            speak(milestones[milestoneToAnnounce as keyof typeof milestones]);
+        if (milestone && !alreadyAnnounced.includes(remainingSeconds)) {
+            playAnnouncement(milestone.key, milestone.text);
+            
             setActiveSession(s => {
                 if (!s) return null;
                 const games = [...s.games];
                 const lastGame = { ...games[games.length - 1] };
                 if (!lastGame) return s;
-                lastGame.announcedMilestones = [...(lastGame.announcedMilestones || []), milestoneToAnnounce];
+                lastGame.announcedMilestones = [...(lastGame.announcedMilestones || []), remainingSeconds];
                 games[games.length - 1] = lastGame;
                 return { ...s, games };
             });
