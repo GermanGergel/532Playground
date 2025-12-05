@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Player, BadgeType, PlayerStatus, SkillType } from '../types';
 import { useTranslation } from '../ui';
@@ -141,8 +140,8 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
                         {(player.skills || []).slice(0, 5).map(skill => (
                             <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
                                 <StarIcon className="w-4 h-4 text-[#00F2FE]" style={{ filter: 'drop-shadow(0 0 3px #00F2FE)'}} />
-                                {/* Added leading-none and -top-[2px] to lift text to star center */}
-                                <span className="font-bold text-xs text-white tracking-wider leading-none relative -top-[2px]" style={{ textShadow: '0 1px 3px #000' }}>
+                                {/* Added leading-none and -top-[4px] to lift text to star center */}
+                                <span className="font-bold text-xs text-white tracking-wider leading-none relative -top-[4px]" style={{ textShadow: '0 1px 3px #000' }}>
                                     {skillAbbreviations[skill]}
                                 </span>
                             </div>

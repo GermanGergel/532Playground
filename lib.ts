@@ -1,8 +1,8 @@
 
-import { AUDIO_ASSETS } from './audioAssets';
+import { loadCustomAudio } from './db';
 
 // --- HYBRID AUDIO SYSTEM ---
-// Priority: 1. Pre-recorded MP3 (Base64) -> 2. Text-to-Speech (Fallback)
+// Priority: 1. User-Uploaded MP3 (IndexedDB) -> 2. Text-to-Speech (Fallback)
 
 let audioContext: AudioContext | null = null;
 let activeSource: AudioBufferSourceNode | null = null;
@@ -28,10 +28,10 @@ const base64ToArrayBuffer = (base64: string) => {
     return bytes.buffer;
 };
 
-// Play a specific audio asset by key
+// Play a specific audio asset by key from IndexedDB
 const playAsset = async (key: string): Promise<boolean> => {
-    const base64 = AUDIO_ASSETS[key];
-    if (!base64 || base64.length < 50) return false; // Empty or invalid
+    const base64 = await loadCustomAudio(key);
+    if (!base64 || base64.length < 50) return false;
 
     try {
         initAudioContext();
@@ -39,7 +39,6 @@ const playAsset = async (key: string): Promise<boolean> => {
 
         const audioBuffer = await audioContext.decodeAudioData(base64ToArrayBuffer(base64));
         
-        // Stop previous sound if overlapping (optional, keeps it clean)
         if (activeSource) {
             try { activeSource.stop(); } catch (e) {}
         }
@@ -51,12 +50,12 @@ const playAsset = async (key: string): Promise<boolean> => {
         activeSource = source;
         return true;
     } catch (error) {
-        console.error(`Failed to play audio asset: ${key}`, error);
+        console.error(`Failed to play custom audio asset: ${key}`, error);
         return false;
     }
 };
 
-// Text-to-Speech Fallback (Legacy Code)
+// Text-to-Speech Fallback
 let ASSISTANT_VOICE: SpeechSynthesisVoice | null = null;
 
 const findAssistantVoice = () => {
@@ -67,7 +66,6 @@ const findAssistantVoice = () => {
     const preferredNames = ['samantha', 'google us english', 'microsoft zira', 'victoria']; 
     const englishVoices = voices.filter(v => v.lang.startsWith('en-'));
     
-    // Try preferred -> Female -> Not Male -> First English
     ASSISTANT_VOICE = 
         englishVoices.find(v => preferredNames.some(n => v.name.toLowerCase().includes(n))) ||
         englishVoices.find(v => v.name.toLowerCase().includes('female')) ||
@@ -83,7 +81,6 @@ findAssistantVoice();
 const speakFallback = (text: string) => {
     if (!('speechSynthesis' in window)) return;
     findAssistantVoice();
-    // Cancel current speech to prevent queue buildup
     window.speechSynthesis.cancel(); 
     
     const utterance = new SpeechSynthesisUtterance(text);
@@ -91,22 +88,39 @@ const speakFallback = (text: string) => {
     if (ASSISTANT_VOICE) {
         utterance.voice = ASSISTANT_VOICE;
         utterance.pitch = 1.0;
-        utterance.rate = 1.1; // Slightly faster for sports context
+        utterance.rate = 1.1;
     }
     window.speechSynthesis.speak(utterance);
 };
 
+
 // --- MAIN EXPORTED FUNCTION ---
+const silentAudioMp3 = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD//////////////////////////////////////////////////////////////////wAAAP//OEAAAAAAAAAAAAAAAAAAAAAATEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//OEAAAAAAAAAAAAAAAAAAAAAAptgAAAAAABIAAADaA4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAAAAA0gAAAAAAABIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==';
+
 export const playAnnouncement = async (key: string, fallbackText: string) => {
-    // 1. Try to play MP3 asset
+    // Special case for silent audio to keep audio context alive on mobile
+    if (key === 'silence') {
+        initAudioContext();
+        if (!audioContext) return;
+        try {
+            const audioBuffer = await audioContext.decodeAudioData(base64ToArrayBuffer(silentAudioMp3));
+            const source = audioContext.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(audioContext.destination);
+            source.start(0);
+        } catch(e) { console.error("Failed to play silence track", e)}
+        return;
+    }
+
+    // 1. Try to play custom MP3 asset from DB
     const played = await playAsset(key);
     
     // 2. If no MP3 found, use TTS Fallback
     if (!played) {
-        console.log(`Audio asset '${key}' not found. Using TTS fallback.`);
+        console.log(`Custom audio for '${key}' not found. Using TTS fallback.`);
         speakFallback(fallbackText);
     } else {
-        console.log(`Playing audio asset: ${key}`);
+        console.log(`Playing custom audio for: ${key}`);
     }
 };
 

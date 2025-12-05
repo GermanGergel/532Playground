@@ -53,7 +53,7 @@ export const useGlobalTimer = (
         };
     }, [activeSession, currentGame]);
 
-    // --- GLOBAL VOICE ASSISTANT LOGIC (UPDATED FOR AUDIO ASSETS) ---
+    // --- GLOBAL VOICE ASSISTANT LOGIC (UPDATED FOR CUSTOM AUDIO) ---
     React.useEffect(() => {
         if (!activeSession || !currentGame || currentGame.status !== GameStatus.Active || !isTimerBasedGame) {
             return;
@@ -61,7 +61,6 @@ export const useGlobalTimer = (
 
         const remainingSeconds = Math.round(displayTime);
 
-        // OPTIMIZATION: Only run logic if the second has changed.
         if (remainingSeconds === lastAnnouncedSecondRef.current) {
             return;
         }
@@ -72,24 +71,17 @@ export const useGlobalTimer = (
 
         const alreadyAnnounced = currentGame.announcedMilestones || [];
 
-        // Map seconds to { key: string, fallback: string }
+        // UPDATED: Milestones adjusted based on user request
         const milestones: Record<number, { key: string, text: string }> = {
-            300: { key: 'five_minutes', text: 'Five minutes remaining' },
-            180: { key: 'three_minutes', text: 'Three minutes remaining' },
-            120: { key: 'two_minutes', text: 'Two minutes warning' },
-            60:  { key: 'one_minute', text: 'Last minute' },
+            180: { key: 'three_minutes', text: 'Three minutes' },
+            60:  { key: 'one_minute', text: 'One minute' },
             30:  { key: 'thirty_seconds', text: 'Thirty seconds' },
-            10:  { key: 'ten', text: 'Ten' },
-            9:   { key: 'nine', text: 'Nine' },
-            8:   { key: 'eight', text: 'Eight' },
-            7:   { key: 'seven', text: 'Seven' },
-            6:   { key: 'six', text: 'Six' },
             5:   { key: 'five', text: 'Five' },
             4:   { key: 'four', text: 'Four' },
             3:   { key: 'three', text: 'Three' },
             2:   { key: 'two', text: 'Two' },
             1:   { key: 'one', text: 'One' },
-            0:   { key: 'finish_match', text: 'Time is up' }
+            0:   { key: 'finish_match', text: 'Last play' }
         };
 
         const milestone = milestones[remainingSeconds];

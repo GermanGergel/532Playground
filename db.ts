@@ -2,7 +2,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { Player, Session, NewsItem } from './types';
 import { Language } from './translations';
-import { get, set } from 'idb-keyval';
+import { get, set, del } from 'idb-keyval';
 
 // --- SUPABASE CONFIGURATION ---
 // Universal environment variable access (works in Vite, Next.js, and standard Node)
@@ -352,5 +352,33 @@ export const loadLanguageFromDB = async (): Promise<Language | undefined> => {
         return await get('language');
     } catch (error) {
         return undefined;
+    }
+};
+
+// --- AUDIO ASSETS (IndexedDB) ---
+const AUDIO_KEY_PREFIX = 'audio_';
+
+export const saveCustomAudio = async (key: string, base64: string): Promise<void> => {
+    try {
+        await set(`${AUDIO_KEY_PREFIX}${key}`, base64);
+    } catch (error) {
+        console.error("Failed to save custom audio:", error);
+    }
+};
+
+export const loadCustomAudio = async (key: string): Promise<string | undefined> => {
+    try {
+        return await get(`${AUDIO_KEY_PREFIX}${key}`);
+    } catch (error) {
+        console.error("Failed to load custom audio:", error);
+        return undefined;
+    }
+};
+
+export const deleteCustomAudio = async (key: string): Promise<void> => {
+    try {
+        await del(`${AUDIO_KEY_PREFIX}${key}`);
+    } catch (error) {
+        console.error("Failed to delete custom audio:", error);
     }
 };

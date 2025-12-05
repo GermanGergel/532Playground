@@ -6,7 +6,7 @@ import {
     HomeScreen, NewGameSetupScreen, AssignPlayersScreen, LiveMatchScreen, 
     StatisticsScreen, HistoryScreen, SessionReportScreen, SettingsScreen, 
     PlayerHubScreen, PlayerDatabaseScreen, PlayerProfileScreen,
-    NewsFeedScreen
+    NewsFeedScreen, VoiceSettingsScreen
 } from './screens';
 import { useApp } from './context';
 
@@ -54,6 +54,7 @@ const App: React.FC = () => {
           <Route path="/history" element={<HistoryScreen />} />
           <Route path="/report/:id" element={<SessionReportScreen />} />
           <Route path="/settings" element={<SettingsScreen />} />
+          <Route path="/settings/voice" element={<VoiceSettingsScreen />} />
           <Route path="/player-hub" element={<PlayerHubScreen />} />
           <Route path="/player-database" element={<PlayerDatabaseScreen />} />
           <Route path="/player/:id" element={<PlayerProfileScreen />} />
