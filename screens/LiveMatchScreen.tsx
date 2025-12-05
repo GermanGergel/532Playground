@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-import { Button, Modal, Page, useTranslation } from '../ui';
+import { Button, Modal, Page, useTranslation, SessionModeIndicator } from '../ui';
 import { TeamAvatar } from '../components/avatars';
 import { StarIcon, Plus, Pause, Play, Edit3 } from '../icons';
 import { Session, Game, GameStatus, Goal, GoalPayload, SubPayload, EventLogEntry, EventType, StartRoundPayload, Player, BadgeType, RotationMode, Team, SessionStatus } from '../types';
@@ -84,7 +83,7 @@ const formatTime = (totalSeconds: number) => {
 };
 
 export const LiveMatchScreen: React.FC = () => {
-    const { activeSession, setActiveSession, setHistory, displayTime, setAllPlayers, setNewsFeed, allPlayers: oldPlayersState, newsFeed } = useApp();
+    const { activeSession, setActiveSession, setHistory, displayTime, setAllPlayers, setNewsFeed, allPlayers: oldPlayersState, newsFeed, activeVoicePack } = useApp();
     const navigate = useNavigate();
     const t = useTranslation();
 
@@ -272,7 +271,7 @@ export const LiveMatchScreen: React.FC = () => {
         initAudioContext();
 
         if (activeSession?.matchDurationMinutes && isTimerBasedGame) {
-            playAnnouncement('start_match', 'Game started');
+            playAnnouncement('start_match', 'Game started', activeVoicePack);
         }
         
         setActiveSession(s => {
@@ -478,6 +477,14 @@ export const LiveMatchScreen: React.FC = () => {
     // This prevents the race condition where state updates triggered a re-render before database save completed.
     const handleFinishSession = async () => {
         if (!activeSession || isSaving) return;
+
+        if (activeSession.isTestMode) {
+            setIsEndSessionModalOpen(false);
+            setActiveSession(null);
+            navigate('/');
+            return;
+        }
+        
         setIsSaving(true);
         
         try {
@@ -671,7 +678,10 @@ export const LiveMatchScreen: React.FC = () => {
             )}
 
             <header className="text-center shrink-0 pt-4">
-                <h1 className="text-3xl font-black uppercase text-dark-text accent-text-glow">{t.liveMatch}</h1>
+                <div className="flex items-center justify-center gap-3">
+                    <h1 className="text-3xl font-black uppercase text-dark-text accent-text-glow">{t.liveMatch}</h1>
+                    <SessionModeIndicator />
+                </div>
             </header>
             
             <div className={`flex-grow flex flex-col px-2`}>

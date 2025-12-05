@@ -200,6 +200,7 @@ export interface Session {
   games: Game[];
   playerPool: Player[];
   eventLog: EventLogEntry[];
+  isTestMode?: boolean;
 }
 
 // --- NEWS FEED SYSTEM ---

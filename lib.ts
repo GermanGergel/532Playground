@@ -28,9 +28,9 @@ const base64ToArrayBuffer = (base64: string) => {
 };
 
 // Play a specific audio asset by key from the local IndexedDB cache
-const playAsset = async (key: string): Promise<boolean> => {
+const playAsset = async (key: string, activeVoicePack: number): Promise<boolean> => {
     // Always load from the local cache for immediate playback
-    const base64 = await loadCustomAudio(key);
+    const base64 = await loadCustomAudio(key, activeVoicePack);
     if (!base64 || base64.length < 50) return false;
 
     try {
@@ -97,7 +97,7 @@ const speakFallback = (text: string) => {
 // --- MAIN EXPORTED FUNCTION ---
 const silentAudioMp3 = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAAEAAABIADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMD//////////////////////////////////////////////////////////////////wAAAP//OEAAAAAAAAAAAAAAAAAAAAAATEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV//OEAAAAAAAAAAAAAAAAAAAAAAptgAAAAAABIAAADaA4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//OEAAAAAAAAAAAAAAAAAAAAAAAAAAA0gAAAAAAABIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==';
 
-export const playAnnouncement = async (key: string, fallbackText: string) => {
+export const playAnnouncement = async (key: string, fallbackText: string, activeVoicePack: number = 1) => {
     // Special case for silent audio to keep audio context alive on mobile
     if (key === 'silence') {
         initAudioContext();
@@ -113,7 +113,7 @@ export const playAnnouncement = async (key: string, fallbackText: string) => {
     }
 
     // 1. Try to play custom MP3 asset from local cache
-    const played = await playAsset(key);
+    const played = await playAsset(key, activeVoicePack);
     
     // 2. If no MP3 found in cache, use TTS Fallback
     if (!played) {

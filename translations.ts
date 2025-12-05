@@ -33,6 +33,9 @@ export const translations = {
     newSession: "NEW SESSION",
     continueSession: "CONTINUE SESSION",
     playerHub: "PLAYER HUB",
+    selectSessionMode: "Select Session Mode",
+    realTraining: "Real Training",
+    testGame: "Test Game",
     // SettingsScreen
     settingsTitle: "Settings",
     language: "Language",
@@ -218,6 +221,9 @@ export const translations = {
     lastSessionAnalysis_indiv: "Individual",
     lastSessionAnalysis_badge: "Badges",
     // Voice Assistant
+    voicePack1: "Pack 1",
+    voicePack2: "Pack 2",
+    voicePack3: "Pack 3",
     announcement_start_match: "Match Start ('Game One')",
     announcement_three_minutes: "3 Minutes Remaining",
     announcement_one_minute: "1 Minute Remaining",
@@ -312,6 +318,9 @@ export const translations = {
     newSession: "НОВАЯ СЕССИЯ",
     continueSession: "ПРОДОЛЖИТЬ СЕССИЮ",
     playerHub: "ХАБ ИГРОКОВ",
+    selectSessionMode: "Выберите режим сессии",
+    realTraining: "Реальная Тренировка",
+    testGame: "Тестовая Игра",
     // SettingsScreen
     settingsTitle: "Настройки",
     language: "Язык",
@@ -497,6 +506,9 @@ export const translations = {
     lastSessionAnalysis_indiv: "Личное",
     lastSessionAnalysis_badge: "Награды",
     // Voice Assistant
+    voicePack1: "Пакет 1",
+    voicePack2: "Пакет 2",
+    voicePack3: "Пакет 3",
     announcement_start_match: "Начало матча ('Game One')",
     announcement_three_minutes: "Осталось 3 минуты",
     announcement_one_minute: "Осталась 1 минута",
@@ -591,6 +603,9 @@ export const translations = {
     newSession: "BUỔI TẬP MỚI",
     continueSession: "TIẾP TỤC BUỔI TẬP",
     playerHub: "TRUNG TÂM CẦU THỦ",
+    selectSessionMode: "Chọn chế độ buổi tập",
+    realTraining: "Tập luyện thực tế",
+    testGame: "Trận đấu thử",
     // SettingsScreen
     settingsTitle: "Cài đặt",
     language: "Ngôn ngữ",
@@ -776,6 +791,9 @@ export const translations = {
     lastSessionAnalysis_indiv: "Cá nhân",
     lastSessionAnalysis_badge: "Huy hiệu",
     // Voice Assistant
+    voicePack1: "Gói 1",
+    voicePack2: "Gói 2",
+    voicePack3: "Gói 3",
     announcement_start_match: "Bắt đầu trận đấu ('Game One')",
     announcement_three_minutes: "Còn lại 3 phút",
     announcement_one_minute: "Còn lại 1 phút",

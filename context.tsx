@@ -7,7 +7,8 @@ import {
     loadHistoryFromDB, saveHistoryToDB,
     loadLanguageFromDB, saveLanguageToDB,
     loadNewsFromDB, saveNewsToDB,
-    syncAndCacheAudioAssets // Import the new sync function
+    syncAndCacheAudioAssets, // Import the new sync function
+    loadActiveVoicePackFromDB, saveActiveVoicePackToDB
 } from './db';
 import { useGlobalTimer } from './hooks/useGlobalTimer';
 
@@ -22,6 +23,8 @@ interface AppContextType {
   setNewsFeed: React.Dispatch<React.SetStateAction<NewsItem[]>>;
   language: Language;
   setLanguage: (lang: Language) => void;
+  activeVoicePack: number;
+  setActiveVoicePack: (packNumber: number) => void;
   isLoading: boolean;
   displayTime: number;
 }
@@ -35,8 +38,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [history, setHistory] = React.useState<Session[]>([]);
   const [newsFeed, setNewsFeed] = React.useState<NewsItem[]>([]);
   const [language, setLanguageState] = React.useState<Language>('en');
+  const [activeVoicePack, setActiveVoicePackState] = React.useState<number>(1);
 
-  const { displayTime } = useGlobalTimer(activeSession, setActiveSession);
+  const { displayTime } = useGlobalTimer(activeSession, setActiveSession, activeVoicePack);
 
   // --- INITIAL DATA LOAD (Async from IndexedDB with LocalStorage Migration) ---
   React.useEffect(() => {
@@ -112,6 +116,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             if (loadedLang) {
                 setLanguageState(loadedLang);
             }
+            
+            // 6. Load Active Voice Pack
+            const loadedPack = await loadActiveVoicePackFromDB();
+            if (loadedPack) {
+                setActiveVoicePackState(loadedPack);
+            }
 
         } catch (error) {
             console.error("Critical error loading data:", error);
@@ -131,17 +141,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [activeSession, isLoading]);
 
-  // CRITICAL FIX: Removed the inefficient useEffect that saved the entire player list on any change.
-  // This prevents hitting Supabase payload size limits with large base64 photos.
-  // Saving is now handled atomically where data is modified (e.g., PlayerProfileScreen, AssignPlayersScreen).
-  /*
-  React.useEffect(() => {
-    if(!isLoading) {
-        savePlayersToDB(allPlayers);
-    }
-  }, [allPlayers, isLoading]);
-  */
-
   React.useEffect(() => {
     if(!isLoading) {
         saveHistoryToDB(history);
@@ -159,6 +158,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     saveLanguageToDB(lang);
   };
 
+  const setActiveVoicePack = (packNumber: number) => {
+    setActiveVoicePackState(packNumber);
+    saveActiveVoicePackToDB(packNumber);
+  };
+
   const value = {
     activeSession,
     setActiveSession,
@@ -170,6 +174,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setNewsFeed,
     language,
     setLanguage,
+    activeVoicePack,
+    setActiveVoicePack,
     isLoading,
     displayTime,
   };

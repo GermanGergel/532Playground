@@ -1,9 +1,10 @@
 
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 // FIX: Import directly from component files instead of barrel file to avoid import errors.
-import { Button, Card, useTranslation, Modal } from '../ui';
+import { Button, Card, useTranslation, Modal, SessionModeIndicator } from '../ui';
 import { TeamAvatar, PlayerAvatar } from '../components/avatars';
 import { Wand, XCircle } from '../icons';
 import { Team, Player, Game, GameStatus, EventLogEntry, EventType, StartRoundPayload, PlayerStatus, PlayerTier } from '../types';
@@ -100,7 +101,9 @@ export const AssignPlayersScreen: React.FC = () => {
                     form: 'stable', badges: {}, skills: [], lastPlayedAt: new Date().toISOString(),
                 };
                 setAllPlayers(prev => [...prev, playerToAdd]);
-                saveSinglePlayerToDB(playerToAdd); // Save new player to DB immediately
+                if (!activeSession.isTestMode) {
+                    saveSinglePlayerToDB(playerToAdd); // Save new player to DB immediately only if not in test mode
+                }
             }
         }
         
@@ -306,7 +309,10 @@ export const AssignPlayersScreen: React.FC = () => {
             </Modal>
             
             <div className="p-4 pt-6 shrink-0 z-10 bg-dark-bg">
-                <h1 className="text-3xl font-bold mb-8 text-center accent-text-glow uppercase">{t.assignPlayersTitle}</h1>
+                <div className="flex items-center justify-center gap-3 mb-8">
+                    <h1 className="text-3xl font-bold text-center accent-text-glow uppercase">{t.assignPlayersTitle}</h1>
+                    <SessionModeIndicator />
+                </div>
                 <div className="relative max-w-md mx-auto">
                     <div className="flex items-center gap-2 mb-4">
                             <input

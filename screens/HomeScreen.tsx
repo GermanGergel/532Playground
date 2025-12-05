@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-import { Page, Button, useTranslation } from '../components';
+import { Page, Button, useTranslation, Modal } from '../components';
 import { homeScreenBackground } from '../assets';
 import { BrandedHeader } from './utils';
 
@@ -9,6 +9,7 @@ export const HomeScreen: React.FC = () => {
   const navigate = useNavigate();
   const t = useTranslation();
   const { activeSession } = useApp();
+  const [isModeModalOpen, setIsModeModalOpen] = React.useState(false);
 
   const handleContinue = () => {
     if (activeSession) {
@@ -20,8 +21,38 @@ export const HomeScreen: React.FC = () => {
     }
   };
 
+  const handleStartNewSession = (isTest: boolean) => {
+    setIsModeModalOpen(false);
+    navigate(`/setup?testMode=${isTest}`);
+  };
+
   return (
     <Page style={{ backgroundImage: `url("${homeScreenBackground}")`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+        <Modal 
+          isOpen={isModeModalOpen} 
+          onClose={() => setIsModeModalOpen(false)}
+          size="xs"
+          containerClassName="border border-dark-accent-start/30 shadow-[0_0_20px_rgba(0,242,254,0.15)]"
+        >
+          <h2 className="text-xl font-bold text-center mb-4">{t.selectSessionMode}</h2>
+          <div className="flex flex-col gap-3">
+              <Button 
+                variant="secondary"
+                onClick={() => handleStartNewSession(false)} 
+                className="w-full !text-lg !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
+              >
+                  {t.realTraining}
+              </Button>
+              <Button 
+                variant="secondary"
+                onClick={() => handleStartNewSession(true)} 
+                className="w-full !text-lg !py-3 shadow-lg shadow-red-500/20 hover:shadow-red-500/40"
+              >
+                  {t.testGame}
+              </Button>
+          </div>
+        </Modal>
+        
         <div className="flex flex-col min-h-[calc(100vh-8rem)] justify-between">
              <BrandedHeader className="mt-12" />
 
@@ -41,7 +72,7 @@ export const HomeScreen: React.FC = () => {
                  ) : (
                     <Button 
                         variant="secondary"
-                        onClick={() => navigate('/setup')} 
+                        onClick={() => setIsModeModalOpen(true)} 
                         className="w-full !text-lg !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
                     >
                         {t.newSession}

@@ -155,3 +155,23 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({ isOn, onToggle }) =>
     </button>
   );
 };
+
+export const SessionModeIndicator: React.FC = () => {
+    const { activeSession } = useApp();
+    if (!activeSession) return null;
+
+    const isTest = activeSession.isTestMode === true;
+    const color = isTest ? '#FF4136' : '#00F2FE'; // Red for test, Neon for real
+    const glowColor = isTest ? 'rgba(255, 65, 54, 0.5)' : 'rgba(0, 242, 254, 0.5)';
+
+    return (
+        <div 
+            className="w-2 h-2 rounded-full flex-shrink-0"
+            style={{ 
+                backgroundColor: color,
+                boxShadow: `0 0 4px ${glowColor}`,
+            }}
+            title={isTest ? 'Test Mode' : 'Real Session'}
+        />
+    );
+};

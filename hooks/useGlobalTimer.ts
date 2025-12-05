@@ -1,11 +1,11 @@
-
 import React from 'react';
 import { Session, GameStatus } from '../types';
 import { playAnnouncement } from '../lib';
 
 export const useGlobalTimer = (
     activeSession: Session | null,
-    setActiveSession: React.Dispatch<React.SetStateAction<Session | null>>
+    setActiveSession: React.Dispatch<React.SetStateAction<Session | null>>,
+    activeVoicePack: number
 ) => {
     const [displayTime, setDisplayTime] = React.useState(0);
     const animationFrameRef = React.useRef<number | null>(null);
@@ -87,7 +87,7 @@ export const useGlobalTimer = (
         const milestone = milestones[remainingSeconds];
 
         if (milestone && !alreadyAnnounced.includes(remainingSeconds)) {
-            playAnnouncement(milestone.key, milestone.text);
+            playAnnouncement(milestone.key, milestone.text, activeVoicePack);
             
             setActiveSession(s => {
                 if (!s) return null;
@@ -99,7 +99,7 @@ export const useGlobalTimer = (
                 return { ...s, games };
             });
         }
-    }, [displayTime, currentGame, isTimerBasedGame, activeSession, setActiveSession]);
+    }, [displayTime, currentGame, isTimerBasedGame, activeSession, setActiveSession, activeVoicePack]);
     
     return { displayTime };
 };
