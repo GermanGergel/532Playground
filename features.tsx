@@ -28,7 +28,7 @@ interface PlayerCardProps {
     onConfirmInitialRating: (rating: number) => void;
     onDownloadCard: () => void;
     onShareProfile: () => void;
-    isDownloading?: boolean;
+    isProcessing?: boolean;
 }
 
 // Removed InitialRatingSetup component as it is no longer used
@@ -190,7 +190,7 @@ const SessionTrendChart: React.FC<{ history?: Player['sessionHistory'] }> = ({ h
 };
 
 
-export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete, onUploadCard, onConfirmInitialRating, onDownloadCard, onShareProfile, isDownloading }) => {
+export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete, onUploadCard, onConfirmInitialRating, onDownloadCard, onShareProfile, isProcessing }) => {
     const t = useTranslation();
     const keyStats = React.useMemo(() => getPlayerKeyStats(player), [player]);
     const countryCodeAlpha2 = React.useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
@@ -236,6 +236,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
     };
 
     const cardClass = "border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)]";
+    const processingText = "Processing...";
 
     return (
         <div id={`player-card-container-${player.id}`}>
@@ -367,16 +368,16 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                 
                 {/* --- ACTION BUTTONS (Reorganized into a grid) --- */}
                 <div className="grid grid-cols-2 gap-3 player-card-actions">
-                    <Button variant="secondary" onClick={onEdit} className={`!py-3 !px-4 font-chakra text-xl tracking-wider ${cardClass}`}>{t.editData}</Button>
-                    <Button variant="secondary" onClick={onUploadCard} className={`!py-3 !px-4 font-chakra text-xl tracking-wider ${cardClass}`}>{t.uploadPhoto}</Button>
-                    <Button variant="secondary" className={`w-full font-chakra text-xl tracking-wider ${cardClass}`} onClick={onDownloadCard} disabled={isDownloading}>
-                        {isDownloading ? 'Exporting...' : t.downloadCard}
+                    <Button variant="secondary" onClick={onEdit} disabled={isProcessing} className={`!py-3 !px-4 font-chakra text-xl tracking-wider ${cardClass}`}>{isProcessing ? processingText : t.editData}</Button>
+                    <Button variant="secondary" onClick={onUploadCard} disabled={isProcessing} className={`!py-3 !px-4 font-chakra text-xl tracking-wider ${cardClass}`}>{isProcessing ? processingText : t.uploadPhoto}</Button>
+                    <Button variant="secondary" className={`w-full font-chakra text-xl tracking-wider ${cardClass}`} onClick={onDownloadCard} disabled={isProcessing}>
+                        {isProcessing ? processingText : t.downloadCard}
                     </Button>
-                    <Button variant="secondary" className={`w-full font-chakra text-xl tracking-wider ${cardClass}`} onClick={onShareProfile}>
-                        {t.shareProfile}
+                    <Button variant="secondary" className={`w-full font-chakra text-xl tracking-wider ${cardClass}`} onClick={onShareProfile} disabled={isProcessing}>
+                        {isProcessing ? processingText : t.shareProfile}
                     </Button>
                 </div>
-                <Button variant="secondary" className={`w-full font-chakra text-xl tracking-wider ${cardClass} player-card-actions`} onClick={onDelete}>{t.deletePlayer}</Button>
+                <Button variant="secondary" className={`w-full font-chakra text-xl tracking-wider ${cardClass} player-card-actions`} onClick={onDelete} disabled={isProcessing}>{isProcessing ? processingText : t.deletePlayer}</Button>
             </div>
         </div>
     );

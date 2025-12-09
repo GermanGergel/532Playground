@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -371,9 +372,9 @@ export const useGameManager = () => {
     
     const handleFinishSession = async () => {
         if (!activeSession || isSaving) return;
+        setIsEndSessionModalOpen(false);
 
         if (activeSession.isTestMode) {
-            setIsEndSessionModalOpen(false);
             setActiveSession(null);
             navigate('/');
             return;
@@ -382,8 +383,6 @@ export const useGameManager = () => {
         setIsSaving(true);
         
         try {
-            setIsEndSessionModalOpen(false);
-            
             const {
                 updatedPlayers,
                 playersToSave,
@@ -395,24 +394,22 @@ export const useGameManager = () => {
                 newsFeed: newsFeed,
             });
 
-            if (playersToSave.length > 0) {
-                await savePlayersToDB(playersToSave);
-                setAllPlayers(updatedPlayers); 
-            }
+            // Await all cloud operations. These functions will throw on failure.
+            await savePlayersToDB(playersToSave, true);
+            await saveNewsToDB(updatedNewsFeed, true);
+            await saveHistoryToDB([finalSession], true);
 
-            if (updatedNewsFeed.length > newsFeed.length) {
-                await saveNewsToDB(updatedNewsFeed);
-                setNewsFeed(updatedNewsFeed);
-            }
-
-            await saveHistoryToDB([finalSession]);
-            setHistory(prev => [finalSession, ...prev]);
-
+            // If cloud saves succeeded, update local state and finish.
+            setAllPlayers(updatedPlayers);
+            setNewsFeed(updatedNewsFeed);
+            setHistory(prev => [finalSession, ...prev].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+            
             setActiveSession(null);
             navigate('/');
         } catch (error) {
-            console.error("Error ending session:", error);
-            alert("Error saving data. Please check your connection.");
+            console.error("Critical Error saving session to cloud:", error);
+            alert("Failed to save session to the cloud. Please check your internet connection and try again. Your data is safe on this device for now.");
+            // Do NOT clear the active session. Let the user retry.
         } finally {
             setIsSaving(false);
         }

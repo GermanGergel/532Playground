@@ -142,8 +142,8 @@ export const playAnnouncement = async (key: string, fallbackText: string, active
 };
 
 // --- IMAGE OPTIMIZATION LOGIC (UPDATED) ---
-// TUNED FOR QUALITY: 1600px width + higher quality JPEG settings.
-// This ensures images look crisp on Retina displays and exports.
+// TUNED FOR QUALITY: 1600px width + 0.90 quality.
+// This ensures images look crisp on Retina displays and exports, while still preventing the 10MB+ file issue.
 export const processPlayerImageFile = (file: File): Promise<{ cardImage: string; avatarImage: string }> => {
     return new Promise((resolve, reject) => {
         const objectUrl = URL.createObjectURL(file);
@@ -154,6 +154,7 @@ export const processPlayerImageFile = (file: File): Promise<{ cardImage: string;
                 const cardCanvas = document.createElement('canvas');
                 const cardCtx = cardCanvas.getContext('2d');
                 
+                // QUALITY SETTING: 1600px is sufficient for full-screen mobile and high-quality exports.
                 const maxWidth = 1600; 
                 let { width, height } = img;
                 
@@ -166,8 +167,8 @@ export const processPlayerImageFile = (file: File): Promise<{ cardImage: string;
                 cardCanvas.height = height;
                 cardCtx?.drawImage(img, 0, 0, width, height);
                 
-                // QUALITY INCREASED: 0.92 provides excellent quality for detailed cards.
-                const cardImage = cardCanvas.toDataURL('image/jpeg', 0.92);
+                // QUALITY SETTING: 0.90 preserves high detail without the bloat of uncompressed PNGs.
+                const cardImage = cardCanvas.toDataURL('image/jpeg', 0.90);
 
                 const avatarCanvas = document.createElement('canvas');
                 const avatarCtx = avatarCanvas.getContext('2d');
@@ -180,8 +181,8 @@ export const processPlayerImageFile = (file: File): Promise<{ cardImage: string;
                 const sy = (cardCanvas.height - side) / 8; 
                 
                 avatarCtx.drawImage(cardCanvas, sx, sy, side, side, 0, 0, side, side);
-                // QUALITY INCREASED: 0.88 is great for smaller avatars.
-                const avatarImage = avatarCanvas.toDataURL('image/jpeg', 0.88);
+                // Avatars are small, so 0.85 quality is perfectly fine and saves space.
+                const avatarImage = avatarCanvas.toDataURL('image/jpeg', 0.85);
 
                 resolve({ cardImage, avatarImage });
 
