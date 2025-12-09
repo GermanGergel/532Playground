@@ -119,9 +119,12 @@ export const saveSinglePlayerToDB = async (player: Player) => {
 
     // 2. Try Cloud Sync (Best Effort)
     if (isSupabaseConfigured() && !isDemoData(player.id)) {
-        supabase!.from('players').upsert(player, { onConflict: 'id' }).catch(() => {
-             console.warn("Cloud sync failed, data is safe on device.");
-        });
+        (async () => {
+            const { error } = await supabase!.from('players').upsert(player, { onConflict: 'id' });
+            if (error) {
+                console.warn("Cloud sync failed, data is safe on device.");
+            }
+        })();
     }
 };
 
@@ -162,7 +165,12 @@ export const savePlayersToDB = async (players: Player[]) => {
         const CHUNK_SIZE = 10;
         for (let i = 0; i < realPlayers.length; i += CHUNK_SIZE) {
             const chunk = realPlayers.slice(i, i + CHUNK_SIZE);
-            supabase!.from('players').upsert(chunk, { onConflict: 'id' }).catch(() => {});
+            (async () => {
+                const { error } = await supabase!.from('players').upsert(chunk, { onConflict: 'id' });
+                if (error) {
+                    console.warn(`Background player chunk sync failed: ${error.message}`);
+                }
+            })();
         }
     }
 };
@@ -212,8 +220,13 @@ export const saveHistoryToDB = async (history: Session[]) => {
 
     // Cloud Save (Background)
     if (isSupabaseConfigured() && realHistory.length > 0) {
-        const latest = realHistory[0]; 
-        supabase!.from('sessions').upsert([latest], { onConflict: 'id' }).catch(() => {});
+        const latest = realHistory[0];
+        (async () => {
+            const { error } = await supabase!.from('sessions').upsert([latest], { onConflict: 'id' });
+            if (error) {
+                console.warn(`Background history sync failed: ${error.message}`);
+            }
+        })();
     }
 };
 
@@ -246,7 +259,12 @@ export const saveNewsToDB = async (news: NewsItem[]) => {
     await set('newsFeed', realNews);
     
     if (isSupabaseConfigured() && realNews.length > 0) {
-        supabase!.from('news').upsert(realNews.slice(0, 10), { onConflict: 'id' }).catch(() => {});
+        (async () => {
+            const { error } = await supabase!.from('news').upsert(realNews.slice(0, 10), { onConflict: 'id' });
+            if (error) {
+                console.warn(`Background news sync failed: ${error.message}`);
+            }
+        })();
     }
 };
 
@@ -287,7 +305,9 @@ export const saveCustomAudio = async (key: string, base64: string, pack: number)
     if (isSupabaseConfigured()) {
         const blob = base64ToBlob(base64);
         const filePath = `pack${pack}/${key}.mp3`;
-        supabase!.storage.from(AUDIO_BUCKET).upload(filePath, blob, { cacheControl: '31536000', upsert: true }).catch(() => {});
+        (async () => {
+            await supabase!.storage.from(AUDIO_BUCKET).upload(filePath, blob, { cacheControl: '31536000', upsert: true });
+        })();
     }
 };
 
@@ -328,7 +348,9 @@ export const uploadSessionAnthem = async (base64: string): Promise<string | null
     if (!isSupabaseConfigured()) return base64;
     try {
         const blob = base64ToBlob(base64);
-        supabase!.storage.from(MUSIC_BUCKET).upload(ANTHEM_FILENAME, blob, { cacheControl: '31536000', upsert: true }).catch(() => {});
+        (async () => {
+            await supabase!.storage.from(MUSIC_BUCKET).upload(ANTHEM_FILENAME, blob, { cacheControl: '31536000', upsert: true });
+        })();
         return base64;
     } catch (e) { return null; }
 };

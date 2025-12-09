@@ -130,9 +130,12 @@ export const saveSinglePlayerToDB = async (player: Player) => {
     } catch (e) { console.error("Local save failed", e); }
 
     if (isSupabaseConfigured() && !isDemoData(player.id)) {
-        supabase!.from('players').upsert(player, { onConflict: 'id' }).catch(() => {
-             console.warn("Cloud sync failed, data is safe on device.");
-        });
+        (async () => {
+            const { error } = await supabase!.from('players').upsert(player, { onConflict: 'id' });
+            if (error) {
+                console.warn(`Background player sync failed: ${error.message}`);
+            }
+        })();
     }
 };
 
@@ -165,24 +168,21 @@ export const savePlayersToDB = async (players: Player[], waitForCloud: boolean =
     const realPlayersToSync = players.filter(p => !isDemoData(p.id));
     if (realPlayersToSync.length === 0 || !isSupabaseConfigured()) return;
 
-    const saveChunk = async (chunk: Player[]) => {
-        const { error } = await supabase!.from('players').upsert(chunk, { onConflict: 'id' });
+    const doCloudSync = async () => {
+        const { error } = await supabase!.from('players').upsert(realPlayersToSync, { onConflict: 'id' });
         if (error) throw error;
     };
 
-    const CHUNK_SIZE = 50;
-    const promises = [];
-    for (let i = 0; i < realPlayersToSync.length; i += CHUNK_SIZE) {
-        const chunk = realPlayersToSync.slice(i, i + CHUNK_SIZE);
-        promises.push(saveChunk(chunk));
-    }
-
     if (waitForCloud) {
-        await Promise.all(promises);
+        await doCloudSync();
     } else {
-        Promise.all(promises).catch(err => {
-            console.warn("Background player sync failed:", err.message);
-        });
+        (async () => {
+            try {
+                await doCloudSync();
+            } catch (err: any) {
+                console.warn("Background player sync failed:", err.message);
+            }
+        })();
     }
 };
 
@@ -223,12 +223,13 @@ export const loadActiveSessionFromDB = async (): Promise<Session | null | undefi
 export const saveHistoryToDB = async (history: Session[], waitForCloud: boolean = false) => {
     try {
         const allLocal = await get<Session[]>('history') || [];
-        // FIX: The type of `s` was being inferred as `unknown`, causing a compile error.
-        // Explicitly casting `s` to `Session` allows accessing the `id` property.
-        const map = new Map(allLocal.map(s => [(s as Session).id, s]));
+        // FIX: The type of `s` was being inferred as `unknown`. Explicitly cast `s` to `Session`
+        // for both the key and value to ensure the created Map is correctly typed as Map<string, Session>.
+        const map = new Map(allLocal.map(s => [(s as Session).id, s as Session]));
         history.forEach(s => map.set(s.id, s));
         const fullHistory = Array.from(map.values());
-        const realHistoryToSave = fullHistory.filter(s => !isDemoData(s.id));
+        // FIX: The type of `s` is being inferred as `unknown`. Explicitly cast `s` to `Session` to access `id`.
+        const realHistoryToSave = fullHistory.filter(s => !isDemoData((s as Session).id));
         const sortedHistory = realHistoryToSave.sort((a: Session, b: Session) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         await set('history', sortedHistory);
     } catch (e) { console.error("Local history save failed", e); }
@@ -236,15 +237,21 @@ export const saveHistoryToDB = async (history: Session[], waitForCloud: boolean 
     const realHistoryToSync = history.filter(s => !isDemoData(s.id));
     if (realHistoryToSync.length === 0 || !isSupabaseConfigured()) return;
 
-    const cloudOp = supabase!.from('sessions').upsert(realHistoryToSync, { onConflict: 'id' });
+    const doCloudSync = async () => {
+        const { error } = await supabase!.from('sessions').upsert(realHistoryToSync, { onConflict: 'id' });
+        if (error) throw error;
+    };
     
     if (waitForCloud) {
-        const { error } = await cloudOp;
-        if (error) throw error;
+        await doCloudSync();
     } else {
-        cloudOp.catch(err => {
-            console.warn("Background history sync failed:", err.message);
-        });
+        (async () => {
+            try {
+                await doCloudSync();
+            } catch (err: any) {
+                console.warn("Background history sync failed:", err.message);
+            }
+        })();
     }
 };
 
@@ -281,15 +288,21 @@ export const saveNewsToDB = async (news: NewsItem[], waitForCloud: boolean = fal
     
     if (realNews.length === 0 || !isSupabaseConfigured()) return;
 
-    const cloudOp = supabase!.from('news').upsert(realNews.slice(0, 50), { onConflict: 'id' });
+    const doCloudSync = async () => {
+        const { error } = await supabase!.from('news').upsert(realNews.slice(0, 50), { onConflict: 'id' });
+        if (error) throw error;
+    };
     
     if (waitForCloud) {
-        const { error } = await cloudOp;
-        if (error) throw error;
+        await doCloudSync();
     } else {
-        cloudOp.catch(err => {
-            console.warn("Background news sync failed:", err.message);
-        });
+        (async () => {
+            try {
+                await doCloudSync();
+            } catch (err: any) {
+                console.warn("Background news sync failed:", err.message);
+            }
+        })();
     }
 };
 
