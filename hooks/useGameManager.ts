@@ -395,10 +395,15 @@ export const useGameManager = () => {
                 newsFeed: newsFeed,
             });
 
-            // Reordered Save Logic: Save most critical/largest data first.
+            // Create a "lean" version of the session object for DB storage
+            // This replaces the full player objects in the pool with just their IDs
+            const sessionForDb = {
+                ...finalSession,
+                playerPool: finalSession.playerPool.map(p => p.id),
+            };
             
             // 1. Save session history. If this fails, abort.
-            await saveHistoryToDB([finalSession]);
+            await saveHistoryToDB([sessionForDb as any]);
             setHistory(prev => [finalSession, ...prev]);
             
             // 2. Save player data. This is now more reliable with one-by-one saves.

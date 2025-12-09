@@ -72,13 +72,29 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
     const loadedHistoryData = await loadHistoryFromDB();
     let initialHistory: Session[] = [];
     if (Array.isArray(loadedHistoryData)) {
-        initialHistory = loadedHistoryData.map((s: any) => ({
-            ...s,
-            teams: s.teams || [],
-            games: s.games || [],
-            playerPool: s.playerPool || [],
-            eventLog: s.eventLog || []
-        }));
+        const allPlayersMap = new Map(initialPlayers.map(p => [p.id, p]));
+
+        initialHistory = loadedHistoryData.map((s: any) => {
+            let rehydratedPlayerPool: Player[] = [];
+            if (s.playerPool && s.playerPool.length > 0) {
+                // Check if the pool contains IDs (new format) or full objects (legacy)
+                if (typeof s.playerPool[0] === 'string') {
+                    rehydratedPlayerPool = s.playerPool
+                        .map((id: string) => allPlayersMap.get(id))
+                        .filter(Boolean) as Player[];
+                } else {
+                    rehydratedPlayerPool = s.playerPool;
+                }
+            }
+            
+            return {
+                ...s,
+                teams: s.teams || [],
+                games: s.games || [],
+                playerPool: rehydratedPlayerPool,
+                eventLog: s.eventLog || []
+            };
+        });
     }
 
     // 4. Load News Feed
