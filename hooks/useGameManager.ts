@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -10,7 +9,7 @@ import { savePlayersToDB, saveNewsToDB, saveHistoryToDB } from '../db';
 import { useTranslation } from '../ui';
 
 export const useGameManager = () => {
-    const { activeSession, setActiveSession, setHistory, setAllPlayers, setNewsFeed, allPlayers: oldPlayersState, newsFeed, activeVoicePack } = useApp();
+    const { activeSession, setActiveSession, setHistory, setAllPlayers, setNewsFeed, allPlayers: oldPlayersState, newsFeed, activeVoicePack, setSyncStatus } = useApp();
     const navigate = useNavigate();
     const t = useTranslation();
 
@@ -381,6 +380,7 @@ export const useGameManager = () => {
         }
         
         setIsSaving(true);
+        setSyncStatus('syncing');
         
         try {
             const {
@@ -405,9 +405,11 @@ export const useGameManager = () => {
             setHistory(prev => [finalSession, ...prev].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
             
             setActiveSession(null);
+            setSyncStatus('synced');
             navigate('/');
         } catch (error) {
             console.error("Critical Error saving session to cloud:", error);
+            setSyncStatus('error');
             alert("Failed to save session to the cloud. Please check your internet connection and try again. Your data is safe on this device for now.");
             // Do NOT clear the active session. Let the user retry.
         } finally {

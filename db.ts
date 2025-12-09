@@ -1,28 +1,23 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { Player, Session, NewsItem } from './types';
 import { Language } from './translations/index';
 import { get, set, del, keys } from 'idb-keyval';
 
-// --- SUPABASE CONFIGURATION ---
-const getEnvVar = (key: string) => {
-    try {
-        // @ts-ignore
-        if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
-            // @ts-ignore
-            return import.meta.env[key];
-        }
-    } catch (e) {}
-    try {
-        if (typeof process !== 'undefined' && process.env && process.env[key]) {
-            return process.env[key];
-        }
-    } catch (e) {}
-    return undefined;
-};
+// --- SYNC EVENT MANAGER ---
+class SyncEventManager extends EventTarget {
+    notify(status: 'syncing' | 'synced' | 'error') {
+        this.dispatchEvent(new CustomEvent('syncstatus', { detail: status }));
+    }
+}
+export const syncEventManager = new SyncEventManager();
 
-const supabaseUrl = getEnvVar('VITE_SUPABASE_URL');
-const supabaseAnonKey = getEnvVar('VITE_SUPABASE_ANON_KEY');
+
+// --- SUPABASE CONFIGURATION (CRITICAL FIX) ---
+// Direct access to Vite's env variables with a safeguard.
+// This prevents a runtime crash if the build environment doesn't inject the variables correctly.
+const env = (import.meta as any)?.env;
+const supabaseUrl = env ? env.VITE_SUPABASE_URL : undefined;
+const supabaseAnonKey = env ? env.VITE_SUPABASE_ANON_KEY : undefined;
 
 const supabase = (supabaseUrl && supabaseAnonKey) 
     ? createClient(supabaseUrl, supabaseAnonKey) 
@@ -72,7 +67,6 @@ export const uploadPlayerImage = async (playerId: string, base64Image: string, t
     if (!base64Image) return null;
 
     if (!isSupabaseConfigured() || isDemoData(playerId)) {
-        // For local mode or demo data, we still return base64, but it won't be saved to the cloud DB
         return base64Image;
     }
 
@@ -80,23 +74,25 @@ export const uploadPlayerImage = async (playerId: string, base64Image: string, t
         const blob = base64ToBlob(base64Image);
         const filePath = `${playerId}/${type}_${Date.now()}.jpeg`;
         
+        syncEventManager.notify('syncing');
         const { error: uploadError } = await supabase!.storage
             .from(BUCKET_NAME)
             .upload(filePath, blob, {
                 cacheControl: '31536000',
-                upsert: false, // Don't upsert, create new file to avoid cache issues
+                upsert: false,
             });
 
         if (uploadError) throw uploadError;
+        syncEventManager.notify('synced');
 
         const { data } = supabase!.storage.from(BUCKET_NAME).getPublicUrl(filePath);
-        
         return data.publicUrl;
 
     } catch (e) {
+        syncEventManager.notify('error');
         console.error("Cloud image upload failed:", e);
         alert("Image upload to cloud storage failed. Please check your connection or storage quota.");
-        return null; // Return null on failure to indicate something went wrong
+        return null;
     }
 };
 
@@ -105,13 +101,15 @@ export const deletePlayerImage = async (imageUrl: string) => {
     
     try {
         const url = new URL(imageUrl);
-        // Correctly extract path after the bucket name
         const pathAfterBucket = url.pathname.split(`/${BUCKET_NAME}/`)[1];
         
         if (pathAfterBucket) {
+            syncEventManager.notify('syncing');
             await supabase!.storage.from(BUCKET_NAME).remove([pathAfterBucket]);
+            syncEventManager.notify('synced');
         }
     } catch (e) {
+        syncEventManager.notify('error');
         console.warn(`Could not delete image from storage: ${imageUrl}`, e);
     }
 };
@@ -119,35 +117,30 @@ export const deletePlayerImage = async (imageUrl: string) => {
 
 // --- DATA METHODS (OFFLINE FIRST ARCHITECTURE) ---
 
-// SAVE SINGLE PLAYER
 export const saveSinglePlayerToDB = async (player: Player) => {
     try {
-        const allPlayers = await get<Player[]>('players') || [];
-        const index = allPlayers.findIndex(p => p.id === player.id);
-        if (index > -1) allPlayers[index] = player;
-        else allPlayers.push(player);
-        await set('players', allPlayers);
+        await set('players', (await get<Player[]>('players') || []).map(p => p.id === player.id ? player : p));
     } catch (e) { console.error("Local save failed", e); }
 
     if (isSupabaseConfigured() && !isDemoData(player.id)) {
         (async () => {
-            const { error } = await supabase!.from('players').upsert(player, { onConflict: 'id' });
-            if (error) {
-                console.warn(`Background player sync failed: ${error.message}`);
+            try {
+                syncEventManager.notify('syncing');
+                const { error } = await supabase!.from('players').upsert(player, { onConflict: 'id' });
+                if (error) throw error;
+                syncEventManager.notify('synced');
+            } catch (err: any) {
+                syncEventManager.notify('error');
+                console.warn(`Background player sync failed: ${err.message}`);
             }
         })();
     }
 };
 
-// LOAD SINGLE PLAYER
 export const loadSinglePlayerFromDB = async (id: string): Promise<Player | null> => {
     if (isSupabaseConfigured()) {
         try {
-            const response = await withTimeout(supabase!
-                .from('players')
-                .select('*')
-                .eq('id', id)
-                .single());
+            const response = await withTimeout(supabase!.from('players').select('*').eq('id', id).single());
             const { data, error } = response as any;
             if (!error && data) return data as Player;
         } catch (e) { /* Fallback to local */ }
@@ -156,7 +149,6 @@ export const loadSinglePlayerFromDB = async (id: string): Promise<Player | null>
     return allPlayers.find(p => p.id === id) || null;
 };
 
-// SAVE BULK PLAYERS
 export const savePlayersToDB = async (players: Player[], waitForCloud: boolean = false) => {
     try {
         const allLocal = await get<Player[]>('players') || [];
@@ -178,8 +170,11 @@ export const savePlayersToDB = async (players: Player[], waitForCloud: boolean =
     } else {
         (async () => {
             try {
+                syncEventManager.notify('syncing');
                 await doCloudSync();
+                syncEventManager.notify('synced');
             } catch (err: any) {
+                syncEventManager.notify('error');
                 console.warn("Background player sync failed:", err.message);
             }
         })();
@@ -187,7 +182,6 @@ export const savePlayersToDB = async (players: Player[], waitForCloud: boolean =
 };
 
 
-// LOAD PLAYERS
 export const loadPlayersFromDB = async (): Promise<Player[] | undefined> => {
     let localData: Player[] = [];
     try { localData = await get('players') || []; } catch (e) {}
@@ -209,28 +203,22 @@ export const loadPlayersFromDB = async (): Promise<Player[] | undefined> => {
     return localData; 
 };
 
-// ACTIVE SESSION
 export const saveActiveSessionToDB = async (session: Session | null) => {
-    if (session && !isDemoData(session.id)) await set('activeSession', session);
-    else if (!session) await set('activeSession', null);
+    await set('activeSession', session);
 };
 
 export const loadActiveSessionFromDB = async (): Promise<Session | null | undefined> => {
     return await get('activeSession');
 };
 
-// HISTORY
 export const saveHistoryToDB = async (history: Session[], waitForCloud: boolean = false) => {
     try {
         const allLocal = await get<Session[]>('history') || [];
-        // FIX: The type of `s` was being inferred as `unknown`. Explicitly cast `s` to `Session`
-        // for both the key and value to ensure the created Map is correctly typed as Map<string, Session>.
-        const map = new Map(allLocal.map(s => [(s as Session).id, s as Session]));
+        const map = new Map(allLocal.map(s => [s.id, s as Session]));
         history.forEach(s => map.set(s.id, s));
         const fullHistory = Array.from(map.values());
-        // FIX: The type of `s` is being inferred as `unknown`. Explicitly cast `s` to `Session` to access `id`.
-        const realHistoryToSave = fullHistory.filter(s => !isDemoData((s as Session).id));
-        const sortedHistory = realHistoryToSave.sort((a: Session, b: Session) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        // FIX: Add explicit types to sort callback parameters to fix type inference issue.
+        const sortedHistory = fullHistory.sort((a: Session, b: Session) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         await set('history', sortedHistory);
     } catch (e) { console.error("Local history save failed", e); }
     
@@ -247,8 +235,11 @@ export const saveHistoryToDB = async (history: Session[], waitForCloud: boolean 
     } else {
         (async () => {
             try {
+                syncEventManager.notify('syncing');
                 await doCloudSync();
+                syncEventManager.notify('synced');
             } catch (err: any) {
+                syncEventManager.notify('error');
                 console.warn("Background history sync failed:", err.message);
             }
         })();
@@ -257,16 +248,11 @@ export const saveHistoryToDB = async (history: Session[], waitForCloud: boolean 
 
 export const loadHistoryFromDB = async (): Promise<Session[] | undefined> => {
     let localData: Session[] = [];
-    // FIX: Added generic type to `get` for better type safety.
     try { localData = await get<Session[]>('history') || []; } catch(e) {}
 
     if (isSupabaseConfigured()) {
         try {
-            const response = await withTimeout(supabase!
-                .from('sessions')
-                .select('*')
-                .order('createdAt', { ascending: false }), 2000);
-            
+            const response = await withTimeout(supabase!.from('sessions').select('*').order('createdAt', { ascending: false }), 2000);
             const { data, error } = response as any;
             if (!error && data) {
                 set('history', data);
@@ -279,7 +265,6 @@ export const loadHistoryFromDB = async (): Promise<Session[] | undefined> => {
     return localData;
 };
 
-// NEWS
 export const saveNewsToDB = async (news: NewsItem[], waitForCloud: boolean = false) => {
     const realNews = news.filter(n => !isDemoData(n.id));
     try {
@@ -298,8 +283,11 @@ export const saveNewsToDB = async (news: NewsItem[], waitForCloud: boolean = fal
     } else {
         (async () => {
             try {
+                syncEventManager.notify('syncing');
                 await doCloudSync();
+                syncEventManager.notify('synced');
             } catch (err: any) {
+                syncEventManager.notify('error');
                 console.warn("Background news sync failed:", err.message);
             }
         })();
@@ -309,11 +297,7 @@ export const saveNewsToDB = async (news: NewsItem[], waitForCloud: boolean = fal
 export const loadNewsFromDB = async (): Promise<NewsItem[] | undefined> => {
     try {
         if (isSupabaseConfigured()) {
-            const response = await withTimeout(supabase!
-                .from('news')
-                .select('*')
-                .order('timestamp', { ascending: false })
-                .limit(50), 1500);
+            const response = await withTimeout(supabase!.from('news').select('*').order('timestamp', { ascending: false }).limit(50), 1500);
             const { data, error } = response as any;
             if (!error && data) {
                 set('newsFeed', data);
@@ -341,9 +325,18 @@ export const saveCustomAudio = async (key: string, base64: string, pack: number)
     await set(cacheKey, { data: base64, lastModified: new Date().toISOString() }); // Local first
     
     if (isSupabaseConfigured()) {
-        const blob = base64ToBlob(base64);
-        const filePath = `pack${pack}/${key}.mp3`;
-        supabase!.storage.from(AUDIO_BUCKET).upload(filePath, blob, { cacheControl: '31536000', upsert: true }).catch(() => {});
+        (async () => {
+            try {
+                syncEventManager.notify('syncing');
+                const blob = base64ToBlob(base64);
+                const filePath = `pack${pack}/${key}.mp3`;
+                const { error } = await supabase!.storage.from(AUDIO_BUCKET).upload(filePath, blob, { cacheControl: '31536000', upsert: true });
+                if (error) throw error;
+                syncEventManager.notify('synced');
+            } catch (e) {
+                syncEventManager.notify('error');
+            }
+        })();
     }
 };
 
@@ -351,14 +344,8 @@ export const loadCustomAudio = async (key: string, pack: number): Promise<string
     const cacheKey = getCacheKey(key, pack);
     try {
         const cached = await get<CachedAudio>(cacheKey);
-        // If data exists locally, return it immediately without checking cloud
-        if (cached?.data) {
-            return cached.data;
-        }
+        if (cached?.data) return cached.data;
     } catch (e) {}
-
-    // If no local data, do not attempt to fetch from cloud here to avoid blocking playback.
-    // Syncing is handled separately.
     return undefined;
 };
 
@@ -366,10 +353,17 @@ export const deleteCustomAudio = async (key: string, pack: number): Promise<void
     const cacheKey = getCacheKey(key, pack);
     await del(cacheKey);
     if (isSupabaseConfigured()) {
-        try {
-            const filePath = `pack${pack}/${key}.mp3`;
-            await supabase!.storage.from(AUDIO_BUCKET).remove([filePath]);
-        } catch (e) {}
+        (async () => {
+            try {
+                syncEventManager.notify('syncing');
+                const filePath = `pack${pack}/${key}.mp3`;
+                const { error } = await supabase!.storage.from(AUDIO_BUCKET).remove([filePath]);
+                if (error) throw error;
+                syncEventManager.notify('synced');
+            } catch (e) {
+                syncEventManager.notify('error');
+            }
+        })();
     }
 };
 
@@ -389,17 +383,33 @@ const ANTHEM_FILENAME = 'anthem.mp3';
 export const uploadSessionAnthem = async (base64: string): Promise<string | null> => {
     await set('session_anthem', base64);
     if (!isSupabaseConfigured()) return base64;
-    try {
-        const blob = base64ToBlob(base64);
-        supabase!.storage.from(MUSIC_BUCKET).upload(ANTHEM_FILENAME, blob, { cacheControl: '31536000', upsert: true }).catch(() => {});
-        return base64;
-    } catch (e) { return null; }
+    (async () => {
+        try {
+            syncEventManager.notify('syncing');
+            const blob = base64ToBlob(base64);
+            const { error } = await supabase!.storage.from(MUSIC_BUCKET).upload(ANTHEM_FILENAME, blob, { cacheControl: '31536000', upsert: true });
+            if (error) throw error;
+            syncEventManager.notify('synced');
+        } catch (e) {
+            syncEventManager.notify('error');
+        }
+    })();
+    return base64;
 };
 
 export const deleteSessionAnthem = async (): Promise<void> => {
     await del('session_anthem');
     if (isSupabaseConfigured()) {
-        try { await supabase!.storage.from(MUSIC_BUCKET).remove([ANTHEM_FILENAME]); } catch(e) {}
+        (async () => {
+            try {
+                syncEventManager.notify('syncing');
+                const { error } = await supabase!.storage.from(MUSIC_BUCKET).remove([ANTHEM_FILENAME]);
+                if (error) throw error;
+                syncEventManager.notify('synced');
+            } catch(e) {
+                syncEventManager.notify('error');
+            }
+        })();
     }
 };
 

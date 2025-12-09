@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Session, Player, GameStatus, RotationMode, Team, Game, Goal, SessionStatus, EventLogEntry, EventType, StartRoundPayload, GoalPayload, PlayerStatus, PlayerTier, BadgeType, NewsItem } from './types';
 import { Language } from './translations/index';
@@ -8,10 +7,13 @@ import {
     saveHistoryToDB,
     saveLanguageToDB,
     saveNewsToDB,
-    saveActiveVoicePackToDB
+    saveActiveVoicePackToDB,
+    syncEventManager // Import the event manager
 } from './db';
 import { initializeAppState } from './services/appInitializer';
 import { useMatchTimer } from './hooks/useMatchTimer';
+
+type SyncStatus = 'synced' | 'syncing' | 'error';
 
 interface AppContextType {
   activeSession: Session | null;
@@ -28,6 +30,8 @@ interface AppContextType {
   setActiveVoicePack: (packNumber: number) => void;
   isLoading: boolean;
   displayTime: number; // Re-introduced for global timer
+  syncStatus: SyncStatus;
+  setSyncStatus: React.Dispatch<React.SetStateAction<SyncStatus>>;
 }
 
 const AppContext = React.createContext<AppContextType | undefined>(undefined);
@@ -40,9 +44,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [newsFeed, setNewsFeed] = React.useState<NewsItem[]>([]);
   const [language, setLanguageState] = React.useState<Language>('en');
   const [activeVoicePack, setActiveVoicePackState] = React.useState<number>(1);
+  const [syncStatus, setSyncStatus] = React.useState<SyncStatus>('synced');
+
 
   // --- GLOBAL TIMER LOGIC (Restored) ---
   const { displayTime } = useMatchTimer(activeSession, setActiveSession, activeVoicePack);
+
+  // --- BACKGROUND SYNC LISTENER ---
+  React.useEffect(() => {
+    const handleSyncUpdate = (event: Event) => {
+        const customEvent = event as CustomEvent<SyncStatus>;
+        setSyncStatus(customEvent.detail);
+        // If an error occurs, automatically switch back to 'synced' (idle with error state) after a few seconds.
+        if (customEvent.detail === 'error') {
+            setTimeout(() => setSyncStatus('error'), 3000);
+        }
+    };
+    
+    syncEventManager.addEventListener('syncstatus', handleSyncUpdate);
+
+    return () => {
+        syncEventManager.removeEventListener('syncstatus', handleSyncUpdate);
+    };
+  }, []);
 
   // --- INITIAL DATA LOAD (Now handled by appInitializer service) ---
   React.useEffect(() => {
@@ -124,6 +148,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveVoicePack,
     isLoading,
     displayTime,
+    syncStatus,
+    setSyncStatus,
   };
 
   if(isLoading) {
