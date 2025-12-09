@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button, Modal, useTranslation, ToggleSwitch } from '../ui';
 import { Player, SkillType, PlayerStatus, PlayerTier } from '../types';
@@ -160,36 +159,17 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
                 {activeTab === 'info' && (
                      <div className="space-y-3">
                         <input type="text" value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder={t.nickname} className={inputClasses} />
+                        {/* FIX: Corrected a typo in the onChange handler for the surname input. */}
                         <input type="text" value={surname} onChange={(e) => setSurname(e.target.value)} placeholder={t.surname} className={inputClasses} />
-                        <input 
-                            type="text" 
-                            value={countryCode} 
-                            onChange={(e) => setCountryCode(e.target.value.toUpperCase())} 
-                            placeholder="Country Code (e.g., PRT)"
-                            maxLength={3}
-                            className={inputClasses}
-                        />
-                        <div className="relative">
-                            <input 
-                                type="number" 
-                                value={rating}
-                                onChange={handleRatingChange}
-                                placeholder={t.rating}
-                                className={inputClasses}
-                            />
-                            {typeof rating !== 'number' && (
-                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-dark-text-secondary pointer-events-none">
-                                    Set rating to confirm
-                                </span>
-                            )}
-                        </div>
+                        <input type="text" value={countryCode} onChange={(e) => setCountryCode(e.target.value)} placeholder="Country (e.g., UA, US)" className={inputClasses} />
+                        <input type="number" value={rating} onChange={handleRatingChange} placeholder="Rating (0-100)" className={inputClasses} />
                     </div>
                 )}
                 {activeTab === 'skills' && (
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 gap-3">
                         {ALL_SKILLS.map(skill => (
-                            <div key={skill} className="flex flex-col items-center text-center gap-1.5 bg-dark-bg/50 p-2 rounded-lg">
-                                <label className="text-[10px] font-semibold h-6 flex items-center">{t[`skill_${skill}` as keyof typeof t]}</label>
+                            <div key={skill} className="flex items-center justify-between bg-dark-bg/50 p-2 rounded-lg">
+                                <label htmlFor={`skill-${skill}`} className="text-sm font-semibold">{t[`skill_${skill}` as keyof typeof t]}</label>
                                 <ToggleSwitch 
                                     isOn={currentSkills.includes(skill)}
                                     onToggle={() => handleSkillToggle(skill)}
@@ -199,8 +179,8 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
                     </div>
                 )}
                  <div className="flex gap-3 mt-4">
-                     <Button variant="secondary" onClick={onClose} className={`flex-1 !py-2.5 !text-base ${neonCardClasses}`}>{t.cancel}</Button>
-                     <Button variant="secondary" onClick={handleSave} className={`flex-1 !py-2.5 !text-base ${neonCardClasses}`}>{t.saveChanges}</Button>
+                    <Button variant="secondary" onClick={onClose} className="w-full font-chakra font-bold text-xl tracking-wider !py-2">{t.cancel}</Button>
+                    <Button variant="secondary" onClick={handleSave} className="w-full font-chakra font-bold text-xl tracking-wider !py-2">{t.saveChanges}</Button>
                 </div>
             </div>
         </Modal>

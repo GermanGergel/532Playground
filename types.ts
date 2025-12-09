@@ -24,7 +24,6 @@ export type BadgeType =
   'mvp' | 
   'decisive_factor' | 
   'unsung_hero' |
-  // New Badges
   'first_blood' |
   'duplet' |
   'maestro' |
@@ -32,7 +31,24 @@ export type BadgeType =
   'fortress' |
   'club_legend_goals' |
   'club_legend_assists' |
-  'veteran';
+  'veteran' |
+  // NEW BADGES FROM USER LIST
+  'session_top_scorer' |
+  'stable_striker' |
+  'victory_finisher' |
+  'session_top_assistant' |
+  'passing_streak' |
+  'team_conductor' |
+  'ten_influence' |
+  'mastery_balance' |
+  'key_player' |
+  'win_leader' |
+  'iron_streak' |
+  'undefeated' |
+  'dominant_participant' |
+  'career_100_wins' |
+  'career_150_influence' |
+  'career_super_veteran';
 
 export type SkillType = 'goalkeeper' | 'power_shot' | 'technique' | 'defender' | 'playmaker' | 'finisher' | 'versatile' | 'tireless_motor' | 'leader';
 
@@ -43,6 +59,13 @@ export type RatingBreakdown = {
   badgeBonus: number;
   finalChange: number;
   newRating: number;
+  badgesEarned: BadgeType[];
+};
+
+export type PlayerRecords = {
+  bestGoalsInSession: { value: number; sessionId: string; };
+  bestAssistsInSession: { value: number; sessionId: string; };
+  bestWinRateInSession: { value: number; sessionId: string; };
 };
 
 export interface Player {
@@ -84,6 +107,7 @@ export interface Player {
   lastPlayedAt: string; // ISO string
   sessionHistory?: { winRate: number }[];
   lastRatingChange?: RatingBreakdown;
+  records: PlayerRecords;
 }
 
 export enum RotationMode {

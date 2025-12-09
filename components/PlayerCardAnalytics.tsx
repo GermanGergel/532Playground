@@ -2,7 +2,7 @@ import React from 'react';
 import { Player, PlayerStatus } from '../types';
 import { Card, useTranslation } from '../ui';
 import { useApp } from '../context';
-import { BootIcon, HandshakeIcon, CrownIcon } from '../icons';
+import { BadgeIcon } from '../features';
 
 const RatingChangePill: React.FC<{ value: number, label: string }> = ({ value, label }) => {
     if (value === 0) return null;
@@ -28,20 +28,18 @@ export const LastSessionBreakdown: React.FC<{ player: Player }> = ({ player }) =
 
     if (!breakdown) return null;
 
-    // FIXED: Removed colored border, kept shadow (glow) and standard subtle border
     const cardClass = "border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)]";
+    const badgesEarned = breakdown.badgesEarned || [];
     
-    // Updated design: Label is outside the circle, container has fixed width (w-20) for symmetry
     const RatingCircle: React.FC<{ rating: number, isNew?: boolean }> = ({ rating, isNew }) => (
         <div className="flex flex-col items-center gap-1 w-20">
             <div className={`
                 w-16 h-16 rounded-full flex items-center justify-center shrink-0
                 ${isNew 
-                    ? 'bg-dark-accent-start/10 border-2 border-[#00F2FE]' // Keep border but avoid heavy blur on the circle itself
+                    ? 'bg-dark-accent-start/10 border-2 border-[#00F2FE]'
                     : 'bg-dark-surface border-2 border-dark-text-secondary/50'
                 }
             `}>
-                {/* KEEP FLAT: No text-shadow on the rating number */}
                 <span className={`font-black text-3xl leading-none ${isNew ? 'text-[#00F2FE]' : 'text-dark-text'}`} style={{ textShadow: 'none' }}>
                     {rating.toFixed(0)}
                 </span>
@@ -53,26 +51,41 @@ export const LastSessionBreakdown: React.FC<{ player: Player }> = ({ player }) =
     );
 
     return (
-        <Card className={cardClass}>
-            <div className="flex items-center justify-between px-1">
-                <RatingCircle rating={breakdown.previousRating} />
-                
-                <div className="flex flex-col items-center justify-center gap-1.5 flex-grow px-2 -mt-3">
-                     <div className="flex items-start justify-center gap-2 text-center">
-                        <RatingChangePill value={breakdown.teamPerformance} label={t.lastSessionAnalysis_team} />
-                        <RatingChangePill value={breakdown.individualPerformance} label={t.lastSessionAnalysis_indiv} />
-                        <RatingChangePill value={breakdown.badgeBonus} label={t.lastSessionAnalysis_badge} />
+        <Card title={t.lastSessionAnalysis} className={cardClass}>
+            <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between px-1">
+                    <RatingCircle rating={breakdown.previousRating} />
+                    
+                    <div className="flex flex-col items-center justify-center gap-1.5 flex-grow px-2 -mt-3">
+                         <div className="flex items-start justify-center gap-2 text-center">
+                            <RatingChangePill value={breakdown.teamPerformance} label={t.lastSessionAnalysis_team} />
+                            <RatingChangePill value={breakdown.individualPerformance} label={t.lastSessionAnalysis_indiv} />
+                            <RatingChangePill value={breakdown.badgeBonus} label={t.lastSessionAnalysis_badge} />
+                        </div>
+                         <div className="w-full h-px bg-gradient-to-r from-transparent via-dark-accent-start to-transparent opacity-50 my-0.5"></div>
+                         <div className="flex flex-col items-center justify-center text-center">
+                            <p className={`text-base font-bold leading-tight ${breakdown.finalChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                               {breakdown.finalChange >= 0 ? '+' : ''}{breakdown.finalChange.toFixed(1)}
+                            </p>
+                            <p className="text-[9px] text-dark-text-secondary uppercase leading-none mt-0.5">{t.finalChange}</p>
+                         </div>
                     </div>
-                     <div className="w-full h-px bg-gradient-to-r from-transparent via-dark-accent-start to-transparent opacity-50 my-0.5"></div>
-                     <div className="flex flex-col items-center justify-center text-center">
-                        <p className={`text-base font-bold leading-tight ${breakdown.finalChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                           {breakdown.finalChange >= 0 ? '+' : ''}{breakdown.finalChange.toFixed(1)}
-                        </p>
-                        <p className="text-[9px] text-dark-text-secondary uppercase leading-none mt-0.5">{t.finalChange}</p>
-                     </div>
+
+                    <RatingCircle rating={breakdown.newRating} isNew />
                 </div>
 
-                <RatingCircle rating={breakdown.newRating} isNew />
+                {badgesEarned.length > 0 && (
+                    <div className="pt-3 mt-3 border-t border-white/10">
+                        <p className="text-center text-xs font-bold text-dark-text-secondary mb-2">{t.awards}</p>
+                        <div className="flex justify-center items-center gap-3 flex-wrap">
+                            {badgesEarned.map(badge => (
+                                <div key={badge} title={t[`badge_${badge}` as keyof typeof t] || ''}>
+                                    <BadgeIcon badge={badge} className="w-7 h-7" />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </Card>
     );
@@ -82,9 +95,6 @@ export const ClubRankings: React.FC<{ player: Player }> = ({ player }) => {
     const t = useTranslation();
     const { allPlayers } = useApp();
     
-    // FIXED: Removed colored border, kept shadow (glow) and standard subtle border
-    const cardClass = "border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)]";
-
     const rankings = React.useMemo(() => {
         const confirmedPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
         
@@ -101,8 +111,6 @@ export const ClubRankings: React.FC<{ player: Player }> = ({ player }) => {
         return { goalRank, assistRank, ratingRank, total: confirmedPlayers.length };
     }, [allPlayers, player.id]);
     
-    // Removed Icon prop and the # symbol
-    // Replaced gradient-text and neon-text-glow with solid color
     const RankItem: React.FC<{ label: string; rank: number; total: number }> = ({ label, rank, total }) => (
         <div className="flex flex-col items-center gap-1 text-center py-1">
             <div className="flex items-baseline gap-1">
@@ -116,11 +124,40 @@ export const ClubRankings: React.FC<{ player: Player }> = ({ player }) => {
     if (!rankings) return null;
 
     return (
-        <Card className={`${cardClass} !py-1`}>
+        <Card title={t.clubRankings}>
             <div className="grid grid-cols-3 gap-2 divide-x divide-white/10">
                 <RankItem label={t.topScorer} rank={rankings.goalRank} total={rankings.total} />
                 <RankItem label={t.topAssistant} rank={rankings.assistRank} total={rankings.total} />
                 <RankItem label={t.rating} rank={rankings.ratingRank} total={rankings.total} />
+            </div>
+        </Card>
+    );
+};
+
+export const BestSessionCard: React.FC<{ player: Player }> = ({ player }) => {
+    const t = useTranslation();
+    const records = player.records;
+    const cardClass = "border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)]";
+
+    if (!records || (records.bestGoalsInSession.value === 0 && records.bestAssistsInSession.value === 0 && records.bestWinRateInSession.value === 0)) {
+        return null;
+    }
+
+    return (
+        <Card title={t.bestSessionTitle} className={cardClass}>
+            <div className="grid grid-cols-3 gap-2 text-center">
+                <div>
+                    <p className="text-base font-bold">{records.bestGoalsInSession.value}</p>
+                    <p className="text-[10px] text-dark-text-secondary uppercase">{t.recordGoals}</p>
+                </div>
+                <div>
+                    <p className="text-base font-bold">{records.bestAssistsInSession.value}</p>
+                    <p className="text-[10px] text-dark-text-secondary uppercase">{t.recordAssists}</p>
+                </div>
+                <div>
+                    <p className="text-base font-bold">{records.bestWinRateInSession.value}%</p>
+                    <p className="text-[10px] text-dark-text-secondary uppercase">{t.bestWinRate}</p>
+                </div>
             </div>
         </Card>
     );

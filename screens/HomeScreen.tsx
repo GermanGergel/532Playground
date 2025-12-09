@@ -39,14 +39,14 @@ export const HomeScreen: React.FC = () => {
               <Button 
                 variant="secondary"
                 onClick={() => handleStartNewSession(false)} 
-                className="w-full !text-lg !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
+                className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
               >
                   {t.realTraining}
               </Button>
               <Button 
                 variant="secondary"
                 onClick={() => handleStartNewSession(true)} 
-                className="w-full !text-lg !py-3 shadow-lg shadow-red-500/20 hover:shadow-red-500/40"
+                className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-red-500/20 hover:shadow-red-500/40"
               >
                   {t.testGame}
               </Button>
@@ -65,7 +65,7 @@ export const HomeScreen: React.FC = () => {
                     <Button 
                         variant="secondary"
                         onClick={handleContinue} 
-                        className="w-full !text-lg !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
+                        className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
                     >
                         {t.continueSession}
                     </Button>
@@ -73,13 +73,16 @@ export const HomeScreen: React.FC = () => {
                     <Button 
                         variant="secondary"
                         onClick={() => setIsModeModalOpen(true)} 
-                        className="w-full !text-lg !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
+                        className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
                     >
                         {t.newSession}
                     </Button>
                  )}
-                 <Button variant="secondary" onClick={() => navigate('/player-hub')} className="w-full !text-lg !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">
+                 <Button variant="secondary" onClick={() => navigate('/player-hub')} className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">
                     {t.playerHub}
+                 </Button>
+                 <Button variant="secondary" onClick={() => navigate('/announcement')} className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">
+                    {t.createAnnouncement}
                  </Button>
             </main>
         </div>

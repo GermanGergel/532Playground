@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useApp } from './context';
-import { translations } from './translations';
+import { translations } from './translations/index';
 import { 
     Home, VideoCamera, BarChartDynamic, History, Settings, ChevronLeft 
 } from './icons';

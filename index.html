@@ -75,6 +75,17 @@
       background-color: #1A1D24; /* Ensure bg color matches splash */
       overscroll-behavior-y: none; /* Disables pull-to-refresh / bounce effect on mobile */
     }
+    /* Custom Selection Color */
+    ::selection {
+      background-color: #00F2FE;
+      color: #1A1D24;
+      text-shadow: none;
+    }
+    ::-moz-selection { /* Firefox */
+      background-color: #00F2FE;
+      color: #1A1D24;
+      text-shadow: none;
+    }
     /* Hide Scrollbar Globally for Native Feel */
     ::-webkit-scrollbar {
         width: 0px;

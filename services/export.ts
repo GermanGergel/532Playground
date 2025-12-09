@@ -117,6 +117,11 @@ export const shareOrDownloadImages = async (elementId: string, sessionName: stri
         console.error("Error waiting for images to load before export:", error);
         // We can choose to proceed anyway, but it might result in a broken image.
     }
+    
+    // FIX: Wait for all custom fonts to be fully loaded before rendering the canvas.
+    // This is the definitive solution to prevent text and numbers from being rendered with
+    // fallback fonts, which causes significant layout shifts and misalignment.
+    await document.fonts.ready;
 
     const files: File[] = [];
 

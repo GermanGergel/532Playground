@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -25,6 +24,7 @@ export const PlayerProfileScreen: React.FC = () => {
     const [isInfoModalOpen, setIsInfoModalOpen] = React.useState(false);
     const [isExporting, setIsExporting] = React.useState(false);
     const [playerForExport, setPlayerForExport] = React.useState<Player | null>(null);
+    
     const exportCardRef = React.useRef<HTMLDivElement>(null);
 
     const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -41,6 +41,31 @@ export const PlayerProfileScreen: React.FC = () => {
             return () => clearTimeout(timer);
         }
     }, [player, allPlayers, id, navigate]);
+
+    const handleShareProfile = async () => {
+        if (!player) return;
+    
+        const shareUrl = new URL(`/public-profile/${player.id}`, window.location.origin).href;
+    
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: `532 Playground Profile: ${player.nickname}`,
+                    text: `Check out ${player.nickname}'s player card!`,
+                    url: shareUrl,
+                });
+            } catch (error: any) {
+                if (error.name !== 'AbortError') {
+                    console.error('Share API failed:', error);
+                    await navigator.clipboard.writeText(shareUrl);
+                    alert('Sharing failed. Link copied to clipboard!');
+                }
+            }
+        } else {
+            await navigator.clipboard.writeText(shareUrl);
+            alert('Link copied to clipboard!');
+        }
+    };
 
     const handleDownloadCard = async () => {
         if (!player || isExporting) return;
@@ -74,8 +99,7 @@ export const PlayerProfileScreen: React.FC = () => {
         const exportImage = async () => {
             if (!playerForExport || !exportCardRef.current) return;
 
-            // Give the browser a moment to render the off-screen component and its background image
-            await new Promise(resolve => setTimeout(resolve, 500)); // Wait for render
+            await new Promise(resolve => setTimeout(resolve, 500)); 
 
             try {
                 const elementToCapture = exportCardRef.current.querySelector('#export-card-to-capture');
@@ -83,7 +107,6 @@ export const PlayerProfileScreen: React.FC = () => {
                 
                 const canvas = await html2canvas(elementToCapture as HTMLElement, {
                   backgroundColor: '#1A1D24',
-                  // Scale 4 creates ~2800px height. Scale 7 creates ~5000px height which crashes iOS Safari canvas.
                   scale: 4, 
                   useCORS: true,
                   allowTaint: true,
@@ -132,9 +155,13 @@ export const PlayerProfileScreen: React.FC = () => {
     }
 
     const ALL_BADGES: BadgeType[] = [
-        'goleador', 'perfect_finish', 'dynasty', 'sniper', 'assistant', 'mvp', 
-        'decisive_factor', 'unsung_hero', 'first_blood', 'duplet', 'maestro', 
-        'comeback_kings', 'fortress', 'club_legend_goals', 'club_legend_assists', 'veteran'
+      'goleador', 'perfect_finish', 'dynasty', 'sniper', 'assistant', 'mvp', 
+      'decisive_factor', 'unsung_hero', 'first_blood', 'duplet', 'maestro', 
+      'comeback_kings', 'fortress', 'club_legend_goals', 'club_legend_assists', 'veteran',
+      'session_top_scorer', 'stable_striker', 'victory_finisher', 'session_top_assistant',
+      'passing_streak', 'team_conductor', 'ten_influence', 'mastery_balance',
+      'key_player', 'win_leader', 'iron_streak', 'undefeated', 'dominant_participant',
+      'career_100_wins', 'career_150_influence', 'career_super_veteran'
     ];
     const ALL_SKILLS_INFO: SkillType[] = ['goalkeeper', 'power_shot', 'technique', 'defender', 'playmaker', 'finisher', 'versatile', 'tireless_motor', 'leader'];
 
@@ -224,8 +251,8 @@ export const PlayerProfileScreen: React.FC = () => {
                 <h2 className="text-xl font-bold mb-4">{t.deletePlayer}</h2>
                 <p className="mb-6">{t.deletePlayerConfirm.replace('{playerName}', player.nickname)}</p>
                 <div className="flex justify-end gap-4">
-                    <Button variant="secondary" onClick={() => setIsDeleteModalOpen(false)}>{t.cancel}</Button>
-                    <Button variant="danger" onClick={handleDeletePlayer}>{t.delete}</Button>
+                    <Button variant="secondary" onClick={() => setIsDeleteModalOpen(false)} className="font-chakra font-bold text-xl tracking-wider">{t.cancel}</Button>
+                    <Button variant="danger" onClick={handleDeletePlayer} className="font-chakra font-bold text-xl tracking-wider">{t.delete}</Button>
                 </div>
             </Modal>
             
@@ -275,6 +302,7 @@ export const PlayerProfileScreen: React.FC = () => {
                 onUploadCard={handleUploadClick}
                 onConfirmInitialRating={handleConfirmInitialRating}
                 onDownloadCard={handleDownloadCard}
+                onShareProfile={handleShareProfile}
                 isDownloading={isExporting}
             />
 

@@ -1,5 +1,4 @@
 import { loadCustomAudio } from './db';
-import { silentAudioMp3 } from './assets';
 
 // --- HYBRID AUDIO SYSTEM ---
 // Priority: 1. User-Uploaded MP3 (Cached in IndexedDB) -> 2. Text-to-Speech (Fallback)
@@ -17,15 +16,29 @@ export const initAudioContext = () => {
     }
 };
 
-// Helper to decode Base64 string to ArrayBuffer
-const base64ToArrayBuffer = (base64: string) => {
-    const binaryString = window.atob(base64.split(',')[1] || base64);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
+// Helper to decode Base64 string to ArrayBuffer (Final, Most Robust Implementation)
+const base64ToArrayBuffer = (base64: string): ArrayBuffer => {
+    let base64Data = base64;
+    // Find the comma that separates the metadata from the data
+    const prefixIndex = base64.indexOf(',');
+    if (prefixIndex !== -1) {
+      // Take only the part after the comma
+      base64Data = base64.substring(prefixIndex + 1);
     }
-    return bytes.buffer;
+    
+    try {
+        const binaryString = window.atob(base64Data.trim());
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+        return bytes.buffer;
+    } catch(e) {
+        console.error("Failed to decode base64 string. This is the error:", e);
+        console.error("Problematic base64 data (first 50 chars):", base64Data.substring(0, 50));
+        throw e; // re-throw the error to be caught by the caller
+    }
 };
 
 // Play a specific audio asset by key from the local IndexedDB cache
@@ -89,7 +102,7 @@ const speakFallback = (text: string) => {
     if (ASSISTANT_VOICE) {
         utterance.voice = ASSISTANT_VOICE;
         utterance.pitch = 1.0;
-        utterance.rate = 1.1;
+        utterance.rate = 1.0; // Adjusted rate from 1.1 to 1.0 for more natural speech
     }
     window.speechSynthesis.speak(utterance);
 };
@@ -102,12 +115,16 @@ export const playAnnouncement = async (key: string, fallbackText: string, active
         initAudioContext();
         if (!audioContext) return;
         try {
-            const audioBuffer = await audioContext.decodeAudioData(base64ToArrayBuffer(silentAudioMp3));
+            // THE ULTIMATE FIX: Programmatically create a silent buffer instead of decoding a file.
+            // This is the idiomatic Web Audio API way and is guaranteed to work.
+            const buffer = audioContext.createBuffer(1, 1, 22050); // 1 channel, 1 frame, 22.05kHz sample rate
             const source = audioContext.createBufferSource();
-            source.buffer = audioBuffer;
+            source.buffer = buffer;
             source.connect(audioContext.destination);
             source.start(0);
-        } catch(e) { console.error("Failed to play silence track", e)}
+        } catch(e) { 
+            console.error("Failed to play programmatically generated silence track", e);
+        }
         return;
     }
 

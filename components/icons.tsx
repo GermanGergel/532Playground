@@ -47,24 +47,6 @@ export const VeteranBadgeIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 15V9"/><path d="M12 9l-3 3m3-3l3 3"/><circle cx="12" cy="12" r="8"/><path d="M3.5 8.5L7 5m10 14l3.5-3.5"/></svg>
 );
 
-// --- 16 NEW ICONS ---
-export const SessionTopScorerBadgeIcon = (props: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>;
-export const StableStrikerBadgeIcon = (props: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M7 17l5-5-5-5"/><path d="M12 17l5-5-5-5"/></svg>;
-export const VictoryFinisherBadgeIcon = (props: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>;
-export const SessionTopAssistantBadgeIcon = (props: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M18 11.034C18 7.133 15.314 4 12 4s-6 3.133-6 6.966"/><path d="M12 18.155V21"/><path d="M8.243 14.32L6 16.5"/><path d="M15.757 14.32l2.243 2.18"/><path d="M12 4V2"/><path d="M12 14.28a2.28 2.28 0 002.28-2.28 2.28 2.28 0 00-4.56 0A2.28 2.28 0 0012 14.28z"/></svg>;
-export const PassingStreakBadgeIcon = (props: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M17 5L3 12l14 7-4-7 4-7z"/><path d="M21 5l-4 7 4 7"/></svg>;
-export const TeamConductorBadgeIcon = (props: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M17 11.5a4.5 4.5 0 10-9 0 4.5 4.5 0 009 0z"/><path d="M12 16V6"/><path d="M12 6L9 9"/><path d="M12 6l3 3"/></svg>;
-export const TenInfluenceBadgeIcon = (props: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M4 15h2a2 2 0 012 2v2a2 2 0 01-2 2H4v-6z"/><path d="M16 15h2a2 2 0 012 2v2a2 2 0 01-2 2h-2v-6z"/><path d="M10 9a2 2 0 01-2-2V5h4v2a2 2 0 01-2 2z"/><path d="M10 15V9"/></svg>;
-export const MasteryBalanceBadgeIcon = (props: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M16 4h3l-3 3h3"/><path d="M2 12h20"/><path d="M12 2v20"/><path d="M5 20l14-14"/></svg>;
-export const KeyPlayerBadgeIcon = (props: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="7.5" cy="15.5" r="5.5"/><path d="M12 10V4.5l4 4-4 4V10H8"/></svg>;
-export const WinLeaderBadgeIcon = (props: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M13 14l-4-4 4-4"/><path d="M7 10h9.5a2.5 2.5 0 010 5H11"/></svg>;
-export const IronStreakBadgeIcon = (props: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M12 11l4 4-4 4"/><path d="M8 11l-4 4 4 4"/></svg>;
-export const UndefeatedBadgeIcon = (props: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M14.5 21H8a2 2 0 01-2-2V5a2 2 0 012-2h8a2 2 0 012 2v6.5"/><path d="M9 16h2"/><path d="M9 12h4"/><path d="M9 8h4"/><path d="M17.5 14.5l3 3-3 3"/><path d="M20.5 14.5l-3 3 3 3"/></svg>;
-export const DominantParticipantBadgeIcon = (props: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>;
-export const Career100WinsBadgeIcon = (props: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 6l4 6H8l4-6z"/><path d="M18 18H6l-4-6h20l-4 6z"/><path d="M12 12V6"/></svg>;
-export const Career150InfluenceBadgeIcon = (props: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>;
-export const CareerSuperVeteranBadgeIcon = (props: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M17 3.34a10 10 0 11-10 0"/><path d="M7 3.34a10 10 0 1010 0"/><path d="M12 22V12l-4-4"/><path d="M12 12l4-4"/></svg>;
-
 // --- RANKING ICONS ---
 export const BootIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M18.5 8l2.5 1-3 5-1-1-1 2-2 1-1-2-1-1-3-1-1-3 1-3 2-1 3-1 2 1 2 1z"/><path d="M11.5 13.5l-2-3-2-1-2 1-1 3 2 3h3"/></svg>
@@ -95,6 +77,7 @@ export const Zap = (props: React.SVGProps<SVGSVGElement>) => (
 export const CloudFog = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 17H7"/><path d="M17 21H9"/></svg>
 );
+
 
 // --- APP UI ICONS ---
 export const Home = (props: React.SVGProps<SVGSVGElement>) => (
@@ -173,16 +156,5 @@ export const LightbulbIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export const StarIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" {...props}>
         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-    </svg>
-);
-export const TrophyIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
-        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
-        <path d="M4 22h16"/>
-        <path d="M10 14.66V17c0 .55-.45 1-1 1H5c-.55 0-1-.45-1-1v-2.34"/>
-        <path d="M15 14.66V17c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-2.34"/>
-        <path d="M8.5 14.66c.55 0 1 .45 1 1V17h5v-1.34c0-.55.45-1 1-1"/>
-        <path d="M12 12a3 3 0 0 0 3-3V4a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3z"/>
     </svg>
 );

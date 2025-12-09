@@ -3,13 +3,19 @@ import { Team, Player, PlayerTier, PlayerStatus, BadgeType, PlayerForm, SkillTyp
 import { getPlayerKeyStats } from './services/statistics';
 import { convertCountryCodeAlpha3ToAlpha2 } from './utils/countries';
 import { Button, Modal, Card, useTranslation } from './ui';
-import { LastSessionBreakdown, ClubRankings } from './components/PlayerCardAnalytics';
+import { LastSessionBreakdown, ClubRankings, BestSessionCard } from './components/PlayerCardAnalytics';
 import { 
     StarIcon,
     GoleadorBadgeIcon, PerfectFinishBadgeIcon, DynastyBadgeIcon, SniperBadgeIcon,
     AssistantBadgeIcon, MvpBadgeIcon, DecisiveFactorBadgeIcon, UnsungHeroBadgeIcon,
     FirstBloodBadgeIcon, DupletBadgeIcon, MaestroBadgeIcon, ComebackKingsBadgeIcon,
-    FortressBadgeIcon, ClubLegendBadgeIcon, VeteranBadgeIcon
+    FortressBadgeIcon, ClubLegendBadgeIcon, VeteranBadgeIcon,
+    SessionTopScorerBadgeIcon, StableStrikerBadgeIcon, VictoryFinisherBadgeIcon,
+    SessionTopAssistantBadgeIcon, PassingStreakBadgeIcon, TeamConductorBadgeIcon,
+    TenInfluenceBadgeIcon, MasteryBalanceBadgeIcon, KeyPlayerBadgeIcon,
+    WinLeaderBadgeIcon, IronStreakBadgeIcon, UndefeatedBadgeIcon,
+    DominantParticipantBadgeIcon, Career100WinsBadgeIcon, Career150InfluenceBadgeIcon,
+    CareerSuperVeteranBadgeIcon
 } from './icons';
 
 // Feature Components
@@ -21,12 +27,19 @@ interface PlayerCardProps {
     onUploadCard: () => void;
     onConfirmInitialRating: (rating: number) => void;
     onDownloadCard: () => void;
+    onShareProfile: () => void;
     isDownloading?: boolean;
 }
 
 // Removed InitialRatingSetup component as it is no longer used
 
-export const BadgeIcon: React.FC<{ badge: BadgeType; count?: number; className?: string }> = ({ badge, count, className }) => {
+// FIX: Updated BadgeIcon to accept and pass through SVG props like `style`.
+interface BadgeIconProps extends React.SVGProps<SVGSVGElement> {
+    badge: BadgeType;
+    count?: number;
+}
+
+export const BadgeIcon: React.FC<BadgeIconProps> = ({ badge, count, className, ...rest }) => {
     const badgeConfig: Record<BadgeType, { Icon: React.FC<any>, colorClass: string }> = {
         goleador: { Icon: GoleadorBadgeIcon, colorClass: 'badge-glow-gold' },
         perfect_finish: { Icon: PerfectFinishBadgeIcon, colorClass: 'badge-glow-gold' },
@@ -44,13 +57,30 @@ export const BadgeIcon: React.FC<{ badge: BadgeType; count?: number; className?:
         club_legend_goals: { Icon: ClubLegendBadgeIcon, colorClass: 'badge-glow-gold' },
         club_legend_assists: { Icon: ClubLegendBadgeIcon, colorClass: 'badge-glow-gold' },
         veteran: { Icon: VeteranBadgeIcon, colorClass: 'badge-glow-gold' },
+        // New Badges
+        session_top_scorer: { Icon: SessionTopScorerBadgeIcon, colorClass: 'badge-glow-gold' },
+        stable_striker: { Icon: StableStrikerBadgeIcon, colorClass: 'badge-glow-gold' },
+        victory_finisher: { Icon: VictoryFinisherBadgeIcon, colorClass: 'badge-glow-gold' },
+        session_top_assistant: { Icon: SessionTopAssistantBadgeIcon, colorClass: 'badge-glow-gold' },
+        passing_streak: { Icon: PassingStreakBadgeIcon, colorClass: 'badge-glow-gold' },
+        team_conductor: { Icon: TeamConductorBadgeIcon, colorClass: 'badge-glow-gold' },
+        ten_influence: { Icon: TenInfluenceBadgeIcon, colorClass: 'badge-glow-gold' },
+        mastery_balance: { Icon: MasteryBalanceBadgeIcon, colorClass: 'badge-glow-gold' },
+        key_player: { Icon: KeyPlayerBadgeIcon, colorClass: 'badge-glow-gold' },
+        win_leader: { Icon: WinLeaderBadgeIcon, colorClass: 'badge-glow-gold' },
+        iron_streak: { Icon: IronStreakBadgeIcon, colorClass: 'badge-glow-gold' },
+        undefeated: { Icon: UndefeatedBadgeIcon, colorClass: 'badge-glow-gold' },
+        dominant_participant: { Icon: DominantParticipantBadgeIcon, colorClass: 'badge-glow-gold' },
+        career_100_wins: { Icon: Career100WinsBadgeIcon, colorClass: 'badge-glow-gold' },
+        career_150_influence: { Icon: Career150InfluenceBadgeIcon, colorClass: 'badge-glow-gold' },
+        career_super_veteran: { Icon: CareerSuperVeteranBadgeIcon, colorClass: 'badge-glow-gold' },
     };
 
     const { Icon, colorClass } = badgeConfig[badge] || { Icon: MvpBadgeIcon, colorClass: 'badge-glow-gold' };
 
     return (
         <div className="relative inline-block">
-            <Icon className={`${colorClass} ${className}`} />
+            <Icon className={`${colorClass} ${className}`} {...rest} />
             {count && count > 1 && (
                 <span
                     className="absolute -top-1 -right-2 text-[10px] font-black leading-none"
@@ -160,7 +190,7 @@ const SessionTrendChart: React.FC<{ history?: Player['sessionHistory'] }> = ({ h
 };
 
 
-export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete, onUploadCard, onConfirmInitialRating, onDownloadCard, isDownloading }) => {
+export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete, onUploadCard, onConfirmInitialRating, onDownloadCard, onShareProfile, isDownloading }) => {
     const t = useTranslation();
     const keyStats = React.useMemo(() => getPlayerKeyStats(player), [player]);
     const countryCodeAlpha2 = React.useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
@@ -168,6 +198,9 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
     const badgeList = player.badges ? (Object.keys(player.badges) as BadgeType[]) : [];
 
     const winRate = player.totalGames > 0 ? `${Math.round((player.totalWins / player.totalGames) * 100)}%` : 'N/A';
+    const goalsPerSession = player.totalSessionsPlayed > 0 ? (player.totalGoals / player.totalSessionsPlayed).toFixed(2) : '0.00';
+    const assistsPerSession = player.totalSessionsPlayed > 0 ? (player.totalAssists / player.totalSessionsPlayed).toFixed(2) : '0.00';
+
 
     const StatItem: React.FC<{ label: string; value: string | number; isKeyStat?: boolean }> = ({ label, value, isKeyStat }) => (
         <div>
@@ -202,7 +235,6 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
         );
     };
 
-    // FIXED: Removed colored border, kept shadow (glow) and standard subtle border
     const cardClass = "border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)]";
 
     return (
@@ -272,7 +304,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                                     </div>
                                     {badgeList.length > 8 && (
                                         <div className="flex flex-col space-y-2 items-center">
-                                            {badgeList.slice(8).map(badge => (
+                                            {badgeList.slice(8, 16).map(badge => (
                                                 <div key={badge} title={t[`badge_${badge}` as keyof typeof t] || ''}>
                                                     <BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-7 h-7" />
                                                 </div>
@@ -292,9 +324,13 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
             </div>
             
             <div className="space-y-3 pt-4">
-                 {/* MOVED: LastSessionBreakdown is now first */}
                  {player.lastRatingChange && player.status === PlayerStatus.Confirmed && <LastSessionBreakdown player={player} />}
-                 {player.status === PlayerStatus.Confirmed && <ClubRankings player={player} />}
+                 <BestSessionCard player={player} />
+                 {player.status === PlayerStatus.Confirmed && (
+                    <Card title={t.clubRankings} className={cardClass}>
+                        <ClubRankings player={player} />
+                    </Card>
+                 )}
 
                  <Card id={`all-time-stats-${player.id}`} title={t.allTimeStats} className={cardClass}>
                      <div className="grid grid-cols-4 gap-2 text-center">
@@ -304,6 +340,13 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                         <StatItem label={t.winRate.toUpperCase()} value={winRate} isKeyStat={keyStats.isTopWinner} />
                     </div>
                  </Card>
+
+                 <Card title="Career Averages" className={cardClass}>
+                    <div className="grid grid-cols-2 gap-2 text-center">
+                        <StatItem label={t.goalsPerSession} value={goalsPerSession} />
+                        <StatItem label={t.assistsPerSession} value={assistsPerSession} />
+                    </div>
+                </Card>
 
                  <Card id={`monthly-stats-${player.id}`} title={t.monthlyStatsTitle} className={cardClass}>
                      <div className="grid grid-cols-4 gap-2 text-center">
@@ -322,15 +365,18 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                     <SessionTrendChart history={player.sessionHistory} />
                 </Card>
                 
-                {/* --- ACTION BUTTONS --- */}
+                {/* --- ACTION BUTTONS (Reorganized into a grid) --- */}
                 <div className="grid grid-cols-2 gap-3 player-card-actions">
-                    <Button variant="secondary" onClick={onEdit} className={`!py-3.5 !px-4 !text-base ${cardClass}`}>{t.editData}</Button>
-                    <Button variant="secondary" onClick={onUploadCard} className={`!py-3.5 !px-4 !text-base ${cardClass}`}>{t.uploadPhoto}</Button>
+                    <Button variant="secondary" onClick={onEdit} className={`!py-3 !px-4 font-chakra text-xl tracking-wider ${cardClass}`}>{t.editData}</Button>
+                    <Button variant="secondary" onClick={onUploadCard} className={`!py-3 !px-4 font-chakra text-xl tracking-wider ${cardClass}`}>{t.uploadPhoto}</Button>
+                    <Button variant="secondary" className={`w-full font-chakra text-xl tracking-wider ${cardClass}`} onClick={onDownloadCard} disabled={isDownloading}>
+                        {isDownloading ? 'Exporting...' : t.downloadCard}
+                    </Button>
+                    <Button variant="secondary" className={`w-full font-chakra text-xl tracking-wider ${cardClass}`} onClick={onShareProfile}>
+                        {t.shareProfile}
+                    </Button>
                 </div>
-                <Button variant="secondary" className={`w-full ${cardClass} player-card-actions`} onClick={onDownloadCard} disabled={isDownloading}>
-                    {isDownloading ? 'EXPORTING...' : t.downloadCard}
-                </Button>
-                <Button variant="secondary" className={`w-full ${cardClass} player-card-actions`} onClick={onDelete}>{t.deletePlayer}</Button>
+                <Button variant="secondary" className={`w-full font-chakra text-xl tracking-wider ${cardClass} player-card-actions`} onClick={onDelete}>{t.deletePlayer}</Button>
             </div>
         </div>
     );

@@ -12,6 +12,30 @@ export const getTierForRating = (rating: number): PlayerTier => {
 
 // --- "532 PRO" HYBRID RATING ENGINE with MATCH CONTEXT & REPUTATION ---
 export const calculateRatingUpdate = (player: Player, stats: PlayerStats, session: Session, earnedBadges: BadgeType[]): { delta: number, breakdown: RatingBreakdown } => {
+    // Simplified logic for 2-team sessions
+    if (session.numTeams === 2) {
+        let delta = 0.1; // Draw by default
+        if (stats.wins > stats.losses) {
+            delta = 0.5; // Win
+        } else if (stats.losses > stats.wins) {
+            delta = -0.3; // Loss
+        }
+        const newRating = Math.round(player.rating + delta);
+        return {
+            delta,
+            breakdown: {
+                previousRating: player.rating,
+                teamPerformance: delta, // Simplified
+                individualPerformance: 0,
+                badgeBonus: 0,
+                finalChange: delta,
+                newRating: newRating,
+                // FIX: Added missing 'badgesEarned' property.
+                badgesEarned: earnedBadges,
+            }
+        };
+    }
+
     const playerGames = session.games.filter(g => g.status === 'finished' && (
         session.teams.find(t => t.id === g.team1Id)?.playerIds.includes(player.id) ||
         session.teams.find(t => t.id === g.team2Id)?.playerIds.includes(player.id)
@@ -26,6 +50,8 @@ export const calculateRatingUpdate = (player: Player, stats: PlayerStats, sessio
             badgeBonus: 0,
             finalChange: 0,
             newRating: player.rating,
+            // FIX: Added missing 'badgesEarned' property. It's an empty array for players who didn't play.
+            badgesEarned: [],
         }
     };
 
@@ -101,6 +127,12 @@ export const calculateRatingUpdate = (player: Player, stats: PlayerStats, sessio
         mvp: 0.4, dynasty: 0.4, goleador: 0.3, assistant: 0.3, fortress: 0.3,
         decisive_factor: 0.2, comeback_kings: 0.2, sniper: 0.2, unsung_hero: 0.2,
         first_blood: 0.1, perfect_finish: 0.1, duplet: 0.1, maestro: 0.1,
+        // new badges also have bonuses
+        session_top_scorer: 0.3, session_top_assistant: 0.3, win_leader: 0.3,
+        ten_influence: 0.25, iron_streak: 0.25, undefeated: 0.25,
+        key_player: 0.2, mastery_balance: 0.2, team_conductor: 0.2,
+        stable_striker: 0.1, passing_streak: 0.1, dominant_participant: 0.1,
+        victory_finisher: 0.1,
     };
     
     for (const badge of earnedBadges) {
@@ -142,116 +174,105 @@ export const calculateRatingUpdate = (player: Player, stats: PlayerStats, sessio
         badgeBonus: badgeBonusPoints,
         finalChange: finalDelta,
         newRating: Math.round(player.rating + finalDelta),
+        // FIX: Added missing 'badgesEarned' property.
+        badgesEarned: earnedBadges,
     };
 
     return { delta: finalDelta, breakdown };
 };
 
 
-// --- BADGE ENGINE (16 Badges) ---
+// --- BADGE ENGINE (32 Badges) ---
 export const calculateEarnedBadges = (
     player: Player, 
     stats: PlayerStats, 
     session: Session, 
     allPlayersStats: PlayerStats[]
 ): BadgeType[] => {
+    if (session.numTeams === 2) return [];
+
     const earned = new Set<BadgeType>();
-    
-    // Helper to add a badge to the set for this session
     const addBadge = (b: BadgeType) => earned.add(b);
     
     const playerGames = session.games.filter(g => g.status === 'finished' && (
         session.teams.find(t => t.id === g.team1Id)?.playerIds.includes(player.id) ||
         session.teams.find(t => t.id === g.team2Id)?.playerIds.includes(player.id)
-    ));
+    )).sort((a, b) => a.gameNumber - b.gameNumber);
 
-    // 1. SESSION AGGREGATES
+    // --- SESSION AGGREGATES & COMPARATIVE ---
     if (stats.goals >= 7) addBadge('goleador');
     if (stats.assists >= 6) addBadge('assistant');
     if (stats.goals >= 5 && stats.assists >= 5 && stats.wins >= 5) addBadge('mvp');
+    if (stats.goals + stats.assists >= 10) addBadge('ten_influence');
+    if (stats.goals >= 3 && stats.assists >= 3) addBadge('mastery_balance');
+    if (stats.gamesPlayed >= 10) addBadge('dominant_participant');
+    if (stats.gamesPlayed >= 6 && stats.losses === 0) addBadge('undefeated');
 
-    // 2. GAME-LEVEL ANALYSIS
-    let perfectFinishCount = 0; // 2 goals in a game
-    let sniperCount = 0; // Winning goal
-    let firstBloodCount = 0; // First goal of the game
-    let dupletCount = 0; // 2 goals (Used for Duplet badge)
-    let maestroCount = 0; // 2 assists in a game
-    let comebackCount = 0; // Wins after trailing
-    let fortressCount = 0; // Clean sheets
+    const maxGoals = Math.max(...allPlayersStats.map(s => s.goals));
+    if (stats.goals > 0 && stats.goals === maxGoals) addBadge('session_top_scorer');
+
+    const maxAssists = Math.max(...allPlayersStats.map(s => s.assists));
+    if (stats.assists > 0 && stats.assists === maxAssists) addBadge('session_top_assistant');
+
+    const maxWins = Math.max(...allPlayersStats.map(s => s.wins));
+    if (stats.wins > 0 && stats.wins === maxWins) addBadge('win_leader');
     
-    // 3. TEAM-LEVEL ANALYSIS
-    // Find winningest team
-    const teamWins = session.teams.map(t => {
-        const wins = session.games.filter(g => g.status === 'finished' && g.winnerTeamId === t.id).length;
-        return { id: t.id, wins };
-    });
-    const maxWins = Math.max(...teamWins.map(t => t.wins));
-    const winningestTeams = teamWins.filter(t => t.wins === maxWins && t.wins >= 3).map(t => t.id); // Min 3 wins to qualify
-
-    // Unsung Hero: In winningest team, 0G 0A
-    const playerTeam = session.teams.find(t => t.playerIds.includes(player.id));
-    if (playerTeam && winningestTeams.includes(playerTeam.id) && stats.goals === 0 && stats.assists === 0) {
+    // --- IMPROVED Unsung Hero ---
+    if (stats.wins > 0 && stats.wins === maxWins && maxWins >= 3 && (stats.goals + stats.assists) <= 1) {
         addBadge('unsung_hero');
     }
 
-    // Decisive Factor: Goal or Assist in EVERY win
-    const myWins = playerGames.filter(g => {
-        const myTeam = session.teams.find(t => t.playerIds.includes(player.id));
-        return myTeam && g.winnerTeamId === myTeam.id;
-    });
-    if (myWins.length >= 3) { // Min 3 wins
-        const contributedInAll = myWins.every(g => {
-            const myGoals = g.goals.filter(goal => goal.scorerId === player.id).length;
-            const myAssists = g.goals.filter(goal => goal.assistantId === player.id).length;
-            return myGoals > 0 || myAssists > 0;
-        });
-        if (contributedInAll) addBadge('decisive_factor');
-    }
-
-    // Loop through games for detail stats
+    // --- GAME-LEVEL & STREAK ANALYSIS ---
+    let sniperCount = 0, firstBloodCount = 0, comebackCount = 0;
+    let dupletCount = 0, maestroCount = 0, fortressCount = 0, conductorCount = 0;
+    
+    let goalStreak = 0, maxGoalStreak = 0;
+    let assistStreak = 0, maxAssistStreak = 0;
+    let winStreak = 0, maxWinStreak = 0;
+    let winContributionStreak = 0, maxWinContributionStreak = 0;
+    
     playerGames.forEach(g => {
         const myTeam = session.teams.find(t => t.playerIds.includes(player.id));
         if (!myTeam) return;
 
         const isMyTeamWinner = g.winnerTeamId === myTeam.id;
-        const myGoals = g.goals.filter(goal => goal.scorerId === player.id);
+        const myGoals = g.goals.filter(goal => goal.scorerId === player.id && !goal.isOwnGoal);
         const myAssists = g.goals.filter(goal => goal.assistantId === player.id);
+        const hasContribution = myGoals.length > 0 || myAssists.length > 0;
         
-        // Duplet / Perfect Finish
-        if (myGoals.length >= 2) {
-            dupletCount++;
-            const myTeamScore = g.team1Id === myTeam.id ? g.team1Score : g.team2Score;
-            // FIX: goalsToWin is a session-level property, not game-level.
-            if (myTeamScore === 2 && myGoals.length === 2 && session.goalsToWin === 2) {
-                perfectFinishCount++;
-            }
+        // Streaks
+        goalStreak = myGoals.length > 0 ? goalStreak + 1 : 0;
+        if (goalStreak > maxGoalStreak) maxGoalStreak = goalStreak;
+        
+        assistStreak = myAssists.length > 0 ? assistStreak + 1 : 0;
+        if (assistStreak > maxAssistStreak) maxAssistStreak = assistStreak;
+
+        winStreak = isMyTeamWinner ? winStreak + 1 : 0;
+        if (winStreak > maxWinStreak) maxWinStreak = winStreak;
+
+        winContributionStreak = (isMyTeamWinner && hasContribution) ? winContributionStreak + 1 : 0;
+        if (winContributionStreak > maxWinContributionStreak) maxWinContributionStreak = winContributionStreak;
+
+        // Counts for badges
+        if (g.goals.length > 0 && g.goals.sort((a,b) => a.timestampSeconds - b.timestampSeconds)[0].scorerId === player.id) {
+            firstBloodCount++;
         }
 
-        // Maestro
-        if (myAssists.length >= 2) maestroCount++;
-
-        // Fortress (Clean Sheet)
-        const opponentScore = g.team1Id === myTeam.id ? g.team2Score : g.team1Score;
-        if (opponentScore === 0) fortressCount++;
-
-        // First Blood
-        if (g.goals.length > 0) {
-            const sortedGoals = [...g.goals].sort((a,b) => a.timestampSeconds - b.timestampSeconds);
-            if (sortedGoals[0].scorerId === player.id) firstBloodCount++;
-        }
-
-        // Sniper & Comeback
         if (isMyTeamWinner) {
+            if (myGoals.length >= 2) dupletCount++;
+            if (myAssists.length >= 2) maestroCount++;
+            if (myAssists.length > 0) conductorCount++;
+
+            const opponentScore = g.team1Id === myTeam.id ? g.team2Score : g.team1Score;
+            if (opponentScore === 0) fortressCount++;
+
             const sortedGoals = [...g.goals].sort((a,b) => a.timestampSeconds - b.timestampSeconds);
-            let scoreA = 0;
-            let scoreB = 0;
+            let scoreA = 0, scoreB = 0;
             const myTeamIsA = g.team1Id === myTeam.id;
             let trailed = false;
-
             for (const gl of sortedGoals) {
                 const goalForA = (gl.teamId === g.team1Id && !gl.isOwnGoal) || (gl.teamId === g.team2Id && gl.isOwnGoal);
                 if (goalForA) scoreA++; else scoreB++;
-                
                 const myScore = myTeamIsA ? scoreA : scoreB;
                 const oppScore = myTeamIsA ? scoreB : scoreA;
                 if (oppScore > myScore) trailed = true;
@@ -260,45 +281,77 @@ export const calculateEarnedBadges = (
             
             const lastGoal = sortedGoals[sortedGoals.length - 1];
             const myTeamWonByOne = Math.abs(g.team1Score - g.team2Score) === 1;
-            if (lastGoal.scorerId === player.id && myTeamWonByOne) {
-                sniperCount++;
+            if (lastGoal.scorerId === player.id && myTeamWonByOne) sniperCount++;
+        }
+    });
+
+    if (maxGoalStreak >= 3) addBadge('stable_striker');
+    if (maxAssistStreak >= 3) addBadge('passing_streak');
+    if (maxWinStreak >= 5) addBadge('iron_streak');
+    if (maxWinStreak >= 9) addBadge('dynasty'); // Retained
+    if (maxWinContributionStreak >= 3) addBadge('key_player');
+
+    if (firstBloodCount >= 3) addBadge('first_blood'); // Updated
+    if (dupletCount >= 2) addBadge('duplet'); // Updated
+    if (maestroCount >= 2) addBadge('maestro'); // Updated
+    if (conductorCount >= 3) addBadge('team_conductor');
+    if (fortressCount >= 3) addBadge('fortress'); // Updated
+    if (sniperCount >= 3) addBadge('sniper');
+    if (comebackCount >= 3) addBadge('comeback_kings');
+    
+    // Victory Finisher
+    const lastGame = session.games.filter(g => g.status === 'finished').sort((a,b) => b.gameNumber - a.gameNumber)[0];
+    if (lastGame) {
+        const myTeam = session.teams.find(t => t.playerIds.includes(player.id));
+        const wasInLastGame = myTeam && (lastGame.team1Id === myTeam.id || lastGame.team2Id === myTeam.id);
+        if (wasInLastGame && lastGame.winnerTeamId === myTeam.id) {
+            const sortedGoals = [...lastGame.goals].sort((a,b) => a.timestampSeconds - b.timestampSeconds);
+            const lastGoal = sortedGoals[sortedGoals.length - 1];
+            if (lastGoal.scorerId === player.id && Math.abs(lastGame.team1Score - lastGame.team2Score) === 1) {
+                addBadge('victory_finisher');
             }
         }
-    });
+    }
 
-    if (perfectFinishCount >= 3) addBadge('perfect_finish');
-    if (sniperCount >= 3) addBadge('sniper');
-    if (firstBloodCount >= 5) addBadge('first_blood');
-    if (dupletCount >= 2) addBadge('duplet');
-    if (maestroCount >= 2) addBadge('maestro');
-    if (comebackCount >= 3) addBadge('comeback_kings');
-    if (fortressCount >= 3) addBadge('fortress');
-
-    // Dynasty: 9 wins in a row
-    let currentWinStreak = 0;
-    let maxWinStreak = 0;
-    session.games.filter(g => g.status === 'finished').forEach(g => {
+    // Decisive Factor
+    const myWins = playerGames.filter(g => {
         const myTeam = session.teams.find(t => t.playerIds.includes(player.id));
-        const myTeamInGame = myTeam && (g.team1Id === myTeam.id || g.team2Id === myTeam.id);
-
-        if (myTeamInGame && g.winnerTeamId === myTeam.id) {
-            currentWinStreak++;
-        } else if (myTeamInGame) {
-            currentWinStreak = 0;
-        }
-        if (currentWinStreak > maxWinStreak) maxWinStreak = currentWinStreak;
+        return myTeam && g.winnerTeamId === myTeam.id;
     });
-    if (maxWinStreak >= 9) addBadge('dynasty');
+    if (myWins.length >= 3) {
+        const contributedInAll = myWins.every(g => g.goals.some(goal => goal.scorerId === player.id || goal.assistantId === player.id));
+        if (contributedInAll) addBadge('decisive_factor');
+    }
+    
+    // Perfect Finish (Retained and fixed)
+    let perfectFinishCount = 0;
+    playerGames.forEach(g => {
+         const myTeam = session.teams.find(t => t.playerIds.includes(player.id));
+         if (!myTeam || g.winnerTeamId !== myTeam.id) return;
+         const myGoals = g.goals.filter(goal => goal.scorerId === player.id && !goal.isOwnGoal);
+         const myTeamScore = g.team1Id === myTeam.id ? g.team1Score : g.team2Score;
+         if (session.goalsToWin === 2 && myTeamScore === 2 && myGoals.length === 2) {
+             perfectFinishCount++;
+         }
+    });
+    if (perfectFinishCount >= 3) addBadge('perfect_finish');
 
 
-    // 4. CAREER MILESTONES
+    // --- CAREER MILESTONES ---
     const totalG = player.totalGoals + stats.goals;
     const totalA = player.totalAssists + stats.assists;
     const totalSess = (player.totalSessionsPlayed || 0) + 1;
+    const totalWins = player.totalWins + stats.wins;
+    const totalInfluence = totalG + totalA;
 
-    if ([40, 60, 80].some(milestone => totalG >= milestone && player.totalGoals < milestone)) addBadge('club_legend_goals');
-    if ([40, 60, 80].some(milestone => totalA >= milestone && player.totalAssists < milestone)) addBadge('club_legend_assists');
-    if ([20, 50].some(milestone => totalSess >= milestone && (player.totalSessionsPlayed || 0) < milestone)) addBadge('veteran');
+    if ([40, 60, 80].some(m => totalG >= m && player.totalGoals < m)) addBadge('club_legend_goals');
+    if ([40, 60, 80].some(m => totalA >= m && player.totalAssists < m)) addBadge('club_legend_assists');
+    if ([20, 50].some(m => totalSess >= m && (player.totalSessionsPlayed || 0) < m)) addBadge('veteran');
+
+    if (totalWins >= 100 && player.totalWins < 100) addBadge('career_100_wins');
+    if (totalInfluence >= 150 && (player.totalGoals + player.totalAssists) < 150) addBadge('career_150_influence');
+    if (totalSess >= 100 && (player.totalSessionsPlayed || 0) < 100) addBadge('career_super_veteran');
+
 
     return Array.from(earned);
 };

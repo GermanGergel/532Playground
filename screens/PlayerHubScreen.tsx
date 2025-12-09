@@ -1,6 +1,3 @@
-
-
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -21,21 +18,21 @@ export const PlayerHubScreen: React.FC = () => {
                     <Button 
                         variant="secondary"
                         onClick={() => navigate('/player-database?status=unconfirmed')} 
-                        className="w-full !text-lg !py-5 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 border border-dark-accent-start/30"
+                        className="w-full font-chakra font-bold text-xl tracking-wider !py-5 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 border border-dark-accent-start/30"
                     >
                         {t.newPlayerManagement}
                     </Button>
                     <Button 
                         variant="secondary"
                         onClick={() => navigate('/player-database?status=confirmed')} 
-                        className="w-full !text-lg !py-5 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 border border-dark-accent-start/30"
+                        className="w-full font-chakra font-bold text-xl tracking-wider !py-5 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 border border-dark-accent-start/30"
                     >
                         {t.playerDatabase}
                     </Button>
                     <Button 
                         variant="secondary"
                         onClick={() => navigate('/news-feed')}
-                        className="w-full !text-lg !py-5 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 border border-dark-accent-start/30"
+                        className="w-full font-chakra font-bold text-xl tracking-wider !py-5 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 border border-dark-accent-start/30"
                     >
                         {t.clubNews}
                     </Button>

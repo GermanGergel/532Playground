@@ -87,7 +87,7 @@ export const GoalModal: React.FC<GoalModalProps> = ({ isOpen, onClose, onSave, g
                         <Button 
                             onClick={handleOwnGoalClick} 
                             variant="secondary" 
-                            className="w-full mt-2 !border-dark-accent-start/60 !shadow-[0_0_8px_rgba(0,242,254,0.5)]"
+                            className="w-full mt-2 font-chakra font-bold text-xl tracking-wider !border-dark-accent-start/60 !shadow-[0_0_8px_rgba(0,242,254,0.5)]"
                         >
                             {t.ownGoal}
                         </Button>
@@ -101,7 +101,7 @@ export const GoalModal: React.FC<GoalModalProps> = ({ isOpen, onClose, onSave, g
                          <Button 
                             onClick={() => handleSave(undefined)} 
                             variant="secondary" 
-                            className="w-full mt-2 !border-dark-accent-start/60 !shadow-[0_0_8px_rgba(0,242,254,0.5)]"
+                            className="w-full mt-2 font-chakra font-bold text-xl tracking-wider !border-dark-accent-start/60 !shadow-[0_0_8px_rgba(0,242,254,0.5)]"
                          >
                             {t.withoutAssist}
                          </Button>
@@ -132,14 +132,14 @@ export const EndSessionModal: React.FC<{
                     <Button 
                         variant="secondary" 
                         onClick={onConfirm} 
-                        className="w-full uppercase shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
+                        className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
                     >
                         {t.confirm}
                     </Button>
                     <Button 
                         variant="secondary" 
                         onClick={onClose} 
-                        className="w-full uppercase shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
+                        className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
                     >
                         {t.cancel}
                     </Button>

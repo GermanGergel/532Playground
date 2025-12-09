@@ -4,14 +4,11 @@ import { useApp } from '../context';
 import { Button, Modal, Page, useTranslation, SessionModeIndicator } from '../ui';
 import { TeamAvatar } from '../components/avatars';
 import { StarIcon, Plus, Pause, Play, Edit3 } from '../icons';
-import { Session, Game, GameStatus, Goal, GoalPayload, SubPayload, EventLogEntry, EventType, StartRoundPayload, Player, BadgeType, RotationMode, Team, SessionStatus } from '../types';
-import { playAnnouncement, initAudioContext } from '../lib'; // UPDATED IMPORTS
-import { calculateAllStats } from '../services/statistics';
-import { calculateEarnedBadges, calculateRatingUpdate, getTierForRating } from '../services/rating';
-import { generateNewsUpdates, manageNewsFeedSize } from '../services/news';
+import { Session, Game, GameStatus, Goal, Team, Player } from '../types';
+import { playAnnouncement, initAudioContext } from '../lib';
 import { GoalModal, EditGoalModal, EndSessionModal, SelectWinnerModal, SubstitutionModal } from '../modals';
-import { hexToRgba, newId } from './utils';
-import { savePlayersToDB, saveNewsToDB, saveHistoryToDB } from '../db';
+import { hexToRgba } from './utils';
+import { useGameManager } from '../hooks/useGameManager';
 
 const GameIndicators: React.FC<{ count: number; color: string }> = ({ count, color }) => {
     return (
@@ -83,31 +80,25 @@ const formatTime = (totalSeconds: number) => {
 };
 
 export const LiveMatchScreen: React.FC = () => {
-    const { activeSession, setActiveSession, setHistory, displayTime, setAllPlayers, setNewsFeed, allPlayers: oldPlayersState, newsFeed, activeVoicePack } = useApp();
+    const { activeSession, activeVoicePack, displayTime } = useApp();
     const navigate = useNavigate();
     const t = useTranslation();
-
-    const [scoringTeamForModal, setScoringTeamForModal] = React.useState<string | null>(null);
-    const [isEndSessionModalOpen, setIsEndSessionModalOpen] = React.useState(false);
-    const [isSelectWinnerModalOpen, setIsSelectWinnerModalOpen] = React.useState(false);
-    const [goalToEdit, setGoalToEdit] = React.useState<Goal | null>(null);
-    const [isSaving, setIsSaving] = React.useState(false);
-    const [subModalState, setSubModalState] = React.useState<{
-        isOpen: boolean;
-        teamId?: string;
-        playerOutId?: string;
-    }>({ isOpen: false });
+    
+    const gameManager = useGameManager();
+    const {
+        currentGame, isTimerBasedGame, scoringTeamForModal, isEndSessionModalOpen,
+        isSelectWinnerModalOpen, goalToEdit, isSaving, subModalState,
+        setScoringTeamForModal, setIsEndSessionModalOpen, setGoalToEdit, setSubModalState,
+        finishCurrentGameAndSetupNext, handleStartGame, handleTogglePause,
+        handleGoalSave, handleGoalUpdate, handleSubstitution, handleFinishSession
+    } = gameManager;
     
     React.useEffect(() => {
-        // Only initialize audio for 3-team, timer-based games.
-        if (activeSession?.numTeams !== 3) {
-            return;
-        }
+        if (activeSession?.numTeams !== 3) return;
 
-        // Initialize Audio Context on first interaction
         const handleInteraction = () => {
             initAudioContext();
-            playAnnouncement('silence', ''); // Wake up audio
+            playAnnouncement('silence', '', activeVoicePack);
             window.removeEventListener('click', handleInteraction);
             window.removeEventListener('touchstart', handleInteraction);
         };
@@ -119,515 +110,13 @@ export const LiveMatchScreen: React.FC = () => {
             window.removeEventListener('click', handleInteraction);
             window.removeEventListener('touchstart', handleInteraction);
         };
-    }, [activeSession?.numTeams]);
-    
-    const currentGame = activeSession?.games[activeSession.games.length - 1];
-    const isTimerBasedGame = activeSession?.numTeams === 3;
-
-    const handlePlayerClickForSub = React.useCallback((teamId: string, playerOutId: string) => {
-        setSubModalState({ isOpen: true, teamId, playerOutId });
-    }, []);
-
-    const finishCurrentGameAndSetupNext = React.useCallback((manualWinnerId?: string) => {
-        setActiveSession(session => {
-            if (!session || !session.games.length) return session;
-            const game = session.games[session.games.length - 1];
-            if (game.status === GameStatus.Finished) return session;
-
-            const finishRoundEvent: EventLogEntry = {
-                timestamp: new Date().toISOString(),
-                round: game.gameNumber,
-                type: EventType.FINISH_ROUND,
-                payload: {},
-            };
-            
-            if (session.numTeams === 2) {
-                const finalElapsedSeconds = game.status === GameStatus.Active && game.lastResumeTime
-                    ? game.elapsedSecondsOnPause + (Date.now() - game.lastResumeTime) / 1000
-                    : game.elapsedSecondsOnPause;
-                 const finishedGame = { ...game, status: GameStatus.Finished, endedAt: new Date().toISOString(), elapsedSeconds: finalElapsedSeconds };
-                 const updatedGames = [...session.games.slice(0, -1), finishedGame];
-                 return { ...session, games: updatedGames, eventLog: [...session.eventLog, finishRoundEvent] };
-            }
-
-            const finalElapsedSeconds = game.status === GameStatus.Active && game.lastResumeTime
-                ? game.elapsedSecondsOnPause + (Date.now() - game.lastResumeTime) / 1000
-                : game.elapsedSecondsOnPause;
-
-            let winnerId: string | undefined = undefined;
-            if (game.team1Score > game.team2Score) {
-                winnerId = game.team1Id;
-            } else if (game.team2Score > game.team1Score) {
-                winnerId = game.team2Id;
-            }
-            const isDraw = !winnerId;
-            
-            let teamToStayOnFieldId: string | undefined;
-
-            const team1 = session.teams.find(t => t.id === game.team1Id)!;
-            const team2 = session.teams.find(t => t.id === game.team2Id)!;
-
-            if (isDraw) {
-                if (game.gameNumber === 1) {
-                    if (manualWinnerId) {
-                        teamToStayOnFieldId = manualWinnerId;
-                    } else {
-                        setIsSelectWinnerModalOpen(true);
-                        return session; 
-                    }
-                } else {
-                    teamToStayOnFieldId = team1.consecutiveGames > team2.consecutiveGames ? team2.id : team1.id;
-                }
-            } else {
-                teamToStayOnFieldId = winnerId;
-            }
-            
-            if (!teamToStayOnFieldId) {
-                console.error("Critical logic error: Could not determine team to stay on field.");
-                return session;
-            }
-            setIsSelectWinnerModalOpen(false);
-
-            const finishedGame: Game = { 
-                ...game, 
-                status: GameStatus.Finished, 
-                winnerTeamId: isDraw ? undefined : teamToStayOnFieldId,
-                isDraw: isDraw, 
-                endedAt: new Date().toISOString(), 
-                elapsedSeconds: finalElapsedSeconds 
-            };
-            
-            const updatedGames = [...session.games.slice(0, -1), finishedGame];
-
-            const teamThatStays = session.teams.find(t => t.id === teamToStayOnFieldId)!;
-            const teamThatLeaves = teamThatStays.id === team1.id ? team2 : team1;
-            const restingTeam = session.teams.find(t => t.id !== team1.id && t.id !== team2.id)!;
-
-            const winnerGamesPlayed = teamThatStays.consecutiveGames;
-            const mustRotate = session.rotationMode === RotationMode.AutoRotate && !isDraw && (winnerGamesPlayed + 1) >= 3;
-            const mustRotateOnDraw = session.rotationMode === RotationMode.AutoRotate && isDraw && (teamThatStays.consecutiveGames >= 2);
-
-            const teamToRestNext = mustRotate || mustRotateOnDraw ? teamThatStays : teamThatLeaves;
-            const teamOnFieldForNextRound = teamToRestNext.id === teamThatStays.id ? teamThatLeaves : teamThatStays;
-            const challengerTeam = restingTeam;
-
-            const awardBigStar = session.rotationMode === RotationMode.AutoRotate && !isDraw && teamThatStays.consecutiveGames === 2;
-            
-            const finalUpdatedTeams = session.teams.map(t => {
-                let newBigStars = t.bigStars || 0;
-                if (t.id === teamThatStays.id && awardBigStar) {
-                    newBigStars += 1;
-                }
-
-                if (t.id === teamToRestNext.id) {
-                    return { ...t, consecutiveGames: 0, bigStars: newBigStars };
-                }
-                if (t.id === teamOnFieldForNextRound.id) {
-                    return { ...t, consecutiveGames: t.consecutiveGames + 1, bigStars: newBigStars };
-                }
-                return { ...t, consecutiveGames: 0, bigStars: newBigStars }; 
-            });
-            
-            const getUpdatedTeam = (id: string) => finalUpdatedTeams.find(t => t.id === id)!;
-            
-            let nextTeam1 = getUpdatedTeam(teamOnFieldForNextRound.id);
-            let nextTeam2 = getUpdatedTeam(challengerTeam.id);
-
-            const teamThatStaysWasTeam1 = teamOnFieldForNextRound.id === game.team1Id;
-            if(!teamThatStaysWasTeam1) {
-                [nextTeam1, nextTeam2] = [nextTeam2, nextTeam1];
-            }
-    
-            const nextGame: Game = { 
-                id: newId(), 
-                gameNumber: game.gameNumber + 1, 
-                team1Id: nextTeam1.id, 
-                team2Id: nextTeam2.id, 
-                team1Score: 0, 
-                team2Score: 0, 
-                isDraw: false, 
-                durationSeconds: session.matchDurationMinutes ? session.matchDurationMinutes * 60 : undefined, 
-                elapsedSeconds: 0, 
-                elapsedSecondsOnPause: 0, 
-                goals: [], 
-                status: GameStatus.Pending 
-            };
-            
-            const getPlayerNickname = (id: string) => session.playerPool.find(p => p.id === id)?.nickname || '';
-            const startRoundEvent: EventLogEntry = {
-                timestamp: new Date().toISOString(),
-                round: nextGame.gameNumber,
-                type: EventType.START_ROUND,
-                payload: {
-                    leftTeam: nextTeam1.color,
-                    rightTeam: nextTeam2.color,
-                    leftPlayers: nextTeam1.playerIds.slice(0, session.playersPerTeam).map(getPlayerNickname),
-                    rightPlayers: nextTeam2.playerIds.slice(0, session.playersPerTeam).map(getPlayerNickname),
-                } as StartRoundPayload,
-            };
-
-            return { ...session, games: [...updatedGames, nextGame], teams: finalUpdatedTeams, eventLog: [...session.eventLog, finishRoundEvent, startRoundEvent] };
-        });
-    }, [setActiveSession, setIsSelectWinnerModalOpen]);
-    
-     const handleStartGame = () => {
-        // Only initialize audio and play announcements for timer-based games (3 teams)
-        if (isTimerBasedGame) {
-            initAudioContext();
-            if (activeSession?.matchDurationMinutes) {
-                playAnnouncement('start_match', 'Game started', activeVoicePack);
-            }
-        }
-        
-        setActiveSession(s => {
-            if (!s) return null;
-            const games = [...s.games];
-            const currentGame = { ...games[games.length - 1] };
-            if (currentGame.status !== GameStatus.Pending) return s;
-
-            currentGame.status = GameStatus.Active;
-            currentGame.lastResumeTime = Date.now();
-            if (!currentGame.startTime) {
-                currentGame.startTime = currentGame.lastResumeTime;
-            }
-            currentGame.announcedMilestones = [];
-
-            games[games.length - 1] = currentGame;
-            
-            const startEvent: EventLogEntry = {
-                timestamp: new Date().toISOString(),
-                round: currentGame.gameNumber,
-                type: EventType.TIMER_START,
-                payload: {},
-            };
-            
-            return { ...s, games, eventLog: [...s.eventLog, startEvent] };
-        });
-    };
-
-    const handleTogglePause = () => {
-        setActiveSession(s => {
-            if (!s) return null;
-            const games = [...s.games];
-            const currentGame = { ...games[games.length - 1] };
-            
-            if (currentGame.status === GameStatus.Active) {
-                const elapsedSinceResume = (Date.now() - (currentGame.lastResumeTime || Date.now())) / 1000;
-                currentGame.elapsedSecondsOnPause += elapsedSinceResume;
-                currentGame.status = GameStatus.Paused;
-            } else if (currentGame.status === GameStatus.Paused) {
-                currentGame.status = GameStatus.Active;
-                currentGame.lastResumeTime = Date.now();
-            } else {
-                return s;
-            }
-            
-            games[games.length - 1] = currentGame;
-
-            const event: EventLogEntry = {
-                timestamp: new Date().toISOString(),
-                round: currentGame.gameNumber,
-                type: EventType.TIMER_STOP,
-                payload: {},
-            };
-            
-            return { ...s, games, eventLog: [...s.eventLog, event] };
-        });
-    };
-
-
-    const handleGoalSave = (goalData: Omit<Goal, 'id' | 'gameId' | 'timestampSeconds'>, goalPayload: GoalPayload) => {
-        setActiveSession(s => {
-            if (!s) return null;
-            const games = [...s.games];
-            let currentGame = { ...games[s.games.length - 1] };
-            
-            if (currentGame.status === GameStatus.Finished) return s;
-
-            const currentTotalElapsed = currentGame.status === GameStatus.Active && currentGame.lastResumeTime
-                ? currentGame.elapsedSecondsOnPause + (Date.now() - currentGame.lastResumeTime) / 1000
-                : currentGame.elapsedSecondsOnPause;
-
-            const newGoal: Goal = { 
-                ...goalData, 
-                id: newId(), 
-                gameId: currentGame.id, 
-                timestampSeconds: Math.floor(currentTotalElapsed)
-            };
-            
-            currentGame.goals = [...currentGame.goals, newGoal];
-
-            if (newGoal.teamId === currentGame.team1Id) {
-                currentGame.team1Score++;
-            } else {
-                currentGame.team2Score++;
-            }
-            
-            games[s.games.length - 1] = currentGame;
-
-             const goalEvent: EventLogEntry = {
-                timestamp: new Date().toISOString(),
-                round: currentGame.gameNumber,
-                type: EventType.GOAL,
-                payload: goalPayload,
-            };
-            
-            return { ...s, games, eventLog: [...s.eventLog, goalEvent] };
-        });
-    };
-
-    const handleGoalUpdate = (goalId: string, updates: { scorerId?: string; assistantId?: string; isOwnGoal: boolean }) => {
-        setActiveSession(s => {
-            if (!s) return s;
-    
-            const games = [...s.games];
-            const gameIndex = games.findIndex(g => g.id === currentGame?.id);
-            if (gameIndex === -1) return s;
-    
-            const updatedGame = { ...games[gameIndex] };
-            const goalIndex = updatedGame.goals.findIndex(g => g.id === goalId);
-            if (goalIndex === -1) return s;
-    
-            const originalGoal = updatedGame.goals[goalIndex];
-            const updatedGoal = { ...originalGoal, ...updates };
-
-            if (updates.isOwnGoal) {
-                updatedGoal.scorerId = undefined;
-                updatedGoal.assistantId = undefined;
-            }
-            updatedGame.goals[goalIndex] = updatedGoal;
-            games[gameIndex] = updatedGame;
-    
-            const getPlayerNickname = (id?: string) => s.playerPool.find(p => p.id === id)?.nickname;
-            
-            const eventLog = [...s.eventLog];
-            let eventUpdated = false;
-            for (let i = eventLog.length - 1; i >= 0; i--) {
-                const event = eventLog[i];
-                 if (event.round === updatedGame.gameNumber && event.type === EventType.GOAL) {
-                    const eventTimestamp = new Date(event.timestamp).getTime();
-                    const goalTimestamp = (updatedGame.startTime || 0) + originalGoal.timestampSeconds * 1000;
-                    
-                    if (Math.abs(eventTimestamp - goalTimestamp) < 2000) {
-                        const payload = event.payload as GoalPayload;
-                        const originalTeamColor = s.teams.find(t => t.id === originalGoal.teamId)?.color;
-                        
-                        if(payload.team === originalTeamColor){
-                             const newPayload: GoalPayload = {
-                                ...payload,
-                                scorer: getPlayerNickname(updatedGoal.scorerId),
-                                assist: getPlayerNickname(updatedGoal.assistantId),
-                                isOwnGoal: updatedGoal.isOwnGoal,
-                            };
-                            eventLog[i] = { ...event, payload: newPayload };
-                            eventUpdated = true;
-                            break;
-                        }
-                    }
-                }
-            }
-            
-            setGoalToEdit(null);
-            return { ...s, games, eventLog: eventUpdated ? eventLog : s.eventLog };
-        });
-    };
-
-    const handleSubstitution = (playerInId: string) => {
-        const { teamId, playerOutId } = subModalState;
-        if (!teamId || !playerOutId) return;
-    
-        setActiveSession(currentSession => {
-            if (!currentSession) return null;
-    
-            const teamIndex = currentSession.teams.findIndex(t => t.id === teamId);
-            if (teamIndex === -1) return currentSession;
-    
-            const teamToUpdate = { ...currentSession.teams[teamIndex] };
-            const playerIds = [...teamToUpdate.playerIds];
-            const outIndex = playerIds.indexOf(playerOutId);
-            const inIndex = playerIds.indexOf(playerInId);
-    
-            if (outIndex === -1 || inIndex === -1) {
-                return currentSession;
-            }
-    
-            [playerIds[outIndex], playerIds[inIndex]] = [playerIds[inIndex], playerIds[outIndex]];
-            teamToUpdate.playerIds = playerIds;
-    
-            const updatedTeams = [...currentSession.teams];
-            updatedTeams[teamIndex] = teamToUpdate;
-    
-            const currentLiveGame = currentSession.games[currentSession.games.length - 1];
-            if (!currentLiveGame) return { ...currentSession, teams: updatedTeams };
-    
-            const getPlayerNickname = (id: string) => currentSession.playerPool.find(p => p.id === id)?.nickname || '';
-            const subEvent: EventLogEntry = {
-                timestamp: new Date().toISOString(),
-                round: currentLiveGame.gameNumber,
-                type: EventType.SUBSTITUTION,
-                payload: {
-                    side: teamId === currentLiveGame.team1Id ? 'left' : 'right',
-                    out: getPlayerNickname(playerOutId),
-                    in: getPlayerNickname(playerInId),
-                } as SubPayload,
-            };
-    
-            return { ...currentSession, teams: updatedTeams, eventLog: [...currentSession.eventLog, subEvent] };
-        });
-    
-        setSubModalState({ isOpen: false });
-    };
-    
-    // IMPORTANT FIX: Logic refactored to calculate, await save, and THEN update state.
-    // This prevents the race condition where state updates triggered a re-render before database save completed.
-    const handleFinishSession = async () => {
-        if (!activeSession || isSaving) return;
-
-        if (activeSession.isTestMode) {
-            setIsEndSessionModalOpen(false);
-            setActiveSession(null);
-            navigate('/');
-            return;
-        }
-        
-        setIsSaving(true);
-        
-        try {
-            setIsEndSessionModalOpen(false);
-            
-            // 1. Calculate All Stats
-            const { allPlayersStats } = calculateAllStats(activeSession);
-            const playerStatsMap = new Map(allPlayersStats.map(stat => [stat.player.id, stat]));
-            
-            // 2. Generate Updated Player Objects
-            // We use oldPlayersState (from context) as the base to ensure we are updating the full roster
-            let updatedPlayers = oldPlayersState.map(player => {
-                const sessionStats = playerStatsMap.get(player.id);
-                if (sessionStats) {
-                    const updatedPlayer: Player = {
-                        ...player,
-                        totalGames: player.totalGames + sessionStats.gamesPlayed,
-                        totalGoals: player.totalGoals + sessionStats.goals,
-                        totalAssists: player.totalAssists + sessionStats.assists,
-                        totalWins: player.totalWins + sessionStats.wins,
-                        totalDraws: player.totalDraws + sessionStats.draws,
-                        totalLosses: player.totalLosses + sessionStats.losses,
-                        totalSessionsPlayed: (player.totalSessionsPlayed || 0) + 1,
-                        monthlyGames: player.monthlyGames + sessionStats.gamesPlayed,
-                        monthlyGoals: player.monthlyGoals + sessionStats.goals,
-                        monthlyAssists: player.monthlyAssists + sessionStats.assists,
-                        monthlyWins: player.monthlyWins + sessionStats.wins,
-                        monthlySessionsPlayed: (player.monthlySessionsPlayed || 0) + 1,
-                        lastPlayedAt: new Date().toISOString(),
-                    };
-                    return updatedPlayer;
-                }
-                return player;
-            });
-
-            // 3. Apply Ratings & Badges
-            updatedPlayers = updatedPlayers.map(player => {
-                const sessionStats = playerStatsMap.get(player.id);
-                if (sessionStats) {
-                    const badgesEarnedThisSession = calculateEarnedBadges(player, sessionStats, activeSession, allPlayersStats);
-                    const currentBadges = player.badges || {};
-                    const badgesNewThisSession = badgesEarnedThisSession.filter(b => !currentBadges[b]);
-
-                    const { delta, breakdown } = calculateRatingUpdate(player, sessionStats, activeSession, badgesNewThisSession);
-                    const newRating = Math.round(player.rating + delta);
-                    
-                    let newForm: 'hot_streak' | 'stable' | 'cold_streak' = 'stable';
-                    if (delta >= 0.5) newForm = 'hot_streak';
-                    else if (delta <= -0.5) newForm = 'cold_streak';
-                    
-                    const newTier = getTierForRating(newRating);
-
-                    const updatedBadges: Partial<Record<BadgeType, number>> = { ...currentBadges };
-                    badgesEarnedThisSession.forEach(badge => {
-                        updatedBadges[badge] = (updatedBadges[badge] || 0) + 1;
-                    });
-                    
-                    const sessionHistory = [...(player.sessionHistory || [])];
-                    if (sessionStats.gamesPlayed > 0) {
-                        sessionHistory.push({ winRate: Math.round((sessionStats.wins / sessionStats.gamesPlayed) * 100) });
-                    }
-                    if (sessionHistory.length > 5) sessionHistory.shift();
-
-                    return { 
-                        ...player, 
-                        rating: newRating, 
-                        tier: newTier, 
-                        form: newForm,
-                        badges: updatedBadges,
-                        sessionHistory: sessionHistory,
-                        lastRatingChange: breakdown,
-                    };
-                }
-                return player;
-            });
-            
-            // 4. SAVE PLAYERS TO DB (Blocking, Optimised)
-            // CRITICAL FIX: Only save players who participated in the session to avoid large payloads/timeouts.
-            const playersToSave = updatedPlayers.filter(p => playerStatsMap.has(p.id));
-            
-            if (playersToSave.length > 0) {
-                await savePlayersToDB(playersToSave);
-                // Update local state with the FULL list, but only after successful DB save of the modified ones
-                setAllPlayers(updatedPlayers); 
-            }
-
-            // 5. Generate & Save News (Blocking)
-            if (playersToSave.length > 0) {
-                const newNewsItems = generateNewsUpdates(oldPlayersState, updatedPlayers);
-                if (newNewsItems.length > 0) {
-                    const updatedFeed = manageNewsFeedSize([...newNewsItems, ...newsFeed]);
-                    await saveNewsToDB(updatedFeed);
-                    setNewsFeed(updatedFeed); // Update local state only after successful DB save
-                }
-            }
-
-            // 6. Save History (Blocking)
-            const finalSession: Session = { 
-                ...activeSession, 
-                status: SessionStatus.Completed,
-            };
-            
-            // Note: History loading depends on local/remote precedence, but we append here for immediate UI consistency
-            const newHistory = [finalSession, ...(await import('../db').then(mod => mod.loadHistoryFromDB()) || [])];
-            await saveHistoryToDB([finalSession]); // Append to DB (or full overwrite depending on impl, usually handled by ID)
-            setHistory(prev => [finalSession, ...prev]); // Update UI
-
-            setActiveSession(null);
-            navigate('/');
-        } catch (error) {
-            console.error("Error ending session:", error);
-            alert("Error saving data. Please check your connection.");
-        } finally {
-            setIsSaving(false);
-        }
-    };
-    
-    const handleFinishGameManually = () => {
-        finishCurrentGameAndSetupNext();
-    };
+    }, [activeSession?.numTeams, activeVoicePack]);
 
     React.useEffect(() => {
         if (!activeSession || !currentGame) {
             navigate('/', { replace: true });
         }
     }, [activeSession, currentGame, navigate]);
-
-    React.useEffect(() => {
-        if (!activeSession || !currentGame || currentGame.status !== GameStatus.Active) return;
-    
-        const goalLimit = activeSession.goalsToWin;
-        if (goalLimit && goalLimit > 0) {
-            if (currentGame.team1Score >= goalLimit || currentGame.team2Score >= goalLimit) {
-                finishCurrentGameAndSetupNext();
-            }
-        }
-    }, [currentGame?.team1Score, currentGame?.team2Score, activeSession, currentGame, finishCurrentGameAndSetupNext]);
-
 
     if (!activeSession || !currentGame) {
         return <Page><p className="text-center text-lg">{t.loading}</p></Page>;
@@ -645,8 +134,7 @@ export const LiveMatchScreen: React.FC = () => {
     
     const canFinishGame = (isGameActive || isGamePaused) && isTimerFinished;
     const mainButtonText = isGamePending ? t.startGame : t.finishGame;
-
-    const showIndicators = activeSession.numTeams === 3 && activeSession.rotationMode === RotationMode.AutoRotate;
+    const showIndicators = activeSession.numTeams === 3 && activeSession.rotationMode === 'auto_rotate';
 
     if (!team1 || !team2) return null;
 
@@ -670,7 +158,7 @@ export const LiveMatchScreen: React.FC = () => {
                     </div>
                 </div>
             )}
-            <SelectWinnerModal isOpen={isSelectWinnerModalOpen} onClose={() => setIsSelectWinnerModalOpen(false)} onSelect={finishCurrentGameAndSetupNext} team1={team1} team2={team2}/>
+            <SelectWinnerModal isOpen={isSelectWinnerModalOpen} onClose={() => {}} onSelect={finishCurrentGameAndSetupNext} team1={team1} team2={team2}/>
             {subModalState.isOpen && teamForSub && playerOutForSub && (
                 <SubstitutionModal 
                     isOpen={subModalState.isOpen}
@@ -785,9 +273,9 @@ export const LiveMatchScreen: React.FC = () => {
                 <div className="py-4 space-y-3 shrink-0 max-w-xl mx-auto w-full">
                      <Button 
                         variant="secondary"
-                        onClick={isGamePending ? handleStartGame : handleFinishGameManually} 
+                        onClick={isGamePending ? handleStartGame : () => finishCurrentGameAndSetupNext()} 
                         disabled={!isGamePending && !canFinishGame}
-                        className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 uppercase"
+                        className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
                     >
                         {mainButtonText}
                     </Button>
@@ -822,14 +310,14 @@ export const LiveMatchScreen: React.FC = () => {
 
                 <div className="max-w-xl mx-auto w-full">
                      <div className="grid grid-cols-2 gap-4">
-                        <TeamRoster team={team1} session={activeSession} onPlayerClick={handlePlayerClickForSub} />
-                        <TeamRoster team={team2} session={activeSession} onPlayerClick={handlePlayerClickForSub} />
+                        <TeamRoster team={team1} session={activeSession} onPlayerClick={(teamId, playerOutId) => setSubModalState({ isOpen: true, teamId, playerOutId })} />
+                        <TeamRoster team={team2} session={activeSession} onPlayerClick={(teamId, playerOutId) => setSubModalState({ isOpen: true, teamId, playerOutId })} />
                     </div>
                 </div>
             </div>
 
             <div className="mt-auto shrink-0 py-4 px-4 max-w-xl mx-auto w-full">
-                 <Button variant="secondary" className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 uppercase" onClick={() => setIsEndSessionModalOpen(true)}>{t.endSession}</Button>
+                 <Button variant="secondary" className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40" onClick={() => setIsEndSessionModalOpen(true)}>{t.endSession}</Button>
             </div>
         </div>
     );

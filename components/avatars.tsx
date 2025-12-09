@@ -32,7 +32,7 @@ export const TeamAvatar: React.FC<TeamAvatarProps> = ({ team, size = 'sm', onCli
         </div>
     );
     
-    const clickableProps = onClick ? { onClick, role: 'button', tabIndex: 0, onKeyDown: (e: React.KeyboardEvent) => e.key === 'Enter' && onClick() } : {};
+    const clickableProps = onClick ? { onClick, role: 'button', tabIndex: 0, onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => { if (e.key === 'Enter' && onClick) onClick(); } } : {};
 
     // --- UNIFIED BORDER LOGIC ---
     // Apply a border to all avatars, scaling its thickness with size for better visuals.

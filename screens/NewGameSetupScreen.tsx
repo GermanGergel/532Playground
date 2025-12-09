@@ -120,7 +120,7 @@ export const NewGameSetupScreen: React.FC = () => {
                     </Card>
                 </div>
                 
-                <Button variant="secondary" onClick={handleSubmit} className="w-full !text-xl !py-4 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.addPlayers}</Button>
+                <Button variant="secondary" onClick={handleSubmit} className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.addPlayers}</Button>
             </div>
         </Page>
     );

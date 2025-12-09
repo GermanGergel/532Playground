@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -135,9 +133,7 @@ export const NewsFeedScreen: React.FC = () => {
 
     return (
         <Page>
-            <div className="flex items-center justify-between mb-6 pt-12">
-                 <PageHeader title={t.clubNews} hideBack={true} />
-            </div>
+            <PageHeader title={t.clubNews} />
             
             {sortedNews.length === 0 ? (
                 <div className="flex flex-col items-center justify-center mt-20 opacity-50">
@@ -157,12 +153,6 @@ export const NewsFeedScreen: React.FC = () => {
                     ))}
                 </div>
             )}
-            
-            <div className="fixed bottom-24 left-4 z-50">
-                 <Button variant="secondary" onClick={() => navigate(-1)} className="!rounded-full !p-3 !bg-dark-surface/80 shadow-lg border border-white/10">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                </Button>
-            </div>
         </Page>
     );
 };

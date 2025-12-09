@@ -1,16 +1,17 @@
+
 import React from 'react';
 import { Session, Player, GameStatus, RotationMode, Team, Game, Goal, SessionStatus, EventLogEntry, EventType, StartRoundPayload, GoalPayload, PlayerStatus, PlayerTier, BadgeType, NewsItem } from './types';
-import { Language } from './translations';
+import { Language } from './translations/index';
 import { 
-    loadPlayersFromDB, savePlayersToDB, 
-    loadActiveSessionFromDB, saveActiveSessionToDB, 
-    loadHistoryFromDB, saveHistoryToDB,
-    loadLanguageFromDB, saveLanguageToDB,
-    loadNewsFromDB, saveNewsToDB,
-    syncAndCacheAudioAssets, // Import the new sync function
-    loadActiveVoicePackFromDB, saveActiveVoicePackToDB
+    savePlayersToDB, 
+    saveActiveSessionToDB, 
+    saveHistoryToDB,
+    saveLanguageToDB,
+    saveNewsToDB,
+    saveActiveVoicePackToDB
 } from './db';
-import { useGlobalTimer } from './hooks/useGlobalTimer';
+import { initializeAppState } from './services/appInitializer';
+import { useMatchTimer } from './hooks/useMatchTimer';
 
 interface AppContextType {
   activeSession: Session | null;
@@ -26,7 +27,7 @@ interface AppContextType {
   activeVoicePack: number;
   setActiveVoicePack: (packNumber: number) => void;
   isLoading: boolean;
-  displayTime: number;
+  displayTime: number; // Re-introduced for global timer
 }
 
 const AppContext = React.createContext<AppContextType | undefined>(undefined);
@@ -40,93 +41,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [language, setLanguageState] = React.useState<Language>('en');
   const [activeVoicePack, setActiveVoicePackState] = React.useState<number>(1);
 
-  const { displayTime } = useGlobalTimer(activeSession, setActiveSession, activeVoicePack);
+  // --- GLOBAL TIMER LOGIC (Restored) ---
+  const { displayTime } = useMatchTimer(activeSession, setActiveSession, activeVoicePack);
 
-  // --- INITIAL DATA LOAD (Async from IndexedDB with LocalStorage Migration) ---
+  // --- INITIAL DATA LOAD (Now handled by appInitializer service) ---
   React.useEffect(() => {
     const initApp = async () => {
         try {
-            // Run audio sync in the background
-            syncAndCacheAudioAssets();
-
-            // 1. Load Active Session
-            let loadedSession = await loadActiveSessionFromDB();
-            if (loadedSession) {
-                // Ensure data structure integrity
-                if (!loadedSession.playerPool) loadedSession.playerPool = [];
-                if (!loadedSession.teams) loadedSession.teams = [];
-                if (!loadedSession.games) loadedSession.games = [];
-                if (!loadedSession.eventLog) loadedSession.eventLog = [];
-                setActiveSession(loadedSession);
-            }
-
-            // 2. Load Players
-            let loadedPlayers = await loadPlayersFromDB();
-            
-            let initialPlayers: Player[] = Array.isArray(loadedPlayers) ? loadedPlayers : [];
-            
-            // Migration loop to ensure fields exist on real players
-            initialPlayers = initialPlayers.map(p => {
-                // Badge data migration from string array to object counter
-                let badges: Partial<Record<BadgeType, number>> = {};
-                if (Array.isArray(p.badges)) {
-                    p.badges.forEach((badge: BadgeType) => {
-                        badges[badge] = (badges[badge] || 0) + 1;
-                    });
-                } else if (p.badges) { // Already an object
-                    badges = p.badges;
-                }
-
-                return {
-                    ...p,
-                    badges,
-                    totalSessionsPlayed: (p.totalSessionsPlayed ?? Math.round(p.totalGames / 15)) || 0,
-                    monthlySessionsPlayed: (p.monthlySessionsPlayed ?? Math.round(p.monthlyGames / 15)) || 0,
-                    lastRatingChange: p.lastRatingChange || undefined,
-                    sessionHistory: p.sessionHistory || [], // CRITICAL FIX: Ensure sessionHistory is always an array to prevent crashes.
-                };
-            });
-            
-            setAllPlayers(initialPlayers);
-
-            // 3. Load History
-            let loadedHistory = await loadHistoryFromDB();
-            
-            let initialHistory: Session[] = [];
-            if (Array.isArray(loadedHistory)) {
-                initialHistory = loadedHistory.map((s: any) => ({
-                    ...s,
-                    teams: s.teams || [],
-                    games: s.games || [],
-                    playerPool: s.playerPool || [],
-                    eventLog: s.eventLog || []
-                }));
-            }
-            
-            setHistory(initialHistory);
-
-            // 4. Load News Feed
-            let loadedNews = await loadNewsFromDB();
-            if (Array.isArray(loadedNews)) {
-                setNewsFeed(loadedNews);
-            }
-
-            // 5. Load Language
-            const loadedLang = await loadLanguageFromDB();
-            if (loadedLang) {
-                setLanguageState(loadedLang);
-            }
-            
-            // 6. Load Active Voice Pack
-            const loadedPack = await loadActiveVoicePackFromDB();
-            if (loadedPack) {
-                setActiveVoicePackState(loadedPack);
-            }
-
+            const initialState = await initializeAppState();
+            setActiveSession(initialState.session);
+            setAllPlayers(initialState.players);
+            setHistory(initialState.history);
+            setNewsFeed(initialState.newsFeed);
+            setLanguageState(initialState.language);
+            setActiveVoicePackState(initialState.activeVoicePack);
         } catch (error) {
             console.error("Critical error loading data:", error);
         } finally {
-            setIsLoading(false);
+            // Add a small artificial delay if data loads too fast, 
+            // so the user can actually see the cool animation (optional, implies polish)
+            setTimeout(() => {
+                setIsLoading(false);
+            }, 1500);
         }
     };
 
@@ -182,10 +118,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   if(isLoading) {
     return (
-        <div className="flex items-center justify-center h-screen bg-dark-bg">
-            <div className="flex flex-col items-center gap-4">
-                 <div className="w-12 h-12 border-4 border-dark-accent-start border-t-transparent rounded-full animate-spin"></div>
-                 <div className="text-xl font-bold text-dark-text animate-pulse">Loading 532 Playground...</div>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#1A1D24]">
+            <div className="relative flex flex-col items-center justify-center w-64 h-64">
+                {/* Rotating Ring */}
+                <div className="absolute inset-0 animate-spin" style={{ animationDuration: '2s' }}>
+                    <svg viewBox="0 0 100 100" className="w-full h-full">
+                        <defs>
+                            <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" stopColor="#00F2FE" stopOpacity="1" />
+                                <stop offset="100%" stopColor="#00F2FE" stopOpacity="0" />
+                            </linearGradient>
+                        </defs>
+                        <circle 
+                            cx="50" cy="50" r="48" 
+                            fill="none" 
+                            stroke="url(#ringGradient)" 
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeDasharray="200 300" // Creates the partial arc effect
+                        />
+                    </svg>
+                </div>
+
+                {/* Static Text Content */}
+                <div className="flex flex-col items-center justify-center z-10">
+                    <h1 className="text-5xl font-black text-[#00F2FE] tracking-tighter" style={{ textShadow: '0 0 15px rgba(0, 242, 254, 0.5)' }}>
+                        532
+                    </h1>
+                    <h2 className="text-xl font-bold text-white tracking-[0.2em] mt-1">
+                        PLAYGROUND
+                    </h2>
+                </div>
             </div>
         </div>
     );

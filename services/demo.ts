@@ -1,11 +1,12 @@
 import { 
     Player, Session, Team, Game, Goal, EventLogEntry, 
     EventType, PlayerStatus, PlayerTier, GameStatus, 
-    RotationMode, SessionStatus, StartRoundPayload, GoalPayload 
+    RotationMode, SessionStatus, StartRoundPayload, GoalPayload, NewsItem, BadgeType 
 } from '../types';
 import { newId } from '../screens/utils';
-import { getTierForRating, calculateRatingUpdate } from './rating';
+import { getTierForRating, calculateRatingUpdate, calculateEarnedBadges } from './rating';
 import { calculateAllStats } from './statistics';
+import { generateNewsUpdates } from './news';
 
 const DEMO_NAMES = [
     "Alex", "Dima", "Sergei", "Maxim", "Ivan", 
@@ -15,10 +16,13 @@ const DEMO_NAMES = [
 
 const COLORS = ['#FF4136', '#0074D9', '#2ECC40']; // Red, Blue, Green
 
+// Helper to ensure all demo IDs are recognizable
+const newDemoId = (prefix: string = '') => `demo_${prefix}${newId()}`;
+
 export const generateDemoData = () => {
     // 1. Create Players
-    const players: Player[] = DEMO_NAMES.map((name, index) => ({
-        id: newId(),
+    const initialPlayers: Player[] = DEMO_NAMES.map((name, index) => ({
+        id: newDemoId(`player_${index}_`),
         nickname: name,
         surname: `Demo ${index + 1}`,
         createdAt: new Date().toISOString(),
@@ -34,24 +38,30 @@ export const generateDemoData = () => {
         badges: {},
         skills: index % 3 === 0 ? ['finisher'] : index % 3 === 1 ? ['playmaker'] : ['defender'],
         lastPlayedAt: new Date().toISOString(),
+        records: {
+            bestGoalsInSession: { value: 0, sessionId: '' },
+            bestAssistsInSession: { value: 0, sessionId: '' },
+            bestWinRateInSession: { value: 0, sessionId: '' },
+        },
     }));
 
     // Update Tier based on random rating
-    players.forEach(p => p.tier = getTierForRating(p.rating));
+    initialPlayers.forEach(p => p.tier = getTierForRating(p.rating));
 
     // 2. Create Teams
     const teams: Team[] = COLORS.map((color, i) => ({
-        id: newId(),
+        id: newDemoId(`team_${i}_`),
         color,
         name: `Team ${i + 1}`,
-        playerIds: players.slice(i * 5, (i + 1) * 5).map(p => p.id),
+        playerIds: initialPlayers.slice(i * 5, (i + 1) * 5).map(p => p.id),
         consecutiveGames: 0,
         bigStars: 0,
     }));
 
     // 3. Simulate Session & Games
+    const sessionId = newDemoId('session_');
     const session: Session = {
-        id: newId(),
+        id: sessionId,
         sessionName: "Demo Session 16 Rounds",
         date: new Date().toISOString(),
         numTeams: 3,
@@ -63,8 +73,9 @@ export const generateDemoData = () => {
         createdAt: new Date().toISOString(),
         teams: teams,
         games: [],
-        playerPool: players,
-        eventLog: []
+        playerPool: initialPlayers,
+        eventLog: [],
+        isTestMode: true, // Mark demo sessions as test mode
     };
 
     // Simulation State
@@ -96,8 +107,9 @@ export const generateDemoData = () => {
         const loserTeam = team1Score > team2Score ? team2 : team1;
 
         // Create Game Object
+        const gameId = newDemoId(`game_${round}_`);
         const game: Game = {
-            id: newId(),
+            id: gameId,
             gameNumber: round,
             team1Id: team1.id,
             team2Id: team2.id,
@@ -118,39 +130,19 @@ export const generateDemoData = () => {
         const generateGoal = (teamId: string, isOwn: boolean = false): Goal => {
             const team = teams.find(t => t.id === teamId);
             
-            // Safety check: if team doesn't exist or has no players, return minimal data
             if (!team || team.playerIds.length === 0) {
-                 return {
-                    id: newId(),
-                    gameId: game.id,
-                    teamId: teamId,
-                    scorerId: undefined,
-                    assistantId: undefined,
-                    isOwnGoal: true, // fallback to avoid crash
-                    timestampSeconds: Math.floor(Math.random() * 300)
-                };
+                 return { id: newDemoId('goal_'), gameId: game.id, teamId: teamId, isOwnGoal: true, timestampSeconds: Math.floor(Math.random() * 300) };
             }
 
-            // Safe random selection based on actual array length
             const randomIndex = Math.floor(Math.random() * team.playerIds.length);
             const scorerId = team.playerIds[randomIndex];
-            const scorer = players.find(p => p.id === scorerId);
+            const scorer = initialPlayers.find(p => p.id === scorerId);
 
-            // Safety check: if scorer not found
             if (!scorer) {
-                return {
-                    id: newId(),
-                    gameId: game.id,
-                    teamId: teamId,
-                    scorerId: undefined,
-                    assistantId: undefined,
-                    isOwnGoal: true,
-                    timestampSeconds: Math.floor(Math.random() * 300)
-                };
+                return { id: newDemoId('goal_'), gameId: game.id, teamId: teamId, isOwnGoal: true, timestampSeconds: Math.floor(Math.random() * 300) };
             }
 
             let assistId: string | undefined = undefined;
-            // 30% chance of assist, must have teammate available
             if (!isOwn && Math.random() > 0.3 && team.playerIds.length > 1) {
                 const possibleAssists = team.playerIds.filter(pid => pid !== scorer.id);
                 if (possibleAssists.length > 0) {
@@ -159,7 +151,7 @@ export const generateDemoData = () => {
             }
             
             return {
-                id: newId(),
+                id: newDemoId('goal_'),
                 gameId: game.id,
                 teamId: teamId,
                 scorerId: isOwn ? undefined : scorer.id,
@@ -174,62 +166,81 @@ export const generateDemoData = () => {
 
         session.games.push(game);
 
-        // Rotation Logic (Winner Stays, max 3)
-        // Update consecutive games
-        teams.forEach(t => {
-            if (t.id === winnerTeam.id) t.consecutiveGames++;
-            else if (t.id === loserTeam.id) t.consecutiveGames = 0;
-        });
-
-        // Determine next queue
-        if (winnerTeam.consecutiveGames >= 3) {
-            // Force rotate winner out
-            winnerTeam.consecutiveGames = 0;
-            queue = [waitingTeam, loserTeam, winnerTeam]; // Winner goes to bench
+        if (session.rotationMode === RotationMode.AutoRotate) {
+            teams.forEach(t => {
+                if (t.id === winnerTeam.id) t.consecutiveGames++;
+                else if (t.id === loserTeam.id) t.consecutiveGames = 0;
+            });
+            if (winnerTeam.consecutiveGames >= 3) {
+                winnerTeam.consecutiveGames = 0;
+                queue = [waitingTeam, loserTeam, winnerTeam];
+            } else {
+                queue = [winnerTeam, waitingTeam, loserTeam];
+            }
         } else {
-            // Winner stays
-            queue = [winnerTeam, waitingTeam, loserTeam]; // Loser goes to bench
+             queue = [winnerTeam, waitingTeam, loserTeam];
         }
     }
 
     // 5. Calculate Stats and Update Players
     const { allPlayersStats } = calculateAllStats(session);
+    
+    const badgesByPlayer = new Map<string, BadgeType[]>();
+    allPlayersStats.forEach(stats => {
+        const earnedBadges = calculateEarnedBadges(stats.player, stats, session, allPlayersStats);
+        badgesByPlayer.set(stats.player.id, earnedBadges);
+    });
 
-    // Update the player objects with these stats
-    const updatedPlayers = players.map(p => {
+
+    const updatedPlayers = initialPlayers.map(p => {
         const stats = allPlayersStats.find(s => s.player.id === p.id);
         if (!stats) return p;
-
-        // Use the actual rating engine to generate a breakdown
-        const { delta, breakdown } = calculateRatingUpdate(p, stats, session, []);
+        
+        const earnedBadges = badgesByPlayer.get(p.id) || [];
+        const { delta, breakdown } = calculateRatingUpdate(p, stats, session, earnedBadges);
         const newRating = Math.min(99, Math.max(40, Math.round(p.rating + delta)));
         
+        const updatedBadges: Partial<Record<BadgeType, number>> = { ...p.badges };
+        earnedBadges.forEach(badge => {
+            updatedBadges[badge] = (updatedBadges[badge] || 0) + 1;
+        });
+
+        const sessionWinRate = stats.gamesPlayed > 0 ? Math.round((stats.wins / stats.gamesPlayed) * 100) : 0;
+        const records = {
+            bestGoalsInSession: { value: stats.goals, sessionId: session.id },
+            bestAssistsInSession: { value: stats.assists, sessionId: session.id },
+            bestWinRateInSession: { value: sessionWinRate, sessionId: session.id },
+        };
+
         return {
             ...p,
-            totalGames: stats.gamesPlayed,
-            totalGoals: stats.goals,
-            totalAssists: stats.assists,
-            totalWins: stats.wins,
-            totalDraws: stats.draws,
-            totalLosses: stats.losses,
-            totalSessionsPlayed: 1,
+            totalGames: p.totalGames + stats.gamesPlayed,
+            totalGoals: p.totalGoals + stats.goals,
+            totalAssists: p.totalAssists + stats.assists,
+            totalWins: p.totalWins + stats.wins,
+            totalDraws: p.totalDraws + stats.draws,
+            totalLosses: p.totalLosses + stats.losses,
+            totalSessionsPlayed: (p.totalSessionsPlayed || 0) + 1,
             rating: newRating,
             tier: getTierForRating(newRating),
             form: delta > 0.5 ? 'hot_streak' : delta < -0.5 ? 'cold_streak' : 'stable',
-            lastRatingChange: breakdown, // ADD THE BREAKDOWN HERE
-            badges: stats.goals > 3 ? { 'goleador': 1 } : {}
+            lastRatingChange: breakdown,
+            badges: updatedBadges,
+            records: records,
         } as Player;
     });
+    
+    // 6. Generate News based on the changes
+    const news = generateNewsUpdates(initialPlayers, updatedPlayers).map(n => ({ ...n, id: newDemoId('news_') }));
 
-    // Replace session player pool with updated players to ensure report is correct
     session.playerPool = updatedPlayers;
 
-    return { session, players: updatedPlayers };
+    return { session, players: updatedPlayers, news };
 };
 
 export const createShowcasePlayer = (): Player => {
     return {
-        id: newId(),
+        id: newDemoId('showcase_'),
         nickname: "Maverick",
         surname: "Top Gun",
         createdAt: new Date().toISOString(),
@@ -259,7 +270,6 @@ export const createShowcasePlayer = (): Player => {
             'dynasty': 2
         },
         lastPlayedAt: new Date().toISOString(),
-        // ADD A REALISTIC BREAKDOWN FOR THE SHOWCASE PLAYER
         lastRatingChange: {
             previousRating: 92.5,
             teamPerformance: 0.8,
@@ -267,6 +277,12 @@ export const createShowcasePlayer = (): Player => {
             badgeBonus: 0.2,
             finalChange: 1.5,
             newRating: 94,
-        }
+            badgesEarned: ['mvp', 'goleador'],
+        },
+        records: {
+            bestGoalsInSession: { value: 12, sessionId: 'demo-session-id' },
+            bestAssistsInSession: { value: 9, sessionId: 'demo-session-id' },
+            bestWinRateInSession: { value: 80, sessionId: 'demo-session-id' },
+        },
     };
 };

@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { Player, Session, NewsItem } from './types';
-import { Language } from './translations';
+import { Language } from './translations/index';
 import { get, set, del, keys } from 'idb-keyval';
 
 // --- SUPABASE CONFIGURATION ---
@@ -49,6 +49,9 @@ const logStorageMode = () => {
     }
 };
 
+// --- DEMO DATA FILTER ---
+const isDemoData = (id: string) => id.startsWith('demo_');
+
 // --- BASE64 to Blob HELPER (Improved) ---
 const base64ToBlob = (base64: string): Blob => {
     const parts = base64.split(';base64,');
@@ -76,6 +79,7 @@ const BUCKET_NAME = 'player_images';
 
 export const uploadPlayerImage = async (playerId: string, base64Image: string, type: 'avatar' | 'card'): Promise<string | null> => {
     if (!isSupabaseConfigured() || !base64Image) return null;
+    if (isDemoData(playerId)) return null; // Block demo uploads
 
     try {
         const blob = base64ToBlob(base64Image);
@@ -131,6 +135,8 @@ export const deletePlayerImage = async (imageUrl: string) => {
 
 // --- SINGLE PLAYER SAVE (ATOMIC) ---
 export const saveSinglePlayerToDB = async (player: Player) => {
+    if (isDemoData(player.id)) return; // Don't save demo players
+
     if (!isSupabaseConfigured()) {
         // Fallback for local-only mode: load all, update one, save all
         const allPlayers = await get<Player[]>('players') || [];
@@ -156,10 +162,41 @@ export const saveSinglePlayerToDB = async (player: Player) => {
     }
 };
 
+// --- SINGLE PLAYER LOAD ---
+export const loadSinglePlayerFromDB = async (id: string): Promise<Player | null> => {
+    if (!isSupabaseConfigured()) {
+        const allPlayers = await get<Player[]>('players') || [];
+        return allPlayers.find(p => p.id === id) || null;
+    }
+
+    try {
+        const { data, error } = await supabase!
+            .from('players')
+            .select('*')
+            .eq('id', id)
+            .single();
+        if (error) {
+            // 'single()' throws an error if 0 or >1 rows are found.
+            if (error.code === 'PGRST116') { // PostgREST error for "exact one row not found"
+                return null;
+            }
+            throw error;
+        }
+        return data as Player;
+    } catch (error) {
+        console.error(`Supabase Load Single Player Error (ID: ${id}):`, error);
+        // Fallback to local cache if cloud fails
+        const allPlayers = await get<Player[]>('players') || [];
+        return allPlayers.find(p => p.id === id) || null;
+    }
+};
+
 
 // --- PLAYERS (Legacy bulk save, updated with CHUNKING) ---
 export const savePlayersToDB = async (players: Player[]) => {
     logStorageMode();
+    const realPlayers = players.filter(p => !isDemoData(p.id));
+    if (realPlayers.length === 0) return; // Nothing to save
     
     // Mode 1: Cloud
     if (isSupabaseConfigured()) {
@@ -168,8 +205,8 @@ export const savePlayersToDB = async (players: Player[]) => {
             // especially with high-res base64 images. 
             // Previous limit of 5 was still occasionally causing timeouts.
             const CHUNK_SIZE = 2; 
-            for (let i = 0; i < players.length; i += CHUNK_SIZE) {
-                const chunk = players.slice(i, i + CHUNK_SIZE);
+            for (let i = 0; i < realPlayers.length; i += CHUNK_SIZE) {
+                const chunk = realPlayers.slice(i, i + CHUNK_SIZE);
                 const { error } = await supabase!
                     .from('players')
                     .upsert(chunk, { onConflict: 'id' });
@@ -186,7 +223,14 @@ export const savePlayersToDB = async (players: Player[]) => {
     // Mode 2: Local Fallback
     else {
         try {
-            await set('players', players);
+            // CORRECTED LOGIC: Merge players instead of overwriting the entire list.
+            const allPlayers = await get<Player[]>('players') || [];
+            const playersMap = new Map(allPlayers.map(p => [p.id, p]));
+            realPlayers.forEach(playerToSave => {
+                playersMap.set(playerToSave.id, playerToSave);
+            });
+            const updatedPlayers = Array.from(playersMap.values());
+            await set('players', updatedPlayers);
         } catch (error) {
             // Silent fail or minimal log
         }
@@ -223,11 +267,12 @@ export const loadPlayersFromDB = async (): Promise<Player[] | undefined> => {
 // Active session is ALWAYS local (IndexedDB) for performance and offline stability during games.
 export const saveActiveSessionToDB = async (session: Session | null) => {
     try {
-        if (session) {
+        if (session && !isDemoData(session.id)) {
             await set('activeSession', session);
-        } else {
+        } else if (!session) {
             await set('activeSession', null);
         }
+        // If demo session, simply don't save to DB (stays in React state)
     } catch (error) {
         // Silent
     }
@@ -243,12 +288,15 @@ export const loadActiveSessionFromDB = async (): Promise<Session | null | undefi
 
 // --- HISTORY (SESSIONS) ---
 export const saveHistoryToDB = async (history: Session[]) => {
+    const realHistory = history.filter(s => !isDemoData(s.id));
+    if (realHistory.length === 0 && history.length > 0) return; // Only demo sessions present
+
     // Mode 1: Cloud
     if (isSupabaseConfigured()) {
         try {
             const { error } = await supabase!
                 .from('sessions')
-                .upsert(history, { onConflict: 'id' });
+                .upsert(realHistory, { onConflict: 'id' });
             if (error) throw error;
         } catch (error) {
             console.error("Supabase Save History Error:", error);
@@ -258,7 +306,7 @@ export const saveHistoryToDB = async (history: Session[]) => {
     // Mode 2: Local Fallback
     else {
         try {
-            await set('history', history);
+            await set('history', realHistory);
         } catch (error) {
             // Silent
         }
@@ -291,12 +339,15 @@ export const loadHistoryFromDB = async (): Promise<Session[] | undefined> => {
 
 // --- NEWS FEED ---
 export const saveNewsToDB = async (news: NewsItem[]) => {
+    const realNews = news.filter(n => !isDemoData(n.id));
+    if (realNews.length === 0 && news.length > 0) return;
+
     // Mode 1: Cloud
     if (isSupabaseConfigured()) {
         try {
             const { error } = await supabase!
                 .from('news')
-                .upsert(news, { onConflict: 'id' });
+                .upsert(realNews, { onConflict: 'id' });
             if (error) throw error;
         } catch (error) {
             console.error("Supabase Save News Error:", error);
@@ -306,7 +357,7 @@ export const saveNewsToDB = async (news: NewsItem[]) => {
     // Mode 2: Local Fallback
     else {
         try {
-            await set('newsFeed', news);
+            await set('newsFeed', realNews);
         } catch (error) {
             // Silent
         }
@@ -485,5 +536,62 @@ export const syncAndCacheAudioAssets = async () => {
 
     } catch (error) {
         console.error("Failed to sync audio assets:", error);
+    }
+};
+
+// --- SESSION ANTHEM (SINGLE TRACK) ---
+const MUSIC_BUCKET = 'session_music';
+const ANTHEM_FILENAME = 'anthem.mp3';
+
+export const uploadSessionAnthem = async (base64: string): Promise<string | null> => {
+    const localKey = 'session_anthem';
+    if (!isSupabaseConfigured()) {
+        await set(localKey, base64);
+        return base64;
+    }
+    try {
+        const blob = base64ToBlob(base64);
+        const { error } = await supabase!.storage.from(MUSIC_BUCKET).upload(ANTHEM_FILENAME, blob, { upsert: true });
+        if (error) throw error;
+        const { data } = supabase!.storage.from(MUSIC_BUCKET).getPublicUrl(ANTHEM_FILENAME);
+        return data.publicUrl;
+    } catch (error) {
+        console.error("Failed to upload session anthem:", error);
+        throw error;
+    }
+};
+
+export const deleteSessionAnthem = async (): Promise<void> => {
+    const localKey = 'session_anthem';
+    if (!isSupabaseConfigured()) {
+        await del(localKey);
+        return;
+    }
+    try {
+        await supabase!.storage.from(MUSIC_BUCKET).remove([ANTHEM_FILENAME]);
+    } catch (error) {
+        console.error("Failed to delete session anthem:", error);
+    }
+};
+
+export const getSessionAnthemUrl = async (): Promise<string | null> => {
+    const localKey = 'session_anthem';
+    if (!isSupabaseConfigured()) {
+        return await get<string>(localKey) || null;
+    }
+    try {
+        const { data, error } = await supabase!.storage.from(MUSIC_BUCKET).list();
+        if (error) throw error;
+        
+        const anthemFile = data.find(file => file.name === ANTHEM_FILENAME);
+        if (anthemFile) {
+            const { data: urlData } = supabase!.storage.from(MUSIC_BUCKET).getPublicUrl(ANTHEM_FILENAME);
+            // Add a timestamp to bust the cache
+            return `${urlData.publicUrl}?t=${new Date(anthemFile.updated_at).getTime()}`;
+        }
+        return null;
+    } catch (error) {
+        console.error("Failed to get session anthem URL:", error);
+        return null;
     }
 };
