@@ -24,7 +24,7 @@ export const PlayerProfileScreen: React.FC = () => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
     const [isInfoModalOpen, setIsInfoModalOpen] = React.useState(false);
     const [isShareModalOpen, setIsShareModalOpen] = React.useState(false);
-    const [isProcessing, setIsProcessing] = React.useState(false);
+    const [isExporting, setIsExporting] = React.useState(false);
     const [playerForExport, setPlayerForExport] = React.useState<Player | null>(null);
     
     const exportCardRef = React.useRef<HTMLDivElement>(null);
@@ -50,8 +50,8 @@ export const PlayerProfileScreen: React.FC = () => {
     };
 
     const handleDownloadCard = async () => {
-        if (!player || isProcessing) return;
-        setIsProcessing(true);
+        if (!player || isExporting) return;
+        setIsExporting(true);
 
         try {
             let exportablePlayer = { ...player };
@@ -73,7 +73,7 @@ export const PlayerProfileScreen: React.FC = () => {
         } catch (error) {
             console.error("Error preparing card for export:", error);
             alert('Failed to prepare card image for export. The image might be inaccessible.');
-            setIsProcessing(false);
+            setIsExporting(false);
         }
     };
 
@@ -121,15 +121,15 @@ export const PlayerProfileScreen: React.FC = () => {
                   alert('Failed to export player card.');
                 }
             } finally {
-                setIsProcessing(false);
+                setIsExporting(false);
                 setPlayerForExport(null);
             }
         };
 
-        if (playerForExport && isProcessing) {
+        if (playerForExport && isExporting) {
             exportImage();
         }
-    }, [playerForExport, isProcessing]);
+    }, [playerForExport, isExporting]);
     
 
     if (!player) {
@@ -155,40 +155,25 @@ export const PlayerProfileScreen: React.FC = () => {
         const file = e.target.files?.[0];
         if (!file || !player) return;
 
-        setIsProcessing(true);
         try {
-            // 1. Process image locally to get base64 strings for both card and avatar
             const { cardImage, avatarImage } = await processPlayerImageFile(file);
-
-            // 2. Delete old images from cloud storage before uploading new ones to prevent orphans
-            const deletePromises = [];
-            if (player.photo && player.photo.startsWith('http')) {
-                deletePromises.push(deletePlayerImage(player.photo));
-            }
-            if (player.playerCard && player.playerCard.startsWith('http')) {
-                deletePromises.push(deletePlayerImage(player.playerCard));
-            }
-            await Promise.all(deletePromises);
-
-            // 3. Upload new images and get their public URLs
-            const [avatarUrl, cardUrl] = await Promise.all([
+            const uploadPromises = [
                 uploadPlayerImage(player.id, avatarImage, 'avatar'),
                 uploadPlayerImage(player.id, cardImage, 'card'),
-            ]);
+            ];
+            
+            const deletePromises = [
+                player.photo ? deletePlayerImage(player.photo) : Promise.resolve(),
+                player.playerCard ? deletePlayerImage(player.playerCard) : Promise.resolve(),
+            ];
 
-            // 4. Critical Check: Ensure URLs were returned successfully
-            if (!avatarUrl || !cardUrl) {
-                alert("Image upload failed. The new image could not be saved to the cloud. Please try again.");
-                setIsProcessing(false);
-                return; 
-            }
+            const [avatarUrl, cardUrl] = await Promise.all(uploadPromises);
+            await Promise.all(deletePromises);
 
-            // 5. Update player object with the new URLs and save to DB
             const updatedPlayer: Player = {
                 ...player,
-                photo: avatarUrl,
-                playerCard: cardUrl,
-                // If a player was unconfirmed, uploading a photo confirms them.
+                photo: avatarUrl || player.photo,
+                playerCard: cardUrl || player.playerCard,
                 status: PlayerStatus.Confirmed,
             };
             
@@ -199,11 +184,9 @@ export const PlayerProfileScreen: React.FC = () => {
             console.error("Image processing or upload failed:", error);
             alert("Failed to upload image. It might be too large or in an unsupported format.");
         } finally {
-            // Reset file input to allow re-uploading the same file if needed
             if (e.target) {
                 e.target.value = '';
             }
-            setIsProcessing(false);
         }
     };
 
@@ -303,7 +286,7 @@ export const PlayerProfileScreen: React.FC = () => {
                 onConfirmInitialRating={handleConfirmInitialRating}
                 onDownloadCard={handleDownloadCard}
                 onShareProfile={handleShareProfile}
-                isProcessing={isProcessing}
+                isDownloading={isExporting}
             />
 
             {playerForExport && (

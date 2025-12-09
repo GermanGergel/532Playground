@@ -76,7 +76,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
     const roundsToDisplay = itemLimit ? finishedGames.slice(0, itemLimit) : finishedGames;
 
     return (
-        <div className="space-y-6 w-full max-w-full">
+        <div className="space-y-6 w-full">
             {/* Team Standings */}
             {(!visibleSection || visibleSection === 'standings') && (
             <div 
@@ -84,38 +84,36 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                 style={{ boxShadow: isExport ? 'none' : '0 8px 25px -5px rgba(0, 242, 254, 0.1), 0 5px 10px -6px rgba(0, 242, 254, 0.1)' }}
             >
                 <h3 className={cardTitleClasses}>{t.teamStandings}</h3>
-                <div className="overflow-x-auto w-full">
-                    <table className="w-full text-sm text-center table-fixed min-w-full">
-                        <thead>
-                            <tr className="text-dark-text-secondary">
-                                <th className="text-left py-1 px-1 font-normal w-[10%]">#</th>
-                                <th className="py-1 px-1 font-normal text-center w-[20%]">{t.team}</th>
-                                <th className="py-1 px-1 font-normal w-[10%]">{t.thP}</th>
-                                <th className="py-1 px-1 font-normal w-[10%]">{t.thW}</th>
-                                <th className="py-1 px-1 font-normal w-[10%]">{t.thD}</th>
-                                <th className="py-1 px-1 font-normal w-[10%]">{t.thL}</th>
-                                <th className="py-1 px-1 font-normal w-[15%]">{t.thGD}</th>
-                                <th className="py-1 px-1 font-bold w-[15%]">{t.thPts}</th>
+                <table className="w-full text-sm text-center table-fixed">
+                    <thead>
+                        <tr className="text-dark-text-secondary">
+                            <th className="text-left py-1 px-1 font-normal" style={{ width: '8%' }}>#</th>
+                            <th className="py-1 px-1 font-normal text-center" style={{ width: '20%' }}>{t.team}</th>
+                            <th className="py-1 px-1 font-normal" style={{ width: '10%' }}>{t.thP}</th>
+                            <th className="py-1 px-1 font-normal" style={{ width: '10%' }}>{t.thW}</th>
+                            <th className="py-1 px-1 font-normal" style={{ width: '10%' }}>{t.thD}</th>
+                            <th className="py-1 px-1 font-normal" style={{ width: '10%' }}>{t.thL}</th>
+                            <th className="py-1 px-1 font-normal" style={{ width: '12%' }}>{t.thGD}</th>
+                            <th className="py-1 px-1 font-bold" style={{ width: '20%' }}>{t.thPts}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {teamStats.map(({ team, gamesPlayed, wins, draws, losses, goalDifference, points }, index) => (
+                            <tr key={team.id} className="border-t border-white/10">
+                                <td className="py-2 px-1 text-left">{index + 1}</td>
+                                <td className={`py-2 px-1 flex justify-center items-center`}>
+                                    <TeamAvatar team={team} size="xxs" className={isExport ? 'translate-y-2' : ''} />
+                                </td>
+                                <td className="py-2 px-1">{gamesPlayed}</td>
+                                <td className="py-2 px-1">{wins}</td>
+                                <td className="py-2 px-1">{draws}</td>
+                                <td className="py-2 px-1">{losses}</td>
+                                <td className="py-2 px-1">{goalDifference > 0 ? `+${goalDifference}` : goalDifference}</td>
+                                <td className="py-2 px-1 font-bold">{points}</td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {teamStats.map(({ team, gamesPlayed, wins, draws, losses, goalDifference, points }, index) => (
-                                <tr key={team.id} className="border-t border-white/10">
-                                    <td className="py-2 px-1 text-left">{index + 1}</td>
-                                    <td className={`py-2 px-1 flex justify-center items-center`}>
-                                        <TeamAvatar team={team} size="xxs" className={isExport ? 'translate-y-2' : ''} />
-                                    </td>
-                                    <td className="py-2 px-1">{gamesPlayed}</td>
-                                    <td className="py-2 px-1">{wins}</td>
-                                    <td className="py-2 px-1">{draws}</td>
-                                    <td className="py-2 px-1">{losses}</td>
-                                    <td className="py-2 px-1">{goalDifference > 0 ? `+${goalDifference}` : goalDifference}</td>
-                                    <td className="py-2 px-1 font-bold">{points}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                        ))}
+                    </tbody>
+                </table>
             </div>
             )}
 
@@ -126,38 +124,35 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                 style={{ boxShadow: isExport ? 'none' : '0 8px 25px -5px rgba(0, 242, 254, 0.1), 0 5px 10px -6px rgba(0, 242, 254, 0.1)' }}
              >
                 <h3 className={cardTitleClasses}>{t.playerStatistics}</h3>
-                <div className="overflow-x-auto w-full">
-                    <table className="w-full text-sm text-center table-fixed min-w-full">
-                    <thead>
-                            <tr className="text-dark-text-secondary">
-                                <th className="text-left py-1 px-1 font-normal w-[10%]">#</th>
-                                {/* EXPANDED WIDTH FOR NAME and REMOVED TRUNCATE logic */}
-                                <th className="text-left py-1 px-1 font-normal w-[50%]">{t.players}</th>
-                                <th className="py-1 px-1 font-normal w-[10%]">{t.team}</th>
-                                <th className="py-1 px-1 font-normal w-[10%]">{t.thGP}</th>
-                                <th className="py-1 px-1 font-normal w-[10%]">{t.thG}</th>
-                                <th className="py-1 px-1 font-normal w-[10%]">{t.thA}</th>
-                                <th className="py-1 px-1 font-bold w-[10%]">{t.thTotal}</th>
+                <table className="w-full text-sm text-center table-fixed">
+                   <thead>
+                        <tr className="text-dark-text-secondary">
+                            <th className="text-left py-1 px-1 font-normal" style={{ width: '10%' }}>#</th>
+                            <th className="text-left py-1 px-1 font-normal" style={{ width: '35%' }}>{t.players}</th>
+                            <th className="py-1 px-1 font-normal" style={{ width: '15%' }}>{t.team}</th>
+                            <th className="py-1 px-1 font-normal" style={{ width: '10%' }}>{t.thGP}</th>
+                            <th className="py-1 px-1 font-normal" style={{ width: '10%' }}>{t.thG}</th>
+                            <th className="py-1 px-1 font-normal" style={{ width: '10%' }}>{t.thA}</th>
+                            <th className="py-1 px-1 font-bold" style={{ width: '10%' }}>{t.thTotal}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {sortedPlayers.map((stats, index) => (
+                             <tr key={stats.player.id} className="border-t border-white/10">
+                                <td className="py-2 px-1 text-left">{index + 1}</td>
+                                {/* Truncate long names to prevent layout shift */}
+                                <td className="py-2 px-1 text-left font-semibold truncate pr-2" title={stats.player.nickname}>
+                                    {stats.player.nickname}
+                                </td>
+                                <td className="py-2 px-1"><TeamAvatar team={stats.team} size="xxs" className={`mx-auto ${isExport ? 'translate-y-2' : ''}`} /></td>
+                                <td className="py-2 px-1">{stats.gamesPlayed}</td>
+                                <td className="py-2 px-1">{stats.goals}</td>
+                                <td className="py-2 px-1">{stats.assists}</td>
+                                <td className="py-2 px-1 font-bold">{stats.goals + stats.assists}</td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {sortedPlayers.map((stats, index) => (
-                                <tr key={stats.player.id} className="border-t border-white/10">
-                                    <td className="py-3 px-1 text-left">{index + 1}</td>
-                                    {/* Truncate logic removed for export, width increased */}
-                                    <td className="py-3 px-1 text-left font-semibold pr-2" title={stats.player.nickname}>
-                                        <div className={isExport ? "whitespace-nowrap" : "truncate w-full"}>{stats.player.nickname}</div>
-                                    </td>
-                                    <td className="py-3 px-1"><TeamAvatar team={stats.team} size="xxs" className={`mx-auto ${isExport ? 'translate-y-2' : ''}`} /></td>
-                                    <td className="py-3 px-1">{stats.gamesPlayed}</td>
-                                    <td className="py-3 px-1">{stats.goals}</td>
-                                    <td className="py-3 px-1">{stats.assists}</td>
-                                    <td className="py-3 px-1 font-bold">{stats.goals + stats.assists}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                        ))}
+                    </tbody>
+                </table>
             </div>
             )}
             
@@ -174,7 +169,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                         const team2 = session.teams.find(t => t.id === game.team2Id);
                         if (!team1 || !team2) return null;
                         return (
-                             <li key={game.id} className="flex items-center justify-between py-3 border-t border-white/10 first:border-t-0">
+                             <li key={game.id} className="flex items-center justify-between py-2 border-t border-white/10 first:border-t-0">
                                 <span className="text-dark-text-secondary text-sm">{t.round} {game.gameNumber}</span>
                                 <div className="flex items-center justify-end gap-2 flex-grow">
                                     <TeamAvatar team={team1} size="xxs" className={isExport ? 'translate-y-2' : ''} />
@@ -274,25 +269,27 @@ export const StatisticsScreen: React.FC = () => {
                     </div>
                 </BrandedShareableReport>
                 
-                {/* 2. PLAYERS - Compact (No Header, No Date) */}
+                {/* 2. PLAYERS - Compact (No Header) */}
                 <BrandedShareableReport 
                     session={activeSession} 
                     data-export-section="players"
                     style={{ width: '500px', padding: '20px' }}
                 >
-                    {/* Date removed per user request */}
-                    <div className="mb-2 w-full"></div>
+                    <div className="mb-2 text-center w-full border-b border-white/10 pb-2">
+                        <p className="font-chakra text-dark-text text-lg font-bold tracking-widest uppercase">{displayDate}</p>
+                    </div>
                     <ShareableReport session={activeSession} visibleSection="players" isExport={true} />
                 </BrandedShareableReport>
                 
-                {/* 3. ROUNDS - Compact (No Header, No Date) */}
+                {/* 3. ROUNDS - Compact (No Header) */}
                 <BrandedShareableReport 
                     session={activeSession} 
                     data-export-section="rounds"
                     style={{ width: '500px', padding: '20px' }}
                 >
-                     {/* Date removed per user request */}
-                     <div className="mb-2 w-full"></div>
+                     <div className="mb-2 text-center w-full border-b border-white/10 pb-2">
+                        <p className="font-chakra text-dark-text text-lg font-bold tracking-widest uppercase">{displayDate}</p>
+                    </div>
                     <ShareableReport session={activeSession} visibleSection="rounds" isExport={true} />
                 </BrandedShareableReport>
             </div>

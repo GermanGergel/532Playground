@@ -9,7 +9,7 @@ import { savePlayersToDB, saveNewsToDB, saveHistoryToDB } from '../db';
 import { useTranslation } from '../ui';
 
 export const useGameManager = () => {
-    const { activeSession, setActiveSession, setHistory, setAllPlayers, setNewsFeed, allPlayers: oldPlayersState, newsFeed, activeVoicePack, setSyncStatus } = useApp();
+    const { activeSession, setActiveSession, setHistory, setAllPlayers, setNewsFeed, allPlayers: oldPlayersState, newsFeed, activeVoicePack } = useApp();
     const navigate = useNavigate();
     const t = useTranslation();
 
@@ -371,18 +371,19 @@ export const useGameManager = () => {
     
     const handleFinishSession = async () => {
         if (!activeSession || isSaving) return;
-        setIsEndSessionModalOpen(false);
 
         if (activeSession.isTestMode) {
+            setIsEndSessionModalOpen(false);
             setActiveSession(null);
             navigate('/');
             return;
         }
         
         setIsSaving(true);
-        setSyncStatus('syncing');
         
         try {
+            setIsEndSessionModalOpen(false);
+            
             const {
                 updatedPlayers,
                 playersToSave,
@@ -394,24 +395,24 @@ export const useGameManager = () => {
                 newsFeed: newsFeed,
             });
 
-            // Await all cloud operations. These functions will throw on failure.
-            await savePlayersToDB(playersToSave, true);
-            await saveNewsToDB(updatedNewsFeed, true);
-            await saveHistoryToDB([finalSession], true);
+            if (playersToSave.length > 0) {
+                await savePlayersToDB(playersToSave);
+                setAllPlayers(updatedPlayers); 
+            }
 
-            // If cloud saves succeeded, update local state and finish.
-            setAllPlayers(updatedPlayers);
-            setNewsFeed(updatedNewsFeed);
-            setHistory(prev => [finalSession, ...prev].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-            
+            if (updatedNewsFeed.length > newsFeed.length) {
+                await saveNewsToDB(updatedNewsFeed);
+                setNewsFeed(updatedNewsFeed);
+            }
+
+            await saveHistoryToDB([finalSession]);
+            setHistory(prev => [finalSession, ...prev]);
+
             setActiveSession(null);
-            setSyncStatus('synced');
             navigate('/');
         } catch (error) {
-            console.error("Critical Error saving session to cloud:", error);
-            setSyncStatus('error');
-            alert("Failed to save session to the cloud. Please check your internet connection and try again. Your data is safe on this device for now.");
-            // Do NOT clear the active session. Let the user retry.
+            console.error("Error ending session:", error);
+            alert("Error saving data. Please check your connection.");
         } finally {
             setIsSaving(false);
         }

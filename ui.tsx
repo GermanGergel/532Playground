@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useApp } from './context';
@@ -63,31 +64,6 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, 
   );
 };
 
-const SyncStatusIndicator: React.FC = () => {
-    const { syncStatus } = useApp();
-    
-    const config = {
-        synced: { color: '#00F2FE', animation: '', title: 'All data synced to cloud' },
-        syncing: { color: '#FFDC00', animation: 'animate-pulse', title: 'Syncing data with cloud...' },
-        error: { color: '#FF4136', animation: '', title: 'Cloud sync failed. Data is saved locally. Check internet connection.' },
-    };
-
-    const currentStatus = config[syncStatus] || config.synced;
-
-    return (
-        <div 
-            className={`absolute top-1 right-3 w-2.5 h-2.5 rounded-full ${currentStatus.animation}`}
-            style={{ 
-                backgroundColor: currentStatus.color,
-                boxShadow: `0 0 5px ${currentStatus.color}`,
-                transition: 'background-color 0.5s ease',
-            }}
-            title={currentStatus.title}
-        />
-    );
-};
-
-
 export const BottomNav: React.FC = () => {
     const t = useTranslation();
     const { activeSession, language } = useApp();
@@ -101,8 +77,7 @@ export const BottomNav: React.FC = () => {
 
     return (
         <div className="fixed bottom-4 inset-x-0 px-4 z-50">
-            <nav className="relative max-w-md mx-auto h-16 flex justify-around items-center bg-dark-surface/40 backdrop-blur-xl border border-dark-accent-start/40 rounded-full shadow-[0_0_20px_rgba(0,242,254,0.3)]">
-                <SyncStatusIndicator />
+            <nav className="max-w-md mx-auto h-16 flex justify-around items-center bg-dark-surface/40 backdrop-blur-xl border border-dark-accent-start/40 rounded-full shadow-[0_0_20px_rgba(0,242,254,0.3)]">
                 <NavLink to="/" className={({isActive}) => `${commonClass} ${isActive ? activeClass : ''}`}>
                     <Home className="mb-1"/>
                     <span className={`${navTextSize} font-medium`}>{t.navHome}</span>

@@ -1,4 +1,3 @@
-
 import { loadCustomAudio } from './db';
 
 // --- HYBRID AUDIO SYSTEM ---
@@ -141,9 +140,7 @@ export const playAnnouncement = async (key: string, fallbackText: string, active
     }
 };
 
-// --- IMAGE OPTIMIZATION LOGIC (UPDATED) ---
-// TUNED FOR QUALITY: 1600px width + higher quality JPEG settings.
-// This ensures images look crisp on Retina displays and exports.
+// Image Processing Utility (Unchanged)
 export const processPlayerImageFile = (file: File): Promise<{ cardImage: string; avatarImage: string }> => {
     return new Promise((resolve, reject) => {
         const objectUrl = URL.createObjectURL(file);
@@ -153,8 +150,7 @@ export const processPlayerImageFile = (file: File): Promise<{ cardImage: string;
             try {
                 const cardCanvas = document.createElement('canvas');
                 const cardCtx = cardCanvas.getContext('2d');
-                
-                const maxWidth = 1600; 
+                const maxWidth = 2560; 
                 let { width, height } = img;
                 
                 if (width > maxWidth) {
@@ -166,8 +162,7 @@ export const processPlayerImageFile = (file: File): Promise<{ cardImage: string;
                 cardCanvas.height = height;
                 cardCtx?.drawImage(img, 0, 0, width, height);
                 
-                // QUALITY INCREASED: 0.92 provides excellent quality for detailed cards.
-                const cardImage = cardCanvas.toDataURL('image/jpeg', 0.92);
+                const cardImage = cardCanvas.toDataURL('image/jpeg', 0.95);
 
                 const avatarCanvas = document.createElement('canvas');
                 const avatarCtx = avatarCanvas.getContext('2d');
@@ -180,8 +175,7 @@ export const processPlayerImageFile = (file: File): Promise<{ cardImage: string;
                 const sy = (cardCanvas.height - side) / 8; 
                 
                 avatarCtx.drawImage(cardCanvas, sx, sy, side, side, 0, 0, side, side);
-                // QUALITY INCREASED: 0.88 is great for smaller avatars.
-                const avatarImage = avatarCanvas.toDataURL('image/jpeg', 0.88);
+                const avatarImage = avatarCanvas.toDataURL('image/jpeg', 0.95);
 
                 resolve({ cardImage, avatarImage });
 
