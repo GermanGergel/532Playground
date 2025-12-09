@@ -46,6 +46,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // --- INITIAL DATA LOAD (Now handled by appInitializer service) ---
   React.useEffect(() => {
+    // FAIL-SAFE: Force loading to stop after 7 seconds if DB hangs
+    const safetyTimer = setTimeout(() => {
+        if (isLoading) {
+            console.warn("Forcing app load due to timeout.");
+            setIsLoading(false);
+        }
+    }, 7000);
+
     const initApp = async () => {
         try {
             const initialState = await initializeAppState();
@@ -67,6 +75,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     initApp();
+    
+    return () => clearTimeout(safetyTimer);
   }, []);
 
   // --- PERSISTENCE EFFECT HOOKS (Save to DB) ---

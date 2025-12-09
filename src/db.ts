@@ -51,10 +51,10 @@ const logStorageMode = () => {
 
 // --- TIMEOUT HELPER ---
 // Wraps a promise with a timeout. If the promise takes too long, it rejects.
-const withTimeout = <T>(promise: Promise<T>, ms: number = 3000): Promise<T> => {
+const withTimeout = (promise: Promise<any> | PromiseLike<any>, ms: number = 3000): Promise<any> => {
     return Promise.race([
-        promise,
-        new Promise<T>((_, reject) => 
+        Promise.resolve(promise),
+        new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Database Request Timeout')), ms)
         )
     ]);
@@ -562,7 +562,7 @@ export const getSessionAnthemUrl = async (): Promise<string | null> => {
         const { data, error } = await withTimeout(supabase!.storage.from(MUSIC_BUCKET).list());
         if (error) throw error;
         
-        const anthemFile = data.find(file => file.name === ANTHEM_FILENAME);
+        const anthemFile = data.find((file: any) => file.name === ANTHEM_FILENAME);
         if (anthemFile) {
             const { data: urlData } = supabase!.storage.from(MUSIC_BUCKET).getPublicUrl(ANTHEM_FILENAME);
             return `${urlData.publicUrl}?t=${new Date(anthemFile.updated_at).getTime()}`;
