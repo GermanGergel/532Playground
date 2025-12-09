@@ -1,5 +1,5 @@
 import { Session, Player, NewsItem, BadgeType } from '../types';
-import { Language } from './translations/index';
+import { Language } from '../translations/index';
 import {
     loadPlayersFromDB,
     loadActiveSessionFromDB,
