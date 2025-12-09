@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Player, PlayerStatus } from '../types';
 import { Card, useTranslation } from '../ui';
@@ -139,7 +140,7 @@ export const BestSessionCard: React.FC<{ player: Player }> = ({ player }) => {
     const records = player.records;
     const cardClass = "border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)]";
 
-    if (!records || (records.bestGoalsInSession.value === 0 && records.bestAssistsInSession.value === 0 && records.bestWinRateInSession.value === 0)) {
+    if (!records) {
         return null;
     }
 

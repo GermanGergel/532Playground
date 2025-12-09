@@ -7,7 +7,6 @@ import { getSessionAnthemUrl, loadSinglePlayerFromDB } from '../db';
 import { PublicPlayerCard } from '../components/PublicPlayerCard';
 import { useApp } from '../context';
 import { Language } from '../translations/index';
-import { Play } from '../icons';
 
 const MusicLoader: React.FC<{ onInteract: () => void }> = ({ onInteract }) => {
     const t = useTranslation();
@@ -25,16 +24,10 @@ const MusicLoader: React.FC<{ onInteract: () => void }> = ({ onInteract }) => {
                     </svg>
                 </div>
                 
-                {/* Content with Play Icon */}
+                {/* Content - Just Text, No Icon */}
                 <div className="flex flex-col items-center justify-center z-10">
                     <h1 className="text-5xl font-black text-[#00F2FE] tracking-tighter" style={{ textShadow: '0 0 15px rgba(0, 242, 254, 0.5)' }}>532</h1>
                     <h2 className="text-xl font-bold text-white tracking-[0.2em] mt-1">PLAYGROUND</h2>
-                    
-                    {/* Pulsing Play Icon */}
-                    <div className="mt-4 flex items-center justify-center relative">
-                        <div className="absolute inset-0 bg-dark-accent-start/20 rounded-full animate-ping"></div>
-                        <Play className="w-12 h-12 text-[#00F2FE] fill-[#00F2FE] relative z-10 drop-shadow-[0_0_10px_rgba(0,242,254,0.8)]" />
-                    </div>
                 </div>
                 
                 {/* CTA Text */}

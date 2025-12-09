@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { Button, Modal, useTranslation, ToggleSwitch } from '../ui';
 import { Player, SkillType, PlayerStatus, PlayerTier } from '../types';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
+import html2canvas from 'html2canvas';
 
 // --- PLAYER ADD MODAL ---
 export interface PlayerAddModalProps {
@@ -83,7 +84,6 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
     const [currentSkills, setCurrentSkills] = React.useState<SkillType[]>([]);
     const [activeTab, setActiveTab] = React.useState<'info' | 'skills'>('info');
     
-    // Tier calculation logic duplicated to avoid circular dependencies with services
     const getTierForRating = (rating: number): PlayerTier => {
         if (rating >= 89) return PlayerTier.Legend;
         if (rating >= 79) return PlayerTier.Elite;
@@ -99,7 +99,7 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
             setCountryCode(playerToEdit.countryCode || '');
             setRating(playerToEdit.rating > 0 ? playerToEdit.rating : '');
             setCurrentSkills(playerToEdit.skills || []);
-            setActiveTab('info'); // Reset to first tab on open
+            setActiveTab('info'); 
         }
     }, [isOpen, playerToEdit]);
 
@@ -127,7 +127,6 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
         const newRating = typeof rating === 'number' ? rating : playerToEdit.rating;
         const newTier = getTierForRating(newRating);
 
-        // LOGIC CHANGE: If rating is set and valid (>0), automatically confirm the player
         let newStatus = playerToEdit.status;
         if (newRating > 0) {
             newStatus = PlayerStatus.Confirmed;
@@ -141,7 +140,7 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
             rating: newRating,
             tier: newTier,
             skills: currentSkills,
-            status: newStatus, // Automatically updated status
+            status: newStatus,
         };
         onSave(player);
         onClose();
@@ -161,7 +160,6 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
                 {activeTab === 'info' && (
                      <div className="space-y-3">
                         <input type="text" value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder={t.nickname} className={inputClasses} />
-                        {/* FIX: Corrected a typo in the onChange handler for the surname input. */}
                         <input type="text" value={surname} onChange={(e) => setSurname(e.target.value)} placeholder={t.surname} className={inputClasses} />
                         <input type="text" value={countryCode} onChange={(e) => setCountryCode(e.target.value)} placeholder="Country (e.g., UA, US)" className={inputClasses} />
                         <input type="number" value={rating} onChange={handleRatingChange} placeholder="Rating (0-100)" className={inputClasses} />
@@ -200,30 +198,50 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
     const t = useTranslation();
     const shareUrl = new URL(`/public-profile/${player.id}`, window.location.origin).href;
     const countryCodeAlpha2 = player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null;
+    const cardRef = useRef<HTMLDivElement>(null);
+    const [isSharing, setIsSharing] = useState(false);
     
-    // QR Code URL (using a free API for client-side generation)
-    // Dark background (1A1D24) and Neon Cyan (00F2FE) foreground
     const encodedUrl = encodeURIComponent(shareUrl);
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedUrl}&color=00F2FE&bgcolor=1A1D24&margin=10`;
 
-    const handleCopy = async () => {
-        await navigator.clipboard.writeText(shareUrl);
-        alert(t.profileLinkCopied);
-    };
+    const handleShare = async () => {
+        if (isSharing || !cardRef.current) return;
+        setIsSharing(true);
 
-    const handleNativeShare = async () => {
-        if (navigator.share) {
-            try {
+        try {
+            // Wait for images to load
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            const canvas = await html2canvas(cardRef.current, {
+                backgroundColor: '#1A1D24',
+                scale: 3,
+                useCORS: true,
+                logging: false,
+            });
+
+            const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
+            if (!blob) throw new Error('Failed to create image');
+
+            const file = new File([blob], `532_Access_${player.nickname}.png`, { type: 'image/png' });
+
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share({
-                    title: `532 Playground Profile: ${player.nickname}`,
-                    text: `Check out ${player.nickname}'s player card!\n${shareUrl}`, // URL in text body for Telegram
-                    url: shareUrl,
+                    files: [file],
+                    title: `532 Profile: ${player.nickname}`,
+                    text: `Check out ${player.nickname}'s player card on 532 Playground!\n\n🔗 ${shareUrl}`,
                 });
-            } catch (error: any) {
-                if (error.name !== 'AbortError') console.error('Share failed:', error);
+            } else {
+                // Fallback: Copy link
+                await navigator.clipboard.writeText(shareUrl);
+                alert(t.profileLinkCopied);
             }
-        } else {
-            handleCopy();
+        } catch (error) {
+            console.error("Sharing failed:", error);
+            // Fallback
+            await navigator.clipboard.writeText(shareUrl);
+            alert(t.profileLinkCopied);
+        } finally {
+            setIsSharing(false);
         }
     };
 
@@ -232,50 +250,67 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
             isOpen={isOpen} 
             onClose={onClose}
             size="xs"
-            containerClassName="!p-0 border border-dark-accent-start/40 shadow-[0_0_30px_rgba(0,242,254,0.25)] bg-dark-surface"
+            containerClassName="!p-0 bg-transparent border-none shadow-none"
             hideCloseButton
         >
-            <div className="relative overflow-hidden">
-                {/* Header Section */}
-                <div className="bg-dark-bg p-6 text-center border-b border-white/10 relative">
-                    <button onClick={onClose} className="absolute top-3 right-3 text-dark-text-secondary hover:text-white">&times;</button>
-                    <h3 className="text-sm font-bold tracking-[0.2em] text-dark-accent-start uppercase mb-1">{t.shareAccessCard}</h3>
-                    <div className="flex flex-col items-center mt-4">
-                        <div className="w-20 h-20 rounded-full border-4 border-dark-accent-start shadow-[0_0_15px_rgba(0,242,254,0.4)] overflow-hidden bg-dark-surface mb-3">
-                             {player.photo ? (
-                                <img src={player.photo} alt={player.nickname} className="w-full h-full object-cover" />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-gray-700 text-2xl font-bold">{player.nickname[0]}</div>
-                            )}
-                        </div>
-                        <h2 className="text-2xl font-black uppercase text-white tracking-tight">{player.nickname}</h2>
-                        <div className="flex items-center gap-2 mt-1">
-                            {countryCodeAlpha2 && (
-                                <img 
-                                    src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`}
-                                    alt="flag"
-                                    className="w-4 h-auto rounded-sm opacity-80"
-                                />
-                            )}
-                            <span className="text-sm font-bold text-dark-text-secondary">OVG {player.rating}</span>
+            <div className="flex flex-col gap-4">
+                {/* The "Plaque" to capture */}
+                <div 
+                    ref={cardRef}
+                    className="relative overflow-hidden rounded-2xl bg-[#1A1D24] border-2 border-dark-accent-start shadow-[0_0_30px_rgba(0,242,254,0.4)]"
+                >
+                    {/* Header Section */}
+                    <div className="bg-dark-surface p-6 text-center border-b border-white/10 relative">
+                        <h3 className="text-[10px] font-black tracking-[0.3em] text-dark-accent-start uppercase mb-1 drop-shadow-[0_0_5px_rgba(0,242,254,0.8)]">
+                            OFFICIAL ACCESS CARD
+                        </h3>
+                        <div className="flex flex-col items-center mt-4">
+                            <div className="w-24 h-24 rounded-full border-4 border-dark-accent-start shadow-[0_0_20px_rgba(0,242,254,0.5)] overflow-hidden bg-dark-bg mb-3">
+                                 {player.photo ? (
+                                    <img src={player.photo} alt={player.nickname} className="w-full h-full object-cover" crossOrigin="anonymous" />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center bg-gray-700 text-3xl font-bold">{player.nickname[0]}</div>
+                                )}
+                            </div>
+                            <h2 className="text-3xl font-black uppercase text-white tracking-tight drop-shadow-md">{player.nickname}</h2>
+                            <div className="flex items-center gap-2 mt-1 px-3 py-1 bg-white/5 rounded-full border border-white/10">
+                                {countryCodeAlpha2 && (
+                                    <img 
+                                        src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`}
+                                        alt="flag"
+                                        className="w-5 h-auto rounded-sm opacity-90"
+                                        crossOrigin="anonymous"
+                                    />
+                                )}
+                                <span className="text-sm font-bold text-[#00F2FE] tracking-wider">OVG {player.rating}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {/* QR Section */}
-                <div className="p-6 flex flex-col items-center bg-dark-surface">
-                    <div className="p-1 bg-gradient-to-br from-dark-accent-start to-dark-accent-end rounded-xl shadow-lg">
-                        <div className="bg-[#1A1D24] p-2 rounded-lg">
-                            <img src={qrCodeUrl} alt="QR Code" className="w-40 h-40 rounded-md" />
+                    {/* QR Section */}
+                    <div className="p-6 flex flex-col items-center bg-[#15171C]">
+                        <div className="p-1.5 bg-gradient-to-br from-dark-accent-start to-dark-accent-end rounded-xl shadow-lg">
+                            <div className="bg-[#1A1D24] p-2 rounded-lg">
+                                <img src={qrCodeUrl} alt="QR Code" className="w-40 h-40 rounded-md" crossOrigin="anonymous" />
+                            </div>
                         </div>
+                        <p className="text-[10px] font-bold text-dark-text-secondary uppercase tracking-[0.2em] mt-4 animate-pulse">{t.scanToOpen}</p>
                     </div>
-                    <p className="text-[10px] font-bold text-dark-text-secondary uppercase tracking-widest mt-4 animate-pulse">{t.scanToOpen}</p>
+                    
+                    {/* Watermark for image */}
+                    <div className="absolute bottom-2 right-3 opacity-30 text-[8px] font-mono text-white">
+                        532 PLAYGROUND
+                    </div>
                 </div>
 
                 {/* Actions */}
-                <div className="p-4 grid grid-cols-2 gap-3 bg-dark-bg/50 border-t border-white/5">
-                    <Button variant="secondary" onClick={handleCopy} className="text-xs !py-3">{t.copyLink}</Button>
-                    <Button variant="primary" onClick={handleNativeShare} className="text-xs !py-3 !text-dark-bg font-black">{t.shareViaApp}</Button>
+                <div className="grid grid-cols-2 gap-3">
+                    <Button variant="secondary" onClick={onClose} className="text-sm !py-3 font-bold bg-black/50 backdrop-blur-md border border-white/10">
+                        {t.cancel}
+                    </Button>
+                    <Button variant="primary" onClick={handleShare} disabled={isSharing} className="text-sm !py-3 !text-dark-bg font-black shadow-[0_0_20px_rgba(0,242,254,0.4)]">
+                        {isSharing ? 'GENERATING...' : t.shareViaApp}
+                    </Button>
                 </div>
             </div>
         </Modal>

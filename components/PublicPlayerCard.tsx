@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Player, PlayerTier, PlayerStatus, BadgeType, PlayerForm, SkillType } from '../types';
 import { getPlayerKeyStats } from '../services/statistics';
@@ -30,21 +31,22 @@ const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
     }
 };
 
-// Read-only version of the main PlayerCard, identical to the admin panel one
+// Read-only version of the main PlayerCard
 const ReadOnlyPlayerCard: React.FC<{ player: Player }> = ({ player }) => {
     const t = useTranslation();
     const countryCodeAlpha2 = React.useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
     const badgeList = player.badges ? (Object.keys(player.badges) as BadgeType[]) : [];
     
-    const cardClass = "border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)]";
+    // FIX: merged shadow, border, and rounded into one class string applied to the overflow-hidden container
+    const cardClass = "relative rounded-3xl overflow-hidden text-white p-4 bg-dark-surface border border-white/10 shadow-[0_0_20px_rgba(0,242,254,0.3)]";
 
     return (
         <div>
-            <div className={`relative rounded-3xl h-[440px] overflow-hidden text-white p-4 bg-dark-surface ${cardClass}`}>
+            <div className={cardClass}>
                 {player.playerCard && <div className="absolute inset-0 w-full h-full bg-cover bg-no-repeat" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }} />}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
                 <div className="absolute top-24 left-4 z-20"><div className="space-y-4">{(player.skills || []).map(skill => (<div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}><StarIcon className="w-4 h-4 text-[#00F2FE]" /><span className="font-bold text-xs text-white tracking-wider">{skillAbbreviations[skill]}</span></div>))}</div></div>
-                <div className="relative z-10 h-full flex flex-col justify-between">
+                <div className="relative z-10 h-full flex flex-col justify-between" style={{ minHeight: '400px' }}>
                     <div className="flex justify-between items-start">
                         <div>
                             <p style={{ color: '#00F2FE' }} className="text-base font-black leading-none">532</p>
