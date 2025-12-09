@@ -183,7 +183,7 @@ export const generateDemoData = () => {
     }
 
     // 5. Calculate Stats and Update Players
-    const { allPlayersStats } = calculateAllStats(session);
+    const { allPlayersStats } = calculateAllStats(session, initialPlayers);
     
     const badgesByPlayer = new Map<string, BadgeType[]>();
     allPlayersStats.forEach(stats => {

@@ -374,31 +374,26 @@ export const useGameManager = () => {
                 newsFeed: newsFeed,
             });
 
-            // FINAL FIX: Remove the massive eventLog from the object being saved to the database.
-            // This is the primary cause of timeouts on large sessions.
-            const sessionForDb: any = {
+            const sessionForDb: Session = {
                 ...finalSession,
                 playerPool: (finalSession.playerPool as Player[]).map(p => p.id),
-                eventLog: [], // The critical change
+                eventLog: [], // The critical change to reduce payload size
             };
             
-            // 1. Save session history. If this fails, abort.
             await saveHistoryToDB([sessionForDb]);
-            setHistory(prev => [finalSession, ...prev]);
             
-            // 2. Save player data. This is now more reliable with one-by-one saves.
             if (playersToSave.length > 0) {
                 await savePlayersToDB(playersToSave);
-                setAllPlayers(updatedPlayers); 
             }
 
-            // 3. Save news feed. Unlikely to fail.
             if (updatedNewsFeed.length > newsFeed.length) {
                 await saveNewsToDB(updatedNewsFeed);
-                setNewsFeed(updatedNewsFeed);
             }
+            
+            setHistory(prev => [sessionForDb, ...prev].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+            setAllPlayers(updatedPlayers); 
+            setNewsFeed(updatedNewsFeed);
 
-            // 4. If all saves were successful, clear the active session and navigate home.
             setActiveSession(null);
             navigate('/');
         } catch (error) {

@@ -26,7 +26,7 @@ export const processFinishedSession = ({
     newsFeed: NewsItem[];
 }): ProcessedSessionResult => {
 
-    const { allPlayersStats } = calculateAllStats(session);
+    const { allPlayersStats } = calculateAllStats(session, oldPlayers);
     const playerStatsMap = new Map(allPlayersStats.map(stat => [stat.player.id, stat]));
     
     // --- 1. UPDATE PLAYER LIFETIME STATS ---

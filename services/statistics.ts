@@ -1,4 +1,3 @@
-
 import { Session, Player, Team } from '../types';
 
 // Statistics Calculation Utilities
@@ -31,11 +30,20 @@ interface TeamStats {
 
 const getPlayerById = (id: string, players: Player[]) => players.find(p => p.id === id);
 
-export const calculateAllStats = (session: Session) => {
+export const calculateAllStats = (session: Session, allPlayers: Player[]) => {
     // Safeguard: ensure teams exists (handle corrupted legacy data)
     const teams = session.teams || [];
-    const playerPool = session.playerPool || [];
     const games = session.games || [];
+
+    let playerPool: Player[];
+    if (session.playerPool && session.playerPool.length > 0 && typeof session.playerPool[0] === 'string') {
+        const allPlayersMap = new Map(allPlayers.map(p => [p.id, p]));
+        playerPool = (session.playerPool as string[])
+            .map(id => allPlayersMap.get(id))
+            .filter(Boolean) as Player[];
+    } else {
+        playerPool = (session.playerPool as Player[]) || [];
+    }
 
     const playerTeamMap = new Map<string, Team>();
     teams.forEach(team => {
@@ -44,8 +52,7 @@ export const calculateAllStats = (session: Session) => {
         });
     });
 
-    // FIX: Cast playerPool to Player[] as getPlayerById expects Player[].
-    const allPlayersInSession = teams.flatMap(t => t.playerIds).map(pid => getPlayerById(pid, playerPool as Player[])).filter(Boolean) as Player[];
+    const allPlayersInSession = teams.flatMap(t => t.playerIds).map(pid => getPlayerById(pid, playerPool)).filter(Boolean) as Player[];
 
     const playerStats: PlayerStats[] = allPlayersInSession.map(player => {
         const team = playerTeamMap.get(player.id);

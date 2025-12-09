@@ -5,6 +5,7 @@ import { Page, Button, Modal, useTranslation } from '../ui';
 import { shareOrDownloadImages, exportSessionAsJson } from '../services/export';
 import { BrandedHeader, newId } from './utils';
 import { ShareableReport } from './StatisticsScreen';
+import { Player } from '../types';
 
 // Re-defining BrandedShareableReport locally to avoid import issues
 const BrandedShareableReport: React.FC<{
@@ -41,7 +42,7 @@ const BrandedShareableReport: React.FC<{
 
 export const SessionReportScreen: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-    const { history, isLoading } = useApp();
+    const { history, isLoading, allPlayers } = useApp();
     const t = useTranslation();
     const navigate = useNavigate();
     const [isDownloadModalOpen, setIsDownloadModalOpen] = React.useState(false);
@@ -112,7 +113,7 @@ export const SessionReportScreen: React.FC = () => {
                  <BrandedHeader className="mb-4" />
                  <p className="text-dark-text-secondary mb-6">{new Date(session.date).toLocaleDateString('en-GB')}</p>
                 
-                <ShareableReport session={session} />
+                <ShareableReport session={session} allPlayers={allPlayers} />
                 
                 <div className="mt-auto pt-6 w-full flex flex-col gap-3">
                     <Button variant="secondary" onClick={() => setIsDownloadModalOpen(true)} className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.saveTable}</Button>
@@ -130,7 +131,7 @@ export const SessionReportScreen: React.FC = () => {
                         <BrandedHeader isExport={true} />
                         <p className="font-chakra text-dark-text mt-8 text-xl font-medium tracking-wider uppercase">{displayDate}</p>
                     </div>
-                    <ShareableReport session={session} visibleSection="standings" isExport={true} />
+                    <ShareableReport session={session} allPlayers={allPlayers} visibleSection="standings" isExport={true} />
                 </BrandedShareableReport>
 
                 <BrandedShareableReport 
@@ -143,13 +144,13 @@ export const SessionReportScreen: React.FC = () => {
                 >
                     <div className="flex w-full items-start gap-4">
                         <div className="w-[60%] flex flex-col items-center">
-                            <ShareableReport session={session} visibleSection="players" isExport={true} />
+                            <ShareableReport session={session} allPlayers={allPlayers} visibleSection="players" isExport={true} />
                             <div className="mt-4 font-bold text-lg text-white">
                                 #532Playground #SessionReport
                             </div>
                         </div>
                         <div className="w-[40%]">
-                            <ShareableReport session={session} visibleSection="rounds" isExport={true} />
+                            <ShareableReport session={session} allPlayers={allPlayers} visibleSection="rounds" isExport={true} />
                         </div>
                     </div>
                 </BrandedShareableReport>
