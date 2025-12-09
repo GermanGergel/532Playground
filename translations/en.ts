@@ -1,3 +1,4 @@
+
 export const en = {
     // General
     loading: "Loading 532 Playground...",
@@ -44,7 +45,7 @@ export const en = {
     sortByName: "Name",
     sortByRating: "Rating",
     sortByDate: "Date",
-    clickToEnter: "Click to Enter",
+    clickToEnter: "TAP TO START",
     // Navigation
     navHome: "Home",
     navLive: "Live",
@@ -284,6 +285,13 @@ export const en = {
     changeBackground: "Change Background",
     selectTemplate: "Select Template",
     generateAndShare: "Download",
+
+    // Share Modal
+    shareAccessCard: "Player Access Card",
+    scanToOpen: "SCAN TO OPEN",
+    copyLink: "Copy Link",
+    shareViaApp: "Share via App",
+    profileLinkCopied: "Profile link copied to clipboard!",
 
     // Skills
     skill_goalkeeper: "Goalkeeper",

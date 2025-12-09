@@ -7,7 +7,7 @@ import { PlayerCard, BadgeIcon } from '../features';
 import { InfoIcon, StarIcon, XCircle } from '../icons';
 import { Player, BadgeType, SkillType, PlayerStatus } from '../types';
 import { getTierForRating } from '../services/rating';
-import { PlayerEditModal } from '../modals';
+import { PlayerEditModal, ShareProfileModal } from '../modals';
 import { processPlayerImageFile } from '../lib';
 import { saveSinglePlayerToDB, uploadPlayerImage, deletePlayerImage } from '../db';
 import html2canvas from 'html2canvas';
@@ -23,6 +23,7 @@ export const PlayerProfileScreen: React.FC = () => {
     const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
     const [isInfoModalOpen, setIsInfoModalOpen] = React.useState(false);
+    const [isShareModalOpen, setIsShareModalOpen] = React.useState(false);
     const [isExporting, setIsExporting] = React.useState(false);
     const [playerForExport, setPlayerForExport] = React.useState<Player | null>(null);
     
@@ -43,29 +44,9 @@ export const PlayerProfileScreen: React.FC = () => {
         }
     }, [player, allPlayers, id, navigate]);
 
-    const handleShareProfile = async () => {
+    const handleShareProfile = () => {
         if (!player) return;
-    
-        const shareUrl = new URL(`/public-profile/${player.id}`, window.location.origin).href;
-    
-        if (navigator.share) {
-            try {
-                await navigator.share({
-                    title: `532 Playground Profile: ${player.nickname}`,
-                    text: `Check out ${player.nickname}'s player card!\n${shareUrl}`, // Include URL in text for Telegram/WhatsApp
-                    url: shareUrl,
-                });
-            } catch (error: any) {
-                if (error.name !== 'AbortError') {
-                    console.error('Share API failed:', error);
-                    await navigator.clipboard.writeText(shareUrl);
-                    alert('Sharing failed. Link copied to clipboard!');
-                }
-            }
-        } else {
-            await navigator.clipboard.writeText(shareUrl);
-            alert('Link copied to clipboard!');
-        }
+        setIsShareModalOpen(true);
     };
 
     const handleDownloadCard = async () => {
@@ -247,6 +228,7 @@ export const PlayerProfileScreen: React.FC = () => {
                 </Button>
             </PageHeader>
             <PlayerEditModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} onSave={handleSavePlayer} playerToEdit={player} />
+            <ShareProfileModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} player={player} />
 
             <Modal isOpen={isDeleteModalOpen} onClose={() => setIsDeleteModalOpen(false)} size="sm">
                 <h2 className="text-xl font-bold mb-4">{t.deletePlayer}</h2>

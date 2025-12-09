@@ -45,7 +45,7 @@ export const ua = {
     sortByName: "Ім'я",
     sortByRating: "Рейтинг",
     sortByDate: "Дата",
-    clickToEnter: "Натисніть, щоб увійти",
+    clickToEnter: "НАТИСНИ, ЩОБ ПОЧАТИ",
     // Navigation
     navHome: "Головна",
     navLive: "Матч",
@@ -116,7 +116,7 @@ export const ua = {
     allPlayersAssigned: "Всі гравці розподілені.",
     // History Screen
     historyTitle: "Історія сесій",
-    noSessionsFound: "Сесії не знайдено.",
+    noSessionsFound: "Сессии не знайдено.",
     deleteSessionPrompt: "Ви впевнені, що хочете видалити цю сесію?",
     // LiveMatch Screen
     liveMatch: "Поточний матч",
@@ -286,6 +286,13 @@ export const ua = {
     changeBackground: "Змінити Фон",
     selectTemplate: "Виберіть Шаблон",
     generateAndShare: "Завантажити",
+
+    // Share Modal
+    shareAccessCard: "Карта Доступу Гравця",
+    scanToOpen: "СКАНУЙ ДЛЯ ВХОДУ",
+    copyLink: "Копіювати посилання",
+    shareViaApp: "Надіслати через...",
+    profileLinkCopied: "Посилання на профіль скопійовано!",
 
     // Skills
     skill_goalkeeper: "Воротар",

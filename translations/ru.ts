@@ -45,7 +45,7 @@ export const ru = {
     sortByName: "Имя",
     sortByRating: "Рейтинг",
     sortByDate: "Дата",
-    clickToEnter: "Нажмите, чтобы войти",
+    clickToEnter: "НАЖМИ, ЧТОБЫ НАЧАТЬ",
     // Navigation
     navHome: "Главная",
     navLive: "Матч",
@@ -268,7 +268,7 @@ export const ru = {
     defaultAudio: "Стандарт",
     upload: "Загрузить",
     replace: "Заменить",
-    deleteAudio: "Удалить аудио",
+    deleteAudio: "Удалить аудіо",
     preview: "Прослушать",
     uploading: "Загрузка...",
     sessionAnthem: "Гимн сессии",
@@ -286,6 +286,13 @@ export const ru = {
     changeBackground: "Сменить Фон",
     selectTemplate: "Выберите Шаблон",
     generateAndShare: "Скачать",
+
+    // Share Modal
+    shareAccessCard: "Карта Доступа Игрока",
+    scanToOpen: "СКАНИРУЙ ДЛЯ ВХОДА",
+    copyLink: "Копировать ссылку",
+    shareViaApp: "Отправить через...",
+    profileLinkCopied: "Ссылка на профиль скопирована!",
 
     // Skills
     skill_goalkeeper: "Вратарь",

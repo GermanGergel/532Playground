@@ -45,7 +45,7 @@ export const vn = {
     sortByName: "Tên",
     sortByRating: "Xếp hạng",
     sortByDate: "Ngày",
-    clickToEnter: "Nhấn để vào",
+    clickToEnter: "CHẠM ĐỂ BẮT ĐẦU",
     // Navigation
     navHome: "Trang chủ",
     navLive: "Trực tiếp",
@@ -286,6 +286,13 @@ export const vn = {
     changeBackground: "Thay đổi nền",
     selectTemplate: "Chọn mẫu",
     generateAndShare: "Tải xuống",
+
+    // Share Modal
+    shareAccessCard: "Thẻ Truy cập Cầu thủ",
+    scanToOpen: "QUÉT ĐỂ MỞ",
+    copyLink: "Sao chép liên kết",
+    shareViaApp: "Chia sẻ qua Ứng dụng",
+    profileLinkCopied: "Đã sao chép liên kết hồ sơ!",
 
     // Skills
     skill_goalkeeper: "Thủ môn",

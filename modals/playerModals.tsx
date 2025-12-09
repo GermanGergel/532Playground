@@ -1,6 +1,8 @@
+
 import React from 'react';
 import { Button, Modal, useTranslation, ToggleSwitch } from '../ui';
 import { Player, SkillType, PlayerStatus, PlayerTier } from '../types';
+import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 
 // --- PLAYER ADD MODAL ---
 export interface PlayerAddModalProps {
@@ -181,6 +183,99 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
                  <div className="flex gap-3 mt-4">
                     <Button variant="secondary" onClick={onClose} className="w-full font-chakra font-bold text-xl tracking-wider !py-2">{t.cancel}</Button>
                     <Button variant="secondary" onClick={handleSave} className="w-full font-chakra font-bold text-xl tracking-wider !py-2">{t.saveChanges}</Button>
+                </div>
+            </div>
+        </Modal>
+    );
+};
+
+// --- SHARE PROFILE MODAL ---
+interface ShareProfileModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    player: Player;
+}
+
+export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, onClose, player }) => {
+    const t = useTranslation();
+    const shareUrl = new URL(`/public-profile/${player.id}`, window.location.origin).href;
+    const countryCodeAlpha2 = player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null;
+    
+    // QR Code URL (using a free API for client-side generation)
+    // Dark background (1A1D24) and Neon Cyan (00F2FE) foreground
+    const encodedUrl = encodeURIComponent(shareUrl);
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedUrl}&color=00F2FE&bgcolor=1A1D24&margin=10`;
+
+    const handleCopy = async () => {
+        await navigator.clipboard.writeText(shareUrl);
+        alert(t.profileLinkCopied);
+    };
+
+    const handleNativeShare = async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: `532 Playground Profile: ${player.nickname}`,
+                    text: `Check out ${player.nickname}'s player card!\n${shareUrl}`, // URL in text body for Telegram
+                    url: shareUrl,
+                });
+            } catch (error: any) {
+                if (error.name !== 'AbortError') console.error('Share failed:', error);
+            }
+        } else {
+            handleCopy();
+        }
+    };
+
+    return (
+        <Modal 
+            isOpen={isOpen} 
+            onClose={onClose}
+            size="xs"
+            containerClassName="!p-0 border border-dark-accent-start/40 shadow-[0_0_30px_rgba(0,242,254,0.25)] bg-dark-surface"
+            hideCloseButton
+        >
+            <div className="relative overflow-hidden">
+                {/* Header Section */}
+                <div className="bg-dark-bg p-6 text-center border-b border-white/10 relative">
+                    <button onClick={onClose} className="absolute top-3 right-3 text-dark-text-secondary hover:text-white">&times;</button>
+                    <h3 className="text-sm font-bold tracking-[0.2em] text-dark-accent-start uppercase mb-1">{t.shareAccessCard}</h3>
+                    <div className="flex flex-col items-center mt-4">
+                        <div className="w-20 h-20 rounded-full border-4 border-dark-accent-start shadow-[0_0_15px_rgba(0,242,254,0.4)] overflow-hidden bg-dark-surface mb-3">
+                             {player.photo ? (
+                                <img src={player.photo} alt={player.nickname} className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gray-700 text-2xl font-bold">{player.nickname[0]}</div>
+                            )}
+                        </div>
+                        <h2 className="text-2xl font-black uppercase text-white tracking-tight">{player.nickname}</h2>
+                        <div className="flex items-center gap-2 mt-1">
+                            {countryCodeAlpha2 && (
+                                <img 
+                                    src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`}
+                                    alt="flag"
+                                    className="w-4 h-auto rounded-sm opacity-80"
+                                />
+                            )}
+                            <span className="text-sm font-bold text-dark-text-secondary">OVG {player.rating}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* QR Section */}
+                <div className="p-6 flex flex-col items-center bg-dark-surface">
+                    <div className="p-1 bg-gradient-to-br from-dark-accent-start to-dark-accent-end rounded-xl shadow-lg">
+                        <div className="bg-[#1A1D24] p-2 rounded-lg">
+                            <img src={qrCodeUrl} alt="QR Code" className="w-40 h-40 rounded-md" />
+                        </div>
+                    </div>
+                    <p className="text-[10px] font-bold text-dark-text-secondary uppercase tracking-widest mt-4 animate-pulse">{t.scanToOpen}</p>
+                </div>
+
+                {/* Actions */}
+                <div className="p-4 grid grid-cols-2 gap-3 bg-dark-bg/50 border-t border-white/5">
+                    <Button variant="secondary" onClick={handleCopy} className="text-xs !py-3">{t.copyLink}</Button>
+                    <Button variant="primary" onClick={handleNativeShare} className="text-xs !py-3 !text-dark-bg font-black">{t.shareViaApp}</Button>
                 </div>
             </div>
         </Modal>

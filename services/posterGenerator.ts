@@ -44,7 +44,7 @@ export const generateAndSharePoster = async (options: PosterData) => {
         document.fonts.load(`400 ${S * 7}px "Orbitron"`),
         document.fonts.load(`bold ${S * 28}px "Teko"`),
         document.fonts.load(`700 ${S * 100}px "Orbitron"`),
-        document.fonts.load(`400 ${S * 25}px "Orbitron"`),
+        document.fonts.load(`700 ${S * 25}px "Orbitron"`), // Changed from 400 to 700 for DAY
         document.fonts.load(`bold ${S * 36}px "Teko"`),
         document.fonts.load(`400 ${S * 20}px "Teko"`),
         document.fonts.load(`900 ${S * 14}px "Chakra Petch"`),
@@ -121,7 +121,7 @@ export const generateAndSharePoster = async (options: PosterData) => {
 
     // "DAY" part (Small, right-aligned under "GAME")
     ctx.textAlign = 'right'; // Align to the right
-    ctx.font = `400 ${S * 25}px "Orbitron"`;
+    ctx.font = `700 ${S * 25}px "Orbitron"`; // Changed from 400 to 700 (Bold)
     ctx.letterSpacing = `${S * 15}px`; // Keep wide spacing for style
     ctx.fillText("DAY", gameRightEdge, titleCenterY + S * 40);
     
