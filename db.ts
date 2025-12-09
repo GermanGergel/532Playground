@@ -51,9 +51,10 @@ const logStorageMode = () => {
 
 // --- TIMEOUT HELPER ---
 // Wraps a promise with a timeout. If the promise takes too long, it rejects.
-const withTimeout = <T>(promise: Promise<T>, ms: number = 3000): Promise<T> => {
+// We use PromiseLike<any> to accept Supabase Builders without strict type fighting
+const withTimeout = <T>(promise: Promise<T> | PromiseLike<T>, ms: number = 3000): Promise<T> => {
     return Promise.race([
-        promise,
+        Promise.resolve(promise),
         new Promise<T>((_, reject) => 
             setTimeout(() => reject(new Error('Database Request Timeout')), ms)
         )
@@ -168,12 +169,15 @@ export const loadSinglePlayerFromDB = async (id: string): Promise<Player | null>
 
     try {
         // Wrap network call with timeout to prevent hanging
-        const { data, error } = await withTimeout(supabase!
+        const response = await withTimeout(supabase!
             .from('players')
             .select('*')
             .eq('id', id)
             .single());
             
+        // Explicitly cast response to any to avoid TS build errors with PostgrestBuilder types
+        const { data, error } = response as any;
+
         if (error) {
             if (error.code === 'PGRST116') { 
                 return null;
@@ -236,9 +240,13 @@ export const loadPlayersFromDB = async (): Promise<Player[] | undefined> => {
     if (isSupabaseConfigured()) {
         try {
             // Force timeout after 3s if Supabase is blocked/slow
-            const { data, error } = await withTimeout(supabase!
+            const response = await withTimeout(supabase!
                 .from('players')
                 .select('*'));
+            
+            // Explicitly cast response to any
+            const { data, error } = response as any;
+
             if (error) throw error;
             return data as Player[];
         } catch (error) {
@@ -306,10 +314,14 @@ export const saveHistoryToDB = async (history: Session[]) => {
 export const loadHistoryFromDB = async (): Promise<Session[] | undefined> => {
     if (isSupabaseConfigured()) {
         try {
-            const { data, error } = await withTimeout(supabase!
+            const response = await withTimeout(supabase!
                 .from('sessions')
                 .select('*')
                 .order('createdAt', { ascending: false }));
+            
+            // Explicitly cast response to any
+            const { data, error } = response as any;
+
             if (error) throw error;
             return data as Session[];
         } catch (error) {
@@ -353,10 +365,14 @@ export const saveNewsToDB = async (news: NewsItem[]) => {
 export const loadNewsFromDB = async (): Promise<NewsItem[] | undefined> => {
     if (isSupabaseConfigured()) {
         try {
-            const { data, error } = await withTimeout(supabase!
+            const response = await withTimeout(supabase!
                 .from('news')
                 .select('*')
                 .order('timestamp', { ascending: false }));
+            
+            // Explicitly cast response to any
+            const { data, error } = response as any;
+
             if (error) throw error;
             return data as NewsItem[];
         } catch (error) {
@@ -467,11 +483,14 @@ export const syncAndCacheAudioAssets = async () => {
     if (!isSupabaseConfigured()) return;
 
     try {
-        const { data: cloudFiles, error } = await withTimeout(supabase!.storage.from(AUDIO_BUCKET).list('', {
+        const response = await withTimeout(supabase!.storage.from(AUDIO_BUCKET).list('', {
             limit: 100,
             offset: 0,
             sortBy: { column: 'name', order: 'asc' },
         }), 5000); // 5s timeout for sync, it's non-blocking
+        
+        // Explicitly cast response to any
+        const { data: cloudFiles, error } = response as any;
         
         if (error) throw error;
         if (!cloudFiles) return;
@@ -559,10 +578,13 @@ export const getSessionAnthemUrl = async (): Promise<string | null> => {
         return await get<string>(localKey) || null;
     }
     try {
-        const { data, error } = await withTimeout(supabase!.storage.from(MUSIC_BUCKET).list());
+        const response = await withTimeout(supabase!.storage.from(MUSIC_BUCKET).list());
+        // Explicitly cast response to any
+        const { data, error } = response as any;
+
         if (error) throw error;
         
-        const anthemFile = data.find(file => file.name === ANTHEM_FILENAME);
+        const anthemFile = data.find((file: any) => file.name === ANTHEM_FILENAME);
         if (anthemFile) {
             const { data: urlData } = supabase!.storage.from(MUSIC_BUCKET).getPublicUrl(ANTHEM_FILENAME);
             return `${urlData.publicUrl}?t=${new Date(anthemFile.updated_at).getTime()}`;
