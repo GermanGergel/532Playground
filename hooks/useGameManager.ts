@@ -1,12 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
+import { useTranslation } from '../ui';
 import { Session, Game, GameStatus, Goal, GoalPayload, SubPayload, EventLogEntry, EventType, StartRoundPayload, Player, BadgeType, RotationMode, Team, SessionStatus } from '../types';
 import { playAnnouncement, initAudioContext } from '../lib';
 import { processFinishedSession } from '../services/sessionProcessor';
 import { newId } from '../screens/utils';
 import { savePlayersToDB, saveNewsToDB, saveHistoryToDB } from '../db';
-import { useTranslation } from '../ui';
 
 export const useGameManager = () => {
     const { activeSession, setActiveSession, setHistory, setAllPlayers, setNewsFeed, allPlayers: oldPlayersState, newsFeed, activeVoicePack } = useApp();
@@ -395,19 +395,25 @@ export const useGameManager = () => {
                 newsFeed: newsFeed,
             });
 
+            // Reordered Save Logic: Save most critical/largest data first.
+            
+            // 1. Save session history. If this fails, abort.
+            await saveHistoryToDB([finalSession]);
+            setHistory(prev => [finalSession, ...prev]);
+            
+            // 2. Save player data. This is now more reliable with one-by-one saves.
             if (playersToSave.length > 0) {
                 await savePlayersToDB(playersToSave);
                 setAllPlayers(updatedPlayers); 
             }
 
+            // 3. Save news feed. Unlikely to fail.
             if (updatedNewsFeed.length > newsFeed.length) {
                 await saveNewsToDB(updatedNewsFeed);
                 setNewsFeed(updatedNewsFeed);
             }
 
-            await saveHistoryToDB([finalSession]);
-            setHistory(prev => [finalSession, ...prev]);
-
+            // 4. If all saves were successful, clear the active session and navigate home.
             setActiveSession(null);
             navigate('/');
         } catch (error) {

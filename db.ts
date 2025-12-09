@@ -201,19 +201,16 @@ export const savePlayersToDB = async (players: Player[]) => {
     // Mode 1: Cloud
     if (isSupabaseConfigured()) {
         try {
-            // CRITICAL FIX: Split into VERY small chunks (2) to avoid Supabase payload size limits 
-            // especially with high-res base64 images. 
-            // Previous limit of 5 was still occasionally causing timeouts.
-            const CHUNK_SIZE = 2; 
-            for (let i = 0; i < realPlayers.length; i += CHUNK_SIZE) {
-                const chunk = realPlayers.slice(i, i + CHUNK_SIZE);
+            // ATOMIC UPDATE: Save players one by one. Slower, but much more reliable against payload size limits.
+            for (const player of realPlayers) {
                 const { error } = await supabase!
                     .from('players')
-                    .upsert(chunk, { onConflict: 'id' });
+                    .upsert(player, { onConflict: 'id' });
                 
-                if (error) throw error;
-                // Small delay to be nice to the database and prevent rate limits
-                await new Promise(resolve => setTimeout(resolve, 100));
+                if (error) {
+                    console.error(`Supabase Save Error (Single Player ${player.id}):`, error);
+                    throw error; // If one fails, the whole process fails to ensure data consistency.
+                }
             }
         } catch (error) {
             console.error("Supabase Save Error (Batch):", error);

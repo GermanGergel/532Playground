@@ -152,9 +152,10 @@ export const LiveMatchScreen: React.FC = () => {
             />
             {isSaving && (
                 <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center">
-                    <div className="flex flex-col items-center gap-4">
+                    <div className="flex flex-col items-center gap-4 text-center px-4">
                         <div className="w-12 h-12 border-4 border-dark-accent-start border-t-transparent rounded-full animate-spin"></div>
-                        <p className="text-white font-bold animate-pulse">SAVING TO CLOUD...</p>
+                        <p className="text-white font-bold animate-pulse">SAVING SESSION...</p>
+                        <p className="text-sm text-dark-text-secondary">This may take a moment. Please wait.</p>
                     </div>
                 </div>
             )}
