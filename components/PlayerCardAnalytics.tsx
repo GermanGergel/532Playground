@@ -137,12 +137,11 @@ export const ClubRankings: React.FC<{ player: Player }> = ({ player }) => {
 
 export const BestSessionCard: React.FC<{ player: Player }> = ({ player }) => {
     const t = useTranslation();
-    const records = player.records;
+    const records = player.records || { bestGoalsInSession: { value: 0 }, bestAssistsInSession: { value: 0 }, bestWinRateInSession: { value: 0 } };
     const cardClass = "border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)]";
 
-    if (!records) {
-        return null;
-    }
+    // REMOVED THE CONDITION THAT HID THE CARD IF VALUES WERE ZERO
+    // Now it always renders, showing 0s if no data.
 
     return (
         <Card title={t.bestSessionTitle} className={cardClass}>

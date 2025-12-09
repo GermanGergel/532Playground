@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -63,7 +64,8 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
         // Use standard padding for all cards for consistent spacing.
         const paddingClass = 'p-4';
 
-        return `rounded-2xl ${paddingClass} border border-dark-accent-start/30 ${bgClass} w-full`;
+        // Added overflow-hidden to prevent inner content from breaking out of rounded corners
+        return `rounded-2xl ${paddingClass} border border-dark-accent-start/30 ${bgClass} w-full overflow-hidden`;
     };
         
     const cardTitleClasses = "font-bold text-xl mb-4 text-dark-text";
@@ -82,7 +84,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                 style={{ boxShadow: isExport ? 'none' : '0 8px 25px -5px rgba(0, 242, 254, 0.1), 0 5px 10px -6px rgba(0, 242, 254, 0.1)' }}
             >
                 <h3 className={cardTitleClasses}>{t.teamStandings}</h3>
-                <table className={`w-full text-sm text-center ${isExport ? 'table-fixed' : ''}`}>
+                <table className="w-full text-sm text-center table-fixed">
                     <thead>
                         <tr className="text-dark-text-secondary">
                             <th className="text-left py-1 px-1 font-normal" style={{ width: '8%' }}>#</th>
@@ -122,24 +124,24 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                 style={{ boxShadow: isExport ? 'none' : '0 8px 25px -5px rgba(0, 242, 254, 0.1), 0 5px 10px -6px rgba(0, 242, 254, 0.1)' }}
              >
                 <h3 className={cardTitleClasses}>{t.playerStatistics}</h3>
-                <table className={`w-full text-sm text-center ${isExport ? 'table-fixed' : ''}`}>
+                <table className="w-full text-sm text-center table-fixed">
                    <thead>
                         <tr className="text-dark-text-secondary">
-                            <th className="text-left py-1 px-1 font-normal" style={{ width: '8%' }}>#</th>
-                            <th className="text-left py-1 px-1 font-normal" style={{ width: '28%' }}>{t.players}</th>
+                            <th className="text-left py-1 px-1 font-normal" style={{ width: '10%' }}>#</th>
+                            <th className="text-left py-1 px-1 font-normal" style={{ width: '35%' }}>{t.players}</th>
                             <th className="py-1 px-1 font-normal" style={{ width: '15%' }}>{t.team}</th>
-                            <th className="py-1 px-1 font-normal" style={{ width: '13%' }}>{t.thGP}</th>
-                            <th className="py-1 px-1 font-normal" style={{ width: '12%' }}>{t.thG}</th>
-                            <th className="py-1 px-1 font-normal" style={{ width: '12%' }}>{t.thA}</th>
-                            <th className="py-1 px-1 font-bold" style={{ width: '12%' }}>{t.thTotal}</th>
+                            <th className="py-1 px-1 font-normal" style={{ width: '10%' }}>{t.thGP}</th>
+                            <th className="py-1 px-1 font-normal" style={{ width: '10%' }}>{t.thG}</th>
+                            <th className="py-1 px-1 font-normal" style={{ width: '10%' }}>{t.thA}</th>
+                            <th className="py-1 px-1 font-bold" style={{ width: '10%' }}>{t.thTotal}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {sortedPlayers.map((stats, index) => (
                              <tr key={stats.player.id} className="border-t border-white/10">
                                 <td className="py-2 px-1 text-left">{index + 1}</td>
-                                {/* Truncate fix: max-w-0 forces the cell to respect the column width and use ellipsis for long names */}
-                                <td className="py-2 px-1 text-left font-semibold whitespace-nowrap overflow-hidden text-ellipsis max-w-0">
+                                {/* Truncate long names to prevent layout shift */}
+                                <td className="py-2 px-1 text-left font-semibold truncate pr-2" title={stats.player.nickname}>
                                     {stats.player.nickname}
                                 </td>
                                 <td className="py-2 px-1"><TeamAvatar team={stats.team} size="xxs" className={`mx-auto ${isExport ? 'translate-y-2' : ''}`} /></td>
