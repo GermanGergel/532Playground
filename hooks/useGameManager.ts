@@ -374,15 +374,16 @@ export const useGameManager = () => {
                 newsFeed: newsFeed,
             });
 
-            // Create a "lean" version of the session object for DB storage
-            // This replaces the full player objects in the pool with just their IDs
-            const sessionForDb: Omit<Session, 'playerPool'> & { playerPool: string[] } = {
+            // FINAL FIX: Remove the massive eventLog from the object being saved to the database.
+            // This is the primary cause of timeouts on large sessions.
+            const sessionForDb: any = {
                 ...finalSession,
                 playerPool: (finalSession.playerPool as Player[]).map(p => p.id),
+                eventLog: [], // The critical change
             };
             
             // 1. Save session history. If this fails, abort.
-            await saveHistoryToDB([sessionForDb as any]);
+            await saveHistoryToDB([sessionForDb]);
             setHistory(prev => [finalSession, ...prev]);
             
             // 2. Save player data. This is now more reliable with one-by-one saves.
