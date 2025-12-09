@@ -1,3 +1,4 @@
+
 import { Session, Player, Team } from '../types';
 
 // Statistics Calculation Utilities
@@ -43,7 +44,8 @@ export const calculateAllStats = (session: Session) => {
         });
     });
 
-    const allPlayersInSession = teams.flatMap(t => t.playerIds).map(pid => getPlayerById(pid, playerPool)).filter(Boolean) as Player[];
+    // FIX: Cast playerPool to Player[] as getPlayerById expects Player[].
+    const allPlayersInSession = teams.flatMap(t => t.playerIds).map(pid => getPlayerById(pid, playerPool as Player[])).filter(Boolean) as Player[];
 
     const playerStats: PlayerStats[] = allPlayersInSession.map(player => {
         const team = playerTeamMap.get(player.id);

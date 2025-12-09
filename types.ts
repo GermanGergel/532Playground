@@ -180,23 +180,23 @@ export enum EventType {
 }
 
 export interface StartRoundPayload {
-  leftTeam: string; // color
-  rightTeam: string; // color
-  leftPlayers: string[]; // nicknames
-  rightPlayers: string[]; // nicknames
+  leftTeamColor: string;
+  rightTeamColor: string;
+  leftPlayerIds: string[];
+  rightPlayerIds: string[];
 }
 
 export interface GoalPayload {
-  team: string; // color
-  scorer?: string; // nickname
-  assist?: string; // nickname
+  teamColor: string;
+  scorerId?: string;
+  assistId?: string;
   isOwnGoal: boolean;
 }
 
 export interface SubPayload {
   side: 'left' | 'right';
-  out: string; // nickname
-  in: string; // nickname
+  outId: string;
+  inId: string;
 }
 
 export type EventPayload = StartRoundPayload | GoalPayload | SubPayload | {};
@@ -222,7 +222,7 @@ export interface Session {
   createdAt: string;
   teams: Team[];
   games: Game[];
-  playerPool: Player[];
+  playerPool: Player[] | string[]; // Can be full objects or just IDs
   eventLog: EventLogEntry[];
   isTestMode?: boolean;
 }

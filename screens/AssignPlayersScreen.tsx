@@ -1,3 +1,4 @@
+
 import React from 'react';
 // FIX: Import directly from component files instead of barrel file to avoid import errors.
 import { Button, Card, useTranslation, Modal, SessionModeIndicator } from '../ui';
@@ -6,6 +7,7 @@ import { Wand, XCircle } from '../icons';
 import { TeamColorPickerModal } from '../modals';
 import { hexToRgba } from './utils';
 import { useTeamAssignment } from '../hooks/useTeamAssignment';
+import { Player } from '../types';
 
 
 export const AssignPlayersScreen: React.FC = () => {
@@ -126,7 +128,8 @@ export const AssignPlayersScreen: React.FC = () => {
                             />
                             <div className="w-full max-w-[100px] space-y-2">
                                 {team.playerIds.map(playerId => {
-                                    const player = (activeSession.playerPool || []).find(p => p.id === playerId);
+                                    // FIX: Cast playerPool to Player[] to avoid type errors when accessing properties.
+                                    const player = (activeSession.playerPool as Player[]).find(p => p.id === playerId);
                                     return player ? (
                                         <div 
                                             key={playerId} 

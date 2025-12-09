@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button, Modal, useTranslation } from '../ui';
 import { Goal, GoalPayload, Game, Session, Team, Player } from '../types';
@@ -8,7 +9,7 @@ import { TeamAvatar } from '../components/avatars';
 interface GoalModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (goal: Omit<Goal, 'id' | 'gameId' | 'timestampSeconds'>, goalPayload: GoalPayload) => void;
+    onSave: (goalData: Omit<Goal, 'id' | 'gameId' | 'timestampSeconds'>) => void;
     game: Game;
     session: Session;
     scoringTeamId: string | null;
@@ -36,35 +37,26 @@ export const GoalModal: React.FC<GoalModalProps> = ({ isOpen, onClose, onSave, g
     const defendingTeam = session.teams.find(t => t.id === (game.team1Id === initialScoringTeamId ? game.team2Id : game.team1Id));
     if (!defendingTeam) return null;
     
-    const playersOnField = scoringTeam.playerIds.map(pid => session.playerPool.find(p => p.id === pid)).filter(Boolean) as Player[];
-    const getPlayerNickname = (id?: string) => id ? session.playerPool.find(p => p.id === id)?.nickname : undefined;
-
+    // FIX: Cast session.playerPool to Player[] to resolve type errors.
+    const playersOnField = scoringTeam.playerIds.map(pid => (session.playerPool as Player[]).find(p => p.id === pid)).filter(Boolean) as Player[];
+    
     const handleScorerSelect = (id: string) => {
         setScorerId(id);
         setStep('assistant');
     };
 
     const handleSave = (finalAssistantId?: string) => {
-        const payload: GoalPayload = {
-            team: scoringTeam.color,
-            scorer: getPlayerNickname(scorerId),
-            assist: getPlayerNickname(finalAssistantId),
-            isOwnGoal: false,
-        };
-        onSave({ teamId: scoringTeam.id, scorerId, assistantId: finalAssistantId, isOwnGoal: false }, payload);
+        onSave({ teamId: scoringTeam.id, scorerId, assistantId: finalAssistantId, isOwnGoal: false });
         onClose();
     };
     
     const handleOwnGoalClick = () => {
-        const payload: GoalPayload = {
-            team: defendingTeam.color,
-            isOwnGoal: true,
-        };
         onSave({ 
             teamId: defendingTeam.id, 
             scorerId: undefined, // No scorer for own goal in the game data
+            assistantId: undefined,
             isOwnGoal: true,
-        }, payload);
+        });
         onClose();
     };
     
@@ -186,9 +178,10 @@ export const SubstitutionModal: React.FC<{
     playerOut: Player;
 }> = ({ isOpen, onClose, onSelect, team, session, playerOut }) => {
     const t = useTranslation();
+    // FIX: Cast session.playerPool to Player[] to resolve type errors.
     const subs = team.playerIds
         .slice(session.playersPerTeam)
-        .map(id => session.playerPool.find(p => p.id === id))
+        .map(id => (session.playerPool as Player[]).find(p => p.id === id))
         .filter(Boolean) as Player[];
 
     return (
@@ -239,8 +232,9 @@ export const EditGoalModal: React.FC<{
     if (!isOpen || !goal) return null;
 
     const scoringTeam = session.teams.find(t => t.id === goal.teamId);
+    // FIX: Cast session.playerPool to Player[] to resolve type errors.
     const playersOnField = scoringTeam
-        ? scoringTeam.playerIds.map(pid => session.playerPool.find(p => p.id === pid)).filter(Boolean) as Player[]
+        ? scoringTeam.playerIds.map(pid => (session.playerPool as Player[]).find(p => p.id === pid)).filter(Boolean) as Player[]
         : [];
         
     const handleSave = () => {

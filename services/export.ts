@@ -1,11 +1,21 @@
-import { Session, EventType, GoalPayload, SubPayload, StartRoundPayload } from '../types';
+
+import { Session, EventType, GoalPayload, SubPayload, StartRoundPayload, Player } from '../types';
 import html2canvas from 'html2canvas'; // Import html2canvas
 
 // Data Export Utilities
 export const formatDate = (date: Date) => date.toISOString().split('T')[0];
 
 export const exportSessionAsJson = async (session: Session) => {
-    const { eventLog } = session;
+    const { eventLog, playerPool } = session;
+
+    // Ensure playerPool is fully hydrated with Player objects
+    if (!playerPool || playerPool.length === 0 || typeof playerPool[0] === 'string') {
+        console.error("Cannot export JSON: playerPool is not hydrated.");
+        return;
+    }
+    const playerMap = new Map((playerPool as Player[]).map(p => [p.id, p]));
+    const getPlayerNickname = (id?: string) => id ? playerMap.get(id)?.nickname : undefined;
+
 
     const formattedLog = eventLog.map(log => {
         const base = {
@@ -20,17 +30,29 @@ export const exportSessionAsJson = async (session: Session) => {
              case EventType.GOAL:
                 const goalPayload = log.payload as GoalPayload;
                 payload = {
-                    team: goalPayload.team,
-                    // Explicitly set scorer to null for own goals to ensure format consistency.
-                    scorer: goalPayload.isOwnGoal ? null : (goalPayload.scorer || null),
-                    assist: goalPayload.assist || null,
+                    team: goalPayload.teamColor,
+                    scorer: getPlayerNickname(goalPayload.scorerId) || null,
+                    assist: getPlayerNickname(goalPayload.assistId) || null,
+                    isOwnGoal: goalPayload.isOwnGoal,
                 };
+                if(goalPayload.isOwnGoal) payload.scorer = null; // Enforce null for own goals
                 break;
             case EventType.SUBSTITUTION:
-                 payload = log.payload as SubPayload;
+                 const subPayload = log.payload as SubPayload;
+                 payload = {
+                    side: subPayload.side,
+                    out: getPlayerNickname(subPayload.outId),
+                    in: getPlayerNickname(subPayload.inId),
+                 };
                  break;
             case EventType.START_ROUND:
-                 payload = log.payload as StartRoundPayload;
+                 const startPayload = log.payload as StartRoundPayload;
+                 payload = {
+                     leftTeam: startPayload.leftTeamColor,
+                     rightTeam: startPayload.rightTeamColor,
+                     leftPlayers: startPayload.leftPlayerIds.map(id => getPlayerNickname(id)),
+                     rightPlayers: startPayload.rightPlayerIds.map(id => getPlayerNickname(id)),
+                 };
                  break;
             default:
                 payload = {};
