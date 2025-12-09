@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Page, PageHeader, Card, Button, useTranslation } from '../ui';
 import { 
@@ -5,7 +6,7 @@ import {
     uploadSessionAnthem, deleteSessionAnthem, getSessionAnthemUrl
 } from '../db';
 import { playAnnouncement, initAudioContext } from '../lib';
-import { Upload, Trash2, Play } from '../icons';
+import { Upload, Trash2, Play, Pause } from '../icons';
 import { useApp } from '../context';
 
 type AnnouncementKey = 'start_match' | 'three_minutes' | 'one_minute' | 'thirty_seconds' | 'five' | 'four' | 'three' | 'two' | 'one' | 'finish_match';
@@ -36,6 +37,7 @@ const AnthemSection: React.FC = () => {
     const t = useTranslation();
     const [status, setStatus] = useState<'loading' | 'uploaded' | 'none'>('loading');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -45,6 +47,14 @@ const AnthemSection: React.FC = () => {
             setStatus(url ? 'uploaded' : 'none');
         };
         checkAnthem();
+
+        // Cleanup: Stop audio when component unmounts (user leaves screen)
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+            }
+        };
     }, []);
 
     const handleUploadClick = () => {
@@ -77,6 +87,11 @@ const AnthemSection: React.FC = () => {
     const handleDelete = async () => {
         setIsProcessing(true);
         try {
+            // Stop playing if deleting
+            if (audioRef.current) {
+                audioRef.current.pause();
+                setIsPlaying(false);
+            }
             await deleteSessionAnthem();
             setStatus('none');
         } catch (error) {
@@ -87,14 +102,30 @@ const AnthemSection: React.FC = () => {
     };
 
     const handlePreview = async () => {
+        // Toggle Logic
+        if (isPlaying && audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+            setIsPlaying(false);
+            return;
+        }
+
         const url = await getSessionAnthemUrl();
         if (url) {
             if (audioRef.current) {
-                audioRef.current.pause();
+                audioRef.current.pause(); // Ensure old instance is stopped
             }
             const audio = new Audio(url);
+            audio.onended = () => setIsPlaying(false); // Reset icon when song finishes
             audioRef.current = audio;
-            audio.play();
+            
+            try {
+                await audio.play();
+                setIsPlaying(true);
+            } catch (e) {
+                console.error("Playback failed", e);
+                setIsPlaying(false);
+            }
         }
     };
 
@@ -117,7 +148,7 @@ const AnthemSection: React.FC = () => {
                     </div>
                     <div className="flex items-center gap-2">
                          <Button variant="ghost" className="!p-2" onClick={handlePreview} disabled={isProcessing || status !== 'uploaded'}>
-                            <Play className="w-5 h-5" />
+                            {isPlaying ? <Pause className="w-5 h-5 text-dark-accent-start" /> : <Play className="w-5 h-5" />}
                         </Button>
                         <Button variant="ghost" className="!p-2" onClick={handleUploadClick} disabled={isProcessing}>
                             {isProcessing ? <Spinner /> : <Upload className="w-5 h-5" />}

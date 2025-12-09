@@ -1,3 +1,4 @@
+
 import { WeatherData, getWeatherIconType } from './weather';
 
 interface PosterData {
@@ -93,7 +94,8 @@ export const generateAndSharePoster = async (options: PosterData) => {
             ctx.fillStyle = '#FFF';
             ctx.font = `bold ${S * 28}px "Teko"`;
             ctx.textAlign = 'right';
-            ctx.fillText(`${Math.round(options.weather.temperature) + 3}°`, W - P, headerY + S * 35);
+            // Corrected: Temperature adjustment from +3 to +1
+            ctx.fillText(`${Math.round(options.weather.temperature) + 1}°`, W - P, headerY + S * 35);
             ctx.shadowBlur = 0;
             ctx.textAlign = 'left';
         } catch (e) {

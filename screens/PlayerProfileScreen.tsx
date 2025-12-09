@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -51,7 +52,7 @@ export const PlayerProfileScreen: React.FC = () => {
             try {
                 await navigator.share({
                     title: `532 Playground Profile: ${player.nickname}`,
-                    text: `Check out ${player.nickname}'s player card!`,
+                    text: `Check out ${player.nickname}'s player card!\n${shareUrl}`, // Include URL in text for Telegram/WhatsApp
                     url: shareUrl,
                 });
             } catch (error: any) {
