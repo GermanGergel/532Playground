@@ -1,3 +1,4 @@
+
 export const vn = {
     // General
     loading: "Đang tải 532 Playground...",
@@ -363,5 +364,4 @@ export const vn = {
     badge_career_150_influence_desc: "Đạt 150 đóng góp vào bàn thắng (bàn thắng + kiến tạo) trong sự nghiệp.",
     badge_career_super_veteran: "Siêu cựu binh",
     badge_career_super_veteran_desc: "Tham gia vào 100 buổi tập trong sự nghiệp.",
-  }
 };

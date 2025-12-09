@@ -1,3 +1,4 @@
+
 export const ua = {
     // General
     loading: "Завантаження 532 Playground...",
@@ -143,7 +144,7 @@ export const ua = {
     onBench: "На заміні",
     // Statistics Screen
     statisticsTitle: "Статистика",
-    teamStandings: "Турнірна таблиця",
+    teamStandings: "Турнирна таблиця",
     playerStatistics: "Статистика гравців",
     topScorers: "Найкращі бомбардири",
     topAssists: "Найкращі асистенти",
@@ -363,5 +364,4 @@ export const ua = {
     badge_career_150_influence_desc: "Набрати 150 результативних дій (голи + асисти) за кар'єру.",
     badge_career_super_veteran: "Суперветеран",
     badge_career_super_veteran_desc: "Взяти участь у 100 сесіях за кар'єру.",
-  }
 };

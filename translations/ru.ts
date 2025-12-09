@@ -1,3 +1,4 @@
+
 export const ru = {
     // General
     loading: "Загрузка 532 Playground...",
@@ -363,5 +364,4 @@ export const ru = {
     badge_career_150_influence_desc: "Набрать 150 результативных действий (голы + ассисты) за карьеру.",
     badge_career_super_veteran: "Суперветеран",
     badge_career_super_veteran_desc: "Участвовать в 100 сессиях за карьеру.",
-  }
 };
