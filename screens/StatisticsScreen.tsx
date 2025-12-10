@@ -79,6 +79,13 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
     const tableTextClass = "text-[10px] sm:text-xs text-center table-fixed"; 
     const cellPadding = "py-1.5 px-0.5";
 
+    // Dynamic class for player names: 
+    // Export: 'truncate' + 'max-w-[200px]' ensures it never wraps, fits "Oleg Drobeniuk", and adds "..." if longer.
+    // Mobile: 'truncate' + 'max-w-[80px]' keeps it compact for phones.
+    const playerNameClass = isExport 
+        ? `${cellPadding} text-left font-semibold truncate max-w-[200px] pr-2` 
+        : `${cellPadding} text-left font-semibold truncate pr-2 max-w-[80px] sm:max-w-[100px]`;
+
     return (
         <div className="space-y-6 w-full max-w-full">
             {/* Team Standings */}
@@ -135,7 +142,8 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                     <thead>
                             <tr className="text-dark-text-secondary">
                                 <th className={`text-left font-normal ${cellPadding}`} style={{ width: '10%' }}>#</th>
-                                <th className={`text-left font-normal ${cellPadding}`} style={{ width: '35%' }}>{t.players}</th>
+                                {/* Increased width for name column on export to allow max-w-[200px] to work effectively */}
+                                <th className={`text-left font-normal ${cellPadding}`} style={{ width: isExport ? '40%' : '35%' }}>{t.players}</th>
                                 <th className={`font-normal ${cellPadding}`} style={{ width: '15%' }}>{t.team}</th>
                                 <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.thGP}</th>
                                 <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.thG}</th>
@@ -147,8 +155,8 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                             {sortedPlayers.map((stats, index) => (
                                 <tr key={stats.player.id} className="border-t border-white/10">
                                     <td className={`${cellPadding} text-left`}>{index + 1}</td>
-                                    {/* Truncate long names to prevent layout shift */}
-                                    <td className={`${cellPadding} text-left font-semibold truncate pr-2 max-w-[80px] sm:max-w-[100px]`} title={stats.player.nickname}>
+                                    {/* Updated Name Cell Class with strict truncation */}
+                                    <td className={playerNameClass} title={stats.player.nickname}>
                                         {stats.player.nickname}
                                     </td>
                                     <td className={cellPadding}><TeamAvatar team={stats.team} size="xxs" className={`mx-auto ${isExport ? 'translate-y-2' : ''}`} /></td>
@@ -243,7 +251,7 @@ export const StatisticsScreen: React.FC = () => {
                 size="xs"
                 hideCloseButton
                 containerClassName="border border-dark-accent-start/40 shadow-[0_0_20px_rgba(0,242,254,0.3)]"
-            >
+             >
                 <div className="flex flex-col gap-3">
                     <Button variant="secondary" onClick={() => handleExport('standings')} disabled={isExporting} className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{isExporting ? 'Exporting...' : t.exportStandings}</Button>
                     <Button variant="secondary" onClick={() => handleExport('players')} disabled={isExporting} className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{isExporting ? 'Exporting...' : t.exportPlayers}</Button>
@@ -277,11 +285,11 @@ export const StatisticsScreen: React.FC = () => {
                     </div>
                 </BrandedShareableReport>
                 
-                {/* 2. PLAYERS - Compact (No Header) */}
+                {/* 2. PLAYERS - Compact (No Header) - UPDATED WIDTH to 800px */}
                 <BrandedShareableReport 
                     session={activeSession} 
                     data-export-section="players"
-                    style={{ width: '500px', padding: '20px' }}
+                    style={{ width: '800px', padding: '20px' }}
                 >
                     <div className="mb-2 text-center w-full border-b border-white/10 pb-2">
                         <p className="font-chakra text-dark-text text-lg font-bold tracking-widest uppercase">{displayDate}</p>
