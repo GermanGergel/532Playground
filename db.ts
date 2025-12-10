@@ -4,31 +4,12 @@ import { Language } from './translations/index';
 import { get, set, del, keys } from 'idb-keyval';
 
 // --- SUPABASE CONFIGURATION ---
-// Universal environment variable access (works in Vite, Next.js, and standard Node)
-const getEnvVar = (key: string) => {
-    try {
-        // @ts-ignore
-        if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
-            // @ts-ignore
-            return import.meta.env[key];
-        }
-    } catch (e) {
-        // Ignore errors if import.meta is not defined
-    }
+// Use process.env as a more robust method for accessing environment variables
+// @ts-ignore
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+// @ts-ignore
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
 
-    try {
-        if (typeof process !== 'undefined' && process.env && process.env[key]) {
-            return process.env[key];
-        }
-    } catch (e) {
-        // Ignore errors
-    }
-    
-    return undefined;
-};
-
-const supabaseUrl = getEnvVar('VITE_SUPABASE_URL');
-const supabaseAnonKey = getEnvVar('VITE_SUPABASE_ANON_KEY');
 
 // Initialize Supabase ONLY if keys are present
 const supabase = (supabaseUrl && supabaseAnonKey) 
@@ -238,30 +219,34 @@ export const savePlayersToDB = async (players: Player[]) => {
     }
 };
 
+export const loadPlayersFromCloud = async (): Promise<Player[] | null> => {
+    if (!isSupabaseConfigured()) return null;
+    try {
+        const { data, error } = await supabase!.from('players').select('*');
+        if (error) {
+            console.warn("Supabase: Failed to load players from cloud.", error);
+            return null; // Return null on error instead of throwing
+        }
+        return data as Player[];
+    } catch (e) {
+        console.error("Supabase: Exception while loading players from cloud.", e);
+        return null;
+    }
+};
+
 export const loadPlayersFromDB = async (): Promise<Player[] | undefined> => {
     logStorageMode();
+    const cloudPlayers = await loadPlayersFromCloud();
 
-    // Mode 1: Cloud
-    if (isSupabaseConfigured()) {
-        try {
-            const { data, error } = await supabase!
-                .from('players')
-                .select('*');
-            if (error) throw error;
-            return data as Player[];
-        } catch (error) {
-            // If cloud fails, try local quietly
-            return await get('players');
-        }
-    } 
-    // Mode 2: Local Fallback
-    else {
-        try {
-            return await get('players');
-        } catch (error) {
-            return undefined;
-        }
+    if (cloudPlayers) {
+        // Sync cloud to local cache for future offline use
+        await set('players', cloudPlayers);
+        return cloudPlayers;
     }
+    
+    // Fallback to local if cloud fails
+    console.log("Supabase: Falling back to local player data.");
+    return await get('players');
 };
 
 // --- ACTIVE SESSION ---

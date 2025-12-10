@@ -20,10 +20,12 @@ export const processFinishedSession = ({
     session,
     oldPlayers,
     newsFeed,
+    force = false, // Add a force flag to bypass idempotency check
 }: {
     session: Session;
     oldPlayers: Player[];
     newsFeed: NewsItem[];
+    force?: boolean;
 }): ProcessedSessionResult => {
 
     const { allPlayersStats } = calculateAllStats(session, oldPlayers);
@@ -33,8 +35,8 @@ export const processFinishedSession = ({
     
     // --- 1. UPDATE PLAYER LIFETIME STATS ---
     const updatedPlayers = oldPlayers.map(player => {
-        // IDEMPOTENCY CHECK: If this session has already been processed for this player, skip them.
-        if (player.processedSessionIds?.includes(session.id)) {
+        // IDEMPOTENCY CHECK: If this session has already been processed for this player, skip them, unless forced.
+        if (!force && player.processedSessionIds?.includes(session.id)) {
             return player;
         }
 
@@ -111,7 +113,7 @@ export const processFinishedSession = ({
             sessionHistory: sessionHistory,
             lastRatingChange: { ...breakdown, badgesEarned: badgesEarnedThisSession },
             records: newRecords,
-            processedSessionIds: [...(player.processedSessionIds || []), session.id],
+            processedSessionIds: [...(player.processedSessionIds || []).filter(id => id !== session.id), session.id],
         };
         
         playersToSave.push(finalPlayer);

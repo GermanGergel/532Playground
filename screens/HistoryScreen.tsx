@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context';
 import { Page, Button, Card, Modal, useTranslation } from '../ui';
 import { Trash2, RefreshCw } from '../icons';
-import { Session, Player } from '../types';
+import { Session, Player, NewsItem } from '../types';
 import { BrandedHeader } from './utils';
 import { processFinishedSession } from '../services/sessionProcessor';
 import { savePlayersToDB, saveNewsToDB } from '../db';
@@ -37,25 +36,10 @@ export const HistoryScreen: React.FC = () => {
 
     const handleRecalculate = async () => {
         if (!sessionToRecalculate || isProcessing) return;
-        
+    
         setIsProcessing(true);
         try {
-            const participatingPlayerIds = new Set(
-                (sessionToRecalculate.playerPool as Player[]).map(p => p.id)
-            );
-
-            const isAlreadyProcessed = allPlayers
-                .filter(p => participatingPlayerIds.has(p.id))
-                .every(p => p.processedSessionIds?.includes(sessionToRecalculate.id));
-
-            if (isAlreadyProcessed) {
-                alert("Statistics for this session have already been calculated and applied.");
-                setIsRecalculateModalOpen(false);
-                setSessionToRecalculate(null);
-                setIsProcessing(false);
-                return;
-            }
-
+            // Step 1: Process data purely in memory, forcing re-evaluation
             const {
                 updatedPlayers,
                 playersToSave,
@@ -64,23 +48,31 @@ export const HistoryScreen: React.FC = () => {
                 session: sessionToRecalculate,
                 oldPlayers: allPlayers,
                 newsFeed: newsFeed,
+                force: true, // Force recalculation, ignoring local `processedSessionIds`
             });
-
-            if (playersToSave.length > 0) {
-                await savePlayersToDB(playersToSave);
+    
+            // If processFinishedSession determines no actual changes are needed (e.g., no players participated)
+            if (playersToSave.length === 0) {
+                alert("No new statistics to calculate for this session.");
+                setIsProcessing(false);
+                setIsRecalculateModalOpen(false);
+                setSessionToRecalculate(null);
+                return;
             }
-            if (updatedNewsFeed.length > newsFeed.length) {
-                await saveNewsToDB(updatedNewsFeed);
-            }
+    
+            // Step 2: Attempt to save to the database FIRST. This will throw on failure.
+            await savePlayersToDB(playersToSave);
+            await saveNewsToDB(updatedNewsFeed);
             
+            // Step 3: ONLY on successful save, update the local React state.
             setAllPlayers(updatedPlayers); 
             setNewsFeed(updatedNewsFeed);
             
-            alert("Statistics successfully recalculated and saved!");
-
+            alert("Statistics successfully recalculated and saved to the cloud!");
+    
         } catch (error) {
             console.error("Error recalculating session:", error);
-            alert("An error occurred during recalculation.");
+            alert("Failed to save recalculated data to the cloud. Please check your connection and try again. No local data has been changed.");
         } finally {
             setIsProcessing(false);
             setIsRecalculateModalOpen(false);

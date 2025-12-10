@@ -372,6 +372,7 @@ export const useGameManager = () => {
                 session: activeSession,
                 oldPlayers: oldPlayersState,
                 newsFeed: newsFeed,
+                force: false, // Default behavior
             });
 
             const sessionForDb: Session = {
