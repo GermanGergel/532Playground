@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -68,7 +67,6 @@ export const PlayerDatabaseScreen: React.FC = () => {
                 bestAssistsInSession: { value: 0, sessionId: '' },
                 bestWinRateInSession: { value: 0, sessionId: '' },
             },
-            processedSessionIds: [],
         };
         setAllPlayers(prev => [...prev, newPlayer]);
         saveSinglePlayerToDB(newPlayer);

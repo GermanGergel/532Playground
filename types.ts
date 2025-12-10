@@ -108,7 +108,6 @@ export interface Player {
   sessionHistory?: { winRate: number }[];
   lastRatingChange?: RatingBreakdown;
   records: PlayerRecords;
-  processedSessionIds?: string[];
 }
 
 export enum RotationMode {
@@ -181,23 +180,23 @@ export enum EventType {
 }
 
 export interface StartRoundPayload {
-  leftTeamColor: string;
-  rightTeamColor: string;
-  leftPlayerIds: string[];
-  rightPlayerIds: string[];
+  leftTeam: string; // color
+  rightTeam: string; // color
+  leftPlayers: string[]; // nicknames
+  rightPlayers: string[]; // nicknames
 }
 
 export interface GoalPayload {
-  teamColor: string;
-  scorerId?: string;
-  assistId?: string;
+  team: string; // color
+  scorer?: string; // nickname
+  assist?: string; // nickname
   isOwnGoal: boolean;
 }
 
 export interface SubPayload {
   side: 'left' | 'right';
-  outId: string;
-  inId: string;
+  out: string; // nickname
+  in: string; // nickname
 }
 
 export type EventPayload = StartRoundPayload | GoalPayload | SubPayload | {};
@@ -223,7 +222,7 @@ export interface Session {
   createdAt: string;
   teams: Team[];
   games: Game[];
-  playerPool: Player[] | string[]; // Can be full objects or just IDs
+  playerPool: Player[];
   eventLog: EventLogEntry[];
   isTestMode?: boolean;
 }

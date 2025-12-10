@@ -46,9 +46,6 @@ export const ru = {
     sortByRating: "Рейтинг",
     sortByDate: "Дата",
     clickToEnter: "НАЖМИ, ЧТОБЫ НАЧАТЬ",
-    recalculateStats: "Пересчитать",
-    recalculateStatsTitle: "Пересчитать статистику?",
-    recalculateStatsDesc: "Используйте эту функцию, если статистика сессии не была применена корректно. Это заново обработает все игровые данные и обновит профили игроков. Действие безопасно для многократного использования.",
     // Navigation
     navHome: "Главная",
     navLive: "Матч",

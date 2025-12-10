@@ -1,10 +1,11 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 // FIX: Import directly from component files instead of barrel file to avoid import errors.
 import { Page, Button, Modal, useTranslation } from '../ui';
 import { TeamAvatar } from '../components/avatars';
-import { Session, Player } from '../types';
+import { Session } from '../types';
 import { calculateAllStats } from '../services/statistics';
 import { shareOrDownloadImages } from '../services/export';
 import { BrandedHeader, newId } from './utils';
@@ -45,15 +46,14 @@ const BrandedShareableReport: React.FC<{
 // --- Statistics & Report Screen Components ---
 export interface ShareableReportProps {
     session: Session;
-    allPlayers: Player[];
     visibleSection?: 'standings' | 'players' | 'rounds';
     isExport?: boolean;
     itemLimit?: number;
 }
 
-export const ShareableReport: React.FC<ShareableReportProps> = ({ session, allPlayers, visibleSection, isExport = false, itemLimit }) => {
+export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visibleSection, isExport = false, itemLimit }) => {
     const t = useTranslation();
-    const { teamStats, allPlayersStats } = React.useMemo(() => calculateAllStats(session, allPlayers), [session, allPlayers]);
+    const { teamStats, allPlayersStats } = React.useMemo(() => calculateAllStats(session), [session]);
     
     const getCardClasses = (section: 'standings' | 'players' | 'rounds') => {
         // When exporting, all cards are transparent to show the branded background.
@@ -187,7 +187,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, allPl
 };
 
 export const StatisticsScreen: React.FC = () => {
-    const { activeSession, allPlayers } = useApp();
+    const { activeSession } = useApp();
     const t = useTranslation();
     const navigate = useNavigate();
     const [isDownloadModalOpen, setIsDownloadModalOpen] = React.useState(false);
@@ -247,7 +247,7 @@ export const StatisticsScreen: React.FC = () => {
                 <h1 className="text-3xl font-black uppercase text-dark-text accent-text-glow">{t.liveStatistics}</h1>
             </header>
             
-            <ShareableReport session={activeSession} allPlayers={allPlayers} />
+            <ShareableReport session={activeSession} />
             
             <div className="mt-auto pt-6 w-full flex flex-col gap-3">
                 <Button variant="secondary" onClick={() => setIsDownloadModalOpen(true)} className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.saveTable}</Button>
@@ -265,7 +265,7 @@ export const StatisticsScreen: React.FC = () => {
                         <p className="font-chakra text-dark-text mt-8 text-xl font-medium tracking-wider uppercase">{displayDate}</p>
                     </div>
                     <div className="p-4 w-full">
-                        <ShareableReport session={activeSession} allPlayers={allPlayers} visibleSection="standings" isExport={true} />
+                        <ShareableReport session={activeSession} visibleSection="standings" isExport={true} />
                     </div>
                 </BrandedShareableReport>
                 
@@ -278,7 +278,7 @@ export const StatisticsScreen: React.FC = () => {
                     <div className="mb-2 text-center w-full border-b border-white/10 pb-2">
                         <p className="font-chakra text-dark-text text-lg font-bold tracking-widest uppercase">{displayDate}</p>
                     </div>
-                    <ShareableReport session={activeSession} allPlayers={allPlayers} visibleSection="players" isExport={true} />
+                    <ShareableReport session={activeSession} visibleSection="players" isExport={true} />
                 </BrandedShareableReport>
                 
                 {/* 3. ROUNDS - Compact (No Header) */}
@@ -290,7 +290,7 @@ export const StatisticsScreen: React.FC = () => {
                      <div className="mb-2 text-center w-full border-b border-white/10 pb-2">
                         <p className="font-chakra text-dark-text text-lg font-bold tracking-widest uppercase">{displayDate}</p>
                     </div>
-                    <ShareableReport session={activeSession} allPlayers={allPlayers} visibleSection="rounds" isExport={true} />
+                    <ShareableReport session={activeSession} visibleSection="rounds" isExport={true} />
                 </BrandedShareableReport>
             </div>
         </Page>

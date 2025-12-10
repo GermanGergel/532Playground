@@ -20,109 +20,101 @@ export const processFinishedSession = ({
     session,
     oldPlayers,
     newsFeed,
-    force = false, // Add a force flag to bypass idempotency check
 }: {
     session: Session;
     oldPlayers: Player[];
     newsFeed: NewsItem[];
-    force?: boolean;
 }): ProcessedSessionResult => {
 
-    const { allPlayersStats } = calculateAllStats(session, oldPlayers);
+    const { allPlayersStats } = calculateAllStats(session);
     const playerStatsMap = new Map(allPlayersStats.map(stat => [stat.player.id, stat]));
     
-    const playersToSave: Player[] = [];
-    
     // --- 1. UPDATE PLAYER LIFETIME STATS ---
-    const updatedPlayers = oldPlayers.map(player => {
-        // IDEMPOTENCY CHECK: If this session has already been processed for this player, skip them, unless forced.
-        if (!force && player.processedSessionIds?.includes(session.id)) {
-            return player;
-        }
-
+    let playersWithUpdatedStats = oldPlayers.map(player => {
         const sessionStats = playerStatsMap.get(player.id);
-        if (!sessionStats) {
-            return player; // Player didn't participate, no changes needed.
+        if (sessionStats) {
+            const updatedPlayer: Player = {
+                ...player,
+                totalGames: player.totalGames + sessionStats.gamesPlayed,
+                totalGoals: player.totalGoals + sessionStats.goals,
+                totalAssists: player.totalAssists + sessionStats.assists,
+                totalWins: player.totalWins + sessionStats.wins,
+                totalDraws: player.totalDraws + sessionStats.draws,
+                totalLosses: player.totalLosses + sessionStats.losses,
+                totalSessionsPlayed: (player.totalSessionsPlayed || 0) + 1,
+                monthlyGames: player.monthlyGames + sessionStats.gamesPlayed,
+                monthlyGoals: player.monthlyGoals + sessionStats.goals,
+                monthlyAssists: player.monthlyAssists + sessionStats.assists,
+                monthlyWins: player.monthlyWins + sessionStats.wins,
+                monthlySessionsPlayed: (player.monthlySessionsPlayed || 0) + 1,
+                lastPlayedAt: new Date().toISOString(),
+            };
+            return updatedPlayer;
         }
-
-        const playerWithUpdatedStats: Player = {
-            ...player,
-            totalGames: player.totalGames + sessionStats.gamesPlayed,
-            totalGoals: player.totalGoals + sessionStats.goals,
-            totalAssists: player.totalAssists + sessionStats.assists,
-            totalWins: player.totalWins + sessionStats.wins,
-            totalDraws: player.totalDraws + sessionStats.draws,
-            totalLosses: player.totalLosses + sessionStats.losses,
-            totalSessionsPlayed: (player.totalSessionsPlayed || 0) + 1,
-            monthlyGames: player.monthlyGames + sessionStats.gamesPlayed,
-            monthlyGoals: player.monthlyGoals + sessionStats.goals,
-            monthlyAssists: player.monthlyAssists + sessionStats.assists,
-            monthlyWins: player.monthlyWins + sessionStats.wins,
-            monthlySessionsPlayed: (player.monthlySessionsPlayed || 0) + 1,
-            lastPlayedAt: new Date().toISOString(),
-        };
-
-        // --- 2. CALCULATE RATINGS, BADGES, and FORM ---
-        const badgesEarnedThisSession = calculateEarnedBadges(playerWithUpdatedStats, sessionStats, session, allPlayersStats);
-        
-        const { delta, breakdown } = calculateRatingUpdate(playerWithUpdatedStats, sessionStats, session, badgesEarnedThisSession);
-        const newRating = Math.round(player.rating + delta);
-        
-        let newForm: 'hot_streak' | 'stable' | 'cold_streak' = 'stable';
-        if (delta >= 0.5) newForm = 'hot_streak';
-        else if (delta <= -0.5) newForm = 'cold_streak';
-        
-        const newTier = getTierForRating(newRating);
-
-        const updatedBadges: Partial<Record<BadgeType, number>> = { ...player.badges };
-        badgesEarnedThisSession.forEach(badge => {
-            updatedBadges[badge] = (updatedBadges[badge] || 0) + 1;
-        });
-        
-        const sessionHistory = [...(player.sessionHistory || [])];
-        const sessionWinRate = sessionStats.gamesPlayed > 0 ? Math.round((sessionStats.wins / sessionStats.gamesPlayed) * 100) : 0;
-        if (sessionStats.gamesPlayed > 0) {
-            sessionHistory.push({ winRate: sessionWinRate });
-        }
-        if (sessionHistory.length > 5) sessionHistory.shift();
-        
-        const oldRecords = player.records || {
-            bestGoalsInSession: { value: 0, sessionId: '' },
-            bestAssistsInSession: { value: 0, sessionId: '' },
-            bestWinRateInSession: { value: 0, sessionId: '' },
-        };
-    
-        const newRecords: PlayerRecords = {
-            bestGoalsInSession: sessionStats.goals >= oldRecords.bestGoalsInSession.value
-                ? { value: sessionStats.goals, sessionId: session.id }
-                : oldRecords.bestGoalsInSession,
-            bestAssistsInSession: sessionStats.assists >= oldRecords.bestAssistsInSession.value
-                ? { value: sessionStats.assists, sessionId: session.id }
-                : oldRecords.bestAssistsInSession,
-            bestWinRateInSession: sessionWinRate >= oldRecords.bestWinRateInSession.value
-                ? { value: sessionWinRate, sessionId: session.id }
-                : oldRecords.bestWinRateInSession,
-        };
-        
-        const finalPlayer = { 
-            ...playerWithUpdatedStats, 
-            rating: newRating, 
-            tier: newTier, 
-            form: newForm,
-            badges: updatedBadges,
-            sessionHistory: sessionHistory,
-            lastRatingChange: { ...breakdown, badgesEarned: badgesEarnedThisSession },
-            records: newRecords,
-            processedSessionIds: [...(player.processedSessionIds || []).filter(id => id !== session.id), session.id],
-        };
-        
-        playersToSave.push(finalPlayer);
-        return finalPlayer;
+        return player;
     });
 
+    // --- 2. CALCULATE RATINGS, BADGES, and FORM ---
+    let playersWithCalculatedRatings = playersWithUpdatedStats.map(player => {
+        const sessionStats = playerStatsMap.get(player.id);
+        if (sessionStats) {
+            const badgesEarnedThisSession = calculateEarnedBadges(player, sessionStats, session, allPlayersStats);
+            
+            const { delta, breakdown } = calculateRatingUpdate(player, sessionStats, session, badgesEarnedThisSession);
+            const newRating = Math.round(player.rating + delta);
+            
+            let newForm: 'hot_streak' | 'stable' | 'cold_streak' = 'stable';
+            if (delta >= 0.5) newForm = 'hot_streak';
+            else if (delta <= -0.5) newForm = 'cold_streak';
+            
+            const newTier = getTierForRating(newRating);
+
+            const updatedBadges: Partial<Record<BadgeType, number>> = { ...player.badges };
+            badgesEarnedThisSession.forEach(badge => {
+                updatedBadges[badge] = (updatedBadges[badge] || 0) + 1;
+            });
+            
+            const sessionHistory = [...(player.sessionHistory || [])];
+            const sessionWinRate = sessionStats.gamesPlayed > 0 ? Math.round((sessionStats.wins / sessionStats.gamesPlayed) * 100) : 0;
+            if (sessionStats.gamesPlayed > 0) {
+                sessionHistory.push({ winRate: sessionWinRate });
+            }
+            if (sessionHistory.length > 5) sessionHistory.shift();
+            
+            const oldRecords = player.records || {
+                bestGoalsInSession: { value: 0, sessionId: '' },
+                bestAssistsInSession: { value: 0, sessionId: '' },
+                bestWinRateInSession: { value: 0, sessionId: '' },
+            };
+        
+            const newRecords: PlayerRecords = {
+                bestGoalsInSession: sessionStats.goals >= oldRecords.bestGoalsInSession.value
+                    ? { value: sessionStats.goals, sessionId: session.id }
+                    : oldRecords.bestGoalsInSession,
+                bestAssistsInSession: sessionStats.assists >= oldRecords.bestAssistsInSession.value
+                    ? { value: sessionStats.assists, sessionId: session.id }
+                    : oldRecords.bestAssistsInSession,
+                bestWinRateInSession: sessionWinRate >= oldRecords.bestWinRateInSession.value
+                    ? { value: sessionWinRate, sessionId: session.id }
+                    : oldRecords.bestWinRateInSession,
+            };
+
+            return { 
+                ...player, 
+                rating: newRating, 
+                tier: newTier, 
+                form: newForm,
+                badges: updatedBadges,
+                sessionHistory: sessionHistory,
+                lastRatingChange: { ...breakdown, badgesEarned: badgesEarnedThisSession },
+                records: newRecords,
+            };
+        }
+        return player;
+    });
 
     // --- 3. GENERATE NEWS ---
-    const newNewsItems = generateNewsUpdates(oldPlayers, updatedPlayers);
+    const newNewsItems = generateNewsUpdates(oldPlayers, playersWithCalculatedRatings);
     const updatedNewsFeed = newNewsItems.length > 0
         ? manageNewsFeedSize([...newNewsItems, ...newsFeed])
         : newsFeed;
@@ -133,8 +125,10 @@ export const processFinishedSession = ({
         status: SessionStatus.Completed,
     };
 
+    const playersToSave = playersWithCalculatedRatings.filter(p => playerStatsMap.has(p.id));
+
     return {
-        updatedPlayers,
+        updatedPlayers: playersWithCalculatedRatings,
         playersToSave,
         finalSession,
         updatedNewsFeed,

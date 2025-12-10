@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -38,8 +37,7 @@ const TeamRoster: React.FC<{
     onPlayerClick: (teamId: string, playerOutId: string) => void;
 }> = React.memo(({ team, session, onPlayerClick }) => {
     const t = useTranslation();
-    // FIX: Cast session.playerPool to Player[] to resolve type errors.
-    const players = team.playerIds.map(id => (session.playerPool as Player[]).find(p => p.id === id)).filter(Boolean) as Player[];
+    const players = team.playerIds.map(id => session.playerPool.find(p => p.id === id)).filter(Boolean) as Player[];
     const activePlayers = players.slice(0, session.playersPerTeam);
     const subs = players.slice(session.playersPerTeam);
     
@@ -141,8 +139,7 @@ export const LiveMatchScreen: React.FC = () => {
     if (!team1 || !team2) return null;
 
     const teamForSub = subModalState.teamId ? activeSession.teams.find(t => t.id === subModalState.teamId) : undefined;
-    // FIX: Cast activeSession.playerPool to Player[] to resolve type errors.
-    const playerOutForSub = subModalState.playerOutId ? (activeSession.playerPool as Player[]).find(p => p.id === subModalState.playerOutId) : undefined;
+    const playerOutForSub = subModalState.playerOutId ? activeSession.playerPool.find(p => p.id === subModalState.playerOutId) : undefined;
     
     return (
         <div className="pb-28 flex flex-col min-h-screen">
@@ -155,10 +152,9 @@ export const LiveMatchScreen: React.FC = () => {
             />
             {isSaving && (
                 <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center">
-                    <div className="flex flex-col items-center gap-4 text-center px-4">
+                    <div className="flex flex-col items-center gap-4">
                         <div className="w-12 h-12 border-4 border-dark-accent-start border-t-transparent rounded-full animate-spin"></div>
-                        <p className="text-white font-bold animate-pulse">SAVING SESSION...</p>
-                        <p className="text-sm text-dark-text-secondary">This may take a moment. Please wait.</p>
+                        <p className="text-white font-bold animate-pulse">SAVING TO CLOUD...</p>
                     </div>
                 </div>
             )}
@@ -290,9 +286,8 @@ export const LiveMatchScreen: React.FC = () => {
                         <ul className="space-y-1 max-h-32 overflow-y-auto">
                             {currentGame.goals.map(goal => {
                             const team = activeSession.teams.find(t => t.id === goal.teamId);
-                            // FIX: Cast activeSession.playerPool to Player[] to resolve type errors.
-                            const scorer = (activeSession.playerPool as Player[]).find(p => p.id === goal.scorerId);
-                            const assistant = (activeSession.playerPool as Player[]).find(p => p.id === goal.assistantId);
+                            const scorer = activeSession.playerPool.find(p => p.id === goal.scorerId);
+                            const assistant = activeSession.playerPool.find(p => p.id === goal.assistantId);
                             return (
                                 <li key={goal.id} className="flex items-center justify-between p-1.5 bg-dark-bg/60 rounded-md text-sm">
                                     <div className="flex items-center gap-2 overflow-hidden">

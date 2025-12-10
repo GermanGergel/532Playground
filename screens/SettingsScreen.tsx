@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context';
 import { Card, useTranslation, Button } from '../ui';
-import { isSupabaseConfigured, loadPlayersFromCloud } from '../db';
+import { isSupabaseConfigured, loadPlayersFromDB } from '../db';
 import { generateDemoData } from '../services/demo';
 import { ChevronLeft } from '../icons';
 
@@ -13,25 +13,20 @@ export const SettingsScreen: React.FC = () => {
 
     React.useEffect(() => {
         const checkCloud = async () => {
-            const cloudData = await loadPlayersFromCloud(); // Directly call the cloud-only function
-            if (cloudData) { // If we got data, we are connected
+            if (isSupabaseConfigured()) {
+                const cloudPlayers = await loadPlayersFromDB();
                 setCloudStatus({
                     connected: true,
-                    count: cloudData.length // This is the TRUE cloud count
+                    count: Array.isArray(cloudPlayers) ? cloudPlayers.length : 0
                 });
             } else {
                 setCloudStatus({ connected: false, count: 0 });
             }
         };
-        
-        if (isSupabaseConfigured()) {
-            checkCloud();
-            const intervalId = setInterval(checkCloud, 5000); // Re-check every 5 seconds
-            return () => clearInterval(intervalId);
-        } else {
-            setCloudStatus({ connected: false, count: 0 });
-        }
-    }, []);
+        checkCloud();
+        const intervalId = setInterval(checkCloud, 5000); // Re-check every 5 seconds
+        return () => clearInterval(intervalId);
+    }, [allPlayers.length]);
 
 
     const handleGenerateDemo = () => {

@@ -30,20 +30,11 @@ interface TeamStats {
 
 const getPlayerById = (id: string, players: Player[]) => players.find(p => p.id === id);
 
-export const calculateAllStats = (session: Session, allPlayers: Player[]) => {
+export const calculateAllStats = (session: Session) => {
     // Safeguard: ensure teams exists (handle corrupted legacy data)
     const teams = session.teams || [];
+    const playerPool = session.playerPool || [];
     const games = session.games || [];
-
-    let playerPool: Player[];
-    if (session.playerPool && session.playerPool.length > 0 && typeof session.playerPool[0] === 'string') {
-        const allPlayersMap = new Map(allPlayers.map(p => [p.id, p]));
-        playerPool = (session.playerPool as string[])
-            .map(id => allPlayersMap.get(id))
-            .filter(Boolean) as Player[];
-    } else {
-        playerPool = (session.playerPool as Player[]) || [];
-    }
 
     const playerTeamMap = new Map<string, Team>();
     teams.forEach(team => {

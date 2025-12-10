@@ -46,9 +46,6 @@ export const ua = {
     sortByRating: "Рейтинг",
     sortByDate: "Дата",
     clickToEnter: "НАТИСНИ, ЩОБ ПОЧАТИ",
-    recalculateStats: "Перерахувати",
-    recalculateStatsTitle: "Перерахувати статистику?",
-    recalculateStatsDesc: "Використовуйте цю функцію, якщо статистика сесії не була застосована коректно. Це заново обробить усі ігрові дані та оновить профілі гравців. Дія безпечна для багаторазового використання.",
     // Navigation
     navHome: "Головна",
     navLive: "Матч",

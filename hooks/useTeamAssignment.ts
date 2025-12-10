@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -43,7 +42,7 @@ export const useTeamAssignment = () => {
         }
     }, [activeSession, t.team, navigate, setActiveSession]);
 
-    const sessionPlayerIds = new Set((activeSession?.playerPool as Player[])?.map(p => p.id));
+    const sessionPlayerIds = new Set(activeSession?.playerPool.map(p => p.id));
     
     const searchResults = playerSearch && !activeSession?.isTestMode
         ? allPlayers.filter(p => 
@@ -92,10 +91,9 @@ export const useTeamAssignment = () => {
             }
         }
         
-        const isPlayerAlreadyInSession = (activeSession.playerPool as Player[]).some(p => p.id === playerToAdd.id);
+        const isPlayerAlreadyInSession = activeSession.playerPool.some(p => p.id === playerToAdd.id);
         if (!isPlayerAlreadyInSession) {
-            // FIX: Cast playerPool to Player[] to avoid creating a mixed-type array.
-            setActiveSession(s => s ? { ...s, playerPool: [...(s.playerPool as Player[]), playerToAdd] } : s);
+            setActiveSession(s => s ? { ...s, playerPool: [...s.playerPool, playerToAdd] } : s);
         }
         
         setPlayerSearch('');
@@ -130,8 +128,7 @@ export const useTeamAssignment = () => {
         setActiveSession(s => {
             if (!s) return null;
             
-            // FIX: Cast playerPool to Player[] to filter correctly.
-            const updatedPlayerPool = (s.playerPool as Player[]).filter(p => p.id !== playerId);
+            const updatedPlayerPool = s.playerPool.filter(p => p.id !== playerId);
 
             const updatedTeams = s.teams.map(team => ({
                 ...team,
@@ -167,7 +164,7 @@ export const useTeamAssignment = () => {
         setActiveSession(s => {
             if (!s) return null;
 
-            const calibratedPlayers = (s.playerPool as Player[])
+            const calibratedPlayers = s.playerPool
                 .sort((a, b) => b.rating - a.rating);
 
             const numTeams = s.teams.length;
@@ -196,7 +193,7 @@ export const useTeamAssignment = () => {
     const handleStartSession = () => {
         if (!activeSession || !activeSession.teams || activeSession.teams.length < 2) return;
 
-        const getPlayerNickname = (id: string) => ((activeSession.playerPool || []) as Player[]).find(p => p.id === id)?.nickname || '';
+        const getPlayerNickname = (id: string) => (activeSession.playerPool || []).find(p => p.id === id)?.nickname || '';
 
         const updatedTeams = activeSession.teams.map((team, index) => ({
             ...team,
@@ -230,12 +227,11 @@ export const useTeamAssignment = () => {
             timestamp: new Date().toISOString(),
             round: 1,
             type: EventType.START_ROUND,
-            // FIX: Corrected payload structure to match StartRoundPayload type.
             payload: {
-                leftTeamColor: team1.color,
-                rightTeamColor: team2.color,
-                leftPlayerIds: team1.playerIds.slice(0, activeSession.playersPerTeam),
-                rightPlayerIds: team2.playerIds.slice(0, activeSession.playersPerTeam),
+                leftTeam: team1.color,
+                rightTeam: team2.color,
+                leftPlayers: team1.playerIds.slice(0, activeSession.playersPerTeam).map(getPlayerNickname),
+                rightPlayers: team2.playerIds.slice(0, activeSession.playersPerTeam).map(getPlayerNickname),
             } as StartRoundPayload,
         };
         
@@ -250,8 +246,7 @@ export const useTeamAssignment = () => {
     };
 
     const assignedPlayerIds = new Set(activeSession?.teams.flatMap(t => t.playerIds));
-    // FIX: Cast playerPool to Player[] to avoid type errors.
-    const unassignedPlayers = ((activeSession?.playerPool as Player[]) || []).filter(p => !assignedPlayerIds.has(p.id));
+    const unassignedPlayers = (activeSession?.playerPool || []).filter(p => !assignedPlayerIds.has(p.id));
     
     const canStart =
         unassignedPlayers.length === 0 &&

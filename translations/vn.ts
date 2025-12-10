@@ -46,9 +46,6 @@ export const vn = {
     sortByRating: "Xếp hạng",
     sortByDate: "Ngày",
     clickToEnter: "CHẠM ĐỂ BẮT ĐẦU",
-    recalculateStats: "Tính toán lại",
-    recalculateStatsTitle: "Tính toán lại Thống kê?",
-    recalculateStatsDesc: "Sử dụng chức năng này nếu thống kê của một buổi tập không được áp dụng đúng. Thao tác này sẽ xử lý lại tất cả dữ liệu trận đấu và cập nhật hồ sơ cầu thủ. Hành động này an toàn để sử dụng nhiều lần.",
     // Navigation
     navHome: "Trang chủ",
     navLive: "Trực tiếp",

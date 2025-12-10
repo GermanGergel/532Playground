@@ -4,12 +4,31 @@ import { Language } from './translations/index';
 import { get, set, del, keys } from 'idb-keyval';
 
 // --- SUPABASE CONFIGURATION ---
-// Environment variables are managed by the execution environment
-// @ts-ignore
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-// @ts-ignore
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
+// Universal environment variable access (works in Vite, Next.js, and standard Node)
+const getEnvVar = (key: string) => {
+    try {
+        // @ts-ignore
+        if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
+            // @ts-ignore
+            return import.meta.env[key];
+        }
+    } catch (e) {
+        // Ignore errors if import.meta is not defined
+    }
 
+    try {
+        if (typeof process !== 'undefined' && process.env && process.env[key]) {
+            return process.env[key];
+        }
+    } catch (e) {
+        // Ignore errors
+    }
+    
+    return undefined;
+};
+
+const supabaseUrl = getEnvVar('VITE_SUPABASE_URL');
+const supabaseAnonKey = getEnvVar('VITE_SUPABASE_ANON_KEY');
 
 // Initialize Supabase ONLY if keys are present
 const supabase = (supabaseUrl && supabaseAnonKey) 
@@ -133,11 +152,9 @@ export const saveSinglePlayerToDB = async (player: Player) => {
 
     // Supabase Mode
     try {
-        // FIX: Remove processedSessionIds before saving to avoid schema mismatch.
-        const { processedSessionIds, ...playerForDb } = player;
         const { error } = await supabase!
             .from('players')
-            .upsert(playerForDb, { onConflict: 'id' });
+            .upsert(player, { onConflict: 'id' });
         if (error) throw error;
     } catch (error) {
         console.error("Supabase Save Single Player Error:", error);
@@ -184,18 +201,19 @@ export const savePlayersToDB = async (players: Player[]) => {
     // Mode 1: Cloud
     if (isSupabaseConfigured()) {
         try {
-            // ATOMIC UPDATE: Save players one by one. Slower, but much more reliable against payload size limits.
-            for (const player of realPlayers) {
-                // FIX: Remove processedSessionIds before saving to avoid schema mismatch.
-                const { processedSessionIds, ...playerForDb } = player;
+            // CRITICAL FIX: Split into VERY small chunks (2) to avoid Supabase payload size limits 
+            // especially with high-res base64 images. 
+            // Previous limit of 5 was still occasionally causing timeouts.
+            const CHUNK_SIZE = 2; 
+            for (let i = 0; i < realPlayers.length; i += CHUNK_SIZE) {
+                const chunk = realPlayers.slice(i, i + CHUNK_SIZE);
                 const { error } = await supabase!
                     .from('players')
-                    .upsert(playerForDb, { onConflict: 'id' });
+                    .upsert(chunk, { onConflict: 'id' });
                 
-                if (error) {
-                    console.error(`Supabase Save Error (Single Player ${player.id}):`, error);
-                    throw error; // If one fails, the whole process fails to ensure data consistency.
-                }
+                if (error) throw error;
+                // Small delay to be nice to the database and prevent rate limits
+                await new Promise(resolve => setTimeout(resolve, 100));
             }
         } catch (error) {
             console.error("Supabase Save Error (Batch):", error);
@@ -219,34 +237,30 @@ export const savePlayersToDB = async (players: Player[]) => {
     }
 };
 
-export const loadPlayersFromCloud = async (): Promise<Player[] | null> => {
-    if (!isSupabaseConfigured()) return null;
-    try {
-        const { data, error } = await supabase!.from('players').select('*');
-        if (error) {
-            console.warn("Supabase: Failed to load players from cloud.", error);
-            return null; // Return null on error instead of throwing
-        }
-        return data as Player[];
-    } catch (e) {
-        console.error("Supabase: Exception while loading players from cloud.", e);
-        return null;
-    }
-};
-
 export const loadPlayersFromDB = async (): Promise<Player[] | undefined> => {
     logStorageMode();
-    const cloudPlayers = await loadPlayersFromCloud();
 
-    if (cloudPlayers) {
-        // Sync cloud to local cache for future offline use
-        await set('players', cloudPlayers);
-        return cloudPlayers;
+    // Mode 1: Cloud
+    if (isSupabaseConfigured()) {
+        try {
+            const { data, error } = await supabase!
+                .from('players')
+                .select('*');
+            if (error) throw error;
+            return data as Player[];
+        } catch (error) {
+            // If cloud fails, try local quietly
+            return await get('players');
+        }
+    } 
+    // Mode 2: Local Fallback
+    else {
+        try {
+            return await get('players');
+        } catch (error) {
+            return undefined;
+        }
     }
-    
-    // Fallback to local if cloud fails
-    console.log("Supabase: Falling back to local player data.");
-    return await get('players');
 };
 
 // --- ACTIVE SESSION ---
@@ -280,15 +294,9 @@ export const saveHistoryToDB = async (history: Session[]) => {
     // Mode 1: Cloud
     if (isSupabaseConfigured()) {
         try {
-            // FIX: Remove properties that cause errors (schema mismatch or payload size) before saving.
-            const historyForDb = realHistory.map(session => {
-                const { isTestMode, eventLog, ...rest } = session;
-                return rest;
-            });
-
             const { error } = await supabase!
                 .from('sessions')
-                .upsert(historyForDb, { onConflict: 'id' });
+                .upsert(realHistory, { onConflict: 'id' });
             if (error) throw error;
         } catch (error) {
             console.error("Supabase Save History Error:", error);

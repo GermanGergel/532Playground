@@ -1,12 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-import { useTranslation } from '../ui';
 import { Session, Game, GameStatus, Goal, GoalPayload, SubPayload, EventLogEntry, EventType, StartRoundPayload, Player, BadgeType, RotationMode, Team, SessionStatus } from '../types';
 import { playAnnouncement, initAudioContext } from '../lib';
 import { processFinishedSession } from '../services/sessionProcessor';
 import { newId } from '../screens/utils';
 import { savePlayersToDB, saveNewsToDB, saveHistoryToDB } from '../db';
+import { useTranslation } from '../ui';
 
 export const useGameManager = () => {
     const { activeSession, setActiveSession, setHistory, setAllPlayers, setNewsFeed, allPlayers: oldPlayersState, newsFeed, activeVoicePack } = useApp();
@@ -148,15 +148,16 @@ export const useGameManager = () => {
                 status: GameStatus.Pending 
             };
             
+            const getPlayerNickname = (id: string) => session.playerPool.find(p => p.id === id)?.nickname || '';
             const startRoundEvent: EventLogEntry = {
                 timestamp: new Date().toISOString(),
                 round: nextGame.gameNumber,
                 type: EventType.START_ROUND,
                 payload: {
-                    leftTeamColor: nextTeam1.color,
-                    rightTeamColor: nextTeam2.color,
-                    leftPlayerIds: nextTeam1.playerIds.slice(0, session.playersPerTeam),
-                    rightPlayerIds: nextTeam2.playerIds.slice(0, session.playersPerTeam),
+                    leftTeam: nextTeam1.color,
+                    rightTeam: nextTeam2.color,
+                    leftPlayers: nextTeam1.playerIds.slice(0, session.playersPerTeam).map(getPlayerNickname),
+                    rightPlayers: nextTeam2.playerIds.slice(0, session.playersPerTeam).map(getPlayerNickname),
                 } as StartRoundPayload,
             };
 
@@ -228,48 +229,40 @@ export const useGameManager = () => {
         });
     };
 
-    const handleGoalSave = (goalData: Omit<Goal, 'id' | 'gameId' | 'timestampSeconds'>) => {
+    const handleGoalSave = (goalData: Omit<Goal, 'id' | 'gameId' | 'timestampSeconds'>, goalPayload: GoalPayload) => {
         setActiveSession(s => {
-            if (!s || !currentGame) return null;
+            if (!s) return null;
             const games = [...s.games];
-            let currentGameCopy = { ...games[s.games.length - 1] };
+            let currentGame = { ...games[s.games.length - 1] };
             
-            if (currentGameCopy.status === GameStatus.Finished) return s;
+            if (currentGame.status === GameStatus.Finished) return s;
 
-            const currentTotalElapsed = currentGameCopy.status === GameStatus.Active && currentGameCopy.lastResumeTime
-                ? currentGameCopy.elapsedSecondsOnPause + (Date.now() - currentGameCopy.lastResumeTime) / 1000
-                : currentGameCopy.elapsedSecondsOnPause;
+            const currentTotalElapsed = currentGame.status === GameStatus.Active && currentGame.lastResumeTime
+                ? currentGame.elapsedSecondsOnPause + (Date.now() - currentGame.lastResumeTime) / 1000
+                : currentGame.elapsedSecondsOnPause;
 
             const newGoal: Goal = { 
                 ...goalData, 
                 id: newId(), 
-                gameId: currentGameCopy.id, 
+                gameId: currentGame.id, 
                 timestampSeconds: Math.floor(currentTotalElapsed)
             };
             
-            currentGameCopy.goals = [...currentGameCopy.goals, newGoal];
+            currentGame.goals = [...currentGame.goals, newGoal];
 
-            if (newGoal.teamId === currentGameCopy.team1Id) {
-                currentGameCopy.team1Score++;
+            if (newGoal.teamId === currentGame.team1Id) {
+                currentGame.team1Score++;
             } else {
-                currentGameCopy.team2Score++;
+                currentGame.team2Score++;
             }
             
-            games[s.games.length - 1] = currentGameCopy;
-            
-            const scoringTeam = s.teams.find(t => t.id === goalData.teamId);
-            const defendingTeam = s.teams.find(t => t.id !== goalData.teamId && (t.id === currentGame.team1Id || t.id === currentGame.team2Id));
+            games[s.games.length - 1] = currentGame;
 
-            const goalEvent: EventLogEntry = {
+             const goalEvent: EventLogEntry = {
                 timestamp: new Date().toISOString(),
-                round: currentGameCopy.gameNumber,
+                round: currentGame.gameNumber,
                 type: EventType.GOAL,
-                payload: {
-                    teamColor: goalData.isOwnGoal ? defendingTeam!.color : scoringTeam!.color,
-                    scorerId: goalData.scorerId,
-                    assistId: goalData.assistantId,
-                    isOwnGoal: goalData.isOwnGoal,
-                } as GoalPayload,
+                payload: goalPayload,
             };
             
             return { ...s, games, eventLog: [...s.eventLog, goalEvent] };
@@ -298,10 +291,37 @@ export const useGameManager = () => {
             updatedGame.goals[goalIndex] = updatedGoal;
             games[gameIndex] = updatedGame;
     
-            // TODO: Update event log
+            const getPlayerNickname = (id?: string) => s.playerPool.find(p => p.id === id)?.nickname;
+            
+            const eventLog = [...s.eventLog];
+            let eventUpdated = false;
+            for (let i = eventLog.length - 1; i >= 0; i--) {
+                const event = eventLog[i];
+                 if (event.round === updatedGame.gameNumber && event.type === EventType.GOAL) {
+                    const eventTimestamp = new Date(event.timestamp).getTime();
+                    const goalTimestamp = (updatedGame.startTime || 0) + originalGoal.timestampSeconds * 1000;
+                    
+                    if (Math.abs(eventTimestamp - goalTimestamp) < 2000) {
+                        const payload = event.payload as GoalPayload;
+                        const originalTeamColor = s.teams.find(t => t.id === originalGoal.teamId)?.color;
+                        
+                        if(payload.team === originalTeamColor){
+                             const newPayload: GoalPayload = {
+                                ...payload,
+                                scorer: getPlayerNickname(updatedGoal.scorerId),
+                                assist: getPlayerNickname(updatedGoal.assistantId),
+                                isOwnGoal: updatedGoal.isOwnGoal,
+                            };
+                            eventLog[i] = { ...event, payload: newPayload };
+                            eventUpdated = true;
+                            break;
+                        }
+                    }
+                }
+            }
             
             setGoalToEdit(null);
-            return { ...s, games };
+            return { ...s, games, eventLog: eventUpdated ? eventLog : s.eventLog };
         });
     };
 
@@ -331,14 +351,15 @@ export const useGameManager = () => {
             const currentLiveGame = currentSession.games[currentSession.games.length - 1];
             if (!currentLiveGame) return { ...currentSession, teams: updatedTeams };
     
+            const getPlayerNickname = (id: string) => currentSession.playerPool.find(p => p.id === id)?.nickname || '';
             const subEvent: EventLogEntry = {
                 timestamp: new Date().toISOString(),
                 round: currentLiveGame.gameNumber,
                 type: EventType.SUBSTITUTION,
                 payload: {
                     side: teamId === currentLiveGame.team1Id ? 'left' : 'right',
-                    outId: playerOutId,
-                    inId: playerInId,
+                    out: getPlayerNickname(playerOutId),
+                    in: getPlayerNickname(playerInId),
                 } as SubPayload,
             };
     
@@ -372,28 +393,20 @@ export const useGameManager = () => {
                 session: activeSession,
                 oldPlayers: oldPlayersState,
                 newsFeed: newsFeed,
-                force: false, // Default behavior
             });
 
-            const sessionForDb: Session = {
-                ...finalSession,
-                playerPool: (finalSession.playerPool as Player[]).map(p => p.id),
-                eventLog: [], // The critical change to reduce payload size
-            };
-            
-            await saveHistoryToDB([sessionForDb]);
-            
             if (playersToSave.length > 0) {
                 await savePlayersToDB(playersToSave);
+                setAllPlayers(updatedPlayers); 
             }
 
             if (updatedNewsFeed.length > newsFeed.length) {
                 await saveNewsToDB(updatedNewsFeed);
+                setNewsFeed(updatedNewsFeed);
             }
-            
-            setHistory(prev => [sessionForDb, ...prev].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-            setAllPlayers(updatedPlayers); 
-            setNewsFeed(updatedNewsFeed);
+
+            await saveHistoryToDB([finalSession]);
+            setHistory(prev => [finalSession, ...prev]);
 
             setActiveSession(null);
             navigate('/');
