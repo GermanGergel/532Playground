@@ -137,8 +137,6 @@ export const uploadPlayerImage = async (playerId: string, base64Image: string, t
         const filePath = `${playerId}/${type}_${Date.now()}.${fileExtension}`;
 
         // TRAFFIC OPTIMIZATION: Cache-Control set to 1 year (31536000 seconds)
-        // This is crucial. It tells the browser "Store this image on disk and NEVER ask the server for it again for 1 year".
-        // This allows us to use high-quality images without consuming bandwidth on every app launch.
         const { error: uploadError } = await supabase!.storage
             .from(BUCKET_NAME)
             .upload(filePath, blob, { 
@@ -197,22 +195,23 @@ export const saveSinglePlayerToDB = async (player: Player): Promise<DbResult> =>
 };
 
 // --- SINGLE PLAYER LOAD (TRAFFIC OPTIMIZED) ---
-export const loadSinglePlayerFromDB = async (id: string): Promise<Player | null> => {
-    // 1. CACHE FIRST: Try Local Storage (IndexedDB)
-    // This saves traffic for Public Profiles re-visiting the same player.
-    try {
-        const allPlayers = await get<Player[]>('players') || [];
-        const localPlayer = allPlayers.find(p => p.id === id);
-        
-        if (localPlayer) {
-            console.log(`⚡ Loaded player ${id} from local cache.`);
-            return localPlayer;
+export const loadSinglePlayerFromDB = async (id: string, skipCache: boolean = false): Promise<Player | null> => {
+    // 1. CACHE FIRST: Try Local Storage (IndexedDB) unless skipCache is true
+    if (!skipCache) {
+        try {
+            const allPlayers = await get<Player[]>('players') || [];
+            const localPlayer = allPlayers.find(p => p.id === id);
+            
+            if (localPlayer) {
+                console.log(`⚡ Loaded player ${id} from local cache.`);
+                return localPlayer;
+            }
+        } catch (e) {
+            console.warn("Local read failed", e);
         }
-    } catch (e) {
-        console.warn("Local read failed", e);
     }
 
-    // 2. Cloud Fallback (Only if not in local)
+    // 2. Cloud Fallback (Or if skipped cache)
     if (isSupabaseConfigured()) {
         try {
             console.log(`☁️ Fetching player ${id} from Cloud...`);
@@ -289,8 +288,7 @@ export const savePlayersToDB = async (players: Player[]): Promise<DbResult> => {
 };
 
 export const loadPlayersFromDB = async (): Promise<Player[] | undefined> => {
-    // Basic load still prefers cloud for the main database to ensure sync,
-    // but individual profile views use the optimized single loader.
+    // Basic load still prefers cloud for the main database to ensure sync
     if (isSupabaseConfigured()) {
         try {
             const { data, error } = await supabase!.from('players').select('*');

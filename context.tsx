@@ -30,7 +30,7 @@ interface AppContextType {
   setActiveVoicePack: (packNumber: number) => void;
   isLoading: boolean;
   displayTime: number; // Re-introduced for global timer
-  fetchFullHistory: () => Promise<void>;
+  fetchHistory: (limit?: number) => Promise<void>;
   fetchFullNews: () => Promise<void>;
 }
 
@@ -74,9 +74,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   // --- LAZY LOADING METHODS ---
-  const fetchFullHistory = async () => {
-      const fullHistory = await loadHistoryFromDB(); // No limit = full fetch
-      if (fullHistory) setHistory(fullHistory);
+  // Updated to accept limit
+  const fetchHistory = async (limit?: number) => {
+      const historyData = await loadHistoryFromDB(limit);
+      if (historyData) setHistory(historyData);
   };
 
   const fetchFullNews = async () => {
@@ -129,7 +130,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveVoicePack,
     isLoading,
     displayTime,
-    fetchFullHistory,
+    fetchHistory,
     fetchFullNews
   };
 

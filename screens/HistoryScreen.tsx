@@ -8,22 +8,21 @@ import { Session } from '../types';
 import { BrandedHeader } from './utils';
 
 export const HistoryScreen: React.FC = () => {
-    const { history, setHistory, fetchFullHistory } = useApp();
+    const { history, setHistory, fetchHistory } = useApp();
     const t = useTranslation();
     const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
     const [sessionToDelete, setSessionToDelete] = React.useState<Session | null>(null);
     const [isLoadingMore, setIsLoadingMore] = React.useState(false);
 
-    // Lazy load full history on mount if we only have the startup subset
+    // TRAFFIC OPTIMIZATION: Only load the last 3 sessions when visiting this screen.
+    // The user must access the database directly for older records.
     React.useEffect(() => {
-        const loadMore = async () => {
-            if (history.length <= 5) {
-                setIsLoadingMore(true);
-                await fetchFullHistory();
-                setIsLoadingMore(false);
-            }
+        const loadRecentHistory = async () => {
+            setIsLoadingMore(true);
+            await fetchHistory(3);
+            setIsLoadingMore(false);
         };
-        loadMore();
+        loadRecentHistory();
     }, []);
 
     const openDeleteModal = (session: Session) => {
@@ -41,7 +40,7 @@ export const HistoryScreen: React.FC = () => {
     return (
         <Page>
             <BrandedHeader className="mb-8" />
-            {history.length === 0 ? (
+            {history.length === 0 && !isLoadingMore ? (
                 <p className="text-center text-dark-text-secondary">{t.noSessionsFound}</p>
             ) : (
                 <>
@@ -79,6 +78,12 @@ export const HistoryScreen: React.FC = () => {
                         <div className="flex justify-center mt-4">
                             <div className="w-6 h-6 border-2 border-dark-accent-start border-t-transparent rounded-full animate-spin"></div>
                         </div>
+                    )}
+                    {/* Visual cue that only recent history is shown */}
+                    {!isLoadingMore && history.length >= 3 && (
+                        <p className="text-center text-[10px] text-dark-text-secondary mt-6 uppercase tracking-widest opacity-50">
+                            Showing last 3 sessions
+                        </p>
                     )}
                 </>
             )}

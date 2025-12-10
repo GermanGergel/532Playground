@@ -14,6 +14,7 @@ export const SettingsScreen: React.FC = () => {
     const [isRefreshing, setIsRefreshing] = React.useState(false);
     
     const checkCloud = async () => {
+        if (isRefreshing) return;
         setIsRefreshing(true);
         if (isSupabaseConfigured()) {
             // TRAFFIC OPTIMIZATION: Use lightweight HEAD request (count only)
@@ -70,7 +71,10 @@ export const SettingsScreen: React.FC = () => {
         const theme = isOnline ? onlineTheme : offlineTheme;
         
         return (
-            <div className={`relative overflow-hidden rounded-xl border ${theme.borderColor}/50 bg-black/60 p-5 shadow-[0_0_20px_${theme.glowColor}] transition-all duration-500`}>
+            <div 
+                onClick={checkCloud}
+                className={`relative overflow-hidden rounded-xl border ${theme.borderColor}/50 bg-black/60 p-5 shadow-[0_0_20px_${theme.glowColor}] transition-all duration-300 cursor-pointer active:scale-95 group select-none`}
+            >
                 <div 
                     className="absolute inset-0 opacity-10 pointer-events-none"
                     style={{ 
@@ -92,7 +96,7 @@ export const SettingsScreen: React.FC = () => {
                         </div>
 
                         <div className="flex flex-col">
-                            <h3 className="text-[10px] font-bold tracking-[0.2em] text-dark-text-secondary uppercase mb-0.5">
+                            <h3 className="text-[10px] font-bold tracking-[0.2em] text-dark-text-secondary uppercase mb-0.5 group-hover:text-white transition-colors">
                                 DATABASE UPLINK
                             </h3>
                             <div className="flex items-center gap-2">
@@ -105,15 +109,8 @@ export const SettingsScreen: React.FC = () => {
                     <div className="text-right">
                         <div className="flex flex-col items-end">
                             <div className="flex items-center gap-2">
-                                <button 
-                                    onClick={checkCloud} 
-                                    disabled={isRefreshing}
-                                    className="p-1.5 rounded-full hover:bg-white/10 transition-colors active:scale-95 text-dark-text-secondary"
-                                >
-                                    <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                                </button>
-                                <span className="text-[9px] text-dark-text-secondary font-mono">
-                                    SYNC STATUS
+                                <span className="text-[9px] text-dark-text-secondary font-mono group-hover:text-dark-accent-start transition-colors">
+                                    {isRefreshing ? 'SYNCING...' : 'TAP TO SYNC'}
                                 </span>
                             </div>
                             

@@ -7,6 +7,7 @@ import { getSessionAnthemUrl, loadSinglePlayerFromDB } from '../db';
 import { PublicPlayerCard } from '../components/PublicPlayerCard';
 import { useApp } from '../context';
 import { Language } from '../translations/index';
+import { RefreshCw } from '../icons';
 
 const MusicLoader: React.FC<{ onInteract: () => void }> = ({ onInteract }) => {
     const t = useTranslation();
@@ -46,6 +47,7 @@ export const PublicProfileScreen: React.FC = () => {
     const navigate = useNavigate();
     const [player, setPlayer] = React.useState<Player | null>(null);
     const [isLoading, setIsLoading] = React.useState(true);
+    const [isRefreshing, setIsRefreshing] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
     const { language, setLanguage } = useApp();
 
@@ -53,50 +55,54 @@ export const PublicProfileScreen: React.FC = () => {
     const [userInteracted, setUserInteracted] = React.useState(false);
     const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
+    const fetchPlayerAndMusic = async (forceRefresh: boolean = false) => {
+        if (!id) return;
+        
+        if (forceRefresh) setIsRefreshing(true);
+        else setIsLoading(true);
+
+        try {
+            // Pass 'true' to loadSinglePlayerFromDB if forcing refresh to bypass cache
+            const [playerData, musicUrl] = await Promise.all([
+                loadSinglePlayerFromDB(id, forceRefresh),
+                getSessionAnthemUrl()
+            ]);
+
+            if (playerData) {
+                // Sanitize data: Ensure complex objects exist for older players
+                if (!playerData.records) {
+                    playerData.records = {
+                        bestGoalsInSession: { value: 0, sessionId: '' },
+                        bestAssistsInSession: { value: 0, sessionId: '' },
+                        bestWinRateInSession: { value: 0, sessionId: '' },
+                    };
+                }
+                if (!playerData.badges) {
+                    playerData.badges = {};
+                }
+                
+                setPlayer(playerData);
+            } else {
+                setError("Player not found.");
+            }
+            setAnthemUrl(musicUrl);
+
+        } catch (err) {
+            console.error("Failed to load data:", err);
+            setError("An error occurred while fetching data.");
+        } finally {
+            if (forceRefresh) setIsRefreshing(false);
+            else setTimeout(() => setIsLoading(false), 500);
+        }
+    };
+
     React.useEffect(() => {
         if (!id) {
             setError("No player ID provided.");
             setIsLoading(false);
             return;
         }
-
-        const fetchPlayerAndMusic = async () => {
-            setIsLoading(true);
-            try {
-                // getSessionAnthemUrl now intelligently returns a cached Blob URL if available
-                const [playerData, musicUrl] = await Promise.all([
-                    loadSinglePlayerFromDB(id),
-                    getSessionAnthemUrl()
-                ]);
-
-                if (playerData) {
-                    // Sanitize data: Ensure complex objects exist for older players
-                    if (!playerData.records) {
-                        playerData.records = {
-                            bestGoalsInSession: { value: 0, sessionId: '' },
-                            bestAssistsInSession: { value: 0, sessionId: '' },
-                            bestWinRateInSession: { value: 0, sessionId: '' },
-                        };
-                    }
-                    if (!playerData.badges) {
-                        playerData.badges = {};
-                    }
-                    
-                    setPlayer(playerData);
-                } else {
-                    setError("Player not found.");
-                }
-                setAnthemUrl(musicUrl);
-
-            } catch (err) {
-                console.error("Failed to load data:", err);
-                setError("An error occurred while fetching data.");
-            } finally {
-                setTimeout(() => setIsLoading(false), 500); // Faster loading
-            }
-        };
-
-        fetchPlayerAndMusic();
+        fetchPlayerAndMusic(false);
     }, [id]);
 
     React.useEffect(() => {
@@ -110,11 +116,6 @@ export const PublicProfileScreen: React.FC = () => {
         return () => {
             if (audioRef.current) {
                 audioRef.current.pause();
-                // Revoke URL if it was a blob to free memory, but React state reuse might make this tricky.
-                // Generally browser handles GC for blobs when page closes, but explicitly:
-                if (anthemUrl && anthemUrl.startsWith('blob:')) {
-                    // We don't revoke here because user might replay, let browser handle it on navigation
-                }
                 audioRef.current = null;
             }
         };
@@ -144,8 +145,22 @@ export const PublicProfileScreen: React.FC = () => {
 
     return (
         <Page>
-            <div className="flex items-center justify-center mb-8 h-12">
-                <LanguageSwitcher />
+            <div className="flex items-center justify-between mb-8 h-12 relative">
+                {/* Spacer to balance title/content if needed, or left action */}
+                <div className="w-8"></div> 
+                
+                <div className="absolute left-1/2 -translate-x-1/2">
+                    <LanguageSwitcher />
+                </div>
+
+                <button 
+                    onClick={() => fetchPlayerAndMusic(true)}
+                    disabled={isRefreshing || isLoading}
+                    className="p-2 rounded-full bg-dark-surface/50 text-dark-text-secondary hover:text-white transition-colors active:scale-95"
+                    title="Refresh Data"
+                >
+                    <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                </button>
             </div>
             
             {isLoading && (
