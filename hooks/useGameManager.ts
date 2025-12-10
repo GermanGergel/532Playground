@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -5,7 +6,7 @@ import { Session, Game, GameStatus, Goal, GoalPayload, SubPayload, EventLogEntry
 import { playAnnouncement, initAudioContext } from '../lib';
 import { processFinishedSession } from '../services/sessionProcessor';
 import { newId } from '../screens/utils';
-import { savePlayersToDB, saveNewsToDB, saveHistoryToDB } from '../db';
+import { savePlayersToDB, saveNewsToDB, saveSingleSessionToDB } from '../db';
 import { useTranslation } from '../ui';
 
 export const useGameManager = () => {
@@ -395,17 +396,25 @@ export const useGameManager = () => {
                 newsFeed: newsFeed,
             });
 
+            // 1. Explicit Cloud Sync for Players
             if (playersToSave.length > 0) {
                 await savePlayersToDB(playersToSave);
-                setAllPlayers(updatedPlayers); 
             }
+            // 2. Update Local State (triggers cache save via Context useEffect)
+            setAllPlayers(updatedPlayers); 
 
+            // 3. Explicit Cloud Sync for News
             if (updatedNewsFeed.length > newsFeed.length) {
                 await saveNewsToDB(updatedNewsFeed);
-                setNewsFeed(updatedNewsFeed);
             }
+            setNewsFeed(updatedNewsFeed);
 
-            await saveHistoryToDB([finalSession]);
+            // 4. Explicit Cloud Sync for Session (Single)
+            // Use saveSingleSessionToDB instead of saveHistoryToDB([arr]) to avoid
+            // potentially overwriting the entire history in local storage logic.
+            await saveSingleSessionToDB(finalSession);
+            
+            // 5. Update Local History State
             setHistory(prev => [finalSession, ...prev]);
 
             setActiveSession(null);

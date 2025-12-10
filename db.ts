@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import { Player, Session, NewsItem } from './types';
 import { Language } from './translations/index';
@@ -133,12 +134,27 @@ export const deletePlayerImage = async (imageUrl: string) => {
     }
 };
 
-// --- SINGLE PLAYER SAVE (ATOMIC) ---
-export const saveSinglePlayerToDB = async (player: Player) => {
-    if (isDemoData(player.id)) return; // Don't save demo players
+// --- LOCAL CACHE HELPERS (For Context useEffects) ---
+// These functions ONLY touch IndexedDB. They are safe to call frequently.
+export const saveLocalPlayers = async (players: Player[]) => {
+    try { await set('players', players); } catch (e) {}
+};
+export const saveLocalHistory = async (history: Session[]) => {
+    try { await set('history', history); } catch (e) {}
+};
+export const saveLocalNews = async (news: NewsItem[]) => {
+    try { await set('newsFeed', news); } catch (e) {}
+};
 
-    if (!isSupabaseConfigured()) {
-        // Fallback for local-only mode: load all, update one, save all
+
+// --- CLOUD SYNC FUNCTIONS (Transactional) ---
+
+// SINGLE PLAYER SAVE (ATOMIC)
+export const saveSinglePlayerToDB = async (player: Player) => {
+    if (isDemoData(player.id)) return;
+
+    // Always update local cache immediately
+    try {
         const allPlayers = await get<Player[]>('players') || [];
         const playerIndex = allPlayers.findIndex(p => p.id === player.id);
         if (playerIndex > -1) {
@@ -147,22 +163,23 @@ export const saveSinglePlayerToDB = async (player: Player) => {
             allPlayers.push(player);
         }
         await set('players', allPlayers);
-        return;
-    }
+    } catch(e) {}
 
-    // Supabase Mode
-    try {
-        const { error } = await supabase!
-            .from('players')
-            .upsert(player, { onConflict: 'id' });
-        if (error) throw error;
-    } catch (error) {
-        console.error("Supabase Save Single Player Error:", error);
-        throw error;
+    // Supabase Sync
+    if (isSupabaseConfigured()) {
+        try {
+            const { error } = await supabase!
+                .from('players')
+                .upsert(player, { onConflict: 'id' });
+            if (error) throw error;
+        } catch (error) {
+            console.error("Supabase Save Single Player Error:", error);
+            throw error;
+        }
     }
 };
 
-// --- SINGLE PLAYER LOAD ---
+// SINGLE PLAYER LOAD
 export const loadSinglePlayerFromDB = async (id: string): Promise<Player | null> => {
     if (!isSupabaseConfigured()) {
         const allPlayers = await get<Player[]>('players') || [];
@@ -176,35 +193,32 @@ export const loadSinglePlayerFromDB = async (id: string): Promise<Player | null>
             .eq('id', id)
             .single();
         if (error) {
-            // 'single()' throws an error if 0 or >1 rows are found.
-            if (error.code === 'PGRST116') { // PostgREST error for "exact one row not found"
-                return null;
-            }
+            if (error.code === 'PGRST116') return null;
             throw error;
         }
         return data as Player;
     } catch (error) {
         console.error(`Supabase Load Single Player Error (ID: ${id}):`, error);
-        // Fallback to local cache if cloud fails
         const allPlayers = await get<Player[]>('players') || [];
         return allPlayers.find(p => p.id === id) || null;
     }
 };
 
 
-// --- PLAYERS (Legacy bulk save, updated with CHUNKING) ---
+// BULK PLAYER SAVE (Explicit Cloud Sync)
 export const savePlayersToDB = async (players: Player[]) => {
     logStorageMode();
     const realPlayers = players.filter(p => !isDemoData(p.id));
-    if (realPlayers.length === 0) return; // Nothing to save
+    if (realPlayers.length === 0) return;
     
+    // Always update local cache
+    await saveLocalPlayers(players);
+
     // Mode 1: Cloud
     if (isSupabaseConfigured()) {
         try {
-            // CRITICAL FIX: Split into VERY small chunks (2) to avoid Supabase payload size limits 
-            // especially with high-res base64 images. 
-            // Previous limit of 5 was still occasionally causing timeouts.
-            const CHUNK_SIZE = 2; 
+            // Split into small chunks to avoid payload limits
+            const CHUNK_SIZE = 5; 
             for (let i = 0; i < realPlayers.length; i += CHUNK_SIZE) {
                 const chunk = realPlayers.slice(i, i + CHUNK_SIZE);
                 const { error } = await supabase!
@@ -212,35 +226,17 @@ export const savePlayersToDB = async (players: Player[]) => {
                     .upsert(chunk, { onConflict: 'id' });
                 
                 if (error) throw error;
-                // Small delay to be nice to the database and prevent rate limits
-                await new Promise(resolve => setTimeout(resolve, 100));
+                await new Promise(resolve => setTimeout(resolve, 100)); // Rate limiting
             }
         } catch (error) {
             console.error("Supabase Save Error (Batch):", error);
             throw error;
         }
     } 
-    // Mode 2: Local Fallback
-    else {
-        try {
-            // CORRECTED LOGIC: Merge players instead of overwriting the entire list.
-            const allPlayers = await get<Player[]>('players') || [];
-            const playersMap = new Map(allPlayers.map(p => [p.id, p]));
-            realPlayers.forEach(playerToSave => {
-                playersMap.set(playerToSave.id, playerToSave);
-            });
-            const updatedPlayers = Array.from(playersMap.values());
-            await set('players', updatedPlayers);
-        } catch (error) {
-            // Silent fail or minimal log
-        }
-    }
 };
 
 export const loadPlayersFromDB = async (): Promise<Player[] | undefined> => {
     logStorageMode();
-
-    // Mode 1: Cloud
     if (isSupabaseConfigured()) {
         try {
             const { data, error } = await supabase!
@@ -249,22 +245,13 @@ export const loadPlayersFromDB = async (): Promise<Player[] | undefined> => {
             if (error) throw error;
             return data as Player[];
         } catch (error) {
-            // If cloud fails, try local quietly
             return await get('players');
         }
     } 
-    // Mode 2: Local Fallback
-    else {
-        try {
-            return await get('players');
-        } catch (error) {
-            return undefined;
-        }
-    }
+    return await get('players');
 };
 
 // --- ACTIVE SESSION ---
-// Active session is ALWAYS local (IndexedDB) for performance and offline stability during games.
 export const saveActiveSessionToDB = async (session: Session | null) => {
     try {
         if (session && !isDemoData(session.id)) {
@@ -272,10 +259,7 @@ export const saveActiveSessionToDB = async (session: Session | null) => {
         } else if (!session) {
             await set('activeSession', null);
         }
-        // If demo session, simply don't save to DB (stays in React state)
-    } catch (error) {
-        // Silent
-    }
+    } catch (error) {}
 };
 
 export const loadActiveSessionFromDB = async (): Promise<Session | null | undefined> => {
@@ -288,10 +272,23 @@ export const loadActiveSessionFromDB = async (): Promise<Session | null | undefi
 
 // --- HISTORY (SESSIONS) ---
 
-// Optimized single session save to prevent payload errors on updates
+// SINGLE SESSION SAVE
 export const saveSingleSessionToDB = async (session: Session) => {
     if (isDemoData(session.id)) return;
 
+    // Update Local Cache
+    try {
+        const history = await get<Session[]>('history') || [];
+        const index = history.findIndex(s => s.id === session.id);
+        if (index > -1) {
+            history[index] = session;
+        } else {
+            history.push(session);
+        }
+        await set('history', history);
+    } catch (error) {}
+
+    // Cloud Sync
     if (isSupabaseConfigured()) {
         try {
             const { error } = await supabase!
@@ -302,31 +299,47 @@ export const saveSingleSessionToDB = async (session: Session) => {
             console.error("Supabase Save Single Session Error:", error);
             throw error;
         }
-    } else {
-        // Local fallback: update entry in history array
+    }
+};
+
+// DELETE SESSION
+export const deleteSessionFromDB = async (sessionId: string) => {
+    if (isDemoData(sessionId)) return;
+
+    // Update Local Cache
+    try {
+        const history = await get<Session[]>('history') || [];
+        const updatedHistory = history.filter(s => s.id !== sessionId);
+        await set('history', updatedHistory);
+    } catch (error) {}
+
+    // Cloud Sync
+    if (isSupabaseConfigured()) {
         try {
-            const history = await get<Session[]>('history') || [];
-            const index = history.findIndex(s => s.id === session.id);
-            if (index > -1) {
-                history[index] = session;
-            } else {
-                history.push(session);
-            }
-            await set('history', history);
+            const { error } = await supabase!
+                .from('sessions')
+                .delete()
+                .eq('id', sessionId);
+            if (error) throw error;
         } catch (error) {
-            console.error("Local Save Single Session Error:", error);
+            console.error("Supabase Delete Session Error:", error);
+            throw error;
         }
     }
 };
 
+// BULK HISTORY SAVE (Explicit Cloud Sync)
 export const saveHistoryToDB = async (history: Session[]) => {
-    const realHistory = history.filter(s => !isDemoData(s.id));
-    if (realHistory.length === 0 && history.length > 0) return; // Only demo sessions present
+    // Always save local
+    await saveLocalHistory(history);
 
-    // Mode 1: Cloud
+    const realHistory = history.filter(s => !isDemoData(s.id));
+    if (realHistory.length === 0) return;
+
     if (isSupabaseConfigured()) {
+        // NOTE: This function should only be called for explicit bulk migrations.
+        // It is dangerous to call this from a useEffect loop with a large history.
         try {
-            // FIX: Implemented chunking for sessions as well, because eventLogs can get large
             const CHUNK_SIZE = 5; 
             for (let i = 0; i < realHistory.length; i += CHUNK_SIZE) {
                 const chunk = realHistory.slice(i, i + CHUNK_SIZE);
@@ -335,7 +348,6 @@ export const saveHistoryToDB = async (history: Session[]) => {
                     .upsert(chunk, { onConflict: 'id' });
                 
                 if (error) throw error;
-                // Tiny delay to prevent network congestion
                 await new Promise(resolve => setTimeout(resolve, 50));
             }
         } catch (error) {
@@ -343,18 +355,9 @@ export const saveHistoryToDB = async (history: Session[]) => {
             throw error;
         }
     } 
-    // Mode 2: Local Fallback
-    else {
-        try {
-            await set('history', realHistory);
-        } catch (error) {
-            // Silent
-        }
-    }
 };
 
 export const loadHistoryFromDB = async (): Promise<Session[] | undefined> => {
-    // Mode 1: Cloud
     if (isSupabaseConfigured()) {
         try {
             const { data, error } = await supabase!
@@ -367,22 +370,17 @@ export const loadHistoryFromDB = async (): Promise<Session[] | undefined> => {
             return await get('history');
         }
     } 
-    // Mode 2: Local Fallback
-    else {
-        try {
-            return await get('history');
-        } catch (error) {
-            return undefined;
-        }
-    }
+    return await get('history');
 };
 
 // --- NEWS FEED ---
 export const saveNewsToDB = async (news: NewsItem[]) => {
-    const realNews = news.filter(n => !isDemoData(n.id));
-    if (realNews.length === 0 && news.length > 0) return;
+    // Always save local
+    await saveLocalNews(news);
 
-    // Mode 1: Cloud
+    const realNews = news.filter(n => !isDemoData(n.id));
+    if (realNews.length === 0) return;
+
     if (isSupabaseConfigured()) {
         try {
             const { error } = await supabase!
@@ -394,18 +392,9 @@ export const saveNewsToDB = async (news: NewsItem[]) => {
             throw error;
         }
     } 
-    // Mode 2: Local Fallback
-    else {
-        try {
-            await set('newsFeed', realNews);
-        } catch (error) {
-            // Silent
-        }
-    }
 };
 
 export const loadNewsFromDB = async (): Promise<NewsItem[] | undefined> => {
-    // Mode 1: Cloud
     if (isSupabaseConfigured()) {
         try {
             const { data, error } = await supabase!
@@ -418,31 +407,16 @@ export const loadNewsFromDB = async (): Promise<NewsItem[] | undefined> => {
             return await get('newsFeed');
         }
     } 
-    // Mode 2: Local Fallback
-    else {
-        try {
-            return await get('newsFeed');
-        } catch (error) {
-            return undefined;
-        }
-    }
+    return await get('newsFeed');
 };
 
 // --- LANGUAGE (Always Local) ---
 export const saveLanguageToDB = async (lang: Language) => {
-    try {
-        await set('language', lang);
-    } catch (error) {
-        // Silent
-    }
+    try { await set('language', lang); } catch (error) {}
 };
 
 export const loadLanguageFromDB = async (): Promise<Language | undefined> => {
-    try {
-        return await get('language');
-    } catch (error) {
-        return undefined;
-    }
+    try { return await get('language'); } catch (error) { return undefined; }
 };
 
 // --- VOICE PACK (Always Local) ---
@@ -453,14 +427,13 @@ export const loadActiveVoicePackFromDB = async (): Promise<number | undefined> =
     try { return await get('activeVoicePack'); } catch(e) { return undefined; }
 };
 
-// --- HYBRID AUDIO ASSETS (Supabase Storage + IndexedDB Cache) ---
+// --- HYBRID AUDIO ASSETS ---
 const AUDIO_BUCKET = 'audio_assets';
 const AUDIO_KEY_PREFIX = 'audio_';
 type CachedAudio = { data: string; lastModified: string };
 
 const getCacheKey = (key: string, packNumber: number) => `${AUDIO_KEY_PREFIX}pack${packNumber}_${key}`;
 
-// 1. Save: Upload to cloud, then cache locally
 export const saveCustomAudio = async (key: string, base64: string, packNumber: number): Promise<void> => {
     const cacheKey = getCacheKey(key, packNumber);
     if (!isSupabaseConfigured()) {
@@ -475,47 +448,35 @@ export const saveCustomAudio = async (key: string, base64: string, packNumber: n
             upsert: true 
         });
         if (error) throw error;
-        
-        // After successful upload, cache it locally
         await set(cacheKey, { data: base64, lastModified: new Date().toISOString() });
     } catch (error) {
         console.error("Failed to save/upload custom audio:", error);
-        throw error; // Re-throw to be caught by UI
+        throw error;
     }
 };
 
-// 2. Load: Always read from local cache for speed
 export const loadCustomAudio = async (key: string, packNumber: number): Promise<string | undefined> => {
     const cacheKey = getCacheKey(key, packNumber);
     try {
         const cached = await get<CachedAudio>(cacheKey);
         return cached?.data;
     } catch (error) {
-        console.error("Failed to load custom audio from cache:", error);
         return undefined;
     }
 };
 
-// 3. Delete: Remove from cloud and local cache
 export const deleteCustomAudio = async (key: string, packNumber: number): Promise<void> => {
     const cacheKey = getCacheKey(key, packNumber);
     if (isSupabaseConfigured()) {
         try {
             const filePath = `pack${packNumber}/${key}.mp3`;
             await supabase!.storage.from(AUDIO_BUCKET).remove([filePath]);
-            // For cleanup of old root-level files
-            if (packNumber === 1) {
-                await supabase!.storage.from(AUDIO_BUCKET).remove([`${key}.mp3`]);
-            }
+            if (packNumber === 1) await supabase!.storage.from(AUDIO_BUCKET).remove([`${key}.mp3`]);
         } catch (error) {
             console.error("Failed to delete custom audio from cloud:", error);
         }
     }
-    try {
-        await del(cacheKey);
-    } catch (error) {
-        console.error("Failed to delete custom audio from cache:", error);
-    }
+    try { await del(cacheKey); } catch (error) {}
 };
 
 const blobToBase64 = (blob: Blob): Promise<string> => {
@@ -527,12 +488,9 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
     });
 };
 
-// 4. Sync: On app start, sync cloud to local cache
 export const syncAndCacheAudioAssets = async () => {
     if (!isSupabaseConfigured()) return;
-
     try {
-        console.log("Syncing audio assets from cloud...");
         const { data: cloudFiles, error } = await supabase!.storage.from(AUDIO_BUCKET).list('', {
             limit: 100,
             offset: 0,
@@ -554,14 +512,13 @@ export const syncAndCacheAudioAssets = async () => {
             if (isNaN(packNumber)) continue;
 
             const cacheKey = getCacheKey(key, packNumber);
-            localKeySet.delete(cacheKey); // Mark as present in cloud
+            localKeySet.delete(cacheKey);
 
             const localAsset = await get<CachedAudio>(cacheKey);
             const cloudLastModified = new Date(cloudFile.updated_at || cloudFile.created_at).getTime();
             const localLastModified = localAsset ? new Date(localAsset.lastModified).getTime() : 0;
 
             if (!localAsset || cloudLastModified > localLastModified) {
-                console.log(`Downloading audio [Pack ${packNumber}]: ${key}`);
                 const { data: blob, error: downloadError } = await supabase!.storage.from(AUDIO_BUCKET).download(cloudFile.name);
                 if (downloadError) throw downloadError;
                 if (blob) {
@@ -570,19 +527,15 @@ export const syncAndCacheAudioAssets = async () => {
                 }
             }
         }
-        
-        // Clean up: remove local assets that no longer exist in the cloud
         for (const keyToDelete of localKeySet) {
-            console.log(`Removing stale local audio: ${keyToDelete}`);
             await del(keyToDelete);
         }
-
     } catch (error) {
         console.error("Failed to sync audio assets:", error);
     }
 };
 
-// --- SESSION ANTHEM (SINGLE TRACK) ---
+// --- SESSION ANTHEM ---
 const MUSIC_BUCKET = 'session_music';
 const ANTHEM_FILENAME = 'anthem.mp3';
 
@@ -595,8 +548,7 @@ export const uploadSessionAnthem = async (base64: string): Promise<string | null
     try {
         const blob = base64ToBlob(base64);
         const { error } = await supabase!.storage.from(MUSIC_BUCKET).upload(ANTHEM_FILENAME, blob, { 
-            cacheControl: '31536000', // 1 Year Cache
-            upsert: true 
+            cacheControl: '31536000', upsert: true 
         });
         if (error) throw error;
         const { data } = supabase!.storage.from(MUSIC_BUCKET).getPublicUrl(ANTHEM_FILENAME);
@@ -632,12 +584,10 @@ export const getSessionAnthemUrl = async (): Promise<string | null> => {
         const anthemFile = data.find(file => file.name === ANTHEM_FILENAME);
         if (anthemFile) {
             const { data: urlData } = supabase!.storage.from(MUSIC_BUCKET).getPublicUrl(ANTHEM_FILENAME);
-            // Add a timestamp to bust the cache (only if file actually updated)
             return `${urlData.publicUrl}?t=${new Date(anthemFile.updated_at).getTime()}`;
         }
         return null;
     } catch (error) {
-        console.error("Failed to get session anthem URL:", error);
         return null;
     }
 };

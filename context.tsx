@@ -3,11 +3,11 @@ import React from 'react';
 import { Session, Player, GameStatus, RotationMode, Team, Game, Goal, SessionStatus, EventLogEntry, EventType, StartRoundPayload, GoalPayload, PlayerStatus, PlayerTier, BadgeType, NewsItem } from './types';
 import { Language } from './translations/index';
 import { 
-    savePlayersToDB, 
+    saveLocalPlayers, 
     saveActiveSessionToDB, 
-    saveHistoryToDB,
+    saveLocalHistory,
     saveLanguageToDB,
-    saveNewsToDB,
+    saveLocalNews,
     saveActiveVoicePackToDB
 } from './db';
 import { initializeAppState } from './services/appInitializer';
@@ -70,6 +70,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   // --- PERSISTENCE EFFECT HOOKS (Save to DB) ---
+  // NOTE: These effects ONLY save to the LOCAL Cache (IndexedDB) to prevent
+  // high-frequency Cloud writes and errors. Cloud synchronization is handled 
+  // explicitly in specific action handlers (e.g. finish session, add player).
 
   React.useEffect(() => {
     if(!isLoading) {
@@ -79,13 +82,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   React.useEffect(() => {
     if(!isLoading) {
-        saveHistoryToDB(history);
+        saveLocalHistory(history);
     }
   }, [history, isLoading]);
 
   React.useEffect(() => {
     if(!isLoading) {
-        saveNewsToDB(newsFeed);
+        saveLocalPlayers(allPlayers);
+    }
+  }, [allPlayers, isLoading]);
+
+  React.useEffect(() => {
+    if(!isLoading) {
+        saveLocalNews(newsFeed);
     }
   }, [newsFeed, isLoading]);
   

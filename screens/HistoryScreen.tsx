@@ -7,7 +7,7 @@ import { Trash2, Zap } from '../icons';
 import { Session } from '../types';
 import { BrandedHeader } from './utils';
 import { processFinishedSession } from '../services/sessionProcessor';
-import { savePlayersToDB, saveNewsToDB, saveSingleSessionToDB } from '../db';
+import { savePlayersToDB, saveNewsToDB, saveSingleSessionToDB, deleteSessionFromDB, isSupabaseConfigured } from '../db';
 
 export const HistoryScreen: React.FC = () => {
     const { history, setHistory, allPlayers, setAllPlayers, newsFeed, setNewsFeed } = useApp();
@@ -16,22 +16,33 @@ export const HistoryScreen: React.FC = () => {
     // Deletion State
     const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
     const [sessionToDelete, setSessionToDelete] = React.useState<Session | null>(null);
+    const [isProcessing, setIsProcessing] = React.useState(false);
 
     // Recalculation State
     const [isRecalcModalOpen, setIsRecalcModalOpen] = React.useState(false);
     const [sessionToRecalc, setSessionToRecalc] = React.useState<Session | null>(null);
-    const [isRecalculating, setIsRecalculating] = React.useState(false);
 
     const openDeleteModal = (session: Session) => {
         setSessionToDelete(session);
         setIsDeleteModalOpen(true);
     };
 
-    const handleDelete = () => {
+    const handleDelete = async () => {
         if (!sessionToDelete) return;
-        setHistory(prev => prev.filter(s => s.id !== sessionToDelete.id));
-        setIsDeleteModalOpen(false);
-        setSessionToDelete(null);
+        setIsProcessing(true);
+        try {
+            // Explicitly delete from cloud/local storage
+            await deleteSessionFromDB(sessionToDelete.id);
+            // Update local state (triggers cache save via Context)
+            setHistory(prev => prev.filter(s => s.id !== sessionToDelete.id));
+            setIsDeleteModalOpen(false);
+            setSessionToDelete(null);
+        } catch (error) {
+            console.error("Delete failed:", error);
+            alert("Failed to delete session.");
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     const openRecalcModal = (session: Session) => {
@@ -40,8 +51,8 @@ export const HistoryScreen: React.FC = () => {
     };
 
     const handleRecalculate = async () => {
-        if (!sessionToRecalc || isRecalculating) return;
-        setIsRecalculating(true);
+        if (!sessionToRecalc || isProcessing) return;
+        setIsProcessing(true);
 
         try {
             // Apply logic to CURRENT players based on the session data
@@ -56,19 +67,21 @@ export const HistoryScreen: React.FC = () => {
                 newsFeed: newsFeed,
             });
 
-            // 1. Save players
+            // 1. Explicit Cloud Sync for Players
             if (playersToSave.length > 0) {
                 await savePlayersToDB(playersToSave);
-                setAllPlayers(updatedPlayers);
             }
+            // Update state (triggers local cache save)
+            setAllPlayers(updatedPlayers);
 
-            // 2. Save News
+            // 2. Explicit Cloud Sync for News
             if (updatedNewsFeed.length > newsFeed.length) {
                 await saveNewsToDB(updatedNewsFeed);
-                setNewsFeed(updatedNewsFeed);
             }
+            // Update state (triggers local cache save)
+            setNewsFeed(updatedNewsFeed);
 
-            // 3. Save Session (Essential to ensure data integrity without re-saving entire history)
+            // 3. Explicit Cloud Sync for Session
             await saveSingleSessionToDB(finalSession);
             
             // 4. Update History State (Replace the old session object with the new one)
@@ -79,7 +92,7 @@ export const HistoryScreen: React.FC = () => {
             console.error("Recalculation failed:", error);
             alert("Failed to recalculate statistics. Check console for details.");
         } finally {
-            setIsRecalculating(false);
+            setIsProcessing(false);
             setIsRecalcModalOpen(false);
             setSessionToRecalc(null);
         }
@@ -116,6 +129,7 @@ export const HistoryScreen: React.FC = () => {
                                         openRecalcModal(session);
                                     }}
                                     title={t.recalculateStats}
+                                    disabled={isProcessing}
                                 >
                                     <Zap className="w-5 h-5"/>
                                 </Button>
@@ -128,6 +142,7 @@ export const HistoryScreen: React.FC = () => {
                                         e.stopPropagation();
                                         openDeleteModal(session);
                                     }}
+                                    disabled={isProcessing}
                                 >
                                     <Trash2 className="w-5 h-5"/>
                                 </Button>
@@ -148,8 +163,10 @@ export const HistoryScreen: React.FC = () => {
                 <div className="flex flex-col gap-4 text-center">
                     <h3 className="text-xl font-bold text-dark-text">{t.confirmDeletion}</h3>
                     <div className="flex justify-center gap-3">
-                        <Button variant="secondary" onClick={() => setIsDeleteModalOpen(false)} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.cancel}</Button>
-                        <Button variant="secondary" className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 !text-red-400" onClick={handleDelete}>{t.delete}</Button>
+                        <Button variant="secondary" onClick={() => setIsDeleteModalOpen(false)} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40" disabled={isProcessing}>{t.cancel}</Button>
+                        <Button variant="secondary" className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 !text-red-400" onClick={handleDelete} disabled={isProcessing}>
+                            {isProcessing ? "..." : t.delete}
+                        </Button>
                     </div>
                 </div>
              </Modal>
@@ -173,9 +190,9 @@ export const HistoryScreen: React.FC = () => {
                             variant="secondary" 
                             className="w-full !text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/10" 
                             onClick={handleRecalculate}
-                            disabled={isRecalculating}
+                            disabled={isProcessing}
                         >
-                            {isRecalculating ? "..." : t.confirm}
+                            {isProcessing ? "..." : t.confirm}
                         </Button>
                     </div>
                 </div>
