@@ -1,14 +1,15 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Button, Modal, Page, useTranslation, SessionModeIndicator } from '../ui';
 import { TeamAvatar } from '../components/avatars';
-import { StarIcon, Plus, Pause, Play, Edit3 } from '../icons';
+import { StarIcon, Plus, Pause, Play, Edit3, Cloud, CloudFog } from '../icons';
 import { Session, Game, GameStatus, Goal, Team, Player } from '../types';
 import { playAnnouncement, initAudioContext } from '../lib';
 import { GoalModal, EditGoalModal, EndSessionModal, SelectWinnerModal, SubstitutionModal } from '../modals';
 import { hexToRgba } from './utils';
-import { useGameManager } from '../hooks/useGameManager';
+import { useGameManager, SaveStatus } from '../hooks/useGameManager';
 
 const GameIndicators: React.FC<{ count: number; color: string }> = ({ count, color }) => {
     return (
@@ -79,6 +80,72 @@ const formatTime = (totalSeconds: number) => {
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 };
 
+// --- SAVE STATUS OVERLAY ---
+const SaveStatusOverlay: React.FC<{ status: SaveStatus; onExit: () => void }> = ({ status, onExit }) => {
+    if (status === 'idle') return null;
+
+    let content = null;
+
+    if (status === 'saving') {
+        content = (
+            <>
+                <div className="w-16 h-16 border-4 border-dark-accent-start border-t-transparent rounded-full animate-spin mb-4"></div>
+                <h2 className="text-2xl font-bold text-white animate-pulse uppercase tracking-wider text-center">Syncing Database...</h2>
+                <p className="text-dark-text-secondary mt-2 text-sm text-center">Please wait while we secure your data.</p>
+            </>
+        );
+    } else if (status === 'cloud_success') {
+        content = (
+            <>
+                <div className="relative mb-6">
+                    <div className="absolute inset-0 bg-green-500 blur-2xl opacity-20 rounded-full"></div>
+                    <Cloud className="w-24 h-24 text-green-400 drop-shadow-[0_0_15px_rgba(74,222,128,0.5)]" />
+                    <div className="absolute -bottom-2 -right-2 bg-green-500 rounded-full p-1 border-4 border-black">
+                        <svg className="w-6 h-6 text-black font-bold" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg>
+                    </div>
+                </div>
+                <h2 className="text-3xl font-black text-green-400 uppercase tracking-widest text-center mb-2">Saved to Cloud</h2>
+                <p className="text-gray-300 text-center max-w-xs mb-8">Session data is safely stored in the database. It is now safe to close the app.</p>
+                <Button variant="secondary" onClick={onExit} className="w-full !py-4 font-bold text-xl border border-green-500/50 text-green-400 hover:bg-green-500/10">GO HOME</Button>
+            </>
+        );
+    } else if (status === 'local_success') {
+        content = (
+            <>
+                <div className="relative mb-6">
+                    <div className="absolute inset-0 bg-yellow-500 blur-2xl opacity-20 rounded-full"></div>
+                    <CloudFog className="w-24 h-24 text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
+                </div>
+                <h2 className="text-3xl font-black text-yellow-400 uppercase tracking-widest text-center mb-2">Saved Locally</h2>
+                <p className="text-gray-300 text-center max-w-xs mb-8 font-bold">
+                    No database connection.
+                    <br/>
+                    <span className="font-normal text-sm opacity-80 block mt-2">Data is saved on this device only. Please connect to the internet later to sync.</span>
+                </p>
+                <Button variant="secondary" onClick={onExit} className="w-full !py-4 font-bold text-xl border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10">I UNDERSTAND</Button>
+            </>
+        );
+    } else if (status === 'error') {
+        content = (
+            <>
+                <div className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center mb-6 border-2 border-red-500">
+                    <span className="text-4xl">❌</span>
+                </div>
+                <h2 className="text-2xl font-black text-red-500 uppercase tracking-widest text-center mb-4">Save Failed</h2>
+                <p className="text-gray-300 text-center max-w-xs mb-8">A critical error occurred. Please check your connection and try again.</p>
+                <Button variant="secondary" onClick={onExit} className="w-full !py-4 font-bold text-xl">CLOSE ANYWAY</Button>
+            </>
+        );
+    }
+
+    return (
+        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex flex-col items-center justify-center p-6 animate-in fade-in duration-300">
+            {content}
+        </div>
+    );
+};
+
+
 export const LiveMatchScreen: React.FC = () => {
     const { activeSession, activeVoicePack, displayTime } = useApp();
     const navigate = useNavigate();
@@ -87,10 +154,10 @@ export const LiveMatchScreen: React.FC = () => {
     const gameManager = useGameManager();
     const {
         currentGame, isTimerBasedGame, scoringTeamForModal, isEndSessionModalOpen,
-        isSelectWinnerModalOpen, goalToEdit, isSaving, subModalState,
+        isSelectWinnerModalOpen, goalToEdit, saveStatus, subModalState,
         setScoringTeamForModal, setIsEndSessionModalOpen, setGoalToEdit, setSubModalState,
         finishCurrentGameAndSetupNext, handleStartGame, handleTogglePause,
-        handleGoalSave, handleGoalUpdate, handleSubstitution, handleFinishSession
+        handleGoalSave, handleGoalUpdate, handleSubstitution, handleFinishSession, resetSession
     } = gameManager;
     
     React.useEffect(() => {
@@ -143,6 +210,8 @@ export const LiveMatchScreen: React.FC = () => {
     
     return (
         <div className="pb-28 flex flex-col min-h-screen">
+            <SaveStatusOverlay status={saveStatus} onExit={resetSession} />
+            
             <GoalModal isOpen={!!scoringTeamForModal} onClose={() => setScoringTeamForModal(null)} onSave={handleGoalSave} game={currentGame} session={activeSession} scoringTeamId={scoringTeamForModal} />
             <EditGoalModal isOpen={!!goalToEdit} onClose={() => setGoalToEdit(null)} onSave={handleGoalUpdate} goal={goalToEdit} game={currentGame} session={activeSession} />
             <EndSessionModal 
@@ -150,14 +219,7 @@ export const LiveMatchScreen: React.FC = () => {
                 onClose={() => setIsEndSessionModalOpen(false)} 
                 onConfirm={handleFinishSession} 
             />
-            {isSaving && (
-                <div className="fixed inset-0 z-[60] bg-black/80 flex items-center justify-center">
-                    <div className="flex flex-col items-center gap-4">
-                        <div className="w-12 h-12 border-4 border-dark-accent-start border-t-transparent rounded-full animate-spin"></div>
-                        <p className="text-white font-bold animate-pulse">SAVING TO CLOUD...</p>
-                    </div>
-                </div>
-            )}
+            
             <SelectWinnerModal isOpen={isSelectWinnerModalOpen} onClose={() => {}} onSelect={finishCurrentGameAndSetupNext} team1={team1} team2={team2}/>
             {subModalState.isOpen && teamForSub && playerOutForSub && (
                 <SubstitutionModal 

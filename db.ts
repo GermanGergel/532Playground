@@ -75,6 +75,7 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
 // --- UTILS ---
 export interface DbResult {
     success: boolean;
+    cloudSaved: boolean; // NEW: Explicit flag for UI feedback
     message?: string;
     errorDetail?: any;
 }
@@ -170,7 +171,7 @@ export const deletePlayerImage = async (imageUrl: string) => {
 
 // --- SINGLE PLAYER SAVE ---
 export const saveSinglePlayerToDB = async (player: Player): Promise<DbResult> => {
-    if (isDemoData(player.id)) return { success: true, message: "Demo data skipped" };
+    if (isDemoData(player.id)) return { success: true, cloudSaved: false, message: "Demo data skipped" };
 
     // 1. Local Save
     await saveLocalPlayerOnly(player);
@@ -185,13 +186,14 @@ export const saveSinglePlayerToDB = async (player: Player): Promise<DbResult> =>
                 .upsert(sanitizedPlayer, { onConflict: 'id' });
             
             if (error) throw error;
-            return { success: true };
+            return { success: true, cloudSaved: true };
         } catch (error: any) {
             console.error("Supabase Save Error:", error);
-            return { success: false, message: `Cloud Sync Failed: ${error.message || 'Unknown error'}`, errorDetail: error };
+            // Return success: true because local saved, but cloudSaved: false
+            return { success: true, cloudSaved: false, message: `Cloud Sync Failed: ${error.message || 'Unknown error'}`, errorDetail: error };
         }
     }
-    return { success: true, message: "Local only" };
+    return { success: true, cloudSaved: false, message: "Local only" };
 };
 
 // --- SINGLE PLAYER LOAD (TRAFFIC OPTIMIZED) ---
@@ -244,9 +246,10 @@ export const loadSinglePlayerFromDB = async (id: string, skipCache: boolean = fa
 export const savePlayersToDB = async (players: Player[]): Promise<DbResult> => {
     logStorageMode();
     const realPlayers = players.filter(p => !isDemoData(p.id));
-    if (realPlayers.length === 0) return { success: true };
+    if (realPlayers.length === 0) return { success: true, cloudSaved: false };
     
     let cloudError: any = null;
+    let cloudSaved = false;
 
     // 1. Cloud Save
     if (isSupabaseConfigured()) {
@@ -261,9 +264,11 @@ export const savePlayersToDB = async (players: Player[]): Promise<DbResult> => {
                     .upsert(chunk, { onConflict: 'id' });
                 if (error) throw error;
             }
+            cloudSaved = true;
         } catch (error: any) {
             console.error("Supabase Batch Save Error:", error);
             cloudError = error;
+            cloudSaved = false;
         }
     } 
 
@@ -278,13 +283,13 @@ export const savePlayersToDB = async (players: Player[]): Promise<DbResult> => {
         await set('players', updatedPlayers);
     } catch (error) {
         console.error("Local Batch Save Error:", error);
-        return { success: false, message: "Local save failed" };
+        return { success: false, cloudSaved: false, message: "Local save failed" };
     }
 
     if (cloudError) {
-        return { success: false, message: `Saved locally, but Cloud failed: ${cloudError.message}`, errorDetail: cloudError };
+        return { success: true, cloudSaved: false, message: `Saved locally, but Cloud failed: ${cloudError.message}`, errorDetail: cloudError };
     }
-    return { success: true };
+    return { success: true, cloudSaved: true };
 };
 
 export const loadPlayersFromDB = async (): Promise<Player[] | undefined> => {
@@ -302,8 +307,6 @@ export const loadPlayersFromDB = async (): Promise<Player[] | undefined> => {
 };
 
 // --- NEW FUNCTION: LIGHTWEIGHT CLOUD CHECK ---
-// Returns just the number of records, does not download the data.
-// Uses HEAD request for minimum traffic.
 export const getCloudPlayerCount = async (): Promise<number | null> => {
     if (!isSupabaseConfigured()) return null;
     try {
@@ -334,9 +337,10 @@ export const loadActiveSessionFromDB = async (): Promise<Session | null | undefi
 // --- HISTORY (SESSIONS) ---
 export const saveHistoryToDB = async (history: Session[]): Promise<DbResult> => {
     const realHistory = history.filter(s => !isDemoData(s.id));
-    if (realHistory.length === 0) return { success: true };
+    if (realHistory.length === 0) return { success: true, cloudSaved: false };
 
     let cloudError: any = null;
+    let cloudSaved = false;
 
     // 1. Cloud Save
     if (isSupabaseConfigured()) {
@@ -354,9 +358,11 @@ export const saveHistoryToDB = async (history: Session[]): Promise<DbResult> => 
                 .from('sessions')
                 .upsert(optimizedHistory, { onConflict: 'id' });
             if (error) throw error;
+            cloudSaved = true;
         } catch (error: any) {
             console.error("Supabase Save History Error:", error);
             cloudError = error;
+            cloudSaved = false;
         }
     } 
 
@@ -373,13 +379,13 @@ export const saveHistoryToDB = async (history: Session[]): Promise<DbResult> => 
         await set('history', mergedHistory);
     } catch (error) {
         console.error("Local History Save Error:", error);
-        return { success: false, message: "Local save failed" };
+        return { success: false, cloudSaved: false, message: "Local save failed" };
     }
 
     if (cloudError) {
-        return { success: false, message: `Saved locally, but Cloud failed: ${cloudError.message}`, errorDetail: cloudError };
+        return { success: true, cloudSaved: false, message: `Saved locally, but Cloud failed: ${cloudError.message}`, errorDetail: cloudError };
     }
-    return { success: true };
+    return { success: true, cloudSaved: true };
 };
 
 // UPDATED: Support for Limit to reduce Traffic
@@ -409,9 +415,10 @@ export const loadHistoryFromDB = async (limit?: number): Promise<Session[] | und
 // --- NEWS FEED ---
 export const saveNewsToDB = async (news: NewsItem[]): Promise<DbResult> => {
     const realNews = news.filter(n => !isDemoData(n.id));
-    if (realNews.length === 0) return { success: true };
+    if (realNews.length === 0) return { success: true, cloudSaved: false };
 
     let cloudError: any = null;
+    let cloudSaved = false;
 
     if (isSupabaseConfigured()) {
         try {
@@ -421,9 +428,11 @@ export const saveNewsToDB = async (news: NewsItem[]): Promise<DbResult> => {
                 .from('news')
                 .upsert(sanitizedNews, { onConflict: 'id' });
             if (error) throw error;
+            cloudSaved = true;
         } catch (error: any) {
             console.error("Supabase Save News Error:", error);
             cloudError = error;
+            cloudSaved = false;
         }
     } 
 
@@ -440,8 +449,8 @@ export const saveNewsToDB = async (news: NewsItem[]): Promise<DbResult> => {
         await set('newsFeed', mergedNews);
     } catch (error) { }
 
-    if (cloudError) return { success: false, message: cloudError.message, errorDetail: cloudError };
-    return { success: true };
+    if (cloudError) return { success: true, cloudSaved: false, message: cloudError.message, errorDetail: cloudError };
+    return { success: true, cloudSaved: true };
 };
 
 // UPDATED: Support for Limit to reduce Traffic

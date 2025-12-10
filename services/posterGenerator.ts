@@ -43,8 +43,7 @@ export const generateAndSharePoster = async (options: PosterData) => {
         document.fonts.load(`700 ${S * 14}px "Orbitron"`),
         document.fonts.load(`400 ${S * 7}px "Orbitron"`),
         document.fonts.load(`bold ${S * 28}px "Teko"`),
-        document.fonts.load(`700 ${S * 100}px "Orbitron"`),
-        document.fonts.load(`700 ${S * 25}px "Orbitron"`), // Changed from 400 to 700 for DAY
+        document.fonts.load(`700 ${S * 100}px "Orbitron"`), // For Main Title
         document.fonts.load(`bold ${S * 36}px "Teko"`),
         document.fonts.load(`400 ${S * 20}px "Teko"`),
         document.fonts.load(`900 ${S * 14}px "Chakra Petch"`),
@@ -103,27 +102,22 @@ export const generateAndSharePoster = async (options: PosterData) => {
         }
     }
 
-    // Main Title ("GAME" wider than "DAY" style)
-    const titleCenterY = H * 0.58;
+    // --- MAIN TITLE: "GAME DAY" (Stacked & Centered) ---
+    const titleBlockY = H * 0.53; // Vertical center point
     ctx.fillStyle = '#FFFFFF';
     ctx.shadowColor = 'rgba(0,0,0,0.7)';
     ctx.shadowBlur = S * 6;
-
-    // "GAME" part (Big, centered)
     ctx.textAlign = 'center';
+
+    // Font Configuration (Huge Orbitron)
     ctx.font = `700 ${S * 100}px "Orbitron"`; 
+    
+    // Line 1: GAME
     ctx.letterSpacing = `${S * 5}px`;
-    ctx.fillText("GAME", W / 2, titleCenterY);
+    ctx.fillText("GAME", W / 2, titleBlockY);
 
-    // Get metrics of "GAME" to align "DAY"
-    const gameMetrics = ctx.measureText("GAME");
-    const gameRightEdge = W / 2 + gameMetrics.width / 2;
-
-    // "DAY" part (Small, right-aligned under "GAME")
-    ctx.textAlign = 'right'; // Align to the right
-    ctx.font = `700 ${S * 25}px "Orbitron"`; // Changed from 400 to 700 (Bold)
-    ctx.letterSpacing = `${S * 15}px`; // Keep wide spacing for style
-    ctx.fillText("DAY", gameRightEdge, titleCenterY + S * 40);
+    // Line 2: DAY (Same size, directly below)
+    ctx.fillText("DAY", W / 2, titleBlockY + S * 105);
     
     ctx.shadowBlur = 0;
     ctx.letterSpacing = '0px';

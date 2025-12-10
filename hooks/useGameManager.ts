@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -8,6 +9,9 @@ import { newId } from '../screens/utils';
 import { savePlayersToDB, saveNewsToDB, saveHistoryToDB } from '../db';
 import { useTranslation } from '../ui';
 
+// New Type for Save Status Feedback
+export type SaveStatus = 'idle' | 'saving' | 'cloud_success' | 'local_success' | 'error';
+
 export const useGameManager = () => {
     const { activeSession, setActiveSession, setHistory, setAllPlayers, setNewsFeed, allPlayers: oldPlayersState, newsFeed, activeVoicePack } = useApp();
     const navigate = useNavigate();
@@ -17,7 +21,10 @@ export const useGameManager = () => {
     const [isEndSessionModalOpen, setIsEndSessionModalOpen] = React.useState(false);
     const [isSelectWinnerModalOpen, setIsSelectWinnerModalOpen] = React.useState(false);
     const [goalToEdit, setGoalToEdit] = React.useState<Goal | null>(null);
-    const [isSaving, setIsSaving] = React.useState(false);
+    
+    // Replaces generic isSaving boolean with detailed status
+    const [saveStatus, setSaveStatus] = React.useState<SaveStatus>('idle');
+    
     const [subModalState, setSubModalState] = React.useState<{
         isOpen: boolean;
         teamId?: string;
@@ -370,8 +377,9 @@ export const useGameManager = () => {
     };
     
     const handleFinishSession = async () => {
-        if (!activeSession || isSaving) return;
+        if (!activeSession || saveStatus === 'saving') return;
 
+        // Test Mode: immediate exit, no save
         if (activeSession.isTestMode) {
             setIsEndSessionModalOpen(false);
             setActiveSession(null);
@@ -379,11 +387,10 @@ export const useGameManager = () => {
             return;
         }
         
-        setIsSaving(true);
+        setSaveStatus('saving');
+        setIsEndSessionModalOpen(false); // Close the confirm modal, the SaveOverlay will take over
         
         try {
-            setIsEndSessionModalOpen(false);
-            
             const {
                 updatedPlayers,
                 playersToSave,
@@ -395,6 +402,9 @@ export const useGameManager = () => {
                 newsFeed: newsFeed,
             });
 
+            // Parallel save execution would be faster, but let's do sequential for safer status reporting
+            // We care most about Session History being cloud-saved.
+            
             if (playersToSave.length > 0) {
                 await savePlayersToDB(playersToSave);
                 setAllPlayers(updatedPlayers); 
@@ -405,17 +415,27 @@ export const useGameManager = () => {
                 setNewsFeed(updatedNewsFeed);
             }
 
-            await saveHistoryToDB([finalSession]);
+            // Save History is the critical path
+            const historyResult = await saveHistoryToDB([finalSession]);
             setHistory(prev => [finalSession, ...prev]);
 
-            setActiveSession(null);
-            navigate('/');
+            // Determine final status
+            if (historyResult.cloudSaved) {
+                setSaveStatus('cloud_success');
+            } else {
+                setSaveStatus('local_success');
+            }
+
         } catch (error) {
             console.error("Error ending session:", error);
-            alert("Error saving data. Please check your connection.");
-        } finally {
-            setIsSaving(false);
+            setSaveStatus('error');
         }
+    };
+    
+    const resetSession = () => {
+        setActiveSession(null);
+        setSaveStatus('idle');
+        navigate('/');
     };
 
     React.useEffect(() => {
@@ -435,7 +455,7 @@ export const useGameManager = () => {
         isEndSessionModalOpen,
         isSelectWinnerModalOpen,
         goalToEdit,
-        isSaving,
+        saveStatus,
         subModalState,
         // Derived state
         currentGame,
@@ -451,6 +471,7 @@ export const useGameManager = () => {
         handleGoalSave,
         handleGoalUpdate,
         handleSubstitution,
-        handleFinishSession
+        handleFinishSession,
+        resetSession // New handler to clear session after success screen
     };
 };
