@@ -291,9 +291,15 @@ export const saveHistoryToDB = async (history: Session[]) => {
     // Mode 1: Cloud
     if (isSupabaseConfigured()) {
         try {
+            // FIX: Remove the 'isTestMode' property before saving to prevent schema mismatch errors.
+            const historyForDb = realHistory.map(session => {
+                const { isTestMode, ...rest } = session;
+                return rest;
+            });
+
             const { error } = await supabase!
                 .from('sessions')
-                .upsert(realHistory, { onConflict: 'id' });
+                .upsert(historyForDb, { onConflict: 'id' });
             if (error) throw error;
         } catch (error) {
             console.error("Supabase Save History Error:", error);
