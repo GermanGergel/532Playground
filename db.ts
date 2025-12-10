@@ -62,6 +62,16 @@ const base64ToBlob = (base64: string): Blob => {
     return new Blob(byteArrays, { type: contentType });
 };
 
+// --- BLOB to Base64 HELPER ---
+const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+};
+
 // --- UTILS ---
 export interface DbResult {
     success: boolean;
@@ -161,7 +171,6 @@ export const saveSinglePlayerToDB = async (player: Player): Promise<DbResult> =>
     if (isSupabaseConfigured()) {
         try {
             const sanitizedPlayer = sanitizeObject(player);
-            // We now assume the user has added the 'records' column to Supabase
             
             const { error } = await supabase!
                 .from('players')
@@ -214,7 +223,6 @@ export const savePlayersToDB = async (players: Player[]): Promise<DbResult> => {
     if (isSupabaseConfigured()) {
         try {
             const cleanPlayers = realPlayers.map(p => sanitizeObject(p));
-            // We now assume the user has added the 'records' column to Supabase
 
             const CHUNK_SIZE = 10; 
             for (let i = 0; i < cleanPlayers.length; i += CHUNK_SIZE) {
@@ -352,7 +360,6 @@ export const saveNewsToDB = async (news: NewsItem[]): Promise<DbResult> => {
     if (isSupabaseConfigured()) {
         try {
             const sanitizedNews = sanitizeObject(realNews);
-            // We now assume the user has added the 'priority' column to Supabase
 
             const { error } = await supabase!
                 .from('news')
@@ -395,20 +402,35 @@ export const loadNewsFromDB = async (): Promise<NewsItem[] | undefined> => {
     return await get('newsFeed');
 };
 
-// --- REST OF FILE UNCHANGED ---
 export const saveLanguageToDB = async (lang: Language) => { try { await set('language', lang); } catch (error) {} };
 export const loadLanguageFromDB = async (): Promise<Language | undefined> => { try { return await get('language'); } catch (error) { return undefined; } };
 export const saveActiveVoicePackToDB = async (packNumber: number) => { try { await set('activeVoicePack', packNumber); } catch (e) {} };
 export const loadActiveVoicePackFromDB = async (): Promise<number | undefined> => { try { return await get('activeVoicePack'); } catch(e) { return undefined; } };
 
+// --- OPTIMIZED AUDIO CACHING SYSTEM ---
+
 const AUDIO_BUCKET = 'audio_assets';
-const AUDIO_KEY_PREFIX = 'audio_';
-type CachedAudio = { data: string; lastModified: string };
+const MUSIC_BUCKET = 'session_music';
+const ANTHEM_FILENAME = 'anthem.mp3';
+const AUDIO_KEY_PREFIX = 'audio_'; // Key prefix for IDB
+
+// Type for cached audio in IndexedDB
+type CachedAudio = { 
+    data: string; // Base64 string
+    lastModified: string; // ISO Date string from Cloud metadata
+};
+
+// Helper: Generate consistent IDB key
 const getCacheKey = (key: string, packNumber: number) => `${AUDIO_KEY_PREFIX}pack${packNumber}_${key}`;
 
+// 1. SAVE: Save locally AND upload to cloud
 export const saveCustomAudio = async (key: string, base64: string, packNumber: number): Promise<void> => {
+    // Save to local cache immediately with current timestamp
     const cacheKey = getCacheKey(key, packNumber);
-    await set(cacheKey, { data: base64, lastModified: new Date().toISOString() });
+    const now = new Date().toISOString();
+    await set(cacheKey, { data: base64, lastModified: now });
+
+    // Upload to Cloud
     if (isSupabaseConfigured()) {
         try {
             const blob = base64ToBlob(base64);
@@ -417,13 +439,21 @@ export const saveCustomAudio = async (key: string, base64: string, packNumber: n
         } catch (error) { console.error("Failed to upload custom audio", error); }
     }
 };
+
+// 2. LOAD: Read directly from local cache (FAST, ZERO TRAFFIC)
 export const loadCustomAudio = async (key: string, packNumber: number): Promise<string | undefined> => {
     const cacheKey = getCacheKey(key, packNumber);
-    try { const cached = await get<CachedAudio>(cacheKey); return cached?.data; } catch (error) { return undefined; }
+    try { 
+        const cached = await get<CachedAudio>(cacheKey); 
+        return cached?.data; 
+    } catch (error) { return undefined; }
 };
+
+// 3. DELETE
 export const deleteCustomAudio = async (key: string, packNumber: number): Promise<void> => {
     const cacheKey = getCacheKey(key, packNumber);
     try { await del(cacheKey); } catch (e) {}
+    
     if (isSupabaseConfigured()) {
         try {
             const filePath = `pack${packNumber}/${key}.mp3`;
@@ -431,73 +461,136 @@ export const deleteCustomAudio = async (key: string, packNumber: number): Promis
         } catch (error) { console.error("Failed to delete custom audio", error); }
     }
 };
-const blobToBase64 = (blob: Blob): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-    });
-};
+
+// 4. SMART SYNC (The Magic Function)
+// Call this on app start. It checks cloud metadata vs local metadata.
+// Only downloads the *body* of the file if the cloud version is newer.
 export const syncAndCacheAudioAssets = async () => {
     if (!isSupabaseConfigured()) return;
+
     try {
-        const { data: cloudFiles, error } = await supabase!.storage.from(AUDIO_BUCKET).list('', { limit: 100 });
-        if (error || !cloudFiles) return;
-        const allLocalCacheKeys = (await keys()).filter(k => typeof k === 'string' && k.startsWith(AUDIO_KEY_PREFIX));
-        const localKeySet = new Set(allLocalCacheKeys);
-        for (const cloudFile of cloudFiles) {
-            const isRootFile = !cloudFile.name.includes('/');
-            if (isRootFile && !cloudFile.name.endsWith('.mp3')) continue;
-            const packNumber = isRootFile ? 1 : parseInt(cloudFile.name.split('/')[0].replace('pack', ''), 10);
-            const key = isRootFile ? cloudFile.name.replace('.mp3', '') : cloudFile.name.split('/')[1].replace('.mp3', '');
-            if (isNaN(packNumber)) continue;
-            const cacheKey = getCacheKey(key, packNumber);
-            localKeySet.delete(cacheKey); 
-            const localAsset = await get<CachedAudio>(cacheKey);
-            const cloudLastModified = new Date(cloudFile.updated_at || cloudFile.created_at).getTime();
-            const localLastModified = localAsset ? new Date(localAsset.lastModified).getTime() : 0;
-            if (!localAsset || cloudLastModified > localLastModified) {
-                const { data: blob } = await supabase!.storage.from(AUDIO_BUCKET).download(cloudFile.name);
-                if (blob) {
-                    const base64 = await blobToBase64(blob);
-                    await set(cacheKey, { data: base64, lastModified: new Date(cloudLastModified).toISOString() });
+        // A. VOICE ASSISTANT SYNC
+        const { data: cloudFiles, error } = await supabase!.storage.from(AUDIO_BUCKET).list('', { limit: 100, sortBy: { column: 'name', order: 'asc' } });
+        
+        if (!error && cloudFiles) {
+            // Get all local keys to find outdated ones
+            const allLocalKeys = await keys();
+            const localAudioKeys = allLocalKeys.filter(k => typeof k === 'string' && k.startsWith(AUDIO_KEY_PREFIX));
+            
+            // Iterate recursively through folders if needed, but assuming flat structure pack1/file.mp3 for simplicity based on `list` limitations:
+            // Actually, Supabase list returns files in the root or folder placeholders.
+            // We need to list specifically for packs if they are folders.
+            // Simplification: We will loop through known Packs (1, 2, 3)
+            for (let packNum = 1; packNum <= 3; packNum++) {
+                const { data: packFiles } = await supabase!.storage.from(AUDIO_BUCKET).list(`pack${packNum}`);
+                if (!packFiles) continue;
+
+                for (const file of packFiles) {
+                    if (!file.name.endsWith('.mp3')) continue;
+                    
+                    const key = file.name.replace('.mp3', '');
+                    const cacheKey = getCacheKey(key, packNum);
+                    
+                    const localAsset = await get<CachedAudio>(cacheKey);
+                    const cloudTime = new Date(file.updated_at || file.created_at).getTime();
+                    const localTime = localAsset ? new Date(localAsset.lastModified).getTime() : 0;
+
+                    // If Cloud is newer (or local doesn't exist) -> DOWNLOAD
+                    if (!localAsset || cloudTime > localTime) {
+                        console.log(`⬇️ Downloading update for: ${key} (Pack ${packNum})`);
+                        const { data: blob } = await supabase!.storage.from(AUDIO_BUCKET).download(`pack${packNum}/${file.name}`);
+                        if (blob) {
+                            const base64 = await blobToBase64(blob);
+                            await set(cacheKey, { data: base64, lastModified: file.updated_at || file.created_at });
+                        }
+                    }
                 }
             }
         }
-        for (const keyToDelete of localKeySet) await del(keyToDelete);
-    } catch (error) {}
+
+        // B. ANTHEM SYNC
+        const { data: musicFiles } = await supabase!.storage.from(MUSIC_BUCKET).list();
+        const anthemFile = musicFiles?.find(f => f.name === ANTHEM_FILENAME);
+        
+        if (anthemFile) {
+            const cacheKey = 'session_anthem_data';
+            const localAnthem = await get<CachedAudio>(cacheKey);
+            const cloudTime = new Date(anthemFile.updated_at || anthemFile.created_at).getTime();
+            const localTime = localAnthem ? new Date(localAnthem.lastModified).getTime() : 0;
+
+            if (!localAnthem || cloudTime > localTime) {
+                console.log(`🎵 Downloading new Session Anthem...`);
+                const { data: blob } = await supabase!.storage.from(MUSIC_BUCKET).download(ANTHEM_FILENAME);
+                if (blob) {
+                    const base64 = await blobToBase64(blob);
+                    await set(cacheKey, { data: base64, lastModified: anthemFile.updated_at || anthemFile.created_at });
+                }
+            }
+        }
+
+    } catch (error) {
+        console.error("Audio Sync Error:", error);
+    }
 };
 
-const MUSIC_BUCKET = 'session_music';
-const ANTHEM_FILENAME = 'anthem.mp3';
+// --- ANTHEM MANAGEMENT ---
+
 export const uploadSessionAnthem = async (base64: string): Promise<string | null> => {
-    const localKey = 'session_anthem';
-    try { await set(localKey, base64); } catch(e) {}
-    if (!isSupabaseConfigured()) return base64;
+    // 1. Save locally immediately
+    const cacheKey = 'session_anthem_data';
+    const now = new Date().toISOString();
+    await set(cacheKey, { data: base64, lastModified: now });
+
+    // 2. Upload to Cloud
+    if (!isSupabaseConfigured()) return "local_only";
     try {
         const blob = base64ToBlob(base64);
         const { error } = await supabase!.storage.from(MUSIC_BUCKET).upload(ANTHEM_FILENAME, blob, { upsert: true });
         if (error) throw error;
-        const { data } = supabase!.storage.from(MUSIC_BUCKET).getPublicUrl(ANTHEM_FILENAME);
-        return data.publicUrl;
+        
+        // Return a fake URL because we use local mostly, but UI checks for existence
+        return "uploaded";
     } catch (error) { return null; }
 };
+
 export const deleteSessionAnthem = async (): Promise<void> => {
-    const localKey = 'session_anthem';
-    try { await del(localKey); } catch(e) {}
+    const cacheKey = 'session_anthem_data';
+    try { await del(cacheKey); } catch(e) {}
     if (isSupabaseConfigured()) { try { await supabase!.storage.from(MUSIC_BUCKET).remove([ANTHEM_FILENAME]); } catch (error) {} }
 };
+
+// SMART GETTER FOR ANTHEM
+// Returns a Blob URL (blob:http://...) if cached locally, avoiding network request.
+// Fallback to Supabase URL if not cached (and triggers a background cache).
 export const getSessionAnthemUrl = async (): Promise<string | null> => {
-    const localKey = 'session_anthem';
-    if (!isSupabaseConfigured()) return await get<string>(localKey) || null;
+    const cacheKey = 'session_anthem_data';
+    
+    // 1. Try Local Cache First
     try {
-        const { data } = await supabase!.storage.from(MUSIC_BUCKET).list();
-        const anthemFile = data?.find(file => file.name === ANTHEM_FILENAME);
-        if (anthemFile) {
-            const { data: urlData } = supabase!.storage.from(MUSIC_BUCKET).getPublicUrl(ANTHEM_FILENAME);
-            return `${urlData.publicUrl}?t=${new Date(anthemFile.updated_at).getTime()}`;
+        const cached = await get<CachedAudio>(cacheKey);
+        if (cached && cached.data) {
+            const blob = base64ToBlob(cached.data);
+            return URL.createObjectURL(blob);
         }
-        return null;
-    } catch (error) { return await get<string>(localKey) || null; }
+    } catch (e) { console.error("Cache read error", e); }
+
+    // 2. If no local, try Cloud (and cache it for next time)
+    if (isSupabaseConfigured()) {
+        try {
+            const { data } = await supabase!.storage.from(MUSIC_BUCKET).download(ANTHEM_FILENAME);
+            if (data) {
+                // We found it in cloud but not locally. Return URL immediately...
+                const url = URL.createObjectURL(data);
+                
+                // ...and save to cache in background for next time
+                blobToBase64(data).then(base64 => {
+                    set(cacheKey, { data: base64, lastModified: new Date().toISOString() });
+                });
+                
+                return url;
+            }
+        } catch (error) { }
+    }
+    
+    return null;
 };

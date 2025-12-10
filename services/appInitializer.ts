@@ -27,6 +27,7 @@ interface InitialAppState {
  */
 export const initializeAppState = async (): Promise<InitialAppState> => {
     // Run audio sync in the background without blocking the main data load
+    // This will quietly check cloud timestamps and download new audio only if needed.
     syncAndCacheAudioAssets();
 
     // 1. Load Active Session

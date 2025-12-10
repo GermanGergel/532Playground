@@ -63,6 +63,7 @@ export const PublicProfileScreen: React.FC = () => {
         const fetchPlayerAndMusic = async () => {
             setIsLoading(true);
             try {
+                // getSessionAnthemUrl now intelligently returns a cached Blob URL if available
                 const [playerData, musicUrl] = await Promise.all([
                     loadSinglePlayerFromDB(id),
                     getSessionAnthemUrl()
@@ -109,6 +110,11 @@ export const PublicProfileScreen: React.FC = () => {
         return () => {
             if (audioRef.current) {
                 audioRef.current.pause();
+                // Revoke URL if it was a blob to free memory, but React state reuse might make this tricky.
+                // Generally browser handles GC for blobs when page closes, but explicitly:
+                if (anthemUrl && anthemUrl.startsWith('blob:')) {
+                    // We don't revoke here because user might replay, let browser handle it on navigation
+                }
                 audioRef.current = null;
             }
         };
