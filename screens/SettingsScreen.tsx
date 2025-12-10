@@ -2,24 +2,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context';
-import { Card, useTranslation, Button, Modal } from '../ui';
-import { isSupabaseConfigured, loadPlayersFromDB, savePlayersToDB } from '../db';
+import { Card, useTranslation, Button } from '../ui';
+import { isSupabaseConfigured, loadPlayersFromDB } from '../db';
 import { generateDemoData } from '../services/demo';
-import { calculateAllStats } from '../services/statistics';
-import { calculateEarnedBadges } from '../services/rating'; // Imported for badge recalculation
-import { Player, BadgeType } from '../types';
-import { Wand, User } from '../icons';
 
 export const SettingsScreen: React.FC = () => {
     const t = useTranslation();
-    const { language, setLanguage, allPlayers, setAllPlayers, history, setHistory, setNewsFeed } = useApp();
+    const { language, setLanguage, allPlayers, setAllPlayers, setHistory, setNewsFeed } = useApp();
     const [cloudStatus, setCloudStatus] = React.useState<{ connected: boolean, count: number } | null>(null);
     
-    // Repair State
-    const [isScanning, setIsScanning] = React.useState(false);
-    const [foundGhosts, setFoundGhosts] = React.useState<Player[]>([]);
-    const [isConfirmRepairOpen, setIsConfirmRepairOpen] = React.useState(false);
-
     React.useEffect(() => {
         const checkCloud = async () => {
             if (isSupabaseConfigured()) {
@@ -48,142 +39,6 @@ export const SettingsScreen: React.FC = () => {
         }
         setNewsFeed(prev => [...news, ...prev].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
         alert('Demo session generated. This data is temporary.');
-    };
-
-    // Step 1: Scan for missing players
-    const handleScanForGhosts = () => {
-        if (!history || history.length === 0) {
-            alert("No history found to restore from.");
-            return;
-        }
-
-        setIsScanning(true);
-        
-        setTimeout(() => {
-            const existingIds = new Set(allPlayers.map(p => p.id));
-            const ghostsMap = new Map<string, Player>();
-
-            // Iterate backwards (newest to oldest) to get the most recent profile data snapshot
-            [...history].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).forEach(session => {
-                session.playerPool.forEach(p => {
-                    if (!existingIds.has(p.id) && !ghostsMap.has(p.id)) {
-                        // Found a missing player. Initialize with a clean slate for stats
-                        // We will rebuild these stats from zero based on history
-                        ghostsMap.set(p.id, {
-                            ...p,
-                            totalGoals: 0, totalAssists: 0, totalGames: 0, 
-                            totalWins: 0, totalDraws: 0, totalLosses: 0,
-                            totalSessionsPlayed: 0,
-                            monthlyGoals: 0, monthlyAssists: 0, monthlyGames: 0, monthlyWins: 0, monthlySessionsPlayed: 0,
-                            badges: {}, // Reset badges to recalculate
-                            sessionHistory: [], // Reset trend
-                            records: { // Reset records
-                                bestGoalsInSession: { value: 0, sessionId: '' },
-                                bestAssistsInSession: { value: 0, sessionId: '' },
-                                bestWinRateInSession: { value: 0, sessionId: '' },
-                            }
-                        });
-                    }
-                });
-            });
-
-            const ghosts = Array.from(ghostsMap.values());
-            
-            if (ghosts.length === 0) {
-                alert("Scan complete. No missing players found.");
-            } else {
-                setFoundGhosts(ghosts);
-                setIsConfirmRepairOpen(true);
-            }
-            setIsScanning(false);
-        }, 100);
-    };
-
-    // Step 2: Restore confirmed players with FULL RECALCULATION
-    const handleConfirmRestore = async () => {
-        if (foundGhosts.length === 0) return;
-
-        const restoredPlayers: Player[] = [];
-        
-        // IMPORTANT: Sort history OLDEST to NEWEST to rebuild records and trends chronologically
-        const chronologicalHistory = [...history].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-
-        // For each ghost, replay history
-        foundGhosts.forEach(ghost => {
-            let restoredGhost = { ...ghost };
-            
-            // Ensure data structures exist
-            if (!restoredGhost.badges) restoredGhost.badges = {};
-            if (!restoredGhost.records) restoredGhost.records = { bestGoalsInSession: { value: 0, sessionId: '' }, bestAssistsInSession: { value: 0, sessionId: '' }, bestWinRateInSession: { value: 0, sessionId: '' } };
-            if (!restoredGhost.sessionHistory) restoredGhost.sessionHistory = [];
-
-            chronologicalHistory.forEach(session => {
-                // Check if player was in this session
-                const wasInSession = session.playerPool.some(p => p.id === ghost.id);
-                
-                if (wasInSession) {
-                    const { allPlayersStats } = calculateAllStats(session);
-                    const stats = allPlayersStats.find(s => s.player.id === ghost.id);
-                    
-                    if (stats) {
-                        // 1. Accumulate Totals
-                        restoredGhost.totalGames += stats.gamesPlayed;
-                        restoredGhost.totalGoals += stats.goals;
-                        restoredGhost.totalAssists += stats.assists;
-                        restoredGhost.totalWins += stats.wins;
-                        restoredGhost.totalDraws += stats.draws;
-                        restoredGhost.totalLosses += stats.losses;
-                        restoredGhost.totalSessionsPlayed += 1;
-                        
-                        // Monthly stats (simple check)
-                        const sessionDate = new Date(session.date);
-                        const now = new Date();
-                        if (sessionDate.getMonth() === now.getMonth() && sessionDate.getFullYear() === now.getFullYear()) {
-                            restoredGhost.monthlyGames += stats.gamesPlayed;
-                            restoredGhost.monthlyGoals += stats.goals;
-                            restoredGhost.monthlyAssists += stats.assists;
-                            restoredGhost.monthlyWins += stats.wins;
-                            restoredGhost.monthlySessionsPlayed += 1;
-                        }
-
-                        // 2. Recalculate Badges for this session
-                        const badgesEarned = calculateEarnedBadges(restoredGhost, stats, session, allPlayersStats);
-                        badgesEarned.forEach(badge => {
-                            restoredGhost.badges[badge] = (restoredGhost.badges[badge] || 0) + 1;
-                        });
-
-                        // 3. Update Session History (Trend)
-                        const sessionWinRate = stats.gamesPlayed > 0 ? Math.round((stats.wins / stats.gamesPlayed) * 100) : 0;
-                        restoredGhost.sessionHistory.push({ winRate: sessionWinRate });
-                        if (restoredGhost.sessionHistory.length > 5) restoredGhost.sessionHistory.shift();
-
-                        // 4. Update Best Session Records
-                        // Goals
-                        if (stats.goals > restoredGhost.records.bestGoalsInSession.value) {
-                            restoredGhost.records.bestGoalsInSession = { value: stats.goals, sessionId: session.id };
-                        }
-                        // Assists
-                        if (stats.assists > restoredGhost.records.bestAssistsInSession.value) {
-                            restoredGhost.records.bestAssistsInSession = { value: stats.assists, sessionId: session.id };
-                        }
-                        // Win Rate (only if better or equal value, but prioritize more recent)
-                        if (sessionWinRate >= restoredGhost.records.bestWinRateInSession.value) {
-                            restoredGhost.records.bestWinRateInSession = { value: sessionWinRate, sessionId: session.id };
-                        }
-                    }
-                }
-            });
-            restoredPlayers.push(restoredGhost);
-        });
-
-        // Merge and Save
-        const newAllPlayers = [...allPlayers, ...restoredPlayers];
-        setAllPlayers(newAllPlayers);
-        await savePlayersToDB(newAllPlayers);
-
-        setIsConfirmRepairOpen(false);
-        setFoundGhosts([]);
-        alert(`Successfully restored ${restoredPlayers.length} players with full stats, badges, and records!`);
     };
 
     const langClasses = (lang: string) => `px-3 py-1 rounded-full font-bold transition-colors text-base ${language === lang ? 'gradient-bg text-dark-bg' : 'bg-dark-surface hover:bg-white/10'}`;
@@ -275,59 +130,6 @@ export const SettingsScreen: React.FC = () => {
 
     return (
         <div className="flex flex-col min-h-screen pb-28">
-            {/* --- REPAIR CONFIRMATION MODAL --- */}
-            <Modal
-                isOpen={isConfirmRepairOpen}
-                onClose={() => setIsConfirmRepairOpen(false)}
-                size="sm"
-                containerClassName="border border-dark-accent-start/40 shadow-[0_0_20px_rgba(0,242,254,0.3)] !p-5"
-                hideCloseButton
-            >
-                <div className="text-center">
-                    <Wand className="w-12 h-12 text-yellow-400 mx-auto mb-3" />
-                    <h3 className="text-xl font-black text-white uppercase tracking-wider mb-2">
-                        {foundGhosts.length} Missing Players Found
-                    </h3>
-                    <p className="text-sm text-dark-text-secondary mb-4">
-                        The system found these players in the history who are missing from your database.
-                        <br/><br/>
-                        <span className="text-yellow-400 font-bold">Confirming will restore stats, badges, and records.</span>
-                        <br/>Existing players will NOT be changed.
-                    </p>
-                    
-                    <div className="max-h-48 overflow-y-auto bg-dark-bg/50 rounded-lg p-2 mb-6 border border-white/10">
-                        {foundGhosts.map(p => (
-                            <div key={p.id} className="flex items-center gap-3 p-2 border-b border-white/5 last:border-0">
-                                <div className="w-8 h-8 rounded-full bg-dark-surface flex items-center justify-center border border-white/20">
-                                    <User className="w-4 h-4 text-dark-text-secondary" />
-                                </div>
-                                <div className="text-left">
-                                    <p className="font-bold text-sm text-white">{p.nickname}</p>
-                                    <p className="text-[10px] text-dark-text-secondary">ID: ...{p.id.slice(-6)}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="flex gap-3">
-                        <Button 
-                            variant="ghost" 
-                            onClick={() => setIsConfirmRepairOpen(false)} 
-                            className="flex-1 font-bold"
-                        >
-                            Cancel
-                        </Button>
-                        <Button 
-                            variant="secondary" 
-                            onClick={handleConfirmRestore} 
-                            className="flex-1 font-bold !bg-yellow-500/20 !text-yellow-200 !border-yellow-500/50 hover:!bg-yellow-500/30"
-                        >
-                            Confirm Restore
-                        </Button>
-                    </div>
-                </div>
-            </Modal>
-
             <div className="p-4 flex-grow">
                 <h1 className="text-2xl font-bold text-center mb-8">{t.settingsTitle}</h1>
                 <div className="space-y-3">
@@ -353,29 +155,11 @@ export const SettingsScreen: React.FC = () => {
                         </Card>
                     </Link>
 
-                    {/* Compact Card: Database Tools */}
+                    {/* Compact Card: Demo Tools */}
                     <Card className={`${cardNeonClasses} !p-3 space-y-3`}>
                          <Button variant="ghost" onClick={handleGenerateDemo} className="w-full !justify-center !p-0">
                             <h2 className="font-chakra font-bold text-xl text-white tracking-wider">{t.generateDemoSession}</h2>
                         </Button>
-                        <div className="border-t border-white/10 pt-2">
-                            <Button 
-                                variant="secondary" 
-                                onClick={handleScanForGhosts} 
-                                disabled={isScanning}
-                                className="w-full !justify-center !p-3 !bg-yellow-500/10 !border-yellow-500/30 !text-yellow-200"
-                            >
-                                <div className="flex items-center gap-2">
-                                    <Wand className="w-5 h-5" />
-                                    <span className="font-chakra font-bold text-lg tracking-wider">
-                                        {isScanning ? 'Scanning History...' : 'Restore Missing Players'}
-                                    </span>
-                                </div>
-                            </Button>
-                            <p className="text-[10px] text-center text-dark-text-secondary mt-1">
-                                Safe scan: Checks history for deleted players and asks for confirmation before restoring.
-                            </p>
-                        </div>
                     </Card>
                 </div>
             </div>
