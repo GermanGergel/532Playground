@@ -152,10 +152,9 @@ export const processPlayerImageFile = (file: File): Promise<{ cardImage: string;
                 const cardCanvas = document.createElement('canvas');
                 const cardCtx = cardCanvas.getContext('2d');
                 
-                // UPDATED: Reduced max width from 2560 to 800.
-                // This drastically reduces file size (from ~5MB to ~150KB) while maintaining
-                // excellent quality for mobile screens.
-                const maxWidth = 800; 
+                // QUALITY UPGRADE: Increased max width to 1000px for sharper exports.
+                // We rely on Cache-Control: 1 year to mitigate traffic impact.
+                const maxWidth = 1000; 
                 
                 let { width, height } = img;
                 
@@ -168,8 +167,8 @@ export const processPlayerImageFile = (file: File): Promise<{ cardImage: string;
                 cardCanvas.height = height;
                 cardCtx?.drawImage(img, 0, 0, width, height);
                 
-                // UPDATED: Reduced quality slightly to 0.85 for better compression
-                const cardImage = cardCanvas.toDataURL('image/jpeg', 0.85);
+                // QUALITY UPGRADE: Increased JPEG quality to 0.90
+                const cardImage = cardCanvas.toDataURL('image/jpeg', 0.90);
 
                 const avatarCanvas = document.createElement('canvas');
                 const avatarCtx = avatarCanvas.getContext('2d');
@@ -183,8 +182,8 @@ export const processPlayerImageFile = (file: File): Promise<{ cardImage: string;
                 
                 avatarCtx.drawImage(cardCanvas, sx, sy, side, side, 0, 0, side, side);
                 
-                // UPDATED: Reduced quality slightly to 0.85
-                const avatarImage = avatarCanvas.toDataURL('image/jpeg', 0.85);
+                // QUALITY UPGRADE: Increased JPEG quality to 0.90
+                const avatarImage = avatarCanvas.toDataURL('image/jpeg', 0.90);
 
                 resolve({ cardImage, avatarImage });
 

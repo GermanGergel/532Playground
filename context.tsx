@@ -8,7 +8,9 @@ import {
     saveHistoryToDB,
     saveLanguageToDB,
     saveNewsToDB,
-    saveActiveVoicePackToDB
+    saveActiveVoicePackToDB,
+    loadHistoryFromDB,
+    loadNewsFromDB
 } from './db';
 import { initializeAppState } from './services/appInitializer';
 import { useMatchTimer } from './hooks/useMatchTimer';
@@ -28,6 +30,8 @@ interface AppContextType {
   setActiveVoicePack: (packNumber: number) => void;
   isLoading: boolean;
   displayTime: number; // Re-introduced for global timer
+  fetchFullHistory: () => Promise<void>;
+  fetchFullNews: () => Promise<void>;
 }
 
 const AppContext = React.createContext<AppContextType | undefined>(undefined);
@@ -68,6 +72,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     initApp();
   }, []);
+
+  // --- LAZY LOADING METHODS ---
+  const fetchFullHistory = async () => {
+      const fullHistory = await loadHistoryFromDB(); // No limit = full fetch
+      if (fullHistory) setHistory(fullHistory);
+  };
+
+  const fetchFullNews = async () => {
+      const fullNews = await loadNewsFromDB(); // No limit = full fetch
+      if (fullNews) setNewsFeed(fullNews);
+  };
 
   // --- PERSISTENCE EFFECT HOOKS (Save to DB) ---
 
@@ -114,6 +129,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveVoicePack,
     isLoading,
     displayTime,
+    fetchFullHistory,
+    fetchFullNews
   };
 
   if(isLoading) {

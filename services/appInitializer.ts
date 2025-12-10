@@ -77,7 +77,9 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
     });
 
     // 3. Load History and perform migrations
-    const loadedHistoryData = await loadHistoryFromDB();
+    // TRAFFIC OPTIMIZATION: Only load the absolutely latest session (limit: 1).
+    // The user can load more by visiting the History screen.
+    const loadedHistoryData = await loadHistoryFromDB(1);
     let initialHistory: Session[] = [];
     if (Array.isArray(loadedHistoryData)) {
         initialHistory = loadedHistoryData.map((s: any) => ({
@@ -90,7 +92,8 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
     }
 
     // 4. Load News Feed & EMERGENCY CLEANUP for Egress Leak
-    const loadedNews = await loadNewsFromDB();
+    // TRAFFIC OPTIMIZATION: Only load the last 10 news items (approx 1 session worth).
+    const loadedNews = await loadNewsFromDB(10);
     let initialNewsFeed = Array.isArray(loadedNews) ? loadedNews : [];
     
     // Check for "heavy" news items (base64 images) that cause 5GB egress issues

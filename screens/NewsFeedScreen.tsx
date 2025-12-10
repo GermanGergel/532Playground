@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -125,9 +126,22 @@ const NewsCardItem: React.FC<{ item: NewsItem; onClickProfile: () => void }> = (
 };
 
 export const NewsFeedScreen: React.FC = () => {
-    const { newsFeed } = useApp();
+    const { newsFeed, fetchFullNews } = useApp();
     const t = useTranslation();
     const navigate = useNavigate();
+    const [isLoadingMore, setIsLoadingMore] = React.useState(false);
+
+    // Lazy load full news on mount if we only have the startup subset
+    React.useEffect(() => {
+        const loadMore = async () => {
+            if (newsFeed.length <= 5) {
+                setIsLoadingMore(true);
+                await fetchFullNews();
+                setIsLoadingMore(false);
+            }
+        };
+        loadMore();
+    }, []);
 
     const sortedNews = [...newsFeed].sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
@@ -143,15 +157,22 @@ export const NewsFeedScreen: React.FC = () => {
                     </p>
                 </div>
             ) : (
-                <div className="space-y-3 pb-10">
-                    {sortedNews.map(item => (
-                        <NewsCardItem 
-                            key={item.id} 
-                            item={item} 
-                            onClickProfile={() => navigate(`/player/${item.playerId}`)} 
-                        />
-                    ))}
-                </div>
+                <>
+                    <div className="space-y-3 pb-10">
+                        {sortedNews.map(item => (
+                            <NewsCardItem 
+                                key={item.id} 
+                                item={item} 
+                                onClickProfile={() => navigate(`/player/${item.playerId}`)} 
+                            />
+                        ))}
+                    </div>
+                    {isLoadingMore && (
+                        <div className="flex justify-center pb-20">
+                            <div className="w-6 h-6 border-2 border-dark-accent-start border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                    )}
+                </>
             )}
         </Page>
     );

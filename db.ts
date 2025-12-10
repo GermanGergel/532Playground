@@ -98,7 +98,6 @@ const sanitizeObject = (obj: any): any => {
         const newObj: any = {};
         for (const key in obj) {
             // STRIP BASE64 IMAGES FROM JSON PAYLOAD
-            // CRITICAL FIX: Added 'playerPhoto' to blacklist to prevent News Feed Egress Leak
             if ((key === 'photo' || key === 'playerCard' || key === 'logo' || key === 'playerPhoto') && typeof obj[key] === 'string' && obj[key].startsWith('data:')) {
                 newObj[key] = null; 
             } else {
@@ -108,6 +107,20 @@ const sanitizeObject = (obj: any): any => {
         return newObj;
     }
     return obj;
+};
+
+// Helper: Save to local IDB only (no cloud sync)
+// Used when we fetch from cloud and want to cache it locally
+const saveLocalPlayerOnly = async (player: Player) => {
+    try {
+        const allPlayers = await get<Player[]>('players') || [];
+        const playerIndex = allPlayers.findIndex(p => p.id === player.id);
+        if (playerIndex > -1) allPlayers[playerIndex] = player;
+        else allPlayers.push(player);
+        await set('players', allPlayers);
+    } catch (e) {
+        console.error("Failed to save player locally", e);
+    }
 };
 
 
@@ -123,9 +136,15 @@ export const uploadPlayerImage = async (playerId: string, base64Image: string, t
         const fileExtension = blob.type.split('/')[1] || 'jpeg';
         const filePath = `${playerId}/${type}_${Date.now()}.${fileExtension}`;
 
+        // TRAFFIC OPTIMIZATION: Cache-Control set to 1 year (31536000 seconds)
+        // This is crucial. It tells the browser "Store this image on disk and NEVER ask the server for it again for 1 year".
+        // This allows us to use high-quality images without consuming bandwidth on every app launch.
         const { error: uploadError } = await supabase!.storage
             .from(BUCKET_NAME)
-            .upload(filePath, blob, { cacheControl: '3600', upsert: true });
+            .upload(filePath, blob, { 
+                cacheControl: '31536000', 
+                upsert: true 
+            });
 
         if (uploadError) throw uploadError;
 
@@ -155,17 +174,8 @@ export const deletePlayerImage = async (imageUrl: string) => {
 export const saveSinglePlayerToDB = async (player: Player): Promise<DbResult> => {
     if (isDemoData(player.id)) return { success: true, message: "Demo data skipped" };
 
-    // 1. Local Save (Always works, stores everything)
-    try {
-        const allPlayers = await get<Player[]>('players') || [];
-        const playerIndex = allPlayers.findIndex(p => p.id === player.id);
-        if (playerIndex > -1) allPlayers[playerIndex] = player;
-        else allPlayers.push(player);
-        await set('players', allPlayers);
-    } catch (e) {
-        console.error("Local save failed", e);
-        return { success: false, message: "Local storage failure" };
-    }
+    // 1. Local Save
+    await saveLocalPlayerOnly(player);
 
     // 2. Cloud Save
     if (isSupabaseConfigured()) {
@@ -186,28 +196,48 @@ export const saveSinglePlayerToDB = async (player: Player): Promise<DbResult> =>
     return { success: true, message: "Local only" };
 };
 
-// --- SINGLE PLAYER LOAD ---
+// --- SINGLE PLAYER LOAD (TRAFFIC OPTIMIZED) ---
 export const loadSinglePlayerFromDB = async (id: string): Promise<Player | null> => {
-    if (!isSupabaseConfigured()) {
-        const allPlayers = await get<Player[]>('players') || [];
-        return allPlayers.find(p => p.id === id) || null;
-    }
+    // 1. CACHE FIRST: Try Local Storage (IndexedDB)
+    // This saves traffic for Public Profiles re-visiting the same player.
     try {
-        const { data, error } = await supabase!
-            .from('players')
-            .select('*')
-            .eq('id', id)
-            .single();
-        if (error) {
-            if (error.code === 'PGRST116') return null;
-            throw error;
-        }
-        return data as Player;
-    } catch (error) {
-        console.warn(`Cloud load failed, trying local.`);
         const allPlayers = await get<Player[]>('players') || [];
-        return allPlayers.find(p => p.id === id) || null;
+        const localPlayer = allPlayers.find(p => p.id === id);
+        
+        if (localPlayer) {
+            console.log(`⚡ Loaded player ${id} from local cache.`);
+            return localPlayer;
+        }
+    } catch (e) {
+        console.warn("Local read failed", e);
     }
+
+    // 2. Cloud Fallback (Only if not in local)
+    if (isSupabaseConfigured()) {
+        try {
+            console.log(`☁️ Fetching player ${id} from Cloud...`);
+            const { data, error } = await supabase!
+                .from('players')
+                .select('*')
+                .eq('id', id)
+                .single();
+            if (error) {
+                if (error.code === 'PGRST116') return null;
+                throw error;
+            }
+            
+            // Save to local cache for next time!
+            if (data) {
+                await saveLocalPlayerOnly(data as Player);
+            }
+            
+            return data as Player;
+        } catch (error) {
+            console.warn(`Cloud load failed.`);
+            return null;
+        }
+    }
+    return null;
 };
 
 
@@ -259,6 +289,8 @@ export const savePlayersToDB = async (players: Player[]): Promise<DbResult> => {
 };
 
 export const loadPlayersFromDB = async (): Promise<Player[] | undefined> => {
+    // Basic load still prefers cloud for the main database to ensure sync,
+    // but individual profile views use the optimized single loader.
     if (isSupabaseConfigured()) {
         try {
             const { data, error } = await supabase!.from('players').select('*');
@@ -334,13 +366,21 @@ export const saveHistoryToDB = async (history: Session[]): Promise<DbResult> => 
     return { success: true };
 };
 
-export const loadHistoryFromDB = async (): Promise<Session[] | undefined> => {
+// UPDATED: Support for Limit to reduce Traffic
+export const loadHistoryFromDB = async (limit?: number): Promise<Session[] | undefined> => {
     if (isSupabaseConfigured()) {
         try {
-            const { data, error } = await supabase!
+            let query = supabase!
                 .from('sessions')
                 .select('*')
                 .order('createdAt', { ascending: false });
+            
+            if (limit) {
+                query = query.limit(limit);
+            }
+
+            const { data, error } = await query;
+            
             if (error) throw error;
             return data as Session[];
         } catch (error) {
@@ -388,13 +428,20 @@ export const saveNewsToDB = async (news: NewsItem[]): Promise<DbResult> => {
     return { success: true };
 };
 
-export const loadNewsFromDB = async (): Promise<NewsItem[] | undefined> => {
+// UPDATED: Support for Limit to reduce Traffic
+export const loadNewsFromDB = async (limit?: number): Promise<NewsItem[] | undefined> => {
     if (isSupabaseConfigured()) {
         try {
-            const { data, error } = await supabase!
+            let query = supabase!
                 .from('news')
                 .select('*')
                 .order('timestamp', { ascending: false });
+            
+            if (limit) {
+                query = query.limit(limit);
+            }
+
+            const { data, error } = await query;
             if (error) throw error;
             return data as NewsItem[];
         } catch (error) {}
