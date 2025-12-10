@@ -152,9 +152,11 @@ export const saveSinglePlayerToDB = async (player: Player) => {
 
     // Supabase Mode
     try {
+        // FIX: Remove processedSessionIds before saving to avoid schema mismatch.
+        const { processedSessionIds, ...playerForDb } = player;
         const { error } = await supabase!
             .from('players')
-            .upsert(player, { onConflict: 'id' });
+            .upsert(playerForDb, { onConflict: 'id' });
         if (error) throw error;
     } catch (error) {
         console.error("Supabase Save Single Player Error:", error);
@@ -203,9 +205,11 @@ export const savePlayersToDB = async (players: Player[]) => {
         try {
             // ATOMIC UPDATE: Save players one by one. Slower, but much more reliable against payload size limits.
             for (const player of realPlayers) {
+                // FIX: Remove processedSessionIds before saving to avoid schema mismatch.
+                const { processedSessionIds, ...playerForDb } = player;
                 const { error } = await supabase!
                     .from('players')
-                    .upsert(player, { onConflict: 'id' });
+                    .upsert(playerForDb, { onConflict: 'id' });
                 
                 if (error) {
                     console.error(`Supabase Save Error (Single Player ${player.id}):`, error);
