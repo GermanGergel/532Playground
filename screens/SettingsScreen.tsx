@@ -6,7 +6,8 @@ import { Card, useTranslation, Button, Modal } from '../ui';
 import { isSupabaseConfigured, loadPlayersFromDB, savePlayersToDB } from '../db';
 import { generateDemoData } from '../services/demo';
 import { calculateAllStats } from '../services/statistics';
-import { Player } from '../types';
+import { calculateEarnedBadges } from '../services/rating'; // Imported for badge recalculation
+import { Player, BadgeType } from '../types';
 import { Wand, User } from '../icons';
 
 export const SettingsScreen: React.FC = () => {
@@ -58,7 +59,6 @@ export const SettingsScreen: React.FC = () => {
 
         setIsScanning(true);
         
-        // Use timeout to allow UI to update loading state
         setTimeout(() => {
             const existingIds = new Set(allPlayers.map(p => p.id));
             const ghostsMap = new Map<string, Player>();
@@ -66,16 +66,22 @@ export const SettingsScreen: React.FC = () => {
             // Iterate backwards (newest to oldest) to get the most recent profile data snapshot
             [...history].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).forEach(session => {
                 session.playerPool.forEach(p => {
-                    // Check if player is NOT in current DB
                     if (!existingIds.has(p.id) && !ghostsMap.has(p.id)) {
-                        // We found a "ghost" - a player that exists in history but not in the active list
+                        // Found a missing player. Initialize with a clean slate for stats
+                        // We will rebuild these stats from zero based on history
                         ghostsMap.set(p.id, {
                             ...p,
-                            // Reset cumulative counters to 0, we will recalculate them only if confirmed
                             totalGoals: 0, totalAssists: 0, totalGames: 0, 
                             totalWins: 0, totalDraws: 0, totalLosses: 0,
                             totalSessionsPlayed: 0,
-                            monthlyGoals: 0, monthlyAssists: 0, monthlyGames: 0, monthlyWins: 0, monthlySessionsPlayed: 0
+                            monthlyGoals: 0, monthlyAssists: 0, monthlyGames: 0, monthlyWins: 0, monthlySessionsPlayed: 0,
+                            badges: {}, // Reset badges to recalculate
+                            sessionHistory: [], // Reset trend
+                            records: { // Reset records
+                                bestGoalsInSession: { value: 0, sessionId: '' },
+                                bestAssistsInSession: { value: 0, sessionId: '' },
+                                bestWinRateInSession: { value: 0, sessionId: '' },
+                            }
                         });
                     }
                 });
@@ -93,18 +99,26 @@ export const SettingsScreen: React.FC = () => {
         }, 100);
     };
 
-    // Step 2: Restore confirmed players
+    // Step 2: Restore confirmed players with FULL RECALCULATION
     const handleConfirmRestore = async () => {
         if (foundGhosts.length === 0) return;
 
         const restoredPlayers: Player[] = [];
+        
+        // IMPORTANT: Sort history OLDEST to NEWEST to rebuild records and trends chronologically
+        const chronologicalHistory = [...history].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
-        // For each ghost, replay history to calculate stats
+        // For each ghost, replay history
         foundGhosts.forEach(ghost => {
             let restoredGhost = { ...ghost };
+            
+            // Ensure data structures exist
+            if (!restoredGhost.badges) restoredGhost.badges = {};
+            if (!restoredGhost.records) restoredGhost.records = { bestGoalsInSession: { value: 0, sessionId: '' }, bestAssistsInSession: { value: 0, sessionId: '' }, bestWinRateInSession: { value: 0, sessionId: '' } };
+            if (!restoredGhost.sessionHistory) restoredGhost.sessionHistory = [];
 
-            history.forEach(session => {
-                // Only process if the ghost participated in this session
+            chronologicalHistory.forEach(session => {
+                // Check if player was in this session
                 const wasInSession = session.playerPool.some(p => p.id === ghost.id);
                 
                 if (wasInSession) {
@@ -112,6 +126,7 @@ export const SettingsScreen: React.FC = () => {
                     const stats = allPlayersStats.find(s => s.player.id === ghost.id);
                     
                     if (stats) {
+                        // 1. Accumulate Totals
                         restoredGhost.totalGames += stats.gamesPlayed;
                         restoredGhost.totalGoals += stats.goals;
                         restoredGhost.totalAssists += stats.assists;
@@ -120,7 +135,7 @@ export const SettingsScreen: React.FC = () => {
                         restoredGhost.totalLosses += stats.losses;
                         restoredGhost.totalSessionsPlayed += 1;
                         
-                        // Simple check for monthly stats
+                        // Monthly stats (simple check)
                         const sessionDate = new Date(session.date);
                         const now = new Date();
                         if (sessionDate.getMonth() === now.getMonth() && sessionDate.getFullYear() === now.getFullYear()) {
@@ -129,6 +144,31 @@ export const SettingsScreen: React.FC = () => {
                             restoredGhost.monthlyAssists += stats.assists;
                             restoredGhost.monthlyWins += stats.wins;
                             restoredGhost.monthlySessionsPlayed += 1;
+                        }
+
+                        // 2. Recalculate Badges for this session
+                        const badgesEarned = calculateEarnedBadges(restoredGhost, stats, session, allPlayersStats);
+                        badgesEarned.forEach(badge => {
+                            restoredGhost.badges[badge] = (restoredGhost.badges[badge] || 0) + 1;
+                        });
+
+                        // 3. Update Session History (Trend)
+                        const sessionWinRate = stats.gamesPlayed > 0 ? Math.round((stats.wins / stats.gamesPlayed) * 100) : 0;
+                        restoredGhost.sessionHistory.push({ winRate: sessionWinRate });
+                        if (restoredGhost.sessionHistory.length > 5) restoredGhost.sessionHistory.shift();
+
+                        // 4. Update Best Session Records
+                        // Goals
+                        if (stats.goals > restoredGhost.records.bestGoalsInSession.value) {
+                            restoredGhost.records.bestGoalsInSession = { value: stats.goals, sessionId: session.id };
+                        }
+                        // Assists
+                        if (stats.assists > restoredGhost.records.bestAssistsInSession.value) {
+                            restoredGhost.records.bestAssistsInSession = { value: stats.assists, sessionId: session.id };
+                        }
+                        // Win Rate (only if better or equal value, but prioritize more recent)
+                        if (sessionWinRate >= restoredGhost.records.bestWinRateInSession.value) {
+                            restoredGhost.records.bestWinRateInSession = { value: sessionWinRate, sessionId: session.id };
                         }
                     }
                 }
@@ -143,7 +183,7 @@ export const SettingsScreen: React.FC = () => {
 
         setIsConfirmRepairOpen(false);
         setFoundGhosts([]);
-        alert(`Successfully restored ${restoredPlayers.length} players!`);
+        alert(`Successfully restored ${restoredPlayers.length} players with full stats, badges, and records!`);
     };
 
     const langClasses = (lang: string) => `px-3 py-1 rounded-full font-bold transition-colors text-base ${language === lang ? 'gradient-bg text-dark-bg' : 'bg-dark-surface hover:bg-white/10'}`;
@@ -251,7 +291,7 @@ export const SettingsScreen: React.FC = () => {
                     <p className="text-sm text-dark-text-secondary mb-4">
                         The system found these players in the history who are missing from your database.
                         <br/><br/>
-                        <span className="text-yellow-400 font-bold">Confirming will ONLY restore these specific players.</span>
+                        <span className="text-yellow-400 font-bold">Confirming will restore stats, badges, and records.</span>
                         <br/>Existing players will NOT be changed.
                     </p>
                     
