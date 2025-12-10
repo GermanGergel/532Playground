@@ -137,25 +137,29 @@ export const ClubRankings: React.FC<{ player: Player }> = ({ player }) => {
 
 export const BestSessionCard: React.FC<{ player: Player }> = ({ player }) => {
     const t = useTranslation();
-    const records = player.records || { bestGoalsInSession: { value: 0 }, bestAssistsInSession: { value: 0 }, bestWinRateInSession: { value: 0 } };
-    const cardClass = "border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)]";
+    
+    // FIX: Using "Optional Chaining" (?.) and "Nullish Coalescing" (?? 0)
+    // This tells JS: "Try to get value. If the path is broken, just give me 0."
+    const records = (player.records || {}) as any;
+    const bestGoals = records.bestGoalsInSession?.value ?? 0;
+    const bestAssists = records.bestAssistsInSession?.value ?? 0;
+    const bestWinRate = records.bestWinRateInSession?.value ?? 0;
 
-    // REMOVED THE CONDITION THAT HID THE CARD IF VALUES WERE ZERO
-    // Now it always renders, showing 0s if no data.
+    const cardClass = "border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)]";
 
     return (
         <Card title={t.bestSessionTitle} className={cardClass}>
             <div className="grid grid-cols-3 gap-2 text-center">
                 <div>
-                    <p className="text-base font-bold">{records.bestGoalsInSession.value}</p>
+                    <p className="text-base font-bold">{bestGoals}</p>
                     <p className="text-[10px] text-dark-text-secondary uppercase">{t.recordGoals}</p>
                 </div>
                 <div>
-                    <p className="text-base font-bold">{records.bestAssistsInSession.value}</p>
+                    <p className="text-base font-bold">{bestAssists}</p>
                     <p className="text-[10px] text-dark-text-secondary uppercase">{t.recordAssists}</p>
                 </div>
                 <div>
-                    <p className="text-base font-bold">{records.bestWinRateInSession.value}%</p>
+                    <p className="text-base font-bold">{bestWinRate}%</p>
                     <p className="text-[10px] text-dark-text-secondary uppercase">{t.bestWinRate}</p>
                 </div>
             </div>

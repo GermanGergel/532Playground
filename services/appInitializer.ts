@@ -1,3 +1,4 @@
+
 import { Session, Player, NewsItem, BadgeType } from '../types';
 import { Language } from '../translations/index';
 import {
@@ -53,18 +54,23 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
             badges = p.badges;
         }
 
+        // Deep merge records to ensure no sub-property is missing
+        // Cast to any to handle migration from old data where records might be undefined/empty
+        const rawRecords = (p.records || {}) as any;
+        const safeRecords = {
+            bestGoalsInSession: rawRecords.bestGoalsInSession || { value: 0, sessionId: '' },
+            bestAssistsInSession: rawRecords.bestAssistsInSession || { value: 0, sessionId: '' },
+            bestWinRateInSession: rawRecords.bestWinRateInSession || { value: 0, sessionId: '' },
+        };
+
         return {
             ...p,
             badges,
             totalSessionsPlayed: (p.totalSessionsPlayed ?? Math.round(p.totalGames / 15)) || 0,
             monthlySessionsPlayed: (p.monthlySessionsPlayed ?? Math.round(p.monthlyGames / 15)) || 0,
             lastRatingChange: p.lastRatingChange || undefined,
-            sessionHistory: p.sessionHistory || [], // CRITICAL FIX: Ensure sessionHistory is always an array.
-            records: p.records || {
-                bestGoalsInSession: { value: 0, sessionId: '' },
-                bestAssistsInSession: { value: 0, sessionId: '' },
-                bestWinRateInSession: { value: 0, sessionId: '' },
-            },
+            sessionHistory: p.sessionHistory || [], 
+            records: safeRecords,
         };
     });
 

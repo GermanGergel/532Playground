@@ -82,12 +82,16 @@ export const processFinishedSession = ({
             }
             if (sessionHistory.length > 5) sessionHistory.shift();
             
-            // FIX: Robust check for existing records to prevent crashes
+            // FIX: Robust check for existing records to prevent crashes ("undefined is not an object")
+            // If the record doesn't exist, we create a temporary "zero" record to compare against.
             const getSafeRecord = (rec: any) => (rec && typeof rec.value === 'number') ? rec : { value: 0, sessionId: '' };
             
-            const oldGoalsRec = getSafeRecord(player.records?.bestGoalsInSession);
-            const oldAssistsRec = getSafeRecord(player.records?.bestAssistsInSession);
-            const oldWinRateRec = getSafeRecord(player.records?.bestWinRateInSession);
+            // Ensure player.records exists before accessing
+            const safePlayerRecords = (player.records || {}) as any;
+
+            const oldGoalsRec = getSafeRecord(safePlayerRecords.bestGoalsInSession);
+            const oldAssistsRec = getSafeRecord(safePlayerRecords.bestAssistsInSession);
+            const oldWinRateRec = getSafeRecord(safePlayerRecords.bestWinRateInSession);
         
             const newRecords: PlayerRecords = {
                 bestGoalsInSession: sessionStats.goals >= oldGoalsRec.value
