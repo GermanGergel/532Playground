@@ -153,9 +153,14 @@ export const saveSinglePlayerToDB = async (player: Player) => {
 
     // Supabase Mode
     try {
+        // Sanitize before saving: Remove Base64 strings to prevent 400 Errors
+        const playerToSave = { ...player };
+        if (playerToSave.photo && playerToSave.photo.startsWith('data:')) delete playerToSave.photo;
+        if (playerToSave.playerCard && playerToSave.playerCard.startsWith('data:')) delete playerToSave.playerCard;
+
         const { error } = await supabase!
             .from('players')
-            .upsert(player, { onConflict: 'id' });
+            .upsert(playerToSave, { onConflict: 'id' });
         if (error) throw error;
     } catch (error) {
         console.error("Supabase Save Single Player Error:", error);
@@ -207,7 +212,23 @@ export const savePlayersToDB = async (players: Player[]) => {
             // Previous limit of 5 was still occasionally causing timeouts.
             const CHUNK_SIZE = 2; 
             for (let i = 0; i < realPlayers.length; i += CHUNK_SIZE) {
-                const chunk = realPlayers.slice(i, i + CHUNK_SIZE);
+                const rawChunk = realPlayers.slice(i, i + CHUNK_SIZE);
+                
+                // CRITICAL FIX 2: Sanitize chunk to remove Base64 strings.
+                // Supabase text columns cannot handle 5MB+ strings, resulting in 400 Bad Request.
+                const chunk = rawChunk.map(p => {
+                    const cleanP = { ...p };
+                    // If image is local Base64 (starts with data:), DO NOT send it to DB.
+                    // Only URLs (starting with http) are allowed in the DB text column.
+                    if (cleanP.photo && cleanP.photo.startsWith('data:')) {
+                        delete cleanP.photo;
+                    }
+                    if (cleanP.playerCard && cleanP.playerCard.startsWith('data:')) {
+                        delete cleanP.playerCard;
+                    }
+                    return cleanP;
+                });
+
                 const { error } = await supabase!
                     .from('players')
                     .upsert(chunk, { onConflict: 'id' });
