@@ -4,7 +4,7 @@ import { Language } from './translations/index';
 import { get, set, del, keys } from 'idb-keyval';
 
 // --- SUPABASE CONFIGURATION ---
-// Use process.env as a more robust method for accessing environment variables
+// Environment variables are managed by the execution environment
 // @ts-ignore
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
 // @ts-ignore
