@@ -12,9 +12,8 @@ export const initAudioContext = () => {
     if (!audioContext) {
         audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
-    if (audioContext.state === 'suspended') {
-        audioContext.resume();
-    }
+    // We do NOT call resume() here blindly, as it returns a Promise that must be handled.
+    // We handle the 'suspended' state check directly in playAsset.
 };
 
 // Helper to decode Base64 string to ArrayBuffer (Final, Most Robust Implementation)
@@ -44,28 +43,39 @@ const base64ToArrayBuffer = (base64: string): ArrayBuffer => {
 
 // Play a specific audio asset by key from the local IndexedDB cache
 const playAsset = async (key: string, activeVoicePack: number): Promise<boolean> => {
-    // Always load from the local cache for immediate playback
-    const base64 = await loadCustomAudio(key, activeVoicePack);
-    if (!base64 || base64.length < 50) return false;
-
     try {
+        // 1. Load from Local Cache (No Internet Required)
+        const base64 = await loadCustomAudio(key, activeVoicePack);
+        if (!base64 || base64.length < 50) return false;
+
+        // 2. Initialize Context
         initAudioContext();
         if (!audioContext) return false;
 
+        // 3. WAKE LOCK: Check if browser suspended audio (common on mobile after silence)
+        if (audioContext.state === 'suspended') {
+            await audioContext.resume();
+        }
+
+        // 4. Decode
         const audioBuffer = await audioContext.decodeAudioData(base64ToArrayBuffer(base64));
         
+        // 5. Stop previous sound if any (prevents overlap)
         if (activeSource) {
             try { activeSource.stop(); } catch (e) {}
         }
 
+        // 6. Play
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffer;
         source.connect(audioContext.destination);
         source.start(0);
         activeSource = source;
+        
         return true;
     } catch (error) {
         console.error(`Failed to play cached audio asset: ${key}`, error);
+        // Important: Return false so the app falls back to TTS
         return false;
     }
 };
@@ -95,7 +105,10 @@ findAssistantVoice();
 
 const speakFallback = (text: string) => {
     if (!('speechSynthesis' in window)) return;
-    findAssistantVoice();
+    
+    // Ensure we have voices loaded
+    if (!ASSISTANT_VOICE) findAssistantVoice();
+    
     window.speechSynthesis.cancel(); 
     
     const utterance = new SpeechSynthesisUtterance(text);
@@ -103,7 +116,7 @@ const speakFallback = (text: string) => {
     if (ASSISTANT_VOICE) {
         utterance.voice = ASSISTANT_VOICE;
         utterance.pitch = 1.0;
-        utterance.rate = 1.0; // Adjusted rate from 1.1 to 1.0 for more natural speech
+        utterance.rate = 1.0; 
     }
     window.speechSynthesis.speak(utterance);
 };
@@ -114,17 +127,17 @@ export const playAnnouncement = async (key: string, fallbackText: string, active
     // Special case for silent audio to keep audio context alive on mobile
     if (key === 'silence') {
         initAudioContext();
-        if (!audioContext) return;
-        try {
-            // THE ULTIMATE FIX: Programmatically create a silent buffer instead of decoding a file.
-            // This is the idiomatic Web Audio API way and is guaranteed to work.
-            const buffer = audioContext.createBuffer(1, 1, 22050); // 1 channel, 1 frame, 22.05kHz sample rate
-            const source = audioContext.createBufferSource();
-            source.buffer = buffer;
-            source.connect(audioContext.destination);
-            source.start(0);
-        } catch(e) { 
-            console.error("Failed to play programmatically generated silence track", e);
+        if (audioContext) {
+            try {
+                if (audioContext.state === 'suspended') await audioContext.resume();
+                const buffer = audioContext.createBuffer(1, 1, 22050); 
+                const source = audioContext.createBufferSource();
+                source.buffer = buffer;
+                source.connect(audioContext.destination);
+                source.start(0);
+            } catch(e) { 
+                console.error("Failed to play silence", e);
+            }
         }
         return;
     }
@@ -132,9 +145,9 @@ export const playAnnouncement = async (key: string, fallbackText: string, active
     // 1. Try to play custom MP3 asset from local cache
     const played = await playAsset(key, activeVoicePack);
     
-    // 2. If no MP3 found in cache, use TTS Fallback
+    // 2. If no MP3 found in cache OR playback failed (e.g. context blocked), use TTS Fallback
     if (!played) {
-        console.log(`Cached audio for '${key}' not found. Using TTS fallback.`);
+        console.log(`Audio '${key}' failed or missing. Using TTS fallback.`);
         speakFallback(fallbackText);
     } else {
         console.log(`Playing cached audio for: ${key}`);
@@ -153,7 +166,6 @@ export const processPlayerImageFile = (file: File): Promise<{ cardImage: string;
                 const cardCtx = cardCanvas.getContext('2d');
                 
                 // QUALITY UPGRADE: Increased max width to 1000px for sharper exports.
-                // We rely on Cache-Control: 1 year to mitigate traffic impact.
                 const maxWidth = 1000; 
                 
                 let { width, height } = img;

@@ -70,13 +70,14 @@ export const PublicProfileScreen: React.FC = () => {
 
             if (playerData) {
                 // Sanitize data: Ensure complex objects exist for older players
-                if (!playerData.records) {
-                    playerData.records = {
-                        bestGoalsInSession: { value: 0, sessionId: '' },
-                        bestAssistsInSession: { value: 0, sessionId: '' },
-                        bestWinRateInSession: { value: 0, sessionId: '' },
-                    };
-                }
+                // Fix: Check specifically for missing keys inside records, not just the records object itself.
+                const rawRecords = (playerData.records || {}) as any;
+                playerData.records = {
+                    bestGoalsInSession: rawRecords.bestGoalsInSession || { value: 0, sessionId: '' },
+                    bestAssistsInSession: rawRecords.bestAssistsInSession || { value: 0, sessionId: '' },
+                    bestWinRateInSession: rawRecords.bestWinRateInSession || { value: 0, sessionId: '' },
+                };
+
                 if (!playerData.badges) {
                     playerData.badges = {};
                 }

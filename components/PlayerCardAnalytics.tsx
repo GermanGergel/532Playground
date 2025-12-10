@@ -138,12 +138,18 @@ export const ClubRankings: React.FC<{ player: Player }> = ({ player }) => {
 export const BestSessionCard: React.FC<{ player: Player }> = ({ player }) => {
     const t = useTranslation();
     
-    // FIX: Using "Optional Chaining" (?.) and "Nullish Coalescing" (?? 0)
-    // This tells JS: "Try to get value. If the path is broken, just give me 0."
+    // Strict helper to ensure we never render blank/undefined/null.
+    // If value is missing, it explicitly returns 0.
+    const getSafeValue = (val: any) => {
+        if (val === undefined || val === null) return 0;
+        const num = Number(val);
+        return isNaN(num) ? 0 : num;
+    };
+
     const records = (player.records || {}) as any;
-    const bestGoals = records.bestGoalsInSession?.value ?? 0;
-    const bestAssists = records.bestAssistsInSession?.value ?? 0;
-    const bestWinRate = records.bestWinRateInSession?.value ?? 0;
+    const bestGoals = getSafeValue(records.bestGoalsInSession?.value);
+    const bestAssists = getSafeValue(records.bestAssistsInSession?.value);
+    const bestWinRate = getSafeValue(records.bestWinRateInSession?.value);
 
     const cardClass = "border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)]";
 
