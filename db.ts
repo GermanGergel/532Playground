@@ -291,9 +291,9 @@ export const saveHistoryToDB = async (history: Session[]) => {
     // Mode 1: Cloud
     if (isSupabaseConfigured()) {
         try {
-            // FIX: Remove the 'isTestMode' property before saving to prevent schema mismatch errors.
+            // FIX: Remove properties that cause errors (schema mismatch or payload size) before saving.
             const historyForDb = realHistory.map(session => {
-                const { isTestMode, ...rest } = session;
+                const { isTestMode, eventLog, ...rest } = session;
                 return rest;
             });
 
