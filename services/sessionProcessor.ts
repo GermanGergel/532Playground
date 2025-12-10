@@ -1,3 +1,4 @@
+
 import { Session, Player, NewsItem, BadgeType, SessionStatus, PlayerRecords } from '../types';
 import { calculateAllStats } from './statistics';
 import { calculateEarnedBadges, calculateRatingUpdate, getTierForRating } from './rating';
@@ -81,22 +82,23 @@ export const processFinishedSession = ({
             }
             if (sessionHistory.length > 5) sessionHistory.shift();
             
-            const oldRecords = player.records || {
-                bestGoalsInSession: { value: 0, sessionId: '' },
-                bestAssistsInSession: { value: 0, sessionId: '' },
-                bestWinRateInSession: { value: 0, sessionId: '' },
-            };
+            // FIX: Robust check for existing records to prevent crashes
+            const getSafeRecord = (rec: any) => (rec && typeof rec.value === 'number') ? rec : { value: 0, sessionId: '' };
+            
+            const oldGoalsRec = getSafeRecord(player.records?.bestGoalsInSession);
+            const oldAssistsRec = getSafeRecord(player.records?.bestAssistsInSession);
+            const oldWinRateRec = getSafeRecord(player.records?.bestWinRateInSession);
         
             const newRecords: PlayerRecords = {
-                bestGoalsInSession: sessionStats.goals >= oldRecords.bestGoalsInSession.value
+                bestGoalsInSession: sessionStats.goals >= oldGoalsRec.value
                     ? { value: sessionStats.goals, sessionId: session.id }
-                    : oldRecords.bestGoalsInSession,
-                bestAssistsInSession: sessionStats.assists >= oldRecords.bestAssistsInSession.value
+                    : oldGoalsRec,
+                bestAssistsInSession: sessionStats.assists >= oldAssistsRec.value
                     ? { value: sessionStats.assists, sessionId: session.id }
-                    : oldRecords.bestAssistsInSession,
-                bestWinRateInSession: sessionWinRate >= oldRecords.bestWinRateInSession.value
+                    : oldAssistsRec,
+                bestWinRateInSession: sessionWinRate >= oldWinRateRec.value
                     ? { value: sessionWinRate, sessionId: session.id }
-                    : oldRecords.bestWinRateInSession,
+                    : oldWinRateRec,
             };
 
             return { 

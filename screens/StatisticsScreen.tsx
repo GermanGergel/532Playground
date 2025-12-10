@@ -75,12 +75,12 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
     const finishedGames = session.games.filter(g => g.status === 'finished');
     const roundsToDisplay = itemLimit ? finishedGames.slice(0, itemLimit) : finishedGames;
 
-    // FIX: Reduced text size to text-xs for mobile fit
-    const tableTextClass = "text-xs text-center table-fixed"; 
+    // FIX: Reduced text size to text-[10px] or text-xs and enforced table-fixed to prevent overflow
+    const tableTextClass = "text-[10px] sm:text-xs text-center table-fixed"; 
     const cellPadding = "py-1.5 px-0.5";
 
     return (
-        <div className="space-y-6 w-full">
+        <div className="space-y-6 w-full max-w-full">
             {/* Team Standings */}
             {(!visibleSection || visibleSection === 'standings') && (
             <div 
@@ -88,36 +88,38 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                 style={{ boxShadow: isExport ? 'none' : '0 8px 25px -5px rgba(0, 242, 254, 0.1), 0 5px 10px -6px rgba(0, 242, 254, 0.1)' }}
             >
                 <h3 className={cardTitleClasses}>{t.teamStandings}</h3>
-                <table className={`w-full ${tableTextClass}`}>
-                    <thead>
-                        <tr className="text-dark-text-secondary">
-                            <th className={`text-left font-normal ${cellPadding}`} style={{ width: '8%' }}>#</th>
-                            <th className={`font-normal text-center ${cellPadding}`} style={{ width: '20%' }}>{t.team}</th>
-                            <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.thP}</th>
-                            <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.thW}</th>
-                            <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.thD}</th>
-                            <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.thL}</th>
-                            <th className={`font-normal ${cellPadding}`} style={{ width: '12%' }}>{t.thGD}</th>
-                            <th className={`font-bold ${cellPadding}`} style={{ width: '20%' }}>{t.thPts}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {teamStats.map(({ team, gamesPlayed, wins, draws, losses, goalDifference, points }, index) => (
-                            <tr key={team.id} className="border-t border-white/10">
-                                <td className={`${cellPadding} text-left`}>{index + 1}</td>
-                                <td className={`${cellPadding} flex justify-center items-center`}>
-                                    <TeamAvatar team={team} size="xxs" className={isExport ? 'translate-y-2' : ''} />
-                                </td>
-                                <td className={cellPadding}>{gamesPlayed}</td>
-                                <td className={cellPadding}>{wins}</td>
-                                <td className={cellPadding}>{draws}</td>
-                                <td className={cellPadding}>{losses}</td>
-                                <td className={cellPadding}>{goalDifference > 0 ? `+${goalDifference}` : goalDifference}</td>
-                                <td className={`${cellPadding} font-bold`}>{points}</td>
+                <div className="overflow-x-hidden">
+                    <table className={`w-full ${tableTextClass}`}>
+                        <thead>
+                            <tr className="text-dark-text-secondary">
+                                <th className={`text-left font-normal ${cellPadding}`} style={{ width: '8%' }}>#</th>
+                                <th className={`font-normal text-center ${cellPadding}`} style={{ width: '20%' }}>{t.team}</th>
+                                <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.thP}</th>
+                                <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.thW}</th>
+                                <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.thD}</th>
+                                <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.thL}</th>
+                                <th className={`font-normal ${cellPadding}`} style={{ width: '12%' }}>{t.thGD}</th>
+                                <th className={`font-bold ${cellPadding}`} style={{ width: '20%' }}>{t.thPts}</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {teamStats.map(({ team, gamesPlayed, wins, draws, losses, goalDifference, points }, index) => (
+                                <tr key={team.id} className="border-t border-white/10">
+                                    <td className={`${cellPadding} text-left`}>{index + 1}</td>
+                                    <td className={`${cellPadding} flex justify-center items-center`}>
+                                        <TeamAvatar team={team} size="xxs" className={isExport ? 'translate-y-2' : ''} />
+                                    </td>
+                                    <td className={cellPadding}>{gamesPlayed}</td>
+                                    <td className={cellPadding}>{wins}</td>
+                                    <td className={cellPadding}>{draws}</td>
+                                    <td className={cellPadding}>{losses}</td>
+                                    <td className={cellPadding}>{goalDifference > 0 ? `+${goalDifference}` : goalDifference}</td>
+                                    <td className={`${cellPadding} font-bold`}>{points}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
             )}
 
@@ -128,35 +130,37 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                 style={{ boxShadow: isExport ? 'none' : '0 8px 25px -5px rgba(0, 242, 254, 0.1), 0 5px 10px -6px rgba(0, 242, 254, 0.1)' }}
              >
                 <h3 className={cardTitleClasses}>{t.playerStatistics}</h3>
-                <table className={`w-full ${tableTextClass}`}>
-                   <thead>
-                        <tr className="text-dark-text-secondary">
-                            <th className={`text-left font-normal ${cellPadding}`} style={{ width: '10%' }}>#</th>
-                            <th className={`text-left font-normal ${cellPadding}`} style={{ width: '35%' }}>{t.players}</th>
-                            <th className={`font-normal ${cellPadding}`} style={{ width: '15%' }}>{t.team}</th>
-                            <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.thGP}</th>
-                            <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.thG}</th>
-                            <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.thA}</th>
-                            <th className={`font-bold ${cellPadding}`} style={{ width: '10%' }}>{t.thTotal}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {sortedPlayers.map((stats, index) => (
-                             <tr key={stats.player.id} className="border-t border-white/10">
-                                <td className={`${cellPadding} text-left`}>{index + 1}</td>
-                                {/* Truncate long names to prevent layout shift */}
-                                <td className={`${cellPadding} text-left font-semibold truncate pr-2 max-w-[100px]`} title={stats.player.nickname}>
-                                    {stats.player.nickname}
-                                </td>
-                                <td className={cellPadding}><TeamAvatar team={stats.team} size="xxs" className={`mx-auto ${isExport ? 'translate-y-2' : ''}`} /></td>
-                                <td className={cellPadding}>{stats.gamesPlayed}</td>
-                                <td className={cellPadding}>{stats.goals}</td>
-                                <td className={cellPadding}>{stats.assists}</td>
-                                <td className={`${cellPadding} font-bold`}>{stats.goals + stats.assists}</td>
+                <div className="overflow-x-hidden">
+                    <table className={`w-full ${tableTextClass}`}>
+                    <thead>
+                            <tr className="text-dark-text-secondary">
+                                <th className={`text-left font-normal ${cellPadding}`} style={{ width: '10%' }}>#</th>
+                                <th className={`text-left font-normal ${cellPadding}`} style={{ width: '35%' }}>{t.players}</th>
+                                <th className={`font-normal ${cellPadding}`} style={{ width: '15%' }}>{t.team}</th>
+                                <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.thGP}</th>
+                                <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.thG}</th>
+                                <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.thA}</th>
+                                <th className={`font-bold ${cellPadding}`} style={{ width: '10%' }}>{t.thTotal}</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {sortedPlayers.map((stats, index) => (
+                                <tr key={stats.player.id} className="border-t border-white/10">
+                                    <td className={`${cellPadding} text-left`}>{index + 1}</td>
+                                    {/* Truncate long names to prevent layout shift */}
+                                    <td className={`${cellPadding} text-left font-semibold truncate pr-2 max-w-[80px] sm:max-w-[100px]`} title={stats.player.nickname}>
+                                        {stats.player.nickname}
+                                    </td>
+                                    <td className={cellPadding}><TeamAvatar team={stats.team} size="xxs" className={`mx-auto ${isExport ? 'translate-y-2' : ''}`} /></td>
+                                    <td className={cellPadding}>{stats.gamesPlayed}</td>
+                                    <td className={cellPadding}>{stats.goals}</td>
+                                    <td className={cellPadding}>{stats.assists}</td>
+                                    <td className={`${cellPadding} font-bold`}>{stats.goals + stats.assists}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
             )}
             
