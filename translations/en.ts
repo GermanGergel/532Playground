@@ -117,9 +117,6 @@ export const en = {
     historyTitle: "Session History",
     noSessionsFound: "No sessions found.",
     deleteSessionPrompt: "Are you sure you want to delete this session?",
-    recalculateStats: "Recalculate Stats",
-    recalculateConfirm: "Attention!",
-    recalculateWarning: "Only proceed if this session's stats were NOT counted previously. Otherwise, player stats will be duplicated.",
     // LiveMatch Screen
     liveMatch: "Live Match",
     liveStatistics: "Live Statistics",

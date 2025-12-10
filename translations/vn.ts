@@ -118,9 +118,6 @@ export const vn = {
     historyTitle: "Lịch sử buổi tập",
     noSessionsFound: "Không tìm thấy buổi tập nào.",
     deleteSessionPrompt: "Bạn có chắc chắn muốn xóa buổi tập này không?",
-    recalculateStats: "Tính lại thống kê",
-    recalculateConfirm: "Chú ý!",
-    recalculateWarning: "Chỉ tiếp tục nếu thống kê của buổi tập này CHƯA được tính trước đó. Nếu không, thống kê của cầu thủ sẽ bị trùng lặp.",
     // LiveMatch Screen
     liveMatch: "Trận đấu trực tiếp",
     liveStatistics: "Thống kê trực tiếp",

@@ -118,9 +118,6 @@ export const ua = {
     historyTitle: "Історія сесій",
     noSessionsFound: "Сессии не знайдено.",
     deleteSessionPrompt: "Ви впевнені, що хочете видалити цю сесію?",
-    recalculateStats: "Перерахувати статистику",
-    recalculateConfirm: "Увага!",
-    recalculateWarning: "Натискайте, тільки якщо статистика цієї сесії НЕ була врахована раніше. Інакше дані гравців подвояться.",
     // LiveMatch Screen
     liveMatch: "Поточний матч",
     liveStatistics: "Поточна статистика",

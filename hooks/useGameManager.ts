@@ -1,12 +1,11 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-import { Session, Game, GameStatus, Goal, GoalPayload, SubPayload, EventLogEntry, EventType, StartRoundPayload, RotationMode } from '../types';
+import { Session, Game, GameStatus, Goal, GoalPayload, SubPayload, EventLogEntry, EventType, StartRoundPayload, Player, BadgeType, RotationMode, Team, SessionStatus } from '../types';
 import { playAnnouncement, initAudioContext } from '../lib';
 import { processFinishedSession } from '../services/sessionProcessor';
 import { newId } from '../screens/utils';
-import { savePlayersToDB, saveNewsToDB, saveSingleSessionToDB } from '../db';
+import { savePlayersToDB, saveNewsToDB, saveHistoryToDB } from '../db';
 import { useTranslation } from '../ui';
 
 export const useGameManager = () => {
@@ -28,10 +27,6 @@ export const useGameManager = () => {
     const currentGame = activeSession?.games[activeSession.games.length - 1];
     const isTimerBasedGame = activeSession?.numTeams === 3;
 
-    // ... (All other functions remain same: finishCurrentGameAndSetupNext, handleStartGame, handleTogglePause, handleGoalSave, handleGoalUpdate, handleSubstitution)
-    
-    // REDECLARING FUNCTIONS TO KEEP CONTEXT - No Logic Changes until handleFinishSession
-    
     const finishCurrentGameAndSetupNext = React.useCallback((manualWinnerId?: string) => {
         setActiveSession(session => {
             if (!session || !session.games.length) return session;
@@ -177,22 +172,29 @@ export const useGameManager = () => {
                 playAnnouncement('start_match', 'Game started', activeVoicePack);
             }
         }
+        
         setActiveSession(s => {
             if (!s) return null;
             const games = [...s.games];
             const currentGame = { ...games[games.length - 1] };
             if (currentGame.status !== GameStatus.Pending) return s;
+
             currentGame.status = GameStatus.Active;
             currentGame.lastResumeTime = Date.now();
-            if (!currentGame.startTime) currentGame.startTime = currentGame.lastResumeTime;
+            if (!currentGame.startTime) {
+                currentGame.startTime = currentGame.lastResumeTime;
+            }
             currentGame.announcedMilestones = [];
+
             games[games.length - 1] = currentGame;
+            
             const startEvent: EventLogEntry = {
                 timestamp: new Date().toISOString(),
                 round: currentGame.gameNumber,
                 type: EventType.TIMER_START,
                 payload: {},
             };
+            
             return { ...s, games, eventLog: [...s.eventLog, startEvent] };
         });
     };
@@ -202,6 +204,7 @@ export const useGameManager = () => {
             if (!s) return null;
             const games = [...s.games];
             const currentGame = { ...games[games.length - 1] };
+            
             if (currentGame.status === GameStatus.Active) {
                 const elapsedSinceResume = (Date.now() - (currentGame.lastResumeTime || Date.now())) / 1000;
                 currentGame.elapsedSecondsOnPause += elapsedSinceResume;
@@ -209,14 +212,19 @@ export const useGameManager = () => {
             } else if (currentGame.status === GameStatus.Paused) {
                 currentGame.status = GameStatus.Active;
                 currentGame.lastResumeTime = Date.now();
-            } else { return s; }
+            } else {
+                return s;
+            }
+            
             games[games.length - 1] = currentGame;
+
             const event: EventLogEntry = {
                 timestamp: new Date().toISOString(),
                 round: currentGame.gameNumber,
                 type: EventType.TIMER_STOP,
                 payload: {},
             };
+            
             return { ...s, games, eventLog: [...s.eventLog, event] };
         });
     };
@@ -226,26 +234,37 @@ export const useGameManager = () => {
             if (!s) return null;
             const games = [...s.games];
             let currentGame = { ...games[s.games.length - 1] };
+            
             if (currentGame.status === GameStatus.Finished) return s;
+
             const currentTotalElapsed = currentGame.status === GameStatus.Active && currentGame.lastResumeTime
                 ? currentGame.elapsedSecondsOnPause + (Date.now() - currentGame.lastResumeTime) / 1000
                 : currentGame.elapsedSecondsOnPause;
+
             const newGoal: Goal = { 
                 ...goalData, 
                 id: newId(), 
                 gameId: currentGame.id, 
                 timestampSeconds: Math.floor(currentTotalElapsed)
             };
+            
             currentGame.goals = [...currentGame.goals, newGoal];
-            if (newGoal.teamId === currentGame.team1Id) currentGame.team1Score++;
-            else currentGame.team2Score++;
+
+            if (newGoal.teamId === currentGame.team1Id) {
+                currentGame.team1Score++;
+            } else {
+                currentGame.team2Score++;
+            }
+            
             games[s.games.length - 1] = currentGame;
+
              const goalEvent: EventLogEntry = {
                 timestamp: new Date().toISOString(),
                 round: currentGame.gameNumber,
                 type: EventType.GOAL,
                 payload: goalPayload,
             };
+            
             return { ...s, games, eventLog: [...s.eventLog, goalEvent] };
         });
     };
@@ -253,21 +272,27 @@ export const useGameManager = () => {
     const handleGoalUpdate = (goalId: string, updates: { scorerId?: string; assistantId?: string; isOwnGoal: boolean }) => {
         setActiveSession(s => {
             if (!s || !currentGame) return s;
+    
             const games = [...s.games];
             const gameIndex = games.findIndex(g => g.id === currentGame.id);
             if (gameIndex === -1) return s;
+    
             const updatedGame = { ...games[gameIndex] };
             const goalIndex = updatedGame.goals.findIndex(g => g.id === goalId);
             if (goalIndex === -1) return s;
+    
             const originalGoal = updatedGame.goals[goalIndex];
             const updatedGoal = { ...originalGoal, ...updates };
+
             if (updates.isOwnGoal) {
                 updatedGoal.scorerId = undefined;
                 updatedGoal.assistantId = undefined;
             }
             updatedGame.goals[goalIndex] = updatedGoal;
             games[gameIndex] = updatedGame;
+    
             const getPlayerNickname = (id?: string) => s.playerPool.find(p => p.id === id)?.nickname;
+            
             const eventLog = [...s.eventLog];
             let eventUpdated = false;
             for (let i = eventLog.length - 1; i >= 0; i--) {
@@ -275,9 +300,11 @@ export const useGameManager = () => {
                  if (event.round === updatedGame.gameNumber && event.type === EventType.GOAL) {
                     const eventTimestamp = new Date(event.timestamp).getTime();
                     const goalTimestamp = (updatedGame.startTime || 0) + originalGoal.timestampSeconds * 1000;
+                    
                     if (Math.abs(eventTimestamp - goalTimestamp) < 2000) {
                         const payload = event.payload as GoalPayload;
                         const originalTeamColor = s.teams.find(t => t.id === originalGoal.teamId)?.color;
+                        
                         if(payload.team === originalTeamColor){
                              const newPayload: GoalPayload = {
                                 ...payload,
@@ -292,6 +319,7 @@ export const useGameManager = () => {
                     }
                 }
             }
+            
             setGoalToEdit(null);
             return { ...s, games, eventLog: eventUpdated ? eventLog : s.eventLog };
         });
@@ -300,21 +328,29 @@ export const useGameManager = () => {
     const handleSubstitution = (playerInId: string) => {
         const { teamId, playerOutId } = subModalState;
         if (!teamId || !playerOutId) return;
+    
         setActiveSession(currentSession => {
             if (!currentSession) return null;
+    
             const teamIndex = currentSession.teams.findIndex(t => t.id === teamId);
             if (teamIndex === -1) return currentSession;
+    
             const teamToUpdate = { ...currentSession.teams[teamIndex] };
             const playerIds = [...teamToUpdate.playerIds];
             const outIndex = playerIds.indexOf(playerOutId);
             const inIndex = playerIds.indexOf(playerInId);
+    
             if (outIndex === -1 || inIndex === -1) return currentSession;
+    
             [playerIds[outIndex], playerIds[inIndex]] = [playerIds[inIndex], playerIds[outIndex]];
             teamToUpdate.playerIds = playerIds;
+    
             const updatedTeams = [...currentSession.teams];
             updatedTeams[teamIndex] = teamToUpdate;
+    
             const currentLiveGame = currentSession.games[currentSession.games.length - 1];
             if (!currentLiveGame) return { ...currentSession, teams: updatedTeams };
+    
             const getPlayerNickname = (id: string) => currentSession.playerPool.find(p => p.id === id)?.nickname || '';
             const subEvent: EventLogEntry = {
                 timestamp: new Date().toISOString(),
@@ -326,12 +362,13 @@ export const useGameManager = () => {
                     in: getPlayerNickname(playerInId),
                 } as SubPayload,
             };
+    
             return { ...currentSession, teams: updatedTeams, eventLog: [...currentSession.eventLog, subEvent] };
         });
+    
         setSubModalState({ isOpen: false });
     };
     
-    // UPDATED FUNCTION: Explicit cloud saving
     const handleFinishSession = async () => {
         if (!activeSession || isSaving) return;
 
@@ -358,35 +395,24 @@ export const useGameManager = () => {
                 newsFeed: newsFeed,
             });
 
-            // 1. Explicit Cloud Sync for Players (Chunked)
-            // This is the correct way: only save players that changed, safely in chunks.
             if (playersToSave.length > 0) {
                 await savePlayersToDB(playersToSave);
+                setAllPlayers(updatedPlayers); 
             }
-            // 2. Update Local State (Context will auto-save to IndexedDB)
-            setAllPlayers(updatedPlayers); 
 
-            // 3. Explicit Cloud Sync for News
             if (updatedNewsFeed.length > newsFeed.length) {
                 await saveNewsToDB(updatedNewsFeed);
+                setNewsFeed(updatedNewsFeed);
             }
-            setNewsFeed(updatedNewsFeed);
 
-            // 4. Explicit Cloud Sync for Session (Single)
-            // Only save THIS session to cloud, not the entire array.
-            await saveSingleSessionToDB(finalSession);
-            
-            // 5. Update Local History State
+            await saveHistoryToDB([finalSession]);
             setHistory(prev => [finalSession, ...prev]);
 
             setActiveSession(null);
             navigate('/');
         } catch (error) {
             console.error("Error ending session:", error);
-            alert("Session finished locally, but cloud sync failed. Data is safe on this device.");
-            // Even if cloud fails, we finish locally
-            setActiveSession(null);
-            navigate('/');
+            alert("Error saving data. Please check your connection.");
         } finally {
             setIsSaving(false);
         }
@@ -394,6 +420,7 @@ export const useGameManager = () => {
 
     React.useEffect(() => {
         if (!activeSession || !currentGame || currentGame.status !== GameStatus.Active) return;
+    
         const goalLimit = activeSession.goalsToWin;
         if (goalLimit && goalLimit > 0) {
             if (currentGame.team1Score >= goalLimit || currentGame.team2Score >= goalLimit) {
@@ -403,10 +430,27 @@ export const useGameManager = () => {
     }, [currentGame?.team1Score, currentGame?.team2Score, activeSession, currentGame, finishCurrentGameAndSetupNext]);
 
     return {
-        scoringTeamForModal, isEndSessionModalOpen, isSelectWinnerModalOpen, goalToEdit, isSaving, subModalState,
-        currentGame, isTimerBasedGame,
-        setScoringTeamForModal, setIsEndSessionModalOpen, setGoalToEdit, setSubModalState,
-        finishCurrentGameAndSetupNext, handleStartGame, handleTogglePause, handleGoalSave, handleGoalUpdate, handleSubstitution,
+        // State
+        scoringTeamForModal,
+        isEndSessionModalOpen,
+        isSelectWinnerModalOpen,
+        goalToEdit,
+        isSaving,
+        subModalState,
+        // Derived state
+        currentGame,
+        isTimerBasedGame,
+        // Handlers
+        setScoringTeamForModal,
+        setIsEndSessionModalOpen,
+        setGoalToEdit,
+        setSubModalState,
+        finishCurrentGameAndSetupNext,
+        handleStartGame,
+        handleTogglePause,
+        handleGoalSave,
+        handleGoalUpdate,
+        handleSubstitution,
         handleFinishSession
     };
 };
