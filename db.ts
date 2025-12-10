@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import { Player, Session, NewsItem } from './types';
 import { Language } from './translations/index';
@@ -291,12 +292,26 @@ export const saveHistoryToDB = async (history: Session[]) => {
     const realHistory = history.filter(s => !isDemoData(s.id));
     if (realHistory.length === 0 && history.length > 0) return; // Only demo sessions present
 
+    // CRITICAL OPTIMIZATION:
+    // Strip heavy images from the session history payload before saving.
+    // The images are already stored in the 'players' table/storage.
+    // Saving them again inside the JSON session history causes massive payload bloat (50MB+),
+    // which leads to Supabase timeouts and rejected requests.
+    const optimizedHistory = realHistory.map(session => ({
+        ...session,
+        playerPool: session.playerPool.map(p => ({
+            ...p,
+            photo: undefined, // Remove avatar base64/url from session blob
+            playerCard: undefined // Remove card base64/url from session blob
+        }))
+    }));
+
     // Mode 1: Cloud
     if (isSupabaseConfigured()) {
         try {
             const { error } = await supabase!
                 .from('sessions')
-                .upsert(realHistory, { onConflict: 'id' });
+                .upsert(optimizedHistory, { onConflict: 'id' });
             if (error) throw error;
         } catch (error) {
             console.error("Supabase Save History Error:", error);
@@ -306,7 +321,8 @@ export const saveHistoryToDB = async (history: Session[]) => {
     // Mode 2: Local Fallback
     else {
         try {
-            await set('history', realHistory);
+            // For local storage, we also save the optimized version to save space in IndexedDB
+            await set('history', optimizedHistory);
         } catch (error) {
             // Silent
         }

@@ -3,15 +3,20 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context';
 import { Page, Button, Card, Modal, useTranslation } from '../ui';
-import { Trash2 } from '../icons';
+import { Trash2, RefreshCw } from '../icons';
 import { Session } from '../types';
 import { BrandedHeader } from './utils';
+import { processFinishedSession } from '../services/sessionProcessor';
+import { savePlayersToDB, saveNewsToDB, saveHistoryToDB } from '../db';
 
 export const HistoryScreen: React.FC = () => {
-    const { history, setHistory } = useApp();
+    const { history, setHistory, allPlayers, setAllPlayers, newsFeed, setNewsFeed } = useApp();
     const t = useTranslation();
     const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
+    const [isRecalcModalOpen, setIsRecalcModalOpen] = React.useState(false);
     const [sessionToDelete, setSessionToDelete] = React.useState<Session | null>(null);
+    const [sessionToRecalc, setSessionToRecalc] = React.useState<Session | null>(null);
+    const [isProcessing, setIsProcessing] = React.useState(false);
 
     const openDeleteModal = (session: Session) => {
         setSessionToDelete(session);
@@ -23,6 +28,59 @@ export const HistoryScreen: React.FC = () => {
         setHistory(prev => prev.filter(s => s.id !== sessionToDelete.id));
         setIsDeleteModalOpen(false);
         setSessionToDelete(null);
+    };
+
+    const openRecalcModal = (session: Session) => {
+        setSessionToRecalc(session);
+        setIsRecalcModalOpen(true);
+    };
+
+    const handleRecalculate = async () => {
+        if (!sessionToRecalc || isProcessing) return;
+        setIsProcessing(true);
+
+        try {
+            // Process the session using the current state of players
+            const {
+                updatedPlayers,
+                playersToSave,
+                finalSession,
+                updatedNewsFeed
+            } = processFinishedSession({
+                session: sessionToRecalc,
+                oldPlayers: allPlayers,
+                newsFeed: newsFeed,
+            });
+
+            // Save to DB
+            if (playersToSave.length > 0) {
+                await savePlayersToDB(playersToSave);
+                setAllPlayers(updatedPlayers);
+            }
+
+            if (updatedNewsFeed.length > newsFeed.length) {
+                await saveNewsToDB(updatedNewsFeed);
+                setNewsFeed(updatedNewsFeed);
+            }
+            
+            // Note: We don't really need to save the session again if it's already in history,
+            // but we do it to ensure consistency if the processor modified it.
+            // Importantly, this will use the optimized saveHistoryToDB which strips images.
+            await saveHistoryToDB([finalSession]); 
+            
+            // Update local history state if the session object changed
+            setHistory(prev => prev.map(s => s.id === finalSession.id ? finalSession : s));
+
+            alert('Stats recalculated and saved successfully!');
+            setIsRecalcModalOpen(false);
+            setSessionToRecalc(null);
+
+        } catch (error) {
+            console.error("Recalculation error:", error);
+            alert("Failed to recalculate stats. Check console.");
+        } finally {
+            setIsProcessing(false);
+        }
     };
 
     return (
@@ -45,17 +103,30 @@ export const HistoryScreen: React.FC = () => {
                                     </div>
                                 </Card>
                             </Link>
-                             <Button
-                                variant="ghost"
-                                className="!p-3 !text-white shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
-                                style={{ textShadow: '0 0 10px #00F2FE, 0 0 15px #00F2FE' }}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    openDeleteModal(session);
-                                }}
-                            >
-                                <Trash2 className="w-5 h-5"/>
-                            </Button>
+                            <div className="flex flex-col gap-2">
+                                <Button
+                                    variant="ghost"
+                                    className="!p-2 !text-white shadow-lg shadow-green-500/20 hover:shadow-green-500/40"
+                                    title="Recalculate Stats"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        openRecalcModal(session);
+                                    }}
+                                >
+                                    <RefreshCw className="w-5 h-5" />
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    className="!p-2 !text-white shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
+                                    style={{ textShadow: '0 0 10px #00F2FE, 0 0 15px #00F2FE' }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        openDeleteModal(session);
+                                    }}
+                                >
+                                    <Trash2 className="w-5 h-5"/>
+                                </Button>
+                            </div>
                         </li>
                     ))}
                 </ul>
@@ -72,6 +143,27 @@ export const HistoryScreen: React.FC = () => {
                     <div className="flex justify-center gap-3">
                         <Button variant="secondary" onClick={() => setIsDeleteModalOpen(false)} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.cancel}</Button>
                         <Button variant="secondary" className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40" onClick={handleDelete}>{t.delete}</Button>
+                    </div>
+                </div>
+             </Modal>
+
+             <Modal 
+                isOpen={isRecalcModalOpen} 
+                onClose={() => setIsRecalcModalOpen(false)} 
+                size="xs"
+                hideCloseButton
+                containerClassName="border border-green-500/40 shadow-[0_0_20px_rgba(76,255,95,0.3)]"
+             >
+                <div className="flex flex-col gap-4 text-center">
+                    <h3 className="text-xl font-bold text-dark-text">Force Update Stats?</h3>
+                    <p className="text-sm text-dark-text-secondary">
+                        This will re-run the rating and badge calculations for this session and force-update the player database. Use this if the stats were not saved correctly after the match.
+                    </p>
+                    <div className="flex justify-center gap-3">
+                        <Button variant="secondary" onClick={() => setIsRecalcModalOpen(false)} disabled={isProcessing} className="w-full shadow-lg">{t.cancel}</Button>
+                        <Button variant="primary" className="w-full shadow-lg !text-dark-bg" onClick={handleRecalculate} disabled={isProcessing}>
+                            {isProcessing ? 'Processing...' : 'Update'}
+                        </Button>
                     </div>
                 </div>
              </Modal>
