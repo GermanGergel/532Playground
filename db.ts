@@ -69,19 +69,30 @@ export interface DbResult {
     errorDetail?: any;
 }
 
-// Helper to remove NaN values which break Supabase JSON/Int
+// Helper to remove NaN values and huge Base64 strings which break Supabase
 const sanitizeObject = (obj: any): any => {
     if (obj === null || obj === undefined) return obj;
+    
+    // Convert NaN to 0
     if (typeof obj === 'number') {
         return isNaN(obj) ? 0 : obj;
     }
+    
+    // Arrays
     if (Array.isArray(obj)) {
         return obj.map(v => sanitizeObject(v));
     }
+    
+    // Objects
     if (typeof obj === 'object') {
         const newObj: any = {};
         for (const key in obj) {
-            newObj[key] = sanitizeObject(obj[key]);
+            // STRIP BASE64 IMAGES FROM JSON PAYLOAD
+            if ((key === 'photo' || key === 'playerCard' || key === 'logo') && typeof obj[key] === 'string' && obj[key].startsWith('data:')) {
+                newObj[key] = null; 
+            } else {
+                newObj[key] = sanitizeObject(obj[key]);
+            }
         }
         return newObj;
     }
@@ -133,7 +144,7 @@ export const deletePlayerImage = async (imageUrl: string) => {
 export const saveSinglePlayerToDB = async (player: Player): Promise<DbResult> => {
     if (isDemoData(player.id)) return { success: true, message: "Demo data skipped" };
 
-    // 1. Local Save
+    // 1. Local Save (Always works, stores everything)
     try {
         const allPlayers = await get<Player[]>('players') || [];
         const playerIndex = allPlayers.findIndex(p => p.id === player.id);
@@ -148,12 +159,9 @@ export const saveSinglePlayerToDB = async (player: Player): Promise<DbResult> =>
     // 2. Cloud Save
     if (isSupabaseConfigured()) {
         try {
-            const playerToSave = { ...player };
-            if (playerToSave.photo && playerToSave.photo.startsWith('data:')) delete playerToSave.photo;
-            if (playerToSave.playerCard && playerToSave.playerCard.startsWith('data:')) delete playerToSave.playerCard;
+            const sanitizedPlayer = sanitizeObject(player);
+            // We now assume the user has added the 'records' column to Supabase
             
-            const sanitizedPlayer = sanitizeObject(playerToSave);
-
             const { error } = await supabase!
                 .from('players')
                 .upsert(sanitizedPlayer, { onConflict: 'id' });
@@ -204,12 +212,8 @@ export const savePlayersToDB = async (players: Player[]): Promise<DbResult> => {
     // 1. Cloud Save
     if (isSupabaseConfigured()) {
         try {
-            const cleanPlayers = realPlayers.map(p => {
-                const cleanP = { ...p };
-                if (cleanP.photo && cleanP.photo.startsWith('data:')) delete cleanP.photo;
-                if (cleanP.playerCard && cleanP.playerCard.startsWith('data:')) delete cleanP.playerCard;
-                return sanitizeObject(cleanP);
-            });
+            const cleanPlayers = realPlayers.map(p => sanitizeObject(p));
+            // We now assume the user has added the 'records' column to Supabase
 
             const CHUNK_SIZE = 10; 
             for (let i = 0; i < cleanPlayers.length; i += CHUNK_SIZE) {
@@ -347,6 +351,8 @@ export const saveNewsToDB = async (news: NewsItem[]): Promise<DbResult> => {
     if (isSupabaseConfigured()) {
         try {
             const sanitizedNews = sanitizeObject(realNews);
+            // We now assume the user has added the 'priority' column to Supabase
+
             const { error } = await supabase!
                 .from('news')
                 .upsert(sanitizedNews, { onConflict: 'id' });

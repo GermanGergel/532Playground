@@ -54,7 +54,7 @@ export const HistoryScreen: React.FC = () => {
 
             const results: DbResult[] = [];
 
-            // Save to DB
+            // Save to DB (now returns success status)
             if (playersToSave.length > 0) {
                 const res = await savePlayersToDB(playersToSave);
                 results.push(res);
@@ -78,7 +78,7 @@ export const HistoryScreen: React.FC = () => {
             if (failures.length > 0) {
                 // Combine unique error messages
                 const errors = Array.from(new Set(failures.map(f => f.message))).join('\n');
-                alert(`⚠️ Stats recalculated and saved LOCALLY, but Cloud Sync failed:\n${errors}\n\nCheck your internet or Supabase RLS policies.`);
+                alert(`⚠️ Saved LOCALLY, but Cloud Sync failed:\n${errors}\n\nCheck your internet or Supabase RLS policies.`);
             } else {
                 alert('Stats recalculated and saved successfully to Cloud and Device!');
             }

@@ -104,9 +104,10 @@ export const BottomNav: React.FC = () => {
 };
 
 export const Page: React.FC<{children: React.ReactNode, title?: string, className?: string} & React.HTMLAttributes<HTMLDivElement>> = ({children, title, className = '', ...props}) => (
-    <div className={`p-4 pb-28 ${className}`} {...props}>
+    // FIX: Added 'w-full overflow-x-hidden' to strictly prevent horizontal scrolling/swiping
+    <div className={`p-4 pb-28 w-full overflow-x-hidden box-border ${className}`} {...props}>
         {title && <h1 className="text-4xl font-bold mb-6">{title}</h1>}
-        <div className="max-w-sm mx-auto">
+        <div className="max-w-sm mx-auto w-full">
             {children}
         </div>
     </div>
