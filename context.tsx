@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Session, Player, GameStatus, RotationMode, Team, Game, Goal, SessionStatus, EventLogEntry, EventType, StartRoundPayload, GoalPayload, PlayerStatus, PlayerTier, BadgeType, NewsItem } from './types';
+import { Session, Player, NewsItem } from './types';
 import { Language } from './translations/index';
 import { 
     saveLocalPlayers, 
@@ -27,7 +27,7 @@ interface AppContextType {
   activeVoicePack: number;
   setActiveVoicePack: (packNumber: number) => void;
   isLoading: boolean;
-  displayTime: number; // Re-introduced for global timer
+  displayTime: number; 
 }
 
 const AppContext = React.createContext<AppContextType | undefined>(undefined);
@@ -41,38 +41,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [language, setLanguageState] = React.useState<Language>('en');
   const [activeVoicePack, setActiveVoicePackState] = React.useState<number>(1);
 
-  // --- GLOBAL TIMER LOGIC (Restored) ---
+  // --- GLOBAL TIMER LOGIC ---
   const { displayTime } = useMatchTimer(activeSession, setActiveSession, activeVoicePack);
 
-  // --- INITIAL DATA LOAD (Now handled by appInitializer service) ---
+  // --- INITIAL DATA LOAD ---
   React.useEffect(() => {
     const initApp = async () => {
         try {
             const initialState = await initializeAppState();
             setActiveSession(initialState.session);
-            setAllPlayers(initialState.players);
-            setHistory(initialState.history);
-            setNewsFeed(initialState.newsFeed);
+            
+            // Only set if we actually got data, to prevent wiping state on error
+            if (initialState.players.length > 0) setAllPlayers(initialState.players);
+            if (initialState.history.length > 0) setHistory(initialState.history);
+            if (initialState.newsFeed.length > 0) setNewsFeed(initialState.newsFeed);
+            
             setLanguageState(initialState.language);
             setActiveVoicePackState(initialState.activeVoicePack);
         } catch (error) {
             console.error("Critical error loading data:", error);
         } finally {
-            // Add a small artificial delay if data loads too fast, 
-            // so the user can actually see the cool animation (optional, implies polish)
             setTimeout(() => {
                 setIsLoading(false);
-            }, 1500);
+            }, 1000);
         }
     };
 
     initApp();
   }, []);
 
-  // --- PERSISTENCE EFFECT HOOKS (Save to DB) ---
-  // NOTE: These effects ONLY save to the LOCAL Cache (IndexedDB) to prevent
-  // high-frequency Cloud writes and errors. Cloud synchronization is handled 
-  // explicitly in specific action handlers (e.g. finish session, add player).
+  // --- PERSISTENCE EFFECT HOOKS (Save to LOCAL CACHE ONLY) ---
+  // These hooks now ensure that state is always saved to IndexedDB for offline support.
+  // Actual Cloud syncing is done explicitly in action handlers (e.g. handleFinishSession)
+  // to avoid "Supabase Save History Error" (Payload Too Large) and infinite loops.
 
   React.useEffect(() => {
     if(!isLoading) {
@@ -81,19 +82,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [activeSession, isLoading]);
 
   React.useEffect(() => {
-    if(!isLoading) {
+    if(!isLoading && history.length > 0) {
         saveLocalHistory(history);
     }
   }, [history, isLoading]);
 
   React.useEffect(() => {
-    if(!isLoading) {
+    if(!isLoading && allPlayers.length > 0) {
         saveLocalPlayers(allPlayers);
     }
   }, [allPlayers, isLoading]);
 
   React.useEffect(() => {
-    if(!isLoading) {
+    if(!isLoading && newsFeed.length > 0) {
         saveLocalNews(newsFeed);
     }
   }, [newsFeed, isLoading]);
@@ -129,7 +130,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#1A1D24]">
             <div className="relative flex flex-col items-center justify-center w-64 h-64">
-                {/* Rotating Ring */}
                 <div className="absolute inset-0 animate-spin" style={{ animationDuration: '2s' }}>
                     <svg viewBox="0 0 100 100" className="w-full h-full">
                         <defs>
@@ -138,18 +138,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                                 <stop offset="100%" stopColor="#00F2FE" stopOpacity="0" />
                             </linearGradient>
                         </defs>
-                        <circle 
-                            cx="50" cy="50" r="48" 
-                            fill="none" 
-                            stroke="url(#ringGradient)" 
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeDasharray="200 300" // Creates the partial arc effect
-                        />
+                        <circle cx="50" cy="50" r="48" fill="none" stroke="url(#ringGradient)" strokeWidth="2" strokeLinecap="round" strokeDasharray="200 300" />
                     </svg>
                 </div>
-
-                {/* Static Text Content */}
                 <div className="flex flex-col items-center justify-center z-10">
                     <h1 className="text-5xl font-black text-[#00F2FE] tracking-tighter" style={{ textShadow: '0 0 15px rgba(0, 242, 254, 0.5)' }}>
                         532

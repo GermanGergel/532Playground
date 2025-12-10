@@ -7,7 +7,7 @@ import { Trash2, Zap } from '../icons';
 import { Session } from '../types';
 import { BrandedHeader } from './utils';
 import { processFinishedSession } from '../services/sessionProcessor';
-import { savePlayersToDB, saveNewsToDB, saveSingleSessionToDB, deleteSessionFromDB, isSupabaseConfigured } from '../db';
+import { savePlayersToDB, saveNewsToDB, saveSingleSessionToDB, deleteSessionFromDB } from '../db';
 
 export const HistoryScreen: React.FC = () => {
     const { history, setHistory, allPlayers, setAllPlayers, newsFeed, setNewsFeed } = useApp();
@@ -82,6 +82,7 @@ export const HistoryScreen: React.FC = () => {
             setNewsFeed(updatedNewsFeed);
 
             // 3. Explicit Cloud Sync for Session
+            // ONLY sync the single session that changed
             await saveSingleSessionToDB(finalSession);
             
             // 4. Update History State (Replace the old session object with the new one)

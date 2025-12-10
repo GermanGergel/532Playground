@@ -1,29 +1,24 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { Player, Session, NewsItem } from './types';
 import { Language } from './translations/index';
 import { get, set, del, keys } from 'idb-keyval';
 
 // --- SUPABASE CONFIGURATION ---
-// Universal environment variable access (works in Vite, Next.js, and standard Node)
+// Robust environment variable access for both Vite and other environments
 const getEnvVar = (key: string) => {
     try {
         // @ts-ignore
-        if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
+        if (typeof import.meta !== 'undefined' && import.meta.env) {
             // @ts-ignore
             return import.meta.env[key];
         }
-    } catch (e) {
-        // Ignore errors if import.meta is not defined
-    }
-
+    } catch(e) {}
+    
     try {
-        if (typeof process !== 'undefined' && process.env && process.env[key]) {
+        if (typeof process !== 'undefined' && process.env) {
             return process.env[key];
         }
-    } catch (e) {
-        // Ignore errors
-    }
+    } catch(e) {}
     
     return undefined;
 };
@@ -42,9 +37,10 @@ export const isSupabaseConfigured = () => !!supabase;
 let hasLoggedMode = false;
 const logStorageMode = () => {
     if (!hasLoggedMode) {
-        // Only log if we are actually connected to cloud, otherwise stay silent for clean terminal
         if (isSupabaseConfigured()) {
             console.log('🔌 Connected to Cloud Database (Supabase)');
+        } else {
+            console.log('💾 Running in Local Mode (IndexedDB only)');
         }
         hasLoggedMode = true;
     }
@@ -53,7 +49,7 @@ const logStorageMode = () => {
 // --- DEMO DATA FILTER ---
 const isDemoData = (id: string) => id.startsWith('demo_');
 
-// --- BASE64 to Blob HELPER (Improved) ---
+// --- BASE64 to Blob HELPER ---
 const base64ToBlob = (base64: string): Blob => {
     const parts = base64.split(';base64,');
     if (parts.length !== 2) {
@@ -80,17 +76,17 @@ const BUCKET_NAME = 'player_images';
 
 export const uploadPlayerImage = async (playerId: string, base64Image: string, type: 'avatar' | 'card'): Promise<string | null> => {
     if (!isSupabaseConfigured() || !base64Image) return null;
-    if (isDemoData(playerId)) return null; // Block demo uploads
+    if (isDemoData(playerId)) return null;
 
     try {
         const blob = base64ToBlob(base64Image);
-        const fileExtension = blob.type.split('/')[1] || 'jpeg'; // e.g., 'jpeg'
+        const fileExtension = blob.type.split('/')[1] || 'jpeg';
         const filePath = `${playerId}/${type}_${Date.now()}.${fileExtension}`;
 
         const { error: uploadError } = await supabase!.storage
             .from(BUCKET_NAME)
             .upload(filePath, blob, {
-                cacheControl: '31536000', // 1 Year Cache (drastically reduces Egress)
+                cacheControl: '31536000',
                 upsert: true, 
             });
 
@@ -101,18 +97,6 @@ export const uploadPlayerImage = async (playerId: string, base64Image: string, t
 
     } catch (error: any) {
         console.error('Error uploading image:', error);
-        
-        // Detailed help for the user if they see the specific RLS error
-        if (error.message && error.message.includes('row-level security policy')) {
-            console.warn(
-                "⚠️ UPLOAD BLOCKED BY SUPABASE POLICIES:\n" +
-                "1. Go to Supabase Dashboard -> Storage -> player_images\n" +
-                "2. Click 'Policies'\n" +
-                "3. Add a new policy allowing INSERT/UPDATE/SELECT for 'anon' (public) role.\n" +
-                "This is required for the app to save images."
-            );
-        }
-        
         return null;
     }
 };
@@ -121,13 +105,10 @@ export const deletePlayerImage = async (imageUrl: string) => {
     if (!isSupabaseConfigured() || !imageUrl) return;
 
     try {
-        // Only attempt to delete if it's a Supabase URL, not a local base64 string
         if (!imageUrl.startsWith('https://')) return;
-
         const url = new URL(imageUrl);
         const path = url.pathname.split(`/${BUCKET_NAME}/`)[1];
         if (!path) return;
-
         await supabase!.storage.from(BUCKET_NAME).remove([path]);
     } catch (error) {
         console.error("Error deleting old image:", error);
@@ -174,51 +155,48 @@ export const saveSinglePlayerToDB = async (player: Player) => {
             if (error) throw error;
         } catch (error) {
             console.error("Supabase Save Single Player Error:", error);
-            throw error;
+            // Don't throw, just log. Local state is preserved.
         }
     }
 };
 
 // SINGLE PLAYER LOAD
 export const loadSinglePlayerFromDB = async (id: string): Promise<Player | null> => {
-    if (!isSupabaseConfigured()) {
-        const allPlayers = await get<Player[]>('players') || [];
-        return allPlayers.find(p => p.id === id) || null;
+    // Try Cloud First
+    if (isSupabaseConfigured()) {
+        try {
+            const { data, error } = await supabase!
+                .from('players')
+                .select('*')
+                .eq('id', id)
+                .single();
+            if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "not found"
+            if (data) return data as Player;
+        } catch (error) {
+            console.warn(`Supabase Load Single Player Error (ID: ${id}), falling back to local:`, error);
+        }
     }
 
-    try {
-        const { data, error } = await supabase!
-            .from('players')
-            .select('*')
-            .eq('id', id)
-            .single();
-        if (error) {
-            if (error.code === 'PGRST116') return null;
-            throw error;
-        }
-        return data as Player;
-    } catch (error) {
-        console.error(`Supabase Load Single Player Error (ID: ${id}):`, error);
-        const allPlayers = await get<Player[]>('players') || [];
-        return allPlayers.find(p => p.id === id) || null;
-    }
+    // Fallback to Local
+    const allPlayers = await get<Player[]>('players') || [];
+    return allPlayers.find(p => p.id === id) || null;
 };
 
 
 // BULK PLAYER SAVE (Explicit Cloud Sync)
 export const savePlayersToDB = async (players: Player[]) => {
-    logStorageMode();
     const realPlayers = players.filter(p => !isDemoData(p.id));
-    if (realPlayers.length === 0) return;
     
     // Always update local cache
     await saveLocalPlayers(players);
 
-    // Mode 1: Cloud
+    if (realPlayers.length === 0) return;
+
+    // Cloud Sync
     if (isSupabaseConfigured()) {
         try {
-            // Split into small chunks to avoid payload limits
-            const CHUNK_SIZE = 5; 
+            // Split into chunks
+            const CHUNK_SIZE = 10; 
             for (let i = 0; i < realPlayers.length; i += CHUNK_SIZE) {
                 const chunk = realPlayers.slice(i, i + CHUNK_SIZE);
                 const { error } = await supabase!
@@ -226,11 +204,9 @@ export const savePlayersToDB = async (players: Player[]) => {
                     .upsert(chunk, { onConflict: 'id' });
                 
                 if (error) throw error;
-                await new Promise(resolve => setTimeout(resolve, 100)); // Rate limiting
             }
         } catch (error) {
-            console.error("Supabase Save Error (Batch):", error);
-            throw error;
+            console.error("Supabase Save Players Error:", error);
         }
     } 
 };
@@ -243,9 +219,13 @@ export const loadPlayersFromDB = async (): Promise<Player[] | undefined> => {
                 .from('players')
                 .select('*');
             if (error) throw error;
-            return data as Player[];
+            // Update local cache with fresh data
+            if (data) {
+                await saveLocalPlayers(data as Player[]);
+                return data as Player[];
+            }
         } catch (error) {
-            return await get('players');
+            console.warn("Supabase Load Players Error, falling back to local:", error);
         }
     } 
     return await get('players');
@@ -272,7 +252,7 @@ export const loadActiveSessionFromDB = async (): Promise<Session | null | undefi
 
 // --- HISTORY (SESSIONS) ---
 
-// SINGLE SESSION SAVE
+// SINGLE SESSION SAVE (Use this for updates/inserts)
 export const saveSingleSessionToDB = async (session: Session) => {
     if (isDemoData(session.id)) return;
 
@@ -283,7 +263,7 @@ export const saveSingleSessionToDB = async (session: Session) => {
         if (index > -1) {
             history[index] = session;
         } else {
-            history.push(session);
+            history.unshift(session); // Add to top
         }
         await set('history', history);
     } catch (error) {}
@@ -297,15 +277,12 @@ export const saveSingleSessionToDB = async (session: Session) => {
             if (error) throw error;
         } catch (error) {
             console.error("Supabase Save Single Session Error:", error);
-            throw error;
         }
     }
 };
 
 // DELETE SESSION
 export const deleteSessionFromDB = async (sessionId: string) => {
-    if (isDemoData(sessionId)) return;
-
     // Update Local Cache
     try {
         const history = await get<Session[]>('history') || [];
@@ -314,7 +291,7 @@ export const deleteSessionFromDB = async (sessionId: string) => {
     } catch (error) {}
 
     // Cloud Sync
-    if (isSupabaseConfigured()) {
+    if (isSupabaseConfigured() && !isDemoData(sessionId)) {
         try {
             const { error } = await supabase!
                 .from('sessions')
@@ -323,38 +300,13 @@ export const deleteSessionFromDB = async (sessionId: string) => {
             if (error) throw error;
         } catch (error) {
             console.error("Supabase Delete Session Error:", error);
-            throw error;
         }
     }
 };
 
-// BULK HISTORY SAVE (Explicit Cloud Sync)
+// BULK HISTORY SAVE (Heavy Operation - Avoid in loops)
 export const saveHistoryToDB = async (history: Session[]) => {
-    // Always save local
     await saveLocalHistory(history);
-
-    const realHistory = history.filter(s => !isDemoData(s.id));
-    if (realHistory.length === 0) return;
-
-    if (isSupabaseConfigured()) {
-        // NOTE: This function should only be called for explicit bulk migrations.
-        // It is dangerous to call this from a useEffect loop with a large history.
-        try {
-            const CHUNK_SIZE = 5; 
-            for (let i = 0; i < realHistory.length; i += CHUNK_SIZE) {
-                const chunk = realHistory.slice(i, i + CHUNK_SIZE);
-                const { error } = await supabase!
-                    .from('sessions')
-                    .upsert(chunk, { onConflict: 'id' });
-                
-                if (error) throw error;
-                await new Promise(resolve => setTimeout(resolve, 50));
-            }
-        } catch (error) {
-            console.error("Supabase Save History Error:", error);
-            throw error;
-        }
-    } 
 };
 
 export const loadHistoryFromDB = async (): Promise<Session[] | undefined> => {
@@ -365,9 +317,12 @@ export const loadHistoryFromDB = async (): Promise<Session[] | undefined> => {
                 .select('*')
                 .order('createdAt', { ascending: false });
             if (error) throw error;
-            return data as Session[];
+            if (data) {
+                await saveLocalHistory(data as Session[]);
+                return data as Session[];
+            }
         } catch (error) {
-            return await get('history');
+            console.warn("Supabase Load History Error, falling back to local:", error);
         }
     } 
     return await get('history');
@@ -375,7 +330,6 @@ export const loadHistoryFromDB = async (): Promise<Session[] | undefined> => {
 
 // --- NEWS FEED ---
 export const saveNewsToDB = async (news: NewsItem[]) => {
-    // Always save local
     await saveLocalNews(news);
 
     const realNews = news.filter(n => !isDemoData(n.id));
@@ -383,13 +337,14 @@ export const saveNewsToDB = async (news: NewsItem[]) => {
 
     if (isSupabaseConfigured()) {
         try {
+            // We only save the top 20 most recent to cloud to avoid bloat
+            const recentNews = realNews.slice(0, 20); 
             const { error } = await supabase!
                 .from('news')
-                .upsert(realNews, { onConflict: 'id' });
+                .upsert(recentNews, { onConflict: 'id' });
             if (error) throw error;
         } catch (error) {
             console.error("Supabase Save News Error:", error);
-            throw error;
         }
     } 
 };
@@ -400,11 +355,15 @@ export const loadNewsFromDB = async (): Promise<NewsItem[] | undefined> => {
             const { data, error } = await supabase!
                 .from('news')
                 .select('*')
-                .order('timestamp', { ascending: false });
+                .order('timestamp', { ascending: false })
+                .limit(50);
             if (error) throw error;
-            return data as NewsItem[];
+            if (data) {
+                await saveLocalNews(data as NewsItem[]);
+                return data as NewsItem[];
+            }
         } catch (error) {
-            return await get('newsFeed');
+            console.warn("Supabase Load News Error, falling back to local:", error);
         }
     } 
     return await get('newsFeed');
@@ -531,7 +490,7 @@ export const syncAndCacheAudioAssets = async () => {
             await del(keyToDelete);
         }
     } catch (error) {
-        console.error("Failed to sync audio assets:", error);
+        // console.error("Failed to sync audio assets:", error);
     }
 };
 
