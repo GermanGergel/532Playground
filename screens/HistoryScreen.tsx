@@ -3,15 +3,20 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context';
 import { Page, Button, Card, Modal, useTranslation } from '../ui';
-import { Trash2 } from '../icons';
-import { Session } from '../types';
+import { Trash2, RefreshCw } from '../icons';
+import { Session, Player } from '../types';
 import { BrandedHeader } from './utils';
+import { processFinishedSession } from '../services/sessionProcessor';
+import { savePlayersToDB, saveNewsToDB } from '../db';
 
 export const HistoryScreen: React.FC = () => {
-    const { history, setHistory } = useApp();
+    const { history, setHistory, allPlayers, setAllPlayers, newsFeed, setNewsFeed } = useApp();
     const t = useTranslation();
     const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
     const [sessionToDelete, setSessionToDelete] = React.useState<Session | null>(null);
+    const [isRecalculateModalOpen, setIsRecalculateModalOpen] = React.useState(false);
+    const [sessionToRecalculate, setSessionToRecalculate] = React.useState<Session | null>(null);
+    const [isProcessing, setIsProcessing] = React.useState(false);
 
     const openDeleteModal = (session: Session) => {
         setSessionToDelete(session);
@@ -24,6 +29,65 @@ export const HistoryScreen: React.FC = () => {
         setIsDeleteModalOpen(false);
         setSessionToDelete(null);
     };
+
+    const openRecalculateModal = (session: Session) => {
+        setSessionToRecalculate(session);
+        setIsRecalculateModalOpen(true);
+    };
+
+    const handleRecalculate = async () => {
+        if (!sessionToRecalculate || isProcessing) return;
+        
+        setIsProcessing(true);
+        try {
+            const participatingPlayerIds = new Set(
+                (sessionToRecalculate.playerPool as Player[]).map(p => p.id)
+            );
+
+            const isAlreadyProcessed = allPlayers
+                .filter(p => participatingPlayerIds.has(p.id))
+                .every(p => p.processedSessionIds?.includes(sessionToRecalculate.id));
+
+            if (isAlreadyProcessed) {
+                alert("Statistics for this session have already been calculated and applied.");
+                setIsRecalculateModalOpen(false);
+                setSessionToRecalculate(null);
+                setIsProcessing(false);
+                return;
+            }
+
+            const {
+                updatedPlayers,
+                playersToSave,
+                updatedNewsFeed
+            } = processFinishedSession({
+                session: sessionToRecalculate,
+                oldPlayers: allPlayers,
+                newsFeed: newsFeed,
+            });
+
+            if (playersToSave.length > 0) {
+                await savePlayersToDB(playersToSave);
+            }
+            if (updatedNewsFeed.length > newsFeed.length) {
+                await saveNewsToDB(updatedNewsFeed);
+            }
+            
+            setAllPlayers(updatedPlayers); 
+            setNewsFeed(updatedNewsFeed);
+            
+            alert("Statistics successfully recalculated and saved!");
+
+        } catch (error) {
+            console.error("Error recalculating session:", error);
+            alert("An error occurred during recalculation.");
+        } finally {
+            setIsProcessing(false);
+            setIsRecalculateModalOpen(false);
+            setSessionToRecalculate(null);
+        }
+    };
+
 
     return (
         <Page>
@@ -51,6 +115,17 @@ export const HistoryScreen: React.FC = () => {
                                 style={{ textShadow: '0 0 10px #00F2FE, 0 0 15px #00F2FE' }}
                                 onClick={(e) => {
                                     e.stopPropagation();
+                                    openRecalculateModal(session);
+                                }}
+                            >
+                                <RefreshCw className="w-5 h-5"/>
+                            </Button>
+                             <Button
+                                variant="ghost"
+                                className="!p-3 !text-white shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
+                                style={{ textShadow: '0 0 10px #00F2FE, 0 0 15px #00F2FE' }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
                                     openDeleteModal(session);
                                 }}
                             >
@@ -72,6 +147,24 @@ export const HistoryScreen: React.FC = () => {
                     <div className="flex justify-center gap-3">
                         <Button variant="secondary" onClick={() => setIsDeleteModalOpen(false)} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.cancel}</Button>
                         <Button variant="secondary" className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40" onClick={handleDelete}>{t.delete}</Button>
+                    </div>
+                </div>
+             </Modal>
+             <Modal 
+                isOpen={isRecalculateModalOpen} 
+                onClose={() => setIsRecalculateModalOpen(false)} 
+                size="xs"
+                hideCloseButton
+                containerClassName="border border-dark-accent-start/40 shadow-[0_0_20px_rgba(0,242,254,0.3)]"
+             >
+                <div className="flex flex-col gap-4 text-center">
+                    <h3 className="text-xl font-bold text-dark-text">{t.recalculateStatsTitle}</h3>
+                    <p className="text-sm text-dark-text-secondary">{t.recalculateStatsDesc}</p>
+                    <div className="flex justify-center gap-3">
+                        <Button variant="secondary" onClick={() => setIsRecalculateModalOpen(false)} disabled={isProcessing} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.cancel}</Button>
+                        <Button variant="secondary" className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40" onClick={handleRecalculate} disabled={isProcessing}>
+                            {isProcessing ? t.loading : t.recalculateStats}
+                        </Button>
                     </div>
                 </div>
              </Modal>

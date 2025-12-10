@@ -65,6 +65,7 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
                 bestAssistsInSession: { value: 0, sessionId: '' },
                 bestWinRateInSession: { value: 0, sessionId: '' },
             },
+            processedSessionIds: p.processedSessionIds || [],
         };
     });
 

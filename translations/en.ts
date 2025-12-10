@@ -46,6 +46,9 @@ export const en = {
     sortByRating: "Rating",
     sortByDate: "Date",
     clickToEnter: "TAP TO START",
+    recalculateStats: "Recalculate",
+    recalculateStatsTitle: "Recalculate Statistics?",
+    recalculateStatsDesc: "Use this if a session's stats were not applied correctly. This will process all game data again and update player profiles. This action is safe to use multiple times.",
     // Navigation
     navHome: "Home",
     navLive: "Live",

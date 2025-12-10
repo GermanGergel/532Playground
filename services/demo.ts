@@ -43,6 +43,7 @@ export const generateDemoData = () => {
             bestAssistsInSession: { value: 0, sessionId: '' },
             bestWinRateInSession: { value: 0, sessionId: '' },
         },
+        processedSessionIds: [],
     }));
 
     // Update Tier based on random rating
@@ -284,5 +285,6 @@ export const createShowcasePlayer = (): Player => {
             bestAssistsInSession: { value: 9, sessionId: 'demo-session-id' },
             bestWinRateInSession: { value: 80, sessionId: 'demo-session-id' },
         },
+        processedSessionIds: [],
     };
 };

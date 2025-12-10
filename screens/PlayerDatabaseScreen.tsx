@@ -68,6 +68,7 @@ export const PlayerDatabaseScreen: React.FC = () => {
                 bestAssistsInSession: { value: 0, sessionId: '' },
                 bestWinRateInSession: { value: 0, sessionId: '' },
             },
+            processedSessionIds: [],
         };
         setAllPlayers(prev => [...prev, newPlayer]);
         saveSinglePlayerToDB(newPlayer);

@@ -108,6 +108,7 @@ export interface Player {
   sessionHistory?: { winRate: number }[];
   lastRatingChange?: RatingBreakdown;
   records: PlayerRecords;
+  processedSessionIds?: string[];
 }
 
 export enum RotationMode {
