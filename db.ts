@@ -303,6 +303,24 @@ export const loadPlayersFromDB = async (): Promise<Player[] | undefined> => {
     return await get('players');
 };
 
+// --- NEW FUNCTION: LIGHTWEIGHT CLOUD CHECK ---
+// Returns just the number of records, does not download the data.
+// Uses HEAD request for minimum traffic.
+export const getCloudPlayerCount = async (): Promise<number | null> => {
+    if (!isSupabaseConfigured()) return null;
+    try {
+        const { count, error } = await supabase!
+            .from('players')
+            .select('*', { count: 'exact', head: true }); // HEAD=true means no data body, just count.
+        
+        if (error) throw error;
+        return count;
+    } catch (error) {
+        console.error("Cloud check failed:", error);
+        return null;
+    }
+};
+
 // --- ACTIVE SESSION ---
 export const saveActiveSessionToDB = async (session: Session | null) => {
     try {

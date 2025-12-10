@@ -8,7 +8,6 @@ import {
     loadLanguageFromDB,
     loadNewsFromDB,
     saveNewsToDB,
-    syncAndCacheAudioAssets,
     loadActiveVoicePackFromDB
 } from '../db';
 
@@ -26,9 +25,7 @@ interface InitialAppState {
  * and returns the complete initial state for the application.
  */
 export const initializeAppState = async (): Promise<InitialAppState> => {
-    // Run audio sync in the background without blocking the main data load
-    // This will quietly check cloud timestamps and download new audio only if needed.
-    syncAndCacheAudioAssets();
+    // Note: Audio sync is now deferred to the VoiceSettingsScreen to save bandwidth on startup.
 
     // 1. Load Active Session
     const loadedSession = await loadActiveSessionFromDB() || null;

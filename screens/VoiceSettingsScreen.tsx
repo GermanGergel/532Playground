@@ -3,7 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Page, PageHeader, Card, Button, useTranslation } from '../ui';
 import { 
     loadCustomAudio, saveCustomAudio, deleteCustomAudio, isSupabaseConfigured,
-    uploadSessionAnthem, deleteSessionAnthem, getSessionAnthemUrl
+    uploadSessionAnthem, deleteSessionAnthem, getSessionAnthemUrl,
+    syncAndCacheAudioAssets // Added Import
 } from '../db';
 import { playAnnouncement, initAudioContext } from '../lib';
 import { Upload, Trash2, Play, Pause } from '../icons';
@@ -195,6 +196,11 @@ export const VoiceSettingsScreen: React.FC = () => {
 
     // Limit for voice announcements (short clips) - 500KB is plenty
     const MAX_VOICE_SIZE_BYTES = 0.5 * 1024 * 1024; 
+
+    // TRIGGER SYNC ON MOUNT
+    useEffect(() => {
+        syncAndCacheAudioAssets();
+    }, []);
 
     useEffect(() => {
         const checkStatus = async () => {

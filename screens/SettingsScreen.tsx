@@ -3,30 +3,36 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context';
 import { Card, useTranslation, Button } from '../ui';
-import { isSupabaseConfigured, loadPlayersFromDB } from '../db';
+import { isSupabaseConfigured, getCloudPlayerCount } from '../db';
 import { generateDemoData } from '../services/demo';
+import { RefreshCw } from '../icons';
 
 export const SettingsScreen: React.FC = () => {
     const t = useTranslation();
     const { language, setLanguage, allPlayers, setAllPlayers, setHistory, setNewsFeed } = useApp();
     const [cloudStatus, setCloudStatus] = React.useState<{ connected: boolean, count: number } | null>(null);
+    const [isRefreshing, setIsRefreshing] = React.useState(false);
     
-    React.useEffect(() => {
-        const checkCloud = async () => {
-            if (isSupabaseConfigured()) {
-                const cloudPlayers = await loadPlayersFromDB();
-                setCloudStatus({
-                    connected: true,
-                    count: Array.isArray(cloudPlayers) ? cloudPlayers.length : 0
-                });
+    const checkCloud = async () => {
+        setIsRefreshing(true);
+        if (isSupabaseConfigured()) {
+            // TRAFFIC OPTIMIZATION: Use lightweight HEAD request (count only)
+            const count = await getCloudPlayerCount();
+            if (count !== null) {
+                setCloudStatus({ connected: true, count });
             } else {
                 setCloudStatus({ connected: false, count: 0 });
             }
-        };
+        } else {
+            setCloudStatus({ connected: false, count: 0 });
+        }
+        setIsRefreshing(false);
+    };
+
+    // Check once on mount
+    React.useEffect(() => {
         checkCloud();
-        const intervalId = setInterval(checkCloud, 5000); // Re-check every 5 seconds
-        return () => clearInterval(intervalId);
-    }, [allPlayers.length]);
+    }, []);
 
 
     const handleGenerateDemo = () => {
@@ -44,7 +50,7 @@ export const SettingsScreen: React.FC = () => {
     const langClasses = (lang: string) => `px-3 py-1 rounded-full font-bold transition-colors text-base ${language === lang ? 'gradient-bg text-dark-bg' : 'bg-dark-surface hover:bg-white/10'}`;
 
     const NetworkHud = () => {
-        const isLoading = cloudStatus === null;
+        const isLoading = cloudStatus === null || isRefreshing;
         const isOnline = cloudStatus?.connected === true;
 
         const onlineTheme = {
@@ -72,16 +78,17 @@ export const SettingsScreen: React.FC = () => {
                         backgroundSize: '20px 20px'
                     }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent h-full w-full animate-pulse pointer-events-none" style={{ animationDuration: '3s' }} />
-
+                
                 <div className="relative z-10 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="relative flex items-center justify-center w-12 h-12">
-                            <span className="absolute w-full h-full rounded-full opacity-75 animate-ping" style={{ backgroundColor: theme.color }}></span>
+                            <span className={`absolute w-full h-full rounded-full opacity-75 ${isOnline ? 'animate-ping' : ''}`} style={{ backgroundColor: theme.color }}></span>
                             <span className="relative w-4 h-4 rounded-full shadow-[0_0_10px_currentColor]" style={{ backgroundColor: theme.color }}></span>
-                            <svg className="absolute w-12 h-12 animate-spin" style={{ animationDuration: '4s' }} viewBox="0 0 50 50">
-                                <circle cx="25" cy="25" r="23" fill="none" stroke={theme.color} strokeWidth="1" strokeDasharray="30 20" opacity="0.5" />
-                            </svg>
+                            {isLoading && (
+                                <svg className="absolute w-12 h-12 animate-spin" style={{ animationDuration: '4s' }} viewBox="0 0 50 50">
+                                    <circle cx="25" cy="25" r="23" fill="none" stroke={theme.color} strokeWidth="1" strokeDasharray="30 20" opacity="0.5" />
+                                </svg>
+                            )}
                         </div>
 
                         <div className="flex flex-col">
@@ -90,38 +97,41 @@ export const SettingsScreen: React.FC = () => {
                             </h3>
                             <div className="flex items-center gap-2">
                                 <span className="text-xl font-black italic tracking-wider" style={theme.textStyle}>
-                                    {isLoading ? 'CONNECTING...' : isOnline ? 'SYSTEM ONLINE' : 'LOCAL MODE'}
+                                    {isOnline ? 'SYSTEM ONLINE' : 'LOCAL MODE'}
                                 </span>
                             </div>
                         </div>
                     </div>
                     <div className="text-right">
                         <div className="flex flex-col items-end">
-                            <span className="text-[9px] text-dark-text-secondary font-mono">
-                                {isLoading ? 'AWAITING' : isOnline ? 'SYNC STATUS' : 'OFFLINE'}
-                            </span>
-                            <div className="flex items-baseline gap-1">
-                                {(isLoading || !isOnline) ? (
+                            <div className="flex items-center gap-2">
+                                <button 
+                                    onClick={checkCloud} 
+                                    disabled={isRefreshing}
+                                    className="p-1.5 rounded-full hover:bg-white/10 transition-colors active:scale-95 text-dark-text-secondary"
+                                >
+                                    <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                                </button>
+                                <span className="text-[9px] text-dark-text-secondary font-mono">
+                                    SYNC STATUS
+                                </span>
+                            </div>
+                            
+                            <div className="flex items-baseline gap-1 mt-1">
+                                {(isLoading && !cloudStatus) ? (
                                      <span className="text-lg font-bold font-mono" style={{color: theme.color}}>--</span>
                                 ) : (
                                     <>
                                         <span className="text-2xl font-bold font-mono text-white">
-                                            {cloudStatus?.count}
+                                            {cloudStatus?.count || 0}
                                         </span>
                                         <span className="text-[9px] text-dark-text-secondary font-bold">/ {allPlayers.length}</span>
                                     </>
                                 )}
                             </div>
-                            {isOnline && cloudStatus?.count !== allPlayers.length && (
-                                <span className="text-[9px] font-bold animate-pulse" style={{ color: onlineTheme.color }}>
-                                    SYNCING...
-                                </span>
-                            )}
                         </div>
                     </div>
                 </div>
-                <div className="absolute bottom-0 left-0 w-8 h-1 bg-white/20"></div>
-                <div className="absolute top-0 right-0 w-8 h-1 bg-white/20"></div>
             </div>
         );
     };
