@@ -287,6 +287,38 @@ export const loadActiveSessionFromDB = async (): Promise<Session | null | undefi
 };
 
 // --- HISTORY (SESSIONS) ---
+
+// Optimized single session save to prevent payload errors on updates
+export const saveSingleSessionToDB = async (session: Session) => {
+    if (isDemoData(session.id)) return;
+
+    if (isSupabaseConfigured()) {
+        try {
+            const { error } = await supabase!
+                .from('sessions')
+                .upsert(session, { onConflict: 'id' });
+            if (error) throw error;
+        } catch (error) {
+            console.error("Supabase Save Single Session Error:", error);
+            throw error;
+        }
+    } else {
+        // Local fallback: update entry in history array
+        try {
+            const history = await get<Session[]>('history') || [];
+            const index = history.findIndex(s => s.id === session.id);
+            if (index > -1) {
+                history[index] = session;
+            } else {
+                history.push(session);
+            }
+            await set('history', history);
+        } catch (error) {
+            console.error("Local Save Single Session Error:", error);
+        }
+    }
+};
+
 export const saveHistoryToDB = async (history: Session[]) => {
     const realHistory = history.filter(s => !isDemoData(s.id));
     if (realHistory.length === 0 && history.length > 0) return; // Only demo sessions present
@@ -294,10 +326,18 @@ export const saveHistoryToDB = async (history: Session[]) => {
     // Mode 1: Cloud
     if (isSupabaseConfigured()) {
         try {
-            const { error } = await supabase!
-                .from('sessions')
-                .upsert(realHistory, { onConflict: 'id' });
-            if (error) throw error;
+            // FIX: Implemented chunking for sessions as well, because eventLogs can get large
+            const CHUNK_SIZE = 5; 
+            for (let i = 0; i < realHistory.length; i += CHUNK_SIZE) {
+                const chunk = realHistory.slice(i, i + CHUNK_SIZE);
+                const { error } = await supabase!
+                    .from('sessions')
+                    .upsert(chunk, { onConflict: 'id' });
+                
+                if (error) throw error;
+                // Tiny delay to prevent network congestion
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
         } catch (error) {
             console.error("Supabase Save History Error:", error);
             throw error;

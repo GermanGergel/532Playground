@@ -7,7 +7,7 @@ import { Trash2, Zap } from '../icons';
 import { Session } from '../types';
 import { BrandedHeader } from './utils';
 import { processFinishedSession } from '../services/sessionProcessor';
-import { savePlayersToDB, saveNewsToDB } from '../db';
+import { savePlayersToDB, saveNewsToDB, saveSingleSessionToDB } from '../db';
 
 export const HistoryScreen: React.FC = () => {
     const { history, setHistory, allPlayers, setAllPlayers, newsFeed, setNewsFeed } = useApp();
@@ -44,10 +44,11 @@ export const HistoryScreen: React.FC = () => {
         setIsRecalculating(true);
 
         try {
-            // Apply logic to CURRENT players based on the OLD session data
+            // Apply logic to CURRENT players based on the session data
             const {
                 updatedPlayers,
                 playersToSave,
+                finalSession,
                 updatedNewsFeed
             } = processFinishedSession({
                 session: sessionToRecalc,
@@ -67,10 +68,16 @@ export const HistoryScreen: React.FC = () => {
                 setNewsFeed(updatedNewsFeed);
             }
 
+            // 3. Save Session (Essential to ensure data integrity without re-saving entire history)
+            await saveSingleSessionToDB(finalSession);
+            
+            // 4. Update History State (Replace the old session object with the new one)
+            setHistory(prev => prev.map(s => s.id === finalSession.id ? finalSession : s));
+
             alert("Session recalculated and stats updated successfully!");
         } catch (error) {
             console.error("Recalculation failed:", error);
-            alert("Failed to recalculate statistics.");
+            alert("Failed to recalculate statistics. Check console for details.");
         } finally {
             setIsRecalculating(false);
             setIsRecalcModalOpen(false);
