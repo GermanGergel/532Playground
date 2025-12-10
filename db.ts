@@ -88,7 +88,8 @@ const sanitizeObject = (obj: any): any => {
         const newObj: any = {};
         for (const key in obj) {
             // STRIP BASE64 IMAGES FROM JSON PAYLOAD
-            if ((key === 'photo' || key === 'playerCard' || key === 'logo') && typeof obj[key] === 'string' && obj[key].startsWith('data:')) {
+            // CRITICAL FIX: Added 'playerPhoto' to blacklist to prevent News Feed Egress Leak
+            if ((key === 'photo' || key === 'playerCard' || key === 'logo' || key === 'playerPhoto') && typeof obj[key] === 'string' && obj[key].startsWith('data:')) {
                 newObj[key] = null; 
             } else {
                 newObj[key] = sanitizeObject(obj[key]);

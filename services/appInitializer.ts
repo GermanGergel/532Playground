@@ -7,6 +7,7 @@ import {
     loadHistoryFromDB,
     loadLanguageFromDB,
     loadNewsFromDB,
+    saveNewsToDB,
     syncAndCacheAudioAssets,
     loadActiveVoicePackFromDB
 } from '../db';
@@ -87,9 +88,26 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
         }));
     }
 
-    // 4. Load News Feed
+    // 4. Load News Feed & EMERGENCY CLEANUP for Egress Leak
     const loadedNews = await loadNewsFromDB();
-    const initialNewsFeed = Array.isArray(loadedNews) ? loadedNews : [];
+    let initialNewsFeed = Array.isArray(loadedNews) ? loadedNews : [];
+    
+    // Check for "heavy" news items (base64 images) that cause 5GB egress issues
+    let hasBadData = false;
+    initialNewsFeed = initialNewsFeed.map(item => {
+        if (item.playerPhoto && item.playerPhoto.startsWith('data:')) {
+            hasBadData = true;
+            // Clean the data: remove the base64 string
+            return { ...item, playerPhoto: undefined };
+        }
+        return item;
+    });
+
+    if (hasBadData) {
+        console.log("🧹 Cleaning massive Base64 data from News Feed to save bandwidth...");
+        // Save the cleaned data back to Supabase immediately to stop the egress bleeding
+        saveNewsToDB(initialNewsFeed);
+    }
 
     // 5. Load Language
     const loadedLang = await loadLanguageFromDB() || 'en';

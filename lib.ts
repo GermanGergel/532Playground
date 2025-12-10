@@ -1,3 +1,4 @@
+
 import { loadCustomAudio } from './db';
 
 // --- HYBRID AUDIO SYSTEM ---
@@ -140,7 +141,7 @@ export const playAnnouncement = async (key: string, fallbackText: string, active
     }
 };
 
-// Image Processing Utility (Unchanged)
+// Image Processing Utility (OPTIMIZED FOR TRAFFIC)
 export const processPlayerImageFile = (file: File): Promise<{ cardImage: string; avatarImage: string }> => {
     return new Promise((resolve, reject) => {
         const objectUrl = URL.createObjectURL(file);
@@ -150,7 +151,12 @@ export const processPlayerImageFile = (file: File): Promise<{ cardImage: string;
             try {
                 const cardCanvas = document.createElement('canvas');
                 const cardCtx = cardCanvas.getContext('2d');
-                const maxWidth = 2560; 
+                
+                // UPDATED: Reduced max width from 2560 to 800.
+                // This drastically reduces file size (from ~5MB to ~150KB) while maintaining
+                // excellent quality for mobile screens.
+                const maxWidth = 800; 
+                
                 let { width, height } = img;
                 
                 if (width > maxWidth) {
@@ -162,7 +168,8 @@ export const processPlayerImageFile = (file: File): Promise<{ cardImage: string;
                 cardCanvas.height = height;
                 cardCtx?.drawImage(img, 0, 0, width, height);
                 
-                const cardImage = cardCanvas.toDataURL('image/jpeg', 0.95);
+                // UPDATED: Reduced quality slightly to 0.85 for better compression
+                const cardImage = cardCanvas.toDataURL('image/jpeg', 0.85);
 
                 const avatarCanvas = document.createElement('canvas');
                 const avatarCtx = avatarCanvas.getContext('2d');
@@ -175,7 +182,9 @@ export const processPlayerImageFile = (file: File): Promise<{ cardImage: string;
                 const sy = (cardCanvas.height - side) / 8; 
                 
                 avatarCtx.drawImage(cardCanvas, sx, sy, side, side, 0, 0, side, side);
-                const avatarImage = avatarCanvas.toDataURL('image/jpeg', 0.95);
+                
+                // UPDATED: Reduced quality slightly to 0.85
+                const avatarImage = avatarCanvas.toDataURL('image/jpeg', 0.85);
 
                 resolve({ cardImage, avatarImage });
 

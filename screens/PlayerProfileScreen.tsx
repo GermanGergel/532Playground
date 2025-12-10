@@ -25,6 +25,7 @@ export const PlayerProfileScreen: React.FC = () => {
     const [isInfoModalOpen, setIsInfoModalOpen] = React.useState(false);
     const [isShareModalOpen, setIsShareModalOpen] = React.useState(false);
     const [isExporting, setIsExporting] = React.useState(false);
+    const [isUploading, setIsUploading] = React.useState(false);
     const [playerForExport, setPlayerForExport] = React.useState<Player | null>(null);
     
     const exportCardRef = React.useRef<HTMLDivElement>(null);
@@ -63,7 +64,7 @@ export const PlayerProfileScreen: React.FC = () => {
                 const blob = await response.blob();
                 const dataUrl = await new Promise<string>((resolve, reject) => {
                     const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result as string);
+                    reader.onload = () => resolve(reader.result as string);
                     reader.onerror = reject;
                     reader.readAsDataURL(blob);
                 });
@@ -155,35 +156,47 @@ export const PlayerProfileScreen: React.FC = () => {
         const file = e.target.files?.[0];
         if (!file || !player) return;
 
+        setIsUploading(true);
+
         try {
             const { cardImage, avatarImage } = await processPlayerImageFile(file);
+            
             const uploadPromises = [
                 uploadPlayerImage(player.id, avatarImage, 'avatar'),
                 uploadPlayerImage(player.id, cardImage, 'card'),
             ];
             
+            // Wait for uploads to verify success
+            const [avatarUrl, cardUrl] = await Promise.all(uploadPromises);
+
+            // IMPORTANT: If upload fails (returns null), do NOT proceed to save.
+            // This prevents saving bad data or deleting old photos if the new ones failed.
+            if (!avatarUrl || !cardUrl) {
+                throw new Error("Cloud upload failed. Please check your internet connection or storage configuration.");
+            }
+
+            // Only if upload succeeded, delete old images
             const deletePromises = [
                 player.photo ? deletePlayerImage(player.photo) : Promise.resolve(),
                 player.playerCard ? deletePlayerImage(player.playerCard) : Promise.resolve(),
             ];
-
-            const [avatarUrl, cardUrl] = await Promise.all(uploadPromises);
             await Promise.all(deletePromises);
 
             const updatedPlayer: Player = {
                 ...player,
-                photo: avatarUrl || player.photo,
-                playerCard: cardUrl || player.playerCard,
+                photo: avatarUrl,
+                playerCard: cardUrl,
                 status: PlayerStatus.Confirmed,
             };
             
             setAllPlayers(prev => prev.map(p => p.id === player.id ? updatedPlayer : p));
             await saveSinglePlayerToDB(updatedPlayer);
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("Image processing or upload failed:", error);
-            alert("Failed to upload image. It might be too large or in an unsupported format.");
+            alert(`Error: ${error.message || "Failed to upload image."}`);
         } finally {
+            setIsUploading(false);
             if (e.target) {
                 e.target.value = '';
             }
@@ -215,6 +228,12 @@ export const PlayerProfileScreen: React.FC = () => {
 
     return (
         <Page>
+            {isUploading && (
+                <div className="fixed inset-0 z-[100] bg-black/80 flex flex-col items-center justify-center">
+                    <div className="w-16 h-16 border-4 border-dark-accent-start border-t-transparent rounded-full animate-spin mb-4"></div>
+                    <p className="text-white font-bold text-lg animate-pulse">{t.uploading}</p>
+                </div>
+            )}
             <input
                 type="file"
                 ref={fileInputRef}
