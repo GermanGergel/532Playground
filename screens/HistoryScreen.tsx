@@ -7,7 +7,7 @@ import { Trash2, RefreshCw } from '../icons';
 import { Session } from '../types';
 import { BrandedHeader } from './utils';
 import { processFinishedSession } from '../services/sessionProcessor';
-import { savePlayersToDB, saveNewsToDB, saveHistoryToDB } from '../db';
+import { savePlayersToDB, saveNewsToDB, saveHistoryToDB, DbResult } from '../db';
 
 export const HistoryScreen: React.FC = () => {
     const { history, setHistory, allPlayers, setAllPlayers, newsFeed, setNewsFeed } = useApp();
@@ -52,26 +52,37 @@ export const HistoryScreen: React.FC = () => {
                 newsFeed: newsFeed,
             });
 
+            const results: DbResult[] = [];
+
             // Save to DB
             if (playersToSave.length > 0) {
-                await savePlayersToDB(playersToSave);
+                const res = await savePlayersToDB(playersToSave);
+                results.push(res);
                 setAllPlayers(updatedPlayers);
             }
 
             if (updatedNewsFeed.length > newsFeed.length) {
-                await saveNewsToDB(updatedNewsFeed);
+                const res = await saveNewsToDB(updatedNewsFeed);
+                results.push(res);
                 setNewsFeed(updatedNewsFeed);
             }
             
-            // Note: We don't really need to save the session again if it's already in history,
-            // but we do it to ensure consistency if the processor modified it.
-            // Importantly, this will use the optimized saveHistoryToDB which strips images.
-            await saveHistoryToDB([finalSession]); 
+            const histRes = await saveHistoryToDB([finalSession]); 
+            results.push(histRes);
             
             // Update local history state if the session object changed
             setHistory(prev => prev.map(s => s.id === finalSession.id ? finalSession : s));
 
-            alert('Stats recalculated and saved successfully!');
+            // Check for any cloud failures
+            const failures = results.filter(r => !r.success);
+            if (failures.length > 0) {
+                // Combine unique error messages
+                const errors = Array.from(new Set(failures.map(f => f.message))).join('\n');
+                alert(`⚠️ Stats recalculated and saved LOCALLY, but Cloud Sync failed:\n${errors}\n\nCheck your internet or Supabase RLS policies.`);
+            } else {
+                alert('Stats recalculated and saved successfully to Cloud and Device!');
+            }
+
             setIsRecalcModalOpen(false);
             setSessionToRecalc(null);
 
