@@ -3,15 +3,24 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context';
 import { Page, Button, Card, Modal, useTranslation } from '../ui';
-import { Trash2 } from '../icons';
+import { Trash2, Zap } from '../icons';
 import { Session } from '../types';
 import { BrandedHeader } from './utils';
+import { processFinishedSession } from '../services/sessionProcessor';
+import { savePlayersToDB, saveNewsToDB } from '../db';
 
 export const HistoryScreen: React.FC = () => {
-    const { history, setHistory } = useApp();
+    const { history, setHistory, allPlayers, setAllPlayers, newsFeed, setNewsFeed } = useApp();
     const t = useTranslation();
+    
+    // Deletion State
     const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
     const [sessionToDelete, setSessionToDelete] = React.useState<Session | null>(null);
+
+    // Recalculation State
+    const [isRecalcModalOpen, setIsRecalcModalOpen] = React.useState(false);
+    const [sessionToRecalc, setSessionToRecalc] = React.useState<Session | null>(null);
+    const [isRecalculating, setIsRecalculating] = React.useState(false);
 
     const openDeleteModal = (session: Session) => {
         setSessionToDelete(session);
@@ -23,6 +32,50 @@ export const HistoryScreen: React.FC = () => {
         setHistory(prev => prev.filter(s => s.id !== sessionToDelete.id));
         setIsDeleteModalOpen(false);
         setSessionToDelete(null);
+    };
+
+    const openRecalcModal = (session: Session) => {
+        setSessionToRecalc(session);
+        setIsRecalcModalOpen(true);
+    };
+
+    const handleRecalculate = async () => {
+        if (!sessionToRecalc || isRecalculating) return;
+        setIsRecalculating(true);
+
+        try {
+            // Apply logic to CURRENT players based on the OLD session data
+            const {
+                updatedPlayers,
+                playersToSave,
+                updatedNewsFeed
+            } = processFinishedSession({
+                session: sessionToRecalc,
+                oldPlayers: allPlayers, // Uses the current global player state
+                newsFeed: newsFeed,
+            });
+
+            // 1. Save players
+            if (playersToSave.length > 0) {
+                await savePlayersToDB(playersToSave);
+                setAllPlayers(updatedPlayers);
+            }
+
+            // 2. Save News
+            if (updatedNewsFeed.length > newsFeed.length) {
+                await saveNewsToDB(updatedNewsFeed);
+                setNewsFeed(updatedNewsFeed);
+            }
+
+            alert("Session recalculated and stats updated successfully!");
+        } catch (error) {
+            console.error("Recalculation failed:", error);
+            alert("Failed to recalculate statistics.");
+        } finally {
+            setIsRecalculating(false);
+            setIsRecalcModalOpen(false);
+            setSessionToRecalc(null);
+        }
     };
 
     return (
@@ -45,21 +98,39 @@ export const HistoryScreen: React.FC = () => {
                                     </div>
                                 </Card>
                             </Link>
-                             <Button
-                                variant="ghost"
-                                className="!p-3 !text-white shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
-                                style={{ textShadow: '0 0 10px #00F2FE, 0 0 15px #00F2FE' }}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    openDeleteModal(session);
-                                }}
-                            >
-                                <Trash2 className="w-5 h-5"/>
-                            </Button>
+                            
+                            <div className="flex flex-col gap-1">
+                                {/* Recalculate Button */}
+                                <Button
+                                    variant="ghost"
+                                    className="!p-2 !text-yellow-400 bg-dark-surface/50 hover:bg-white/10"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        openRecalcModal(session);
+                                    }}
+                                    title={t.recalculateStats}
+                                >
+                                    <Zap className="w-5 h-5"/>
+                                </Button>
+
+                                {/* Delete Button */}
+                                <Button
+                                    variant="ghost"
+                                    className="!p-2 !text-red-500 bg-dark-surface/50 hover:bg-white/10"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        openDeleteModal(session);
+                                    }}
+                                >
+                                    <Trash2 className="w-5 h-5"/>
+                                </Button>
+                            </div>
                         </li>
                     ))}
                 </ul>
             )}
+            
+             {/* Delete Confirmation Modal */}
              <Modal 
                 isOpen={isDeleteModalOpen} 
                 onClose={() => setIsDeleteModalOpen(false)} 
@@ -71,7 +142,34 @@ export const HistoryScreen: React.FC = () => {
                     <h3 className="text-xl font-bold text-dark-text">{t.confirmDeletion}</h3>
                     <div className="flex justify-center gap-3">
                         <Button variant="secondary" onClick={() => setIsDeleteModalOpen(false)} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.cancel}</Button>
-                        <Button variant="secondary" className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40" onClick={handleDelete}>{t.delete}</Button>
+                        <Button variant="secondary" className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 !text-red-400" onClick={handleDelete}>{t.delete}</Button>
+                    </div>
+                </div>
+             </Modal>
+
+             {/* Recalculate Confirmation Modal */}
+             <Modal 
+                isOpen={isRecalcModalOpen} 
+                onClose={() => setIsRecalcModalOpen(false)} 
+                size="xs"
+                hideCloseButton
+                containerClassName="border border-yellow-500/40 shadow-[0_0_20px_rgba(255,200,0,0.3)]"
+             >
+                <div className="flex flex-col gap-4 text-center">
+                    <h3 className="text-xl font-bold text-yellow-400 uppercase">{t.recalculateConfirm}</h3>
+                    <p className="text-sm text-white/80 leading-relaxed">
+                        {t.recalculateWarning}
+                    </p>
+                    <div className="flex justify-center gap-3 mt-2">
+                        <Button variant="secondary" onClick={() => setIsRecalcModalOpen(false)} className="w-full">{t.cancel}</Button>
+                        <Button 
+                            variant="secondary" 
+                            className="w-full !text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/10" 
+                            onClick={handleRecalculate}
+                            disabled={isRecalculating}
+                        >
+                            {isRecalculating ? "..." : t.confirm}
+                        </Button>
                     </div>
                 </div>
              </Modal>
