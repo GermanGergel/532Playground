@@ -71,6 +71,8 @@ export const vn = {
     voiceAssistant: "Trợ lý giọng nói",
     voiceAssistantDesc: "Tùy chỉnh thông báo hẹn giờ và trận đấu.",
     manageAnnouncements: "Quản lý thông báo",
+    recalculateRecords: "Tính toán lại tất cả kỷ lục",
+    recalculateRecordsDesc: "Tính toán lại các kỷ lục Buổi tập tốt nhất cho tất cả các cầu thủ. Quá trình này có thể chậm.",
     // NewGameSetup Screen
     setupTitle: "Thiết lập buổi tập mới",
     sessionName: "Tên buổi tập",
@@ -275,6 +277,9 @@ export const vn = {
     sessionAnthemDesc: "Tải lên một bản nhạc MP3 sẽ phát khi cầu thủ mở hồ sơ của họ.",
     trackUploaded: "Đã tải nhạc",
     noTrackUploaded: "Không có nhạc",
+    anthemEnableTitle: "Bật nhạc hiệu",
+    anthemEnableDescOn: "Cầu thủ sẽ tải nhạc.",
+    anthemEnableDescOff: "Việc tải nhạc sẽ bị tắt.",
 
     // Announcement Generator
     createAnnouncement: "Tạo áp phích",

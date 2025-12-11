@@ -70,6 +70,8 @@ export const en = {
     voiceAssistant: "Voice Assistant",
     voiceAssistantDesc: "Customize timer and match announcements.",
     manageAnnouncements: "Manage Announcements",
+    recalculateRecords: "Recalculate All Records",
+    recalculateRecordsDesc: "Recalculates Best Session records for all players. This can be slow.",
     // NewGameSetup Screen
     setupTitle: "New Session Setup",
     sessionName: "Session Name",
@@ -274,6 +276,9 @@ export const en = {
     sessionAnthemDesc: "Upload an MP3 track that will play when a player opens their profile.",
     trackUploaded: "Track Uploaded",
     noTrackUploaded: "No Track",
+    anthemEnableTitle: "Enable Anthem",
+    anthemEnableDescOn: "Players will download the music.",
+    anthemEnableDescOff: "Music download will be disabled.",
 
     // Announcement Generator
     createAnnouncement: "Create Poster",

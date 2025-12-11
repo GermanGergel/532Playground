@@ -55,22 +55,55 @@ export const PublicProfileScreen: React.FC = () => {
     const [userInteracted, setUserInteracted] = React.useState(false);
     const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
+    const [lastUpdated, setLastUpdated] = React.useState<Date | null>(null);
+    const [cooldownExpiry, setCooldownExpiry] = React.useState<number>(0);
+    const [timeRemaining, setTimeRemaining] = React.useState('');
+
+    React.useEffect(() => {
+        if (!id) return;
+        const lastRefresh = localStorage.getItem(`lastRefresh_${id}`);
+        if (lastRefresh) {
+            setCooldownExpiry(parseInt(lastRefresh, 10) + 24 * 60 * 60 * 1000);
+        }
+    }, [id]);
+
+    React.useEffect(() => {
+        const updateTimer = () => {
+            const remaining = cooldownExpiry - Date.now();
+            if (remaining > 0) {
+                const hours = Math.floor(remaining / (1000 * 60 * 60));
+                const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+                setTimeRemaining(`${hours}h ${minutes}m`);
+            } else {
+                setTimeRemaining('');
+            }
+        };
+
+        if (cooldownExpiry > 0) {
+            updateTimer();
+            const interval = setInterval(updateTimer, 30000); // Update every 30s
+            return () => clearInterval(interval);
+        }
+    }, [cooldownExpiry]);
+
+
     const fetchPlayerAndMusic = async (forceRefresh: boolean = false) => {
         if (!id) return;
         
-        if (forceRefresh) setIsRefreshing(true);
-        else setIsLoading(true);
+        if (forceRefresh) {
+            if (Date.now() < cooldownExpiry) return; // Cooldown active, block refresh
+            setIsRefreshing(true);
+        } else {
+            setIsLoading(true);
+        }
 
         try {
-            // Pass 'true' to loadSinglePlayerFromDB if forcing refresh to bypass cache
             const [playerData, musicUrl] = await Promise.all([
                 loadSinglePlayerFromDB(id, forceRefresh),
                 getSessionAnthemUrl()
             ]);
 
             if (playerData) {
-                // Sanitize data: Ensure complex objects exist for older players
-                // Fix: Check specifically for missing keys inside records, not just the records object itself.
                 const rawRecords = (playerData.records || {}) as any;
                 playerData.records = {
                     bestGoalsInSession: rawRecords.bestGoalsInSession || { value: 0, sessionId: '' },
@@ -83,6 +116,14 @@ export const PublicProfileScreen: React.FC = () => {
                 }
                 
                 setPlayer(playerData);
+                setLastUpdated(new Date());
+
+                if (forceRefresh) {
+                    const now = Date.now();
+                    localStorage.setItem(`lastRefresh_${id}`, String(now));
+                    setCooldownExpiry(now + 24 * 60 * 60 * 1000);
+                }
+
             } else {
                 setError("Player not found.");
             }
@@ -140,28 +181,42 @@ export const PublicProfileScreen: React.FC = () => {
         );
     };
 
+    const formatLastUpdated = () => {
+        if (!lastUpdated) return '';
+        const now = new Date();
+        const seconds = Math.floor((now.getTime() - lastUpdated.getTime()) / 1000);
+        if (seconds < 5) return 'just now';
+        if (seconds < 60) return `${seconds}s ago`;
+        return `${Math.floor(seconds / 60)}m ago`;
+    };
+
+
     if (showMusicLoader) {
         return <MusicLoader onInteract={handleInteraction} />;
     }
 
     return (
         <Page>
-            <div className="flex items-center justify-between mb-8 h-12 relative">
-                {/* Spacer to balance title/content if needed, or left action */}
+            <div className="flex items-start justify-between mb-8 relative">
                 <div className="w-8"></div> 
                 
                 <div className="absolute left-1/2 -translate-x-1/2">
                     <LanguageSwitcher />
                 </div>
 
-                <button 
-                    onClick={() => fetchPlayerAndMusic(true)}
-                    disabled={isRefreshing || isLoading}
-                    className="p-2 rounded-full bg-dark-surface/50 text-dark-text-secondary hover:text-white transition-colors active:scale-95"
-                    title="Refresh Data"
-                >
-                    <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
-                </button>
+                <div className="flex flex-col items-end">
+                    <button 
+                        onClick={() => fetchPlayerAndMusic(true)}
+                        disabled={isRefreshing || isLoading || Date.now() < cooldownExpiry}
+                        className="p-2 rounded-full bg-dark-surface/50 text-dark-text-secondary hover:text-white transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Refresh Data"
+                    >
+                        <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    </button>
+                    <span className="text-[9px] text-dark-text-secondary/70 mt-1 font-mono">
+                        {timeRemaining || (lastUpdated ? formatLastUpdated() : '')}
+                    </span>
+                </div>
             </div>
             
             {isLoading && (

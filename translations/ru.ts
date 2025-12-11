@@ -71,6 +71,8 @@ export const ru = {
     voiceAssistant: "Голосовой Помощник",
     voiceAssistantDesc: "Настройте озвучку таймера и матчей.",
     manageAnnouncements: "Управление Озвучкой",
+    recalculateRecords: "Пересчитать все рекорды",
+    recalculateRecordsDesc: "Пересчитывает рекорды Лучшей Сессии для всех игроков. Это может занять время.",
     // NewGameSetup Screen
     setupTitle: "Настройка новой сессии",
     sessionName: "Название сессии",
@@ -275,6 +277,9 @@ export const ru = {
     sessionAnthemDesc: "Загрузите MP3-трек, который будет играть при открытии профиля игрока.",
     trackUploaded: "Трек загружен",
     noTrackUploaded: "Нет трека",
+    anthemEnableTitle: "Включить Гимн",
+    anthemEnableDescOn: "Игроки будут скачивать музыку.",
+    anthemEnableDescOff: "Скачивание музыки будет отключено.",
 
     // Announcement Generator
     createAnnouncement: "Создать афишу",

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -76,7 +77,6 @@ export const useTeamAssignment = () => {
                     monthlyGoals: 0, monthlyAssists: 0, monthlyGames: 0, monthlyWins: 0,
                     monthlySessionsPlayed: 0,
                     form: 'stable', badges: {}, skills: [], lastPlayedAt: new Date().toISOString(),
-                    // FIX: Initialize the 'records' property for the new Player object.
                     records: {
                         bestGoalsInSession: { value: 0, sessionId: '' },
                         bestAssistsInSession: { value: 0, sessionId: '' },

@@ -71,6 +71,8 @@ export const ua = {
     voiceAssistant: "Голосовий помічник",
     voiceAssistantDesc: "Налаштуйте озвучку таймера та матчів.",
     manageAnnouncements: "Керування озвучкою",
+    recalculateRecords: "Перерахувати всі рекорди",
+    recalculateRecordsDesc: "Перераховує рекорди Найкращої Сесії для всіх гравців. Це може зайняти час.",
     // NewGameSetup Screen
     setupTitle: "Налаштування нової сесії",
     sessionName: "Назва сесії",
@@ -275,6 +277,9 @@ export const ua = {
     sessionAnthemDesc: "Завантажте MP3-трек, який буде грати при відкритті профілю гравця.",
     trackUploaded: "Трек завантажено",
     noTrackUploaded: "Немає треку",
+    anthemEnableTitle: "Увімкнути Гімн",
+    anthemEnableDescOn: "Гравці будуть завантажувати музику.",
+    anthemEnableDescOff: "Завантаження музики буде вимкнено.",
 
     // Announcement Generator
     createAnnouncement: "Створити афішу",

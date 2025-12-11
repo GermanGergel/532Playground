@@ -65,9 +65,9 @@ const AnthemStatusSection: React.FC = () => {
         <div className="border-t border-white/10 mt-3 pt-3 px-3">
             <div className="flex items-center justify-between">
                 <div>
-                    <p className="font-bold text-white text-sm">Включить Гимн</p>
+                    <p className="font-bold text-white text-sm">{t.anthemEnableTitle}</p>
                     <p className="text-xs text-dark-text-secondary mt-1">
-                        {isEnabled ? 'Игроки будут скачивать музыку' : 'Музыка не будет скачиваться'}
+                        {isEnabled ? t.anthemEnableDescOn : t.anthemEnableDescOff}
                     </p>
                 </div>
                 {isLoading ? <Spinner /> : <ToggleSwitch isOn={isEnabled} onToggle={handleToggle} />}

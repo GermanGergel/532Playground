@@ -3,14 +3,17 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context';
 import { Card, useTranslation, Button } from '../ui';
-import { isSupabaseConfigured, getCloudPlayerCount } from '../db';
+import { isSupabaseConfigured, getCloudPlayerCount, loadHistoryFromDB, savePlayersToDB } from '../db';
 import { RefreshCw } from '../icons';
+import { Player, Session } from '../types';
+import { calculateAllStats } from '../services/statistics';
 
 export const SettingsScreen: React.FC = () => {
     const t = useTranslation();
-    const { language, setLanguage, allPlayers } = useApp();
+    const { language, setLanguage, allPlayers, setAllPlayers } = useApp();
     const [cloudStatus, setCloudStatus] = React.useState<{ connected: boolean, count: number } | null>(null);
     const [isRefreshing, setIsRefreshing] = React.useState(false);
+    const [isRecalculating, setIsRecalculating] = useState(false);
     
     const checkCloud = async () => {
         if (isRefreshing) return;
@@ -33,6 +36,75 @@ export const SettingsScreen: React.FC = () => {
     React.useEffect(() => {
         checkCloud();
     }, []);
+
+    const handleRecalculate = async () => {
+        if (!window.confirm("This will recalculate career records for ALL players based on ALL saved sessions. This can be slow and will overwrite existing records. Continue?")) {
+            return;
+        }
+    
+        setIsRecalculating(true);
+    
+        try {
+            const allHistory = await loadHistoryFromDB();
+            if (!allHistory || allHistory.length === 0) {
+                alert("No session history found to calculate from.");
+                setIsRecalculating(false);
+                return;
+            }
+    
+            const playersToUpdate = JSON.parse(JSON.stringify(allPlayers)) as Player[];
+            const playerMap = new Map<string, Player>(playersToUpdate.map((p: Player) => [p.id, p]));
+    
+            for (const player of playerMap.values()) {
+                player.records = {
+                    bestGoalsInSession: { value: 0, sessionId: '' },
+                    bestAssistsInSession: { value: 0, sessionId: '' },
+                    bestWinRateInSession: { value: 0, sessionId: '' },
+                };
+            }
+    
+            for (const session of allHistory) {
+                if (session.status !== 'completed') continue;
+                
+                const { allPlayersStats } = calculateAllStats(session);
+    
+                for (const stats of allPlayersStats) {
+                    const player = playerMap.get(stats.player.id);
+                    if (!player) continue;
+    
+                    if (stats.goals > player.records.bestGoalsInSession.value) {
+                        player.records.bestGoalsInSession = { value: stats.goals, sessionId: session.id };
+                    }
+    
+                    if (stats.assists > player.records.bestAssistsInSession.value) {
+                        player.records.bestAssistsInSession = { value: stats.assists, sessionId: session.id };
+                    }
+    
+                    const winRate = stats.gamesPlayed > 0 ? Math.round((stats.wins / stats.gamesPlayed) * 100) : 0;
+                    if (winRate > player.records.bestWinRateInSession.value) {
+                        player.records.bestWinRateInSession = { value: winRate, sessionId: session.id };
+                    }
+                }
+            }
+    
+            const updatedPlayersArray = Array.from(playerMap.values());
+    
+            const saveResult = await savePlayersToDB(updatedPlayersArray);
+            setAllPlayers(updatedPlayersArray);
+    
+            if (saveResult.success) {
+                alert(`Successfully recalculated records for ${updatedPlayersArray.length} players. Cloud sync: ${saveResult.cloudSaved ? 'OK' : 'Failed'}.`);
+            } else {
+                throw new Error("Failed to save updated player records.");
+            }
+    
+        } catch (error) {
+            console.error("Recalculation failed:", error);
+            alert(`An error occurred during recalculation: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+            setIsRecalculating(false);
+        }
+    };
 
     const langClasses = (lang: string) => `px-3 py-1 rounded-full font-bold transition-colors text-base ${language === lang ? 'gradient-bg text-dark-bg' : 'bg-dark-surface hover:bg-white/10'}`;
 
@@ -147,6 +219,21 @@ export const SettingsScreen: React.FC = () => {
                             </div>
                         </Card>
                     </Link>
+
+                    {/* Recalculate Records Card */}
+                    <Card className={cardNeonClasses}>
+                        <Button 
+                            variant="secondary"
+                            onClick={handleRecalculate}
+                            disabled={isRecalculating}
+                            className="w-full !py-3"
+                        >
+                            {isRecalculating ? "Processing..." : t.recalculateRecords}
+                        </Button>
+                        <p className="text-xs text-dark-text-secondary text-center mt-2">
+                            {t.recalculateRecordsDesc}
+                        </p>
+                    </Card>
                 </div>
             </div>
 
