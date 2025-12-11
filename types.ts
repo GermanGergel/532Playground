@@ -1,5 +1,4 @@
 
-
 export enum PlayerStatus {
   Confirmed = 'confirmed',
   Unconfirmed = 'unconfirmed',
@@ -108,6 +107,7 @@ export interface Player {
   sessionHistory?: { winRate: number }[];
   lastRatingChange?: RatingBreakdown;
   records: PlayerRecords;
+  consecutiveMissedSessions?: number; // Tracks inactivity penalties
 }
 
 export enum RotationMode {
@@ -229,7 +229,7 @@ export interface Session {
 
 // --- NEWS FEED SYSTEM ---
 
-export type NewsType = 'milestone' | 'tier_up' | 'badge' | 'hot_streak' | 'rating_surge' | 'transfer';
+export type NewsType = 'milestone' | 'tier_up' | 'badge' | 'hot_streak' | 'rating_surge' | 'transfer' | 'penalty';
 
 export interface NewsItem {
     id: string;

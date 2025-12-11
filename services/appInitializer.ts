@@ -70,6 +70,7 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
             lastRatingChange: p.lastRatingChange || undefined,
             sessionHistory: p.sessionHistory || [], 
             records: safeRecords,
+            consecutiveMissedSessions: p.consecutiveMissedSessions || 0, // Migration for new field
         };
     });
 

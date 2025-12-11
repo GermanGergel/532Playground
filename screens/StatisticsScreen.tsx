@@ -280,7 +280,7 @@ export const StatisticsScreen: React.FC = () => {
                 style={{ position: 'absolute', top: 0, left: 0, zIndex: -1, opacity: 0, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '2rem', alignItems: 'flex-start' }} 
                 ref={exportContainerRef}
             >
-                {/* 1. STANDINGS - Full Header (Standard) */}
+                {/* 1. STANDINGS - Full Header (Standard) - KEEP DATE HERE */}
                 <BrandedShareableReport session={activeSession} data-export-section="standings" style={{ width: '600px' }}>
                     <div className="mb-4 text-left w-full">
                         <BrandedHeader isExport={true} />
@@ -291,27 +291,21 @@ export const StatisticsScreen: React.FC = () => {
                     </div>
                 </BrandedShareableReport>
                 
-                {/* 2. PLAYERS - Compact (No Header) - UPDATED WIDTH to 650px for cleaner look */}
+                {/* 2. PLAYERS - Compact (No Header) - UPDATED WIDTH to 650px - DATE REMOVED */}
                 <BrandedShareableReport 
                     session={activeSession} 
                     data-export-section="players"
                     style={{ width: '650px', padding: '20px' }}
                 >
-                    <div className="mb-2 text-center w-full border-b border-white/10 pb-2">
-                        <p className="font-chakra text-dark-text text-lg font-bold tracking-widest uppercase">{displayDate}</p>
-                    </div>
                     <ShareableReport session={activeSession} visibleSection="players" isExport={true} />
                 </BrandedShareableReport>
                 
-                {/* 3. ROUNDS - Compact (No Header) */}
+                {/* 3. ROUNDS - Compact (No Header) - DATE REMOVED */}
                 <BrandedShareableReport 
                     session={activeSession} 
                     data-export-section="rounds"
                     style={{ width: '500px', padding: '20px' }}
                 >
-                     <div className="mb-2 text-center w-full border-b border-white/10 pb-2">
-                        <p className="font-chakra text-dark-text text-lg font-bold tracking-widest uppercase">{displayDate}</p>
-                    </div>
                     <ShareableReport session={activeSession} visibleSection="rounds" isExport={true} />
                 </BrandedShareableReport>
             </div>

@@ -3,6 +3,7 @@ import { Session, Player, NewsItem, BadgeType, SessionStatus, PlayerRecords } fr
 import { calculateAllStats } from './statistics';
 import { calculateEarnedBadges, calculateRatingUpdate, getTierForRating } from './rating';
 import { generateNewsUpdates, manageNewsFeedSize } from './news';
+import { newId } from '../screens/utils';
 
 interface ProcessedSessionResult {
     updatedPlayers: Player[];
@@ -30,10 +31,15 @@ export const processFinishedSession = ({
     const { allPlayersStats } = calculateAllStats(session);
     const playerStatsMap = new Map(allPlayersStats.map(stat => [stat.player.id, stat]));
     
-    // --- 1. UPDATE PLAYER LIFETIME STATS ---
+    // List to hold penalty news items
+    const penaltyNews: NewsItem[] = [];
+
+    // --- 1. UPDATE PLAYERS (Participation & Inactivity Logic) ---
     let playersWithUpdatedStats = oldPlayers.map(player => {
         const sessionStats = playerStatsMap.get(player.id);
+        
         if (sessionStats) {
+            // PLAYER PARTICIPATED
             const updatedPlayer: Player = {
                 ...player,
                 totalGames: player.totalGames + sessionStats.gamesPlayed,
@@ -49,13 +55,48 @@ export const processFinishedSession = ({
                 monthlyWins: player.monthlyWins + sessionStats.wins,
                 monthlySessionsPlayed: (player.monthlySessionsPlayed || 0) + 1,
                 lastPlayedAt: new Date().toISOString(),
+                // Reset inactivity counter because they played
+                consecutiveMissedSessions: 0, 
             };
             return updatedPlayer;
+        } else {
+            // PLAYER MISSED SESSION (Rating Decay Logic)
+            const currentMissed = (player.consecutiveMissedSessions || 0) + 1;
+            let newRating = player.rating;
+            let decayApplied = false;
+
+            // Rule: Every 3 missed sessions, deduct 1 point.
+            if (currentMissed > 0 && currentMissed % 3 === 0) {
+                newRating = Math.max(0, newRating - 1); // Deduct 1 point, but not below 0
+                decayApplied = true;
+                
+                // Add news item about penalty
+                penaltyNews.push({
+                    id: newId(),
+                    playerId: player.id,
+                    playerName: player.nickname,
+                    playerPhoto: player.photo,
+                    type: 'penalty',
+                    message: `${player.nickname} lost 1 rating point due to inactivity.`,
+                    subMessage: '#Inactivity #RatingDecay #ComeBack',
+                    timestamp: new Date().toISOString(),
+                    isHot: false,
+                    statsSnapshot: { rating: newRating, tier: getTierForRating(newRating) }
+                });
+            }
+
+            return {
+                ...player,
+                consecutiveMissedSessions: currentMissed,
+                rating: newRating,
+                tier: getTierForRating(newRating), // Update tier if rating dropped
+                // If rating changed due to decay, we could potentially update lastRatingChange, 
+                // but usually we leave that for actual gameplay updates.
+            };
         }
-        return player;
     });
 
-    // --- 2. CALCULATE RATINGS, BADGES, and FORM ---
+    // --- 2. CALCULATE RATINGS, BADGES, and FORM (Only for participants) ---
     let playersWithCalculatedRatings = playersWithUpdatedStats.map(player => {
         const sessionStats = playerStatsMap.get(player.id);
         if (sessionStats) {
@@ -82,11 +123,7 @@ export const processFinishedSession = ({
             }
             if (sessionHistory.length > 5) sessionHistory.shift();
             
-            // FIX: Robust check for existing records to prevent crashes ("undefined is not an object")
-            // If the record doesn't exist, we create a temporary "zero" record to compare against.
             const getSafeRecord = (rec: any) => (rec && typeof rec.value === 'number') ? rec : { value: 0, sessionId: '' };
-            
-            // Ensure player.records exists before accessing
             const safePlayerRecords = (player.records || {}) as any;
 
             const oldGoalsRec = getSafeRecord(safePlayerRecords.bestGoalsInSession);
@@ -120,9 +157,14 @@ export const processFinishedSession = ({
     });
 
     // --- 3. GENERATE NEWS ---
-    const newNewsItems = generateNewsUpdates(oldPlayers, playersWithCalculatedRatings);
-    const updatedNewsFeed = newNewsItems.length > 0
-        ? manageNewsFeedSize([...newNewsItems, ...newsFeed])
+    // Standard news for participants
+    const newGameplayNews = generateNewsUpdates(oldPlayers, playersWithCalculatedRatings);
+    
+    // Combine gameplay news with penalty news
+    const allNewNews = [...newGameplayNews, ...penaltyNews];
+
+    const updatedNewsFeed = allNewNews.length > 0
+        ? manageNewsFeedSize([...allNewNews, ...newsFeed])
         : newsFeed;
 
     // --- 4. PREPARE FINAL DATA ---
@@ -131,7 +173,18 @@ export const processFinishedSession = ({
         status: SessionStatus.Completed,
     };
 
-    const playersToSave = playersWithCalculatedRatings.filter(p => playerStatsMap.has(p.id));
+    // We must save:
+    // 1. Players who played (stats updated)
+    // 2. Players who missed (counter updated or rating decayed)
+    // Basically, we likely need to save ALL players to keep counters in sync, 
+    // or at least those whose data changed.
+    // For simplicity and data integrity, saving all players is safer if the count isn't massive.
+    // Optimization: Filter out players where nothing changed?
+    // In this logic: every player is mapped.
+    // - Participants change (stats).
+    // - Non-participants change (counter +1).
+    // So essentially EVERY confirmed player changes.
+    const playersToSave = playersWithCalculatedRatings;
 
     return {
         updatedPlayers: playersWithCalculatedRatings,
