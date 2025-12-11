@@ -269,8 +269,24 @@ export const PlayerProgressChart: React.FC<{ history: PlayerHistoryEntry[] }> = 
     }, [activeMetric]);
 
     const currentValue = values[values.length - 1];
-    const growth = Number(values[values.length - 1] - values[0]).toFixed(1);
-    const isPositiveGrowth = values[values.length - 1] >= values[0];
+    
+    // Determine Growth Display Logic
+    let growth = 0;
+    let isPositiveGrowth = true;
+    let growthLabel = 'GROWTH';
+
+    if (activeMetric === 'rating') {
+        // Rating: Show total growth since start of chart
+        growth = Number((values[values.length - 1] - values[0]).toFixed(1));
+        isPositiveGrowth = values[values.length - 1] >= values[0];
+        growthLabel = 'TOTAL GROWTH';
+    } else {
+        // Goals / WinRate: Show change vs PREVIOUS session (Performance Swing)
+        const prevValue = values.length > 1 ? values[values.length - 2] : values[0];
+        growth = Number((values[values.length - 1] - prevValue).toFixed(1));
+        isPositiveGrowth = values[values.length - 1] >= prevValue;
+        growthLabel = 'VS LAST SESS';
+    }
 
     return (
         <Card className="border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)] overflow-hidden transition-all duration-500 !p-4">
@@ -313,7 +329,7 @@ export const PlayerProgressChart: React.FC<{ history: PlayerHistoryEntry[] }> = 
                             </span>
                         </div>
                         <span className="text-[10px] font-bold text-dark-text-secondary uppercase tracking-[0.2em]">
-                            GROWTH
+                            {growthLabel}
                         </span>
                     </div>
                 </div>

@@ -132,8 +132,8 @@ export const processFinishedSession = ({
                 date: dateStr,
                 rating: newRating,
                 winRate: sessionWinRate,
-                goals: player.totalGoals, // Cumulative goals for growth chart
-                assists: player.totalAssists
+                goals: sessionStats.goals, // STORE SESSION SPECIFIC GOALS, NOT TOTAL
+                assists: sessionStats.assists // STORE SESSION SPECIFIC ASSISTS
             };
             
             const historyData = [...(player.historyData || [])];
