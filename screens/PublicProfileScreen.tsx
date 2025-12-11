@@ -171,7 +171,7 @@ export const PublicProfileScreen: React.FC = () => {
     const LanguageSwitcher = () => {
         const langButtonClass = (lang: Language) => `px-2 py-0.5 rounded-md text-[10px] font-bold transition-colors ${language === lang ? 'gradient-bg text-dark-bg' : 'bg-dark-surface hover:bg-white/10'}`;
         return (
-            <div className="flex items-center gap-1 bg-dark-bg p-1 rounded-lg border border-white/10">
+            <div className="flex items-center gap-1 bg-dark-bg p-1 rounded-lg border border-white/10 shadow-lg">
                 <button onClick={() => setLanguage('en')} className={langButtonClass('en')}>EN</button>
                 <button onClick={() => setLanguage('ua')} className={langButtonClass('ua')}>UA</button>
                 <button onClick={() => setLanguage('vn')} className={langButtonClass('vn')}>VN</button>
@@ -189,38 +189,39 @@ export const PublicProfileScreen: React.FC = () => {
 
     return (
         <Page>
-            <div className="flex items-start justify-between mb-8 relative">
-                <div className="w-8"></div> 
+            {/* Center Header Controls */}
+            <div className="flex flex-col items-center justify-center w-full mb-8 relative z-10 pt-2">
                 
-                <div className="absolute left-1/2 -translate-x-1/2 top-0">
-                    <LanguageSwitcher />
-                </div>
+                {/* 1. Language Switcher */}
+                <LanguageSwitcher />
 
-                <div className="flex flex-col items-end z-10">
+                {/* 2. Update Button & Text (Directly Below) */}
+                <div className="flex flex-col items-center mt-4">
                     <button 
                         onClick={() => fetchPlayerAndMusic(true)}
                         disabled={isDisabled}
                         className={`
-                            px-3 py-1 rounded text-[10px] font-bold tracking-widest uppercase transition-all duration-300 border
+                            px-6 py-1.5 rounded-full text-[10px] font-bold tracking-[0.15em] uppercase transition-all duration-300 border
                             ${isDisabled 
-                                ? 'border-white/10 text-white/20 cursor-not-allowed bg-transparent' 
-                                : 'border-[#00F2FE] text-[#00F2FE] hover:bg-[#00F2FE]/10 shadow-[0_0_10px_rgba(0,242,254,0.2)] active:scale-95'
+                                ? 'border-white/5 text-white/20 cursor-not-allowed bg-transparent' 
+                                : 'border-[#00F2FE] text-[#00F2FE] hover:bg-[#00F2FE]/10 shadow-[0_0_15px_rgba(0,242,254,0.15)] active:scale-95'
                             }
                         `}
                     >
                         {isRefreshing ? 'UPDATING...' : 'UPDATE DATA'}
                     </button>
-                    <span className="text-[8px] font-mono text-dark-text-secondary/70 mt-1 uppercase tracking-wider text-right">
+                    
+                    <span className="text-[8px] font-mono text-dark-text-secondary/50 mt-1.5 uppercase tracking-wider text-center">
                         {timeRemaining 
-                            ? `WAIT: ${timeRemaining}` 
-                            : 'ONCE PER 24H'
+                            ? `NEXT UPDATE: ${timeRemaining}` 
+                            : 'AVAILABLE ONCE PER 24H'
                         }
                     </span>
                 </div>
             </div>
             
             {isLoading && (
-                 <div className="flex items-center justify-center pt-20">
+                 <div className="flex items-center justify-center pt-10">
                     <div className="relative flex flex-col items-center justify-center w-48 h-48">
                         <div className="absolute inset-0 animate-spin" style={{ animationDuration: '2s' }}>
                             <svg viewBox="0 0 100 100" className="w-full h-full">
