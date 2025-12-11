@@ -309,7 +309,7 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
 
                         {/* Player Name */}
                         <div className="flex items-center justify-center py-4">
-                            <h2 className="font-audiowide text-3xl uppercase text-white tracking-wide leading-tight" style={{textShadow: '0 2px 5px rgba(0,0,0,0.5)'}}>
+                            <h2 className="font-russo text-3xl uppercase text-white tracking-wide leading-tight" style={{textShadow: '0 2px 5px rgba(0,0,0,0.5)'}}>
                                 {player.nickname} {player.surname}
                             </h2>
                         </div>

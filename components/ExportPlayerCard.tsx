@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Player, BadgeType, PlayerStatus, SkillType } from '../types';
 import { useTranslation } from '../ui';
@@ -154,7 +155,7 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
                 {/* Player Name */}
                 {/* UPDATED: Increased margin-bottom (mb-5) to lift name higher above the line */}
                 <section className="text-center mb-5">
-                    <h1 className="font-audiowide text-4xl uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] leading-tight">
+                    <h1 className="font-russo text-4xl uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] leading-tight">
                         {player.nickname} {player.surname}
                     </h1>
                 </section>
