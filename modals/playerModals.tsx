@@ -207,6 +207,7 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
         if (isOpen) {
             const generateQrCode = async () => {
                 try {
+                    // QR Code styling to match the user's screenshot
                     const response = await fetch(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(profileUrl)}&bgcolor=1A1D24&color=00F2FE&qzone=1&ecc=H`);
                     if (!response.ok) throw new Error('Failed to fetch QR code');
                     const blob = await response.blob();
@@ -223,18 +224,12 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
         }
     }, [isOpen, profileUrl]);
     
-    const handleCopyLink = () => {
-        navigator.clipboard.writeText(profileUrl).then(() => {
-            alert(t.profileLinkCopied);
-        });
-    };
-
     const handleShareViaApp = async () => {
         if (!cardRef.current) return;
         setIsGenerating(true);
         try {
             const canvas = await html2canvas(cardRef.current, { 
-                backgroundColor: null, 
+                backgroundColor: '#1A1D24', // Explicit background for safety
                 scale: 3, 
                 useCORS: true 
             });
@@ -248,12 +243,13 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
     
             if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share({
+                    files: [file],
                     title: t.shareAccessCard,
                     text: `Check out ${player.nickname}'s player card on 532 Playground!`,
-                    url: profileUrl,
-                    files: [file]
+                    // The URL is sent in the text description by the OS, we prioritize the file
                 });
             } else {
+                // Fallback to download if sharing is not supported
                 const dataUrl = URL.createObjectURL(file);
                 const link = document.createElement('a');
                 link.download = file.name;
@@ -265,11 +261,12 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
             }
         } catch (error: any) {
             console.error("Sharing failed:", error);
-            if (error.name !== 'AbortError') {
-                alert("Could not share image, it has been downloaded instead. If download fails, please copy the link.");
+            if (error.name !== 'AbortError') { // Don't alert if user cancels share dialog
+                alert("Could not share image. It has been downloaded instead.");
             }
         } finally {
             setIsGenerating(false);
+            onClose(); // Close modal after action
         }
     };
     
@@ -292,12 +289,12 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
                     </div>
                     
                     {/* Player Name */}
-                    <h2 className="font-russo text-4xl text-white uppercase tracking-wide">
+                    <h2 className="font-russo text-4xl text-white uppercase tracking-wide text-center">
                         {player.nickname} {player.surname}
                     </h2>
 
                     {/* QR Code with gradient border */}
-                    <div className="p-1.5 rounded-2xl bg-gradient-to-br from-dark-accent-start to-dark-accent-end">
+                    <div className="p-1.5 rounded-2xl bg-gradient-to-br from-dark-accent-start to-green-400">
                         <div className="bg-[#1A1D24] p-1 rounded-xl">
                             {qrCodeDataUrl ? (
                                 <img src={qrCodeDataUrl} alt="QR Code" className="w-48 h-48 rounded-lg" />
@@ -315,11 +312,11 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
                     </p>
                 </div>
 
+                {/* Simplified Buttons */}
                 <div className="w-full max-w-[340px] flex flex-col gap-3 pt-4">
                      <Button variant="secondary" onClick={handleShareViaApp} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">
                         {isGenerating ? "Generating..." : t.shareViaApp}
                     </Button>
-                    <Button variant="secondary" onClick={handleCopyLink} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.copyLink}</Button>
                     <Button variant="secondary" onClick={onClose} className="w-full mt-2 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.cancel}</Button>
                 </div>
             </div>

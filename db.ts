@@ -274,13 +274,7 @@ export const savePlayersToDB = async (players: Player[]): Promise<DbResult> => {
 
     // 2. Local Save
     try {
-        const allPlayers = await get<Player[]>('players') || [];
-        const playersMap = new Map(allPlayers.map(p => [p.id, p]));
-        realPlayers.forEach(playerToSave => {
-            playersMap.set(playerToSave.id, playerToSave);
-        });
-        const updatedPlayers = Array.from(playersMap.values());
-        await set('players', updatedPlayers);
+        await set('players', realPlayers);
     } catch (error) {
         console.error("Local Batch Save Error:", error);
         return { success: false, cloudSaved: false, message: "Local save failed" };
@@ -293,23 +287,22 @@ export const savePlayersToDB = async (players: Player[]): Promise<DbResult> => {
 };
 
 export const loadPlayersFromDB = async (): Promise<Player[] | undefined> => {
-    // This function now ensures local cache is synchronized with the cloud on startup.
     if (isSupabaseConfigured()) {
         try {
             const { data, error } = await supabase!.from('players').select('*');
             if (error) throw error;
-            
-            // *** FIX: Synchronize fresh cloud data to the local cache (IndexedDB) ***
-            if (data) {
-                await set('players', data);
-            }
-            
-            return data as Player[];
+
+            // If the API call succeeds, the response IS the source of truth.
+            // We must overwrite the local cache to match, even if it's an empty array.
+            // This prevents loading a stale cache if the cloud data was cleared.
+            await set('players', data || []);
+            return (data || []) as Player[];
+
         } catch (error) {
-            console.warn("Cloud load failed, falling back to local cache.");
+            console.warn("Cloud load failed, falling back to local cache.", error);
         }
-    } 
-    // Fallback for both cloud failure and offline mode
+    }
+    // Fallback for both cloud failure AND offline mode
     return await get('players');
 };
 
