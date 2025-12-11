@@ -3,17 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context';
 import { Card, useTranslation, Button } from '../ui';
-import { isSupabaseConfigured, getCloudPlayerCount, savePlayersToDB, loadHistoryFromDB } from '../db';
-import { generateDemoData } from '../services/demo';
+import { isSupabaseConfigured, getCloudPlayerCount } from '../db';
 import { RefreshCw } from '../icons';
-import { calculateAllStats } from '../services/statistics';
 
 export const SettingsScreen: React.FC = () => {
     const t = useTranslation();
-    const { language, setLanguage, allPlayers, setAllPlayers, history, setHistory, setNewsFeed } = useApp();
+    const { language, setLanguage, allPlayers } = useApp();
     const [cloudStatus, setCloudStatus] = React.useState<{ connected: boolean, count: number } | null>(null);
     const [isRefreshing, setIsRefreshing] = React.useState(false);
-    const [isRecalculating, setIsRecalculating] = useState(false);
     
     const checkCloud = async () => {
         if (isRefreshing) return;
@@ -36,82 +33,6 @@ export const SettingsScreen: React.FC = () => {
     React.useEffect(() => {
         checkCloud();
     }, []);
-
-
-    const handleGenerateDemo = () => {
-        const { session, players: demoPlayers, news } = generateDemoData();
-        setHistory(prev => [session, ...prev].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-        const existingPlayerIds = new Set(allPlayers.map(p => p.id));
-        const newDemoPlayers = demoPlayers.filter(p => !existingPlayerIds.has(p.id));
-        if (newDemoPlayers.length > 0) {
-            setAllPlayers(prev => [...prev, ...newDemoPlayers]);
-        }
-        setNewsFeed(prev => [...news, ...prev].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
-        alert('Demo session generated. This data is temporary.');
-    };
-
-    const handleRecalculateRecords = async () => {
-        if (isRecalculating) return;
-        setIsRecalculating(true);
-
-        try {
-            // **FIX**: Load the FULL history from the database, not from the partial state.
-            const fullHistory = await loadHistoryFromDB();
-            if (!fullHistory || fullHistory.length === 0) {
-                alert("No session history found to recalculate records.");
-                setIsRecalculating(false);
-                return;
-            }
-
-            const recalculatedPlayers = JSON.parse(JSON.stringify(allPlayers));
-
-            for (const player of recalculatedPlayers) {
-                // Reset records to start fresh
-                player.records = {
-                    bestGoalsInSession: { value: 0, sessionId: '' },
-                    bestAssistsInSession: { value: 0, sessionId: '' },
-                    bestWinRateInSession: { value: 0, sessionId: '' },
-                };
-
-                // Use the complete history for calculation
-                for (const session of fullHistory) {
-                    // Check if player participated in this session
-                    if (!session.playerPool.some(p => p.id === player.id)) {
-                        continue;
-                    }
-
-                    // Calculate stats for this specific session
-                    const { allPlayersStats } = calculateAllStats(session);
-                    const playerStatsForSession = allPlayersStats.find(s => s.player.id === player.id);
-
-                    if (playerStatsForSession) {
-                        const { goals, assists, wins, gamesPlayed } = playerStatsForSession;
-                        const winRate = gamesPlayed > 0 ? Math.round((wins / gamesPlayed) * 100) : 0;
-
-                        if (goals > player.records.bestGoalsInSession.value) {
-                            player.records.bestGoalsInSession = { value: goals, sessionId: session.id };
-                        }
-                        if (assists > player.records.bestAssistsInSession.value) {
-                            player.records.bestAssistsInSession = { value: assists, sessionId: session.id };
-                        }
-                        if (winRate > player.records.bestWinRateInSession.value) {
-                            player.records.bestWinRateInSession = { value: winRate, sessionId: session.id };
-                        }
-                    }
-                }
-            }
-
-            setAllPlayers(recalculatedPlayers);
-            await savePlayersToDB(recalculatedPlayers);
-            alert('All player career records have been successfully recalculated and saved!');
-
-        } catch (error) {
-            console.error("Error recalculating records:", error);
-            alert("An error occurred during recalculation.");
-        } finally {
-            setIsRecalculating(false);
-        }
-    };
 
     const langClasses = (lang: string) => `px-3 py-1 rounded-full font-bold transition-colors text-base ${language === lang ? 'gradient-bg text-dark-bg' : 'bg-dark-surface hover:bg-white/10'}`;
 
@@ -226,22 +147,6 @@ export const SettingsScreen: React.FC = () => {
                             </div>
                         </Card>
                     </Link>
-                    
-                    {/* NEW: Data Management Card */}
-                    <Card className={`${cardNeonClasses} !p-3 space-y-3`}>
-                         <Button variant="ghost" onClick={handleRecalculateRecords} disabled={isRecalculating} className="w-full !justify-center !p-0">
-                            <h2 className="font-chakra font-bold text-xl text-white tracking-wider">
-                                {isRecalculating ? 'Recalculating...' : 'Recalculate Career Bests'}
-                            </h2>
-                        </Button>
-                    </Card>
-
-                    {/* Compact Card: Demo Tools */}
-                    <Card className={`${cardNeonClasses} !p-3 space-y-3`}>
-                         <Button variant="ghost" onClick={handleGenerateDemo} className="w-full !justify-center !p-0">
-                            <h2 className="font-chakra font-bold text-xl text-white tracking-wider">{t.generateDemoSession}</h2>
-                        </Button>
-                    </Card>
                 </div>
             </div>
 
