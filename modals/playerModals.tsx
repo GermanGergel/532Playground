@@ -245,8 +245,8 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
                 await navigator.share({
                     files: [file],
                     title: t.shareAccessCard,
-                    text: `Check out ${player.nickname}'s player card on 532 Playground!`,
-                    // The URL is sent in the text description by the OS, we prioritize the file
+                    text: `Check out ${player.nickname}'s player card on 532 Playground! ${profileUrl}`,
+                    url: profileUrl, 
                 });
             } else {
                 // Fallback to download if sharing is not supported
@@ -281,7 +281,7 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
                     <div className="text-center">
                         <h1 className="font-russo text-3xl flex items-baseline">
                             <span className="text-dark-accent-start">532</span>
-                            <span className="text-white ml-2">PLAYGROUND</span>
+                            <span className="text-white ml-2 text-2xl">PLAYGROUND</span>
                         </h1>
                         <p className="text-[10px] font-semibold tracking-[0.25em] text-dark-text-secondary mt-2">
                             OFFICIAL ACCESS CARD
@@ -293,13 +293,13 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
                         {player.nickname} {player.surname}
                     </h2>
 
-                    {/* QR Code with gradient border */}
-                    <div className="p-1.5 rounded-2xl bg-gradient-to-br from-dark-accent-start to-green-400">
-                        <div className="bg-[#1A1D24] p-1 rounded-xl">
+                    {/* QR Code with wider gradient border */}
+                    <div className="p-3 rounded-2xl bg-gradient-to-br from-dark-accent-start to-green-400">
+                        <div className="bg-[#1A1D24] p-1.5 rounded-xl">
                             {qrCodeDataUrl ? (
-                                <img src={qrCodeDataUrl} alt="QR Code" className="w-48 h-48 rounded-lg" />
+                                <img src={qrCodeDataUrl} alt="QR Code" className="w-40 h-40 rounded-lg" />
                             ) : (
-                                <div className="w-48 h-48 flex items-center justify-center">
+                                <div className="w-40 h-40 flex items-center justify-center">
                                     <div className="w-8 h-8 border-2 border-dashed border-dark-accent-start rounded-full animate-spin"></div>
                                 </div>
                             )}

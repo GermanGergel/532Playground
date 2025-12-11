@@ -1,5 +1,5 @@
 
-import { Session, Player, NewsItem, BadgeType } from '../types';
+import { Session, Player, NewsItem, BadgeType, PlayerRecords } from '../types';
 import { Language } from '../translations/index';
 import {
     loadPlayersFromDB,
@@ -43,35 +43,38 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
     
     // Migration loop to ensure all required fields exist on player objects
     initialPlayers = initialPlayers.map(p => {
-        let badges: Partial<Record<BadgeType, number>> = {};
+        const migratedPlayer = { ...p };
+
         // Badge data migration from string array to object counter for older data
-        if (Array.isArray(p.badges)) {
-            p.badges.forEach((badge: BadgeType) => {
+        let badges: Partial<Record<BadgeType, number>> = {};
+        if (Array.isArray(migratedPlayer.badges)) {
+            (migratedPlayer.badges as unknown as BadgeType[]).forEach((badge: BadgeType) => {
                 badges[badge] = (badges[badge] || 0) + 1;
             });
-        } else if (p.badges) { // Already an object
-            badges = p.badges;
+        } else if (migratedPlayer.badges) { // Already an object
+            badges = migratedPlayer.badges;
         }
+        migratedPlayer.badges = badges;
 
-        // Deep merge records to ensure no sub-property is missing
-        // Cast to any to handle migration from old data where records might be undefined/empty
-        const rawRecords = (p.records || {}) as any;
-        const safeRecords = {
-            bestGoalsInSession: rawRecords.bestGoalsInSession || { value: 0, sessionId: '' },
-            bestAssistsInSession: rawRecords.bestAssistsInSession || { value: 0, sessionId: '' },
-            bestWinRateInSession: rawRecords.bestWinRateInSession || { value: 0, sessionId: '' },
-        };
+        // FINAL SAFER RECORDS MIGRATION:
+        // This logic is non-destructive. It ensures the main `records` object exists,
+        // and then ensures each sub-property exists, only adding defaults if a property is missing.
+        // This prevents overwriting valid data with zeros.
+        if (!migratedPlayer.records) {
+            migratedPlayer.records = {} as PlayerRecords;
+        }
+        migratedPlayer.records.bestGoalsInSession = migratedPlayer.records.bestGoalsInSession || { value: 0, sessionId: '' };
+        migratedPlayer.records.bestAssistsInSession = migratedPlayer.records.bestAssistsInSession || { value: 0, sessionId: '' };
+        migratedPlayer.records.bestWinRateInSession = migratedPlayer.records.bestWinRateInSession || { value: 0, sessionId: '' };
 
-        return {
-            ...p,
-            badges,
-            totalSessionsPlayed: (p.totalSessionsPlayed ?? Math.round(p.totalGames / 15)) || 0,
-            monthlySessionsPlayed: (p.monthlySessionsPlayed ?? Math.round(p.monthlyGames / 15)) || 0,
-            lastRatingChange: p.lastRatingChange || undefined,
-            sessionHistory: p.sessionHistory || [], 
-            records: safeRecords,
-            consecutiveMissedSessions: p.consecutiveMissedSessions || 0, // Migration for new field
-        };
+        // Add other missing fields with default values
+        migratedPlayer.totalSessionsPlayed = (migratedPlayer.totalSessionsPlayed ?? Math.round(migratedPlayer.totalGames / 15)) || 0;
+        migratedPlayer.monthlySessionsPlayed = (migratedPlayer.monthlySessionsPlayed ?? Math.round(migratedPlayer.monthlyGames / 15)) || 0;
+        migratedPlayer.lastRatingChange = migratedPlayer.lastRatingChange || undefined;
+        migratedPlayer.sessionHistory = migratedPlayer.sessionHistory || []; 
+        migratedPlayer.consecutiveMissedSessions = migratedPlayer.consecutiveMissedSessions || 0;
+
+        return migratedPlayer as Player;
     });
 
     // 3. Load History and perform migrations
