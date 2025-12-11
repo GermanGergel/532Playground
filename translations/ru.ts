@@ -354,7 +354,7 @@ export const ru = {
     badge_victory_finisher: "Финишер победы",
     badge_victory_finisher_desc: "Забить победный гол в последнем матче сессии.",
     badge_session_top_assistant: "Ассистент сессии",
-    badge_session_top_assistant_desc: "Сделать больше всех голевых передач среди игроков за одну сессию.",
+    badge_session_top_assistant_desc: "Зробити больше за всех гольових передач серед гравців за одну сесію.",
     badge_passing_streak: "Серия пасующего",
     badge_passing_streak_desc: "Отдать ассист в трёх матчах подряд.",
     badge_team_conductor: "Командный дирижёр",

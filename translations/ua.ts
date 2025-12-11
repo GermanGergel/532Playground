@@ -143,7 +143,7 @@ export const ua = {
     endSession: "Завершити сесію",
     endSessionConfirmation: "Ви впевнені, що хочете завершити цю сесію? Весь прогрес буде збережено.",
     startNextRound: "Почати наступний раунд",
-    endSessionPrompt: "Гра закінчена. Ви можете завершити сесію.",
+    endSessionPrompt: "Гра закінчена. Ви можете завершить сесію.",
     selectWinner: "Виберіть переможця",
     selectWinnerDesc: "Час вийшов. Будь ласка, виберіть команду, яка залишиться на полі.",
     onBench: "На заміні",
@@ -286,7 +286,7 @@ export const ua = {
 
     // Announcement Generator
     createAnnouncement: "Створити афішу",
-    announcementGeneratorTitle: "Генератор Афіш",
+    announcementGeneratorTitle: "Генератор Афиш",
     posterDate: "Дата",
     posterTime: "Початок",
     posterEndTime: "Кінець",

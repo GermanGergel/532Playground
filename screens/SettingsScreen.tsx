@@ -3,8 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context';
 import { Card, useTranslation, Button } from '../ui';
-import { isSupabaseConfigured, getCloudPlayerCount, savePlayersToDB } from '../db';
+import { isSupabaseConfigured, getCloudPlayerCount, savePlayersToDB, loadHistoryFromDB } from '../db';
 import { RefreshCw } from '../icons';
+import { Player, Session } from '../types';
 
 export const SettingsScreen: React.FC = () => {
     const t = useTranslation();
@@ -39,19 +40,119 @@ export const SettingsScreen: React.FC = () => {
         setIsRecalculating(true);
         
         try {
+            // 1. Fetch ALL history to reconstruct the timeline
+            const fullHistory = await loadHistoryFromDB(); // No limit = get everything
+            const sessions = (fullHistory || []).sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
             const updatedPlayers = allPlayers.map(p => {
-                // If historyData is missing or empty, backfill it
-                if (!p.historyData || p.historyData.length === 0) {
-                    const winRate = p.totalGames > 0 ? Math.round((p.totalWins / p.totalGames) * 100) : 0;
+                // If chart exists and has more than 1 point, assume it's already good.
+                // We only fix players with NO history or just the dummy "Start" point we created earlier.
+                const hasRealHistory = p.historyData && p.historyData.length > 1;
+                
+                if (!hasRealHistory) {
+                    // --- RECONSTRUCTION LOGIC ---
+                    
+                    // 1. Find sessions this player participated in
+                    const playerSessions = sessions.filter(s => {
+                        return s.teams.some(t => t.playerIds.includes(p.id));
+                    });
+
+                    // 2. Base Rating (Assume 60 for newcomers if we don't know better, or calculate backwards)
+                    // If they have played sessions, we assume linear growth to current rating.
+                    const currentRating = p.rating;
+                    const sessionsPlayedCount = playerSessions.length;
+                    
+                    let historyData = [];
+
+                    if (sessionsPlayedCount === 0) {
+                        // Just a starting point
+                        historyData.push({
+                            date: 'Start',
+                            rating: currentRating,
+                            winRate: 0,
+                            goals: 0,
+                            assists: 0
+                        });
+                    } else {
+                        // Interpolate!
+                        // Example: Started at 60 (default) -> Ends at 80.
+                        // Delta = 20. If 4 sessions, step is 5.
+                        const startRating = 60; 
+                        // If current rating is lower than start (bad player), handle that too.
+                        const totalGrowth = currentRating - startRating;
+                        const step = totalGrowth / sessionsPlayedCount;
+
+                        // Add "Day 0" point
+                        historyData.push({
+                            date: 'Start',
+                            rating: startRating,
+                            winRate: 0,
+                            goals: 0,
+                            assists: 0
+                        });
+
+                        let runningRating = startRating;
+                        let runningGoals = 0;
+                        let runningAssists = 0;
+                        let runningWins = 0;
+                        let runningGames = 0;
+
+                        playerSessions.forEach((session, index) => {
+                            // Calculate cumulative stats for this session from the actual session data
+                            const playerTeam = session.teams.find(t => t.playerIds.includes(p.id));
+                            if (playerTeam) {
+                                session.games.forEach(g => {
+                                    if (g.status === 'finished') {
+                                        const myGoals = g.goals.filter(goal => goal.scorerId === p.id && !goal.isOwnGoal).length;
+                                        const myAssists = g.goals.filter(goal => goal.assistantId === p.id).length;
+                                        const myTeamId = playerTeam.id;
+                                        const isWinner = g.winnerTeamId === myTeamId;
+                                        const played = (g.team1Id === myTeamId || g.team2Id === myTeamId);
+                                        
+                                        if (played) {
+                                            runningGames++;
+                                            runningGoals += myGoals;
+                                            runningAssists += myAssists;
+                                            if (isWinner) runningWins++;
+                                        }
+                                    }
+                                });
+                            }
+
+                            // Math for rating curve
+                            // We use the index to grow the rating linearly towards the current value
+                            runningRating += step;
+                            
+                            // Format date: "DD.MM"
+                            const dateObj = new Date(session.date);
+                            const dateLabel = `${String(dateObj.getDate()).padStart(2, '0')}.${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+
+                            const currentWinRate = runningGames > 0 ? Math.round((runningWins / runningGames) * 100) : 0;
+
+                            historyData.push({
+                                date: dateLabel,
+                                rating: Math.round(runningRating), // Round to integer
+                                winRate: currentWinRate,
+                                goals: runningGoals,
+                                assists: runningAssists
+                            });
+                        });
+                        
+                        // Force the LAST entry to match the EXACT current rating (fix rounding errors)
+                        const lastIdx = historyData.length - 1;
+                        if (lastIdx >= 0) {
+                            historyData[lastIdx].rating = p.rating;
+                        }
+                    }
+
+                    // Keep only last 12 points to match chart limits
+                    if (historyData.length > 12) {
+                        historyData = historyData.slice(historyData.length - 12);
+                    }
+
                     return {
                         ...p,
-                        historyData: [{
-                            date: 'Start',
-                            rating: p.rating,
-                            winRate: winRate,
-                            goals: p.totalGoals,
-                            assists: p.totalAssists
-                        }]
+                        historyData: historyData
                     };
                 }
                 return p;
@@ -64,11 +165,9 @@ export const SettingsScreen: React.FC = () => {
             const result = await savePlayersToDB(updatedPlayers);
             
             if (result.cloudSaved) {
-                alert("✅ SUCCESS! History generated and saved to Cloud Database.");
+                alert(`✅ SUCCESS!\n\nReconstructed history for players based on ${sessions.length} past sessions.\n\nCharts should now show a curve instead of a flat line.`);
             } else {
-                // If cloud failed, it's likely a missing column
-                alert("⚠️ SAVED LOCALLY ONLY!\n\nCloud save failed. Most likely, your Supabase table is missing the 'historyData' column.\n\nPlease run this SQL in Supabase:\n\nalter table players add column \"historyData\" jsonb;");
-                console.error("Save details:", result.message, result.errorDetail);
+                alert("⚠️ SAVED LOCALLY ONLY!\n\nCheck your internet or Supabase connection.");
             }
 
         } catch (error) {
