@@ -207,11 +207,11 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
         if (isSharing || !cardRef.current) return;
         setIsSharing(true);
     
-        const shareText = `Check out ${player.nickname} ${player.surname}'s player card on 532 Playground!`;
+        const shareTextWithUrl = `Check out ${player.nickname} ${player.surname}'s player card on 532 Playground!\n${shareUrl}`;
 
         const shareDataTextOnly = {
             title: `532 Profile: ${player.nickname}`,
-            text: shareText,
+            text: `Check out ${player.nickname} ${player.surname}'s player card on 532 Playground!`,
             url: shareUrl,
         };
     
@@ -239,8 +239,7 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
             const shareDataWithFile = {
                 files: [fileToShare!],
                 title: `532 Profile: ${player.nickname}`,
-                text: shareText,
-                url: shareUrl,
+                text: shareTextWithUrl,
             };
     
             if (fileToShare && navigator.canShare && navigator.canShare({ files: [fileToShare] })) {
