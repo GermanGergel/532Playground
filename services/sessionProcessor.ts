@@ -1,5 +1,5 @@
 
-import { Session, Player, NewsItem, BadgeType, SessionStatus, PlayerRecords } from '../types';
+import { Session, Player, NewsItem, BadgeType, SessionStatus, PlayerRecords, PlayerHistoryEntry } from '../types';
 import { calculateAllStats } from './statistics';
 import { calculateEarnedBadges, calculateRatingUpdate, getTierForRating } from './rating';
 import { generateNewsUpdates, manageNewsFeedSize } from './news';
@@ -116,6 +116,7 @@ export const processFinishedSession = ({
                 updatedBadges[badge] = (updatedBadges[badge] || 0) + 1;
             });
             
+            // Session Trend (Win Rates)
             const sessionHistory = [...(player.sessionHistory || [])];
             const sessionWinRate = sessionStats.gamesPlayed > 0 ? Math.round((sessionStats.wins / sessionStats.gamesPlayed) * 100) : 0;
             if (sessionStats.gamesPlayed > 0) {
@@ -123,6 +124,25 @@ export const processFinishedSession = ({
             }
             if (sessionHistory.length > 5) sessionHistory.shift();
             
+            // --- NEW: LONG TERM HISTORY FOR CHART ---
+            // Format: "DD.MM"
+            const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
+            
+            const newHistoryEntry: PlayerHistoryEntry = {
+                date: dateStr,
+                rating: newRating,
+                winRate: sessionWinRate,
+                goals: player.totalGoals, // Cumulative goals for growth chart
+                assists: player.totalAssists
+            };
+            
+            const historyData = [...(player.historyData || [])];
+            historyData.push(newHistoryEntry);
+            
+            // Keep last 12 sessions for chart scrolling
+            if (historyData.length > 12) historyData.shift();
+            // ----------------------------------------
+
             const getSafeRecord = (rec: any) => (rec && typeof rec.value === 'number') ? rec : { value: 0, sessionId: '' };
             const safePlayerRecords = (player.records || {}) as any;
 
@@ -149,6 +169,7 @@ export const processFinishedSession = ({
                 form: newForm,
                 badges: updatedBadges,
                 sessionHistory: sessionHistory,
+                historyData: historyData, // Saved here
                 lastRatingChange: { ...breakdown, badgesEarned: badgesEarnedThisSession },
                 records: newRecords,
             };
@@ -173,17 +194,6 @@ export const processFinishedSession = ({
         status: SessionStatus.Completed,
     };
 
-    // We must save:
-    // 1. Players who played (stats updated)
-    // 2. Players who missed (counter updated or rating decayed)
-    // Basically, we likely need to save ALL players to keep counters in sync, 
-    // or at least those whose data changed.
-    // For simplicity and data integrity, saving all players is safer if the count isn't massive.
-    // Optimization: Filter out players where nothing changed?
-    // In this logic: every player is mapped.
-    // - Participants change (stats).
-    // - Non-participants change (counter +1).
-    // So essentially EVERY confirmed player changes.
     const playersToSave = playersWithCalculatedRatings;
 
     return {

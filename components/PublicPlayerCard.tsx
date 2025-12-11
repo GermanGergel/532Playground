@@ -4,7 +4,7 @@ import { Player, PlayerTier, PlayerStatus, BadgeType, PlayerForm, SkillType } fr
 import { getPlayerKeyStats } from '../services/statistics';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { Card, useTranslation, Button } from '../ui';
-import { LastSessionBreakdown, ClubRankings, BestSessionCard } from './PlayerCardAnalytics';
+import { LastSessionBreakdown, ClubRankings, BestSessionCard, PlayerProgressChart } from './PlayerCardAnalytics';
 import { BadgeIcon } from '../features';
 import { BarChartDynamic, TrophyIcon, InfoIcon, StarIcon, ChevronLeft } from '../icons';
 
@@ -138,6 +138,8 @@ const StatsView: React.FC<{ player: Player; onBack: () => void }> = ({ player, o
         <div>
             <SubViewHeader title={t.statistics} onBack={onBack} />
             <div className="space-y-3">
+                <PlayerProgressChart history={player.historyData || []} />
+                
                 {player.lastRatingChange && <LastSessionBreakdown player={player} />}
                 <BestSessionCard player={player} />
                 <ClubRankings player={player} />

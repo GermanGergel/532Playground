@@ -67,6 +67,15 @@ export type PlayerRecords = {
   bestWinRateInSession: { value: number; sessionId: string; };
 };
 
+// NEW: History Data Structure for the Chart
+export interface PlayerHistoryEntry {
+    date: string; // "YYYY-MM" or ISO
+    rating: number;
+    winRate: number;
+    goals: number; // Goals accumulated up to this point or in this month
+    assists: number;
+}
+
 export interface Player {
   id: string;
   nickname: string;
@@ -108,6 +117,9 @@ export interface Player {
   lastRatingChange?: RatingBreakdown;
   records: PlayerRecords;
   consecutiveMissedSessions?: number; // Tracks inactivity penalties
+  
+  // Historical Data for Graphs
+  historyData?: PlayerHistoryEntry[]; 
 }
 
 export enum RotationMode {

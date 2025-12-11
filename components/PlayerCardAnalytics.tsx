@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Player, PlayerStatus } from '../types';
+import React, { useMemo, useState, useRef, useLayoutEffect } from 'react';
+import { Player, PlayerStatus, PlayerHistoryEntry } from '../types';
 import { Card, useTranslation } from '../ui';
 import { useApp } from '../context';
 import { BadgeIcon } from '../features';
@@ -138,8 +138,6 @@ export const ClubRankings: React.FC<{ player: Player }> = ({ player }) => {
 export const BestSessionCard: React.FC<{ player: Player }> = ({ player }) => {
     const t = useTranslation();
     
-    // Strict helper to ensure we never render blank/undefined/null.
-    // If value is missing, it explicitly returns 0.
     const getSafeValue = (val: any) => {
         if (val === undefined || val === null) return 0;
         const num = Number(val);
@@ -167,6 +165,304 @@ export const BestSessionCard: React.FC<{ player: Player }> = ({ player }) => {
                 <div>
                     <p className="text-base font-bold">{bestWinRate}%</p>
                     <p className="text-[10px] text-dark-text-secondary uppercase">{t.bestWinRate}</p>
+                </div>
+            </div>
+        </Card>
+    );
+};
+
+// --- NEW COMPONENT: PLAYER PROGRESS CHART (SCROLLABLE) ---
+
+type ChartMetric = 'rating' | 'winRate' | 'goals';
+
+export const PlayerProgressChart: React.FC<{ history: PlayerHistoryEntry[] }> = ({ history }) => {
+    const [activeMetric, setActiveMetric] = useState<ChartMetric>('rating');
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    // 1. Data Processing - USE ALL DATA
+    const chartData = useMemo(() => {
+        if (history.length < 2) return []; 
+        return history;
+    }, [history]);
+
+    // 2. Auto-scroll to the end (newest data) on mount
+    useLayoutEffect(() => {
+        if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth;
+        }
+    }, [chartData, activeMetric]);
+
+    // Dimensions
+    const height = 160; // Slightly taller for better visualization
+    const paddingY = 30; // More padding for dots not to clip
+    const pointSpacing = 60; // More spacing for breathing room
+    const width = Math.max(300, (chartData.length - 1) * pointSpacing + 40);
+
+    // Helper to get value based on active metric
+    const getValue = (entry: PlayerHistoryEntry) => {
+        switch (activeMetric) {
+            case 'rating': return entry.rating;
+            case 'winRate': return entry.winRate;
+            case 'goals': return entry.goals;
+            default: return 0;
+        }
+    };
+
+    const getLabel = () => {
+        switch (activeMetric) {
+            case 'rating': return 'OVG';
+            case 'winRate': return 'WIN %';
+            case 'goals': return 'GOALS';
+            default: return '';
+        }
+    };
+
+    // Calculate scaling
+    const values = chartData.map(getValue);
+    const minVal = Math.min(...values);
+    const maxVal = Math.max(...values);
+    
+    const yBuffer = (maxVal - minVal) * 0.3 || 5; 
+    const yMin = Math.max(0, minVal - yBuffer);
+    const yMax = maxVal + yBuffer;
+
+    // Coordinate mapping functions
+    const getX = (index: number) => 20 + index * pointSpacing; // Fixed spacing
+    const getY = (value: number) => height - paddingY - ((value - yMin) / (yMax - yMin)) * (height - 2 * paddingY);
+
+    // 2. Path Generation (SVG 'd' attribute)
+    const linePath = useMemo(() => {
+        if (chartData.length === 0) return '';
+        return chartData.map((entry, index) => {
+            const x = getX(index);
+            const y = getY(getValue(entry));
+            return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
+        }).join(' ');
+    }, [chartData, activeMetric, yMin, yMax]);
+
+    // Area Fill Path (closed loop)
+    const areaPath = useMemo(() => {
+        if (!linePath) return '';
+        const lastX = getX(chartData.length - 1);
+        const bottomY = height - paddingY;
+        const firstX = getX(0);
+        return `${linePath} L ${lastX} ${bottomY} L ${firstX} ${bottomY} Z`;
+    }, [linePath]);
+
+    // Determine Color Theme based on metric
+    const theme = useMemo(() => {
+        switch (activeMetric) {
+            case 'rating': return { color: '#00F2FE', gradientStart: '#00F2FE', gradientEnd: 'rgba(0, 242, 254, 0)' };
+            case 'winRate': return { color: '#4CFF5F', gradientStart: '#4CFF5F', gradientEnd: 'rgba(76, 255, 95, 0)' };
+            case 'goals': return { color: '#FFD700', gradientStart: '#FFD700', gradientEnd: 'rgba(255, 215, 0, 0)' };
+        }
+    }, [activeMetric]);
+
+    if (chartData.length < 2) {
+        return (
+            <Card title="Player Progress" className="border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)] h-64 flex items-center justify-center">
+                <p className="text-dark-text-secondary text-sm">Not enough data history yet.</p>
+            </Card>
+        );
+    }
+
+    const currentValue = values[values.length - 1];
+    const growth = Number(values[values.length - 1] - values[0]).toFixed(1);
+    const isPositiveGrowth = values[values.length - 1] >= values[0];
+
+    return (
+        <Card className="border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)] overflow-hidden transition-all duration-500 !p-4">
+            {/* Header: BIG STATS + TABS */}
+            <div className="flex justify-between items-start mb-4">
+                {/* Left: Key Stats Block - Using items-stretch to enforce same height */}
+                <div className="flex items-stretch gap-4 h-14">
+                    {/* Primary Value (OVG) - Justify Between pushes label to bottom */}
+                    <div className="flex flex-col items-center justify-between">
+                        <span 
+                            className="text-4xl font-black leading-none tracking-tighter" 
+                            style={{ color: theme.color, textShadow: `0 0 15px ${theme.gradientStart}` }}
+                        >
+                            {currentValue}
+                        </span>
+                        <span className="text-[10px] font-bold text-dark-text-secondary uppercase tracking-[0.2em]">
+                            {getLabel()}
+                        </span>
+                    </div>
+
+                    {/* Divider - Auto height due to stretch */}
+                    <div className="w-px bg-white/10"></div>
+                    
+                    {/* Secondary Value (Growth) - Justify Between pushes label to bottom */}
+                    <div className="flex flex-col items-center justify-between">
+                        {/* Wrapper for the number to keep it vertically centered in the upper space */}
+                        <div className="flex-1 flex items-center">
+                            <span 
+                                className={`text-xl font-black leading-none ${isPositiveGrowth ? 'text-green-400' : 'text-red-400'}`}
+                                style={{ 
+                                    textShadow: isPositiveGrowth 
+                                        ? '0 0 10px rgba(74, 222, 128, 0.5)' 
+                                        : '0 0 10px rgba(248, 113, 113, 0.5)' 
+                                }}
+                            >
+                                {isPositiveGrowth ? '+' : ''}{growth}
+                            </span>
+                        </div>
+                        <span className="text-[10px] font-bold text-dark-text-secondary uppercase tracking-[0.2em]">
+                            GROWTH
+                        </span>
+                    </div>
+                </div>
+
+                {/* Right: Tabs */}
+                <div className="flex bg-dark-bg/50 rounded-lg p-0.5 border border-white/10">
+                    {(['rating', 'winRate', 'goals'] as ChartMetric[]).map(m => (
+                        <button
+                            key={m}
+                            onClick={() => setActiveMetric(m)}
+                            className={`
+                                px-2 py-1 text-[9px] font-bold uppercase rounded-md transition-all duration-300
+                                ${activeMetric === m 
+                                    ? 'bg-dark-surface text-white shadow-sm' 
+                                    : 'text-dark-text-secondary hover:text-white'
+                                }
+                            `}
+                        >
+                            {m === 'winRate' ? 'Win %' : m === 'rating' ? 'OVG' : m}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* The Scrollable Chart Container with FADE MASK */}
+            <div 
+                ref={scrollContainerRef}
+                className="w-full overflow-x-auto no-scrollbar relative"
+                style={{ 
+                    scrollBehavior: 'smooth',
+                    // This creates the "Fade into history" effect on the left side
+                    maskImage: 'linear-gradient(to right, transparent, black 15%)',
+                    WebkitMaskImage: 'linear-gradient(to right, transparent, black 15%)'
+                }}
+            >
+                <div style={{ width: `${width}px`, height: `${height}px` }}>
+                    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
+                        <defs>
+                            <linearGradient id={`gradient-${activeMetric}`} x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor={theme.gradientStart} stopOpacity="0.4" />
+                                <stop offset="100%" stopColor={theme.gradientEnd} stopOpacity="0" />
+                            </linearGradient>
+                            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                                <feMerge>
+                                    <feMergeNode in="coloredBlur" />
+                                    <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                            </filter>
+                        </defs>
+
+                        {/* Grid Lines (Horizontal) - Simplified */}
+                        {[0.2, 0.5, 0.8].map(ratio => {
+                            const y = paddingY + ratio * (height - 2 * paddingY);
+                            return <line key={ratio} x1={0} y1={y} x2={width} y2={y} stroke="white" strokeOpacity="0.03" strokeDasharray="4 4" />;
+                        })}
+
+                        {/* Area Fill */}
+                        <path 
+                            d={areaPath} 
+                            fill={`url(#gradient-${activeMetric})`} 
+                            className="transition-all duration-500 ease-in-out"
+                        />
+
+                        {/* Line Stroke - Thinner (1.5px) */}
+                        <path 
+                            d={linePath} 
+                            fill="none" 
+                            stroke={theme.color} 
+                            strokeWidth="1.5" 
+                            filter="url(#glow)"
+                            className="transition-all duration-500 ease-in-out"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+
+                        {/* Data Points */}
+                        {chartData.map((entry, index) => {
+                            const x = getX(index);
+                            const value = getValue(entry);
+                            const y = getY(value);
+                            const isLast = index === chartData.length - 1;
+
+                            return (
+                                <g key={index} className="group">
+                                    {/* Vertical Line on Hover */}
+                                    <line 
+                                        x1={x} y1={paddingY} x2={x} y2={height - paddingY} 
+                                        stroke="white" strokeOpacity="0" strokeWidth="1"
+                                        className="group-hover:stroke-opacity-20 transition-all"
+                                    />
+
+                                    {/* Invisible hit target */}
+                                    <circle cx={x} cy={y} r="20" fill="transparent" className="cursor-pointer" />
+                                    
+                                    {/* Visible Dot - Thinner stroke */}
+                                    <circle 
+                                        cx={x} 
+                                        cy={y} 
+                                        r={isLast ? "4" : "3"} 
+                                        fill="#1A1D24" 
+                                        stroke={theme.color} 
+                                        strokeWidth="1.5" 
+                                        className="transition-all duration-300 group-hover:r-5 group-hover:fill-white"
+                                    />
+                                    
+                                    {/* Pulse Animation for Last Point */}
+                                    {isLast && (
+                                        <circle cx={x} cy={y} r="8" fill="none" stroke={theme.color} strokeOpacity="0.5" strokeWidth="1">
+                                            <animate attributeName="r" from="4" to="12" dur="1.5s" repeatCount="indefinite" />
+                                            <animate attributeName="stroke-opacity" from="0.8" to="0" dur="1.5s" repeatCount="indefinite" />
+                                        </circle>
+                                    )}
+
+                                    {/* Tooltip */}
+                                    <g className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                                        <rect 
+                                            x={x - 18} 
+                                            y={y - 35} 
+                                            width="36" 
+                                            height="22" 
+                                            rx="4" 
+                                            fill="#1A1D24" 
+                                            stroke={theme.color} 
+                                            strokeWidth="1" 
+                                        />
+                                        <text 
+                                            x={x} 
+                                            y={y - 21} 
+                                            fill="white" 
+                                            fontSize="10" 
+                                            fontWeight="bold" 
+                                            textAnchor="middle"
+                                        >
+                                            {value}
+                                        </text>
+                                    </g>
+                                    
+                                    {/* X-Axis Labels (Date) */}
+                                    <text 
+                                        x={x} 
+                                        y={height - 5} 
+                                        fill={isLast ? "white" : "#A9B1BD"} 
+                                        fontSize="9" 
+                                        fontWeight={isLast ? "bold" : "normal"}
+                                        textAnchor="middle"
+                                        className="transition-colors"
+                                    >
+                                        {entry.date}
+                                    </text>
+                                </g>
+                            );
+                        })}
+                    </svg>
                 </div>
             </div>
         </Card>
