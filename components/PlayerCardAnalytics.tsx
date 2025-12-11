@@ -179,9 +179,11 @@ export const PlayerProgressChart: React.FC<{ history: PlayerHistoryEntry[] }> = 
     const [activeMetric, setActiveMetric] = useState<ChartMetric>('rating');
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-    // 1. Data Processing - USE ALL DATA
+    // 1. Data Processing - Handle edge cases (empty or single item)
     const chartData = useMemo(() => {
-        if (history.length < 2) return []; 
+        if (!history || history.length === 0) return [];
+        // If only 1 history item, duplicate it to draw a flat line instead of showing an error
+        if (history.length === 1) return [history[0], history[0]];
         return history;
     }, [history]);
 
@@ -192,10 +194,13 @@ export const PlayerProgressChart: React.FC<{ history: PlayerHistoryEntry[] }> = 
         }
     }, [chartData, activeMetric]);
 
+    // If absolutely no data, don't render the card at all (cleaner than error message)
+    if (chartData.length === 0) return null;
+
     // Dimensions
-    const height = 160; // Slightly taller for better visualization
-    const paddingY = 30; // More padding for dots not to clip
-    const pointSpacing = 60; // More spacing for breathing room
+    const height = 160; 
+    const paddingY = 30; 
+    const pointSpacing = 60; 
     const width = Math.max(300, (chartData.length - 1) * pointSpacing + 40);
 
     // Helper to get value based on active metric
@@ -222,13 +227,18 @@ export const PlayerProgressChart: React.FC<{ history: PlayerHistoryEntry[] }> = 
     const minVal = Math.min(...values);
     const maxVal = Math.max(...values);
     
-    const yBuffer = (maxVal - minVal) * 0.3 || 5; 
+    // Ensure we don't divide by zero if max == min
+    const range = maxVal - minVal;
+    const yBuffer = range === 0 ? 10 : range * 0.3; 
     const yMin = Math.max(0, minVal - yBuffer);
     const yMax = maxVal + yBuffer;
 
     // Coordinate mapping functions
-    const getX = (index: number) => 20 + index * pointSpacing; // Fixed spacing
-    const getY = (value: number) => height - paddingY - ((value - yMin) / (yMax - yMin)) * (height - 2 * paddingY);
+    const getX = (index: number) => 20 + index * pointSpacing; 
+    const getY = (value: number) => {
+        const normalized = (value - yMin) / (yMax - yMin);
+        return height - paddingY - (normalized * (height - 2 * paddingY));
+    };
 
     // 2. Path Generation (SVG 'd' attribute)
     const linePath = useMemo(() => {
@@ -258,14 +268,6 @@ export const PlayerProgressChart: React.FC<{ history: PlayerHistoryEntry[] }> = 
         }
     }, [activeMetric]);
 
-    if (chartData.length < 2) {
-        return (
-            <Card title="Player Progress" className="border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)] h-64 flex items-center justify-center">
-                <p className="text-dark-text-secondary text-sm">Not enough data history yet.</p>
-            </Card>
-        );
-    }
-
     const currentValue = values[values.length - 1];
     const growth = Number(values[values.length - 1] - values[0]).toFixed(1);
     const isPositiveGrowth = values[values.length - 1] >= values[0];
@@ -278,12 +280,15 @@ export const PlayerProgressChart: React.FC<{ history: PlayerHistoryEntry[] }> = 
                 <div className="flex items-stretch gap-4 h-14">
                     {/* Primary Value (OVG) - Justify Between pushes label to bottom */}
                     <div className="flex flex-col items-center justify-between">
-                        <span 
-                            className="text-4xl font-black leading-none tracking-tighter" 
-                            style={{ color: theme.color, textShadow: `0 0 15px ${theme.gradientStart}` }}
-                        >
-                            {currentValue}
-                        </span>
+                        {/* Wrapper to center number in remaining vertical space */}
+                        <div className="flex-1 flex items-center">
+                            <span 
+                                className="text-4xl font-black leading-none tracking-tighter" 
+                                style={{ color: theme.color, textShadow: `0 0 15px ${theme.gradientStart}` }}
+                            >
+                                {currentValue}
+                            </span>
+                        </div>
                         <span className="text-[10px] font-bold text-dark-text-secondary uppercase tracking-[0.2em]">
                             {getLabel()}
                         </span>
@@ -314,7 +319,7 @@ export const PlayerProgressChart: React.FC<{ history: PlayerHistoryEntry[] }> = 
                 </div>
 
                 {/* Right: Tabs */}
-                <div className="flex bg-dark-bg/50 rounded-lg p-0.5 border border-white/10">
+                <div className="flex bg-dark-bg/50 rounded-lg p-0.5 border border-white/10 self-start">
                     {(['rating', 'winRate', 'goals'] as ChartMetric[]).map(m => (
                         <button
                             key={m}
