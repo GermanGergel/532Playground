@@ -7,7 +7,6 @@ import { getSessionAnthemUrl, loadSinglePlayerFromDB } from '../db';
 import { PublicPlayerCard } from '../components/PublicPlayerCard';
 import { useApp } from '../context';
 import { Language } from '../translations/index';
-import { RefreshCw } from '../icons';
 
 const MusicLoader: React.FC<{ onInteract: () => void }> = ({ onInteract }) => {
     const t = useTranslation();
@@ -170,7 +169,7 @@ export const PublicProfileScreen: React.FC = () => {
     const showMusicLoader = !isLoading && anthemUrl && !userInteracted;
 
     const LanguageSwitcher = () => {
-        const langButtonClass = (lang: Language) => `px-2 py-0.5 rounded-md text-xs font-bold transition-colors ${language === lang ? 'gradient-bg text-dark-bg' : 'bg-dark-surface hover:bg-white/10'}`;
+        const langButtonClass = (lang: Language) => `px-2 py-0.5 rounded-md text-[10px] font-bold transition-colors ${language === lang ? 'gradient-bg text-dark-bg' : 'bg-dark-surface hover:bg-white/10'}`;
         return (
             <div className="flex items-center gap-1 bg-dark-bg p-1 rounded-lg border border-white/10">
                 <button onClick={() => setLanguage('en')} className={langButtonClass('en')}>EN</button>
@@ -193,29 +192,28 @@ export const PublicProfileScreen: React.FC = () => {
             <div className="flex items-start justify-between mb-8 relative">
                 <div className="w-8"></div> 
                 
-                <div className="absolute left-1/2 -translate-x-1/2">
+                <div className="absolute left-1/2 -translate-x-1/2 top-0">
                     <LanguageSwitcher />
                 </div>
 
-                <div className="flex flex-col items-end">
+                <div className="flex flex-col items-end z-10">
                     <button 
                         onClick={() => fetchPlayerAndMusic(true)}
                         disabled={isDisabled}
                         className={`
-                            flex items-center gap-2 px-4 py-2 rounded-full font-bold text-[10px] uppercase tracking-wider transition-all duration-300
+                            px-3 py-1 rounded text-[10px] font-bold tracking-widest uppercase transition-all duration-300 border
                             ${isDisabled 
-                                ? 'bg-dark-surface/50 text-dark-text-secondary border border-white/5 cursor-not-allowed opacity-80' 
-                                : 'gradient-bg text-dark-bg shadow-[0_0_15px_rgba(0,242,254,0.3)] hover:shadow-[0_0_20px_rgba(0,242,254,0.5)] active:scale-95'
+                                ? 'border-white/10 text-white/20 cursor-not-allowed bg-transparent' 
+                                : 'border-[#00F2FE] text-[#00F2FE] hover:bg-[#00F2FE]/10 shadow-[0_0_10px_rgba(0,242,254,0.2)] active:scale-95'
                             }
                         `}
                     >
-                        <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-                        <span>{isRefreshing ? 'Updating...' : 'Update Data'}</span>
+                        {isRefreshing ? 'UPDATING...' : 'UPDATE DATA'}
                     </button>
-                    <span className="text-[9px] text-dark-text-secondary/60 mt-1.5 font-mono text-right max-w-[120px] leading-tight">
+                    <span className="text-[8px] font-mono text-dark-text-secondary/70 mt-1 uppercase tracking-wider text-right">
                         {timeRemaining 
-                            ? `Next update: ${timeRemaining}` 
-                            : 'Available once every 24h'
+                            ? `WAIT: ${timeRemaining}` 
+                            : 'ONCE PER 24H'
                         }
                     </span>
                 </div>
