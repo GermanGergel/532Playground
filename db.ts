@@ -293,16 +293,23 @@ export const savePlayersToDB = async (players: Player[]): Promise<DbResult> => {
 };
 
 export const loadPlayersFromDB = async (): Promise<Player[] | undefined> => {
-    // Basic load still prefers cloud for the main database to ensure sync
+    // This function now ensures local cache is synchronized with the cloud on startup.
     if (isSupabaseConfigured()) {
         try {
             const { data, error } = await supabase!.from('players').select('*');
             if (error) throw error;
+            
+            // *** FIX: Synchronize fresh cloud data to the local cache (IndexedDB) ***
+            if (data) {
+                await set('players', data);
+            }
+            
             return data as Player[];
         } catch (error) {
-            console.warn("Cloud load failed, falling back to local.");
+            console.warn("Cloud load failed, falling back to local cache.");
         }
     } 
+    // Fallback for both cloud failure and offline mode
     return await get('players');
 };
 

@@ -4,6 +4,7 @@ import { Button, Modal, useTranslation, ToggleSwitch } from '../ui';
 import { Player, SkillType, PlayerStatus, PlayerTier } from '../types';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import html2canvas from 'html2canvas';
+import { PlayerAvatar } from '../components/avatars';
 
 // --- PLAYER ADD MODAL ---
 export interface PlayerAddModalProps {
@@ -205,9 +206,8 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
     React.useEffect(() => {
         if (isOpen) {
             const generateQrCode = async () => {
-                // Using a simple public API for QR code generation to avoid heavy libraries
                 try {
-                    const response = await fetch(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(profileUrl)}&bgcolor=1A1D24&color=00F2FE&qzone=1`);
+                    const response = await fetch(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(profileUrl)}&bgcolor=1A1D24&color=00F2FE&qzone=1&ecc=H`);
                     if (!response.ok) throw new Error('Failed to fetch QR code');
                     const blob = await response.blob();
                     const reader = new FileReader();
@@ -240,20 +240,34 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
             });
             const blob = await new Promise<Blob|null>(resolve => canvas.toBlob(resolve, 'image/png'));
             
-            if (blob && navigator.share) {
-                const file = new File([blob], `${player.nickname}_access_card.png`, { type: 'image/png' });
+            if (!blob) {
+                throw new Error("Failed to generate image blob.");
+            }
+    
+            const file = new File([blob], `${player.nickname}_access_card.png`, { type: 'image/png' });
+    
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share({
                     title: t.shareAccessCard,
-                    text: `Check out ${player.nickname}'s profile on 532 Playground!`,
+                    text: `Check out ${player.nickname}'s player card on 532 Playground!`,
                     url: profileUrl,
                     files: [file]
                 });
             } else {
-                 handleCopyLink();
+                const dataUrl = URL.createObjectURL(file);
+                const link = document.createElement('a');
+                link.download = file.name;
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(dataUrl);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Sharing failed:", error);
-            handleCopyLink(); // Fallback to copy link
+            if (error.name !== 'AbortError') {
+                alert("Could not share image, it has been downloaded instead. If download fails, please copy the link.");
+            }
         } finally {
             setIsGenerating(false);
         }
@@ -262,30 +276,43 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="sm" hideCloseButton>
              <div className="flex flex-col items-center gap-4">
-                 <div ref={cardRef} className="relative w-[340px] bg-dark-bg rounded-3xl p-6 flex flex-col items-center gap-4 border-4 border-dark-accent-start shadow-[0_0_30px_rgba(0,242,254,0.7)]">
-                    <div className="absolute inset-0 bg-black/30 rounded-3xl"></div>
-                    <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: `linear-gradient(#00F2FE 1px, transparent 1px), linear-gradient(90deg, #00F2FE 1px, transparent 1px)`, backgroundSize: '20px 20px' }}/>
+                 <div 
+                    ref={cardRef} 
+                    className="w-[340px] bg-[#1A1D24] rounded-2xl p-6 flex flex-col items-center gap-6 border-2 border-dark-accent-start/50 shadow-[0_0_20px_rgba(0,242,254,0.3)]"
+                >
+                    {/* Header */}
+                    <div className="text-center">
+                        <h1 className="font-russo text-3xl flex items-baseline">
+                            <span className="text-dark-accent-start">532</span>
+                            <span className="text-white ml-2">PLAYGROUND</span>
+                        </h1>
+                        <p className="text-[10px] font-semibold tracking-[0.25em] text-dark-text-secondary mt-2">
+                            OFFICIAL ACCESS CARD
+                        </p>
+                    </div>
                     
-                    <div className="relative text-center -mt-2">
-                        <div className="flex items-end justify-center gap-2">
-                            <p className="font-orbitron font-black text-4xl text-dark-accent-start" style={{ textShadow: '0 0 8px rgba(0, 242, 254, 0.7)'}}>532</p>
-                            <p className="font-orbitron font-bold text-2xl text-white">PLAYGROUND</p>
+                    {/* Player Name */}
+                    <h2 className="font-russo text-4xl text-white uppercase tracking-wide">
+                        {player.nickname} {player.surname}
+                    </h2>
+
+                    {/* QR Code with gradient border */}
+                    <div className="p-1.5 rounded-2xl bg-gradient-to-br from-dark-accent-start to-dark-accent-end">
+                        <div className="bg-[#1A1D24] p-1 rounded-xl">
+                            {qrCodeDataUrl ? (
+                                <img src={qrCodeDataUrl} alt="QR Code" className="w-48 h-48 rounded-lg" />
+                            ) : (
+                                <div className="w-48 h-48 flex items-center justify-center">
+                                    <div className="w-8 h-8 border-2 border-dashed border-dark-accent-start rounded-full animate-spin"></div>
+                                </div>
+                            )}
                         </div>
-                        <p className="text-xs font-semibold tracking-[0.3em] text-dark-text-secondary mt-8">OFFICIAL ACCESS CARD</p>
                     </div>
 
-                    <div className="relative w-48 h-48 bg-dark-surface/50 rounded-lg flex items-center justify-center border border-white/10">
-                        {qrCodeDataUrl ? (
-                            <img src={qrCodeDataUrl} alt="QR Code" className="w-full h-full rounded-lg" />
-                        ) : (
-                            <div className="w-8 h-8 border-2 border-dashed border-dark-accent-start rounded-full animate-spin"></div>
-                        )}
-                    </div>
-                    
-                    <div className="relative text-center">
-                        <p className="text-xl font-bold text-white uppercase">{player.nickname} {player.surname}</p>
-                        <p className="text-sm font-semibold tracking-[0.2em] text-dark-accent-start accent-text-glow">{t.scanToOpen}</p>
-                    </div>
+                    {/* Footer */}
+                    <p className="text-sm font-semibold tracking-[0.2em] text-dark-text-secondary">
+                        {t.scanToOpen}
+                    </p>
                 </div>
 
                 <div className="w-full max-w-[340px] flex flex-col gap-3 pt-4">
