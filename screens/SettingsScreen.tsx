@@ -127,11 +127,12 @@ export const SettingsScreen: React.FC = () => {
                 alert("✅ Success! Current data has been forced to the Cloud Database.");
                 checkCloud(); // Update counter
             } else {
-                alert("❌ Cloud save failed. Check your internet connection.");
+                // Show detailed error message from DbResult
+                alert(`❌ Cloud save failed.\n\nReason: ${result.message || "Unknown Error"}`);
             }
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            alert("Error saving to cloud.");
+            alert(`Error saving to cloud: ${e.message}`);
         } finally {
             setIsForceSaving(false);
         }

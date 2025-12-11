@@ -242,33 +242,46 @@ export const loadSinglePlayerFromDB = async (id: string, skipCache: boolean = fa
 };
 
 
-// --- PLAYERS (Batch Save) ---
+// --- PLAYERS (Batch Save - SAFE MODE) ---
 export const savePlayersToDB = async (players: Player[]): Promise<DbResult> => {
     logStorageMode();
     const realPlayers = players.filter(p => !isDemoData(p.id));
     if (realPlayers.length === 0) return { success: true, cloudSaved: false };
     
-    let cloudError: any = null;
-    let cloudSaved = false;
+    let successCount = 0;
+    let failCount = 0;
+    let lastErrorMsg = "";
 
-    // 1. Cloud Save
+    // 1. Cloud Save - Granular (Safe Mode)
+    // We save items one by one (or small chunks) to ensure one bad apple doesn't fail the whole batch.
+    // This is critical for "Force Save" operations.
     if (isSupabaseConfigured()) {
         try {
             const cleanPlayers = realPlayers.map(p => sanitizeObject(p));
 
-            const CHUNK_SIZE = 10; 
+            // Chunk size 1 is safest to isolate corrupted data. 
+            // It's slower but reliable for manual sync.
+            const CHUNK_SIZE = 1; 
+            
             for (let i = 0; i < cleanPlayers.length; i += CHUNK_SIZE) {
                 const chunk = cleanPlayers.slice(i, i + CHUNK_SIZE);
-                const { error } = await supabase!
-                    .from('players')
-                    .upsert(chunk, { onConflict: 'id' });
-                if (error) throw error;
+                try {
+                    const { error } = await supabase!
+                        .from('players')
+                        .upsert(chunk, { onConflict: 'id' });
+                    
+                    if (error) throw error;
+                    successCount += chunk.length;
+                } catch (chunkError: any) {
+                    console.error("Chunk save failed:", chunkError);
+                    failCount += chunk.length;
+                    lastErrorMsg = chunkError.message || "Unknown Cloud Error";
+                }
             }
-            cloudSaved = true;
         } catch (error: any) {
-            console.error("Supabase Batch Save Error:", error);
-            cloudError = error;
-            cloudSaved = false;
+            console.error("Supabase Fatal Batch Error:", error);
+            failCount = realPlayers.length;
+            lastErrorMsg = error.message;
         }
     } 
 
@@ -280,9 +293,19 @@ export const savePlayersToDB = async (players: Player[]): Promise<DbResult> => {
         return { success: false, cloudSaved: false, message: "Local save failed" };
     }
 
-    if (cloudError) {
-        return { success: true, cloudSaved: false, message: `Saved locally, but Cloud failed: ${cloudError.message}`, errorDetail: cloudError };
+    if (failCount > 0) {
+        return { 
+            success: true, 
+            cloudSaved: false, 
+            message: `Cloud Partial Fail: Saved ${successCount}, Failed ${failCount}. Last Error: ${lastErrorMsg}`, 
+            errorDetail: lastErrorMsg 
+        };
     }
+    
+    if (isSupabaseConfigured() && successCount === 0 && realPlayers.length > 0) {
+         return { success: true, cloudSaved: false, message: "Cloud save attempted but 0 records updated." };
+    }
+
     return { success: true, cloudSaved: true };
 };
 
