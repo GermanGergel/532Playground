@@ -206,49 +206,61 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
     const handleShare = async () => {
         if (isSharing || !cardRef.current) return;
         setIsSharing(true);
+    
+        const shareText = `Check out ${player.nickname}'s player card on 532 Playground!\n${shareUrl}`;
 
+        const shareDataTextOnly = {
+            title: `532 Profile: ${player.nickname}`,
+            text: shareText,
+        };
+    
+        let fileToShare: File | null = null;
+    
         try {
             await new Promise(resolve => setTimeout(resolve, 300));
-
             const canvas = await html2canvas(cardRef.current, {
                 backgroundColor: '#1A1D24',
                 scale: 3,
                 useCORS: true,
-                logging: false,
+                logging: true,
             });
-
             const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
-            if (!blob) throw new Error('Failed to create image blob');
-
-            const file = new File([blob], `532_Access_${player.nickname}.png`, { type: 'image/png' });
-            
+            if (blob) {
+                fileToShare = new File([blob], `532_Access_${player.nickname}.png`, { type: 'image/png' });
+            } else {
+                console.warn('Canvas toBlob returned null.');
+            }
+        } catch (error) {
+            console.error("Error generating shareable image:", error);
+        }
+    
+        try {
             const shareDataWithFile = {
-                files: [file],
+                files: [fileToShare!],
                 title: `532 Profile: ${player.nickname}`,
-                text: `Check out ${player.nickname}'s player card on 532 Playground!\n\n🔗 ${shareUrl}`,
+                text: shareText,
             };
-
-            const shareDataTextOnly = {
-                title: `532 Profile: ${player.nickname}`,
-                text: `Check out ${player.nickname}'s player card on 532 Playground!\n\n🔗 ${shareUrl}`,
-            };
-
-            if (navigator.share && navigator.canShare && navigator.canShare(shareDataWithFile)) {
-                // Ideal scenario: Share file + text on mobile
+    
+            if (fileToShare && navigator.canShare && navigator.canShare({ files: [fileToShare] })) {
                 await navigator.share(shareDataWithFile);
-            } else if (navigator.share && navigator.canShare && navigator.canShare(shareDataTextOnly)) {
-                // Fallback for desktop: Share text + link via share menu
+            } else if (navigator.canShare && navigator.canShare(shareDataTextOnly)) {
                 await navigator.share(shareDataTextOnly);
             } else {
-                // Final fallback: Copy link to clipboard
                 await navigator.clipboard.writeText(shareUrl);
                 alert(t.profileLinkCopied);
             }
         } catch (error) {
-            console.error("Sharing failed:", error);
-            // If any part of the sharing process fails, fall back to copying the link.
-            await navigator.clipboard.writeText(shareUrl);
-            alert(t.profileLinkCopied);
+            console.error("Web Share API failed:", error);
+            if ((error as DOMException).name !== 'AbortError') {
+                try {
+                    console.log("File share failed, attempting text-only fallback...");
+                    await navigator.share(shareDataTextOnly);
+                } catch (fallbackError) {
+                    console.error("Text-only share fallback also failed:", fallbackError);
+                    await navigator.clipboard.writeText(shareUrl);
+                    alert(t.profileLinkCopied);
+                }
+            }
         } finally {
             setIsSharing(false);
         }
@@ -267,8 +279,9 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
                     ref={cardRef}
                     className="relative overflow-hidden rounded-3xl bg-dark-bg p-4 text-white"
                 >
-                    {/* Holographic gleam */}
+                    {/* Holographic gleam - ignored during export */}
                     <div 
+                        data-html2canvas-ignore="true"
                         className="absolute top-0 left-[-75%] w-[50%] h-full bg-white/10 -skew-x-[25deg] pointer-events-none"
                         style={{ filter: 'blur(30px)' }}
                     />
