@@ -257,6 +257,7 @@ export const savePlayersToDB = async (players: Player[]): Promise<DbResult> => {
     // This is critical for "Force Save" operations.
     if (isSupabaseConfigured()) {
         try {
+            // NOTE: We now use sanitizeObject directly, retaining 'consecutiveMissedSessions'
             const cleanPlayers = realPlayers.map(p => sanitizeObject(p));
 
             // Chunk size 1 is safest to isolate corrupted data. 
