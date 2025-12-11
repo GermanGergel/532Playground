@@ -244,8 +244,8 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
             if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share({
                     files: [file],
-                    title: t.shareAccessCard,
-                    text: `Check out ${player.nickname}'s player card on 532 Playground! ${profileUrl}`,
+                    // Removed extra text, only sending the URL as requested
+                    text: profileUrl,
                 });
             } else {
                 // Fallback to download if sharing is not supported

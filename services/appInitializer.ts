@@ -56,31 +56,28 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
         }
         migratedPlayer.badges = badges;
         
-        // DEFINITIVE "PARANOID-SAFE" MIGRATION for Player Records
-        // This version is destructive towards zero-value placeholders to fix data
-        // corrupted by older app versions.
+        // --- RECORDS MIGRATION FIX ---
+        // Relaxed logic: We trust the DB structure if it looks like an object with 'value'.
+        // We do NOT check if value > 0 anymore. This allows 0 to be a valid persistent state,
+        // preventing the app from constantly resetting it to a "clean" default and ignoring saved recalculations.
         const existingRecords = migratedPlayer.records as any;
         let newRecords: PlayerRecords | null = null;
 
-        // Check if there's any meaningful data (value > 0).
         if (existingRecords && typeof existingRecords === 'object' && !Array.isArray(existingRecords)) {
-            const hasRealData = 
-                (existingRecords.bestGoalsInSession?.value > 0) ||
-                (existingRecords.bestAssistsInSession?.value > 0) ||
-                (existingRecords.bestWinRateInSession?.value > 0);
-
-            if (hasRealData) {
-                // Data seems real, so we trust it and just ensure the structure is complete.
-                newRecords = {
-                    bestGoalsInSession: (existingRecords.bestGoalsInSession && typeof existingRecords.bestGoalsInSession.value === 'number') ? existingRecords.bestGoalsInSession : { value: 0, sessionId: '' },
-                    bestAssistsInSession: (existingRecords.bestAssistsInSession && typeof existingRecords.bestAssistsInSession.value === 'number') ? existingRecords.bestAssistsInSession : { value: 0, sessionId: '' },
-                    bestWinRateInSession: (existingRecords.bestWinRateInSession && typeof existingRecords.bestWinRateInSession.value === 'number') ? existingRecords.bestWinRateInSession : { value: 0, sessionId: '' },
-                };
-            }
+            newRecords = {
+                bestGoalsInSession: (existingRecords.bestGoalsInSession && typeof existingRecords.bestGoalsInSession.value === 'number') 
+                    ? existingRecords.bestGoalsInSession 
+                    : { value: 0, sessionId: '' },
+                bestAssistsInSession: (existingRecords.bestAssistsInSession && typeof existingRecords.bestAssistsInSession.value === 'number') 
+                    ? existingRecords.bestAssistsInSession 
+                    : { value: 0, sessionId: '' },
+                bestWinRateInSession: (existingRecords.bestWinRateInSession && typeof existingRecords.bestWinRateInSession.value === 'number') 
+                    ? existingRecords.bestWinRateInSession 
+                    : { value: 0, sessionId: '' },
+            };
         }
 
-        // If newRecords is still null, it means the DB had no records or only zeroed-out placeholders.
-        // We will create the default structure, which will show 0 until the user recalculates.
+        // If records were totally missing or corrupt, initialize defaults.
         if (!newRecords) {
             newRecords = {
                 bestGoalsInSession: { value: 0, sessionId: '' },
