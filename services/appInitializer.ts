@@ -55,23 +55,38 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
             badges = migratedPlayer.badges;
         }
         migratedPlayer.badges = badges;
-
-        // "ULTRA-SAFE" RECORDS MIGRATION:
-        // This logic is non-destructive and resilient to malformed data. It checks each
-        // sub-property individually and verifies its structure. If any part is invalid,
-        // it defaults only that part, preserving other valid records.
-        const existingRecords = migratedPlayer.records as any;
-        migratedPlayer.records = {
-            bestGoalsInSession: (existingRecords?.bestGoalsInSession && typeof existingRecords.bestGoalsInSession.value === 'number')
-                ? existingRecords.bestGoalsInSession
-                : { value: 0, sessionId: '' },
-            bestAssistsInSession: (existingRecords?.bestAssistsInSession && typeof existingRecords.bestAssistsInSession.value === 'number')
-                ? existingRecords.bestAssistsInSession
-                : { value: 0, sessionId: '' },
-            bestWinRateInSession: (existingRecords?.bestWinRateInSession && typeof existingRecords.bestWinRateInSession.value === 'number')
-                ? existingRecords.bestWinRateInSession
-                : { value: 0, sessionId: '' },
+        
+        // FINAL, "PARANOID-SAFE" MIGRATION for Player Records
+        // This approach rebuilds the records object from scratch, only adding data if it's valid.
+        // This is resilient to any possible data malformation from old app versions.
+        const newRecords: PlayerRecords = {
+            bestGoalsInSession: { value: 0, sessionId: '' },
+            bestAssistsInSession: { value: 0, sessionId: '' },
+            bestWinRateInSession: { value: 0, sessionId: '' },
         };
+        const existingRecords = migratedPlayer.records as any;
+        if (existingRecords && typeof existingRecords === 'object') {
+            if (existingRecords.bestGoalsInSession && typeof existingRecords.bestGoalsInSession.value === 'number') {
+                newRecords.bestGoalsInSession = {
+                    value: existingRecords.bestGoalsInSession.value,
+                    sessionId: existingRecords.bestGoalsInSession.sessionId || ''
+                };
+            }
+            if (existingRecords.bestAssistsInSession && typeof existingRecords.bestAssistsInSession.value === 'number') {
+                newRecords.bestAssistsInSession = {
+                    value: existingRecords.bestAssistsInSession.value,
+                    sessionId: existingRecords.bestAssistsInSession.sessionId || ''
+                };
+            }
+            if (existingRecords.bestWinRateInSession && typeof existingRecords.bestWinRateInSession.value === 'number') {
+                newRecords.bestWinRateInSession = {
+                    value: existingRecords.bestWinRateInSession.value,
+                    sessionId: existingRecords.bestWinRateInSession.sessionId || ''
+                };
+            }
+        }
+        migratedPlayer.records = newRecords;
+
 
         // Add other missing fields with default values
         migratedPlayer.totalSessionsPlayed = (migratedPlayer.totalSessionsPlayed ?? Math.round(migratedPlayer.totalGames / 15)) || 0;

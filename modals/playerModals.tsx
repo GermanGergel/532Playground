@@ -278,9 +278,9 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
                 >
                     {/* Header */}
                     <div className="text-center">
-                        <h1 className="font-russo text-3xl flex items-baseline">
+                        <h1 className="font-russo text-3xl flex items-end">
                             <span className="text-dark-accent-start">532</span>
-                            <span className="text-white ml-2 text-2xl">PLAYGROUND</span>
+                            <span className="text-white ml-2 text-2xl leading-none">PLAYGROUND</span>
                         </h1>
                         <p className="text-[10px] font-semibold tracking-[0.25em] text-dark-text-secondary mt-2">
                             OFFICIAL ACCESS CARD
