@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useApp } from '../context';
 import { Card, useTranslation, Button } from '../ui';
 import { isSupabaseConfigured, getCloudPlayerCount, loadHistoryFromDB, savePlayersToDB } from '../db';
-import { RefreshCw } from '../icons';
+import { RefreshCw, Upload, Cloud } from '../icons';
 import { Player, Session } from '../types';
 import { calculateAllStats } from '../services/statistics';
 
@@ -14,6 +14,7 @@ export const SettingsScreen: React.FC = () => {
     const [cloudStatus, setCloudStatus] = React.useState<{ connected: boolean, count: number } | null>(null);
     const [isRefreshing, setIsRefreshing] = React.useState(false);
     const [isRecalculating, setIsRecalculating] = useState(false);
+    const [isForceSaving, setIsForceSaving] = useState(false);
     
     const checkCloud = async () => {
         if (isRefreshing) return;
@@ -88,14 +89,17 @@ export const SettingsScreen: React.FC = () => {
             }
     
             const updatedPlayersArray = Array.from(playerMap.values());
-    
-            const saveResult = await savePlayersToDB(updatedPlayersArray);
+            
+            // Update local state immediately so user sees changes
             setAllPlayers(updatedPlayersArray);
+            
+            // Try to save
+            const saveResult = await savePlayersToDB(updatedPlayersArray);
     
             if (saveResult.success) {
-                alert(`Successfully recalculated records for ${updatedPlayersArray.length} players. Cloud sync: ${saveResult.cloudSaved ? 'OK' : 'Failed'}.`);
+                alert(`Calculated! Now verify the data. If it looks correct, click 'Force Save to Cloud' to ensure it sticks.`);
             } else {
-                throw new Error("Failed to save updated player records.");
+                throw new Error("Failed to save updated player records locally.");
             }
     
         } catch (error) {
@@ -103,6 +107,33 @@ export const SettingsScreen: React.FC = () => {
             alert(`An error occurred during recalculation: ${error instanceof Error ? error.message : 'Unknown error'}`);
         } finally {
             setIsRecalculating(false);
+        }
+    };
+
+    const handleForceCloudSave = async () => {
+        if (!isSupabaseConfigured()) {
+            alert("Cloud database is not connected.");
+            return;
+        }
+        
+        if (!window.confirm(`Are you sure? This will overwrite the database with the data currently on your screen (${allPlayers.length} players).`)) {
+            return;
+        }
+
+        setIsForceSaving(true);
+        try {
+            const result = await savePlayersToDB(allPlayers);
+            if (result.cloudSaved) {
+                alert("✅ Success! Current data has been forced to the Cloud Database.");
+                checkCloud(); // Update counter
+            } else {
+                alert("❌ Cloud save failed. Check your internet connection.");
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error saving to cloud.");
+        } finally {
+            setIsForceSaving(false);
         }
     };
 
@@ -220,18 +251,31 @@ export const SettingsScreen: React.FC = () => {
                         </Card>
                     </Link>
 
-                    {/* Recalculate Records Card */}
-                    <Card className={cardNeonClasses}>
-                        <Button 
-                            variant="secondary"
-                            onClick={handleRecalculate}
-                            disabled={isRecalculating}
-                            className="w-full !py-3"
-                        >
-                            {isRecalculating ? "Processing..." : t.recalculateRecords}
-                        </Button>
-                        <p className="text-xs text-dark-text-secondary text-center mt-2">
-                            {t.recalculateRecordsDesc}
+                    {/* Recalculate & Sync Section */}
+                    <Card className={cardNeonClasses} title="Data Management">
+                        <div className="space-y-3">
+                            <Button 
+                                variant="secondary"
+                                onClick={handleRecalculate}
+                                disabled={isRecalculating}
+                                className="w-full !py-3 flex items-center justify-center gap-2"
+                            >
+                                <RefreshCw className={`w-5 h-5 ${isRecalculating ? 'animate-spin' : ''}`} />
+                                {isRecalculating ? "Calculating..." : "1. " + t.recalculateRecords}
+                            </Button>
+                            
+                            <Button 
+                                variant="secondary"
+                                onClick={handleForceCloudSave}
+                                disabled={isForceSaving || isRecalculating}
+                                className="w-full !py-3 flex items-center justify-center gap-2 border border-green-500/30 text-green-300 hover:bg-green-500/10 shadow-green-500/20"
+                            >
+                                <Cloud className="w-5 h-5" />
+                                {isForceSaving ? "Saving..." : "2. Force Save to Cloud"}
+                            </Button>
+                        </div>
+                        <p className="text-xs text-dark-text-secondary text-center mt-3">
+                            Use "Force Save" after recalculating to ensure stats are permanently updated in the database.
                         </p>
                     </Card>
                 </div>
