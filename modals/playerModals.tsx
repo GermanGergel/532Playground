@@ -207,11 +207,12 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
         if (isSharing || !cardRef.current) return;
         setIsSharing(true);
     
-        const shareText = `Check out ${player.nickname}'s player card on 532 Playground!\n${shareUrl}`;
+        const shareText = `Check out ${player.nickname} ${player.surname}'s player card on 532 Playground!`;
 
         const shareDataTextOnly = {
             title: `532 Profile: ${player.nickname}`,
             text: shareText,
+            url: shareUrl,
         };
     
         let fileToShare: File | null = null;
@@ -239,6 +240,7 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
                 files: [fileToShare!],
                 title: `532 Profile: ${player.nickname}`,
                 text: shareText,
+                url: shareUrl,
             };
     
             if (fileToShare && navigator.canShare && navigator.canShare({ files: [fileToShare] })) {
@@ -286,8 +288,14 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
                         style={{ filter: 'blur(30px)' }}
                     />
 
-                    {/* Neon Border Glow Effect */}
-                    <div className="absolute inset-0 rounded-3xl border-2 border-[#00F2FE] shadow-[0_0_20px_rgba(0,242,254,0.5),inset_0_0_20px_rgba(0,242,254,0.2)] pointer-events-none" />
+                    {/* Neon Border (for UI and export) */}
+                    <div className="absolute inset-0 rounded-3xl border-2 border-[#00F2FE] pointer-events-none" />
+
+                    {/* Glow Effect (for UI only, ignored on export) */}
+                    <div 
+                        data-html2canvas-ignore="true"
+                        className="absolute inset-0 rounded-3xl shadow-[0_0_20px_rgba(0,242,254,0.5),inset_0_0_20px_rgba(0,242,254,0.2)] pointer-events-none" 
+                    />
 
                     <div className="relative z-10 flex flex-col items-center text-center bg-dark-bg">
                         {/* New Header */}
