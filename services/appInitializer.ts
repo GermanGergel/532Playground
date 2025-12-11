@@ -1,5 +1,5 @@
 
-import { Session, Player, NewsItem, BadgeType, PlayerRecords } from '../types';
+import { Session, Player, NewsItem, BadgeType, PlayerRecords, PlayerHistoryEntry } from '../types';
 import { Language } from '../translations/index';
 import {
     loadPlayersFromDB,
@@ -94,6 +94,26 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
         migratedPlayer.lastRatingChange = migratedPlayer.lastRatingChange || undefined;
         migratedPlayer.sessionHistory = migratedPlayer.sessionHistory || []; 
         migratedPlayer.consecutiveMissedSessions = migratedPlayer.consecutiveMissedSessions || 0;
+
+        // --- NEW: BACKFILL HISTORY DATA FOR CHART ---
+        // If historyData is missing, create a snapshot based on current stats.
+        // This ensures the chart has at least one point to draw (a flat line).
+        if (!migratedPlayer.historyData || migratedPlayer.historyData.length === 0) {
+            const currentWinRate = migratedPlayer.totalGames > 0 
+                ? Math.round((migratedPlayer.totalWins / migratedPlayer.totalGames) * 100) 
+                : 0;
+            
+            // Create a synthetic "Start" entry
+            const initialHistoryEntry: PlayerHistoryEntry = {
+                date: 'Start', // Label for the initial point
+                rating: migratedPlayer.rating,
+                winRate: currentWinRate,
+                goals: migratedPlayer.totalGoals,
+                assists: migratedPlayer.totalAssists
+            };
+            
+            migratedPlayer.historyData = [initialHistoryEntry];
+        }
 
         return migratedPlayer as Player;
     });
