@@ -197,7 +197,6 @@ interface ShareProfileModalProps {
 export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, onClose, player }) => {
     const t = useTranslation();
     const shareUrl = new URL(`/public-profile/${player.id}`, window.location.origin).href;
-    const countryCodeAlpha2 = player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null;
     const cardRef = useRef<HTMLDivElement>(null);
     const [isSharing, setIsSharing] = useState(false);
     
@@ -209,7 +208,6 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
         setIsSharing(true);
 
         try {
-            // Wait for images to load
             await new Promise(resolve => setTimeout(resolve, 300));
 
             const canvas = await html2canvas(cardRef.current, {
@@ -220,24 +218,35 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
             });
 
             const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
-            if (!blob) throw new Error('Failed to create image');
+            if (!blob) throw new Error('Failed to create image blob');
 
             const file = new File([blob], `532_Access_${player.nickname}.png`, { type: 'image/png' });
+            
+            const shareDataWithFile = {
+                files: [file],
+                title: `532 Profile: ${player.nickname}`,
+                text: `Check out ${player.nickname}'s player card on 532 Playground!\n\n🔗 ${shareUrl}`,
+            };
 
-            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({
-                    files: [file],
-                    title: `532 Profile: ${player.nickname}`,
-                    text: `Check out ${player.nickname}'s player card on 532 Playground!\n\n🔗 ${shareUrl}`,
-                });
+            const shareDataTextOnly = {
+                title: `532 Profile: ${player.nickname}`,
+                text: `Check out ${player.nickname}'s player card on 532 Playground!\n\n🔗 ${shareUrl}`,
+            };
+
+            if (navigator.share && navigator.canShare && navigator.canShare(shareDataWithFile)) {
+                // Ideal scenario: Share file + text on mobile
+                await navigator.share(shareDataWithFile);
+            } else if (navigator.share && navigator.canShare && navigator.canShare(shareDataTextOnly)) {
+                // Fallback for desktop: Share text + link via share menu
+                await navigator.share(shareDataTextOnly);
             } else {
-                // Fallback: Copy link
+                // Final fallback: Copy link to clipboard
                 await navigator.clipboard.writeText(shareUrl);
                 alert(t.profileLinkCopied);
             }
         } catch (error) {
             console.error("Sharing failed:", error);
-            // Fallback
+            // If any part of the sharing process fails, fall back to copying the link.
             await navigator.clipboard.writeText(shareUrl);
             alert(t.profileLinkCopied);
         } finally {
@@ -254,54 +263,49 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
             hideCloseButton
         >
             <div className="flex flex-col gap-4">
-                {/* The "Plaque" to capture */}
                 <div 
                     ref={cardRef}
-                    className="relative overflow-hidden rounded-2xl bg-[#1A1D24] border-2 border-dark-accent-start shadow-[0_0_30px_rgba(0,242,254,0.4)]"
+                    className="relative overflow-hidden rounded-3xl bg-dark-bg p-4 text-white"
                 >
-                    {/* Header Section */}
-                    <div className="bg-dark-surface p-6 text-center border-b border-white/10 relative">
-                        <h3 className="text-[10px] font-black tracking-[0.3em] text-dark-accent-start uppercase mb-1 drop-shadow-[0_0_5px_rgba(0,242,254,0.8)]">
+                    {/* Holographic gleam */}
+                    <div 
+                        className="absolute top-0 left-[-75%] w-[50%] h-full bg-white/10 -skew-x-[25deg] pointer-events-none"
+                        style={{ filter: 'blur(30px)' }}
+                    />
+
+                    {/* Neon Border Glow Effect */}
+                    <div className="absolute inset-0 rounded-3xl border-2 border-[#00F2FE] shadow-[0_0_20px_rgba(0,242,254,0.5),inset_0_0_20px_rgba(0,242,254,0.2)] pointer-events-none" />
+
+                    <div className="relative z-10 flex flex-col items-center text-center">
+                        {/* New Header */}
+                        <div className="flex items-baseline gap-2 mb-1" style={{ textShadow: '0 0 8px rgba(0, 242, 254, 0.5)' }}>
+                            <h1 className="text-3xl font-black uppercase leading-none text-dark-accent-start">532</h1>
+                            <h2 className="text-lg font-bold uppercase text-dark-text leading-none tracking-widest">PLAYGROUND</h2>
+                        </div>
+                        
+                        <h3 className="text-[9px] font-bold tracking-[0.2em] text-dark-text-secondary uppercase mb-8">
                             OFFICIAL ACCESS CARD
                         </h3>
-                        <div className="flex flex-col items-center mt-4">
-                            <div className="w-24 h-24 rounded-full border-4 border-dark-accent-start shadow-[0_0_20px_rgba(0,242,254,0.5)] overflow-hidden bg-dark-bg mb-3">
-                                 {player.photo ? (
-                                    <img src={player.photo} alt={player.nickname} className="w-full h-full object-cover" crossOrigin="anonymous" />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-gray-700 text-3xl font-bold">{player.nickname[0]}</div>
-                                )}
-                            </div>
-                            <h2 className="text-3xl font-black uppercase text-white tracking-tight drop-shadow-md">{player.nickname}</h2>
-                            <div className="flex items-center gap-2 mt-1 px-3 py-1 bg-white/5 rounded-full border border-white/10">
-                                {countryCodeAlpha2 && (
-                                    <img 
-                                        src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`}
-                                        alt="flag"
-                                        className="w-5 h-auto rounded-sm opacity-90"
-                                        crossOrigin="anonymous"
-                                    />
-                                )}
-                                <span className="text-sm font-bold text-[#00F2FE] tracking-wider">OVG {player.rating}</span>
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* QR Section */}
-                    <div className="p-6 flex flex-col items-center bg-[#15171C]">
-                        <div className="p-1.5 bg-gradient-to-br from-dark-accent-start to-dark-accent-end rounded-xl shadow-lg">
-                            <div className="bg-[#1A1D24] p-2 rounded-lg">
-                                <img src={qrCodeUrl} alt="QR Code" className="w-40 h-40 rounded-md" crossOrigin="anonymous" />
-                            </div>
+                        {/* Player Name */}
+                        <div className="flex items-center justify-center py-4">
+                            <h2 className="font-audiowide text-3xl uppercase text-white tracking-wide leading-tight" style={{textShadow: '0 2px 5px rgba(0,0,0,0.5)'}}>
+                                {player.nickname} {player.surname}
+                            </h2>
                         </div>
-                        <p className="text-[10px] font-bold text-dark-text-secondary uppercase tracking-[0.2em] mt-4 animate-pulse">{t.scanToOpen}</p>
-                    </div>
-                    
-                    {/* Watermark for image */}
-                    <div className="absolute bottom-2 right-3 opacity-30 text-[8px] font-mono text-white">
-                        532 PLAYGROUND
+                        
+                        {/* QR Section */}
+                        <div className="flex flex-col items-center mt-4">
+                            <div className="relative p-1.5 bg-gradient-to-br from-dark-accent-start to-dark-accent-end rounded-xl shadow-lg">
+                                <div className="bg-[#1A1D24] p-2 rounded-lg">
+                                    <img src={qrCodeUrl} alt="QR Code" className="w-36 h-36 rounded-md" crossOrigin="anonymous" />
+                                </div>
+                            </div>
+                            <p className="text-[10px] font-bold text-dark-text-secondary uppercase tracking-[0.2em] mt-3 animate-pulse">{t.scanToOpen}</p>
+                        </div>
                     </div>
                 </div>
+
 
                 {/* Actions */}
                 <div className="grid grid-cols-2 gap-3">

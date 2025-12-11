@@ -1,9 +1,10 @@
+
 import { Player, NewsItem, NewsType, PlayerTier, BadgeType } from '../types';
 import { newId } from '../screens/utils';
 
 // --- NEWS GENERATOR SERVICE ---
 
-const STANDARD_HASHTAGS = "#532Playground #ClubNews";
+const STANDARD_HASHTAGS = "#532Playground";
 
 // Helper to assign a priority to a news item
 const getNewsPriority = (item: Omit<NewsItem, 'id' | 'timestamp'>): number => {
@@ -44,10 +45,10 @@ export const generateNewsUpdates = (oldPlayers: Player[], newPlayers: Player[]):
             potentialNews.push({
                 playerId: newPlayer.id,
                 playerName: newPlayer.nickname,
-                playerPhoto: newPlayer.photo,
+                // Removed photo reference to keep object light
                 type: 'tier_up',
-                message: `${newPlayer.nickname} has been promoted to ${newPlayer.tier.toUpperCase()} tier!`,
-                subMessage: `${STANDARD_HASHTAGS} #LevelUp #${newPlayer.tier} #532Elite`,
+                message: `${newPlayer.nickname} promoted to ${newPlayer.tier.toUpperCase()}`,
+                subMessage: `#LevelUp #${newPlayer.tier}`,
                 isHot: newPlayer.tier === PlayerTier.Legend || newPlayer.tier === PlayerTier.Elite,
                 statsSnapshot: { rating: newPlayer.rating, tier: newPlayer.tier }
             });
@@ -65,10 +66,9 @@ export const generateNewsUpdates = (oldPlayers: Player[], newPlayers: Player[]):
                     potentialNews.push({
                         playerId: newPlayer.id,
                         playerName: newPlayer.nickname,
-                        playerPhoto: newPlayer.photo,
                         type: 'badge',
-                        message: `${newPlayer.nickname} unlocked the ${config.name} badge!`,
-                        subMessage: `${STANDARD_HASHTAGS} ${config.hashtags}`,
+                        message: `${newPlayer.nickname} unlocked ${config.name}`,
+                        subMessage: `${config.hashtags}`,
                         isHot: config.isHot,
                         statsSnapshot: { rating: newPlayer.rating, tier: newPlayer.tier }
                     });
@@ -81,10 +81,9 @@ export const generateNewsUpdates = (oldPlayers: Player[], newPlayers: Player[]):
              potentialNews.push({
                 playerId: newPlayer.id,
                 playerName: newPlayer.nickname,
-                playerPhoto: newPlayer.photo,
                 type: 'hot_streak',
-                message: `${newPlayer.nickname} is heating up! Currently on a HOT STREAK.`,
-                subMessage: `${STANDARD_HASHTAGS} #HotStreak #InForm`,
+                message: `${newPlayer.nickname} is on fire!`,
+                subMessage: `#HotStreak #InForm`,
                 isHot: false,
                 statsSnapshot: { rating: newPlayer.rating, tier: newPlayer.tier }
             });
@@ -103,27 +102,36 @@ export const generateNewsUpdates = (oldPlayers: Player[], newPlayers: Player[]):
     }));
 };
 
-// --- FEED MANAGEMENT (Cleanup) ---
+// --- FEED MANAGEMENT (Aggressive Cleanup) ---
 
 export const manageNewsFeedSize = (currentFeed: NewsItem[]): NewsItem[] => {
     const now = Date.now();
-    const HOT_NEWS_TTL = 30 * 24 * 60 * 60 * 1000; // 30 Days
-    const REGULAR_NEWS_TTL = 7 * 24 * 60 * 60 * 1000; // 7 Days
-    const MAX_ITEMS = 50;
+    const HOT_NEWS_TTL = 30 * 24 * 60 * 60 * 1000; // 30 Days for important stuff
+    
+    // Rule: We only keep the VERY LATEST 5 "regular" items. 
+    // Anything older than the top 5 regulars is considered "trash" from previous sessions.
+    const REGULAR_ITEMS_LIMIT = 5;
 
-    // 1. Filter by Expiry
-    const filteredFeed = currentFeed.filter(item => {
-        const itemTime = new Date(item.timestamp).getTime();
-        const age = now - itemTime;
-        const ttl = item.isHot ? HOT_NEWS_TTL : REGULAR_NEWS_TTL;
-        return age < ttl;
+    // 1. Separate Hot and Regular
+    let hotItems = currentFeed.filter(item => item.isHot);
+    let regularItems = currentFeed.filter(item => !item.isHot);
+
+    // 2. Filter Hot by Time (30 days)
+    hotItems = hotItems.filter(item => {
+        const age = now - new Date(item.timestamp).getTime();
+        return age < HOT_NEWS_TTL;
     });
 
-    // 2. Sort by newest first
-    const sortedFeed = filteredFeed.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    // 3. Filter Regular by Count (Strict Limit: 5)
+    // Sort by newest first
+    regularItems.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    // Keep only the newest ones
+    regularItems = regularItems.slice(0, REGULAR_ITEMS_LIMIT);
 
-    // 3. Limit to MAX_ITEMS
-    return sortedFeed.slice(0, MAX_ITEMS);
+    // 4. Combine and Sort
+    const finalFeed = [...hotItems, ...regularItems].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+    return finalFeed;
 };
 
 
@@ -142,10 +150,9 @@ const checkMilestone = (
             news.push({
                 playerId: player.id,
                 playerName: player.nickname,
-                playerPhoto: player.photo,
                 type: 'milestone',
-                message: `${title}: ${player.nickname} reached ${m} career ${label}!`,
-                subMessage: `${STANDARD_HASHTAGS} #Milestone #${m}${label}`,
+                message: `${title}: ${player.nickname} hit ${m} ${label}!`,
+                subMessage: `#Milestone #${m}${label}`,
                 isHot: m >= 100, // 100+ is hot
                 statsSnapshot: { rating: player.rating, tier: player.tier }
             });
@@ -166,12 +173,15 @@ const getTierRank = (tier: PlayerTier): number => {
 
 const getBadgeNewsConfig = (badge: BadgeType): { name: string, hashtags: string, isHot: boolean } | null => {
     const map: Partial<Record<BadgeType, { name: string, hashtags: string, isHot: boolean }>> = {
-        dynasty: { name: "DYNASTY", hashtags: "#Invincible #Dynasty", isHot: true },
-        mvp: { name: "MVP", hashtags: "#MVP #SessionBest", isHot: false },
-        club_legend_goals: { name: "CLUB LEGEND (Goals)", hashtags: "#Legend #Goals", isHot: true },
-        club_legend_assists: { name: "CLUB LEGEND (Assists)", hashtags: "#Legend #Assists", isHot: true },
+        dynasty: { name: "DYNASTY", hashtags: "#Invincible", isHot: true },
+        mvp: { name: "MVP", hashtags: "#SessionBest", isHot: false },
+        club_legend_goals: { name: "CLUB LEGEND", hashtags: "#Goals", isHot: true },
+        club_legend_assists: { name: "CLUB LEGEND", hashtags: "#Assists", isHot: true },
         perfect_finish: { name: "Perfect Finish", hashtags: "#Clinical", isHot: false },
         comeback_kings: { name: "Comeback King", hashtags: "#NeverGiveUp", isHot: true },
+        goleador: { name: "Goleador", hashtags: "#Scorer", isHot: false },
+        assistant: { name: "Assistant", hashtags: "#Playmaker", isHot: false },
+        sniper: { name: "Sniper", hashtags: "#Clutch", isHot: false },
     };
     return map[badge] || null;
 };
