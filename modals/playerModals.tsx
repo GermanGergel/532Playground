@@ -246,7 +246,6 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
                     files: [file],
                     title: t.shareAccessCard,
                     text: `Check out ${player.nickname}'s player card on 532 Playground! ${profileUrl}`,
-                    url: profileUrl, 
                 });
             } else {
                 // Fallback to download if sharing is not supported

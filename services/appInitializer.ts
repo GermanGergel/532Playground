@@ -56,16 +56,22 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
         }
         migratedPlayer.badges = badges;
 
-        // FINAL SAFER RECORDS MIGRATION:
-        // This logic is non-destructive. It ensures the main `records` object exists,
-        // and then ensures each sub-property exists, only adding defaults if a property is missing.
-        // This prevents overwriting valid data with zeros.
-        if (!migratedPlayer.records) {
-            migratedPlayer.records = {} as PlayerRecords;
-        }
-        migratedPlayer.records.bestGoalsInSession = migratedPlayer.records.bestGoalsInSession || { value: 0, sessionId: '' };
-        migratedPlayer.records.bestAssistsInSession = migratedPlayer.records.bestAssistsInSession || { value: 0, sessionId: '' };
-        migratedPlayer.records.bestWinRateInSession = migratedPlayer.records.bestWinRateInSession || { value: 0, sessionId: '' };
+        // "ULTRA-SAFE" RECORDS MIGRATION:
+        // This logic is non-destructive and resilient to malformed data. It checks each
+        // sub-property individually and verifies its structure. If any part is invalid,
+        // it defaults only that part, preserving other valid records.
+        const existingRecords = migratedPlayer.records as any;
+        migratedPlayer.records = {
+            bestGoalsInSession: (existingRecords?.bestGoalsInSession && typeof existingRecords.bestGoalsInSession.value === 'number')
+                ? existingRecords.bestGoalsInSession
+                : { value: 0, sessionId: '' },
+            bestAssistsInSession: (existingRecords?.bestAssistsInSession && typeof existingRecords.bestAssistsInSession.value === 'number')
+                ? existingRecords.bestAssistsInSession
+                : { value: 0, sessionId: '' },
+            bestWinRateInSession: (existingRecords?.bestWinRateInSession && typeof existingRecords.bestWinRateInSession.value === 'number')
+                ? existingRecords.bestWinRateInSession
+                : { value: 0, sessionId: '' },
+        };
 
         // Add other missing fields with default values
         migratedPlayer.totalSessionsPlayed = (migratedPlayer.totalSessionsPlayed ?? Math.round(migratedPlayer.totalGames / 15)) || 0;
