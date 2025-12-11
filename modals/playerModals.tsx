@@ -289,7 +289,7 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
                     {/* Neon Border Glow Effect */}
                     <div className="absolute inset-0 rounded-3xl border-2 border-[#00F2FE] shadow-[0_0_20px_rgba(0,242,254,0.5),inset_0_0_20px_rgba(0,242,254,0.2)] pointer-events-none" />
 
-                    <div className="relative z-10 flex flex-col items-center text-center">
+                    <div className="relative z-10 flex flex-col items-center text-center bg-dark-bg">
                         {/* New Header */}
                         <div className="flex items-baseline gap-2 mb-1" style={{ textShadow: '0 0 8px rgba(0, 242, 254, 0.5)' }}>
                             <h1 className="text-3xl font-black uppercase leading-none text-dark-accent-start">532</h1>
