@@ -607,6 +607,40 @@ export const syncAndCacheAudioAssets = async () => {
 
 // --- ANTHEM MANAGEMENT ---
 
+const ANTHEM_STATUS_KEY = 'anthem_status';
+
+export const getAnthemStatus = async (): Promise<boolean> => {
+    if (!isSupabaseConfigured()) return true; // Default to enabled in local mode
+    try {
+        const { data, error } = await supabase!
+            .from('settings')
+            .select('value')
+            .eq('key', ANTHEM_STATUS_KEY)
+            .single();
+        if (error || !data) {
+             // If setting doesn't exist, assume it's enabled by default
+            return true;
+        }
+        // @ts-ignore
+        return data.value?.enabled ?? true;
+    } catch (error) {
+        console.error("Failed to get anthem status:", error);
+        return true; // Fail-safe: assume enabled if there's an error
+    }
+};
+
+export const setAnthemStatus = async (isEnabled: boolean): Promise<void> => {
+    if (!isSupabaseConfigured()) return;
+    try {
+        const { error } = await supabase!
+            .from('settings')
+            .upsert({ key: ANTHEM_STATUS_KEY, value: { enabled: isEnabled } }, { onConflict: 'key' });
+        if (error) throw error;
+    } catch (error) {
+        console.error("Failed to set anthem status:", error);
+    }
+};
+
 export const uploadSessionAnthem = async (base64: string): Promise<string | null> => {
     // 1. Save locally immediately
     const cacheKey = 'session_anthem_data';
@@ -649,6 +683,14 @@ export const getSessionAnthemUrl = async (): Promise<string | null> => {
     // 2. If no local, try Cloud (and cache it for next time)
     if (isSupabaseConfigured()) {
         try {
+            // *** NEW LOGIC: Check if anthem is enabled before downloading ***
+            const isEnabled = await getAnthemStatus();
+            if (!isEnabled) {
+                console.log("Anthem download is disabled by admin setting.");
+                return null;
+            }
+            // *** END NEW LOGIC ***
+            
             const { data } = await supabase!.storage.from(MUSIC_BUCKET).download(ANTHEM_FILENAME);
             if (data) {
                 // We found it in cloud but not locally. Return URL immediately...

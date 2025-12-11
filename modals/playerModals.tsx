@@ -161,26 +161,26 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
                      <div className="space-y-3">
                         <input type="text" value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder={t.nickname} className={inputClasses} />
                         <input type="text" value={surname} onChange={(e) => setSurname(e.target.value)} placeholder={t.surname} className={inputClasses} />
-                        <input type="text" value={countryCode} onChange={(e) => setCountryCode(e.target.value)} placeholder="Country (e.g., UA, US)" className={inputClasses} />
-                        <input type="number" value={rating} onChange={handleRatingChange} placeholder="Rating (0-100)" className={inputClasses} />
+                        <input type="text" value={countryCode} onChange={(e) => setCountryCode(e.target.value)} placeholder="Country (e.g., UA, BR, US)" className={inputClasses} />
+                        <input type="number" value={rating} onChange={handleRatingChange} placeholder="Overall Rating (0-100)" className={inputClasses} />
                     </div>
                 )}
                 {activeTab === 'skills' && (
-                    <div className="grid grid-cols-2 gap-3">
+                     <div className="grid grid-cols-2 gap-2">
                         {ALL_SKILLS.map(skill => (
-                            <div key={skill} className="flex items-center justify-between bg-dark-bg/50 p-2 rounded-lg">
-                                <label htmlFor={`skill-${skill}`} className="text-sm font-semibold">{t[`skill_${skill}` as keyof typeof t]}</label>
+                             <div key={skill} className="flex items-center gap-2 p-2 rounded-lg bg-dark-bg/50">
                                 <ToggleSwitch 
                                     isOn={currentSkills.includes(skill)}
                                     onToggle={() => handleSkillToggle(skill)}
                                 />
+                                <span className="text-sm font-semibold">{t[`skill_${skill}` as keyof typeof t]}</span>
                             </div>
                         ))}
                     </div>
                 )}
-                 <div className="flex gap-3 mt-4">
-                    <Button variant="secondary" onClick={onClose} className="w-full font-chakra font-bold text-xl tracking-wider !py-2">{t.cancel}</Button>
-                    <Button variant="secondary" onClick={handleSave} className="w-full font-chakra font-bold text-xl tracking-wider !py-2">{t.saveChanges}</Button>
+                <div className="flex justify-end gap-3 mt-6">
+                    <Button variant="secondary" onClick={onClose}>{t.cancel}</Button>
+                    <Button variant="primary" onClick={handleSave}>{t.saveChanges}</Button>
                 </div>
             </div>
         </Modal>
@@ -188,7 +188,7 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
 };
 
 // --- SHARE PROFILE MODAL ---
-interface ShareProfileModalProps {
+export interface ShareProfileModalProps {
     isOpen: boolean;
     onClose: () => void;
     player: Player;
@@ -196,145 +196,104 @@ interface ShareProfileModalProps {
 
 export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, onClose, player }) => {
     const t = useTranslation();
-    const shareUrl = new URL(`/public-profile/${player.id}`, window.location.origin).href;
     const cardRef = useRef<HTMLDivElement>(null);
-    const [isSharing, setIsSharing] = useState(false);
-    
-    const encodedUrl = encodeURIComponent(shareUrl);
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodedUrl}&color=00F2FE&bgcolor=1A1D24&margin=10`;
+    const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
+    const [isGenerating, setIsGenerating] = useState(false);
 
-    const handleShare = async () => {
-        if (isSharing || !cardRef.current) return;
-        setIsSharing(true);
-    
-        const shareTextWithUrl = `Check out ${player.nickname} ${player.surname}'s player card on 532 Playground!\n${shareUrl}`;
+    const profileUrl = `${window.location.origin}/public-profile/${player.id}`;
 
-        const shareDataTextOnly = {
-            title: `532 Profile: ${player.nickname}`,
-            text: `Check out ${player.nickname} ${player.surname}'s player card on 532 Playground!`,
-            url: shareUrl,
-        };
-    
-        let fileToShare: File | null = null;
-    
-        try {
-            await new Promise(resolve => setTimeout(resolve, 300));
-            const canvas = await html2canvas(cardRef.current, {
-                backgroundColor: '#1A1D24',
-                scale: 3,
-                useCORS: true,
-                logging: true,
-            });
-            const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
-            if (blob) {
-                fileToShare = new File([blob], `532_Access_${player.nickname}.png`, { type: 'image/png' });
-            } else {
-                console.warn('Canvas toBlob returned null.');
-            }
-        } catch (error) {
-            console.error("Error generating shareable image:", error);
-        }
-    
-        try {
-            const shareDataWithFile = {
-                files: [fileToShare!],
-                title: `532 Profile: ${player.nickname}`,
-                text: shareTextWithUrl,
-            };
-    
-            if (fileToShare && navigator.canShare && navigator.canShare({ files: [fileToShare] })) {
-                await navigator.share(shareDataWithFile);
-            } else if (navigator.canShare && navigator.canShare(shareDataTextOnly)) {
-                await navigator.share(shareDataTextOnly);
-            } else {
-                await navigator.clipboard.writeText(shareUrl);
-                alert(t.profileLinkCopied);
-            }
-        } catch (error) {
-            console.error("Web Share API failed:", error);
-            if ((error as DOMException).name !== 'AbortError') {
+    React.useEffect(() => {
+        if (isOpen) {
+            const generateQrCode = async () => {
+                // Using a simple public API for QR code generation to avoid heavy libraries
                 try {
-                    console.log("File share failed, attempting text-only fallback...");
-                    await navigator.share(shareDataTextOnly);
-                } catch (fallbackError) {
-                    console.error("Text-only share fallback also failed:", fallbackError);
-                    await navigator.clipboard.writeText(shareUrl);
-                    alert(t.profileLinkCopied);
+                    const response = await fetch(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(profileUrl)}&bgcolor=1A1D24&color=00F2FE&qzone=1`);
+                    if (!response.ok) throw new Error('Failed to fetch QR code');
+                    const blob = await response.blob();
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        setQrCodeDataUrl(reader.result as string);
+                    };
+                    reader.readAsDataURL(blob);
+                } catch (error) {
+                    console.error("QR code generation failed:", error);
                 }
-            }
-        } finally {
-            setIsSharing(false);
+            };
+            generateQrCode();
         }
+    }, [isOpen, profileUrl]);
+    
+    const handleCopyLink = () => {
+        navigator.clipboard.writeText(profileUrl).then(() => {
+            alert(t.profileLinkCopied);
+        });
     };
 
+    const handleShareViaApp = async () => {
+        if (!cardRef.current) return;
+        setIsGenerating(true);
+        try {
+            const canvas = await html2canvas(cardRef.current, { 
+                backgroundColor: null, 
+                scale: 3, 
+                useCORS: true 
+            });
+            const blob = await new Promise<Blob|null>(resolve => canvas.toBlob(resolve, 'image/png'));
+            
+            if (blob && navigator.share) {
+                const file = new File([blob], `${player.nickname}_access_card.png`, { type: 'image/png' });
+                await navigator.share({
+                    title: t.shareAccessCard,
+                    text: `Check out ${player.nickname}'s profile on 532 Playground!`,
+                    url: profileUrl,
+                    files: [file]
+                });
+            } else {
+                 handleCopyLink();
+            }
+        } catch (error) {
+            console.error("Sharing failed:", error);
+            handleCopyLink(); // Fallback to copy link
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+    
     return (
-        <Modal 
-            isOpen={isOpen} 
-            onClose={onClose}
-            size="xs"
-            containerClassName="!p-0 bg-transparent border-none shadow-none"
-            hideCloseButton
-        >
-            <div className="flex flex-col gap-4">
-                <div 
-                    ref={cardRef}
-                    className="relative overflow-hidden rounded-3xl bg-dark-bg p-4 text-white"
-                >
-                    {/* Holographic gleam - ignored during export */}
-                    <div 
-                        data-html2canvas-ignore="true"
-                        className="absolute top-0 left-[-75%] w-[50%] h-full bg-white/10 -skew-x-[25deg] pointer-events-none"
-                        style={{ filter: 'blur(30px)' }}
-                    />
-
-                    {/* Neon Border (for UI and export) */}
-                    <div className="absolute inset-0 rounded-3xl border-2 border-[#00F2FE] pointer-events-none" />
-
-                    {/* Glow Effect (for UI only, ignored on export) */}
-                    <div 
-                        data-html2canvas-ignore="true"
-                        className="absolute inset-0 rounded-3xl shadow-[0_0_20px_rgba(0,242,254,0.5),inset_0_0_20px_rgba(0,242,254,0.2)] pointer-events-none" 
-                    />
-
-                    <div className="relative z-10 flex flex-col items-center text-center bg-dark-bg">
-                        {/* New Header */}
-                        <div className="flex items-baseline gap-2 mb-1" style={{ textShadow: '0 0 8px rgba(0, 242, 254, 0.5)' }}>
-                            <h1 className="text-3xl font-black uppercase leading-none text-dark-accent-start">532</h1>
-                            <h2 className="text-lg font-bold uppercase text-dark-text leading-none tracking-widest">PLAYGROUND</h2>
+        <Modal isOpen={isOpen} onClose={onClose} size="sm" hideCloseButton>
+             <div className="flex flex-col items-center gap-4">
+                 <div ref={cardRef} className="relative w-[340px] bg-dark-bg rounded-3xl p-6 flex flex-col items-center gap-4 border-4 border-dark-accent-start shadow-[0_0_30px_rgba(0,242,254,0.7)]">
+                    <div className="absolute inset-0 bg-black/30 rounded-3xl"></div>
+                    <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: `linear-gradient(#00F2FE 1px, transparent 1px), linear-gradient(90deg, #00F2FE 1px, transparent 1px)`, backgroundSize: '20px 20px' }}/>
+                    
+                    <div className="relative text-center -mt-2">
+                        <div className="flex items-end justify-center gap-2">
+                            <p className="font-orbitron font-black text-4xl text-dark-accent-start" style={{ textShadow: '0 0 8px rgba(0, 242, 254, 0.7)'}}>532</p>
+                            <p className="font-orbitron font-bold text-2xl text-white">PLAYGROUND</p>
                         </div>
-                        
-                        <h3 className="text-[9px] font-bold tracking-[0.2em] text-dark-text-secondary uppercase mb-8">
-                            OFFICIAL ACCESS CARD
-                        </h3>
+                        <p className="text-xs font-semibold tracking-[0.3em] text-dark-text-secondary mt-8">OFFICIAL ACCESS CARD</p>
+                    </div>
 
-                        {/* Player Name */}
-                        <div className="flex items-center justify-center py-4">
-                            <h2 className="font-russo text-3xl uppercase text-white tracking-wide leading-tight" style={{textShadow: '0 2px 5px rgba(0,0,0,0.5)'}}>
-                                {player.nickname} {player.surname}
-                            </h2>
-                        </div>
-                        
-                        {/* QR Section */}
-                        <div className="flex flex-col items-center mt-4">
-                            <div className="relative p-1.5 bg-gradient-to-br from-dark-accent-start to-dark-accent-end rounded-xl shadow-lg">
-                                <div className="bg-[#1A1D24] p-2 rounded-lg">
-                                    <img src={qrCodeUrl} alt="QR Code" className="w-36 h-36 rounded-md" crossOrigin="anonymous" />
-                                </div>
-                            </div>
-                            <p className="text-[10px] font-bold text-dark-text-secondary uppercase tracking-[0.2em] mt-3 animate-pulse">{t.scanToOpen}</p>
-                        </div>
+                    <div className="relative w-48 h-48 bg-dark-surface/50 rounded-lg flex items-center justify-center border border-white/10">
+                        {qrCodeDataUrl ? (
+                            <img src={qrCodeDataUrl} alt="QR Code" className="w-full h-full rounded-lg" />
+                        ) : (
+                            <div className="w-8 h-8 border-2 border-dashed border-dark-accent-start rounded-full animate-spin"></div>
+                        )}
+                    </div>
+                    
+                    <div className="relative text-center">
+                        <p className="text-xl font-bold text-white uppercase">{player.nickname} {player.surname}</p>
+                        <p className="text-sm font-semibold tracking-[0.2em] text-dark-accent-start accent-text-glow">{t.scanToOpen}</p>
                     </div>
                 </div>
 
-
-                {/* Actions */}
-                <div className="grid grid-cols-2 gap-3">
-                    <Button variant="secondary" onClick={onClose} className="text-sm !py-3 font-bold bg-black/50 backdrop-blur-md border border-white/10">
-                        {t.cancel}
+                <div className="w-full max-w-[340px] flex flex-col gap-3 pt-4">
+                     <Button variant="secondary" onClick={handleShareViaApp} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">
+                        {isGenerating ? "Generating..." : t.shareViaApp}
                     </Button>
-                    <Button variant="primary" onClick={handleShare} disabled={isSharing} className="text-sm !py-3 !text-dark-bg font-black shadow-[0_0_20px_rgba(0,242,254,0.4)]">
-                        {isSharing ? 'GENERATING...' : t.shareViaApp}
-                    </Button>
+                    <Button variant="secondary" onClick={handleCopyLink} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.copyLink}</Button>
+                    <Button variant="secondary" onClick={onClose} className="w-full mt-2 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.cancel}</Button>
                 </div>
             </div>
         </Modal>
