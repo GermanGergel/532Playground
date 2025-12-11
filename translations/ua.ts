@@ -71,6 +71,9 @@ export const ua = {
     voiceAssistant: "Голосовий помічник",
     voiceAssistantDesc: "Налаштуйте озвучку таймера та матчів.",
     manageAnnouncements: "Керування озвучкою",
+    dataManagement: "Управління даними",
+    recalculateHistory: "Відновити графіки",
+    recalculateHistoryDesc: "Генерує початкову точку історії для гравців без графіків.",
     recalculateRecords: "Перерахувати всі рекорди",
     recalculateRecordsDesc: "Перераховує рекорди Найкращої Сесії для всіх гравців. Це може зайняти час.",
     // NewGameSetup Screen
@@ -185,7 +188,7 @@ export const ua = {
     addPlayerManually: "Додати гравця",
     playerProfile: "Профіль гравця",
     playerCard: "Картка гравця",
-    confirmPlayer: "Підтвердити гравця",
+    confirmPlayer: "Підтвердить гравця",
     noPlayersFound: "Гравців у цьому списку не знайдено.",
     editData: "Редагувати",
     createPlayerCard: "Створити картку",

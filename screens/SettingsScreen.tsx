@@ -2,14 +2,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context';
-import { Card, useTranslation } from '../ui';
-import { isSupabaseConfigured, getCloudPlayerCount } from '../db';
+import { Card, useTranslation, Button } from '../ui';
+import { isSupabaseConfigured, getCloudPlayerCount, savePlayersToDB } from '../db';
+import { RefreshCw } from '../icons';
 
 export const SettingsScreen: React.FC = () => {
     const t = useTranslation();
-    const { language, setLanguage, allPlayers } = useApp();
+    const { language, setLanguage, allPlayers, setAllPlayers } = useApp();
     const [cloudStatus, setCloudStatus] = React.useState<{ connected: boolean, count: number } | null>(null);
     const [isRefreshing, setIsRefreshing] = React.useState(false);
+    const [isRecalculating, setIsRecalculating] = React.useState(false);
     
     const checkCloud = async () => {
         if (isRefreshing) return;
@@ -32,6 +34,50 @@ export const SettingsScreen: React.FC = () => {
     React.useEffect(() => {
         checkCloud();
     }, []);
+
+    const handleRecalculateHistory = async () => {
+        setIsRecalculating(true);
+        
+        try {
+            const updatedPlayers = allPlayers.map(p => {
+                // If historyData is missing or empty, backfill it
+                if (!p.historyData || p.historyData.length === 0) {
+                    const winRate = p.totalGames > 0 ? Math.round((p.totalWins / p.totalGames) * 100) : 0;
+                    return {
+                        ...p,
+                        historyData: [{
+                            date: 'Start',
+                            rating: p.rating,
+                            winRate: winRate,
+                            goals: p.totalGoals,
+                            assists: p.totalAssists
+                        }]
+                    };
+                }
+                return p;
+            });
+
+            // Optimistic update
+            setAllPlayers(updatedPlayers);
+            
+            // Save to DB and check result
+            const result = await savePlayersToDB(updatedPlayers);
+            
+            if (result.cloudSaved) {
+                alert("✅ SUCCESS! History generated and saved to Cloud Database.");
+            } else {
+                // If cloud failed, it's likely a missing column
+                alert("⚠️ SAVED LOCALLY ONLY!\n\nCloud save failed. Most likely, your Supabase table is missing the 'historyData' column.\n\nPlease run this SQL in Supabase:\n\nalter table players add column \"historyData\" jsonb;");
+                console.error("Save details:", result.message, result.errorDetail);
+            }
+
+        } catch (error) {
+            console.error("Failed to recalculate history:", error);
+            alert("Error regenerating data.");
+        } finally {
+            setIsRecalculating(false);
+        }
+    };
 
     const langClasses = (lang: string) => `px-3 py-1 rounded-full font-bold transition-colors text-base ${language === lang ? 'gradient-bg text-dark-bg' : 'bg-dark-surface hover:bg-white/10'}`;
 
@@ -146,6 +192,23 @@ export const SettingsScreen: React.FC = () => {
                             </div>
                         </Card>
                     </Link>
+
+                    {/* Data Management Section */}
+                    <Card className={`${cardNeonClasses} !p-3`}>
+                        <h2 className="text-sm font-bold text-dark-text-secondary uppercase mb-3 text-center">{t.dataManagement}</h2>
+                        <Button 
+                            variant="secondary" 
+                            onClick={handleRecalculateHistory} 
+                            disabled={isRecalculating}
+                            className="w-full flex items-center justify-center gap-2"
+                        >
+                            <RefreshCw className={`w-4 h-4 ${isRecalculating ? 'animate-spin' : ''}`} />
+                            <div className="text-left">
+                                <p className="font-bold text-sm">{t.recalculateHistory}</p>
+                                <p className="text-[10px] text-dark-text-secondary font-normal">{t.recalculateHistoryDesc}</p>
+                            </div>
+                        </Button>
+                    </Card>
                 </div>
             </div>
 

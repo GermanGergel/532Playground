@@ -71,6 +71,9 @@ export const vn = {
     voiceAssistant: "Trợ lý giọng nói",
     voiceAssistantDesc: "Tùy chỉnh thông báo hẹn giờ và trận đấu.",
     manageAnnouncements: "Quản lý thông báo",
+    dataManagement: "Quản lý dữ liệu",
+    recalculateHistory: "Sửa biểu đồ bị thiếu",
+    recalculateHistoryDesc: "Tạo điểm lịch sử bắt đầu cho cầu thủ thiếu biểu đồ.",
     recalculateRecords: "Tính toán lại tất cả kỷ lục",
     recalculateRecordsDesc: "Tính toán lại các kỷ lục Buổi tập tốt nhất cho tất cả các cầu thủ. Quá trình này có thể chậm.",
     // NewGameSetup Screen

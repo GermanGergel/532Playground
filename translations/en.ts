@@ -70,6 +70,9 @@ export const en = {
     voiceAssistant: "Voice Assistant",
     voiceAssistantDesc: "Customize timer and match announcements.",
     manageAnnouncements: "Manage Announcements",
+    dataManagement: "Data Management",
+    recalculateHistory: "Fix Missing Charts",
+    recalculateHistoryDesc: "Generates a starting history point for players missing graph data.",
     recalculateRecords: "Recalculate All Records",
     recalculateRecordsDesc: "Recalculates Best Session records for all players. This can be slow.",
     // NewGameSetup Screen

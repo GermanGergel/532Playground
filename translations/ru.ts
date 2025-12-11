@@ -71,6 +71,9 @@ export const ru = {
     voiceAssistant: "Голосовой Помощник",
     voiceAssistantDesc: "Настройте озвучку таймера и матчей.",
     manageAnnouncements: "Управление Озвучкой",
+    dataManagement: "Управление данными",
+    recalculateHistory: "Восстановить графики",
+    recalculateHistoryDesc: "Генерирует начальную точку истории для игроков без графиков.",
     recalculateRecords: "Пересчитать все рекорды",
     recalculateRecordsDesc: "Пересчитывает рекорды Лучшей Сессии для всех игроков. Это может занять время.",
     // NewGameSetup Screen
@@ -146,7 +149,7 @@ export const ru = {
     onBench: "На замене",
     // Statistics Screen
     statisticsTitle: "Статистика",
-    teamStandings: "Турнирная таблица",
+    teamStandings: "Турнирная таблиця",
     playerStatistics: "Статистика игроков",
     topScorers: "Лучшие бомбардиры",
     topAssists: "Лучшие ассистенты",
