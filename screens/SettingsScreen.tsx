@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context';
 import { Card, useTranslation, Button } from '../ui';
-import { isSupabaseConfigured, getCloudPlayerCount, savePlayersToDB } from '../db';
+import { isSupabaseConfigured, getCloudPlayerCount, savePlayersToDB, loadHistoryFromDB } from '../db';
 import { generateDemoData } from '../services/demo';
 import { RefreshCw } from '../icons';
 import { calculateAllStats } from '../services/statistics';
@@ -55,6 +55,14 @@ export const SettingsScreen: React.FC = () => {
         setIsRecalculating(true);
 
         try {
+            // **FIX**: Load the FULL history from the database, not from the partial state.
+            const fullHistory = await loadHistoryFromDB();
+            if (!fullHistory || fullHistory.length === 0) {
+                alert("No session history found to recalculate records.");
+                setIsRecalculating(false);
+                return;
+            }
+
             const recalculatedPlayers = JSON.parse(JSON.stringify(allPlayers));
 
             for (const player of recalculatedPlayers) {
@@ -65,7 +73,8 @@ export const SettingsScreen: React.FC = () => {
                     bestWinRateInSession: { value: 0, sessionId: '' },
                 };
 
-                for (const session of history) {
+                // Use the complete history for calculation
+                for (const session of fullHistory) {
                     // Check if player participated in this session
                     if (!session.playerPool.some(p => p.id === player.id)) {
                         continue;
