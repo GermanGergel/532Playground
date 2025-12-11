@@ -181,19 +181,12 @@ export const PublicProfileScreen: React.FC = () => {
         );
     };
 
-    const formatLastUpdated = () => {
-        if (!lastUpdated) return '';
-        const now = new Date();
-        const seconds = Math.floor((now.getTime() - lastUpdated.getTime()) / 1000);
-        if (seconds < 5) return 'just now';
-        if (seconds < 60) return `${seconds}s ago`;
-        return `${Math.floor(seconds / 60)}m ago`;
-    };
-
-
     if (showMusicLoader) {
         return <MusicLoader onInteract={handleInteraction} />;
     }
+
+    const isCooldownActive = Date.now() < cooldownExpiry;
+    const isDisabled = isRefreshing || isLoading || isCooldownActive;
 
     return (
         <Page>
@@ -207,14 +200,23 @@ export const PublicProfileScreen: React.FC = () => {
                 <div className="flex flex-col items-end">
                     <button 
                         onClick={() => fetchPlayerAndMusic(true)}
-                        disabled={isRefreshing || isLoading || Date.now() < cooldownExpiry}
-                        className="p-2 rounded-full bg-dark-surface/50 text-dark-text-secondary hover:text-white transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Refresh Data"
+                        disabled={isDisabled}
+                        className={`
+                            flex items-center gap-2 px-4 py-2 rounded-full font-bold text-[10px] uppercase tracking-wider transition-all duration-300
+                            ${isDisabled 
+                                ? 'bg-dark-surface/50 text-dark-text-secondary border border-white/5 cursor-not-allowed opacity-80' 
+                                : 'gradient-bg text-dark-bg shadow-[0_0_15px_rgba(0,242,254,0.3)] hover:shadow-[0_0_20px_rgba(0,242,254,0.5)] active:scale-95'
+                            }
+                        `}
                     >
-                        <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                        <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                        <span>{isRefreshing ? 'Updating...' : 'Update Data'}</span>
                     </button>
-                    <span className="text-[9px] text-dark-text-secondary/70 mt-1 font-mono">
-                        {timeRemaining || (lastUpdated ? formatLastUpdated() : '')}
+                    <span className="text-[9px] text-dark-text-secondary/60 mt-1.5 font-mono text-right max-w-[120px] leading-tight">
+                        {timeRemaining 
+                            ? `Next update: ${timeRemaining}` 
+                            : 'Available once every 24h'
+                        }
                     </span>
                 </div>
             </div>
