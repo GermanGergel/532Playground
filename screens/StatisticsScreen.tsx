@@ -24,9 +24,11 @@ const BrandedShareableReport: React.FC<{
 
     const containerStyle: React.CSSProperties = {
         padding: `${defaultPadding}px`,
+        backgroundColor: '#1A1D24', // EXPLICIT BASE COLOR to prevent black void if image fails or transparent
         backgroundImage: `url("${homeScreenBackground}")`,
-        backgroundSize: 'cover',
+        backgroundSize: '100% 100%', // FORCE STRETCH to ensure branding is visible on long tables (fixes "black background" issue)
         backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
         boxSizing: 'border-box',
         ...style
     };
@@ -141,10 +143,10 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                     <table className={`w-full ${tableTextClass}`}>
                     <thead>
                             <tr className="text-dark-text-secondary">
-                                <th className={`text-left font-normal ${cellPadding}`} style={{ width: '10%' }}>#</th>
-                                {/* Increased width for name column on export to allow max-w-[200px] to work effectively */}
-                                <th className={`text-left font-normal ${cellPadding}`} style={{ width: isExport ? '40%' : '35%' }}>{t.players}</th>
-                                <th className={`font-normal ${cellPadding}`} style={{ width: '15%' }}>{t.team}</th>
+                                <th className={`text-left font-normal ${cellPadding}`} style={{ width: '8%' }}>#</th>
+                                {/* Adjusted width to be balanced with container width reduction */}
+                                <th className={`text-left font-normal ${cellPadding}`} style={{ width: isExport ? '42%' : '35%' }}>{t.players}</th>
+                                <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.team}</th>
                                 <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.thGP}</th>
                                 <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.thG}</th>
                                 <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.thA}</th>
@@ -159,7 +161,11 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                                     <td className={playerNameClass} title={stats.player.nickname}>
                                         {stats.player.nickname}
                                     </td>
-                                    <td className={cellPadding}><TeamAvatar team={stats.team} size="xxs" className={`mx-auto ${isExport ? 'translate-y-2' : ''}`} /></td>
+                                    <td className={cellPadding}>
+                                        <div className="flex justify-center items-center h-full">
+                                            <TeamAvatar team={stats.team} size="xxs" className={isExport ? 'translate-y-2' : ''} />
+                                        </div>
+                                    </td>
                                     <td className={cellPadding}>{stats.gamesPlayed}</td>
                                     <td className={cellPadding}>{stats.goals}</td>
                                     <td className={cellPadding}>{stats.assists}</td>
@@ -285,11 +291,11 @@ export const StatisticsScreen: React.FC = () => {
                     </div>
                 </BrandedShareableReport>
                 
-                {/* 2. PLAYERS - Compact (No Header) - UPDATED WIDTH to 800px */}
+                {/* 2. PLAYERS - Compact (No Header) - UPDATED WIDTH to 650px for cleaner look */}
                 <BrandedShareableReport 
                     session={activeSession} 
                     data-export-section="players"
-                    style={{ width: '800px', padding: '20px' }}
+                    style={{ width: '650px', padding: '20px' }}
                 >
                     <div className="mb-2 text-center w-full border-b border-white/10 pb-2">
                         <p className="font-chakra text-dark-text text-lg font-bold tracking-widest uppercase">{displayDate}</p>
