@@ -1,11 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PublicPlayerCard } from '../components/PublicPlayerCard';
 import { LastSessionBreakdown } from '../components/PlayerCardAnalytics';
 import { Player, PlayerStatus, PlayerTier } from '../types';
 import { WhatsApp, TrophyIcon, VideoCamera, BarChartDynamic } from '../icons';
 import { BrandedHeader } from './utils';
-import { loadPromoData } from '../db';
+import { loadPromoData, getSessionAnthemUrl } from '../db';
 
 // --- CONFIGURATION ---
 const SOCIAL_LINKS = {
@@ -43,7 +43,6 @@ const DEFAULT_PROMO_PLAYER: Player = {
     skills: ['finisher', 'power_shot', 'leader', 'technique'],
     badges: { 'goleador': 5, 'mvp': 10, 'dynasty': 2, 'sniper': 4, 'club_legend_goals': 1 },
     lastPlayedAt: new Date().toISOString(),
-    // Added mock rating change data for the promo
     lastRatingChange: {
         previousRating: 92.5,
         teamPerformance: 0.8,
@@ -87,6 +86,7 @@ const TEXT = {
         roadmap_leagues_desc: "Compete for the seasonal cup and prizes.",
         cta_join: "JOIN THE SQUAD",
         cta_desc: "Connect with us on WhatsApp to book your slot.",
+        tap_to_enter: "TAP TO ENTER"
     },
     vn: {
         hero_title: "CHƠI NHƯ CHUYÊN NGHIỆP",
@@ -106,6 +106,7 @@ const TEXT = {
         roadmap_leagues_desc: "Cạnh tranh cho cúp mùa giải và giải thưởng.",
         cta_join: "THAM GIA NGAY",
         cta_desc: "Liên hệ qua WhatsApp để đặt chỗ.",
+        tap_to_enter: "CHẠM ĐỂ VÀO"
     },
     ru: {
         hero_title: "ИГРАЙ КАК ПРОФИ",
@@ -125,13 +126,46 @@ const TEXT = {
         roadmap_leagues_desc: "Борись за кубок сезона и призы.",
         cta_join: "ВСТУПИТЬ В КЛУБ",
         cta_desc: "Напиши нам в WhatsApp, чтобы записаться на игру.",
+        tap_to_enter: "НАЖМИ, ЧТОБЫ ВОЙТИ"
     }
 };
+
+// Unified Intro Component (Matches Public Profile Style)
+const PromoIntro: React.FC<{ onEnter: () => void, lang: Lang }> = ({ onEnter, lang }) => (
+    <div 
+        onClick={onEnter}
+        className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#1A1D24] cursor-pointer group select-none animate-in fade-in duration-500"
+    >
+        <div className="relative flex flex-col items-center justify-center w-64 h-64 transition-transform duration-300 group-active:scale-95">
+            {/* Rotating Ring */}
+            <div className="absolute inset-0 animate-spin" style={{ animationDuration: '3s' }}>
+                <svg viewBox="0 0 100 100" className="w-full h-full">
+                    <defs><linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#00F2FE" stopOpacity="1" /><stop offset="100%" stopColor="#00F2FE" stopOpacity="0" /></linearGradient></defs>
+                    <circle cx="50" cy="50" r="48" fill="none" stroke="url(#ringGradient)" strokeWidth="2" strokeLinecap="round" strokeDasharray="200 300" />
+                </svg>
+            </div>
+            
+            {/* Content - Just Text, No Icon */}
+            <div className="flex flex-col items-center justify-center z-10">
+                <h1 className="text-5xl font-black text-[#00F2FE] tracking-tighter" style={{ textShadow: '0 0 15px rgba(0, 242, 254, 0.5)' }}>532</h1>
+                <h2 className="text-xl font-bold text-white tracking-[0.2em] mt-1">PLAYGROUND</h2>
+            </div>
+            
+            {/* CTA Text */}
+            <p className="absolute -bottom-10 text-lg font-bold text-white animate-pulse tracking-widest text-center whitespace-nowrap drop-shadow-[0_0_5px_rgba(0,242,254,0.5)]">
+                {TEXT[lang].tap_to_enter}
+            </p>
+        </div>
+    </div>
+);
 
 export const PromoScreen: React.FC = () => {
     const [lang, setLang] = useState<Lang>('en');
     const [showcasePlayer, setShowcasePlayer] = useState<Player>(DEFAULT_PROMO_PLAYER);
     const [isLoading, setIsLoading] = useState(true);
+    const [showIntro, setShowIntro] = useState(true); // Control the entry screen
+    const [anthemUrl, setAnthemUrl] = useState<string | null>(null);
+    const audioRef = useRef<HTMLAudioElement | null>(null);
     const t = TEXT[lang];
 
     const LangBtn = ({ l, label }: { l: Lang, label: string }) => (
@@ -144,24 +178,51 @@ export const PromoScreen: React.FC = () => {
     );
 
     useEffect(() => {
-        const fetchPromoData = async () => {
-            const data = await loadPromoData();
-            if (data) {
+        const initData = async () => {
+            const [promoData, musicUrl] = await Promise.all([
+                loadPromoData(),
+                getSessionAnthemUrl()
+            ]);
+
+            if (promoData) {
                 setShowcasePlayer(prev => ({
                     ...prev,
-                    nickname: data.nickname,
-                    surname: data.surname,
-                    playerCard: data.photoUrl || prev.playerCard // Keep default if no url
+                    nickname: promoData.nickname,
+                    surname: promoData.surname,
+                    playerCard: promoData.photoUrl || prev.playerCard
                 }));
+            }
+            if (musicUrl) {
+                setAnthemUrl(musicUrl);
             }
             setIsLoading(false);
         };
-        fetchPromoData();
+        initData();
+
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current = null;
+            }
+        };
     }, []);
+
+    const handleEnter = () => {
+        setShowIntro(false);
+        if (anthemUrl) {
+            const audio = new Audio(anthemUrl);
+            audio.loop = true;
+            audio.volume = 0.6; // Slightly lower volume for background
+            audio.play().catch(e => console.error("Audio autoplay prevented", e));
+            audioRef.current = audio;
+        }
+    };
 
     return (
         <div className="min-h-screen bg-[#1A1D24] text-white font-sans overflow-x-hidden selection:bg-[#00F2FE] selection:text-black">
             
+            {showIntro && <PromoIntro onEnter={handleEnter} lang={lang} />}
+
             {/* 1. HEADER SECTION */}
             <div className="relative pt-6 pb-2 px-4 text-center z-20">
                 {/* Background Glow */}
