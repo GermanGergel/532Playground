@@ -96,9 +96,12 @@ const WLDBar: React.FC<{ wins: number; draws: number; losses: number; total: num
     );
 };
 
-const SessionTrendChart: React.FC<{ history?: Player['sessionHistory']; t: any }> = ({ history = [], t }) => {
+const SessionTrendChart: React.FC<{ history?: Player['sessionHistory']; t: any }> = ({ history, t }) => {
+    // FIX: Ensure history is always an array, even if passed as null
+    const safeHistory = history || [];
+    
     const displayData = Array.from({ length: 5 }).map((_, i) => {
-        const item = history[history.length - 5 + i];
+        const item = safeHistory[safeHistory.length - 5 + i];
         return item ? { winRate: item.winRate } : { winRate: 0 };
     });
     const getBarColor = (winRate: number) => {
@@ -163,7 +166,7 @@ const StatsView: React.FC<{ player: Player; onBack: () => void }> = ({ player, o
                     <WLDBar wins={player.totalWins} draws={player.totalDraws} losses={player.totalLosses} total={player.totalGames} t={t} />
                 </Card>
                 <Card title={t.sessionTrend} className={cardNeonClasses}>
-                    <SessionTrendChart history={player.sessionHistory || []} t={t} />
+                    <SessionTrendChart history={player.sessionHistory} t={t} />
                 </Card>
             </div>
         </div>

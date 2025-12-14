@@ -4,7 +4,7 @@ import { Page, PageHeader, Card, Button, useTranslation, ToggleSwitch } from '..
 import { 
     loadCustomAudio, saveCustomAudio, deleteCustomAudio, isSupabaseConfigured,
     uploadSessionAnthem, deleteSessionAnthem, getSessionAnthemUrl,
-    syncAndCacheAudioAssets, getAnthemStatus, setAnthemStatus
+    syncAndCacheAudioAssets
 } from '../db';
 import { playAnnouncement, initAudioContext } from '../lib';
 import { Upload, Trash2, Play, Pause } from '../icons';
@@ -33,49 +33,6 @@ const ANNOUNCEMENTS: Announcement[] = [
 const Spinner = () => (
     <div className="w-5 h-5 border-2 border-dark-text-secondary border-t-dark-accent-start rounded-full animate-spin"></div>
 );
-
-const AnthemStatusSection: React.FC = () => {
-    const t = useTranslation();
-    const [isEnabled, setIsEnabled] = useState(true);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isProcessing, setIsProcessing] = useState(false);
-
-    useEffect(() => {
-        const fetchStatus = async () => {
-            const status = await getAnthemStatus();
-            setIsEnabled(status);
-            setIsLoading(false);
-        };
-        fetchStatus();
-    }, []);
-
-    const handleToggle = async () => {
-        setIsProcessing(true);
-        const newStatus = !isEnabled;
-        setIsEnabled(newStatus); // Optimistic UI update
-        await setAnthemStatus(newStatus);
-        setIsProcessing(false);
-    };
-
-    if (!isSupabaseConfigured()) {
-        return null; // Don't show this control if not connected to the cloud
-    }
-    
-    return (
-        <div className="border-t border-white/10 mt-3 pt-3 px-3">
-            <div className="flex items-center justify-between">
-                <div>
-                    <p className="font-bold text-white text-sm">{t.anthemEnableTitle}</p>
-                    <p className="text-xs text-dark-text-secondary mt-1">
-                        {isEnabled ? t.anthemEnableDescOn : t.anthemEnableDescOff}
-                    </p>
-                </div>
-                {isLoading ? <Spinner /> : <ToggleSwitch isOn={isEnabled} onToggle={handleToggle} />}
-            </div>
-        </div>
-    );
-};
-
 
 const AnthemSection: React.FC = () => {
     const t = useTranslation();
@@ -223,7 +180,6 @@ const AnthemSection: React.FC = () => {
                     </div>
                  </div>
             </div>
-            <AnthemStatusSection />
         </Card>
     );
 };
