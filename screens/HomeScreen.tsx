@@ -121,14 +121,6 @@ export const HomeScreen: React.FC = () => {
                 </div>
 
                 <div className="flex flex-col gap-2 w-full">
-                    {/* INTERNAL NAVIGATION FIX */}
-                    <Button 
-                        variant="secondary" 
-                        onClick={() => { setIsQrModalOpen(false); navigate('/promo'); }} 
-                        className="w-full !py-3 !text-xs font-bold border border-dark-accent-start/30 shadow-[0_0_15px_rgba(0,242,254,0.1)]"
-                    >
-                        OPEN PREVIEW HERE
-                    </Button>
                     <Button variant="secondary" onClick={() => setIsQrModalOpen(false)} className="w-full">
                         CLOSE
                     </Button>
