@@ -27,23 +27,19 @@ export const HomeScreen: React.FC = () => {
   useEffect(() => {
       if (isQrModalOpen) {
           try {
-              // 1. Get current URL
-              const url = new URL(window.location.href);
+              // 1. Get current Origin (e.g. https://myapp.vercel.app)
+              const origin = window.location.origin;
               
-              // 2. Override host if user provided one (for local testing on phone)
+              // 2. Construct the clean URL for BrowserRouter pointing specifically to PROMO
+              let finalUrl = `${origin}/promo`;
+
+              // 3. (Optional) Override host if user provided one for local testing
               if (customHost.trim()) {
-                  // Handle cases where user types "192.168.1.5" or "192.168.1.5:5173"
-                  // We preserve the protocol (http/https)
-                  url.host = customHost.trim(); 
+                  // This is mostly for dev mode
+                  finalUrl = `http://${customHost.trim()}/promo`; 
               }
 
-              // 3. Set Hash Route
-              url.hash = '/promo';
-              
-              // 4. Clean Search Params (optional, keeps link clean)
-              url.search = '';
-
-              setQrUrl(url.toString());
+              setQrUrl(finalUrl);
           } catch (e) {
               console.error("Invalid URL construction", e);
           }
@@ -118,10 +114,9 @@ export const HomeScreen: React.FC = () => {
                     </a>
                 </div>
 
-                {/* Local Network Helper */}
                 <div className="w-full bg-black/40 rounded-lg p-3 border border-white/5">
-                    <p className="text-[10px] text-gray-400 text-center mb-1">
-                        Dev Note: Phone scan requires public deploy (Vercel) due to Auth.
+                    <p className="text-[10px] text-gray-400 text-center mb-1 truncate">
+                        Link: {qrUrl}
                     </p>
                 </div>
 

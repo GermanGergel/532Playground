@@ -43,7 +43,7 @@ const DEFAULT_PROMO_PLAYER: Player = {
     skills: ['finisher', 'power_shot', 'leader', 'technique'],
     badges: { 'goleador': 5, 'mvp': 10, 'dynasty': 2, 'sniper': 4, 'club_legend_goals': 1 },
     lastPlayedAt: new Date().toISOString(),
-    // Added mock rating change data for the promo to show the cool breakdown
+    // Added mock rating change data for the promo
     lastRatingChange: {
         previousRating: 92.5,
         teamPerformance: 0.8,

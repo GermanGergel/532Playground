@@ -33,10 +33,11 @@ const App: React.FC = () => {
     };
   }, [activeSession]);
 
-  // Only hide navigation on the public profile share link. 
-  // The Promo page now retains navigation so admins can easily return to the app.
+  // Only hide navigation on the public profile share link AND the Promo page.
+  // This locks public users into these pages so they can't access Admin features.
   const pathsWithoutNav = [
-    '/public-profile/:id'
+    '/public-profile/:id',
+    '/promo' // <--- CRITICAL: Hides menu on Promo page so guests can't access admin area
   ];
 
   const showNav = !pathsWithoutNav.some(path => matchPath(path, location.pathname));
