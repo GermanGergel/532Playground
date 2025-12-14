@@ -1,12 +1,11 @@
 
 import React from 'react';
 import { Player, PlayerTier, PlayerStatus, BadgeType, PlayerForm, SkillType } from '../types';
-import { getPlayerKeyStats } from '../services/statistics';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { Card, useTranslation, Button } from '../ui';
 import { LastSessionBreakdown, ClubRankings, BestSessionCard, PlayerProgressChart } from './PlayerCardAnalytics';
 import { BadgeIcon } from '../features';
-import { BarChartDynamic, TrophyIcon, InfoIcon, StarIcon, ChevronLeft } from '../icons';
+import { TrophyIcon, StarIcon, ChevronLeft } from '../icons';
 
 type View = 'main' | 'stats' | 'awards' | 'info';
 
@@ -31,41 +30,84 @@ const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
     }
 };
 
-// Read-only version of the main PlayerCard
-const ReadOnlyPlayerCard: React.FC<{ player: Player }> = ({ player }) => {
+// Read-only version of the main PlayerCard (Visual Clone of features.tsx)
+const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties }> = ({ player, style }) => {
     const t = useTranslation();
     const countryCodeAlpha2 = React.useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
     const badgeList = player.badges ? (Object.keys(player.badges) as BadgeType[]) : [];
     
-    // FIX: merged shadow, border, and rounded into one class string applied to the overflow-hidden container
-    const cardClass = "relative rounded-3xl overflow-hidden text-white p-4 bg-dark-surface border border-white/10 shadow-[0_0_20px_rgba(0,242,254,0.3)]";
+    // Exact styling from features.tsx
+    const cardClass = "relative rounded-3xl h-[440px] overflow-hidden text-white p-4 bg-dark-surface border border-white/10 shadow-[0_0_20px_rgba(0,242,254,0.3)]";
 
     return (
         <div>
-            <div className={cardClass}>
-                {player.playerCard && <div className="absolute inset-0 w-full h-full bg-cover bg-no-repeat" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }} />}
+            <div className={cardClass} style={style}>
+                {player.playerCard && (
+                    <div 
+                        className="absolute inset-0 w-full h-full bg-cover bg-no-repeat" 
+                        style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }} 
+                    />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-                <div className="absolute top-24 left-4 z-20"><div className="space-y-4">{(player.skills || []).map(skill => (<div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}><StarIcon className="w-4 h-4 text-[#00F2FE]" /><span className="font-bold text-xs text-white tracking-wider">{skillAbbreviations[skill]}</span></div>))}</div></div>
-                <div className="relative z-10 h-full flex flex-col justify-between" style={{ minHeight: '400px' }}>
+                
+                {/* Skills - Left Side (Aligned perfectly with main card) */}
+                <div className="absolute top-24 left-4 z-20">
+                    <div className="space-y-4">
+                        {(player.skills || []).map(skill => (
+                            <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
+                                <StarIcon className="w-4 h-4 text-[#00F2FE]" />
+                                <span className="font-bold text-xs text-white tracking-wider">{skillAbbreviations[skill]}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="relative z-10 h-full flex flex-col justify-between">
+                    {/* Top Row */}
                     <div className="flex justify-between items-start">
+                        {/* Logo & Flag */}
                         <div>
                             <p style={{ color: '#00F2FE' }} className="text-base font-black leading-none">532</p>
                             <p className="text-white text-[7px] font-bold tracking-[0.15em] leading-none mt-1">PLAYGROUND</p>
                             {countryCodeAlpha2 && <img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} alt={`${player.countryCode} flag`} className="w-6 h-auto mt-3 rounded-sm" />}
                         </div>
+                        
+                        {/* Rating, Form & Badges (Right Side) */}
                         <div className="flex flex-col items-center">
                             <div className="text-4xl font-black leading-none" style={{ color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
                             <p className="font-bold text-white tracking-widest text-sm">OVG</p>
                             <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
+                            
+                            {/* Badges - 2 Columns (Matching main card logic) */}
                             {badgeList.length > 0 && (
                                 <div className="mt-4 flex flex-row-reverse items-center gap-x-2">
-                                    <div className="flex flex-col space-y-2 items-center">{badgeList.slice(0, 8).map(badge => (<div key={badge} title={t[`badge_${badge}` as keyof typeof t] || ''}><BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-7 h-7" /></div>))}</div>
-                                    {badgeList.length > 8 && <div className="flex flex-col space-y-2 items-center">{badgeList.slice(8, 16).map(badge => (<div key={badge} title={t[`badge_${badge}` as keyof typeof t] || ''}><BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-7 h-7" /></div>))}</div>}
+                                    <div className="flex flex-col space-y-2 items-center">
+                                        {badgeList.slice(0, 8).map(badge => (
+                                            <div key={badge}>
+                                                <BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-7 h-7" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    {badgeList.length > 8 && (
+                                        <div className="flex flex-col space-y-2 items-center">
+                                            {badgeList.slice(8, 16).map(badge => (
+                                                <div key={badge}>
+                                                    <BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-7 h-7" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
                     </div>
-                    <div className="text-center"><h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg">{player.nickname} {player.surname}</h1></div>
+                    
+                    {/* Footer: Name */}
+                    <div className="text-center">
+                        <h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg leading-none mb-1">
+                            {player.nickname} {player.surname}
+                        </h1>
+                    </div>
                 </div>
             </div>
         </div>
@@ -97,9 +139,7 @@ const WLDBar: React.FC<{ wins: number; draws: number; losses: number; total: num
 };
 
 const SessionTrendChart: React.FC<{ history?: Player['sessionHistory']; t: any }> = ({ history, t }) => {
-    // FIX: Ensure history is always an array, even if passed as null
     const safeHistory = history || [];
-    
     const displayData = Array.from({ length: 5 }).map((_, i) => {
         const item = safeHistory[safeHistory.length - 5 + i];
         return item ? { winRate: item.winRate } : { winRate: 0 };
@@ -281,12 +321,12 @@ const InfoView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     );
 };
 
-const MainCardView: React.FC<{ player: Player, onNavigate: (view: View) => void }> = ({ player, onNavigate }) => {
+const MainCardView: React.FC<{ player: Player, onNavigate: (view: View) => void, cardStyle?: React.CSSProperties }> = ({ player, onNavigate, cardStyle }) => {
     const t = useTranslation();
     const buttonClasses = "w-full !py-3 flex items-center justify-center shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 border border-dark-accent-start/30 font-chakra font-bold text-xl tracking-wider";
     return (
         <div>
-            <ReadOnlyPlayerCard player={player} />
+            <ReadOnlyPlayerCard player={player} style={cardStyle} />
             <div className="flex flex-col gap-4 mt-6">
                 <Button variant="secondary" onClick={() => onNavigate('stats')} className={buttonClasses}>{t.statistics}</Button>
                 <Button variant="secondary" onClick={() => onNavigate('awards')} className={buttonClasses}>{t.awards}</Button>
@@ -296,7 +336,7 @@ const MainCardView: React.FC<{ player: Player, onNavigate: (view: View) => void 
     );
 };
 
-export const PublicPlayerCard: React.FC<{ player: Player }> = ({ player }) => {
+export const PublicPlayerCard: React.FC<{ player: Player; cardStyle?: React.CSSProperties; compact?: boolean }> = ({ player, cardStyle }) => {
     const [view, setView] = React.useState<View>('main');
 
     switch (view) {
@@ -308,6 +348,6 @@ export const PublicPlayerCard: React.FC<{ player: Player }> = ({ player }) => {
             return <InfoView onBack={() => setView('main')} />;
         case 'main':
         default:
-            return <MainCardView player={player} onNavigate={setView} />;
+            return <MainCardView player={player} onNavigate={setView} cardStyle={cardStyle} />;
     }
 };

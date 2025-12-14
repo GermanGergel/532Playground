@@ -77,6 +77,7 @@ export const useTeamAssignment = () => {
                     monthlyGoals: 0, monthlyAssists: 0, monthlyGames: 0, monthlyWins: 0,
                     monthlySessionsPlayed: 0,
                     form: 'stable', badges: {}, skills: [], lastPlayedAt: new Date().toISOString(),
+                    sessionHistory: [],
                     records: {
                         bestGoalsInSession: { value: 0, sessionId: '' },
                         bestAssistsInSession: { value: 0, sessionId: '' },

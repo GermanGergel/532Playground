@@ -1,3 +1,4 @@
+
 import { 
     Player, Session, Team, Game, Goal, EventLogEntry, 
     EventType, PlayerStatus, PlayerTier, GameStatus, 
@@ -38,6 +39,7 @@ export const generateDemoData = () => {
         badges: {},
         skills: index % 3 === 0 ? ['finisher'] : index % 3 === 1 ? ['playmaker'] : ['defender'],
         lastPlayedAt: new Date().toISOString(),
+        sessionHistory: [],
         records: {
             bestGoalsInSession: { value: 0, sessionId: '' },
             bestAssistsInSession: { value: 0, sessionId: '' },
@@ -284,5 +286,6 @@ export const createShowcasePlayer = (): Player => {
             bestAssistsInSession: { value: 9, sessionId: 'demo-session-id' },
             bestWinRateInSession: { value: 80, sessionId: 'demo-session-id' },
         },
+        sessionHistory: [],
     };
 };

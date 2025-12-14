@@ -201,8 +201,20 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
     const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
     const [isGenerating, setIsGenerating] = useState(false);
 
-    // Updated for BrowserRouter compatibility (removed /#/)
-    const profileUrl = `${window.location.origin}/public-profile/${player.id}`;
+    // Safe URL Construction using new URL API to handle all base cases properly
+    const getProfileUrl = () => {
+        try {
+            const url = new URL(window.location.href);
+            url.hash = `/public-profile/${player.id}`;
+            url.search = ''; // Clean params
+            return url.toString();
+        } catch (e) {
+            // Fallback
+            return `${window.location.origin}/#/public-profile/${player.id}`;
+        }
+    }
+    
+    const profileUrl = getProfileUrl();
 
     React.useEffect(() => {
         if (isOpen) {
@@ -245,7 +257,6 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
             if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
                 await navigator.share({
                     files: [file],
-                    // Removed extra text, only sending the URL as requested
                     text: profileUrl,
                 });
             } else {

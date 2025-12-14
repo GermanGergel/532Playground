@@ -1,5 +1,4 @@
 
-
 export { HomeScreen } from './HomeScreen';
 export { NewGameSetupScreen } from './NewGameSetupScreen';
 export { AssignPlayersScreen } from './AssignPlayersScreen';
@@ -16,5 +15,7 @@ export { PlayerProfileScreen } from './PlayerProfileScreen';
 export { PublicProfileScreen } from './PublicProfileScreen';
 export { NewsFeedScreen } from './NewsFeedScreen';
 export { AnnouncementScreen } from './AnnouncementScreen';
+export { PromoScreen } from './PromoScreen';
+export { PromoAdminScreen } from './PromoAdminScreen'; // New export
 export { BrandedHeader, hexToRgba, newId } from './utils';
 export type { ShareableReportProps } from './StatisticsScreen';

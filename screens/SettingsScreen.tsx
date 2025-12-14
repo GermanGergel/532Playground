@@ -1,12 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Card, Button, useTranslation } from '../ui';
 import { isSupabaseConfigured, getCloudPlayerCount } from '../db';
+import { Wand } from '../icons';
 
 export const SettingsScreen: React.FC = () => {
     const t = useTranslation();
+    const navigate = useNavigate();
     const { language, setLanguage, allPlayers } = useApp();
     const [cloudStatus, setCloudStatus] = React.useState<{ connected: boolean, count: number } | null>(null);
     const [isRefreshing, setIsRefreshing] = React.useState(false);
@@ -149,7 +151,17 @@ export const SettingsScreen: React.FC = () => {
             </div>
 
             <div className="p-4 shrink-0 space-y-4">
+                {/* Admin Button for Promo Config */}
+                <Button 
+                    variant="ghost" 
+                    onClick={() => navigate('/settings/promo-admin')}
+                    className="w-full !py-3 border border-white/5 bg-black/20 hover:bg-white/5 text-dark-text-secondary text-xs tracking-widest uppercase flex items-center justify-center gap-2"
+                >
+                    <Wand className="w-4 h-4 opacity-50" /> Configure Promo Page
+                </Button>
+
                 <NetworkHud />
+                
                 <div className="text-center opacity-40 hover:opacity-100 transition-opacity duration-500">
                     <p className="font-orbitron font-bold text-sm tracking-widest text-dark-accent-start">532 PLAYGROUND</p>
                     <p className="text-[10px] text-dark-text-secondary font-mono mt-1">v4.0.0 • SYSTEM READY</p>

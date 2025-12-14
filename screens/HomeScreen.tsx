@@ -1,15 +1,54 @@
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Page, Button, useTranslation, Modal } from '../components';
 import { homeScreenBackground } from '../assets';
 import { BrandedHeader } from './utils';
+import { Edit3 } from '../icons';
+
+// We use a simple SVG for the QR Icon here to avoid circular dependency if we import from icons
+const QrIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+);
 
 export const HomeScreen: React.FC = () => {
   const navigate = useNavigate();
   const t = useTranslation();
   const { activeSession } = useApp();
-  const [isModeModalOpen, setIsModeModalOpen] = React.useState(false);
+  const [isModeModalOpen, setIsModeModalOpen] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  
+  // Custom Host for local testing
+  const [customHost, setCustomHost] = useState('');
+  const [qrUrl, setQrUrl] = useState('');
+
+  // Update QR URL whenever modal opens or custom host changes
+  useEffect(() => {
+      if (isQrModalOpen) {
+          try {
+              // 1. Get current URL
+              const url = new URL(window.location.href);
+              
+              // 2. Override host if user provided one (for local testing on phone)
+              if (customHost.trim()) {
+                  // Handle cases where user types "192.168.1.5" or "192.168.1.5:5173"
+                  // We preserve the protocol (http/https)
+                  url.host = customHost.trim(); 
+              }
+
+              // 3. Set Hash Route
+              url.hash = '/promo';
+              
+              // 4. Clean Search Params (optional, keeps link clean)
+              url.search = '';
+
+              setQrUrl(url.toString());
+          } catch (e) {
+              console.error("Invalid URL construction", e);
+          }
+      }
+  }, [isQrModalOpen, customHost]);
 
   const handleContinue = () => {
     if (activeSession) {
@@ -26,8 +65,12 @@ export const HomeScreen: React.FC = () => {
     navigate(`/setup?testMode=${isTest}`);
   };
 
+  // Generate QR Code URL using API
+  const qrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrUrl)}&bgcolor=1A1D24&color=00F2FE&qzone=1&ecc=L`;
+
   return (
     <Page style={{ backgroundImage: `url("${homeScreenBackground}")`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+        {/* Session Mode Selection Modal */}
         <Modal 
           isOpen={isModeModalOpen} 
           onClose={() => setIsModeModalOpen(false)}
@@ -46,14 +89,67 @@ export const HomeScreen: React.FC = () => {
               <Button 
                 variant="secondary"
                 onClick={() => handleStartNewSession(true)} 
-                className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-red-500/20 hover:shadow-red-500/40"
+                className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-red-500/40"
               >
                   {t.testGame}
               </Button>
           </div>
         </Modal>
+
+        {/* QR Code / Recruit Modal */}
+        <Modal
+            isOpen={isQrModalOpen}
+            onClose={() => setIsQrModalOpen(false)}
+            size="sm"
+            hideCloseButton
+            containerClassName="border-2 border-dark-accent-start/50 shadow-[0_0_30px_rgba(0,242,254,0.3)] bg-dark-surface/95 backdrop-blur-xl"
+        >
+            <div className="flex flex-col items-center gap-4 p-2">
+                <div className="text-center">
+                    <h2 className="font-russo text-3xl text-white uppercase tracking-wider mb-1">RECRUIT PLAYER</h2>
+                    <p className="text-[10px] font-mono text-dark-accent-start tracking-[0.2em]">SCAN TO JOIN THE CLUB</p>
+                </div>
+                
+                {/* QR Display */}
+                <div className="p-4 bg-white/5 rounded-2xl border border-white/10 relative group">
+                    <div className="absolute inset-0 bg-dark-accent-start/20 blur-xl rounded-full opacity-50 group-hover:opacity-80 transition-opacity"></div>
+                    <a href={qrUrl} target="_blank" rel="noopener noreferrer">
+                        <img src={qrImageSrc} alt="Promo QR" className="w-48 h-48 rounded-lg relative z-10 cursor-pointer hover:opacity-90" />
+                    </a>
+                </div>
+
+                {/* Local Network Helper */}
+                <div className="w-full bg-black/40 rounded-lg p-3 border border-white/5">
+                    <p className="text-[10px] text-gray-400 text-center mb-1">
+                        Dev Note: Phone scan requires public deploy (Vercel) due to Auth.
+                    </p>
+                </div>
+
+                <div className="flex flex-col gap-2 w-full">
+                    {/* INTERNAL NAVIGATION FIX */}
+                    <Button 
+                        variant="secondary" 
+                        onClick={() => { setIsQrModalOpen(false); navigate('/promo'); }} 
+                        className="w-full !py-3 !text-xs font-bold border border-dark-accent-start/30 shadow-[0_0_15px_rgba(0,242,254,0.1)]"
+                    >
+                        OPEN PREVIEW HERE
+                    </Button>
+                    <Button variant="secondary" onClick={() => setIsQrModalOpen(false)} className="w-full">
+                        CLOSE
+                    </Button>
+                </div>
+            </div>
+        </Modal>
         
-        <div className="flex flex-col min-h-[calc(100vh-8rem)] justify-between">
+        <div className="flex flex-col min-h-[calc(100vh-8rem)] justify-between relative">
+             {/* QR Button Top Right */}
+             <button 
+                onClick={() => setIsQrModalOpen(true)}
+                className="absolute top-4 right-0 p-3 bg-dark-surface/80 rounded-full text-dark-accent-start border border-dark-accent-start/30 shadow-[0_0_15px_rgba(0,242,254,0.2)] active:scale-95 transition-all z-50"
+             >
+                <QrIcon />
+             </button>
+
              <BrandedHeader className="mt-12" />
 
             <div className="flex-grow my-8 space-y-6">

@@ -6,7 +6,8 @@ import {
     HomeScreen, NewGameSetupScreen, AssignPlayersScreen, LiveMatchScreen, 
     StatisticsScreen, HistoryScreen, SessionReportScreen, SettingsScreen, 
     PlayerHubScreen, PlayerDatabaseScreen, PlayerProfileScreen,
-    NewsFeedScreen, VoiceSettingsScreen, AnnouncementScreen, PublicProfileScreen
+    NewsFeedScreen, VoiceSettingsScreen, AnnouncementScreen, PublicProfileScreen,
+    PromoScreen, PromoAdminScreen
 } from './screens';
 import { useApp } from './context';
 
@@ -32,8 +33,10 @@ const App: React.FC = () => {
     };
   }, [activeSession]);
 
+  // Only hide navigation on the public profile share link. 
+  // The Promo page now retains navigation so admins can easily return to the app.
   const pathsWithoutNav = [
-    '/public-profile/:id',
+    '/public-profile/:id'
   ];
 
   const showNav = !pathsWithoutNav.some(path => matchPath(path, location.pathname));
@@ -51,12 +54,14 @@ const App: React.FC = () => {
           <Route path="/report/:id" element={<SessionReportScreen />} />
           <Route path="/settings" element={<SettingsScreen />} />
           <Route path="/settings/voice" element={<VoiceSettingsScreen />} />
+          <Route path="/settings/promo-admin" element={<PromoAdminScreen />} />
           <Route path="/player-hub" element={<PlayerHubScreen />} />
           <Route path="/player-database" element={<PlayerDatabaseScreen />} />
           <Route path="/player/:id" element={<PlayerProfileScreen />} />
           <Route path="/public-profile/:id" element={<PublicProfileScreen />} />
           <Route path="/news-feed" element={<NewsFeedScreen />} />
           <Route path="/announcement" element={<AnnouncementScreen />} />
+          <Route path="/promo" element={<PromoScreen />} />
         </Routes>
         {showNav && <BottomNav />}
       </div>
