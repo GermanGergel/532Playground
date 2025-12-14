@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context';
-import { Card, useTranslation } from '../ui';
+import { Card, Button, useTranslation } from '../ui';
 import { isSupabaseConfigured, getCloudPlayerCount } from '../db';
 
 export const SettingsScreen: React.FC = () => {
@@ -15,7 +15,6 @@ export const SettingsScreen: React.FC = () => {
         if (isRefreshing) return;
         setIsRefreshing(true);
         if (isSupabaseConfigured()) {
-            // TRAFFIC OPTIMIZATION: Use lightweight HEAD request (count only)
             const count = await getCloudPlayerCount();
             if (count !== null) {
                 setCloudStatus({ connected: true, count });
@@ -28,8 +27,7 @@ export const SettingsScreen: React.FC = () => {
         setIsRefreshing(false);
     };
 
-    // Check once on mount
-    React.useEffect(() => {
+    useEffect(() => {
         checkCloud();
     }, []);
 
@@ -122,8 +120,9 @@ export const SettingsScreen: React.FC = () => {
 
     return (
         <div className="flex flex-col min-h-screen pb-28">
-            <div className="p-4 flex-grow">
-                <h1 className="text-2xl font-bold text-center mb-8">{t.settingsTitle}</h1>
+            <div className="p-4 flex-grow space-y-4">
+                <h1 className="text-2xl font-bold text-center mb-6">{t.settingsTitle}</h1>
+                
                 <div className="space-y-3">
                     {/* Compact Card: Language */}
                     <Card className={`${cardNeonClasses} !p-3`}>
@@ -153,7 +152,7 @@ export const SettingsScreen: React.FC = () => {
                 <NetworkHud />
                 <div className="text-center opacity-40 hover:opacity-100 transition-opacity duration-500">
                     <p className="font-orbitron font-bold text-sm tracking-widest text-dark-accent-start">532 PLAYGROUND</p>
-                    <p className="text-[10px] text-dark-text-secondary font-mono mt-1">v3.0.0 • SYSTEM READY</p>
+                    <p className="text-[10px] text-dark-text-secondary font-mono mt-1">v4.0.0 • SYSTEM READY</p>
                 </div>
             </div>
         </div>

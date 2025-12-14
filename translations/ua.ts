@@ -300,6 +300,7 @@ export const ua = {
     scanToOpen: "СКАНУЙ ДЛЯ ВХОДУ",
     copyLink: "Копіювати посилання",
     shareViaApp: "Надіслати через...",
+    shareViaWhatsApp: "Надіслати у WhatsApp",
     profileLinkCopied: "Посилання на профіль скопійовано!",
 
     // Skills
@@ -329,7 +330,7 @@ export const ua = {
     badge_decisive_factor: "Вирішальний фактор",
     badge_decisive_factor_desc: "Забити гол або віддати асист у кожному переможному матчі своєї команди протягом сесії.",
     badge_unsung_hero: "Неоспіваний герой",
-    badge_unsung_hero_desc: "Мати найбільше перемог у сесії (мін. 3), зробивши 0-1 результативну дію (голи + асисти).",
+    badge_unsung_hero_desc: "Мати найбільше перемог у сесії (мін. 3), зробивши 0-1 результативну дію (голы + асисти).",
     badge_first_blood: "Перша кров",
     badge_first_blood_desc: "Забити перший гол у трьох різних іграх за одну сесію.",
     badge_duplet: "Подвійний удар",

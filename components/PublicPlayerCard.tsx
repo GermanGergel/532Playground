@@ -163,7 +163,7 @@ const StatsView: React.FC<{ player: Player; onBack: () => void }> = ({ player, o
                     <WLDBar wins={player.totalWins} draws={player.totalDraws} losses={player.totalLosses} total={player.totalGames} t={t} />
                 </Card>
                 <Card title={t.sessionTrend} className={cardNeonClasses}>
-                    <SessionTrendChart history={player.sessionHistory} t={t} />
+                    <SessionTrendChart history={player.sessionHistory || []} t={t} />
                 </Card>
             </div>
         </div>

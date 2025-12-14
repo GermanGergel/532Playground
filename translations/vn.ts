@@ -300,6 +300,7 @@ export const vn = {
     scanToOpen: "QUÉT ĐỂ MỞ",
     copyLink: "Sao chép liên kết",
     shareViaApp: "Chia sẻ qua Ứng dụng",
+    shareViaWhatsApp: "Chia sẻ qua WhatsApp",
     profileLinkCopied: "Đã sao chép liên kết hồ sơ!",
 
     // Skills

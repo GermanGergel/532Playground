@@ -299,6 +299,7 @@ export const en = {
     scanToOpen: "SCAN TO OPEN",
     copyLink: "Copy Link",
     shareViaApp: "Share via App",
+    shareViaWhatsApp: "Share Link via WhatsApp",
     profileLinkCopied: "Profile link copied to clipboard!",
 
     // Skills

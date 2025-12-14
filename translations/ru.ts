@@ -300,6 +300,7 @@ export const ru = {
     scanToOpen: "СКАНИРУЙ ДЛЯ ВХОДА",
     copyLink: "Копировать ссылку",
     shareViaApp: "Отправить через...",
+    shareViaWhatsApp: "Отправить в WhatsApp",
     profileLinkCopied: "Ссылка на профиль скопирована!",
 
     // Skills

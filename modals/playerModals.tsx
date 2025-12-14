@@ -201,6 +201,7 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
     const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
     const [isGenerating, setIsGenerating] = useState(false);
 
+    // Updated for BrowserRouter compatibility (removed /#/)
     const profileUrl = `${window.location.origin}/public-profile/${player.id}`;
 
     React.useEffect(() => {
