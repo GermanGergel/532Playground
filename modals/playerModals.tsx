@@ -201,17 +201,9 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
     const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
     const [isGenerating, setIsGenerating] = useState(false);
 
-    // Safe URL Construction using new URL API to handle all base cases properly
+    // Updated URL Construction for BrowserRouter
     const getProfileUrl = () => {
-        try {
-            const url = new URL(window.location.href);
-            url.hash = `/public-profile/${player.id}`;
-            url.search = ''; // Clean params
-            return url.toString();
-        } catch (e) {
-            // Fallback
-            return `${window.location.origin}/#/public-profile/${player.id}`;
-        }
+        return `${window.location.origin}/public-profile/${player.id}`;
     }
     
     const profileUrl = getProfileUrl();

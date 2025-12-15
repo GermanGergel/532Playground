@@ -36,7 +36,7 @@ export const AssignPlayersScreen: React.FC = () => {
 
     if (!activeSession) return null;
 
-    const inputClasses = "w-full p-3 bg-dark-bg rounded-lg border border-white/20 focus:ring-2 focus:ring-dark-accent-start focus:outline-none";
+    const inputClasses = "p-3 bg-dark-bg rounded-lg border border-white/20 focus:ring-2 focus:ring-dark-accent-start focus:outline-none";
     const gridColsClass = activeSession.numTeams === 2 ? 'grid-cols-2' : 'grid-cols-3';
     const cardNeonClasses = "shadow-lg shadow-dark-accent-start/20 border border-dark-accent-start/40";
 
@@ -94,9 +94,9 @@ export const AssignPlayersScreen: React.FC = () => {
                             onChange={(e) => setPlayerSearch(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && playerSearch.trim() && handleAddPlayer({ nickname: playerSearch.trim() })}
                             placeholder={t.searchOrAddPlayer}
-                            className={inputClasses}
+                            className={`${inputClasses} flex-1`}
                         />
-                        <Button variant="secondary" onClick={() => playerSearch.trim() && handleAddPlayer({ nickname: playerSearch.trim() })} className="!py-3 !px-5 shadow-lg font-chakra font-bold text-xl tracking-wider shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 w-full">{t.addPlayer}</Button>
+                        <Button variant="secondary" onClick={() => playerSearch.trim() && handleAddPlayer({ nickname: playerSearch.trim() })} className="!py-3 !px-5 shadow-lg font-chakra font-bold text-xl tracking-wider shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 w-auto shrink-0">{t.addPlayer}</Button>
                     </div>
                     {searchResults.length > 0 && (
                         <div className="absolute top-full left-0 right-0 z-20 bg-dark-surface border border-dark-accent-start/40 rounded-lg mt-1 max-h-48 overflow-y-auto">
