@@ -98,7 +98,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                 style={{ boxShadow: isExport ? 'none' : '0 8px 25px -5px rgba(0, 242, 254, 0.1), 0 5px 10px -6px rgba(0, 242, 254, 0.1)' }}
             >
                 <h3 className={cardTitleClasses}>{t.teamStandings}</h3>
-                <div className="overflow-x-auto">
+                <div className="overflow-hidden">
                     <table className={`w-full ${tableTextClass}`}>
                         <thead>
                             <tr className="text-dark-text-secondary">
