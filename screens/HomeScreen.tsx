@@ -61,6 +61,27 @@ export const HomeScreen: React.FC = () => {
     navigate(`/setup?testMode=${isTest}`);
   };
 
+  const handleShareLink = async () => {
+      if (navigator.share && navigator.canShare && navigator.canShare({ url: qrUrl })) {
+          try {
+              await navigator.share({
+                  title: '532 Playground',
+                  text: 'Join the club!',
+                  url: qrUrl,
+              });
+          } catch (err) {
+              console.log('Share cancelled');
+          }
+      } else {
+          try {
+              await navigator.clipboard.writeText(qrUrl);
+              alert(t.profileLinkCopied);
+          } catch (err) {
+              console.error('Failed to copy', err);
+          }
+      }
+  };
+
   // Generate QR Code URL using API
   const qrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrUrl)}&bgcolor=1A1D24&color=00F2FE&qzone=1&ecc=L`;
 
@@ -121,6 +142,9 @@ export const HomeScreen: React.FC = () => {
                 </div>
 
                 <div className="flex flex-col gap-2 w-full">
+                    <Button variant="secondary" onClick={handleShareLink} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">
+                        SHARE LINK
+                    </Button>
                     <Button variant="secondary" onClick={() => setIsQrModalOpen(false)} className="w-full">
                         CLOSE
                     </Button>

@@ -77,8 +77,8 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
     const finishedGames = session.games.filter(g => g.status === 'finished');
     const roundsToDisplay = itemLimit ? finishedGames.slice(0, itemLimit) : finishedGames;
 
-    // FIX: Reduced text size to text-[10px] or text-xs and enforced table-fixed to prevent overflow
-    const tableTextClass = "text-[10px] sm:text-xs text-center table-fixed"; 
+    // FIX: Enforced table-fixed to prevent overflow and wobbling
+    const tableTextClass = "text-[10px] sm:text-xs text-center table-fixed border-collapse"; 
     const cellPadding = "py-1.5 px-0.5";
 
     // Dynamic class for player names: 
@@ -97,7 +97,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                 style={{ boxShadow: isExport ? 'none' : '0 8px 25px -5px rgba(0, 242, 254, 0.1), 0 5px 10px -6px rgba(0, 242, 254, 0.1)' }}
             >
                 <h3 className={cardTitleClasses}>{t.teamStandings}</h3>
-                <div className="overflow-x-hidden">
+                <div className="overflow-x-auto">
                     <table className={`w-full ${tableTextClass}`}>
                         <thead>
                             <tr className="text-dark-text-secondary">

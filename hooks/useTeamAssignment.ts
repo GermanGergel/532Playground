@@ -26,6 +26,7 @@ export const useTeamAssignment = () => {
 
     React.useEffect(() => {
         if (activeSession) {
+            // Initial empty team creation
             if (activeSession.teams.length === 0 && activeSession.numTeams > 0) {
                 const defaultColors = ['#0074D9', '#FFDC00', '#FF851B'].slice(0, activeSession.numTeams);
                 const newTeams = Array.from({ length: activeSession.numTeams }, (_, i) => ({
@@ -99,7 +100,7 @@ export const useTeamAssignment = () => {
         
         setPlayerSearch('');
     };
-    
+
     const handleAssignPlayer = (playerId: string, teamId: string) => {
          setActiveSession(s => {
             if (!s) return null;

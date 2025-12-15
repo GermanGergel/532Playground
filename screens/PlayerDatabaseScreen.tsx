@@ -34,8 +34,6 @@ export const PlayerDatabaseScreen: React.FC = () => {
                 p.surname.toLowerCase().includes(searchTerm.toLowerCase())
             )
             .sort((a, b) => {
-                if (a.id === 'test-player-showcase') return -1;
-                if (b.id === 'test-player-showcase') return 1;
                 switch (sortBy) {
                     case 'rating':
                         return b.rating - a.rating;

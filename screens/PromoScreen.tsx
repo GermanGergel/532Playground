@@ -6,6 +6,8 @@ import { Player, PlayerStatus, PlayerTier } from '../types';
 import { WhatsApp, TrophyIcon, VideoCamera, BarChartDynamic } from '../icons';
 import { BrandedHeader } from './utils';
 import { loadPromoData, getSessionAnthemUrl } from '../db';
+import { useApp } from '../context';
+import { Language } from '../translations/index';
 
 // --- CONFIGURATION ---
 const SOCIAL_LINKS = {
@@ -66,7 +68,6 @@ const DEFAULT_PROMO_PLAYER: Player = {
 };
 
 // --- CONTENT TRANSLATIONS ---
-type Lang = 'en' | 'vn' | 'ru';
 const TEXT = {
     en: {
         hero_title: "PLAY LIKE A PRO",
@@ -127,11 +128,31 @@ const TEXT = {
         cta_join: "ВСТУПИТЬ В КЛУБ",
         cta_desc: "Напиши нам в WhatsApp, чтобы записаться на игру.",
         tap_to_enter: "НАЖМИ, ЧТОБЫ ВОЙТИ"
+    },
+    ua: {
+        hero_title: "ГРАЙ ЯК ПРОФІ",
+        hero_subtitle: "Найтехнологічніша футбольна спільнота в Данангу.",
+        feature_card: "Твоя Особиста Картка",
+        feature_card_desc: "Як у FIFA. Рейтинг оновлюється автоматично після кожної гри на основі реальних результатів.",
+        feature_live: "Живе Оновлення Рейтингу",
+        feature_live_desc: "Дивись, як саме твоя гра впливає на рейтинг відразу після сесії.",
+        feature_stats: "Детальна Статистика",
+        feature_stats_desc: "Ми рахуємо все: голи, асисти, перемоги. Цифри визначають твій статус у клубі.",
+        feature_fair: "Розумний Баланс Команд",
+        feature_fair_desc: "Алгоритм ділить склади за силою. Новачки проходять калібрування (3 гри).",
+        roadmap_title: "ПЛАНИ НА МАЙБУТНЄ",
+        roadmap_video: "Відео Хайлайти",
+        roadmap_video_desc: "Нарізки твоїх найкращих голів (Скоро).",
+        roadmap_leagues: "Турніри та Ліги",
+        roadmap_leagues_desc: "Борись за кубок сезону та призи.",
+        cta_join: "ВСТУПИТИ В КЛУБ",
+        cta_desc: "Напиши нам у WhatsApp, щоб записатися на гру.",
+        tap_to_enter: "НАТИСНИ, ЩОБ УВІЙТИ"
     }
 };
 
 // Unified Intro Component (Matches Public Profile Style)
-const PromoIntro: React.FC<{ onEnter: () => void, lang: Lang }> = ({ onEnter, lang }) => (
+const PromoIntro: React.FC<{ onEnter: () => void, lang: Language }> = ({ onEnter, lang }) => (
     <div 
         onClick={onEnter}
         className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#1A1D24] cursor-pointer group select-none animate-in fade-in duration-500"
@@ -153,25 +174,28 @@ const PromoIntro: React.FC<{ onEnter: () => void, lang: Lang }> = ({ onEnter, la
             
             {/* CTA Text */}
             <p className="absolute -bottom-10 text-lg font-bold text-white animate-pulse tracking-widest text-center whitespace-nowrap drop-shadow-[0_0_5px_rgba(0,242,254,0.5)]">
-                {TEXT[lang].tap_to_enter}
+                {TEXT[lang]?.tap_to_enter || TEXT['en'].tap_to_enter}
             </p>
         </div>
     </div>
 );
 
 export const PromoScreen: React.FC = () => {
-    const [lang, setLang] = useState<Lang>('en');
+    // USE GLOBAL CONTEXT for language to ensure child components (cards, badges) translate too
+    const { language, setLanguage } = useApp();
     const [showcasePlayer, setShowcasePlayer] = useState<Player>(DEFAULT_PROMO_PLAYER);
     const [isLoading, setIsLoading] = useState(true);
     const [showIntro, setShowIntro] = useState(true); // Control the entry screen
     const [anthemUrl, setAnthemUrl] = useState<string | null>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
-    const t = TEXT[lang];
+    
+    // Derived text based on global language
+    const t = TEXT[language] || TEXT['en'];
 
-    const LangBtn = ({ l, label }: { l: Lang, label: string }) => (
+    const LangBtn = ({ l, label }: { l: Language, label: string }) => (
         <button 
-            onClick={() => setLang(l)}
-            className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all ${lang === l ? 'bg-[#00F2FE] text-black shadow-[0_0_10px_#00F2FE]' : 'bg-white/10 text-white/50 hover:bg-white/20'}`}
+            onClick={() => setLanguage(l)}
+            className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all ${language === l ? 'bg-[#00F2FE] text-black shadow-[0_0_10px_#00F2FE]' : 'bg-white/10 text-white/50 hover:bg-white/20'}`}
         >
             {label}
         </button>
@@ -221,7 +245,7 @@ export const PromoScreen: React.FC = () => {
     return (
         <div className="min-h-screen bg-[#1A1D24] text-white font-sans overflow-x-hidden selection:bg-[#00F2FE] selection:text-black">
             
-            {showIntro && <PromoIntro onEnter={handleEnter} lang={lang} />}
+            {showIntro && <PromoIntro onEnter={handleEnter} lang={language} />}
 
             {/* 1. HEADER SECTION */}
             <div className="relative pt-6 pb-2 px-4 text-center z-20">
@@ -233,6 +257,7 @@ export const PromoScreen: React.FC = () => {
                     <LangBtn l="en" label="EN" />
                     <LangBtn l="vn" label="VN" />
                     <LangBtn l="ru" label="RU" />
+                    <LangBtn l="ua" label="UA" />
                 </div>
 
                 {/* 2. Logo (Centered below Lang) */}

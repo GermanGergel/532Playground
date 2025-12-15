@@ -1,3 +1,4 @@
+
 import { Session, Player, Team } from '../types';
 
 // Statistics Calculation Utilities
@@ -124,22 +125,38 @@ export const calculateAllStats = (session: Session) => {
         });
         
         // Update Individual Stats based on Game Result
+        // CRITICAL UPDATE: Check if game has a roster snapshot (Legionnaire handling)
+        // If snapshot exists, use it. If not, fallback to current team assignment.
         const team1 = teams.find(t => t.id === game.team1Id);
         const team2 = teams.find(t => t.id === game.team2Id);
         if (!team1 || !team2) return;
         
-        const participatingPlayerIds = new Set([...team1.playerIds, ...team2.playerIds]);
+        // Determine participation based on snapshot OR current team lists
+        const team1Participants = new Set(game.team1Roster || team1.playerIds);
+        const team2Participants = new Set(game.team2Roster || team2.playerIds);
         
         playerStats.forEach(ps => {
-            if (participatingPlayerIds.has(ps.player.id)) {
+            const pid = ps.player.id;
+            let playedInThisGame = false;
+            let playedForTeamId: string | null = null;
+
+            if (team1Participants.has(pid)) {
+                playedInThisGame = true;
+                playedForTeamId = team1.id;
+            } else if (team2Participants.has(pid)) {
+                playedInThisGame = true;
+                playedForTeamId = team2.id;
+            }
+
+            if (playedInThisGame && playedForTeamId) {
                 ps.gamesPlayed++;
                 
                 // Add Clean Sheet to individual stats if their team kept a clean sheet in this game
-                const isTeam1 = ps.team.id === game.team1Id;
+                const isTeam1 = playedForTeamId === game.team1Id;
                 const conceded = isTeam1 ? game.team2Score : game.team1Score;
                 if (conceded === 0) ps.cleanSheets++;
 
-                if(game.winnerTeamId === ps.team.id) ps.wins++;
+                if(game.winnerTeamId === playedForTeamId) ps.wins++;
                 else if (game.isDraw) ps.draws++;
                 else ps.losses++;
             }

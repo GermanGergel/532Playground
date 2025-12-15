@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-import { Session, Game, GameStatus, Goal, GoalPayload, SubPayload, EventLogEntry, EventType, StartRoundPayload, Player, BadgeType, RotationMode, Team, SessionStatus } from '../types';
+import { Session, Game, GameStatus, Goal, GoalPayload, SubPayload, EventLogEntry, EventType, StartRoundPayload, Player, BadgeType, RotationMode, Team, SessionStatus, LegionnaireMove, LegionnairePayload } from '../types';
 import { playAnnouncement, initAudioContext } from '../lib';
 import { processFinishedSession } from '../services/sessionProcessor';
 import { newId } from '../screens/utils';
@@ -31,14 +31,93 @@ export const useGameManager = () => {
         playerOutId?: string;
     }>({ isOpen: false });
 
+    // Legionnaire Modal State
+    const [legionnaireModalState, setLegionnaireModalState] = React.useState<{
+        isOpen: boolean;
+        teamId?: string;
+    }>({ isOpen: false });
+
     const currentGame = activeSession?.games[activeSession.games.length - 1];
     const isTimerBasedGame = activeSession?.numTeams === 3;
+
+    // --- LEGIONNAIRE LOGIC ---
+    const handleLegionnaireSwap = (teamId: string, playerOutId: string, playerInId: string) => {
+        setActiveSession(session => {
+            if (!session || !currentGame) return session;
+
+            // 1. Log the move in the current game object so we can revert it later
+            const games = [...session.games];
+            const game = { ...games[games.length - 1] };
+            
+            // Determine where the replacement player is coming from (resting team)
+            const fromTeam = session.teams.find(t => t.playerIds.includes(playerInId));
+            if (!fromTeam) return session;
+
+            const newMove: LegionnaireMove = {
+                playerId: playerInId,
+                fromTeamId: fromTeam.id,
+                toTeamId: teamId
+            };
+            
+            // Also need to track the player leaving (to put them back)
+            // Ideally we swap them. The playerOut goes to fromTeam (Bench).
+            const reverseMove: LegionnaireMove = {
+                playerId: playerOutId,
+                fromTeamId: teamId,
+                toTeamId: fromTeam.id
+            };
+
+            game.legionnaireMoves = [...(game.legionnaireMoves || []), newMove, reverseMove];
+            games[games.length - 1] = game;
+
+            // 2. Perform the physical swap in session.teams
+            const teams = session.teams.map(team => {
+                if (team.id === teamId) {
+                    // This is the playing team (Host)
+                    return {
+                        ...team,
+                        playerIds: team.playerIds.map(id => id === playerOutId ? playerInId : id)
+                    };
+                }
+                if (team.id === fromTeam.id) {
+                    // This is the resting team (Source)
+                    return {
+                        ...team,
+                        playerIds: team.playerIds.map(id => id === playerInId ? playerOutId : id)
+                    };
+                }
+                return team;
+            });
+
+            // 3. Log event
+            const getPlayerName = (id: string) => session.playerPool.find(p => p.id === id)?.nickname || 'Unknown';
+            const logEntry: EventLogEntry = {
+                timestamp: new Date().toISOString(),
+                round: game.gameNumber,
+                type: EventType.LEGIONNAIRE_SIGN,
+                payload: {
+                    player: getPlayerName(playerInId),
+                    toTeam: teams.find(t => t.id === teamId)?.name || 'Team'
+                } as LegionnairePayload
+            };
+
+            return { ...session, teams, games, eventLog: [...session.eventLog, logEntry] };
+        });
+        
+        setLegionnaireModalState({ isOpen: false });
+    };
 
     const finishCurrentGameAndSetupNext = React.useCallback((manualWinnerId?: string) => {
         setActiveSession(session => {
             if (!session || !session.games.length) return session;
             const game = session.games[session.games.length - 1];
             if (game.status === GameStatus.Finished) return session;
+
+            // --- 1. SNAPSHOT & FINISH GAME ---
+            
+            // Snapshot current rosters (with Legionnaires) for statistics
+            const team1Snapshot = session.teams.find(t => t.id === game.team1Id)?.playerIds || [];
+            const team2Snapshot = session.teams.find(t => t.id === game.team2Id)?.playerIds || [];
 
             const finishRoundEvent: EventLogEntry = {
                 timestamp: new Date().toISOString(),
@@ -65,18 +144,54 @@ export const useGameManager = () => {
                 winnerTeamId: winnerId,
                 isDraw: isDraw, 
                 endedAt: new Date().toISOString(), 
-                elapsedSeconds: finalElapsedSeconds 
+                elapsedSeconds: finalElapsedSeconds,
+                team1Roster: team1Snapshot, // SAVE SNAPSHOT
+                team2Roster: team2Snapshot  // SAVE SNAPSHOT
             };
+            
+            // --- 2. REVERT LEGIONNAIRES ---
+            // Before calculating rotation, put everyone back where they belong
+            let currentTeams = [...session.teams];
+            
+            if (finishedGame.legionnaireMoves && finishedGame.legionnaireMoves.length > 0) {
+                // Reverse the moves. If move was A -> B, we move A back to A (from B).
+                // We process in reverse order of application to be safe.
+                const movesToRevert = [...finishedGame.legionnaireMoves].reverse();
+                
+                movesToRevert.forEach(move => {
+                    // Move playerId FROM toTeamId BACK TO fromTeamId
+                    const currentHostTeamIndex = currentTeams.findIndex(t => t.id === move.toTeamId);
+                    const currentBenchTeamIndex = currentTeams.findIndex(t => t.id === move.fromTeamId);
+                    
+                    if (currentHostTeamIndex > -1 && currentBenchTeamIndex > -1) {
+                        const hostTeam = { ...currentTeams[currentHostTeamIndex] };
+                        const benchTeam = { ...currentTeams[currentBenchTeamIndex] };
+                        
+                        // Check if player is actually in the host team (should be)
+                        if (hostTeam.playerIds.includes(move.playerId)) {
+                            // Remove from Host
+                            hostTeam.playerIds = hostTeam.playerIds.filter(id => id !== move.playerId);
+                            // Add back to Bench (Source)
+                            benchTeam.playerIds = [...benchTeam.playerIds, move.playerId];
+                            
+                            currentTeams[currentHostTeamIndex] = hostTeam;
+                            currentTeams[currentBenchTeamIndex] = benchTeam;
+                        }
+                    }
+                });
+            }
+
+            // --- 3. ROTATION LOGIC (Using Original Rosters) ---
             
             if (session.numTeams === 2) {
                  const updatedGames = [...session.games.slice(0, -1), finishedGame];
-                 return { ...session, games: updatedGames, eventLog: [...session.eventLog, finishRoundEvent] };
+                 return { ...session, games: updatedGames, eventLog: [...session.eventLog, finishRoundEvent], teams: currentTeams };
             }
             
             let teamToStayOnFieldId: string | undefined;
 
-            const team1 = session.teams.find(t => t.id === game.team1Id)!;
-            const team2 = session.teams.find(t => t.id === game.team2Id)!;
+            const team1 = currentTeams.find(t => t.id === game.team1Id)!;
+            const team2 = currentTeams.find(t => t.id === game.team2Id)!;
 
             if (isDraw) {
                 if (game.gameNumber === 1) {
@@ -101,9 +216,9 @@ export const useGameManager = () => {
             
             const updatedGames = [...session.games.slice(0, -1), finishedGame];
 
-            const teamThatStays = session.teams.find(t => t.id === teamToStayOnFieldId)!;
+            const teamThatStays = currentTeams.find(t => t.id === teamToStayOnFieldId)!;
             const teamThatLeaves = teamThatStays.id === team1.id ? team2 : team1;
-            const restingTeam = session.teams.find(t => t.id !== team1.id && t.id !== team2.id)!;
+            const restingTeam = currentTeams.find(t => t.id !== team1.id && t.id !== team2.id)!;
 
             const winnerGamesPlayed = teamThatStays.consecutiveGames;
             const mustRotate = session.rotationMode === RotationMode.AutoRotate && !isDraw && (winnerGamesPlayed + 1) >= 3;
@@ -115,7 +230,7 @@ export const useGameManager = () => {
 
             const awardBigStar = session.rotationMode === RotationMode.AutoRotate && !isDraw && teamThatStays.consecutiveGames === 2;
             
-            const finalUpdatedTeams = session.teams.map(t => {
+            const finalUpdatedTeams = currentTeams.map(t => {
                 let newBigStars = t.bigStars || 0;
                 if (t.id === teamThatStays.id && awardBigStar) {
                     newBigStars += 1;
@@ -457,6 +572,7 @@ export const useGameManager = () => {
         goalToEdit,
         saveStatus,
         subModalState,
+        legionnaireModalState, // Export new state
         // Derived state
         currentGame,
         isTimerBasedGame,
@@ -465,6 +581,7 @@ export const useGameManager = () => {
         setIsEndSessionModalOpen,
         setGoalToEdit,
         setSubModalState,
+        setLegionnaireModalState, // Export new setter
         finishCurrentGameAndSetupNext,
         handleStartGame,
         handleTogglePause,
@@ -472,6 +589,7 @@ export const useGameManager = () => {
         handleGoalUpdate,
         handleSubstitution,
         handleFinishSession,
-        resetSession // New handler to clear session after success screen
+        handleLegionnaireSwap, // Export new handler
+        resetSession 
     };
 };
