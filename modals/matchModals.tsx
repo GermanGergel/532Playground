@@ -1,9 +1,8 @@
-
-import React, { useState } from 'react';
+import React from 'react';
 import { Button, Modal, useTranslation } from '../ui';
 import { Goal, GoalPayload, Game, Session, Team, Player } from '../types';
-import { Edit3, XCircle } from '../icons';
-import { TeamAvatar, PlayerAvatar } from '../components/avatars';
+import { Edit3 } from '../icons';
+import { TeamAvatar } from '../components/avatars';
 
 // --- GOAL MODAL ---
 interface GoalModalProps {
@@ -301,64 +300,6 @@ export const EditGoalModal: React.FC<{
                 </div>
                  <Button onClick={handleSetOwnGoal} variant="secondary" className="w-full mt-2 !border-dark-accent-start/60 !shadow-[0_0_8px_rgba(0,242,254,0.5)] !py-1.5 !text-sm">{t.ownGoal}</Button>
                  <Button onClick={handleSave} variant="secondary" className="w-full mt-2 !border-dark-accent-start/60 !shadow-[0_0_8px_rgba(0,242,254,0.5)] !py-1.5 !text-sm">{t.saveChanges}</Button>
-            </div>
-        </Modal>
-    );
-};
-
-// --- LEGIONNAIRE SELECTION MODAL ---
-interface LegionnaireModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onSelect: (playerInId: string) => void;
-    restingTeam: Team | undefined;
-    session: Session;
-    playerOut: Player;
-}
-
-export const LegionnaireModal: React.FC<LegionnaireModalProps> = ({ isOpen, onClose, onSelect, restingTeam, session, playerOut }) => {
-    
-    // We strictly use ONLY the resting team as the source pool
-    const candidates = restingTeam 
-        ? restingTeam.playerIds.map(id => session.playerPool.find(p => p.id === id)).filter(Boolean) as Player[]
-        : [];
-
-    if (!isOpen) return null;
-
-    return (
-        <Modal
-            isOpen={isOpen}
-            onClose={onClose}
-            size="xs"
-            containerClassName="border border-yellow-500/40 shadow-[0_0_20px_rgba(234,179,8,0.3)] !p-0"
-            hideCloseButton
-        >
-            <div className="bg-dark-surface p-4 rounded-t-2xl border-b border-white/10 flex justify-between items-center">
-                <h3 className="font-bold text-sm text-yellow-500 uppercase tracking-wider">
-                    REPLACE: <span className="text-white">{playerOut.nickname}</span>
-                </h3>
-                <button onClick={onClose} className="text-dark-text-secondary hover:text-white"><XCircle className="w-6 h-6" /></button>
-            </div>
-
-            <div className="p-2 bg-dark-bg/80">
-                <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">
-                    {candidates.length > 0 ? candidates.map(p => (
-                        <button 
-                            key={p.id}
-                            onClick={() => onSelect(p.id)}
-                            className="w-full p-3 rounded-lg bg-dark-surface hover:bg-white/10 border border-white/5 flex items-center justify-between group transition-all"
-                        >
-                            <span className="font-bold text-lg text-white group-hover:text-yellow-400">{p.nickname}</span>
-                            <span className="text-xs text-dark-text-secondary font-mono">SELECT</span>
-                        </button>
-                    )) : (
-                        <p className="text-center text-dark-text-secondary py-4">No resting players available.</p>
-                    )}
-                </div>
-            </div>
-            
-            <div className="p-2 bg-dark-surface rounded-b-2xl border-t border-white/10 text-center">
-                <p className="text-[9px] text-dark-text-secondary opacity-60">* This change is for 1 match only.</p>
             </div>
         </Modal>
     );

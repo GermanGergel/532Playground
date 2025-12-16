@@ -7,7 +7,7 @@ import {
     StatisticsScreen, HistoryScreen, SessionReportScreen, SettingsScreen, 
     PlayerHubScreen, PlayerDatabaseScreen, PlayerProfileScreen,
     NewsFeedScreen, VoiceSettingsScreen, AnnouncementScreen, PublicProfileScreen,
-    PromoScreen, PromoAdminScreen, PublicHubScreen
+    PromoScreen, PromoAdminScreen
 } from './screens';
 import { useApp } from './context';
 
@@ -15,11 +15,11 @@ const App: React.FC = () => {
   const location = useLocation();
   const { activeSession } = useApp();
 
-  // Защита от случайной перезагрузки страницы во время активной сессии
+  // Add global protection against accidental page reloads during an entire session.
   React.useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
         event.preventDefault();
-        event.returnValue = '';
+        event.returnValue = ''; // Required for some browsers to trigger the prompt
     };
 
     if (activeSession) {
@@ -33,34 +33,18 @@ const App: React.FC = () => {
     };
   }, [activeSession]);
 
-  // Скрываем нижнюю навигацию на публичных страницах
+  // Only hide navigation on the public profile share link AND the Promo page.
+  // This locks public users into these pages so they can't access Admin features.
   const pathsWithoutNav = [
     '/public-profile/:id',
-    '/promo',
-    '/hub' 
-  ];
-
-  // СПИСОК СТРАНИЦ, КОТОРЫЕ ДОЛЖНЫ БЫТЬ НА ВЕСЬ ЭКРАН (WEB MODE)
-  const fullScreenPaths = [
-    '/promo',
-    '/hub'
+    '/promo' // <--- CRITICAL: Hides menu on Promo page so guests can't access admin area
   ];
 
   const showNav = !pathsWithoutNav.some(path => matchPath(path, location.pathname));
-  
-  // Проверяем, находимся ли мы на "Веб-странице"
-  const isFullScreen = fullScreenPaths.some(path => matchPath(path, location.pathname));
-
-  // ЛОГИКА КОНТЕЙНЕРА (Самое важное место):
-  // Если FullScreen -> ширина 100%, фон темный.
-  // Если Admin App -> ширина мобильника (max-w-md), по центру, с тенью телефона.
-  const containerClasses = isFullScreen 
-    ? "w-full min-h-screen relative bg-dark-bg" 
-    : "max-w-md mx-auto min-h-screen relative shadow-2xl shadow-black/50 bg-dark-bg border-x border-white/5";
 
   return (
-    <div className="min-h-screen bg-[#121418] text-dark-text font-sans selection:bg-dark-accent-start selection:text-dark-bg overflow-x-hidden">
-      <div className={`${containerClasses} ${showNav ? 'pb-24' : ''}`}>
+    <div className="min-h-screen bg-dark-bg text-dark-text font-sans selection:bg-dark-accent-start selection:text-dark-bg">
+      <div className={`max-w-md mx-auto min-h-screen relative shadow-2xl shadow-black/50 bg-dark-bg ${showNav ? 'pb-24' : ''}`}>
         <Routes>
           <Route path="/" element={<HomeScreen />} />
           <Route path="/setup" element={<NewGameSetupScreen />} />
@@ -79,7 +63,6 @@ const App: React.FC = () => {
           <Route path="/news-feed" element={<NewsFeedScreen />} />
           <Route path="/announcement" element={<AnnouncementScreen />} />
           <Route path="/promo" element={<PromoScreen />} />
-          <Route path="/hub" element={<PublicHubScreen />} />
         </Routes>
         {showNav && <BottomNav />}
       </div>

@@ -52,21 +52,6 @@ export const vn = {
     navStatistics: "Thống kê",
     navHistory: "Lịch sử",
     navSettings: "Cài đặt",
-    // Public Hub
-    hub_location_tag: "Đà Nẵng • Cộng đồng bóng đá",
-    hub_slogan_1: "ĐỊNH HÌNH",
-    hub_slogan_2: "DI SẢN",
-    // FIX: Add missing translation keys for rotating hero words.
-    hub_word_legacy: "DI SẢN",
-    hub_word_game: "LỐI CHƠI",
-    hub_word_skill: "KỸ NĂNG",
-    hub_word_victory: "CHIẾN THẮNG",
-    hub_description: "Chào mừng đến với hệ sinh thái số của 532 Playground. Nơi thống kê gặp gỡ đam mê. Phân tích xếp hạng, theo dõi tiến độ và trở thành huyền thoại.",
-    hub_cta: "Xem Thống Kê",
-    hub_leaders_title: "CẦU THỦ DẪN ĐẦU",
-    hub_active_members: "Thành Viên Tích Cực",
-    hub_avg_rating: "Xếp Hạng Trung Bình",
-    hub_sessions_played: "Số Buổi Đã Chơi",
     // HomeScreen
     mainTitle: "532 PLAYGROUND",
     newSession: "Buổi tập mới",
@@ -395,9 +380,4 @@ export const vn = {
     badge_career_150_influence_desc: "Đạt 150 đóng góp vào bàn thắng (bàn thắng + kiến tạo) trong sự nghiệp.",
     badge_career_super_veteran: "Siêu cựu binh",
     badge_career_super_veteran_desc: "Tham gia vào 100 buổi tập trong sự nghiệp.",
-
-    // Footer
-    footer_cta_title: "THAM GIA NGAY",
-    footer_cta_desc: "Liên hệ qua WhatsApp để đặt chỗ.",
-    footer_copyright: "© {year} 532 Playground. Đã đăng ký bản quyền.",
 };

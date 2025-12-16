@@ -2,8 +2,7 @@
 import { 
     Player, Session, Team, Game, Goal, EventLogEntry, 
     EventType, PlayerStatus, PlayerTier, GameStatus, 
-    RotationMode, SessionStatus, StartRoundPayload, GoalPayload, NewsItem, BadgeType,
-    PlayerForm, SkillType 
+    RotationMode, SessionStatus, StartRoundPayload, GoalPayload, NewsItem, BadgeType 
 } from '../types';
 import { newId } from '../screens/utils';
 import { getTierForRating, calculateRatingUpdate, calculateEarnedBadges } from './rating';
@@ -21,43 +20,35 @@ const COLORS = ['#FF4136', '#0074D9', '#2ECC40']; // Red, Blue, Green
 // Helper to ensure all demo IDs are recognizable
 const newDemoId = (prefix: string = '') => `demo_${prefix}${newId()}`;
 
-export const generateTestPlayers = (count: number = 15): Player[] => {
-    return Array.from({ length: count }).map((_, index) => {
-        const skills: SkillType[] = index % 3 === 0 ? ['finisher'] : index % 3 === 1 ? ['playmaker'] : ['defender'];
-        
-        return {
-            id: newDemoId(`player_${index}_`),
-            nickname: DEMO_NAMES[index % DEMO_NAMES.length] + (index >= 15 ? ` ${index}` : ''),
-            surname: `TestBot ${index + 1}`,
-            createdAt: new Date().toISOString(),
-            countryCode: ['UA', 'BR', 'PT', 'ES', 'FR'][index % 5],
-            status: PlayerStatus.Confirmed,
-            totalGoals: 0, totalAssists: 0, totalGames: 0, totalWins: 0, totalDraws: 0, totalLosses: 0,
-            totalSessionsPlayed: 0,
-            rating: 60 + Math.floor(Math.random() * 20), // Random rating 60-80
-            tier: PlayerTier.Average,
-            monthlyGoals: 0, monthlyAssists: 0, monthlyGames: 0, monthlyWins: 0,
-            monthlySessionsPlayed: 0,
-            form: 'stable' as PlayerForm,
-            badges: {},
-            skills: skills,
-            lastPlayedAt: new Date().toISOString(),
-            sessionHistory: [],
-            records: {
-                bestGoalsInSession: { value: 0, sessionId: '' },
-                bestAssistsInSession: { value: 0, sessionId: '' },
-                bestWinRateInSession: { value: 0, sessionId: '' },
-            },
-        } as Player;
-    }).map(p => ({
-        ...p,
-        tier: getTierForRating(p.rating)
-    }));
-};
-
 export const generateDemoData = () => {
-    // 1. Create Players (15 for full squad)
-    const initialPlayers = generateTestPlayers(15);
+    // 1. Create Players
+    const initialPlayers: Player[] = DEMO_NAMES.map((name, index) => ({
+        id: newDemoId(`player_${index}_`),
+        nickname: name,
+        surname: `Demo ${index + 1}`,
+        createdAt: new Date().toISOString(),
+        countryCode: ['UA', 'BR', 'PT', 'ES', 'FR'][index % 5],
+        status: PlayerStatus.Confirmed,
+        totalGoals: 0, totalAssists: 0, totalGames: 0, totalWins: 0, totalDraws: 0, totalLosses: 0,
+        totalSessionsPlayed: 0,
+        rating: 60 + Math.floor(Math.random() * 20), // Random rating 60-80
+        tier: PlayerTier.Average,
+        monthlyGoals: 0, monthlyAssists: 0, monthlyGames: 0, monthlyWins: 0,
+        monthlySessionsPlayed: 0,
+        form: 'stable',
+        badges: {},
+        skills: index % 3 === 0 ? ['finisher'] : index % 3 === 1 ? ['playmaker'] : ['defender'],
+        lastPlayedAt: new Date().toISOString(),
+        sessionHistory: [],
+        records: {
+            bestGoalsInSession: { value: 0, sessionId: '' },
+            bestAssistsInSession: { value: 0, sessionId: '' },
+            bestWinRateInSession: { value: 0, sessionId: '' },
+        },
+    }));
+
+    // Update Tier based on random rating
+    initialPlayers.forEach(p => p.tier = getTierForRating(p.rating));
 
     // 2. Create Teams
     const teams: Team[] = COLORS.map((color, i) => ({
@@ -234,7 +225,7 @@ export const generateDemoData = () => {
             totalSessionsPlayed: (p.totalSessionsPlayed || 0) + 1,
             rating: newRating,
             tier: getTierForRating(newRating),
-            form: (delta > 0.5 ? 'hot_streak' : delta < -0.5 ? 'cold_streak' : 'stable') as PlayerForm,
+            form: delta > 0.5 ? 'hot_streak' : delta < -0.5 ? 'cold_streak' : 'stable',
             lastRatingChange: breakdown,
             badges: updatedBadges,
             records: records,
@@ -271,7 +262,7 @@ export const createShowcasePlayer = (): Player => {
         monthlyGames: 10,
         monthlyWins: 9,
         monthlySessionsPlayed: 2,
-        form: 'hot_streak' as PlayerForm,
+        form: 'hot_streak',
         skills: ['finisher', 'power_shot', 'leader', 'technique'],
         badges: {
             'goleador': 5,

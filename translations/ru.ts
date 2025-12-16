@@ -52,21 +52,6 @@ export const ru = {
     navStatistics: "Статистика",
     navHistory: "История",
     navSettings: "Настройки",
-    // Public Hub
-    hub_location_tag: "Дананг • Футбольное Комьюнити",
-    hub_slogan_1: "СОЗДАЙ СВОЕ",
-    hub_slogan_2: "НАСЛЕДИЕ",
-    // FIX: Add missing translation keys for rotating hero words.
-    hub_word_legacy: "НАСЛЕДИЕ",
-    hub_word_game: "ИГРУ",
-    hub_word_skill: "МАСТЕРСТВО",
-    hub_word_victory: "ПОБЕДУ",
-    hub_description: "Добро пожаловать в цифровую экосистему 532 Playground. Здесь статистика встречается со страстью. Изучай рейтинги, следи за прогрессом и стань легендой.",
-    hub_cta: "Смотреть Статистику",
-    hub_leaders_title: "ЛИДЕРЫ СЕЗОНА",
-    hub_active_members: "Активные Участники",
-    hub_avg_rating: "Средний Рейтинг",
-    hub_sessions_played: "Сыграно Сессий",
     // HomeScreen
     mainTitle: "532 PLAYGROUND",
     newSession: "Тренировка",
@@ -132,7 +117,7 @@ export const ru = {
     cancelSetup: "Отменить настройку",
     autoBalanceTeams: "Авто-баланс команд",
     autoBalanceConfirmTitle: "Подтвердить авто-баланс",
-    autoBalanceConfirmDesc: "Это автоматически распределит игроков по сбалансованих командам на основе их рейтинга. Вы уверены?",
+    autoBalanceConfirmDesc: "Это автоматически распределит игроков по сбалансированным командам на основе их рейтинга. Вы уверены?",
     allPlayersAssigned: "Все игроки распределены.",
     // History Screen
     historyTitle: "История сессий",
@@ -213,7 +198,7 @@ export const ru = {
     shareProfile: "Поделиться",
     deletePlayerConfirm: "Вы уверены, что хотите удалить {playerName}? Вся его статистика будет безвозвратно утеряна.",
     newPlayerManagement: "Управление новыми игроками",
-    clubNews: "Новости Клубу",
+    clubNews: "Новости Клуба",
     unconfirmedBadge: "НЕ ПОДТВЕРЖДЕН",
     generateDemoNews: "Создать Демо-Новости",
     clearFeed: "Очистить Ленту",
@@ -304,11 +289,11 @@ export const ru = {
     announcementGeneratorTitle: "Генератор Афиш",
     posterDate: "Дата",
     posterTime: "Начало",
-    posterEndTime: "Кінець",
+    posterEndTime: "Конец",
     uploadBackground: "Загрузить Фон",
     changeBackground: "Сменить Фон",
     selectTemplate: "Выберите Шаблон",
-    generateAndShare: "Завантажити",
+    generateAndShare: "Скачать",
 
     // Share Modal
     shareAccessCard: "Карта Доступа Игрока",
@@ -355,7 +340,7 @@ export const ru = {
     badge_comeback_kings: "Короли камбэка",
     badge_comeback_kings_desc: "Выиграть 3 матча за сессию, уступая по ходу игры.",
     badge_fortress: "Неприступная крепость",
-    badge_fortress_desc: "В составе команды выиграть три разные матча, не пропустив ни одного гола, за одну сессию.",
+    badge_fortress_desc: "В составе команды выиграть три разных матча, не пропустив ни одного гола, за одну сессию.",
     badge_club_legend_goals: "Легенда клуба: Голы",
     badge_club_legend_goals_desc: "Забить 40, 60 или 80 голов за карьеру.",
     badge_club_legend_assists: "Легенда клуба: Ассисты",
@@ -395,9 +380,4 @@ export const ru = {
     badge_career_150_influence_desc: "Набрать 150 результативных действий (голы + ассисты) за карьеру.",
     badge_career_super_veteran: "Суперветеран",
     badge_career_super_veteran_desc: "Участвовать в 100 сессиях за карьеру.",
-
-    // Footer
-    footer_cta_title: "ВСТУПИТЬ В КЛУБ",
-    footer_cta_desc: "Напиши нам в WhatsApp, чтобы записаться на игру.",
-    footer_copyright: "© {year} 532 Playground. Все права защищены.",
 };

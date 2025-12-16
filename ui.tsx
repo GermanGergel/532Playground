@@ -46,16 +46,9 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, 
       md: 'max-w-md',
   };
   const paddingClass = size === 'xs' ? 'p-4' : 'p-6';
-  
   return (
-    <div 
-        className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex justify-center items-center z-50 p-4 cursor-pointer"
-        onClick={onClose} // Закрытие по клику на фон
-    >
-      <div 
-        className={`relative bg-dark-surface/80 backdrop-blur-xl text-dark-text rounded-2xl shadow-xl w-full cursor-auto ${sizeClasses[size]} ${paddingClass} border border-white/10 ${containerClassName}`}
-        onClick={(e) => e.stopPropagation()} // Предотвращаем закрытие при клике внутри окна
-      >
+    <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50 p-4">
+      <div className={`relative bg-dark-surface/80 backdrop-blur-xl text-dark-text rounded-2xl shadow-xl w-full ${sizeClasses[size]} ${paddingClass} border border-white/10 ${containerClassName}`}>
         {title && (
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">{title}</h2>

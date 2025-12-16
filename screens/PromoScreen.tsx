@@ -68,6 +68,7 @@ const DEFAULT_PROMO_PLAYER: Player = {
 };
 
 // --- CONTENT TRANSLATIONS ---
+// We map the global language codes to these keys. 'ua' will fallback to 'ru' or 'en' for promo text if not explicitly defined here.
 const TEXT = {
     en: {
         hero_title: "PLAY LIKE A PRO",
@@ -113,7 +114,7 @@ const TEXT = {
         hero_title: "ИГРАЙ КАК ПРОФИ",
         hero_subtitle: "Самое технологичное футбольное комьюнити в Дананге.",
         feature_card: "Твоя Личная Карточка",
-        feature_card_desc: "Как в FIFA. Рейтинг обновляется автоматически после каждой игры на основе реальных результатов.",
+        feature_card_desc: "Как в FIFA. Рейтинг обновляется автоматически после каждой игры на основе реальных результатів.",
         feature_live: "Живое Обновление Рейтинга",
         feature_live_desc: "Смотри, как именно твоя игра влияет на рейтинг сразу после сессии.",
         feature_stats: "Детальная Статистика",
@@ -129,6 +130,7 @@ const TEXT = {
         cta_desc: "Напиши нам в WhatsApp, чтобы записаться на игру.",
         tap_to_enter: "НАЖМИ, ЧТОБЫ ВОЙТИ"
     },
+    // Adding UA support to TEXT object to avoid crashes, mapping close to RU or EN
     ua: {
         hero_title: "ГРАЙ ЯК ПРОФІ",
         hero_subtitle: "Найтехнологічніша футбольна спільнота в Данангу.",

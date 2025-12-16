@@ -67,8 +67,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
         const paddingClass = 'p-4';
 
         // Added overflow-hidden to prevent inner content from breaking out of rounded corners
-        // Added touch-pan-y to prevent horizontal swipe gestures on the table container
-        return `rounded-2xl ${paddingClass} border border-dark-accent-start/30 ${bgClass} w-full overflow-hidden touch-pan-y`;
+        return `rounded-2xl ${paddingClass} border border-dark-accent-start/30 ${bgClass} w-full overflow-hidden`;
     };
         
     const cardTitleClasses = "font-bold text-xl mb-4 text-dark-text";
@@ -78,8 +77,8 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
     const finishedGames = session.games.filter(g => g.status === 'finished');
     const roundsToDisplay = itemLimit ? finishedGames.slice(0, itemLimit) : finishedGames;
 
-    // FIX: Enforced table-fixed to prevent overflow and wobbling
-    const tableTextClass = "text-[10px] sm:text-xs text-center table-fixed border-collapse"; 
+    // FIX: Reduced text size to text-[10px] or text-xs and enforced table-fixed to prevent overflow
+    const tableTextClass = "text-[10px] sm:text-xs text-center table-fixed"; 
     const cellPadding = "py-1.5 px-0.5";
 
     // Dynamic class for player names: 
@@ -98,7 +97,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                 style={{ boxShadow: isExport ? 'none' : '0 8px 25px -5px rgba(0, 242, 254, 0.1), 0 5px 10px -6px rgba(0, 242, 254, 0.1)' }}
             >
                 <h3 className={cardTitleClasses}>{t.teamStandings}</h3>
-                <div className="overflow-hidden">
+                <div className="overflow-x-hidden">
                     <table className={`w-full ${tableTextClass}`}>
                         <thead>
                             <tr className="text-dark-text-secondary">
@@ -145,8 +144,8 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                     <thead>
                             <tr className="text-dark-text-secondary">
                                 <th className={`text-left font-normal ${cellPadding}`} style={{ width: '8%' }}>#</th>
-                                {/* Adjusted width to be 42% in all cases so sums to 100% (8+42+10+10+10+10+10 = 100) */}
-                                <th className={`text-left font-normal ${cellPadding}`} style={{ width: '42%' }}>{t.players}</th>
+                                {/* Adjusted width to be balanced with container width reduction */}
+                                <th className={`text-left font-normal ${cellPadding}`} style={{ width: isExport ? '42%' : '35%' }}>{t.players}</th>
                                 <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.team}</th>
                                 <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.thGP}</th>
                                 <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.thG}</th>

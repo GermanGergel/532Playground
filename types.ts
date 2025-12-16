@@ -116,13 +116,6 @@ export interface Goal {
     timestampSeconds: number;
 }
 
-// Track temporary swaps for "Legionnaires"
-export interface LegionnaireMove {
-    playerId: string;
-    fromTeamId: string;
-    toTeamId: string;
-}
-
 export interface Game {
     id: string;
     gameNumber: number;
@@ -141,10 +134,6 @@ export interface Game {
     lastResumeTime?: number;
     endedAt?: string;
     announcedMilestones?: number[];
-    // New fields for Legionnaire system
-    legionnaireMoves?: LegionnaireMove[]; // To revert changes after game
-    team1Roster?: string[]; // Snapshot of players who actually played (IDs)
-    team2Roster?: string[]; // Snapshot of players who actually played (IDs)
 }
 
 export enum SessionStatus {
@@ -163,8 +152,7 @@ export enum EventType {
     SUBSTITUTION = 'substitution',
     FINISH_ROUND = 'finish_round',
     TIMER_START = 'timer_start',
-    TIMER_STOP = 'timer_stop',
-    LEGIONNAIRE_SIGN = 'legionnaire_sign' // New event type
+    TIMER_STOP = 'timer_stop'
 }
 
 export interface StartRoundPayload {
@@ -187,16 +175,11 @@ export interface SubPayload {
     in: string;
 }
 
-export interface LegionnairePayload {
-    player: string;
-    toTeam: string;
-}
-
 export interface EventLogEntry {
     timestamp: string;
     round: number;
     type: EventType;
-    payload: StartRoundPayload | GoalPayload | SubPayload | LegionnairePayload | {};
+    payload: StartRoundPayload | GoalPayload | SubPayload | {};
 }
 
 export interface Session {

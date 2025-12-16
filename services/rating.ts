@@ -1,4 +1,3 @@
-
 import { Session, Player, Team, Game, Goal, EventLogEntry, EventType, GoalPayload, StartRoundPayload, SubPayload, PlayerTier, BadgeType, RatingBreakdown } from '../types';
 import { PlayerStats } from './statistics';
 
@@ -37,22 +36,10 @@ export const calculateRatingUpdate = (player: Player, stats: PlayerStats, sessio
         };
     }
 
-    // Filter games where player actually played (checking snapshots for legionnaires)
-    const playerGames = session.games.filter(g => {
-        if (g.status !== 'finished') return false;
-        
-        // 1. Check snapshots if available (Legionnaire Logic)
-        if (g.team1Roster && g.team1Roster.includes(player.id)) return true;
-        if (g.team2Roster && g.team2Roster.includes(player.id)) return true;
-        
-        // 2. Fallback to standard check (for legacy games without snapshots)
-        if (!g.team1Roster && !g.team2Roster) {
-            const t1 = session.teams.find(t => t.id === g.team1Id);
-            const t2 = session.teams.find(t => t.id === g.team2Id);
-            return (t1?.playerIds.includes(player.id) || t2?.playerIds.includes(player.id));
-        }
-        return false;
-    });
+    const playerGames = session.games.filter(g => g.status === 'finished' && (
+        session.teams.find(t => t.id === g.team1Id)?.playerIds.includes(player.id) ||
+        session.teams.find(t => t.id === g.team2Id)?.playerIds.includes(player.id)
+    ));
 
     const defaultReturn = {
         delta: 0,
@@ -83,19 +70,10 @@ export const calculateRatingUpdate = (player: Player, stats: PlayerStats, sessio
         let teamPoints = 0;
         let individualPoints = 0;
 
-        // Determine which team the player was on for THIS specific game
-        let myTeamId: string | undefined;
-        if (game.team1Roster && game.team1Roster.includes(player.id)) myTeamId = game.team1Id;
-        else if (game.team2Roster && game.team2Roster.includes(player.id)) myTeamId = game.team2Id;
-        else {
-            // Fallback
-            const t = session.teams.find(t => t.playerIds.includes(player.id));
-            if (t) myTeamId = t.id;
-        }
+        const myTeam = session.teams.find(t => t.playerIds.includes(player.id));
+        if (!myTeam) return;
 
-        if (!myTeamId) return;
-
-        const isTeam1 = game.team1Id === myTeamId;
+        const isTeam1 = game.team1Id === myTeam.id;
         const myScore = isTeam1 ? game.team1Score : game.team2Score;
         const oppScore = isTeam1 ? game.team2Score : game.team1Score;
         const goalDiff = myScore - oppScore;
@@ -103,7 +81,7 @@ export const calculateRatingUpdate = (player: Player, stats: PlayerStats, sessio
         // A. TEAM SUCCESS with CONTEXT
         if (game.isDraw) {
             teamPoints += 0.4;
-        } else if (game.winnerTeamId === myTeamId) {
+        } else if (game.winnerTeamId === myTeam.id) {
             if (goalDiff >= 2) {
                 teamPoints += 1.3; // Dominant Win
             } else {
@@ -111,7 +89,7 @@ export const calculateRatingUpdate = (player: Player, stats: PlayerStats, sessio
                 let myTeamScoreTracker = 0, oppScoreTracker = 0;
                 const sortedGoals = [...game.goals].sort((a,b) => a.timestampSeconds - b.timestampSeconds);
                 for (const goal of sortedGoals) {
-                     if ((goal.teamId === myTeamId && !goal.isOwnGoal) || (goal.teamId !== myTeamId && goal.isOwnGoal)) myTeamScoreTracker++;
+                     if ((goal.teamId === myTeam.id && !goal.isOwnGoal) || (goal.teamId !== myTeam.id && goal.isOwnGoal)) myTeamScoreTracker++;
                      else oppScoreTracker++;
                      if (oppScoreTracker > myTeamScoreTracker) trailed = true;
                 }
@@ -216,21 +194,10 @@ export const calculateEarnedBadges = (
     const earned = new Set<BadgeType>();
     const addBadge = (b: BadgeType) => earned.add(b);
     
-    // Updated Logic: Use snapshots to determine participation
-    const playerGames = session.games.filter(g => {
-        if (g.status !== 'finished') return false;
-        
-        if (g.team1Roster && g.team1Roster.includes(player.id)) return true;
-        if (g.team2Roster && g.team2Roster.includes(player.id)) return true;
-        
-        // Fallback
-        if (!g.team1Roster && !g.team2Roster) {
-            const t1 = session.teams.find(t => t.id === g.team1Id);
-            const t2 = session.teams.find(t => t.id === g.team2Id);
-            return (t1?.playerIds.includes(player.id) || t2?.playerIds.includes(player.id));
-        }
-        return false;
-    }).sort((a, b) => a.gameNumber - b.gameNumber);
+    const playerGames = session.games.filter(g => g.status === 'finished' && (
+        session.teams.find(t => t.id === g.team1Id)?.playerIds.includes(player.id) ||
+        session.teams.find(t => t.id === g.team2Id)?.playerIds.includes(player.id)
+    )).sort((a, b) => a.gameNumber - b.gameNumber);
 
     // --- SESSION AGGREGATES & COMPARATIVE ---
     if (stats.goals >= 7) addBadge('goleador');
@@ -265,18 +232,10 @@ export const calculateEarnedBadges = (
     let winContributionStreak = 0, maxWinContributionStreak = 0;
     
     playerGames.forEach(g => {
-        // Determine player's team in THIS game
-        let myTeamId: string | undefined;
-        if (g.team1Roster && g.team1Roster.includes(player.id)) myTeamId = g.team1Id;
-        else if (g.team2Roster && g.team2Roster.includes(player.id)) myTeamId = g.team2Id;
-        else {
-            const t = session.teams.find(t => t.playerIds.includes(player.id));
-            if (t) myTeamId = t.id;
-        }
+        const myTeam = session.teams.find(t => t.playerIds.includes(player.id));
+        if (!myTeam) return;
 
-        if (!myTeamId) return;
-
-        const isMyTeamWinner = g.winnerTeamId === myTeamId;
+        const isMyTeamWinner = g.winnerTeamId === myTeam.id;
         const myGoals = g.goals.filter(goal => goal.scorerId === player.id && !goal.isOwnGoal);
         const myAssists = g.goals.filter(goal => goal.assistantId === player.id);
         const hasContribution = myGoals.length > 0 || myAssists.length > 0;
@@ -304,12 +263,12 @@ export const calculateEarnedBadges = (
             if (myAssists.length >= 2) maestroCount++;
             if (myAssists.length > 0) conductorCount++;
 
-            const opponentScore = g.team1Id === myTeamId ? g.team2Score : g.team1Score;
+            const opponentScore = g.team1Id === myTeam.id ? g.team2Score : g.team1Score;
             if (opponentScore === 0) fortressCount++;
 
             const sortedGoals = [...g.goals].sort((a,b) => a.timestampSeconds - b.timestampSeconds);
             let scoreA = 0, scoreB = 0;
-            const myTeamIsA = g.team1Id === myTeamId;
+            const myTeamIsA = g.team1Id === myTeam.id;
             let trailed = false;
             for (const gl of sortedGoals) {
                 const goalForA = (gl.teamId === g.team1Id && !gl.isOwnGoal) || (gl.teamId === g.team2Id && gl.isOwnGoal);
@@ -343,12 +302,9 @@ export const calculateEarnedBadges = (
     // Victory Finisher
     const lastGame = session.games.filter(g => g.status === 'finished').sort((a,b) => b.gameNumber - a.gameNumber)[0];
     if (lastGame) {
-        let myTeamId: string | undefined;
-        if (lastGame.team1Roster && lastGame.team1Roster.includes(player.id)) myTeamId = lastGame.team1Id;
-        else if (lastGame.team2Roster && lastGame.team2Roster.includes(player.id)) myTeamId = lastGame.team2Id;
-        
-        const wasInLastGame = !!myTeamId;
-        if (wasInLastGame && lastGame.winnerTeamId === myTeamId) {
+        const myTeam = session.teams.find(t => t.playerIds.includes(player.id));
+        const wasInLastGame = myTeam && (lastGame.team1Id === myTeam.id || lastGame.team2Id === myTeam.id);
+        if (wasInLastGame && lastGame.winnerTeamId === myTeam.id) {
             const sortedGoals = [...lastGame.goals].sort((a,b) => a.timestampSeconds - b.timestampSeconds);
             const lastGoal = sortedGoals[sortedGoals.length - 1];
             if (lastGoal.scorerId === player.id && Math.abs(lastGame.team1Score - lastGame.team2Score) === 1) {
@@ -359,11 +315,8 @@ export const calculateEarnedBadges = (
 
     // Decisive Factor
     const myWins = playerGames.filter(g => {
-        let myTeamId: string | undefined;
-        if (g.team1Roster && g.team1Roster.includes(player.id)) myTeamId = g.team1Id;
-        else if (g.team2Roster && g.team2Roster.includes(player.id)) myTeamId = g.team2Id;
-        
-        return myTeamId && g.winnerTeamId === myTeamId;
+        const myTeam = session.teams.find(t => t.playerIds.includes(player.id));
+        return myTeam && g.winnerTeamId === myTeam.id;
     });
     if (myWins.length >= 3) {
         const contributedInAll = myWins.every(g => g.goals.some(goal => goal.scorerId === player.id || goal.assistantId === player.id));
@@ -373,13 +326,10 @@ export const calculateEarnedBadges = (
     // Perfect Finish (Retained and fixed)
     let perfectFinishCount = 0;
     playerGames.forEach(g => {
-         let myTeamId: string | undefined;
-         if (g.team1Roster && g.team1Roster.includes(player.id)) myTeamId = g.team1Id;
-         else if (g.team2Roster && g.team2Roster.includes(player.id)) myTeamId = g.team2Id;
-
-         if (!myTeamId || g.winnerTeamId !== myTeamId) return;
+         const myTeam = session.teams.find(t => t.playerIds.includes(player.id));
+         if (!myTeam || g.winnerTeamId !== myTeam.id) return;
          const myGoals = g.goals.filter(goal => goal.scorerId === player.id && !goal.isOwnGoal);
-         const myTeamScore = g.team1Id === myTeamId ? g.team1Score : g.team2Score;
+         const myTeamScore = g.team1Id === myTeam.id ? g.team1Score : g.team2Score;
          if (session.goalsToWin === 2 && myTeamScore === 2 && myGoals.length === 2) {
              perfectFinishCount++;
          }

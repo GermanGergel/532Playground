@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Session, Player, GameStatus, RotationMode, Team, Game, Goal, SessionStatus, EventLogEntry, EventType, StartRoundPayload, GoalPayload, PlayerStatus, PlayerTier, BadgeType, NewsItem } from './types';
 import { Language } from './translations/index';
@@ -13,8 +14,6 @@ import {
 } from './db';
 import { initializeAppState } from './services/appInitializer';
 import { useMatchTimer } from './hooks/useMatchTimer';
-
-type RecoveryMode = 'full' | 'session_only' | null;
 
 interface AppContextType {
   activeSession: Session | null;
@@ -33,8 +32,6 @@ interface AppContextType {
   displayTime: number; // Re-introduced for global timer
   fetchHistory: (limit?: number) => Promise<void>;
   fetchFullNews: () => Promise<void>;
-  recoveryMode: RecoveryMode;
-  setRecoveryMode: React.Dispatch<React.SetStateAction<RecoveryMode>>;
 }
 
 const AppContext = React.createContext<AppContextType | undefined>(undefined);
@@ -47,7 +44,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [newsFeed, setNewsFeed] = React.useState<NewsItem[]>([]);
   const [language, setLanguageState] = React.useState<Language>('en');
   const [activeVoicePack, setActiveVoicePackState] = React.useState<number>(1);
-  const [recoveryMode, setRecoveryMode] = React.useState<RecoveryMode>(null);
 
   // --- GLOBAL TIMER LOGIC (Restored) ---
   const { displayTime } = useMatchTimer(activeSession, setActiveSession, activeVoicePack);
@@ -135,9 +131,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     isLoading,
     displayTime,
     fetchHistory,
-    fetchFullNews,
-    recoveryMode,
-    setRecoveryMode,
+    fetchFullNews
   };
 
   if(isLoading) {

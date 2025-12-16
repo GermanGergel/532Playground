@@ -52,21 +52,6 @@ export const ua = {
     navStatistics: "Статистика",
     navHistory: "Історія",
     navSettings: "Налаштування",
-    // Public Hub
-    hub_location_tag: "Дананг • Футбольна Спільнота",
-    hub_slogan_1: "СТВОРИ СВОЮ",
-    hub_slogan_2: "СПАДЩИНУ",
-    // FIX: Add missing translation keys for rotating hero words.
-    hub_word_legacy: "СПАДЩИНУ",
-    hub_word_game: "ГРУ",
-    hub_word_skill: "МАЙСТЕРНІСТЬ",
-    hub_word_victory: "ПЕРЕМОГУ",
-    hub_description: "Ласкаво просимо до цифрової екосистеми 532 Playground. Де статистика зустрічається з пристрастю. Аналізуй рейтинги, стеж за прогресом і стань легендою.",
-    hub_cta: "Дивитись Статистику",
-    hub_leaders_title: "ЛІДЕРИ СЕЗОНУ",
-    hub_active_members: "Активні Учасники",
-    hub_avg_rating: "Середній Рейтинг",
-    hub_sessions_played: "Зіграно Сесій",
     // HomeScreen
     mainTitle: "532 PLAYGROUND",
     newSession: "Тренування",
@@ -321,7 +306,7 @@ export const ua = {
     // Skills
     skill_goalkeeper: "Воротар",
     skill_power_shot: "Потужний удар",
-    skill_technique: "Техника",
+    skill_technique: "Техніка",
     skill_defender: "Захисник",
     skill_playmaker: "Плеймейкер",
     skill_finisher: "Нападник",
@@ -395,9 +380,4 @@ export const ua = {
     badge_career_150_influence_desc: "Набрати 150 результативних дій (голи + асисти) за кар'єру.",
     badge_career_super_veteran: "Суперветеран",
     badge_career_super_veteran_desc: "Взяти участь у 100 сесіях за кар'єру.",
-
-    // Footer
-    footer_cta_title: "ВСТУПИТИ В КЛУБ",
-    footer_cta_desc: "Напиши нам у WhatsApp, щоб записатися на гру.",
-    footer_copyright: "© {year} 532 Playground. Всі права захищені.",
 };
