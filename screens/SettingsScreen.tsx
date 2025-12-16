@@ -1,17 +1,18 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Card, Button, useTranslation } from '../ui';
 import { isSupabaseConfigured, getCloudPlayerCount } from '../db';
 import { Wand, Users, ExternalLink } from '../icons';
+import { Session, SessionStatus } from '../types';
 
 export const SettingsScreen: React.FC = () => {
     const t = useTranslation();
     const navigate = useNavigate();
-    const { language, setLanguage, allPlayers } = useApp();
+    const { language, setLanguage, allPlayers, setActiveSession } = useApp();
     const [cloudStatus, setCloudStatus] = React.useState<{ connected: boolean, count: number } | null>(null);
     const [isRefreshing, setIsRefreshing] = React.useState(false);
+    const [recoveryJson, setRecoveryJson] = React.useState('');
     
     const checkCloud = async () => {
         if (isRefreshing) return;
@@ -32,6 +33,31 @@ export const SettingsScreen: React.FC = () => {
     useEffect(() => {
         checkCloud();
     }, []);
+
+    const handleRecoverSession = () => {
+        if (!recoveryJson.trim()) {
+            alert('Please paste the session data into the text box.');
+            return;
+        }
+        try {
+            const parsed = JSON.parse(recoveryJson);
+            // Basic validation
+            if (typeof parsed !== 'object' || !parsed.id || !parsed.games || !parsed.playerPool) {
+                throw new Error('Invalid session structure. Must contain id, games, and playerPool.');
+            }
+            const sessionToRecover = parsed as Session;
+            // IMPORTANT: Force status to Active so it can be resumed
+            sessionToRecover.status = SessionStatus.Active;
+
+            setActiveSession(sessionToRecover);
+            alert('Recovery session has been loaded! Go to the Home screen and press "Continue Session" to finalize and save it.');
+            navigate('/');
+
+        } catch (error) {
+            console.error("Session recovery failed:", error);
+            alert(`Failed to load session. Please check the JSON data. Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    };
 
     const langClasses = (lang: string) => `px-3 py-1 rounded-full font-bold transition-colors text-base ${language === lang ? 'gradient-bg text-dark-bg' : 'bg-dark-surface hover:bg-white/10'}`;
 
@@ -147,6 +173,18 @@ export const SettingsScreen: React.FC = () => {
                             </div>
                         </Card>
                     </Link>
+
+                    <Card className={`${cardNeonClasses}`}>
+                        <h2 className="text-lg font-bold text-white tracking-wide mb-2">Data Recovery</h2>
+                        <p className="text-xs text-dark-text-secondary mb-3">If a session failed to save, paste the backup JSON data here to load it as the active session.</p>
+                        <textarea
+                            value={recoveryJson}
+                            onChange={(e) => setRecoveryJson(e.target.value)}
+                            className="w-full h-24 p-2 bg-dark-bg rounded-lg border border-white/20 focus:ring-2 focus:ring-dark-accent-start focus:outline-none text-xs font-mono"
+                            placeholder="Paste lost session JSON here..."
+                        />
+                        <Button onClick={handleRecoverSession} className="w-full mt-3">Load Recovery Session</Button>
+                    </Card>
                 </div>
             </div>
 
