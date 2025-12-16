@@ -16,6 +16,7 @@ export { PublicProfileScreen } from './PublicProfileScreen';
 export { NewsFeedScreen } from './NewsFeedScreen';
 export { AnnouncementScreen } from './AnnouncementScreen';
 export { PromoScreen } from './PromoScreen';
-export { PromoAdminScreen } from './PromoAdminScreen'; // New export
+export { PromoAdminScreen } from './PromoAdminScreen';
+export { PublicHubScreen } from './PublicHubScreen'; // New Export
 export { BrandedHeader, hexToRgba, newId } from './utils';
 export type { ShareableReportProps } from './StatisticsScreen';

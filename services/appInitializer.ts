@@ -1,4 +1,3 @@
-
 import { Session, Player, NewsItem, BadgeType, PlayerRecords, PlayerHistoryEntry } from '../types';
 import { Language } from '../translations/index';
 import {
@@ -8,8 +7,10 @@ import {
     loadLanguageFromDB,
     loadNewsFromDB,
     saveNewsToDB,
-    loadActiveVoicePackFromDB
+    loadActiveVoicePackFromDB,
+    savePlayersToDB
 } from '../db';
+import { generateTestPlayers } from './demo';
 
 interface InitialAppState {
     session: Session | null;
@@ -40,6 +41,15 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
     // 2. Load Players and perform migrations
     const loadedPlayersData = await loadPlayersFromDB();
     let initialPlayers: Player[] = Array.isArray(loadedPlayersData) ? loadedPlayersData : [];
+    
+    // If no players are loaded from DB (first run), generate demo players.
+    if (!initialPlayers || initialPlayers.length === 0) {
+        console.log("No players found, generating 15 demo players...");
+        initialPlayers = generateTestPlayers(15);
+        // Save them to local DB so they persist on refresh.
+        // The save function will ignore them for cloud sync because of the 'demo_' prefix.
+        await savePlayersToDB(initialPlayers);
+    }
     
     // Migration loop to ensure all required fields exist on player objects
     initialPlayers = initialPlayers.map(p => {
@@ -119,9 +129,8 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
     });
 
     // 3. Load History and perform migrations
-    // TRAFFIC OPTIMIZATION: Only load the absolutely latest session (limit: 1).
-    // The user can load more by visiting the History screen.
-    const loadedHistoryData = await loadHistoryFromDB(1);
+    // Load a decent number of recent sessions to avoid issues with unsynced data.
+    const loadedHistoryData = await loadHistoryFromDB(10);
     let initialHistory: Session[] = [];
     if (Array.isArray(loadedHistoryData)) {
         initialHistory = loadedHistoryData.map((s: any) => ({

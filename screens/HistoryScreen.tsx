@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context';
@@ -14,17 +13,6 @@ export const HistoryScreen: React.FC = () => {
     const [sessionToDelete, setSessionToDelete] = React.useState<Session | null>(null);
     const [isLoadingMore, setIsLoadingMore] = React.useState(false);
 
-    // TRAFFIC OPTIMIZATION: Only load the last 3 sessions when visiting this screen.
-    // The user must access the database directly for older records.
-    React.useEffect(() => {
-        const loadRecentHistory = async () => {
-            setIsLoadingMore(true);
-            await fetchHistory(3);
-            setIsLoadingMore(false);
-        };
-        loadRecentHistory();
-    }, []);
-
     const openDeleteModal = (session: Session) => {
         setSessionToDelete(session);
         setIsDeleteModalOpen(true);
@@ -36,6 +24,30 @@ export const HistoryScreen: React.FC = () => {
         setIsDeleteModalOpen(false);
         setSessionToDelete(null);
     };
+
+    // THIS LOGIC WAS THE CAUSE OF THE BUG.
+    // It was forcing a fetch from the cloud on screen load, overwriting the local state
+    // that contained the unsynced session. By removing it, the component will now
+    // correctly display whatever is in the AppContext, including local-only data.
+    // React.useEffect(() => {
+    //     const loadRecentHistory = async () => {
+    //         setIsLoadingMore(true);
+    //         await fetchHistory(3);
+    //         setIsLoadingMore(false);
+    //     };
+    //     loadRecentHistory();
+    // }, []);
+
+    const handleLoadMore = async () => {
+        setIsLoadingMore(true);
+        // Fetch all history when user requests it
+        await fetchHistory(); 
+        setIsLoadingMore(false);
+    }
+
+    // Determine if "Load More" should be shown. This is a simplified check.
+    // A more robust system might track if all items have been fetched.
+    const canLoadMore = history.length < 50; // Assuming 50 is a reasonable max to display initially.
 
     return (
         <Page>
@@ -79,11 +91,12 @@ export const HistoryScreen: React.FC = () => {
                             <div className="w-6 h-6 border-2 border-dark-accent-start border-t-transparent rounded-full animate-spin"></div>
                         </div>
                     )}
-                    {/* Visual cue that only recent history is shown */}
-                    {!isLoadingMore && history.length >= 3 && (
-                        <p className="text-center text-[10px] text-dark-text-secondary mt-6 uppercase tracking-widest opacity-50">
-                            Showing last 3 sessions
-                        </p>
+                    {canLoadMore && !isLoadingMore && (
+                        <div className="mt-6 text-center">
+                            <Button variant="secondary" onClick={handleLoadMore}>
+                                Load Full History
+                            </Button>
+                        </div>
                     )}
                 </>
             )}

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -106,8 +105,8 @@ const SaveStatusOverlay: React.FC<{ status: SaveStatus; onExit: () => void }> = 
         content = (
             <>
                 <div className="w-16 h-16 border-4 border-dark-accent-start border-t-transparent rounded-full animate-spin mb-4"></div>
-                <h2 className="text-2xl font-bold text-white animate-pulse uppercase tracking-wider text-center">Syncing Database...</h2>
-                <p className="text-dark-text-secondary mt-2 text-sm text-center">Please wait while we secure your data.</p>
+                <h2 className="text-2xl font-bold text-white animate-pulse uppercase tracking-wider text-center">Синхронізація...</h2>
+                <p className="text-dark-text-secondary mt-2 text-sm text-center">Будь ласка, зачекайте, поки ми зберігаємо ваші дані.</p>
             </>
         );
     } else if (status === 'cloud_success') {
@@ -120,9 +119,9 @@ const SaveStatusOverlay: React.FC<{ status: SaveStatus; onExit: () => void }> = 
                         <svg className="w-6 h-6 text-black font-bold" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg>
                     </div>
                 </div>
-                <h2 className="text-3xl font-black text-green-400 uppercase tracking-widest text-center mb-2">Saved to Cloud</h2>
-                <p className="text-gray-300 text-center max-w-xs mb-8">Session data is safely stored in the database. It is now safe to close the app.</p>
-                <Button variant="secondary" onClick={onExit} className="w-full !py-4 font-bold text-xl border border-green-500/50 text-green-400 hover:bg-green-500/10">GO HOME</Button>
+                <h2 className="text-3xl font-black text-green-400 uppercase tracking-widest text-center mb-2">Збережено в хмару</h2>
+                <p className="text-gray-300 text-center max-w-xs mb-8">Дані сесії надійно збережено в базі даних. Тепер можна безпечно закрити додаток.</p>
+                <Button variant="secondary" onClick={onExit} className="w-full !py-4 font-bold text-xl border border-green-500/50 text-green-400 hover:bg-green-500/10">НА ГОЛОВНУ</Button>
             </>
         );
     } else if (status === 'local_success') {
@@ -132,13 +131,13 @@ const SaveStatusOverlay: React.FC<{ status: SaveStatus; onExit: () => void }> = 
                     <div className="absolute inset-0 bg-yellow-500 blur-2xl opacity-20 rounded-full"></div>
                     <CloudFog className="w-24 h-24 text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
                 </div>
-                <h2 className="text-3xl font-black text-yellow-400 uppercase tracking-widest text-center mb-2">Saved Locally</h2>
+                <h2 className="text-3xl font-black text-yellow-400 uppercase tracking-widest text-center mb-2">Збережено локально</h2>
                 <p className="text-gray-300 text-center max-w-xs mb-8 font-bold">
-                    No database connection.
+                    Немає підключення до бази даних.
                     <br/>
-                    <span className="font-normal text-sm opacity-80 block mt-2">Data is saved on this device only. Please connect to the internet later to sync.</span>
+                    <span className="font-normal text-sm opacity-80 block mt-2">Дані збережено лише на цьому пристрої. Будь ласка, підключіться до Інтернету пізніше для синхронізації.</span>
                 </p>
-                <Button variant="secondary" onClick={onExit} className="w-full !py-4 font-bold text-xl border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10">I UNDERSTAND</Button>
+                <Button variant="secondary" onClick={onExit} className="w-full !py-4 font-bold text-xl border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/10">Я ЗРОЗУМІВ</Button>
             </>
         );
     } else if (status === 'error') {
@@ -147,9 +146,9 @@ const SaveStatusOverlay: React.FC<{ status: SaveStatus; onExit: () => void }> = 
                 <div className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center mb-6 border-2 border-red-500">
                     <span className="text-4xl">❌</span>
                 </div>
-                <h2 className="text-2xl font-black text-red-500 uppercase tracking-widest text-center mb-4">Save Failed</h2>
-                <p className="text-gray-300 text-center max-w-xs mb-8">A critical error occurred. Please check your connection and try again.</p>
-                <Button variant="secondary" onClick={onExit} className="w-full !py-4 font-bold text-xl">CLOSE ANYWAY</Button>
+                <h2 className="text-2xl font-black text-red-500 uppercase tracking-widest text-center mb-4">Помилка збереження</h2>
+                <p className="text-gray-300 text-center max-w-xs mb-8">Сталася критична помилка. Будь ласка, перевірте з'єднання та спробуйте ще раз.</p>
+                <Button variant="secondary" onClick={onExit} className="w-full !py-4 font-bold text-xl">ЗАКРИТИ</Button>
             </>
         );
     }

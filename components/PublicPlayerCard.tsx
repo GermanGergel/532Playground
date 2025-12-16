@@ -321,22 +321,24 @@ const InfoView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     );
 };
 
-const MainCardView: React.FC<{ player: Player, onNavigate: (view: View) => void, cardStyle?: React.CSSProperties }> = ({ player, onNavigate, cardStyle }) => {
+const MainCardView: React.FC<{ player: Player, onNavigate: (view: View) => void, cardStyle?: React.CSSProperties, showNavigation: boolean }> = ({ player, onNavigate, cardStyle, showNavigation }) => {
     const t = useTranslation();
     const buttonClasses = "w-full !py-3 flex items-center justify-center shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 border border-dark-accent-start/30 font-chakra font-bold text-xl tracking-wider";
     return (
         <div>
             <ReadOnlyPlayerCard player={player} style={cardStyle} />
-            <div className="flex flex-col gap-4 mt-6">
-                <Button variant="secondary" onClick={() => onNavigate('stats')} className={buttonClasses}>{t.statistics}</Button>
-                <Button variant="secondary" onClick={() => onNavigate('awards')} className={buttonClasses}>{t.awards}</Button>
-                <Button variant="secondary" onClick={() => onNavigate('info')} className={buttonClasses}>{t.information}</Button>
-            </div>
+            {showNavigation && (
+                <div className="flex flex-col gap-4 mt-6">
+                    <Button variant="secondary" onClick={() => onNavigate('stats')} className={buttonClasses}>{t.statistics}</Button>
+                    <Button variant="secondary" onClick={() => onNavigate('awards')} className={buttonClasses}>{t.awards}</Button>
+                    <Button variant="secondary" onClick={() => onNavigate('info')} className={buttonClasses}>{t.information}</Button>
+                </div>
+            )}
         </div>
     );
 };
 
-export const PublicPlayerCard: React.FC<{ player: Player; cardStyle?: React.CSSProperties; compact?: boolean }> = ({ player, cardStyle }) => {
+export const PublicPlayerCard: React.FC<{ player: Player; cardStyle?: React.CSSProperties; showNavigation?: boolean }> = ({ player, cardStyle, showNavigation = true }) => {
     const [view, setView] = React.useState<View>('main');
 
     switch (view) {
@@ -348,6 +350,6 @@ export const PublicPlayerCard: React.FC<{ player: Player; cardStyle?: React.CSSP
             return <InfoView onBack={() => setView('main')} />;
         case 'main':
         default:
-            return <MainCardView player={player} onNavigate={setView} cardStyle={cardStyle} />;
+            return <MainCardView player={player} onNavigate={setView} cardStyle={cardStyle} showNavigation={showNavigation} />;
     }
 };

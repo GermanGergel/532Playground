@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Card, Button, useTranslation } from '../ui';
 import { isSupabaseConfigured, getCloudPlayerCount } from '../db';
-import { Wand } from '../icons';
+import { Wand, Users, ExternalLink } from '../icons';
 
 export const SettingsScreen: React.FC = () => {
     const t = useTranslation();
@@ -152,13 +152,24 @@ export const SettingsScreen: React.FC = () => {
 
             <div className="p-4 shrink-0 space-y-4">
                 {/* Admin Button for Promo Config */}
-                <Button 
-                    variant="ghost" 
-                    onClick={() => navigate('/settings/promo-admin')}
-                    className="w-full !py-3 border border-white/5 bg-black/20 hover:bg-white/5 text-dark-text-secondary text-xs tracking-widest uppercase flex items-center justify-center gap-2"
-                >
-                    <Wand className="w-4 h-4 opacity-50" /> Configure Promo Page
-                </Button>
+                <div className="grid grid-cols-2 gap-2">
+                    <Button 
+                        variant="ghost" 
+                        onClick={() => navigate('/settings/promo-admin')}
+                        className="!py-3 border border-white/5 bg-black/20 hover:bg-white/5 text-dark-text-secondary text-xs tracking-widest uppercase flex items-center justify-center gap-2"
+                    >
+                        <Wand className="w-4 h-4 opacity-50" /> Promo Config
+                    </Button>
+                    
+                    {/* BUTTON TO PREVIEW WEB SITE (Navigate Internal) */}
+                    <Button 
+                        variant="ghost" 
+                        onClick={() => navigate('/hub')}
+                        className="!py-3 border border-emerald-500/20 bg-emerald-900/10 hover:bg-emerald-500/10 text-emerald-400 text-xs tracking-widest uppercase flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.1)] rounded-xl font-bold transition-all duration-300"
+                    >
+                        <ExternalLink className="w-4 h-4" /> Open Web Hub
+                    </Button>
+                </div>
 
                 <NetworkHud />
                 

@@ -52,6 +52,21 @@ export const en = {
     navStatistics: "Statistics",
     navHistory: "History",
     navSettings: "Settings",
+    // Public Hub
+    hub_location_tag: "Da Nang • Football Community",
+    hub_slogan_1: "DEFINE YOUR",
+    hub_slogan_2: "LEGACY",
+    // FIX: Add missing translation keys for rotating hero words.
+    hub_word_legacy: "LEGACY",
+    hub_word_game: "GAME",
+    hub_word_skill: "SKILL",
+    hub_word_victory: "VICTORY",
+    hub_description: "Welcome to the digital ecosystem of 532 Playground. Where statistics meet passion. Analyze ratings, track progress, and become a legend.",
+    hub_cta: "Explore Stats",
+    hub_leaders_title: "SEASON LEADERS",
+    hub_active_members: "Active Members",
+    hub_avg_rating: "Average Rating",
+    hub_sessions_played: "Sessions Played",
     // HomeScreen
     newSession: "Training Session",
     continueSession: "Continue Session",
@@ -379,4 +394,9 @@ export const en = {
     badge_career_150_influence_desc: "Achieve 150 career goal contributions (goals + assists).",
     badge_career_super_veteran: "Super Veteran",
     badge_career_super_veteran_desc: "Participate in 100 career sessions.",
+
+    // Footer
+    footer_cta_title: "JOIN THE SQUAD",
+    footer_cta_desc: "Connect with us on WhatsApp to book your slot.",
+    footer_copyright: "© {year} 532 Playground. All rights reserved.",
 };
