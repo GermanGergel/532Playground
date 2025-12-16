@@ -12,7 +12,7 @@ import { useTranslation } from '../ui';
 export type SaveStatus = 'idle' | 'saving' | 'cloud_success' | 'local_success' | 'error';
 
 export const useGameManager = () => {
-    const { activeSession, setActiveSession, setHistory, setAllPlayers, setNewsFeed, allPlayers: oldPlayersState, newsFeed, activeVoicePack } = useApp();
+    const { activeSession, setActiveSession, setHistory, setAllPlayers, setNewsFeed, allPlayers: oldPlayersState, newsFeed, activeVoicePack, recoveryMode, setRecoveryMode } = useApp();
     const navigate = useNavigate();
     const t = useTranslation();
 
@@ -493,7 +493,6 @@ export const useGameManager = () => {
     const handleFinishSession = async () => {
         if (!activeSession || saveStatus === 'saving') return;
 
-        // Test Mode: immediate exit, no save
         if (activeSession.isTestMode) {
             setIsEndSessionModalOpen(false);
             setActiveSession(null);
@@ -502,8 +501,26 @@ export const useGameManager = () => {
         }
         
         setSaveStatus('saving');
-        setIsEndSessionModalOpen(false); // Close the confirm modal, the SaveOverlay will take over
+        setIsEndSessionModalOpen(false);
         
+        if (recoveryMode === 'session_only') {
+            try {
+                const sessionToSave: Session = {
+                    ...activeSession,
+                    status: SessionStatus.Completed,
+                };
+                const historyResult = await saveHistoryToDB([sessionToSave]);
+                setHistory(prev => [sessionToSave, ...prev.filter(s => s.id !== sessionToSave.id)]);
+                setSaveStatus(historyResult.cloudSaved ? 'cloud_success' : 'local_success');
+                setRecoveryMode(null);
+            } catch (error) {
+                console.error("Error ending session in 'session_only' mode:", error);
+                setSaveStatus('error');
+                setRecoveryMode(null);
+            }
+            return;
+        }
+
         try {
             const {
                 updatedPlayers,
@@ -515,9 +532,6 @@ export const useGameManager = () => {
                 oldPlayers: oldPlayersState,
                 newsFeed: newsFeed,
             });
-
-            // Parallel save execution would be faster, but let's do sequential for safer status reporting
-            // We care most about Session History being cloud-saved.
             
             if (playersToSave.length > 0) {
                 await savePlayersToDB(playersToSave);
@@ -529,20 +543,16 @@ export const useGameManager = () => {
                 setNewsFeed(updatedNewsFeed);
             }
 
-            // Save History is the critical path
             const historyResult = await saveHistoryToDB([finalSession]);
             setHistory(prev => [finalSession, ...prev]);
 
-            // Determine final status
-            if (historyResult.cloudSaved) {
-                setSaveStatus('cloud_success');
-            } else {
-                setSaveStatus('local_success');
-            }
+            setSaveStatus(historyResult.cloudSaved ? 'cloud_success' : 'local_success');
+            if (recoveryMode) setRecoveryMode(null);
 
         } catch (error) {
             console.error("Error ending session:", error);
             setSaveStatus('error');
+            if (recoveryMode) setRecoveryMode(null);
         }
     };
     

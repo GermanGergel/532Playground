@@ -1,4 +1,3 @@
-
 import { Session, Player, NewsItem, BadgeType, SessionStatus, PlayerRecords, PlayerHistoryEntry } from '../types';
 import { calculateAllStats } from './statistics';
 import { calculateEarnedBadges, calculateRatingUpdate, getTierForRating } from './rating';
@@ -191,6 +190,7 @@ export const processFinishedSession = ({
     // --- 4. PREPARE FINAL DATA ---
     const finalSession: Session = { 
         ...session, 
+        // Force status to completed, important for recovery tool
         status: SessionStatus.Completed,
     };
 
