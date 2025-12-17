@@ -21,6 +21,7 @@ export const HistoryScreen: React.FC = () => {
             setIsLoadingMore(true);
             
             // 1. Try to push any local-only sessions to the cloud
+            // This function now logs errors to console if it fails due to column issues
             await retrySyncPendingSessions(); 
             
             // 2. Fetch the latest history (this updates the UI from Yellow -> Green if successful)
@@ -39,15 +40,27 @@ export const HistoryScreen: React.FC = () => {
     const handleDelete = async () => {
         if (!sessionToDelete) return;
         
-        // 1. Optimistically update UI (Remove from list)
-        const updatedHistory = history.filter(s => s.id !== sessionToDelete.id);
-        setHistory(updatedHistory);
+        // 1. Optimistically update UI
+        setHistory(prev => prev.filter(s => s.id !== sessionToDelete.id));
         
-        // 2. Perform actual deletion (Local IDB + Cloud)
+        // 2. Perform actual deletion (Local IDB overwrite + Cloud)
         await deleteSessionFromDB(sessionToDelete.id);
         
         setIsDeleteModalOpen(false);
         setSessionToDelete(null);
+    };
+
+    const handleRetrySync = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const count = await retrySyncPendingSessions();
+        if (count > 0) {
+            await fetchHistory(5);
+        } else {
+            // If still 0, it means it failed. The DB logic logs the error to console.
+            // We can verify visually if it turns green.
+            alert("Sync attempt finished. If still yellow, check console for database errors (e.g. missing columns).");
+        }
     };
 
     return (
@@ -67,7 +80,9 @@ export const HistoryScreen: React.FC = () => {
                                             <div className="overflow-hidden">
                                                 <h3 className="font-bold text-base truncate flex items-center gap-2">
                                                     {session.sessionName}
-                                                    {session.syncStatus === 'pending' && <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" title="Pending Sync"></span>}
+                                                    {session.syncStatus === 'pending' && (
+                                                        <button onClick={handleRetrySync} className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse cursor-pointer" title="Pending Sync - Click to Retry" />
+                                                    )}
                                                 </h3>
                                                 <p className="text-xs text-dark-text-secondary">{new Date(session.date).toLocaleDateString()}</p>
                                             </div>
@@ -79,7 +94,7 @@ export const HistoryScreen: React.FC = () => {
                                     </Card>
                                 </Link>
                                 <div className="flex flex-col gap-2">
-                                    {/* LOGIC CHANGE: Delete button ONLY shows if session is NOT synced (i.e. Local/Pending) */}
+                                    {/* Delete button only for pending/local sessions as requested */}
                                     {session.syncStatus !== 'synced' && (
                                         <Button
                                             variant="ghost"
@@ -102,7 +117,6 @@ export const HistoryScreen: React.FC = () => {
                             <div className="w-6 h-6 border-2 border-dark-accent-start border-t-transparent rounded-full animate-spin"></div>
                         </div>
                     )}
-                    {/* Visual cue that only recent history is shown */}
                     {!isLoadingMore && history.length >= 3 && (
                         <p className="text-center text-[10px] text-dark-text-secondary mt-6 uppercase tracking-widest opacity-50">
                             Showing recent sessions
