@@ -93,15 +93,6 @@ export const uploadPromoImage = async (base64Image: string): Promise<string | nu
     }
 };
 
-const hasLoggedMode = false;
-const logStorageMode = () => {
-    if (!hasLoggedMode) {
-        if (isSupabaseConfigured()) {
-            console.log('🔌 Connected to Cloud Database (Supabase)');
-        }
-    }
-};
-
 // --- BASE64 to Blob HELPER ---
 const base64ToBlob = (base64: string): Blob => {
     const parts = base64.split(';base64,');
@@ -150,7 +141,12 @@ const sanitizeObject = (obj: any): any => {
     if (typeof obj === 'object') {
         const newObj: any = {};
         for (const key in obj) {
-            if ((key === 'photo' || key === 'playerCard' || key === 'logo' || key === 'playerPhoto') && typeof obj[key] === 'string' && obj[key].startsWith('data:')) {
+            // Aggressively remove large strings that look like base64 images
+            if (
+                (key === 'photo' || key === 'playerCard' || key === 'logo' || key === 'playerPhoto') && 
+                typeof obj[key] === 'string' && 
+                (obj[key].startsWith('data:') || obj[key].length > 1000)
+            ) {
                 newObj[key] = null; 
             } else {
                 newObj[key] = sanitizeObject(obj[key]);
@@ -328,7 +324,6 @@ export const loadActiveSessionFromDB = async (): Promise<Session | null | undefi
     try { return await get('activeSession'); } catch (error) { return undefined; }
 };
 
-// --- NEW: INSTANT LOCAL SAVE ---
 export const saveHistoryLocalOnly = async (history: Session[]) => {
     try {
         const existingHistory = await get<Session[]>('history') || [];
@@ -350,30 +345,60 @@ export const saveHistoryLocalOnly = async (history: Session[]) => {
     }
 };
 
+// --- IMPROVED DELETE FUNCTION ---
+export const deleteSessionFromDB = async (sessionId: string): Promise<boolean> => {
+    try {
+        // 1. Delete from Local
+        const history = await get<Session[]>('history') || [];
+        const newHistory = history.filter(s => s.id !== sessionId);
+        await set('history', newHistory);
+
+        // 2. Delete from Cloud
+        if (isSupabaseConfigured() && !sessionId.startsWith('demo_')) {
+            const { error } = await supabase!.from('sessions').delete().eq('id', sessionId);
+            if (error) console.error("Cloud delete error:", error);
+        }
+        return true;
+    } catch (error) {
+        console.error("Delete failed:", error);
+        return false;
+    }
+};
+
 // --- ROBUST SESSION HISTORY SAVE ---
 export const saveHistoryToDB = async (history: Session[]): Promise<DbResult> => {
     const realHistory = history.filter(s => !s.id.startsWith('demo_'));
     if (realHistory.length === 0) return { success: true, cloudSaved: false };
 
-    // 1. LOCAL FIRST (Always execute to ensure IDB is up to date)
     await saveHistoryLocalOnly(realHistory);
 
-    // 2. CLOUD SYNC
     let cloudError: any = null;
     let cloudSaved = false;
 
     if (isSupabaseConfigured()) {
         try {
-            // Find what really needs syncing (completed and not synced)
-            // We re-read from local to be sure we have the latest status if 'saveHistoryLocalOnly' just ran
             const currentLocalHistory = await get<Session[]>('history') || realHistory;
             const sessionsToSync = currentLocalHistory.filter(s => s.status === 'completed' && s.syncStatus !== 'synced' && !s.id.startsWith('demo_'));
             
             if (sessionsToSync.length > 0) {
+                // EXTREME SANITIZATION: Remove all heavy objects nested in session
                 const optimizedHistory = sessionsToSync.map(session => ({
                     ...session,
                     syncStatus: 'synced', 
-                    playerPool: session.playerPool.map(p => ({ ...p, photo: undefined, playerCard: undefined }))
+                    // Completely strip player details, only keep minimal info or IDs if possible.
+                    // But to be safe, we just strip the photos vigorously.
+                    playerPool: session.playerPool.map(p => ({
+                        ...p,
+                        photo: undefined, // Remove photo URL completely from session record
+                        playerCard: undefined, // Remove card URL completely
+                        records: undefined, // Remove records (they are saved on player object)
+                        historyData: undefined // Remove chart data (saved on player object)
+                    })),
+                    // Teams often have playerIds, which is fine. Ensure logos are stripped if base64.
+                    teams: session.teams.map(t => ({
+                        ...t,
+                        logo: (t.logo && t.logo.length > 500) ? undefined : t.logo
+                    }))
                 })).map(s => sanitizeObject(s));
 
                 const { error } = await supabase!.from('sessions').upsert(optimizedHistory, { onConflict: 'id' });
@@ -381,7 +406,6 @@ export const saveHistoryToDB = async (history: Session[]): Promise<DbResult> => 
                 
                 cloudSaved = true;
 
-                // 3. UPDATE LOCAL STATUS TO GREEN
                 const finalHistory = currentLocalHistory.map(s => {
                     if (sessionsToSync.some(synced => synced.id === s.id)) {
                         return { ...s, syncStatus: 'synced' as const };
@@ -405,9 +429,10 @@ export const saveHistoryToDB = async (history: Session[]): Promise<DbResult> => 
     return { success: true, cloudSaved: true };
 };
 
-// --- CRITICAL UPDATE: UNIFIED HISTORY LOAD ---
+// --- CRITICAL UPDATE: UNIFIED HISTORY LOAD (Fixes Zombies) ---
 export const loadHistoryFromDB = async (limit?: number): Promise<Session[] | undefined> => {
-    let localHistory = await get<Session[]>('history') || [];
+    // 1. Get Local Data
+    const localHistory = await get<Session[]>('history') || [];
 
     if (isSupabaseConfigured()) {
         try {
@@ -418,25 +443,33 @@ export const loadHistoryFromDB = async (limit?: number): Promise<Session[] | und
             if (error) throw error;
 
             if (cloudHistory) {
-                const sessionMap = new Map<string, Session>();
-                
+                // STRATEGY:
+                // 1. Trust Cloud as the Source of Truth for "Synced" sessions.
+                // 2. Keep Local sessions ONLY if they are 'pending' (waiting to upload).
+                // 3. This effectively kills "Zombies" (deleted in cloud but stuck in local).
+
+                const mergedHistory: Session[] = [];
+                const cloudIds = new Set(cloudHistory.map(s => s.id));
+
+                // Add all Cloud sessions (marked as synced)
                 cloudHistory.forEach(s => {
-                    sessionMap.set(s.id, { ...s, syncStatus: 'synced' } as Session);
+                    mergedHistory.push({ ...s, syncStatus: 'synced' } as Session);
                 });
-                
+
+                // Add Local sessions ONLY if they are NOT in cloud AND are marked 'pending'
                 localHistory.forEach(s => {
-                    const cloudVersion = sessionMap.get(s.id);
-                    if (!cloudVersion) {
-                        sessionMap.set(s.id, s);
+                    if (!cloudIds.has(s.id) && s.syncStatus === 'pending') {
+                        mergedHistory.push(s);
                     }
                 });
 
-                const mergedHistory = Array.from(sessionMap.values()).sort((a, b) => 
+                const sortedHistory = mergedHistory.sort((a, b) => 
                     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
                 );
 
-                await set('history', mergedHistory);
-                return limit ? mergedHistory.slice(0, limit) : mergedHistory;
+                // Update local cache to match reality
+                await set('history', sortedHistory);
+                return limit ? sortedHistory.slice(0, limit) : sortedHistory;
             }
         } catch (error) { 
             console.error("Cloud history load failed, utilizing local cache", error);

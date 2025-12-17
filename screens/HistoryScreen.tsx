@@ -6,7 +6,7 @@ import { Page, Button, Card, Modal, useTranslation } from '../ui';
 import { Trash2, Cloud } from '../icons';
 import { Session } from '../types';
 import { BrandedHeader } from './utils';
-import { retrySyncPendingSessions } from '../db';
+import { retrySyncPendingSessions, deleteSessionFromDB } from '../db';
 
 export const HistoryScreen: React.FC = () => {
     const { history, setHistory, fetchHistory } = useApp();
@@ -16,8 +16,6 @@ export const HistoryScreen: React.FC = () => {
     const [isLoadingMore, setIsLoadingMore] = React.useState(false);
 
     // AUTO-SYNC LOGIC:
-    // When this screen mounts, we assume the user might have just finished a session.
-    // We immediately try to sync any pending sessions in the background.
     useEffect(() => {
         const syncAndRefresh = async () => {
             setIsLoadingMore(true);
@@ -38,9 +36,15 @@ export const HistoryScreen: React.FC = () => {
         setIsDeleteModalOpen(true);
     };
 
-    const handleDelete = () => {
+    const handleDelete = async () => {
         if (!sessionToDelete) return;
+        
+        // Optimistically update UI
         setHistory(prev => prev.filter(s => s.id !== sessionToDelete.id));
+        
+        // Perform actual deletion (Local IDB + Cloud)
+        await deleteSessionFromDB(sessionToDelete.id);
+        
         setIsDeleteModalOpen(false);
         setSessionToDelete(null);
     };
@@ -74,17 +78,20 @@ export const HistoryScreen: React.FC = () => {
                                     </Card>
                                 </Link>
                                 <div className="flex flex-col gap-2">
-                                    <Button
-                                        variant="ghost"
-                                        className="!p-2 !text-white shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
-                                        style={{ textShadow: '0 0 10px #00F2FE, 0 0 15px #00F2FE' }}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            openDeleteModal(session);
-                                        }}
-                                    >
-                                        <Trash2 className="w-5 h-5"/>
-                                    </Button>
+                                    {/* LOGIC CHANGE: Delete button ONLY shows if session is NOT synced (i.e. Local/Pending) */}
+                                    {session.syncStatus !== 'synced' && (
+                                        <Button
+                                            variant="ghost"
+                                            className="!p-2 !text-white shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
+                                            style={{ textShadow: '0 0 10px #00F2FE, 0 0 15px #00F2FE' }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                openDeleteModal(session);
+                                            }}
+                                        >
+                                            <Trash2 className="w-5 h-5"/>
+                                        </Button>
+                                    )}
                                 </div>
                             </li>
                         ))}
