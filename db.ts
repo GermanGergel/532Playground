@@ -324,22 +324,28 @@ export const loadActiveSessionFromDB = async (): Promise<Session | null | undefi
     try { return await get('activeSession'); } catch (error) { return undefined; }
 };
 
-export const saveHistoryLocalOnly = async (history: Session[]) => {
+// FIX: Added 'overwrite' parameter to prevent zombies during full saves.
+export const saveHistoryLocalOnly = async (history: Session[], overwrite: boolean = false) => {
     try {
-        const existingHistory = await get<Session[]>('history') || [];
-        const historyMap = new Map<string, Session>();
+        let mergedHistory = history;
         
-        existingHistory.forEach(s => historyMap.set(s.id, s));
-        history.forEach(session => {
-            const updatedSession = { ...session };
-            if (updatedSession.status === 'completed' && updatedSession.syncStatus !== 'synced') {
-                updatedSession.syncStatus = 'pending';
-            }
-            historyMap.set(updatedSession.id, updatedSession);
-        });
+        if (!overwrite) {
+            const existingHistory = await get<Session[]>('history') || [];
+            const historyMap = new Map<string, Session>();
+            
+            existingHistory.forEach(s => historyMap.set(s.id, s));
+            history.forEach(session => {
+                const updatedSession = { ...session };
+                if (updatedSession.status === 'completed' && updatedSession.syncStatus !== 'synced') {
+                    updatedSession.syncStatus = 'pending';
+                }
+                historyMap.set(updatedSession.id, updatedSession);
+            });
+            mergedHistory = Array.from(historyMap.values());
+        }
 
-        const mergedHistory = Array.from(historyMap.values()).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        await set('history', mergedHistory);
+        const sortedHistory = mergedHistory.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        await set('history', sortedHistory);
     } catch (error) {
         console.error("Local Save Failed", error);
     }
@@ -348,7 +354,7 @@ export const saveHistoryLocalOnly = async (history: Session[]) => {
 // --- IMPROVED DELETE FUNCTION ---
 export const deleteSessionFromDB = async (sessionId: string): Promise<boolean> => {
     try {
-        // 1. Delete from Local
+        // 1. Delete from Local (Forceful overwrite logic handled by manual filter here)
         const history = await get<Session[]>('history') || [];
         const newHistory = history.filter(s => s.id !== sessionId);
         await set('history', newHistory);
@@ -368,9 +374,12 @@ export const deleteSessionFromDB = async (sessionId: string): Promise<boolean> =
 // --- ROBUST SESSION HISTORY SAVE ---
 export const saveHistoryToDB = async (history: Session[]): Promise<DbResult> => {
     const realHistory = history.filter(s => !s.id.startsWith('demo_'));
-    if (realHistory.length === 0) return { success: true, cloudSaved: false };
+    
+    // FIX: When saving the full history list from context, use OVERWRITE mode 
+    // to ensure deleted items (which are missing from 'history') are removed from IDB.
+    await saveHistoryLocalOnly(realHistory, true);
 
-    await saveHistoryLocalOnly(realHistory);
+    if (realHistory.length === 0) return { success: true, cloudSaved: false };
 
     let cloudError: any = null;
     let cloudSaved = false;
@@ -381,20 +390,16 @@ export const saveHistoryToDB = async (history: Session[]): Promise<DbResult> => 
             const sessionsToSync = currentLocalHistory.filter(s => s.status === 'completed' && s.syncStatus !== 'synced' && !s.id.startsWith('demo_'));
             
             if (sessionsToSync.length > 0) {
-                // EXTREME SANITIZATION: Remove all heavy objects nested in session
                 const optimizedHistory = sessionsToSync.map(session => ({
                     ...session,
                     syncStatus: 'synced', 
-                    // Completely strip player details, only keep minimal info or IDs if possible.
-                    // But to be safe, we just strip the photos vigorously.
                     playerPool: session.playerPool.map(p => ({
                         ...p,
-                        photo: undefined, // Remove photo URL completely from session record
-                        playerCard: undefined, // Remove card URL completely
-                        records: undefined, // Remove records (they are saved on player object)
-                        historyData: undefined // Remove chart data (saved on player object)
+                        photo: undefined, 
+                        playerCard: undefined,
+                        records: undefined,
+                        historyData: undefined
                     })),
-                    // Teams often have playerIds, which is fine. Ensure logos are stripped if base64.
                     teams: session.teams.map(t => ({
                         ...t,
                         logo: (t.logo && t.logo.length > 500) ? undefined : t.logo
@@ -443,11 +448,6 @@ export const loadHistoryFromDB = async (limit?: number): Promise<Session[] | und
             if (error) throw error;
 
             if (cloudHistory) {
-                // STRATEGY:
-                // 1. Trust Cloud as the Source of Truth for "Synced" sessions.
-                // 2. Keep Local sessions ONLY if they are 'pending' (waiting to upload).
-                // 3. This effectively kills "Zombies" (deleted in cloud but stuck in local).
-
                 const mergedHistory: Session[] = [];
                 const cloudIds = new Set(cloudHistory.map(s => s.id));
 

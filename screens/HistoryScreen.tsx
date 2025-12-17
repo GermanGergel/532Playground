@@ -39,10 +39,11 @@ export const HistoryScreen: React.FC = () => {
     const handleDelete = async () => {
         if (!sessionToDelete) return;
         
-        // Optimistically update UI
-        setHistory(prev => prev.filter(s => s.id !== sessionToDelete.id));
+        // 1. Optimistically update UI (Remove from list)
+        const updatedHistory = history.filter(s => s.id !== sessionToDelete.id);
+        setHistory(updatedHistory);
         
-        // Perform actual deletion (Local IDB + Cloud)
+        // 2. Perform actual deletion (Local IDB + Cloud)
         await deleteSessionFromDB(sessionToDelete.id);
         
         setIsDeleteModalOpen(false);
