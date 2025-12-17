@@ -6,7 +6,7 @@ import { Page, Button, Card, Modal, useTranslation } from '../ui';
 import { Trash2, Cloud } from '../icons';
 import { Session } from '../types';
 import { BrandedHeader } from './utils';
-import { retrySyncPendingSessions, deleteSessionFromLocalDB } from '../db';
+import { retrySyncPendingSessions, deleteSession } from '../db';
 
 export const HistoryScreen: React.FC = () => {
     const { history, setHistory, fetchHistory } = useApp();
@@ -41,13 +41,14 @@ export const HistoryScreen: React.FC = () => {
     const handleDelete = async () => {
         if (!sessionToDelete) return;
         
-        // 1. Remove from React State (Visual)
+        // --- NUCLEAR DELETE ---
+        // Attempts to delete from Cloud AND Local DB AND Active Session State.
+        // Even if it fails on cloud (offline), it will burn it locally.
+        await deleteSession(sessionToDelete.id);
+
+        // Remove from React State (Visual)
         setHistory(prev => prev.filter(s => s.id !== sessionToDelete.id));
         
-        // 2. Remove permanently from IDB (Local Storage)
-        // This ensures pending sessions don't reappear on reload
-        await deleteSessionFromLocalDB(sessionToDelete.id);
-
         setIsDeleteModalOpen(false);
         setSessionToDelete(null);
     };
