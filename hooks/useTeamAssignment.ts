@@ -45,7 +45,8 @@ export const useTeamAssignment = () => {
 
     const sessionPlayerIds = new Set(activeSession?.playerPool.map(p => p.id));
     
-    const searchResults = playerSearch && !activeSession?.isTestMode
+    // Always filter based on real players now, no test mode branch
+    const searchResults = playerSearch
         ? allPlayers.filter(p => 
             !sessionPlayerIds.has(p.id) &&
             p.nickname.toLowerCase().includes(playerSearch.toLowerCase())
@@ -56,10 +57,10 @@ export const useTeamAssignment = () => {
         if (!activeSession) return;
         let playerToAdd: Player;
 
-        if ('id' in player && !activeSession.isTestMode) {
+        if ('id' in player) {
             playerToAdd = player;
         } else {
-            const existingPlayer = !activeSession.isTestMode ? allPlayers.find(p => p.nickname.toLowerCase() === player.nickname.toLowerCase()) : undefined;
+            const existingPlayer = allPlayers.find(p => p.nickname.toLowerCase() === player.nickname.toLowerCase());
             
             if (existingPlayer) {
                 playerToAdd = existingPlayer;
@@ -85,10 +86,9 @@ export const useTeamAssignment = () => {
                     },
                 };
                 
-                if (!activeSession.isTestMode) {
-                    setAllPlayers(prev => [...prev, playerToAdd]);
-                    saveSinglePlayerToDB(playerToAdd);
-                }
+                // Always save new player
+                setAllPlayers(prev => [...prev, playerToAdd]);
+                saveSinglePlayerToDB(playerToAdd);
             }
         }
         

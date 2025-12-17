@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useApp } from '../context';
 import { Page, Button, useTranslation } from '../ui';
 
 export const PlayerHubScreen: React.FC = () => {

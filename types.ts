@@ -27,7 +27,8 @@ export type BadgeType =
     | 'session_top_scorer' | 'stable_striker' | 'victory_finisher' | 'session_top_assistant'
     | 'passing_streak' | 'team_conductor' | 'ten_influence' | 'mastery_balance'
     | 'key_player' | 'win_leader' | 'iron_streak' | 'undefeated' | 'dominant_participant'
-    | 'career_100_wins' | 'career_150_influence' | 'career_super_veteran';
+    | 'career_100_wins' | 'career_150_influence' | 'career_super_veteran'
+    | 'mercenary' | 'double_agent' | 'joker' | 'crisis_manager' | 'iron_lung';
 
 export type SkillType = 'goalkeeper' | 'power_shot' | 'technique' | 'defender' | 'playmaker' | 'finisher' | 'versatile' | 'tireless_motor' | 'leader';
 
@@ -116,6 +117,13 @@ export interface Goal {
     timestampSeconds: number;
 }
 
+// Legionnaire System Types
+export interface LegionnaireMove {
+    playerId: string;
+    fromTeamId: string;
+    toTeamId: string;
+}
+
 export interface Game {
     id: string;
     gameNumber: number;
@@ -134,6 +142,7 @@ export interface Game {
     lastResumeTime?: number;
     endedAt?: string;
     announcedMilestones?: number[];
+    legionnaireMoves?: LegionnaireMove[]; // Track temporary transfers
 }
 
 export enum SessionStatus {
@@ -152,7 +161,8 @@ export enum EventType {
     SUBSTITUTION = 'substitution',
     FINISH_ROUND = 'finish_round',
     TIMER_START = 'timer_start',
-    TIMER_STOP = 'timer_stop'
+    TIMER_STOP = 'timer_stop',
+    LEGIONNAIRE_SIGN = 'legionnaire_sign'
 }
 
 export interface StartRoundPayload {
@@ -175,11 +185,16 @@ export interface SubPayload {
     in: string;
 }
 
+export interface LegionnairePayload {
+    player: string;
+    toTeam: string;
+}
+
 export interface EventLogEntry {
     timestamp: string;
     round: number;
     type: EventType;
-    payload: StartRoundPayload | GoalPayload | SubPayload | {};
+    payload: StartRoundPayload | GoalPayload | SubPayload | LegionnairePayload | {};
 }
 
 export type SyncState = 'synced' | 'pending' | 'error';
@@ -199,8 +214,7 @@ export interface Session {
     games: Game[];
     playerPool: Player[];
     eventLog: EventLogEntry[];
-    isTestMode: boolean;
-    syncStatus?: SyncState; // New field for robust sync tracking
+    syncStatus?: SyncState;
 }
 
 export type NewsType = 'tier_up' | 'badge' | 'milestone' | 'hot_streak' | 'penalty';

@@ -70,20 +70,14 @@
     }
   </script>
   <style>
-    /* CRITICAL FIX FOR HORIZONTAL SCROLLING ISSUE */
+    /* CRITICAL FIX FOR SCROLLING: RESTORED NATURAL BEHAVIOR */
     html, body {
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       background-color: #1A1D24; 
       
-      /* Prevents pull-to-refresh and elastic bounce on the body */
-      overscroll-behavior-y: none; 
-      
-      /* PREVENTS HORIZONTAL SWIPING / BACK GESTURES from moving the page */
-      overscroll-behavior-x: none;
-      
-      /* Tells browser this page only handles vertical scrolling, ignoring horizontal swipes */
-      touch-action: pan-y;
+      /* Removed strict touch-action: pan-y to allow diagonal scrolling to propagate naturally */
+      /* Removed strict overscroll-behavior to allow native bounce which helps gesture recognition */
       
       /* Hard clips any content overflowing width */
       overflow-x: hidden;
@@ -183,7 +177,8 @@
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "idb-keyval": "https://cdn.jsdelivr.net/npm/idb-keyval@6/+esm",
     "@supabase/supabase-js": "https://aistudiocdn.com/@supabase/supabase-js@^2.86.0",
-    "html2canvas": "https://aistudiocdn.com/html2canvas@^1.4.1"
+    "html2canvas": "https://aistudiocdn.com/html2canvas@^1.4.1",
+    "react-dom": "https://esm.sh/react-dom@^19.2.3"
   }
 }
 </script>

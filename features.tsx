@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Team, Player, PlayerTier, PlayerStatus, BadgeType, PlayerForm, SkillType } from './types';
 import { getPlayerKeyStats } from './services/statistics';
 import { convertCountryCodeAlpha3ToAlpha2 } from './utils/countries';
@@ -16,7 +16,11 @@ import {
     TenInfluenceBadgeIcon, MasteryBalanceBadgeIcon, KeyPlayerBadgeIcon,
     WinLeaderBadgeIcon, IronStreakBadgeIcon, UndefeatedBadgeIcon,
     DominantParticipantBadgeIcon, Career100WinsBadgeIcon, Career150InfluenceBadgeIcon,
-    CareerSuperVeteranBadgeIcon
+    CareerSuperVeteranBadgeIcon,
+    // New Legionnaire Icons
+    MercenaryBadgeIcon, DoubleAgentBadgeIcon, JokerBadgeIcon, CrisisManagerBadgeIcon, IronLungBadgeIcon,
+    TrophyIcon,
+    XCircle
 } from './icons';
 
 // Feature Components
@@ -31,8 +35,6 @@ interface PlayerCardProps {
     onShareProfile: () => void;
     isDownloading?: boolean;
 }
-
-// Removed InitialRatingSetup component as it is no longer used
 
 // FIX: Updated BadgeIcon to accept and pass through SVG props like `style`.
 interface BadgeIconProps extends React.SVGProps<SVGSVGElement> {
@@ -75,6 +77,12 @@ export const BadgeIcon: React.FC<BadgeIconProps> = ({ badge, count, className, .
         career_100_wins: { Icon: Career100WinsBadgeIcon, colorClass: 'badge-glow-gold' },
         career_150_influence: { Icon: Career150InfluenceBadgeIcon, colorClass: 'badge-glow-gold' },
         career_super_veteran: { Icon: CareerSuperVeteranBadgeIcon, colorClass: 'badge-glow-gold' },
+        // Legionnaire Badges (TURQUOISE)
+        mercenary: { Icon: MercenaryBadgeIcon, colorClass: 'badge-glow-turquoise' },
+        double_agent: { Icon: DoubleAgentBadgeIcon, colorClass: 'badge-glow-turquoise' },
+        joker: { Icon: JokerBadgeIcon, colorClass: 'badge-glow-turquoise' },
+        crisis_manager: { Icon: CrisisManagerBadgeIcon, colorClass: 'badge-glow-turquoise' },
+        iron_lung: { Icon: IronLungBadgeIcon, colorClass: 'badge-glow-turquoise' },
     };
 
     const { Icon, colorClass } = badgeConfig[badge] || { Icon: MvpBadgeIcon, colorClass: 'badge-glow-gold' };
@@ -190,16 +198,192 @@ const SessionTrendChart: React.FC<{ history?: Player['sessionHistory'] }> = ({ h
     );
 };
 
+// --- BADGE SORTING & DISPLAY UTILS ---
+
+const BADGE_PRIORITY: Record<BadgeType, number> = {
+    // 1. Career Legends & High Difficulty
+    'career_100_wins': 100,
+    'career_150_influence': 99,
+    'career_super_veteran': 98,
+    'dynasty': 95,
+    
+    // 2. Legionnaire (New & Cool)
+    'double_agent': 90,
+    'mercenary': 89,
+    'iron_lung': 88,
+    'crisis_manager': 87,
+    'joker': 86,
+
+    // 3. Top Session Performance
+    'mvp': 85,
+    'goleador': 80,
+    'assistant': 80,
+    'fortress': 75,
+    'undefeated': 75,
+    'club_legend_goals': 70,
+    'club_legend_assists': 70,
+    
+    // 4. Strong Gameplay
+    'session_top_scorer': 65,
+    'session_top_assistant': 65,
+    'win_leader': 60,
+    'perfect_finish': 60,
+    'comeback_kings': 60,
+    'sniper': 60,
+    'decisive_factor': 55,
+    
+    // 5. Standard
+    'ten_influence': 50,
+    'mastery_balance': 50,
+    'iron_streak': 45,
+    'key_player': 45,
+    'team_conductor': 40,
+    'passing_streak': 40,
+    'stable_striker': 40,
+    'victory_finisher': 40,
+    
+    // 6. Common
+    'first_blood': 30,
+    'duplet': 30,
+    'maestro': 30,
+    'unsung_hero': 25,
+    'dominant_participant': 20,
+    'veteran': 10
+};
+
+export const getBadgePriority = (badge: BadgeType): number => BADGE_PRIORITY[badge] || 0;
+
+export const sortBadgesByPriority = (badges: Partial<Record<BadgeType, number>>): BadgeType[] => {
+    return (Object.keys(badges) as BadgeType[]).sort((a, b) => {
+        // Sort by Priority Descending
+        return getBadgePriority(b) - getBadgePriority(a);
+    });
+};
+
+// --- BADGE DISPLAY COMPONENT (The "7+1" System) ---
+export const BadgeDisplay: React.FC<{ 
+    badges: Partial<Record<BadgeType, number>>; 
+    limit?: number; // Kept as prop, but we default/force new logic below
+    size?: 'sm' | 'md' | 'lg';
+    onOpenChange?: (isOpen: boolean) => void; // New prop to signal parent
+}> = ({ badges, limit, size = 'md', onOpenChange }) => {
+    const t = useTranslation();
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    
+    // Sync internal modal state with parent
+    useEffect(() => {
+        if (onOpenChange) {
+            onOpenChange(isModalOpen);
+        }
+    }, [isModalOpen, onOpenChange]);
+
+    const sortedBadges = sortBadgesByPriority(badges);
+    
+    if (sortedBadges.length === 0) return null;
+
+    // --- NEW LOGIC: 7 ICONS + 1 CIRCLE (if overflow) ---
+    const DISPLAY_LIMIT = 7;
+    const showCounter = sortedBadges.length > DISPLAY_LIMIT;
+    const renderBadges = showCounter ? sortedBadges.slice(0, DISPLAY_LIMIT) : sortedBadges; 
+    const counterValue = sortedBadges.length - DISPLAY_LIMIT;
+
+    const iconSize = size === 'sm' ? 'w-5 h-5' : size === 'lg' ? 'w-9 h-9' : 'w-7 h-7';
+    const counterSize = size === 'sm' ? 'w-5 h-5 text-[8px]' : size === 'lg' ? 'w-9 h-9 text-xs' : 'w-7 h-7 text-[10px]';
+
+    return (
+        <>
+            {/* Main Display Grid - VERTICAL COLUMN */}
+            <div className="mt-3 flex flex-col items-center gap-1">
+                {renderBadges.map(badge => (
+                    <div 
+                        key={badge} 
+                        title={t[`badge_${badge}` as keyof typeof t]}
+                        className="cursor-pointer hover:scale-110 transition-transform relative z-10"
+                        onClick={(e) => { e.stopPropagation(); setIsModalOpen(true); }}
+                    >
+                        <BadgeIcon badge={badge} count={badges[badge]} className={iconSize} />
+                    </div>
+                ))}
+
+                {showCounter && (
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); setIsModalOpen(true); }}
+                        className={`${counterSize} rounded-full bg-dark-surface border border-dark-text-secondary/50 flex items-center justify-center font-bold text-white hover:bg-dark-accent-start/20 hover:border-dark-accent-start transition-all cursor-pointer z-10`}
+                        title="View all badges"
+                    >
+                        +{counterValue}
+                    </button>
+                )}
+            </div>
+
+            {/* EXPANDED MODAL - REDESIGNED ("News Cinematic" Style - Monolithic & Opaque) */}
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                size="sm" 
+                // STYLE: Opaque Black #0a0c10. z-[9999] provided by Portal but kept here for clarity.
+                containerClassName="!w-[300px] !max-w-[90vw] !p-0 !bg-[#0a0c10] !border !border-[#1e293b] !shadow-2xl overflow-hidden relative"
+                hideCloseButton
+            >
+                {/* Top Cinematic Line (Neon Glow) */}
+                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent opacity-100 z-50"></div>
+                <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-[#00F2FE]/10 to-transparent blur-xl pointer-events-none z-0"></div>
+
+                {/* Header: Solid Dark */}
+                <div className="p-4 border-b border-white/5 flex justify-between items-center bg-[#0a0c10] relative z-10">
+                    <div className="flex items-center gap-3">
+                        <h3 className="font-black text-lg text-white uppercase tracking-widest">{t.awards}</h3>
+                        <span className="bg-[#00F2FE]/10 border border-[#00F2FE]/30 text-[#00F2FE] px-2 py-0.5 rounded text-xs font-black font-mono">
+                            {sortedBadges.length}
+                        </span>
+                    </div>
+                    <button 
+                        onClick={() => setIsModalOpen(false)} 
+                        className="text-gray-500 hover:text-white transition-colors"
+                    >
+                        <XCircle className="w-6 h-6" />
+                    </button>
+                </div>
+
+                {/* Content: Clean List, Solid Background */}
+                <div className="flex-1 overflow-y-auto max-h-[50vh] bg-[#0a0c10] p-2 relative z-10">
+                    {sortedBadges.map((badge, index) => {
+                        return (
+                            <div 
+                                key={badge} 
+                                className="flex items-center gap-4 p-3 rounded-xl transition-all border border-transparent border-b-white/5 last:border-b-0 hover:bg-[#00F2FE]/10 hover:border-[#00F2FE]/30 hover:shadow-[0_0_15px_rgba(0,242,254,0.15)] group"
+                            >
+                                <div className="shrink-0 relative">
+                                    <BadgeIcon badge={badge} className="w-10 h-10" count={badges[badge]} />
+                                </div>
+                                <div className="flex-grow min-w-0">
+                                    <h4 className="font-bold text-sm text-white leading-tight truncate tracking-wide group-hover:text-[#00F2FE] transition-colors">
+                                        {t[`badge_${badge}` as keyof typeof t]}
+                                    </h4>
+                                    <p className="text-[10px] text-gray-400 leading-snug mt-1 line-clamp-2">
+                                        {t[`badge_${badge}_desc` as keyof typeof t]}
+                                    </p>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+                
+                {/* Footer Stripe */}
+                <div className="h-1 w-full bg-gradient-to-r from-transparent via-[#00F2FE]/30 to-transparent relative z-10"></div>
+            </Modal>
+        </>
+    );
+};
+
 
 export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete, onUploadCard, onConfirmInitialRating, onDownloadCard, onShareProfile, isDownloading }) => {
     const t = useTranslation();
     const keyStats = React.useMemo(() => getPlayerKeyStats(player), [player]);
     const countryCodeAlpha2 = React.useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
     
-    const badgeList = player.badges ? (Object.keys(player.badges) as BadgeType[]) : [];
-
-    // Configuration for badge layout
-    const BADGES_PER_COL = 7;
+    // STATE: Track if badge modal is open
+    const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
 
     const winRate = player.totalGames > 0 ? `${Math.round((player.totalWins / player.totalGames) * 100)}%` : 'N/A';
     const goalsPerSession = player.totalSessionsPlayed > 0 ? (player.totalGoals / player.totalSessionsPlayed).toFixed(2) : '0.00';
@@ -260,17 +444,20 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
                 
-                <div className="absolute top-24 left-4 z-20">
-                    <div className="space-y-4">
-                        {(player.skills || []).map(skill => (
-                            <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
-                                {/* Removed filter drop-shadow for flat look to prevent blur artifacts */}
-                                <StarIcon className="w-4 h-4 text-[#00F2FE]" />
-                                <span className="font-bold text-xs text-white tracking-wider">{skillAbbreviations[skill]}</span>
-                            </div>
-                        ))}
+                {/* SKILLS SECTION: Condition Rendering - Hides when badge modal is open */}
+                {!isBadgeModalOpen && (
+                    <div className="absolute top-24 left-4 z-20">
+                        <div className="space-y-4">
+                            {(player.skills || []).map(skill => (
+                                <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
+                                    {/* Removed filter drop-shadow for flat look to prevent blur artifacts */}
+                                    <StarIcon className="w-4 h-4 text-[#00F2FE]" />
+                                    <span className="font-bold text-xs text-white tracking-wider">{skillAbbreviations[skill]}</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                </div>
+                )}
 
                 <div className="relative z-10 h-full flex flex-col justify-between">
                      {/* Top section for logo and rating */}
@@ -288,7 +475,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                             )}
                         </div>
                          {/* Rating, Form & Badges */}
-                        <div className="flex flex-col items-center">
+                        <div className="flex flex-col items-center max-w-[50%]">
                             {/* KEEP FLAT: No text-shadow on the rating number for clean export */}
                             <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>
                                 {player.rating}
@@ -298,40 +485,13 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                                 <FormArrowIndicator form={player.form} />
                             </div>
                             
-                            {/* REFACTORED BADGE LAYOUT: Tighter spacing and 7 per column */}
-                            {badgeList.length > 0 && (
-                                <div className="mt-3 flex flex-row-reverse items-start gap-x-1">
-                                    {/* Column 1 (0-7) */}
-                                    <div className="flex flex-col space-y-1 items-center">
-                                        {badgeList.slice(0, BADGES_PER_COL).map(badge => (
-                                            <div key={badge} title={t[`badge_${badge}` as keyof typeof t] || ''}>
-                                                <BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-7 h-7" />
-                                            </div>
-                                        ))}
-                                    </div>
-                                    
-                                    {/* Column 2 (7-14) */}
-                                    {badgeList.length > BADGES_PER_COL && (
-                                        <div className="flex flex-col space-y-1 items-center">
-                                            {badgeList.slice(BADGES_PER_COL, BADGES_PER_COL * 2).map(badge => (
-                                                <div key={badge} title={t[`badge_${badge}` as keyof typeof t] || ''}>
-                                                    <BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-7 h-7" />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    {/* Column 3 (14+) - Just in case */}
-                                    {badgeList.length > BADGES_PER_COL * 2 && (
-                                        <div className="flex flex-col space-y-1 items-center">
-                                            {badgeList.slice(BADGES_PER_COL * 2, BADGES_PER_COL * 3).map(badge => (
-                                                <div key={badge} title={t[`badge_${badge}` as keyof typeof t] || ''}>
-                                                    <BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-7 h-7" />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
+                            {/* UPDATED: Passing callback to hide skills */}
+                            {player.badges && Object.keys(player.badges).length > 0 && (
+                                <BadgeDisplay 
+                                    badges={player.badges} 
+                                    limit={7} 
+                                    onOpenChange={setIsBadgeModalOpen} 
+                                />
                             )}
                         </div>
                     </div>

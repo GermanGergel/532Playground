@@ -77,7 +77,7 @@ export const generateDemoData = () => {
         games: [],
         playerPool: initialPlayers,
         eventLog: [],
-        isTestMode: true, // Mark demo sessions as test mode
+        // isTestMode removed
     };
 
     // Simulation State

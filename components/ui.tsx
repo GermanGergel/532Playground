@@ -1,11 +1,12 @@
 
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { useApp } from './context';
-import { translations } from './translations/index';
+import { useApp } from '../context';
+import { translations } from '../translations/index';
 import { 
     Home, VideoCamera, BarChartDynamic, History, Settings, ChevronLeft 
-} from './icons';
+} from '../icons';
 
 // Translation Hook
 export const useTranslation = () => {
@@ -46,9 +47,11 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, 
       md: 'max-w-md',
   };
   const paddingClass = size === 'xs' ? 'p-4' : 'p-6';
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50 p-4">
-      <div className={`relative bg-dark-surface/80 backdrop-blur-xl text-dark-text rounded-2xl shadow-xl w-full ${sizeClasses[size]} ${paddingClass} border border-white/10 ${containerClassName}`}>
+  
+  // Use Portal to render modal at body level, bypassing parent z-index/stacking contexts
+  return createPortal(
+    <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-[9999] p-4 backdrop-blur-sm">
+      <div className={`relative bg-dark-surface text-dark-text rounded-2xl shadow-2xl w-full ${sizeClasses[size]} ${paddingClass} border border-white/10 ${containerClassName}`}>
         {title && (
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">{title}</h2>
@@ -60,7 +63,8 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, 
         )}
         <div>{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
@@ -160,28 +164,5 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({ isOn, onToggle }) =>
 };
 
 export const SessionModeIndicator: React.FC = () => {
-    // INDICATOR DISABLED:
-    // The user requested to remove all logic/UI related to Test vs Real sessions.
-    // Returning null effectively hides the indicators from Match, Assign, etc. without needing to edit every file.
     return null;
-    
-    /* Original Code preserved for reference:
-    const { activeSession } = useApp();
-    if (!activeSession) return null;
-
-    const isTest = activeSession.isTestMode === true;
-    const color = isTest ? '#FF4136' : '#00F2FE'; // Red for test, Neon for real
-    const glowColor = isTest ? 'rgba(255, 65, 54, 0.5)' : 'rgba(0, 242, 254, 0.5)';
-
-    return (
-        <div 
-            className="w-2 h-2 rounded-full flex-shrink-0"
-            style={{ 
-                backgroundColor: color,
-                boxShadow: `0 0 4px ${glowColor}`,
-            }}
-            title={isTest ? 'Test Mode' : 'Real Session'}
-        />
-    );
-    */
 };

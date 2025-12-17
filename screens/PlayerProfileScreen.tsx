@@ -144,7 +144,8 @@ export const PlayerProfileScreen: React.FC = () => {
       'session_top_scorer', 'stable_striker', 'victory_finisher', 'session_top_assistant',
       'passing_streak', 'team_conductor', 'ten_influence', 'mastery_balance',
       'key_player', 'win_leader', 'iron_streak', 'undefeated', 'dominant_participant',
-      'career_100_wins', 'career_150_influence', 'career_super_veteran'
+      'career_100_wins', 'career_150_influence', 'career_super_veteran',
+      'mercenary', 'double_agent', 'joker', 'crisis_manager', 'iron_lung'
     ];
     const ALL_SKILLS_INFO: SkillType[] = ['goalkeeper', 'power_shot', 'technique', 'defender', 'playmaker', 'finisher', 'versatile', 'tireless_motor', 'leader'];
 

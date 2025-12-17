@@ -4,20 +4,17 @@ import { newId } from '../screens/utils';
 
 // --- NEWS GENERATOR SERVICE ---
 
-const STANDARD_HASHTAGS = "#532Playground";
-
 // Helper to assign a priority to a news item
 const getNewsPriority = (item: Omit<NewsItem, 'id' | 'timestamp'>): number => {
     switch(item.type) {
         case 'tier_up':
-            return (item.statsSnapshot?.tier === PlayerTier.Legend || item.statsSnapshot?.tier === PlayerTier.Elite) ? 10 : 9;
+            // Priority for Legend/Elite promotions
+            return (item.statsSnapshot?.tier === PlayerTier.Legend || item.statsSnapshot?.tier === PlayerTier.Elite) ? 10 : 8;
         case 'badge':
-            return item.isHot ? 8 : 7;
+            return item.isHot ? 9 : 7;
         case 'milestone':
             const milestoneValue = parseInt(item.message.match(/\d+/)?.[0] || '0', 10);
-            return milestoneValue >= 100 ? 7 : 6;
-        case 'hot_streak':
-            return 5;
+            return milestoneValue >= 100 ? 8 : 6;
         default:
             return 0;
     }
@@ -34,18 +31,24 @@ export const generateNewsUpdates = (oldPlayers: Player[], newPlayers: Player[]):
         const oldPlayer = oldPlayerMap.get(newPlayer.id);
         if (!oldPlayer) return;
 
-        // 1. MILESTONES
-        checkMilestone(potentialNews, newPlayer, oldPlayer.totalGoals, newPlayer.totalGoals, [50, 100, 150, 200, 300, 400, 500], 'Goals', 'GOAL MACHINE');
+        // 1. MILESTONES (STRICTER THRESHOLDS)
+        // Only celebrate significant numbers to avoid spam
+        checkMilestone(potentialNews, newPlayer, oldPlayer.totalGoals, newPlayer.totalGoals, [50, 100, 200, 300, 400, 500, 1000], 'Goals', 'GOAL MACHINE');
         checkMilestone(potentialNews, newPlayer, oldPlayer.totalAssists, newPlayer.totalAssists, [50, 100, 150, 200, 300], 'Assists', 'THE ARCHITECT');
-        checkMilestone(potentialNews, newPlayer, oldPlayer.totalWins, newPlayer.totalWins, [50, 100, 200], 'Wins', 'BORN WINNER');
-        checkMilestone(potentialNews, newPlayer, oldPlayer.totalSessionsPlayed, newPlayer.totalSessionsPlayed, [50, 100], 'Sessions', 'CLUB VETERAN');
+        checkMilestone(potentialNews, newPlayer, oldPlayer.totalWins, newPlayer.totalWins, [50, 100, 200, 300], 'Wins', 'BORN WINNER');
+        checkMilestone(potentialNews, newPlayer, oldPlayer.totalSessionsPlayed, newPlayer.totalSessionsPlayed, [50, 100, 200], 'Sessions', 'CLUB LEGEND');
 
-        // 2. TIER CHANGE (Promotion only)
-        if (getTierRank(newPlayer.tier) > getTierRank(oldPlayer.tier)) {
+        // 2. TIER CHANGE (High Level Promotions Only)
+        // We filter out low-level promotions (e.g. Developing -> Average) to reduce noise.
+        // Only showing promotions to Strong, Elite, or Legend.
+        const oldRank = getTierRank(oldPlayer.tier);
+        const newRank = getTierRank(newPlayer.tier);
+        
+        // Rank 3 is Strong, 4 is Elite, 5 is Legend. 
+        if (newRank > oldRank && newRank >= 3) {
             potentialNews.push({
                 playerId: newPlayer.id,
                 playerName: newPlayer.nickname,
-                // Removed photo reference to keep object light
                 type: 'tier_up',
                 message: `${newPlayer.nickname} promoted to ${newPlayer.tier.toUpperCase()}`,
                 subMessage: `#LevelUp #${newPlayer.tier}`,
@@ -55,6 +58,7 @@ export const generateNewsUpdates = (oldPlayers: Player[], newPlayers: Player[]):
         }
 
         // 3. RARE BADGES EARNED
+        // We only generate news for specific, high-value badges configured in `getBadgeNewsConfig`
         const oldBadges = Object.keys(oldPlayer.badges || {}).length;
         const newBadges = Object.keys(newPlayer.badges || {}).length;
         
@@ -76,21 +80,11 @@ export const generateNewsUpdates = (oldPlayers: Player[], newPlayers: Player[]):
             });
         }
 
-        // 4. FORM CHANGE (Cold -> Hot)
-        if (oldPlayer.form !== 'hot_streak' && newPlayer.form === 'hot_streak') {
-             potentialNews.push({
-                playerId: newPlayer.id,
-                playerName: newPlayer.nickname,
-                type: 'hot_streak',
-                message: `${newPlayer.nickname} is on fire!`,
-                subMessage: `#HotStreak #InForm`,
-                isHot: false,
-                statsSnapshot: { rating: newPlayer.rating, tier: newPlayer.tier }
-            });
-        }
+        // 4. FORM CHANGE REMOVED
+        // "Hot Streak" news removed to reduce "trash" updates as requested.
     });
 
-    // Sort by priority and take the top 5
+    // Sort by priority and take strictly the top 5 most important events
     const sortedNews = potentialNews
         .map(item => ({ ...item, priority: getNewsPriority(item) }))
         .sort((a, b) => b.priority - a.priority);
@@ -171,17 +165,30 @@ const getTierRank = (tier: PlayerTier): number => {
     }
 };
 
+// ONLY High-Value Badges generate news now. Common ones are ignored.
 const getBadgeNewsConfig = (badge: BadgeType): { name: string, hashtags: string, isHot: boolean } | null => {
     const map: Partial<Record<BadgeType, { name: string, hashtags: string, isHot: boolean }>> = {
+        // ULTRA RARE (Hot News)
         dynasty: { name: "DYNASTY", hashtags: "#Invincible", isHot: true },
-        mvp: { name: "MVP", hashtags: "#SessionBest", isHot: false },
+        career_100_wins: { name: "CENTURION", hashtags: "#100Wins", isHot: true },
+        career_150_influence: { name: "ICON", hashtags: "#Legend", isHot: true },
+        career_super_veteran: { name: "SUPER VETERAN", hashtags: "#Loyalty", isHot: true },
+        
+        // HARD TO GET (Hot News)
         club_legend_goals: { name: "CLUB LEGEND", hashtags: "#Goals", isHot: true },
         club_legend_assists: { name: "CLUB LEGEND", hashtags: "#Assists", isHot: true },
-        perfect_finish: { name: "Perfect Finish", hashtags: "#Clinical", isHot: false },
         comeback_kings: { name: "Comeback King", hashtags: "#NeverGiveUp", isHot: true },
-        goleador: { name: "Goleador", hashtags: "#Scorer", isHot: false },
-        assistant: { name: "Assistant", hashtags: "#Playmaker", isHot: false },
+        double_agent: { name: "DOUBLE AGENT", hashtags: "#Mercenary", isHot: true },
+        iron_lung: { name: "IRON LUNG", hashtags: "#Stamina", isHot: true },
+
+        // SESSION BESTS (Regular News - No Spam)
+        mvp: { name: "MVP", hashtags: "#SessionBest", isHot: false },
+        goleador: { name: "Goleador", hashtags: "#Scorer", isHot: false }, // 7 Goals is hard
+        assistant: { name: "Assistant", hashtags: "#Playmaker", isHot: false }, // 6 Assists is hard
         sniper: { name: "Sniper", hashtags: "#Clutch", isHot: false },
+        fortress: { name: "Fortress", hashtags: "#CleanSheet", isHot: false },
+        
+        // Removed: First Blood, Duplet, Maestro (Too common)
     };
     return map[badge] || null;
 };

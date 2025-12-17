@@ -205,12 +205,14 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
     const getProfileUrl = () => {
         try {
             const url = new URL(window.location.href);
-            url.hash = `/public-profile/${player.id}`;
+            // Clean pathname for BrowserRouter (no hash)
+            url.pathname = `/public-profile/${player.id}`;
+            url.hash = ''; // Ensure hash is cleared
             url.search = ''; // Clean params
             return url.toString();
         } catch (e) {
-            // Fallback
-            return `${window.location.origin}/#/public-profile/${player.id}`;
+            // Fallback for clean URL
+            return `${window.location.origin}/public-profile/${player.id}`;
         }
     }
     

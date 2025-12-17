@@ -1,10 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Player, PlayerTier, PlayerStatus, BadgeType, PlayerForm, SkillType } from '../types';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { Card, useTranslation, Button } from '../ui';
 import { LastSessionBreakdown, ClubRankings, BestSessionCard, PlayerProgressChart } from './PlayerCardAnalytics';
-import { BadgeIcon } from '../features';
+import { BadgeIcon, BadgeDisplay } from '../features';
 import { TrophyIcon, StarIcon, ChevronLeft } from '../icons';
 
 type View = 'main' | 'stats' | 'awards' | 'info';
@@ -34,13 +34,12 @@ const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
 const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties }> = ({ player, style }) => {
     const t = useTranslation();
     const countryCodeAlpha2 = React.useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
-    const badgeList = player.badges ? (Object.keys(player.badges) as BadgeType[]) : [];
     
-    // Config for badge layout
-    const BADGES_PER_COL = 7;
-
     // Exact styling from features.tsx
     const cardClass = "relative rounded-3xl h-[440px] overflow-hidden text-white p-4 bg-dark-surface border border-white/10 shadow-[0_0_20px_rgba(0,242,254,0.3)]";
+
+    // STATE: Track badge modal state to hide skills
+    const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
 
     return (
         <div>
@@ -54,16 +53,19 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
                 
                 {/* Skills - Left Side (Aligned perfectly with main card) */}
-                <div className="absolute top-24 left-4 z-20">
-                    <div className="space-y-4">
-                        {(player.skills || []).map(skill => (
-                            <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
-                                <StarIcon className="w-4 h-4 text-[#00F2FE]" />
-                                <span className="font-bold text-xs text-white tracking-wider">{skillAbbreviations[skill]}</span>
-                            </div>
-                        ))}
+                {/* HIDE when badge modal is open */}
+                {!isBadgeModalOpen && (
+                    <div className="absolute top-24 left-4 z-20">
+                        <div className="space-y-4">
+                            {(player.skills || []).map(skill => (
+                                <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
+                                    <StarIcon className="w-4 h-4 text-[#00F2FE]" />
+                                    <span className="font-bold text-xs text-white tracking-wider">{skillAbbreviations[skill]}</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                </div>
+                )}
 
                 <div className="relative z-10 h-full flex flex-col justify-between">
                     {/* Top Row */}
@@ -76,40 +78,18 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
                         </div>
                         
                         {/* Rating, Form & Badges (Right Side) */}
-                        <div className="flex flex-col items-center">
+                        <div className="flex flex-col items-center max-w-[50%]">
                             <div className="text-4xl font-black leading-none" style={{ color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
                             <p className="font-bold text-white tracking-widest text-sm">OVG</p>
                             <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
                             
-                            {/* REFACTORED BADGE LAYOUT: Tighter spacing (space-y-1) and 7 per column */}
-                            {badgeList.length > 0 && (
-                                <div className="mt-3 flex flex-row-reverse items-start gap-x-1">
-                                    <div className="flex flex-col space-y-1 items-center">
-                                        {badgeList.slice(0, BADGES_PER_COL).map(badge => (
-                                            <div key={badge}>
-                                                <BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-7 h-7" />
-                                            </div>
-                                        ))}
-                                    </div>
-                                    {badgeList.length > BADGES_PER_COL && (
-                                        <div className="flex flex-col space-y-1 items-center">
-                                            {badgeList.slice(BADGES_PER_COL, BADGES_PER_COL * 2).map(badge => (
-                                                <div key={badge}>
-                                                    <BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-7 h-7" />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                    {badgeList.length > BADGES_PER_COL * 2 && (
-                                        <div className="flex flex-col space-y-1 items-center">
-                                            {badgeList.slice(BADGES_PER_COL * 2, BADGES_PER_COL * 3).map(badge => (
-                                                <div key={badge}>
-                                                    <BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-7 h-7" />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
+                            {/* Updated to use BadgeDisplay component */}
+                            {player.badges && Object.keys(player.badges).length > 0 && (
+                                <BadgeDisplay 
+                                    badges={player.badges} 
+                                    limit={7}
+                                    onOpenChange={setIsBadgeModalOpen} 
+                                />
                             )}
                         </div>
                     </div>
@@ -234,7 +214,8 @@ const AwardsView: React.FC<{ player: Player; onBack: () => void }> = ({ player, 
         'session_top_scorer', 'stable_striker', 'victory_finisher', 'session_top_assistant',
         'passing_streak', 'team_conductor', 'ten_influence', 'mastery_balance',
         'key_player', 'win_leader', 'iron_streak', 'undefeated', 'dominant_participant',
-        'career_100_wins', 'career_150_influence', 'career_super_veteran'
+        'career_100_wins', 'career_150_influence', 'career_super_veteran',
+        'mercenary', 'double_agent', 'joker', 'crisis_manager', 'iron_lung'
     ];
 
     return (
@@ -279,7 +260,8 @@ const InfoView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         'session_top_scorer', 'stable_striker', 'victory_finisher', 'session_top_assistant',
         'passing_streak', 'team_conductor', 'ten_influence', 'mastery_balance',
         'key_player', 'win_leader', 'iron_streak', 'undefeated', 'dominant_participant',
-        'career_100_wins', 'career_150_influence', 'career_super_veteran'
+        'career_100_wins', 'career_150_influence', 'career_super_veteran',
+        'mercenary', 'double_agent', 'joker', 'crisis_manager', 'iron_lung'
     ];
     const ALL_SKILLS: SkillType[] = ['goalkeeper', 'power_shot', 'technique', 'defender', 'playmaker', 'finisher', 'versatile', 'tireless_motor', 'leader'];
     return (

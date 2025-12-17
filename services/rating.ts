@@ -1,3 +1,4 @@
+
 import { Session, Player, Team, Game, Goal, EventLogEntry, EventType, GoalPayload, StartRoundPayload, SubPayload, PlayerTier, BadgeType, RatingBreakdown } from '../types';
 import { PlayerStats } from './statistics';
 
@@ -30,7 +31,6 @@ export const calculateRatingUpdate = (player: Player, stats: PlayerStats, sessio
                 badgeBonus: 0,
                 finalChange: delta,
                 newRating: newRating,
-                // FIX: Added missing 'badgesEarned' property.
                 badgesEarned: earnedBadges,
             }
         };
@@ -50,7 +50,6 @@ export const calculateRatingUpdate = (player: Player, stats: PlayerStats, sessio
             badgeBonus: 0,
             finalChange: 0,
             newRating: player.rating,
-            // FIX: Added missing 'badgesEarned' property. It's an empty array for players who didn't play.
             badgesEarned: [],
         }
     };
@@ -127,12 +126,14 @@ export const calculateRatingUpdate = (player: Player, stats: PlayerStats, sessio
         mvp: 0.4, dynasty: 0.4, goleador: 0.3, assistant: 0.3, fortress: 0.3,
         decisive_factor: 0.2, comeback_kings: 0.2, sniper: 0.2, unsung_hero: 0.2,
         first_blood: 0.1, perfect_finish: 0.1, duplet: 0.1, maestro: 0.1,
-        // new badges also have bonuses
+        // new badges
         session_top_scorer: 0.3, session_top_assistant: 0.3, win_leader: 0.3,
         ten_influence: 0.25, iron_streak: 0.25, undefeated: 0.25,
         key_player: 0.2, mastery_balance: 0.2, team_conductor: 0.2,
         stable_striker: 0.1, passing_streak: 0.1, dominant_participant: 0.1,
         victory_finisher: 0.1,
+        // Legionnaire badges
+        double_agent: 0.5, iron_lung: 0.4, crisis_manager: 0.3, mercenary: 0.3, joker: 0.2
     };
     
     for (const badge of earnedBadges) {
@@ -174,7 +175,6 @@ export const calculateRatingUpdate = (player: Player, stats: PlayerStats, sessio
         badgeBonus: badgeBonusPoints,
         finalChange: finalDelta,
         newRating: Math.round(player.rating + finalDelta),
-        // FIX: Added missing 'badgesEarned' property.
         badgesEarned: earnedBadges,
     };
 
@@ -182,7 +182,7 @@ export const calculateRatingUpdate = (player: Player, stats: PlayerStats, sessio
 };
 
 
-// --- BADGE ENGINE (32 Badges) ---
+// --- BADGE ENGINE (37 Badges) ---
 export const calculateEarnedBadges = (
     player: Player, 
     stats: PlayerStats, 
@@ -222,6 +222,29 @@ export const calculateEarnedBadges = (
         addBadge('unsung_hero');
     }
 
+    // --- LEGIONNAIRE LOGIC ---
+    let legionnaireGamesPlayed = 0;
+    let legionnaireWins = 0;
+    let ownTeamWins = 0;
+    let ironLungSequence: ('own_win' | 'leg_win' | 'other')[] = [];
+
+    // Helper: Check if player was a legionnaire in a specific game
+    const wasLegionnaireInGame = (g: Game, pid: string) => {
+        // A move exists where playerId is this player, AND the team they moved TO is one of the playing teams
+        return g.legionnaireMoves?.some(m => m.playerId === pid && (m.toTeamId === g.team1Id || m.toTeamId === g.team2Id));
+    };
+
+    // Helper: Get the ID of the team the player actually played for in this game
+    const getPlayerTeamIdInGame = (g: Game, pid: string) => {
+        // Check if moved
+        const move = g.legionnaireMoves?.find(m => m.playerId === pid && (m.toTeamId === g.team1Id || m.toTeamId === g.team2Id));
+        if (move) return move.toTeamId;
+        
+        // Otherwise use original team
+        const originalTeam = session.teams.find(t => t.playerIds.includes(pid));
+        return originalTeam?.id;
+    };
+
     // --- GAME-LEVEL & STREAK ANALYSIS ---
     let sniperCount = 0, firstBloodCount = 0, comebackCount = 0;
     let dupletCount = 0, maestroCount = 0, fortressCount = 0, conductorCount = 0;
@@ -232,14 +255,37 @@ export const calculateEarnedBadges = (
     let winContributionStreak = 0, maxWinContributionStreak = 0;
     
     playerGames.forEach(g => {
-        const myTeam = session.teams.find(t => t.playerIds.includes(player.id));
-        if (!myTeam) return;
+        const myTeamId = getPlayerTeamIdInGame(g, player.id);
+        if (!myTeamId) return; // Should not happen given filters
 
-        const isMyTeamWinner = g.winnerTeamId === myTeam.id;
+        const isLegionnaire = wasLegionnaireInGame(g, player.id);
+        const isMyTeamWinner = g.winnerTeamId === myTeamId;
+        
         const myGoals = g.goals.filter(goal => goal.scorerId === player.id && !goal.isOwnGoal);
         const myAssists = g.goals.filter(goal => goal.assistantId === player.id);
         const hasContribution = myGoals.length > 0 || myAssists.length > 0;
         
+        // Legionnaire tracking
+        if (isLegionnaire) {
+            legionnaireGamesPlayed++;
+            if (isMyTeamWinner) legionnaireWins++;
+            
+            // Joker: Legionnaire + Goal or Assist
+            if (hasContribution) addBadge('joker');
+
+            // Crisis Manager: Legionnaire + (Goals + Assists >= 2)
+            if (myGoals.length + myAssists.length >= 2) addBadge('crisis_manager');
+        } else {
+            if (isMyTeamWinner) ownTeamWins++;
+        }
+
+        // Iron Lung Tracking
+        if (isMyTeamWinner) {
+            ironLungSequence.push(isLegionnaire ? 'leg_win' : 'own_win');
+        } else {
+            ironLungSequence.push('other');
+        }
+
         // Streaks
         goalStreak = myGoals.length > 0 ? goalStreak + 1 : 0;
         if (goalStreak > maxGoalStreak) maxGoalStreak = goalStreak;
@@ -263,12 +309,13 @@ export const calculateEarnedBadges = (
             if (myAssists.length >= 2) maestroCount++;
             if (myAssists.length > 0) conductorCount++;
 
-            const opponentScore = g.team1Id === myTeam.id ? g.team2Score : g.team1Score;
+            const opponentScore = g.team1Id === myTeamId ? g.team2Score : g.team1Score;
             if (opponentScore === 0) fortressCount++;
 
             const sortedGoals = [...g.goals].sort((a,b) => a.timestampSeconds - b.timestampSeconds);
             let scoreA = 0, scoreB = 0;
-            const myTeamIsA = g.team1Id === myTeam.id;
+            // Assuming current team ID logic
+            const myTeamIsA = g.team1Id === myTeamId;
             let trailed = false;
             for (const gl of sortedGoals) {
                 const goalForA = (gl.teamId === g.team1Id && !gl.isOwnGoal) || (gl.teamId === g.team2Id && gl.isOwnGoal);
@@ -285,26 +332,44 @@ export const calculateEarnedBadges = (
         }
     });
 
+    // --- APPLY LEGIONNAIRE BADGES ---
+    // Mercenary: Play 4+ games as legionnaire
+    if (legionnaireGamesPlayed >= 4) addBadge('mercenary');
+
+    // Double Agent: 3 Own Wins + 3 Legionnaire Wins
+    if (ownTeamWins >= 3 && legionnaireWins >= 3) addBadge('double_agent');
+
+    // Iron Lung: Sequence Own(W) -> Leg(W) -> Own(W)
+    for (let i = 0; i < ironLungSequence.length - 2; i++) {
+        const s1 = ironLungSequence[i];
+        const s2 = ironLungSequence[i+1];
+        const s3 = ironLungSequence[i+2];
+        // Sequence: Own -> Leg -> Own (All Wins)
+        if (s1 === 'own_win' && s2 === 'leg_win' && s3 === 'own_win') {
+            addBadge('iron_lung');
+            break;
+        }
+    }
+
     if (maxGoalStreak >= 3) addBadge('stable_striker');
     if (maxAssistStreak >= 3) addBadge('passing_streak');
     if (maxWinStreak >= 5) addBadge('iron_streak');
-    if (maxWinStreak >= 9) addBadge('dynasty'); // Retained
+    if (maxWinStreak >= 9) addBadge('dynasty');
     if (maxWinContributionStreak >= 3) addBadge('key_player');
 
-    if (firstBloodCount >= 3) addBadge('first_blood'); // Updated
-    if (dupletCount >= 2) addBadge('duplet'); // Updated
-    if (maestroCount >= 2) addBadge('maestro'); // Updated
+    if (firstBloodCount >= 3) addBadge('first_blood');
+    if (dupletCount >= 2) addBadge('duplet');
+    if (maestroCount >= 2) addBadge('maestro');
     if (conductorCount >= 3) addBadge('team_conductor');
-    if (fortressCount >= 3) addBadge('fortress'); // Updated
+    if (fortressCount >= 3) addBadge('fortress');
     if (sniperCount >= 3) addBadge('sniper');
     if (comebackCount >= 3) addBadge('comeback_kings');
     
     // Victory Finisher
     const lastGame = session.games.filter(g => g.status === 'finished').sort((a,b) => b.gameNumber - a.gameNumber)[0];
     if (lastGame) {
-        const myTeam = session.teams.find(t => t.playerIds.includes(player.id));
-        const wasInLastGame = myTeam && (lastGame.team1Id === myTeam.id || lastGame.team2Id === myTeam.id);
-        if (wasInLastGame && lastGame.winnerTeamId === myTeam.id) {
+        const myTeamId = getPlayerTeamIdInGame(lastGame, player.id);
+        if (myTeamId && lastGame.winnerTeamId === myTeamId) {
             const sortedGoals = [...lastGame.goals].sort((a,b) => a.timestampSeconds - b.timestampSeconds);
             const lastGoal = sortedGoals[sortedGoals.length - 1];
             if (lastGoal.scorerId === player.id && Math.abs(lastGame.team1Score - lastGame.team2Score) === 1) {
@@ -315,21 +380,21 @@ export const calculateEarnedBadges = (
 
     // Decisive Factor
     const myWins = playerGames.filter(g => {
-        const myTeam = session.teams.find(t => t.playerIds.includes(player.id));
-        return myTeam && g.winnerTeamId === myTeam.id;
+        const myTeamId = getPlayerTeamIdInGame(g, player.id);
+        return myTeamId && g.winnerTeamId === myTeamId;
     });
     if (myWins.length >= 3) {
         const contributedInAll = myWins.every(g => g.goals.some(goal => goal.scorerId === player.id || goal.assistantId === player.id));
         if (contributedInAll) addBadge('decisive_factor');
     }
     
-    // Perfect Finish (Retained and fixed)
+    // Perfect Finish
     let perfectFinishCount = 0;
     playerGames.forEach(g => {
-         const myTeam = session.teams.find(t => t.playerIds.includes(player.id));
-         if (!myTeam || g.winnerTeamId !== myTeam.id) return;
+         const myTeamId = getPlayerTeamIdInGame(g, player.id);
+         if (!myTeamId || g.winnerTeamId !== myTeamId) return;
          const myGoals = g.goals.filter(goal => goal.scorerId === player.id && !goal.isOwnGoal);
-         const myTeamScore = g.team1Id === myTeam.id ? g.team1Score : g.team2Score;
+         const myTeamScore = g.team1Id === myTeamId ? g.team1Score : g.team2Score;
          if (session.goalsToWin === 2 && myTeamScore === 2 && myGoals.length === 2) {
              perfectFinishCount++;
          }

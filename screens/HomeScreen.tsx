@@ -16,7 +16,6 @@ export const HomeScreen: React.FC = () => {
   const navigate = useNavigate();
   const t = useTranslation();
   const { activeSession } = useApp();
-  const [isModeModalOpen, setIsModeModalOpen] = useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   
   // Custom Host for local testing
@@ -30,14 +29,12 @@ export const HomeScreen: React.FC = () => {
               // 1. Get current Origin (e.g. https://myapp.vercel.app or localhost)
               const origin = window.location.origin;
               
-              // 2. Construct the clean URL for HashRouter pointing specifically to PROMO
-              // Note: Added /#/ for HashRouter support
-              let finalUrl = `${origin}/#/promo`;
+              // 2. Construct the clean URL for BrowserRouter (No /#/)
+              let finalUrl = `${origin}/promo`;
 
               // 3. (Optional) Override host if user provided one for local testing
               if (customHost.trim()) {
-                  // This is mostly for dev mode
-                  finalUrl = `http://${customHost.trim()}/#/promo`; 
+                  finalUrl = `http://${customHost.trim()}/promo`; 
               }
 
               setQrUrl(finalUrl);
@@ -57,9 +54,9 @@ export const HomeScreen: React.FC = () => {
     }
   };
 
-  const handleStartNewSession = (isTest: boolean) => {
-    setIsModeModalOpen(false);
-    navigate(`/setup?testMode=${isTest}`);
+  const handleStartNewSession = () => {
+    // Directly navigate to setup, defaulting to Real Training (no test mode param)
+    navigate('/setup');
   };
 
   const handleShareLink = async () => {
@@ -88,32 +85,7 @@ export const HomeScreen: React.FC = () => {
 
   return (
     <Page style={{ backgroundImage: `url("${homeScreenBackground}")`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-        {/* Session Mode Selection Modal */}
-        <Modal 
-          isOpen={isModeModalOpen} 
-          onClose={() => setIsModeModalOpen(false)}
-          size="xs"
-          containerClassName="border border-dark-accent-start/30 shadow-[0_0_20px_rgba(0,242,254,0.15)]"
-        >
-          <h2 className="text-xl font-bold text-center mb-4">{t.selectSessionMode}</h2>
-          <div className="flex flex-col gap-3">
-              <Button 
-                variant="secondary"
-                onClick={() => handleStartNewSession(false)} 
-                className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
-              >
-                  {t.realTraining}
-              </Button>
-              <Button 
-                variant="secondary"
-                onClick={() => handleStartNewSession(true)} 
-                className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-red-500/40"
-              >
-                  {t.testGame}
-              </Button>
-          </div>
-        </Modal>
-
+        
         {/* QR Code / Recruit Modal */}
         <Modal
             isOpen={isQrModalOpen}
@@ -180,7 +152,7 @@ export const HomeScreen: React.FC = () => {
                  ) : (
                     <Button 
                         variant="secondary"
-                        onClick={() => setIsModeModalOpen(true)} 
+                        onClick={handleStartNewSession} 
                         className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
                     >
                         {t.newSession}

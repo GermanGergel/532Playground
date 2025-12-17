@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Button, Modal, Page, useTranslation, SessionModeIndicator } from '../ui';
 import { TeamAvatar } from '../components/avatars';
-import { StarIcon, Plus, Pause, Play, Edit3 } from '../icons';
+import { StarIcon, Plus, Pause, Play, Edit3, TransferIcon } from '../icons';
 import { Session, Game, GameStatus, Goal, Team, Player } from '../types';
 import { audioManager } from '../lib'; // Import Manager directly
-import { GoalModal, EditGoalModal, EndSessionModal, SelectWinnerModal, SubstitutionModal } from '../modals';
+import { GoalModal, EditGoalModal, EndSessionModal, SelectWinnerModal, SubstitutionModal, LegionnaireModal } from '../modals';
 import { hexToRgba } from './utils';
 import { useGameManager } from '../hooks/useGameManager';
 
@@ -36,37 +36,79 @@ const TeamRoster: React.FC<{
     team: Team;
     session: Session;
     onPlayerClick: (teamId: string, playerOutId: string) => void;
-}> = React.memo(({ team, session, onPlayerClick }) => {
+    onTransferToggle?: (teamId: string) => void;
+    isTransferMode?: boolean;
+    activeLegionnaireIds?: string[]; // IDs of players who are currently legionnaires (swapped in)
+}> = React.memo(({ team, session, onPlayerClick, onTransferToggle, isTransferMode, activeLegionnaireIds = [] }) => {
     const t = useTranslation();
     const players = team.playerIds.map(id => session.playerPool.find(p => p.id === id)).filter(Boolean) as Player[];
     const activePlayers = players.slice(0, session.playersPerTeam);
     const subs = players.slice(session.playersPerTeam);
     
-    const accentColor = '#00F2FE';
-    const playerCardStyle = {
-        boxShadow: `0 0 8px ${hexToRgba(accentColor, 0.4)}`,
-        border: `1px solid ${hexToRgba(accentColor, 0.6)}`
+    // Default Blue Neon
+    const blueNeonColor = '#00F2FE';
+    const blueNeonStyle = {
+        boxShadow: `0 0 8px ${hexToRgba(blueNeonColor, 0.4)}`,
+        border: `1px solid ${hexToRgba(blueNeonColor, 0.6)}`
     };
+
+    // New Yellow Neon (For Transfer Selection & Active Legionnaires)
+    const yellowNeonColor = '#FFD700'; // Gold/Yellow
+    const yellowNeonStyle = {
+        boxShadow: `0 0 8px ${hexToRgba(yellowNeonColor, 0.6)}`,
+        border: `1px solid ${hexToRgba(yellowNeonColor, 0.8)}`,
+        color: '#FFD700'
+    };
+
+    // Only show transfer button if 3+ teams exist
+    const showTransferBtn = session.numTeams >= 3;
 
     return (
          <div className="text-sm">
             <ul className="space-y-1">
-                {activePlayers.map(p => 
-                    <li 
-                        key={p.id} 
-                        onClick={() => subs.length > 0 && onPlayerClick(team.id, p.id)}
-                        className={`bg-dark-surface/50 p-2 rounded-full text-center truncate transition-all duration-300 ${subs.length > 0 ? 'cursor-pointer hover:bg-dark-surface/80' : ''}`}
-                        style={playerCardStyle}
-                    >
-                        {p.nickname}
-                    </li>
-                )}
+                {activePlayers.map(p => {
+                    const isLegionnaire = activeLegionnaireIds.includes(p.id);
+                    // Use yellow glow if in transfer mode OR if player is a legionnaire
+                    const useYellow = isTransferMode || isLegionnaire;
+                    
+                    return (
+                        <li 
+                            key={p.id} 
+                            onClick={() => onPlayerClick(team.id, p.id)} 
+                            className={`bg-dark-surface/50 p-2 rounded-full text-center truncate transition-all duration-300 cursor-pointer hover:bg-dark-surface/80`}
+                            style={useYellow ? yellowNeonStyle : blueNeonStyle}
+                        >
+                            {p.nickname}
+                        </li>
+                    );
+                })}
             </ul>
+            
+            {showTransferBtn && onTransferToggle && (
+                <div className="flex justify-center mt-2">
+                    <button 
+                        onClick={() => onTransferToggle(team.id)}
+                        className={`w-8 h-8 rounded-full border flex items-center justify-center transition-colors ${isTransferMode ? 'bg-yellow-500 text-black border-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]' : 'bg-dark-bg text-yellow-500 border-yellow-500/50 hover:bg-yellow-500/10'}`}
+                        title="Transfer Player (Temp)"
+                    >
+                        <TransferIcon className="w-4 h-4" />
+                    </button>
+                </div>
+            )}
+
             {subs.length > 0 && (
                 <div className="mt-3">
                     <h4 className="font-semibold text-xs text-dark-text-secondary text-center mb-1 uppercase">{t.onBench}</h4>
                     <ul className="space-y-1 opacity-70">
-                       {subs.map(p => <li key={p.id} className="bg-dark-surface/50 p-2 rounded-full text-center truncate" style={playerCardStyle}>{p.nickname}</li>)}
+                       {subs.map(p => (
+                           <li 
+                               key={p.id} 
+                               className="bg-dark-surface/50 p-2 rounded-full text-center truncate" 
+                               style={blueNeonStyle}
+                           >
+                               {p.nickname}
+                           </li>
+                       ))}
                     </ul>
                 </div>
             )}
@@ -88,12 +130,16 @@ export const LiveMatchScreen: React.FC = () => {
     const gameManager = useGameManager();
     const {
         currentGame, isTimerBasedGame, scoringTeamForModal, isEndSessionModalOpen,
-        isSelectWinnerModalOpen, goalToEdit, subModalState,
-        setScoringTeamForModal, setIsEndSessionModalOpen, setGoalToEdit, setSubModalState,
+        isSelectWinnerModalOpen, goalToEdit, subModalState, legionnaireModalState,
+        setScoringTeamForModal, setIsEndSessionModalOpen, setGoalToEdit, setSubModalState, setLegionnaireModalState,
         finishCurrentGameAndSetupNext, handleStartGame, handleTogglePause,
-        handleGoalSave, handleGoalUpdate, handleSubstitution, handleFinishSession
+        handleGoalSave, handleGoalUpdate, handleSubstitution, handleFinishSession, handleLegionnaireSwap
     } = gameManager;
     
+    // UI State for Transfer Mode
+    const [transferModeTeamId, setTransferModeTeamId] = React.useState<string | null>(null);
+    const [transferPlayerOutId, setTransferPlayerOutId] = React.useState<string | null>(null);
+
     // --- AUDIO LIFECYCLE MANAGEMENT ---
     React.useEffect(() => {
         if (activeSession?.numTeams === 3) {
@@ -144,9 +190,51 @@ export const LiveMatchScreen: React.FC = () => {
 
     if (!team1 || !team2) return null;
 
+    // Determine Resting Team (for Legionnaire Swap)
+    const restingTeam = activeSession.teams.find(t => t.id !== team1.id && t.id !== team2.id);
+
+    // Modal Helpers
     const teamForSub = subModalState.teamId ? activeSession.teams.find(t => t.id === subModalState.teamId) : undefined;
     const playerOutForSub = subModalState.playerOutId ? activeSession.playerPool.find(p => p.id === subModalState.playerOutId) : undefined;
     
+    const teamForLegionnaire = legionnaireModalState.teamId ? activeSession.teams.find(t => t.id === legionnaireModalState.teamId) : undefined;
+    const playerOutForLegionnaire = transferPlayerOutId ? activeSession.playerPool.find(p => p.id === transferPlayerOutId) : undefined;
+
+    // --- IDENTIFY LEGIONNAIRES ---
+    // A player is a legionnaire in this game if they appear in `currentGame.legionnaireMoves`
+    // We specifically want to highlight the player who moved TO the playing team.
+    const activeLegionnaireIds = currentGame.legionnaireMoves?.map(move => move.playerId) || [];
+
+    // --- HANDLERS ---
+    
+    const handleTransferToggle = (teamId: string) => {
+        if (transferModeTeamId === teamId) {
+            setTransferModeTeamId(null); // Toggle Off
+        } else {
+            setTransferModeTeamId(teamId); // Toggle On
+        }
+    };
+
+    const handlePlayerClick = (teamId: string, playerOutId: string) => {
+        const team = activeSession.teams.find(t => t.id === teamId);
+        if (!team) return;
+
+        // Check if there are subs available
+        const hasSubs = team.playerIds.length > activeSession.playersPerTeam;
+
+        if (transferModeTeamId === teamId) {
+            // LEGIONNAIRE LOGIC
+            setTransferPlayerOutId(playerOutId);
+            setLegionnaireModalState({ isOpen: true, teamId });
+            setTransferModeTeamId(null); // Turn off mode
+        } else {
+            // SUBSTITUTION LOGIC
+            if (hasSubs) {
+                setSubModalState({ isOpen: true, teamId, playerOutId });
+            }
+        }
+    };
+
     return (
         <div className="pb-28 flex flex-col min-h-screen">
             <GoalModal isOpen={!!scoringTeamForModal} onClose={() => setScoringTeamForModal(null)} onSave={handleGoalSave} game={currentGame} session={activeSession} scoringTeamId={scoringTeamForModal} />
@@ -158,6 +246,8 @@ export const LiveMatchScreen: React.FC = () => {
             />
             
             <SelectWinnerModal isOpen={isSelectWinnerModalOpen} onClose={() => {}} onSelect={finishCurrentGameAndSetupNext} team1={team1} team2={team2}/>
+            
+            {/* STANDARD SUB MODAL */}
             {subModalState.isOpen && teamForSub && playerOutForSub && (
                 <SubstitutionModal 
                     isOpen={subModalState.isOpen}
@@ -166,6 +256,18 @@ export const LiveMatchScreen: React.FC = () => {
                     team={teamForSub}
                     session={activeSession}
                     playerOut={playerOutForSub}
+                />
+            )}
+
+            {/* LEGIONNAIRE MODAL */}
+            {legionnaireModalState.isOpen && teamForLegionnaire && playerOutForLegionnaire && restingTeam && (
+                <LegionnaireModal
+                    isOpen={legionnaireModalState.isOpen}
+                    onClose={() => setLegionnaireModalState({ isOpen: false })}
+                    onSelect={(playerInId) => handleLegionnaireSwap(teamForLegionnaire.id, playerOutForLegionnaire.id, playerInId)}
+                    restingTeam={restingTeam}
+                    session={activeSession}
+                    playerOut={playerOutForLegionnaire}
                 />
             )}
 
@@ -309,8 +411,22 @@ export const LiveMatchScreen: React.FC = () => {
 
                 <div className="max-w-xl mx-auto w-full">
                      <div className="grid grid-cols-2 gap-4">
-                        <TeamRoster team={team1} session={activeSession} onPlayerClick={(teamId, playerOutId) => setSubModalState({ isOpen: true, teamId, playerOutId })} />
-                        <TeamRoster team={team2} session={activeSession} onPlayerClick={(teamId, playerOutId) => setSubModalState({ isOpen: true, teamId, playerOutId })} />
+                        <TeamRoster 
+                            team={team1} 
+                            session={activeSession} 
+                            onPlayerClick={handlePlayerClick}
+                            onTransferToggle={handleTransferToggle}
+                            isTransferMode={transferModeTeamId === team1.id}
+                            activeLegionnaireIds={activeLegionnaireIds}
+                        />
+                        <TeamRoster 
+                            team={team2} 
+                            session={activeSession} 
+                            onPlayerClick={handlePlayerClick}
+                            onTransferToggle={handleTransferToggle}
+                            isTransferMode={transferModeTeamId === team2.id}
+                            activeLegionnaireIds={activeLegionnaireIds}
+                        />
                     </div>
                 </div>
             </div>

@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Page, Button, Card, ToggleSwitch, useTranslation } from '../components';
 import { Session, RotationMode, SessionStatus } from '../types';
@@ -9,7 +10,6 @@ import { newId } from './utils';
 export const NewGameSetupScreen: React.FC = () => {
     const { setActiveSession } = useApp();
     const navigate = useNavigate();
-    const location = useLocation();
     const t = useTranslation();
 
     const [sessionName, setSessionName] = React.useState('532 PLAYGROUND GAME');
@@ -19,9 +19,6 @@ export const NewGameSetupScreen: React.FC = () => {
     const [goalsToWin, setGoalsToWin] = React.useState(2);
     const [rotationMode, setRotationMode] = React.useState<RotationMode>(RotationMode.AutoRotate);
     
-    const params = new URLSearchParams(location.search);
-    const isTestMode = params.get('testMode') === 'true';
-
     const handleSubmit = () => {
         const newSession: Session = {
             id: newId(),
@@ -38,7 +35,7 @@ export const NewGameSetupScreen: React.FC = () => {
             games: [],
             playerPool: [],
             eventLog: [],
-            isTestMode,
+            // isTestMode removed
         };
         setActiveSession(newSession);
         navigate('/assign');

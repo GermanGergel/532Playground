@@ -6,7 +6,7 @@ import { Page, Button, Card, Modal, useTranslation } from '../ui';
 import { Trash2, Cloud } from '../icons';
 import { Session } from '../types';
 import { BrandedHeader } from './utils';
-import { retrySyncPendingSessions, deleteSessionFromDB } from '../db';
+import { retrySyncPendingSessions, deleteSessionFromLocalDB } from '../db';
 
 export const HistoryScreen: React.FC = () => {
     const { history, setHistory, fetchHistory } = useApp();
@@ -16,6 +16,8 @@ export const HistoryScreen: React.FC = () => {
     const [isLoadingMore, setIsLoadingMore] = React.useState(false);
 
     // AUTO-SYNC LOGIC:
+    // When this screen mounts, we assume the user might have just finished a session.
+    // We immediately try to sync any pending sessions in the background.
     useEffect(() => {
         const syncAndRefresh = async () => {
             setIsLoadingMore(true);
@@ -39,30 +41,15 @@ export const HistoryScreen: React.FC = () => {
     const handleDelete = async () => {
         if (!sessionToDelete) return;
         
-        // 1. Optimistically update UI
+        // 1. Remove from React State (Visual)
         setHistory(prev => prev.filter(s => s.id !== sessionToDelete.id));
         
-        // 2. Perform actual deletion (Local IDB overwrite + Cloud)
-        await deleteSessionFromDB(sessionToDelete.id);
-        
+        // 2. Remove permanently from IDB (Local Storage)
+        // This ensures pending sessions don't reappear on reload
+        await deleteSessionFromLocalDB(sessionToDelete.id);
+
         setIsDeleteModalOpen(false);
         setSessionToDelete(null);
-    };
-
-    const handleRetrySync = async (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const result = await retrySyncPendingSessions();
-        
-        if (result.cloudSaved) {
-            await fetchHistory(5);
-            // Optional: Success message
-            // alert("Sync successful!");
-        } else {
-            // Show the exact error why it failed
-            alert(`Sync Failed: ${result.message || "Unknown Error"}. Check your connection or database limits.`);
-        }
     };
 
     return (
@@ -82,26 +69,23 @@ export const HistoryScreen: React.FC = () => {
                                             <div className="overflow-hidden">
                                                 <h3 className="font-bold text-base truncate flex items-center gap-2">
                                                     {session.sessionName}
-                                                    {session.syncStatus === 'pending' && (
-                                                        <button 
-                                                            onClick={handleRetrySync} 
-                                                            className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse cursor-pointer hover:scale-150 transition-transform" 
-                                                            title="Sync Pending - Click to Retry" 
-                                                        />
-                                                    )}
+                                                    {/* Yellow Cloud for Pending */}
+                                                    {session.syncStatus === 'pending' && <Cloud className="w-4 h-4 text-yellow-400 animate-pulse" />}
                                                 </h3>
                                                 <p className="text-xs text-dark-text-secondary">{new Date(session.date).toLocaleDateString()}</p>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                {session.syncStatus === 'synced' && <Cloud className="w-3 h-3 text-green-500 opacity-70" />}
+                                                {/* Green Cloud for Synced */}
+                                                {session.syncStatus === 'synced' && <Cloud className="w-4 h-4 text-[#4CFF5F]" />}
                                                 <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 bg-dark-bg rounded-full flex-shrink-0 ml-2">{t.finished}</span>
                                             </div>
                                         </div>
                                     </Card>
                                 </Link>
-                                <div className="flex flex-col gap-2">
-                                    {/* Delete button only for pending/local sessions as requested */}
-                                    {session.syncStatus !== 'synced' && (
+                                
+                                {/* DELETE BUTTON: ONLY visible if session is NOT synced (pending) */}
+                                {session.syncStatus === 'pending' && (
+                                    <div className="flex flex-col gap-2">
                                         <Button
                                             variant="ghost"
                                             className="!p-2 !text-white shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
@@ -113,8 +97,8 @@ export const HistoryScreen: React.FC = () => {
                                         >
                                             <Trash2 className="w-5 h-5"/>
                                         </Button>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
                             </li>
                         ))}
                     </ul>
@@ -123,6 +107,7 @@ export const HistoryScreen: React.FC = () => {
                             <div className="w-6 h-6 border-2 border-dark-accent-start border-t-transparent rounded-full animate-spin"></div>
                         </div>
                     )}
+                    {/* Visual cue that only recent history is shown */}
                     {!isLoadingMore && history.length >= 3 && (
                         <p className="text-center text-[10px] text-dark-text-secondary mt-6 uppercase tracking-widest opacity-50">
                             Showing recent sessions
@@ -139,6 +124,7 @@ export const HistoryScreen: React.FC = () => {
              >
                 <div className="flex flex-col gap-4 text-center">
                     <h3 className="text-xl font-bold text-dark-text">{t.confirmDeletion}</h3>
+                    <p className="text-xs text-dark-text-secondary">This session has not been backed up to the cloud. Deleting it will remove it permanently from this device.</p>
                     <div className="flex justify-center gap-3">
                         <Button variant="secondary" onClick={() => setIsDeleteModalOpen(false)} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.cancel}</Button>
                         <Button variant="secondary" className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40" onClick={handleDelete}>{t.delete}</Button>
