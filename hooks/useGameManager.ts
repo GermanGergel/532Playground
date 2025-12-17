@@ -6,11 +6,8 @@ import { Session, Game, GameStatus, Goal, GoalPayload, SubPayload, EventLogEntry
 import { playAnnouncement, initAudioContext } from '../lib';
 import { processFinishedSession } from '../services/sessionProcessor';
 import { newId } from '../screens/utils';
-import { savePlayersToDB, saveNewsToDB, saveHistoryToDB } from '../db';
+import { savePlayersToDB, saveNewsToDB, saveHistoryLocalOnly } from '../db';
 import { useTranslation } from '../ui';
-
-// New Type for Save Status Feedback
-export type SaveStatus = 'idle' | 'saving' | 'cloud_success' | 'local_success' | 'error';
 
 export const useGameManager = () => {
     const { activeSession, setActiveSession, setHistory, setAllPlayers, setNewsFeed, allPlayers: oldPlayersState, newsFeed, activeVoicePack } = useApp();
@@ -21,9 +18,6 @@ export const useGameManager = () => {
     const [isEndSessionModalOpen, setIsEndSessionModalOpen] = React.useState(false);
     const [isSelectWinnerModalOpen, setIsSelectWinnerModalOpen] = React.useState(false);
     const [goalToEdit, setGoalToEdit] = React.useState<Goal | null>(null);
-    
-    // Replaces generic isSaving boolean with detailed status
-    const [saveStatus, setSaveStatus] = React.useState<SaveStatus>('idle');
     
     const [subModalState, setSubModalState] = React.useState<{
         isOpen: boolean;
@@ -376,10 +370,11 @@ export const useGameManager = () => {
         setSubModalState({ isOpen: false });
     };
     
+    // --- INSTANT SAVE LOGIC ---
     const handleFinishSession = async () => {
-        if (!activeSession || saveStatus === 'saving') return;
+        if (!activeSession) return;
 
-        // Test Mode: immediate exit, no save
+        // 1. Test Mode: Exit immediately
         if (activeSession.isTestMode) {
             setIsEndSessionModalOpen(false);
             setActiveSession(null);
@@ -387,54 +382,44 @@ export const useGameManager = () => {
             return;
         }
         
-        setSaveStatus('saving');
-        setIsEndSessionModalOpen(false); // Close the confirm modal, the SaveOverlay will take over
+        // 2. Process Data (Synchronous/Fast)
+        const {
+            updatedPlayers,
+            playersToSave,
+            finalSession,
+            updatedNewsFeed
+        } = processFinishedSession({
+            session: activeSession,
+            oldPlayers: oldPlayersState,
+            newsFeed: newsFeed,
+        });
+
+        // 3. Mark as pending sync initially
+        finalSession.syncStatus = 'pending';
+
+        // 4. Save LOCALLY (Instant)
+        await saveHistoryLocalOnly([finalSession]); // Very fast IDB write
         
-        try {
-            const {
-                updatedPlayers,
-                playersToSave,
-                finalSession,
-                updatedNewsFeed
-            } = processFinishedSession({
-                session: activeSession,
-                oldPlayers: oldPlayersState,
-                newsFeed: newsFeed,
-            });
+        // 5. Update React Context (Instant UI feedback)
+        setAllPlayers(updatedPlayers); 
+        setNewsFeed(updatedNewsFeed);
+        setHistory(prev => [finalSession, ...prev]);
+        setActiveSession(null);
+        
+        // 6. Navigate Immediately to History
+        setIsEndSessionModalOpen(false);
+        navigate('/history');
 
-            // Parallel save execution would be faster, but let's do sequential for safer status reporting
-            // We care most about Session History being cloud-saved.
-            
-            if (playersToSave.length > 0) {
-                await savePlayersToDB(playersToSave);
-                setAllPlayers(updatedPlayers); 
-            }
-
-            if (updatedNewsFeed.length > newsFeed.length) {
-                await saveNewsToDB(updatedNewsFeed);
-                setNewsFeed(updatedNewsFeed);
-            }
-
-            // Save History is the critical path
-            const historyResult = await saveHistoryToDB([finalSession]);
-            setHistory(prev => [finalSession, ...prev]);
-
-            // Determine final status
-            if (historyResult.cloudSaved) {
-                setSaveStatus('cloud_success');
-            } else {
-                setSaveStatus('local_success');
-            }
-
-        } catch (error) {
-            console.error("Error ending session:", error);
-            setSaveStatus('error');
-        }
+        // 7. Trigger Background Saves (Fire & Forget)
+        // These happen after navigation, so the user doesn't wait
+        savePlayersToDB(playersToSave).catch(e => console.error("BG Player Save Error", e));
+        saveNewsToDB(updatedNewsFeed).catch(e => console.error("BG News Save Error", e));
+        
+        // The History Screen will handle the actual cloud sync of the session itself
     };
     
     const resetSession = () => {
         setActiveSession(null);
-        setSaveStatus('idle');
         navigate('/');
     };
 
@@ -455,7 +440,6 @@ export const useGameManager = () => {
         isEndSessionModalOpen,
         isSelectWinnerModalOpen,
         goalToEdit,
-        saveStatus,
         subModalState,
         // Derived state
         currentGame,
@@ -472,6 +456,6 @@ export const useGameManager = () => {
         handleGoalUpdate,
         handleSubstitution,
         handleFinishSession,
-        resetSession // New handler to clear session after success screen
+        resetSession
     };
 };

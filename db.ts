@@ -328,26 +328,16 @@ export const loadActiveSessionFromDB = async (): Promise<Session | null | undefi
     try { return await get('activeSession'); } catch (error) { return undefined; }
 };
 
-// --- CRITICAL UPDATE: ROBUST SESSION HISTORY SAVE ---
-export const saveHistoryToDB = async (history: Session[]): Promise<DbResult> => {
-    // Filter demo sessions - we never sync these
-    const realHistory = history.filter(s => !s.id.startsWith('demo_'));
-    if (realHistory.length === 0) return { success: true, cloudSaved: false };
-
-    // 1. LOCAL FIRST: Save everything to IDB immediately.
-    // This provides the "ironclad" guarantee that data is persisted on the device.
-    // We mark sessions as 'pending' if they haven't been confirmed synced yet.
+// --- NEW: INSTANT LOCAL SAVE ---
+export const saveHistoryLocalOnly = async (history: Session[]) => {
     try {
-        // Load existing to merge and avoid overwriting valid pending states with stale data (race conditions)
         const existingHistory = await get<Session[]>('history') || [];
         const historyMap = new Map<string, Session>();
         
         existingHistory.forEach(s => historyMap.set(s.id, s));
-        realHistory.forEach(session => {
-            // If the session coming in is 'completed' but doesn't have a syncStatus, assume pending
-            // This ensures we try to upload it.
+        history.forEach(session => {
             const updatedSession = { ...session };
-            if (!updatedSession.syncStatus && updatedSession.status === 'completed') {
+            if (updatedSession.status === 'completed' && updatedSession.syncStatus !== 'synced') {
                 updatedSession.syncStatus = 'pending';
             }
             historyMap.set(updatedSession.id, updatedSession);
@@ -356,24 +346,33 @@ export const saveHistoryToDB = async (history: Session[]): Promise<DbResult> => 
         const mergedHistory = Array.from(historyMap.values()).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         await set('history', mergedHistory);
     } catch (error) {
-        // If local save fails, this is a device-level catastrophe (storage full/error).
         console.error("Local Save Failed", error);
-        return { success: false, cloudSaved: false, message: "Local save failed" };
     }
+};
 
-    // 2. CLOUD SYNC: Attempt to push "pending" sessions to Supabase
+// --- ROBUST SESSION HISTORY SAVE ---
+export const saveHistoryToDB = async (history: Session[]): Promise<DbResult> => {
+    const realHistory = history.filter(s => !s.id.startsWith('demo_'));
+    if (realHistory.length === 0) return { success: true, cloudSaved: false };
+
+    // 1. LOCAL FIRST (Always execute to ensure IDB is up to date)
+    await saveHistoryLocalOnly(realHistory);
+
+    // 2. CLOUD SYNC
     let cloudError: any = null;
     let cloudSaved = false;
 
     if (isSupabaseConfigured()) {
         try {
-            // Find sessions that need syncing
-            const sessionsToSync = realHistory.filter(s => s.status === 'completed' && s.syncStatus !== 'synced');
+            // Find what really needs syncing (completed and not synced)
+            // We re-read from local to be sure we have the latest status if 'saveHistoryLocalOnly' just ran
+            const currentLocalHistory = await get<Session[]>('history') || realHistory;
+            const sessionsToSync = currentLocalHistory.filter(s => s.status === 'completed' && s.syncStatus !== 'synced' && !s.id.startsWith('demo_'));
             
             if (sessionsToSync.length > 0) {
                 const optimizedHistory = sessionsToSync.map(session => ({
                     ...session,
-                    syncStatus: 'synced', // Optimistic update for payload
+                    syncStatus: 'synced', 
                     playerPool: session.playerPool.map(p => ({ ...p, photo: undefined, playerCard: undefined }))
                 })).map(s => sanitizeObject(s));
 
@@ -382,25 +381,25 @@ export const saveHistoryToDB = async (history: Session[]): Promise<DbResult> => 
                 
                 cloudSaved = true;
 
-                // 3. UPDATE LOCAL STATUS: Mark as synced
-                const finalHistory = await get<Session[]>('history') || [];
-                const updatedFinalHistory = finalHistory.map(s => {
+                // 3. UPDATE LOCAL STATUS TO GREEN
+                const finalHistory = currentLocalHistory.map(s => {
                     if (sessionsToSync.some(synced => synced.id === s.id)) {
                         return { ...s, syncStatus: 'synced' as const };
                     }
                     return s;
                 });
-                await set('history', updatedFinalHistory);
+                await set('history', finalHistory);
             } else {
-                cloudSaved = true; // Nothing to sync is technically a success
+                cloudSaved = true; 
             }
         } catch (error: any) { 
             cloudError = error; 
             cloudSaved = false; 
-            console.error("Cloud Save Failed", error);
-            // We do NOT rollback local data. It stays 'pending' in IDB.
+            console.error("Cloud Save Failed details:", error);
         }
-    } 
+    } else {
+        return { success: true, cloudSaved: false, message: "Supabase not configured" };
+    }
 
     if (cloudError) return { success: true, cloudSaved: false, message: `Cloud failed: ${cloudError.message}` };
     return { success: true, cloudSaved: true };
@@ -408,10 +407,8 @@ export const saveHistoryToDB = async (history: Session[]): Promise<DbResult> => 
 
 // --- CRITICAL UPDATE: UNIFIED HISTORY LOAD ---
 export const loadHistoryFromDB = async (limit?: number): Promise<Session[] | undefined> => {
-    // 1. Always load local data first (Source of Truth for offline/pending items)
     let localHistory = await get<Session[]>('history') || [];
 
-    // 2. Try to load cloud data if configured
     if (isSupabaseConfigured()) {
         try {
             let query = supabase!.from('sessions').select('*').order('createdAt', { ascending: false });
@@ -421,40 +418,24 @@ export const loadHistoryFromDB = async (limit?: number): Promise<Session[] | und
             if (error) throw error;
 
             if (cloudHistory) {
-                // 3. MERGE LOGIC: Combine Cloud and Local to ensure nothing is hidden
                 const sessionMap = new Map<string, Session>();
                 
-                // A. Add Cloud data first (Verified data)
                 cloudHistory.forEach(s => {
-                    // Force status to synced for data coming from cloud
                     sessionMap.set(s.id, { ...s, syncStatus: 'synced' } as Session);
                 });
                 
-                // B. Add Local data (The "Safety Net")
                 localHistory.forEach(s => {
                     const cloudVersion = sessionMap.get(s.id);
-                    
                     if (!cloudVersion) {
-                        // Case 1: Session exists locally but not in cloud (Pending Upload)
-                        // Add it to the list so user sees it
                         sessionMap.set(s.id, s);
-                    } else {
-                        // Case 2: Session exists in both
-                        // If local says 'pending' but cloud exists, it means we probably just synced it or it was synced by another device.
-                        // We generally trust Cloud for completed sessions, but we ensure we don't lose local state if relevant.
-                        // For simplicity in this architecture: Cloud wins for data integrity, but we ensure 'syncStatus' is clean.
                     }
                 });
 
-                // Convert back to array and sort
                 const mergedHistory = Array.from(sessionMap.values()).sort((a, b) => 
                     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
                 );
 
-                // Update local cache with the merged source of truth
-                // This ensures that next time we load offline, we have the cloud data too.
                 await set('history', mergedHistory);
-                
                 return limit ? mergedHistory.slice(0, limit) : mergedHistory;
             }
         } catch (error) { 
@@ -462,7 +443,6 @@ export const loadHistoryFromDB = async (limit?: number): Promise<Session[] | und
         }
     } 
     
-    // Fallback: Return local history if cloud fails or not configured
     return limit ? localHistory.slice(0, limit) : localHistory;
 };
 

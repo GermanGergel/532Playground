@@ -1,9 +1,9 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../context';
 import { Page, Button, Card, Modal, useTranslation } from '../ui';
-import { Trash2, RefreshCw, CloudFog, Cloud } from '../icons';
+import { Trash2, Cloud } from '../icons';
 import { Session } from '../types';
 import { BrandedHeader } from './utils';
 import { retrySyncPendingSessions } from '../db';
@@ -14,18 +14,24 @@ export const HistoryScreen: React.FC = () => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
     const [sessionToDelete, setSessionToDelete] = React.useState<Session | null>(null);
     const [isLoadingMore, setIsLoadingMore] = React.useState(false);
-    const [isSyncing, setIsSyncing] = React.useState(false);
 
-    // TRAFFIC OPTIMIZATION: Only load the last 3 sessions when visiting this screen.
-    // The user must access the database directly for older records.
-    React.useEffect(() => {
-        const loadRecentHistory = async () => {
+    // AUTO-SYNC LOGIC:
+    // When this screen mounts, we assume the user might have just finished a session.
+    // We immediately try to sync any pending sessions in the background.
+    useEffect(() => {
+        const syncAndRefresh = async () => {
             setIsLoadingMore(true);
-            await fetchHistory(5); // Increased to 5 to catch more pending items
+            
+            // 1. Try to push any local-only sessions to the cloud
+            await retrySyncPendingSessions(); 
+            
+            // 2. Fetch the latest history (this updates the UI from Yellow -> Green if successful)
+            await fetchHistory(5); 
+            
             setIsLoadingMore(false);
         };
-        loadRecentHistory();
-    }, []);
+        syncAndRefresh();
+    }, [fetchHistory]);
 
     const openDeleteModal = (session: Session) => {
         setSessionToDelete(session);
@@ -39,42 +45,10 @@ export const HistoryScreen: React.FC = () => {
         setSessionToDelete(null);
     };
 
-    const handleRetrySync = async () => {
-        setIsSyncing(true);
-        try {
-            await retrySyncPendingSessions();
-            await fetchHistory(5); // Refresh list
-        } finally {
-            setIsSyncing(false);
-        }
-    };
-
-    const pendingSessionsCount = history.filter(s => s.syncStatus === 'pending').length;
-
     return (
         <Page>
             <BrandedHeader className="mb-8" />
             
-            {pendingSessionsCount > 0 && (
-                <div className="mb-6 p-4 bg-yellow-900/40 border border-yellow-500/50 rounded-xl flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <CloudFog className="w-6 h-6 text-yellow-400" />
-                        <div>
-                            <p className="text-sm font-bold text-yellow-200">{pendingSessionsCount} Unsynced Sessions</p>
-                            <p className="text-[10px] text-yellow-200/70">Data is safe on device.</p>
-                        </div>
-                    </div>
-                    <Button 
-                        variant="ghost" 
-                        onClick={handleRetrySync} 
-                        disabled={isSyncing}
-                        className={`!p-2 text-yellow-400 ${isSyncing ? 'animate-spin' : ''}`}
-                    >
-                        <RefreshCw className="w-5 h-5" />
-                    </Button>
-                </div>
-            )}
-
             {history.length === 0 && !isLoadingMore ? (
                 <p className="text-center text-dark-text-secondary">{t.noSessionsFound}</p>
             ) : (

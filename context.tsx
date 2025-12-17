@@ -85,17 +85,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     initApp();
   }, []);
 
-  // --- LAZY LOADING METHODS ---
+  // --- LAZY LOADING METHODS (Fixed with useCallback to prevent loops) ---
   // Updated to accept limit
-  const fetchHistory = async (limit?: number) => {
+  const fetchHistory = React.useCallback(async (limit?: number) => {
       const historyData = await loadHistoryFromDB(limit);
       if (historyData) setHistory(historyData);
-  };
+  }, []);
 
-  const fetchFullNews = async () => {
+  const fetchFullNews = React.useCallback(async () => {
       const fullNews = await loadNewsFromDB(); // No limit = full fetch
       if (fullNews) setNewsFeed(fullNews);
-  };
+  }, []);
 
   // --- PERSISTENCE EFFECT HOOKS (Save to DB) ---
 

@@ -118,6 +118,8 @@ export const NewsFeedScreen: React.FC = () => {
     const { newsFeed, fetchFullNews } = useApp();
 
     useEffect(() => {
+        // Only fetch on mount.
+        // fetchFullNews is now stable thanks to useCallback in context.
         fetchFullNews();
     }, [fetchFullNews]);
 
