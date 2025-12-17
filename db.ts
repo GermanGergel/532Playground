@@ -318,16 +318,13 @@ export const loadActiveSessionFromDB = async (): Promise<Session | null | undefi
     try { return await get('activeSession'); } catch (error) { return undefined; }
 };
 
-// --- FIXED: OVERWRITE LOCAL HISTORY (Prevents Resurrection) ---
+// --- OVERWRITE LOCAL HISTORY ---
 export const saveHistoryLocalOnly = async (history: Session[]) => {
     try {
-        // We no longer merge. We treat the provided 'history' array (which has the delete applied) 
-        // as the absolute new truth for the 'history' key in IDB.
         const sortedHistory = [...history].sort((a, b) => 
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         await set('history', sortedHistory);
-        console.log("💾 Local history overwritten and updated.");
     } catch (error) {
         console.error("Local Save Failed", error);
     }
@@ -387,7 +384,7 @@ export const saveHistoryToDB = async (history: Session[]): Promise<DbResult> => 
     return { success: true, cloudSaved: true };
 };
 
-// --- UNIFIED HISTORY LOAD ---
+// --- UNIFIED HISTORY LOAD WITH CLOUD CONSISTENCY ---
 export const loadHistoryFromDB = async (limit?: number): Promise<Session[] | undefined> => {
     let localHistory = await get<Session[]>('history') || [];
 
@@ -400,16 +397,31 @@ export const loadHistoryFromDB = async (limit?: number): Promise<Session[] | und
             if (error) throw error;
 
             if (cloudHistory) {
+                const cloudHistoryIds = new Set(cloudHistory.map(s => s.id));
                 const sessionMap = new Map<string, Session>();
                 
+                // 1. Add all cloud sessions (truth)
                 cloudHistory.forEach(s => {
                     sessionMap.set(s.id, { ...s, syncStatus: 'synced' } as Session);
                 });
                 
-                localHistory.forEach(s => {
-                    const cloudVersion = sessionMap.get(s.id);
-                    if (!cloudVersion) {
-                        sessionMap.set(s.id, s);
+                // 2. Add local sessions ONLY if they are not yet synced OR if they exist in cloud
+                // This ensures if a 'synced' session was deleted from Cloud dashboard, it is purged locally too.
+                localHistory.forEach(localSession => {
+                    const existsInCloud = cloudHistoryIds.has(localSession.id);
+                    const isPending = localSession.syncStatus === 'pending';
+
+                    if (isPending || existsInCloud) {
+                        // Keep it. If it's in cloud, the cloud version (step 1) will be preferred if we use .set again,
+                        // but Map keeps first entry unless overwritten. Let's ensure cloud version wins.
+                        if (!existsInCloud) {
+                            sessionMap.set(localSession.id, localSession);
+                        }
+                    } else if (localSession.syncStatus === 'synced' && !existsInCloud) {
+                        // CRITICAL: This session was marked as synced but it's NOT in the cloud results.
+                        // It must have been manually deleted from the database. 
+                        // We skip adding it here, which effectively deletes it from local when we 'set' below.
+                        console.log(`🧹 Session ${localSession.id} was deleted from Cloud. Removing from local cache.`);
                     }
                 });
 
@@ -417,7 +429,9 @@ export const loadHistoryFromDB = async (limit?: number): Promise<Session[] | und
                     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
                 );
 
+                // Update local storage to match the new reality
                 await set('history', mergedHistory);
+                
                 return limit ? mergedHistory.slice(0, limit) : mergedHistory;
             }
         } catch (error) { 
@@ -430,22 +444,15 @@ export const loadHistoryFromDB = async (limit?: number): Promise<Session[] | und
 
 // --- LOCAL-ONLY DELETE FUNCTION ---
 export const deleteSession = async (sessionId: string): Promise<void> => {
-    // Note: Per user request, we DO NOT delete from Cloud in the app.
-    // Cloud sessions (green) are read-only and must be deleted from Supabase dashboard.
-    // This function only handles local cleanup for "yellow" sessions.
-
-    // 1. DELETE FROM LOCAL (History Key)
     try {
         const history = await get<Session[]>('history') || [];
         const updatedHistory = history.filter(s => s.id !== sessionId);
-        // CRITICAL: We overwrite 'history' completely to ensure it's gone
         await set('history', updatedHistory);
         console.log(`🗑️ Session ${sessionId} nuked from Local History`);
     } catch (e) {
         console.error("Failed to delete from local history", e);
     }
 
-    // 2. DELETE FROM ACTIVE SESSION (The Zombie Killer)
     try {
         const active = await get<Session | null>('activeSession');
         if (active && active.id === sessionId) {
