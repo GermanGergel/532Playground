@@ -16,8 +16,6 @@ export const HistoryScreen: React.FC = () => {
     const [isLoadingMore, setIsLoadingMore] = React.useState(false);
 
     // AUTO-SYNC LOGIC:
-    // When this screen mounts, we assume the user might have just finished a session.
-    // We immediately try to sync any pending sessions in the background.
     useEffect(() => {
         const syncAndRefresh = async () => {
             setIsLoadingMore(true);
@@ -25,8 +23,8 @@ export const HistoryScreen: React.FC = () => {
             // 1. Try to push any local-only sessions to the cloud
             await retrySyncPendingSessions(); 
             
-            // 2. Fetch the latest history (this updates the UI from Yellow -> Green if successful)
-            await fetchHistory(5); 
+            // 2. Fetch the latest history (Now showing last 10 sessions)
+            await fetchHistory(10); 
             
             setIsLoadingMore(false);
         };
@@ -42,8 +40,6 @@ export const HistoryScreen: React.FC = () => {
         if (!sessionToDelete) return;
         
         // --- NUCLEAR DELETE ---
-        // Attempts to delete from Cloud AND Local DB AND Active Session State.
-        // Even if it fails on cloud (offline), it will burn it locally.
         await deleteSession(sessionToDelete.id);
 
         // Remove from React State (Visual)
@@ -108,10 +104,10 @@ export const HistoryScreen: React.FC = () => {
                             <div className="w-6 h-6 border-2 border-dark-accent-start border-t-transparent rounded-full animate-spin"></div>
                         </div>
                     )}
-                    {/* Visual cue that only recent history is shown */}
-                    {!isLoadingMore && history.length >= 3 && (
+                    {/* Visual cue that only recent history is shown to prevent clutter */}
+                    {!isLoadingMore && history.length >= 5 && (
                         <p className="text-center text-[10px] text-dark-text-secondary mt-6 uppercase tracking-widest opacity-50">
-                            Showing recent sessions
+                            Showing last 10 sessions
                         </p>
                     )}
                 </>

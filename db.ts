@@ -384,7 +384,7 @@ export const saveHistoryToDB = async (history: Session[]): Promise<DbResult> => 
     return { success: true, cloudSaved: true };
 };
 
-// --- UNIFIED HISTORY LOAD WITH CLOUD CONSISTENCY ---
+// --- UNIFIED HISTORY LOAD WITH IMPROVED CLOUD CONSISTENCY ---
 export const loadHistoryFromDB = async (limit?: number): Promise<Session[] | undefined> => {
     let localHistory = await get<Session[]>('history') || [];
 
@@ -396,32 +396,38 @@ export const loadHistoryFromDB = async (limit?: number): Promise<Session[] | und
             
             if (error) throw error;
 
-            if (cloudHistory) {
+            if (cloudHistory && cloudHistory.length > 0) {
                 const cloudHistoryIds = new Set(cloudHistory.map(s => s.id));
                 const sessionMap = new Map<string, Session>();
                 
+                // Determine the timeframe of cloud results to avoid accidental deletions of older local data
+                const oldestCloudDate = new Date(cloudHistory[cloudHistory.length - 1].createdAt).getTime();
+
                 // 1. Add all cloud sessions (truth)
                 cloudHistory.forEach(s => {
                     sessionMap.set(s.id, { ...s, syncStatus: 'synced' } as Session);
                 });
                 
-                // 2. Add local sessions ONLY if they are not yet synced OR if they exist in cloud
-                // This ensures if a 'synced' session was deleted from Cloud dashboard, it is purged locally too.
+                // 2. Add local sessions
                 localHistory.forEach(localSession => {
                     const existsInCloud = cloudHistoryIds.has(localSession.id);
-                    const isPending = localSession.syncStatus === 'pending';
+                    const localDate = new Date(localSession.createdAt).getTime();
 
-                    if (isPending || existsInCloud) {
-                        // Keep it. If it's in cloud, the cloud version (step 1) will be preferred if we use .set again,
-                        // but Map keeps first entry unless overwritten. Let's ensure cloud version wins.
+                    // Logic: 
+                    // - Keep if it's pending (not yet in cloud)
+                    // - Keep if it exists in cloud result set
+                    // - Keep if it's OLDER than the oldest session we got from cloud (we don't know if it exists or not because of 'limit')
+                    // - DELETE only if it's marked 'synced' AND it's newer/within cloud range AND it's missing from cloud results.
+                    
+                    const isWithinCloudRange = localDate >= oldestCloudDate;
+
+                    if (localSession.syncStatus === 'pending' || existsInCloud || !isWithinCloudRange) {
                         if (!existsInCloud) {
                             sessionMap.set(localSession.id, localSession);
                         }
-                    } else if (localSession.syncStatus === 'synced' && !existsInCloud) {
-                        // CRITICAL: This session was marked as synced but it's NOT in the cloud results.
-                        // It must have been manually deleted from the database. 
-                        // We skip adding it here, which effectively deletes it from local when we 'set' below.
-                        console.log(`🧹 Session ${localSession.id} was deleted from Cloud. Removing from local cache.`);
+                    } else if (localSession.syncStatus === 'synced' && isWithinCloudRange && !existsInCloud) {
+                        // This session was deleted from Cloud manually.
+                        console.log(`🧹 Session ${localSession.id} identified as deleted from Cloud. Cleaning local cache.`);
                     }
                 });
 
@@ -429,9 +435,7 @@ export const loadHistoryFromDB = async (limit?: number): Promise<Session[] | und
                     new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
                 );
 
-                // Update local storage to match the new reality
                 await set('history', mergedHistory);
-                
                 return limit ? mergedHistory.slice(0, limit) : mergedHistory;
             }
         } catch (error) { 
