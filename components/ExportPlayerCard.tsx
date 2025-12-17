@@ -41,11 +41,11 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
     const countryCodeAlpha2 = React.useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
 
     const topBadges = React.useMemo(() => {
-        // Priority Sort - Take top 7 to fit the footer nicely
+        // Priority Sort - Take top 6 to fit the footer nicely
         return Object.entries(player.badges || {})
             .map(([badge]) => badge as BadgeType)
             .sort((a, b) => getBadgePriority(b) - getBadgePriority(a))
-            .slice(0, 7); 
+            .slice(0, 6); 
     }, [player.badges]);
 
     const rankings = React.useMemo(() => {

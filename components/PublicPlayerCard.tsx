@@ -83,11 +83,11 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
                             <p className="font-bold text-white tracking-widest text-sm">OVG</p>
                             <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
                             
-                            {/* Updated to use BadgeDisplay component */}
+                            {/* Updated to use BadgeDisplay component with limit 6 */}
                             {player.badges && Object.keys(player.badges).length > 0 && (
                                 <BadgeDisplay 
                                     badges={player.badges} 
-                                    limit={7}
+                                    limit={6}
                                     onOpenChange={setIsBadgeModalOpen} 
                                 />
                             )}

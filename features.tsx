@@ -260,7 +260,7 @@ export const sortBadgesByPriority = (badges: Partial<Record<BadgeType, number>>)
     });
 };
 
-// --- BADGE DISPLAY COMPONENT (The "7+1" System) ---
+// --- BADGE DISPLAY COMPONENT (The "6+1" System) ---
 export const BadgeDisplay: React.FC<{ 
     badges: Partial<Record<BadgeType, number>>; 
     limit?: number; // Kept as prop, but we default/force new logic below
@@ -281,8 +281,8 @@ export const BadgeDisplay: React.FC<{
     
     if (sortedBadges.length === 0) return null;
 
-    // --- NEW LOGIC: 7 ICONS + 1 CIRCLE (if overflow) ---
-    const DISPLAY_LIMIT = 7;
+    // --- NEW LOGIC: 6 ICONS + 1 CIRCLE (if overflow) ---
+    const DISPLAY_LIMIT = 6;
     const showCounter = sortedBadges.length > DISPLAY_LIMIT;
     const renderBadges = showCounter ? sortedBadges.slice(0, DISPLAY_LIMIT) : sortedBadges; 
     const counterValue = sortedBadges.length - DISPLAY_LIMIT;
@@ -485,11 +485,11 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                                 <FormArrowIndicator form={player.form} />
                             </div>
                             
-                            {/* UPDATED: Passing callback to hide skills */}
+                            {/* UPDATED: Passing callback to hide skills, LIMIT 6 */}
                             {player.badges && Object.keys(player.badges).length > 0 && (
                                 <BadgeDisplay 
                                     badges={player.badges} 
-                                    limit={7} 
+                                    limit={6} 
                                     onOpenChange={setIsBadgeModalOpen} 
                                 />
                             )}
