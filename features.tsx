@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Team, Player, PlayerTier, PlayerStatus, BadgeType, PlayerForm, SkillType } from './types';
 import { getPlayerKeyStats } from './services/statistics';
@@ -197,6 +198,9 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
     
     const badgeList = player.badges ? (Object.keys(player.badges) as BadgeType[]) : [];
 
+    // Configuration for badge layout
+    const BADGES_PER_COL = 7;
+
     const winRate = player.totalGames > 0 ? `${Math.round((player.totalWins / player.totalGames) * 100)}%` : 'N/A';
     const goalsPerSession = player.totalSessionsPlayed > 0 ? (player.totalGoals / player.totalSessionsPlayed).toFixed(2) : '0.00';
     const assistsPerSession = player.totalSessionsPlayed > 0 ? (player.totalAssists / player.totalSessionsPlayed).toFixed(2) : '0.00';
@@ -293,18 +297,34 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                             <div className="mt-1">
                                 <FormArrowIndicator form={player.form} />
                             </div>
+                            
+                            {/* REFACTORED BADGE LAYOUT: Tighter spacing and 7 per column */}
                             {badgeList.length > 0 && (
-                                <div className="mt-4 flex flex-row-reverse items-center gap-x-2">
-                                    <div className="flex flex-col space-y-2 items-center">
-                                        {badgeList.slice(0, 8).map(badge => (
+                                <div className="mt-3 flex flex-row-reverse items-start gap-x-1">
+                                    {/* Column 1 (0-7) */}
+                                    <div className="flex flex-col space-y-1 items-center">
+                                        {badgeList.slice(0, BADGES_PER_COL).map(badge => (
                                             <div key={badge} title={t[`badge_${badge}` as keyof typeof t] || ''}>
                                                 <BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-7 h-7" />
                                             </div>
                                         ))}
                                     </div>
-                                    {badgeList.length > 8 && (
-                                        <div className="flex flex-col space-y-2 items-center">
-                                            {badgeList.slice(8, 16).map(badge => (
+                                    
+                                    {/* Column 2 (7-14) */}
+                                    {badgeList.length > BADGES_PER_COL && (
+                                        <div className="flex flex-col space-y-1 items-center">
+                                            {badgeList.slice(BADGES_PER_COL, BADGES_PER_COL * 2).map(badge => (
+                                                <div key={badge} title={t[`badge_${badge}` as keyof typeof t] || ''}>
+                                                    <BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-7 h-7" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Column 3 (14+) - Just in case */}
+                                    {badgeList.length > BADGES_PER_COL * 2 && (
+                                        <div className="flex flex-col space-y-1 items-center">
+                                            {badgeList.slice(BADGES_PER_COL * 2, BADGES_PER_COL * 3).map(badge => (
                                                 <div key={badge} title={t[`badge_${badge}` as keyof typeof t] || ''}>
                                                     <BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-7 h-7" />
                                                 </div>
@@ -316,8 +336,8 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                         </div>
                     </div>
 
-                    {/* Bottom section for name */}
-                    <div className="text-center">
+                    {/* Bottom section for name - Added flex-shrink-0 to prevent disappearing */}
+                    <div className="text-center flex-shrink-0 relative z-30 pb-1">
                         <h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg">{player.nickname} {player.surname}</h1>
                     </div>
                 </div>

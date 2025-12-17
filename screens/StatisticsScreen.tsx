@@ -2,7 +2,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-// FIX: Import directly from component files instead of barrel file to avoid import errors.
 import { Page, Button, Modal, useTranslation } from '../ui';
 import { TeamAvatar } from '../components/avatars';
 import { Session } from '../types';
@@ -81,9 +80,6 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
     const tableTextClass = "text-[10px] sm:text-xs text-center table-fixed"; 
     const cellPadding = "py-1.5 px-0.5";
 
-    // Dynamic class for player names: 
-    // Export: 'truncate' + 'max-w-[200px]' ensures it never wraps, fits "Oleg Drobeniuk", and adds "..." if longer.
-    // Mobile: 'truncate' + 'max-w-[80px]' keeps it compact for phones.
     const playerNameClass = isExport 
         ? `${cellPadding} text-left font-semibold truncate max-w-[200px] pr-2` 
         : `${cellPadding} text-left font-semibold truncate pr-2 max-w-[80px] sm:max-w-[100px]`;
@@ -97,8 +93,9 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                 style={{ boxShadow: isExport ? 'none' : '0 8px 25px -5px rgba(0, 242, 254, 0.1), 0 5px 10px -6px rgba(0, 242, 254, 0.1)' }}
             >
                 <h3 className={cardTitleClasses}>{t.teamStandings}</h3>
-                <div className="overflow-x-hidden">
-                    <table className={`w-full ${tableTextClass}`}>
+                {/* FIX: overflow-x-auto ensures if content is too wide, only the table scrolls, not the page */}
+                <div className="w-full overflow-x-auto">
+                    <table className={`w-full ${tableTextClass} min-w-[280px]`}>
                         <thead>
                             <tr className="text-dark-text-secondary">
                                 <th className={`text-left font-normal ${cellPadding}`} style={{ width: '8%' }}>#</th>
@@ -139,8 +136,9 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                 style={{ boxShadow: isExport ? 'none' : '0 8px 25px -5px rgba(0, 242, 254, 0.1), 0 5px 10px -6px rgba(0, 242, 254, 0.1)' }}
              >
                 <h3 className={cardTitleClasses}>{t.playerStatistics}</h3>
-                <div className="overflow-x-hidden">
-                    <table className={`w-full ${tableTextClass}`}>
+                {/* FIX: overflow-x-auto ensures if content is too wide, only the table scrolls, not the page */}
+                <div className="w-full overflow-x-auto">
+                    <table className={`w-full ${tableTextClass} min-w-[280px]`}>
                     <thead>
                             <tr className="text-dark-text-secondary">
                                 <th className={`text-left font-normal ${cellPadding}`} style={{ width: '8%' }}>#</th>

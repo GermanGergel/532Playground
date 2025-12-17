@@ -10,8 +10,8 @@ const getInitialDate = () => {
 
 export const useAnnouncementGenerator = () => {
     const [date, setDate] = React.useState(getInitialDate());
-    const [time, setTime] = React.useState('19:00');
-    const [endTime, setEndTime] = React.useState('20:30');
+    const [time, setTime] = React.useState('19:30');
+    const [endTime, setEndTime] = React.useState('21:00');
     const [backgroundImage, setBackgroundImage] = React.useState<string | null>(null);
     const [isGenerating, setIsGenerating] = React.useState(false);
     

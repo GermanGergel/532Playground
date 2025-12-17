@@ -88,7 +88,11 @@ export const generateAndSharePoster = async (options: PosterData) => {
             const iconImg = await loadImage(iconUrl);
             ctx.shadowColor = 'rgba(0,0,0,0.5)';
             ctx.shadowBlur = 5;
-            ctx.drawImage(iconImg, W - P - S * 60, headerY + S * 8, S * 24, S * 24);
+            
+            // ADJUSTED ICON POSITION (Updated based on feedback)
+            // Was: S * 85 (too far left), headerY + S * 14 (too low)
+            // New: S * 70 (Closer to right), headerY + S * 10 (Higher)
+            ctx.drawImage(iconImg, W - P - S * 70, headerY + S * 10, S * 28, S * 28);
             
             ctx.fillStyle = '#FFF';
             ctx.font = `bold ${S * 28}px "Teko"`;

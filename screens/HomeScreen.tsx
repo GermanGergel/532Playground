@@ -27,16 +27,17 @@ export const HomeScreen: React.FC = () => {
   useEffect(() => {
       if (isQrModalOpen) {
           try {
-              // 1. Get current Origin (e.g. https://myapp.vercel.app)
+              // 1. Get current Origin (e.g. https://myapp.vercel.app or localhost)
               const origin = window.location.origin;
               
-              // 2. Construct the clean URL for BrowserRouter pointing specifically to PROMO
-              let finalUrl = `${origin}/promo`;
+              // 2. Construct the clean URL for HashRouter pointing specifically to PROMO
+              // Note: Added /#/ for HashRouter support
+              let finalUrl = `${origin}/#/promo`;
 
               // 3. (Optional) Override host if user provided one for local testing
               if (customHost.trim()) {
                   // This is mostly for dev mode
-                  finalUrl = `http://${customHost.trim()}/promo`; 
+                  finalUrl = `http://${customHost.trim()}/#/promo`; 
               }
 
               setQrUrl(finalUrl);

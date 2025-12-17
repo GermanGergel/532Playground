@@ -13,7 +13,7 @@ import { useApp } from './context';
 
 const App: React.FC = () => {
   const location = useLocation();
-  const { activeSession } = useApp();
+  const { activeSession, setPlayerDbSort, setPlayerDbSearch } = useApp();
 
   // Add global protection against accidental page reloads during an entire session.
   React.useEffect(() => {
@@ -32,6 +32,20 @@ const App: React.FC = () => {
         window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [activeSession]);
+
+  // RESET PLAYER DATABASE FILTERS
+  // When the user leaves the "Player" ecosystem (Database or Profile), we reset the sort/search.
+  // This satisfies the request: "persist while inside, reset when exit".
+  React.useEffect(() => {
+      const isPlayerSection = 
+          location.pathname.includes('/player-database') || 
+          location.pathname.includes('/player/'); // Matches /player/:id
+
+      if (!isPlayerSection) {
+          setPlayerDbSort('date');
+          setPlayerDbSearch('');
+      }
+  }, [location.pathname, setPlayerDbSort, setPlayerDbSearch]);
 
   // Only hide navigation on the public profile share link AND the Promo page.
   // This locks public users into these pages so they can't access Admin features.

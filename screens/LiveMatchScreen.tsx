@@ -6,7 +6,7 @@ import { Button, Modal, Page, useTranslation, SessionModeIndicator } from '../ui
 import { TeamAvatar } from '../components/avatars';
 import { StarIcon, Plus, Pause, Play, Edit3, Cloud, CloudFog } from '../icons';
 import { Session, Game, GameStatus, Goal, Team, Player } from '../types';
-import { playAnnouncement, initAudioContext } from '../lib';
+import { audioManager } from '../lib'; // Import Manager directly
 import { GoalModal, EditGoalModal, EndSessionModal, SelectWinnerModal, SubstitutionModal } from '../modals';
 import { hexToRgba } from './utils';
 import { useGameManager, SaveStatus } from '../hooks/useGameManager';
@@ -160,23 +160,28 @@ export const LiveMatchScreen: React.FC = () => {
         handleGoalSave, handleGoalUpdate, handleSubstitution, handleFinishSession, resetSession
     } = gameManager;
     
+    // --- AUDIO LIFECYCLE MANAGEMENT ---
     React.useEffect(() => {
-        if (activeSession?.numTeams !== 3) return;
+        if (activeSession?.numTeams === 3) {
+            // 1. Preload audio into memory immediately when match screen mounts
+            audioManager.preloadPack(activeVoicePack);
 
-        const handleInteraction = () => {
-            initAudioContext();
-            playAnnouncement('silence', '', activeVoicePack);
-            window.removeEventListener('click', handleInteraction);
-            window.removeEventListener('touchstart', handleInteraction);
-        };
-        
-        window.addEventListener('click', handleInteraction);
-        window.addEventListener('touchstart', handleInteraction);
+            // 2. Setup iOS unlock handler (plays silence on first touch)
+            const handleInteraction = () => {
+                audioManager.play('silence', '', activeVoicePack);
+                // Remove listeners after first successful unlock
+                window.removeEventListener('click', handleInteraction);
+                window.removeEventListener('touchstart', handleInteraction);
+            };
+            
+            window.addEventListener('click', handleInteraction);
+            window.addEventListener('touchstart', handleInteraction);
 
-        return () => {
-            window.removeEventListener('click', handleInteraction);
-            window.removeEventListener('touchstart', handleInteraction);
-        };
+            return () => {
+                window.removeEventListener('click', handleInteraction);
+                window.removeEventListener('touchstart', handleInteraction);
+            };
+        }
     }, [activeSession?.numTeams, activeVoicePack]);
 
     React.useEffect(() => {

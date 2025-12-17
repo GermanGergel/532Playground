@@ -103,9 +103,10 @@ export const BottomNav: React.FC = () => {
     );
 };
 
+// FIX: Added STRICT overflow control. max-w-[100vw] prevents the container from being wider than the viewport.
+// overflow-x-hidden clips anything inside that tries to stick out.
 export const Page: React.FC<{children: React.ReactNode, title?: string, className?: string} & React.HTMLAttributes<HTMLDivElement>> = ({children, title, className = '', ...props}) => (
-    // FIX: Added 'w-full max-w-[100vw] overflow-x-hidden' to strictly prevent horizontal scrolling/swiping
-    <div className={`p-4 pb-28 w-full max-w-[100vw] overflow-x-hidden box-border ${className}`} {...props}>
+    <div className={`p-4 pb-28 w-full max-w-[100vw] overflow-x-hidden box-border relative ${className}`} {...props}>
         {title && <h1 className="text-4xl font-bold mb-6">{title}</h1>}
         <div className="max-w-sm mx-auto w-full">
             {children}

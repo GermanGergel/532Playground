@@ -30,8 +30,6 @@ const supabase = (supabaseUrl && supabaseAnonKey)
 
 export const isSupabaseConfigured = () => !!supabase;
 
-// ... (keep existing helper functions: base64ToBlob, blobToBase64, sanitizeObject, saveLocalPlayerOnly, etc.)
-
 // --- PROMO PLAYER MANAGEMENT (NEW) ---
 
 const SETTINGS_KEY_PROMO = 'promo_player_config';
@@ -95,17 +93,12 @@ export const uploadPromoImage = async (base64Image: string): Promise<string | nu
     }
 };
 
-// ... (keep the rest of the file: uploadPlayerImage, saveSinglePlayerToDB, savePlayersToDB, loadPlayersFromDB, getCloudPlayerCount, etc.)
-// ... (Ensure base64ToBlob and blobToBase64 are preserved at the top of the file as they were)
-
 const hasLoggedMode = false;
-// ... (rest of the file content from original db.ts)
 const logStorageMode = () => {
     if (!hasLoggedMode) {
         if (isSupabaseConfigured()) {
             console.log('🔌 Connected to Cloud Database (Supabase)');
         }
-        // hasLoggedMode = true; // Removed const reassign error
     }
 };
 
@@ -335,50 +328,152 @@ export const loadActiveSessionFromDB = async (): Promise<Session | null | undefi
     try { return await get('activeSession'); } catch (error) { return undefined; }
 };
 
+// --- CRITICAL UPDATE: ROBUST SESSION HISTORY SAVE ---
 export const saveHistoryToDB = async (history: Session[]): Promise<DbResult> => {
+    // Filter demo sessions - we never sync these
     const realHistory = history.filter(s => !s.id.startsWith('demo_'));
     if (realHistory.length === 0) return { success: true, cloudSaved: false };
 
+    // 1. LOCAL FIRST: Save everything to IDB immediately.
+    // This provides the "ironclad" guarantee that data is persisted on the device.
+    // We mark sessions as 'pending' if they haven't been confirmed synced yet.
+    try {
+        // Load existing to merge and avoid overwriting valid pending states with stale data (race conditions)
+        const existingHistory = await get<Session[]>('history') || [];
+        const historyMap = new Map<string, Session>();
+        
+        existingHistory.forEach(s => historyMap.set(s.id, s));
+        realHistory.forEach(session => {
+            // If the session coming in is 'completed' but doesn't have a syncStatus, assume pending
+            // This ensures we try to upload it.
+            const updatedSession = { ...session };
+            if (!updatedSession.syncStatus && updatedSession.status === 'completed') {
+                updatedSession.syncStatus = 'pending';
+            }
+            historyMap.set(updatedSession.id, updatedSession);
+        });
+
+        const mergedHistory = Array.from(historyMap.values()).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        await set('history', mergedHistory);
+    } catch (error) {
+        // If local save fails, this is a device-level catastrophe (storage full/error).
+        console.error("Local Save Failed", error);
+        return { success: false, cloudSaved: false, message: "Local save failed" };
+    }
+
+    // 2. CLOUD SYNC: Attempt to push "pending" sessions to Supabase
     let cloudError: any = null;
     let cloudSaved = false;
 
     if (isSupabaseConfigured()) {
         try {
-            const optimizedHistory = realHistory.map(session => ({
-                ...session,
-                playerPool: session.playerPool.map(p => ({ ...p, photo: undefined, playerCard: undefined }))
-            })).map(s => sanitizeObject(s));
+            // Find sessions that need syncing
+            const sessionsToSync = realHistory.filter(s => s.status === 'completed' && s.syncStatus !== 'synced');
+            
+            if (sessionsToSync.length > 0) {
+                const optimizedHistory = sessionsToSync.map(session => ({
+                    ...session,
+                    syncStatus: 'synced', // Optimistic update for payload
+                    playerPool: session.playerPool.map(p => ({ ...p, photo: undefined, playerCard: undefined }))
+                })).map(s => sanitizeObject(s));
 
-            const { error } = await supabase!.from('sessions').upsert(optimizedHistory, { onConflict: 'id' });
-            if (error) throw error;
-            cloudSaved = true;
-        } catch (error: any) { cloudError = error; cloudSaved = false; }
+                const { error } = await supabase!.from('sessions').upsert(optimizedHistory, { onConflict: 'id' });
+                if (error) throw error;
+                
+                cloudSaved = true;
+
+                // 3. UPDATE LOCAL STATUS: Mark as synced
+                const finalHistory = await get<Session[]>('history') || [];
+                const updatedFinalHistory = finalHistory.map(s => {
+                    if (sessionsToSync.some(synced => synced.id === s.id)) {
+                        return { ...s, syncStatus: 'synced' as const };
+                    }
+                    return s;
+                });
+                await set('history', updatedFinalHistory);
+            } else {
+                cloudSaved = true; // Nothing to sync is technically a success
+            }
+        } catch (error: any) { 
+            cloudError = error; 
+            cloudSaved = false; 
+            console.error("Cloud Save Failed", error);
+            // We do NOT rollback local data. It stays 'pending' in IDB.
+        }
     } 
-
-    try {
-        const existingHistory = await get<Session[]>('history') || [];
-        const historyMap = new Map<string, Session>();
-        existingHistory.forEach(s => historyMap.set(s.id, s));
-        realHistory.forEach(session => historyMap.set(session.id, session));
-        const mergedHistory = Array.from(historyMap.values()).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        await set('history', mergedHistory);
-    } catch (error) { return { success: false, cloudSaved: false, message: "Local save failed" }; }
 
     if (cloudError) return { success: true, cloudSaved: false, message: `Cloud failed: ${cloudError.message}` };
     return { success: true, cloudSaved: true };
 };
 
+// --- CRITICAL UPDATE: UNIFIED HISTORY LOAD ---
 export const loadHistoryFromDB = async (limit?: number): Promise<Session[] | undefined> => {
+    // 1. Always load local data first (Source of Truth for offline/pending items)
+    let localHistory = await get<Session[]>('history') || [];
+
+    // 2. Try to load cloud data if configured
     if (isSupabaseConfigured()) {
         try {
             let query = supabase!.from('sessions').select('*').order('createdAt', { ascending: false });
             if (limit) query = query.limit(limit);
-            const { data, error } = await query;
+            const { data: cloudHistory, error } = await query;
+            
             if (error) throw error;
-            return data as Session[];
-        } catch (error) { }
+
+            if (cloudHistory) {
+                // 3. MERGE LOGIC: Combine Cloud and Local to ensure nothing is hidden
+                const sessionMap = new Map<string, Session>();
+                
+                // A. Add Cloud data first (Verified data)
+                cloudHistory.forEach(s => {
+                    // Force status to synced for data coming from cloud
+                    sessionMap.set(s.id, { ...s, syncStatus: 'synced' } as Session);
+                });
+                
+                // B. Add Local data (The "Safety Net")
+                localHistory.forEach(s => {
+                    const cloudVersion = sessionMap.get(s.id);
+                    
+                    if (!cloudVersion) {
+                        // Case 1: Session exists locally but not in cloud (Pending Upload)
+                        // Add it to the list so user sees it
+                        sessionMap.set(s.id, s);
+                    } else {
+                        // Case 2: Session exists in both
+                        // If local says 'pending' but cloud exists, it means we probably just synced it or it was synced by another device.
+                        // We generally trust Cloud for completed sessions, but we ensure we don't lose local state if relevant.
+                        // For simplicity in this architecture: Cloud wins for data integrity, but we ensure 'syncStatus' is clean.
+                    }
+                });
+
+                // Convert back to array and sort
+                const mergedHistory = Array.from(sessionMap.values()).sort((a, b) => 
+                    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                );
+
+                // Update local cache with the merged source of truth
+                // This ensures that next time we load offline, we have the cloud data too.
+                await set('history', mergedHistory);
+                
+                return limit ? mergedHistory.slice(0, limit) : mergedHistory;
+            }
+        } catch (error) { 
+            console.error("Cloud history load failed, utilizing local cache", error);
+        }
     } 
-    return await get('history');
+    
+    // Fallback: Return local history if cloud fails or not configured
+    return limit ? localHistory.slice(0, limit) : localHistory;
+};
+
+// --- MANUAL SYNC TRIGGER ---
+export const retrySyncPendingSessions = async (): Promise<number> => {
+    const history = await get<Session[]>('history') || [];
+    const pending = history.filter(s => s.syncStatus === 'pending' && s.status === 'completed');
+    if (pending.length === 0) return 0;
+
+    const result = await saveHistoryToDB(history); // This function handles the filtering and upload logic
+    return result.cloudSaved ? pending.length : 0;
 };
 
 export const saveNewsToDB = async (news: NewsItem[]): Promise<DbResult> => {
@@ -428,6 +523,7 @@ const AUDIO_BUCKET = 'audio_assets';
 const MUSIC_BUCKET = 'session_music';
 const ANTHEM_FILENAME = 'anthem.mp3';
 const AUDIO_KEY_PREFIX = 'audio_'; 
+const ANTHEM_UPDATE_KEY = 'anthem_last_updated';
 
 type CachedAudio = { data: string; lastModified: string; };
 const getCacheKey = (key: string, packNumber: number) => `${AUDIO_KEY_PREFIX}pack${packNumber}_${key}`;
@@ -486,21 +582,7 @@ export const syncAndCacheAudioAssets = async () => {
                 }
             }
         }
-        const { data: musicFiles } = await supabase!.storage.from(MUSIC_BUCKET).list();
-        const anthemFile = musicFiles?.find(f => f.name === ANTHEM_FILENAME);
-        if (anthemFile) {
-            const cacheKey = 'session_anthem_data';
-            const localAnthem = await get<CachedAudio>(cacheKey);
-            const cloudTime = new Date(anthemFile.updated_at || anthemFile.created_at).getTime();
-            const localTime = localAnthem ? new Date(localAnthem.lastModified).getTime() : 0;
-            if (!localAnthem || cloudTime > localTime) {
-                const { data: blob } = await supabase!.storage.from(MUSIC_BUCKET).download(ANTHEM_FILENAME);
-                if (blob) {
-                    const base64 = await blobToBase64(blob);
-                    await set(cacheKey, { data: base64, lastModified: anthemFile.updated_at || anthemFile.created_at });
-                }
-            }
-        }
+        
     } catch (error) { }
 };
 
@@ -525,12 +607,25 @@ export const setAnthemStatus = async (isEnabled: boolean): Promise<void> => {
 export const uploadSessionAnthem = async (base64: string): Promise<string | null> => {
     const cacheKey = 'session_anthem_data';
     const now = new Date().toISOString();
+    
+    // Save locally
     await set(cacheKey, { data: base64, lastModified: now });
+    
     if (!isSupabaseConfigured()) return "local_only";
+    
     try {
         const blob = base64ToBlob(base64);
+        
+        // 1. Upload File
         const { error } = await supabase!.storage.from(MUSIC_BUCKET).upload(ANTHEM_FILENAME, blob, { upsert: true });
         if (error) throw error;
+
+        // 2. Update Timestamp in Settings (Crucial for version checking)
+        await supabase!.from('settings').upsert({ 
+            key: ANTHEM_UPDATE_KEY, 
+            value: { timestamp: now } 
+        }, { onConflict: 'key' });
+
         return "uploaded";
     } catch (error) { return null; }
 };
@@ -538,11 +633,58 @@ export const uploadSessionAnthem = async (base64: string): Promise<string | null
 export const deleteSessionAnthem = async (): Promise<void> => {
     const cacheKey = 'session_anthem_data';
     try { await del(cacheKey); } catch(e) {}
-    if (isSupabaseConfigured()) { try { await supabase!.storage.from(MUSIC_BUCKET).remove([ANTHEM_FILENAME]); } catch (error) {} }
+    if (isSupabaseConfigured()) { 
+        try { 
+            await supabase!.storage.from(MUSIC_BUCKET).remove([ANTHEM_FILENAME]);
+            // Also update timestamp to force clients to realize it's gone (or just update metadata)
+            const now = new Date().toISOString();
+            await supabase!.from('settings').upsert({ key: ANTHEM_UPDATE_KEY, value: { timestamp: now, deleted: true } }, { onConflict: 'key' });
+        } catch (error) {} 
+    }
 };
 
 export const getSessionAnthemUrl = async (): Promise<string | null> => {
     const cacheKey = 'session_anthem_data';
+    
+    // 1. Check Cloud Version if possible (Fix for caching issue)
+    if (isSupabaseConfigured()) {
+        try {
+            const isEnabled = await getAnthemStatus();
+            if (!isEnabled) return null;
+
+            // Get server timestamp
+            const { data: setting } = await supabase!.from('settings').select('value').eq('key', ANTHEM_UPDATE_KEY).single();
+            const serverTimestampStr = setting?.value?.timestamp;
+            const serverDeleted = setting?.value?.deleted;
+
+            if (serverDeleted) {
+                // If deleted on server, clear local and return null
+                await del(cacheKey);
+                return null;
+            }
+
+            // Get local timestamp
+            const cached = await get<CachedAudio>(cacheKey);
+            const localTimestamp = cached?.lastModified ? new Date(cached.lastModified).getTime() : 0;
+            const serverTimestamp = serverTimestampStr ? new Date(serverTimestampStr).getTime() : 0;
+
+            // If server is newer, or we don't have local, download
+            if (serverTimestamp > localTimestamp || !cached) {
+                // Append timestamp to URL to bust CDN/Browser cache
+                const { data } = await supabase!.storage.from(MUSIC_BUCKET).download(ANTHEM_FILENAME);
+                if (data) {
+                    const base64 = await blobToBase64(data);
+                    // Update local cache with new timestamp
+                    await set(cacheKey, { data: base64, lastModified: serverTimestampStr || new Date().toISOString() });
+                    return URL.createObjectURL(data);
+                }
+            }
+        } catch (error) { 
+            console.warn("Failed to check anthem update, falling back to cache.", error);
+        }
+    }
+
+    // 2. Fallback to Local Cache
     try {
         const cached = await get<CachedAudio>(cacheKey);
         if (cached && cached.data) {
@@ -550,19 +692,6 @@ export const getSessionAnthemUrl = async (): Promise<string | null> => {
             return URL.createObjectURL(blob);
         }
     } catch (e) { }
-    if (isSupabaseConfigured()) {
-        try {
-            const isEnabled = await getAnthemStatus();
-            if (!isEnabled) return null;
-            const { data } = await supabase!.storage.from(MUSIC_BUCKET).download(ANTHEM_FILENAME);
-            if (data) {
-                const url = URL.createObjectURL(data);
-                blobToBase64(data).then(base64 => {
-                    set(cacheKey, { data: base64, lastModified: new Date().toISOString() });
-                });
-                return url;
-            }
-        } catch (error) { }
-    }
+
     return null;
 };

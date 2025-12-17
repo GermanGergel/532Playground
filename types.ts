@@ -182,6 +182,8 @@ export interface EventLogEntry {
     payload: StartRoundPayload | GoalPayload | SubPayload | {};
 }
 
+export type SyncState = 'synced' | 'pending' | 'error';
+
 export interface Session {
     id: string;
     sessionName: string;
@@ -198,6 +200,7 @@ export interface Session {
     playerPool: Player[];
     eventLog: EventLogEntry[];
     isTestMode: boolean;
+    syncStatus?: SyncState; // New field for robust sync tracking
 }
 
 export type NewsType = 'tier_up' | 'badge' | 'milestone' | 'hot_streak' | 'penalty';

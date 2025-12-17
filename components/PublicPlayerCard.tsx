@@ -36,6 +36,9 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
     const countryCodeAlpha2 = React.useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
     const badgeList = player.badges ? (Object.keys(player.badges) as BadgeType[]) : [];
     
+    // Config for badge layout
+    const BADGES_PER_COL = 7;
+
     // Exact styling from features.tsx
     const cardClass = "relative rounded-3xl h-[440px] overflow-hidden text-white p-4 bg-dark-surface border border-white/10 shadow-[0_0_20px_rgba(0,242,254,0.3)]";
 
@@ -78,19 +81,28 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
                             <p className="font-bold text-white tracking-widest text-sm">OVG</p>
                             <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
                             
-                            {/* Badges - 2 Columns (Matching main card logic) */}
+                            {/* REFACTORED BADGE LAYOUT: Tighter spacing (space-y-1) and 7 per column */}
                             {badgeList.length > 0 && (
-                                <div className="mt-4 flex flex-row-reverse items-center gap-x-2">
-                                    <div className="flex flex-col space-y-2 items-center">
-                                        {badgeList.slice(0, 8).map(badge => (
+                                <div className="mt-3 flex flex-row-reverse items-start gap-x-1">
+                                    <div className="flex flex-col space-y-1 items-center">
+                                        {badgeList.slice(0, BADGES_PER_COL).map(badge => (
                                             <div key={badge}>
                                                 <BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-7 h-7" />
                                             </div>
                                         ))}
                                     </div>
-                                    {badgeList.length > 8 && (
-                                        <div className="flex flex-col space-y-2 items-center">
-                                            {badgeList.slice(8, 16).map(badge => (
+                                    {badgeList.length > BADGES_PER_COL && (
+                                        <div className="flex flex-col space-y-1 items-center">
+                                            {badgeList.slice(BADGES_PER_COL, BADGES_PER_COL * 2).map(badge => (
+                                                <div key={badge}>
+                                                    <BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-7 h-7" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {badgeList.length > BADGES_PER_COL * 2 && (
+                                        <div className="flex flex-col space-y-1 items-center">
+                                            {badgeList.slice(BADGES_PER_COL * 2, BADGES_PER_COL * 3).map(badge => (
                                                 <div key={badge}>
                                                     <BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-7 h-7" />
                                                 </div>
@@ -102,8 +114,8 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
                         </div>
                     </div>
                     
-                    {/* Footer: Name */}
-                    <div className="text-center">
+                    {/* Footer: Name - Added flex-shrink-0 to prevent disappearing */}
+                    <div className="text-center flex-shrink-0 relative z-30 pb-1">
                         <h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg leading-none mb-1">
                             {player.nickname} {player.surname}
                         </h1>

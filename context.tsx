@@ -15,6 +15,8 @@ import {
 import { initializeAppState } from './services/appInitializer';
 import { useMatchTimer } from './hooks/useMatchTimer';
 
+export type SortBy = 'rating' | 'name' | 'date';
+
 interface AppContextType {
   activeSession: Session | null;
   setActiveSession: React.Dispatch<React.SetStateAction<Session | null>>;
@@ -32,6 +34,12 @@ interface AppContextType {
   displayTime: number; // Re-introduced for global timer
   fetchHistory: (limit?: number) => Promise<void>;
   fetchFullNews: () => Promise<void>;
+  
+  // Player Database Persistent State
+  playerDbSort: SortBy;
+  setPlayerDbSort: React.Dispatch<React.SetStateAction<SortBy>>;
+  playerDbSearch: string;
+  setPlayerDbSearch: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const AppContext = React.createContext<AppContextType | undefined>(undefined);
@@ -45,7 +53,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [language, setLanguageState] = React.useState<Language>('en');
   const [activeVoicePack, setActiveVoicePackState] = React.useState<number>(1);
 
-  // --- GLOBAL TIMER LOGIC (Restored) ---
+  // Persistent UI State for Player Database
+  const [playerDbSort, setPlayerDbSort] = React.useState<SortBy>('date');
+  const [playerDbSearch, setPlayerDbSearch] = React.useState<string>('');
+
+  // --- GLOBAL timer LOGIC (Restored) ---
   const { displayTime } = useMatchTimer(activeSession, setActiveSession, activeVoicePack);
 
   // --- INITIAL DATA LOAD (Now handled by appInitializer service) ---
@@ -131,7 +143,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     isLoading,
     displayTime,
     fetchHistory,
-    fetchFullNews
+    fetchFullNews,
+    playerDbSort,
+    setPlayerDbSort,
+    playerDbSearch,
+    setPlayerDbSearch
   };
 
   if(isLoading) {

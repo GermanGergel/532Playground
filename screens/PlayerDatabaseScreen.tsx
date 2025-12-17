@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
-import { useApp } from '../context';
+import { useApp, SortBy } from '../context';
 import { Page, Button, Card, useTranslation } from '../ui';
 import { PlayerAvatar } from '../components/avatars';
 import { Plus, ChevronLeft } from '../icons';
@@ -11,32 +11,35 @@ import { newId } from './utils';
 import { getTierForRating } from '../services/rating';
 import { saveSinglePlayerToDB } from '../db';
 
-type SortBy = 'rating' | 'name' | 'date';
-
 export const PlayerDatabaseScreen: React.FC = () => {
     const t = useTranslation();
     const navigate = useNavigate();
-    const { allPlayers, setAllPlayers } = useApp();
+    const { 
+        allPlayers, 
+        setAllPlayers, 
+        playerDbSort, 
+        setPlayerDbSort, 
+        playerDbSearch, 
+        setPlayerDbSearch 
+    } = useApp();
     const location = useLocation();
 
     const params = new URLSearchParams(location.search);
     const statusToShow = params.get('status') === PlayerStatus.Unconfirmed ? PlayerStatus.Unconfirmed : PlayerStatus.Confirmed;
     
     const [isAddModalOpen, setIsAddModalOpen] = React.useState(false);
-    const [searchTerm, setSearchTerm] = React.useState('');
-    const [sortBy, setSortBy] = React.useState<SortBy>('date');
     
     const playersToList = React.useMemo(() => {
         return allPlayers
             .filter(p => p.status === statusToShow)
             .filter(p => 
-                p.nickname.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                p.surname.toLowerCase().includes(searchTerm.toLowerCase())
+                p.nickname.toLowerCase().includes(playerDbSearch.toLowerCase()) ||
+                p.surname.toLowerCase().includes(playerDbSearch.toLowerCase())
             )
             .sort((a, b) => {
                 if (a.id === 'test-player-showcase') return -1;
                 if (b.id === 'test-player-showcase') return 1;
-                switch (sortBy) {
+                switch (playerDbSort) {
                     case 'rating':
                         return b.rating - a.rating;
                     case 'name':
@@ -46,7 +49,7 @@ export const PlayerDatabaseScreen: React.FC = () => {
                         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
                 }
             });
-    }, [allPlayers, statusToShow, searchTerm, sortBy]);
+    }, [allPlayers, statusToShow, playerDbSearch, playerDbSort]);
 
     const handleAddPlayer = (nickname: string) => {
         const newPlayer: Player = {
@@ -84,7 +87,7 @@ export const PlayerDatabaseScreen: React.FC = () => {
     };
 
     const pageTitle = statusToShow === PlayerStatus.Unconfirmed ? t.newPlayerManagement : t.playerDatabase;
-    const sortButtonClass = (sortType: SortBy) => `px-3 py-1 text-xs rounded-full font-semibold transition-colors ${sortBy === sortType ? 'gradient-bg text-dark-bg' : 'bg-dark-surface hover:bg-white/10'}`;
+    const sortButtonClass = (sortType: SortBy) => `px-3 py-1 text-xs rounded-full font-semibold transition-colors ${playerDbSort === sortType ? 'gradient-bg text-dark-bg' : 'bg-dark-surface hover:bg-white/10'}`;
 
     return (
         <Page>
@@ -110,15 +113,15 @@ export const PlayerDatabaseScreen: React.FC = () => {
                     <input
                         type="text"
                         placeholder={t.searchPlayers}
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        value={playerDbSearch}
+                        onChange={(e) => setPlayerDbSearch(e.target.value)}
                         className="w-full p-2 bg-dark-surface/80 rounded-lg border border-white/10 focus:ring-1 focus:ring-dark-accent-start focus:outline-none text-sm placeholder:text-dark-text-secondary/50"
                     />
                     <div className="flex items-center justify-center gap-2">
                         <span className="text-xs font-semibold text-dark-text-secondary">{t.sortBy}</span>
-                        <button onClick={() => setSortBy('rating')} className={sortButtonClass('rating')}>{t.sortByRating}</button>
-                        <button onClick={() => setSortBy('name')} className={sortButtonClass('name')}>{t.sortByName}</button>
-                        <button onClick={() => setSortBy('date')} className={sortButtonClass('date')}>{t.sortByDate}</button>
+                        <button onClick={() => setPlayerDbSort('rating')} className={sortButtonClass('rating')}>{t.sortByRating}</button>
+                        <button onClick={() => setPlayerDbSort('name')} className={sortButtonClass('name')}>{t.sortByName}</button>
+                        <button onClick={() => setPlayerDbSort('date')} className={sortButtonClass('date')}>{t.sortByDate}</button>
                     </div>
                 </div>
             )}
