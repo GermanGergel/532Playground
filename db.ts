@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import { Player, Session, NewsItem, PromoData } from './types';
 import { Language } from './translations/index';
@@ -185,13 +186,11 @@ const sanitizeObject = (obj: any): any => {
 
 // --- DATA MANAGEMENT ---
 
-// FIX 1: Add 'overwrite' parameter to prevent Zombie sessions
 export const saveHistoryLocalOnly = async (history: Session[], overwrite: boolean = false) => {
     try {
         let mergedHistory = history;
         
         if (!overwrite) {
-            // Standard merge logic for updates
             const existingHistory = await get<Session[]>('history') || [];
             const historyMap = new Map<string, Session>();
             
@@ -204,9 +203,6 @@ export const saveHistoryLocalOnly = async (history: Session[], overwrite: boolea
                 historyMap.set(updatedSession.id, updatedSession);
             });
             mergedHistory = Array.from(historyMap.values());
-        } else {
-            // Overwrite logic: Used when deleting or forcing a full state update
-            // We ensure we don't accidentally bring back deleted items from IDB
         }
 
         const sortedHistory = mergedHistory.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -216,19 +212,12 @@ export const saveHistoryLocalOnly = async (history: Session[], overwrite: boolea
     }
 };
 
-// FIX 2: Explicitly overwrite local DB on delete
 export const deleteSessionFromDB = async (sessionId: string): Promise<boolean> => {
     try {
-        // 1. Force Load Current DB
         const history = await get<Session[]>('history') || [];
-        
-        // 2. Filter out the session
         const newHistory = history.filter(s => s.id !== sessionId);
-        
-        // 3. Force Write back (Overwrite mode implicit by direct set)
         await set('history', newHistory);
 
-        // 4. Delete from Cloud
         if (isSupabaseConfigured() && !sessionId.startsWith('demo_')) {
             const { error } = await supabase!.from('sessions').delete().eq('id', sessionId);
             if (error) console.error("Cloud delete error:", error);
@@ -243,12 +232,6 @@ export const deleteSessionFromDB = async (sessionId: string): Promise<boolean> =
 export const saveHistoryToDB = async (history: Session[]): Promise<DbResult> => {
     const realHistory = history.filter(s => !s.id.startsWith('demo_'));
     
-    // Use Overwrite=true only if we are sure 'history' contains the full valid set (e.g. from Context)
-    // But for safety in this function which might be called with partials, we use merge by default
-    // unless we are doing a specific operation. 
-    // However, to fix zombies, context.tsx calls this with the full state.
-    // Let's rely on saveHistoryLocalOnly's default merge for general saves to be safe, 
-    // but relies on deleteSessionFromDB for deletions.
     await saveHistoryLocalOnly(realHistory);
 
     if (realHistory.length === 0) return { success: true, cloudSaved: false };
@@ -262,11 +245,36 @@ export const saveHistoryToDB = async (history: Session[]): Promise<DbResult> => 
             const sessionsToSync = currentLocalHistory.filter(s => s.status === 'completed' && s.syncStatus !== 'synced' && !s.id.startsWith('demo_'));
             
             if (sessionsToSync.length > 0) {
-                // FIX 3: Remove 'syncStatus' from the payload sent to Supabase
-                // Supabase doesn't have this column, so sending it causes the 400 Error.
+                // FIX: DEEP CLEANING FOR OLD SESSIONS
+                // 1. Strip 'playerPool' heavy fields (historyData, sessionHistory) to reduce size.
+                // 2. Strip 'isTestMode' because the cloud DB schema doesn't have this column yet.
+                // 3. Strip 'syncStatus' as it's local-only.
+                
                 const sessionsForCloud = sessionsToSync.map(session => {
-                    const { syncStatus, ...rest } = session; // Destructure to exclude syncStatus
-                    return sanitizeObject(rest);
+                    const { syncStatus, isTestMode, ...rest } = session;
+                    
+                    // Create a lightweight version of the player pool for the session record
+                    const lightPlayerPool = (rest.playerPool || []).map(p => ({
+                        id: p.id,
+                        nickname: p.nickname,
+                        surname: p.surname,
+                        countryCode: p.countryCode,
+                        photo: p.photo, 
+                        rating: p.rating,
+                        tier: p.tier,
+                        totalGoals: p.totalGoals,
+                        totalAssists: p.totalAssists,
+                        totalWins: p.totalWins,
+                        // STRIP HEAVY FIELDS
+                        historyData: [], 
+                        sessionHistory: [],
+                        records: p.records // Keep records as they are small objects
+                    }));
+
+                    return sanitizeObject({
+                        ...rest,
+                        playerPool: lightPlayerPool
+                    });
                 });
 
                 const { error } = await supabase!.from('sessions').upsert(sessionsForCloud, { onConflict: 'id' });
@@ -289,29 +297,22 @@ export const saveHistoryToDB = async (history: Session[]): Promise<DbResult> => 
         } catch (error: any) { 
             cloudError = error; 
             cloudSaved = false; 
-            console.error("Cloud Save Failed details:", error.message, error.details);
+            console.error("Cloud Save Failed details:", error.message || error);
         }
     } else {
         return { success: true, cloudSaved: false, message: "Supabase not configured" };
     }
 
-    if (cloudError) return { success: true, cloudSaved: false, message: `Cloud failed: ${cloudError.message}` };
+    if (cloudError) return { success: true, cloudSaved: false, message: `Cloud Error: ${cloudError.message}` };
     return { success: true, cloudSaved: true };
 };
 
-export const retrySyncPendingSessions = async (): Promise<number> => {
+export const retrySyncPendingSessions = async (): Promise<DbResult> => {
     const history = await get<Session[]>('history') || [];
     const pending = history.filter(s => s.syncStatus === 'pending' && s.status === 'completed');
-    if (pending.length === 0) return 0;
+    if (pending.length === 0) return { success: true, cloudSaved: true, message: "Nothing to sync" };
 
-    const result = await saveHistoryToDB(history);
-    
-    // If failed, alert the user (Diagnostic)
-    if (!result.cloudSaved && result.message) {
-        console.warn("Sync failed:", result.message);
-    }
-    
-    return result.cloudSaved ? pending.length : 0;
+    return await saveHistoryToDB(history);
 };
 
 // --- OTHER SAVERS (Simplified) ---
@@ -388,9 +389,7 @@ export const loadHistoryFromDB = async (limit?: number): Promise<Session[] | und
             if (limit) q = q.limit(limit);
             const { data } = await q;
             if (data) {
-                // Merge logic for zombie prevention (Cloud truth wins)
                 const cloudIds = new Set(data.map(s => s.id));
-                // Only keep local sessions that are pending and NOT in cloud
                 const validLocal = local.filter(s => s.syncStatus === 'pending' && !cloudIds.has(s.id));
                 const merged = [...data.map(s => ({...s, syncStatus: 'synced'})), ...validLocal]
                     .sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -498,7 +497,6 @@ export const deleteSessionAnthem = async (): Promise<void> => {
     }
 };
 export const getSessionAnthemUrl = async (): Promise<string | null> => {
-    // Basic cache logic
     try {
         const cached = await get<CachedAudio>('session_anthem_data');
         if (cached?.data) return URL.createObjectURL(base64ToBlob(cached.data));

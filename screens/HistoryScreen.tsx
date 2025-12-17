@@ -21,7 +21,6 @@ export const HistoryScreen: React.FC = () => {
             setIsLoadingMore(true);
             
             // 1. Try to push any local-only sessions to the cloud
-            // This function now logs errors to console if it fails due to column issues
             await retrySyncPendingSessions(); 
             
             // 2. Fetch the latest history (this updates the UI from Yellow -> Green if successful)
@@ -53,13 +52,16 @@ export const HistoryScreen: React.FC = () => {
     const handleRetrySync = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        const count = await retrySyncPendingSessions();
-        if (count > 0) {
+        
+        const result = await retrySyncPendingSessions();
+        
+        if (result.cloudSaved) {
             await fetchHistory(5);
+            // Optional: Success message
+            // alert("Sync successful!");
         } else {
-            // If still 0, it means it failed. The DB logic logs the error to console.
-            // We can verify visually if it turns green.
-            alert("Sync attempt finished. If still yellow, check console for database errors (e.g. missing columns).");
+            // Show the exact error why it failed
+            alert(`Sync Failed: ${result.message || "Unknown Error"}. Check your connection or database limits.`);
         }
     };
 
@@ -81,7 +83,11 @@ export const HistoryScreen: React.FC = () => {
                                                 <h3 className="font-bold text-base truncate flex items-center gap-2">
                                                     {session.sessionName}
                                                     {session.syncStatus === 'pending' && (
-                                                        <button onClick={handleRetrySync} className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse cursor-pointer" title="Pending Sync - Click to Retry" />
+                                                        <button 
+                                                            onClick={handleRetrySync} 
+                                                            className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse cursor-pointer hover:scale-150 transition-transform" 
+                                                            title="Sync Pending - Click to Retry" 
+                                                        />
                                                     )}
                                                 </h3>
                                                 <p className="text-xs text-dark-text-secondary">{new Date(session.date).toLocaleDateString()}</p>
