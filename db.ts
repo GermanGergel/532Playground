@@ -371,18 +371,17 @@ export const saveHistoryToDB = async (history: Session[]): Promise<DbResult> => 
             
             if (sessionsToSync.length > 0) {
                 const optimizedHistory = sessionsToSync.map(session => {
-                    // Create a clean copy to avoid mutation issues
-                    const cleanSession = {
-                        ...session,
-                        syncStatus: 'synced' as const, 
-                        playerPool: session.playerPool.map(p => ({ ...p, photo: undefined, playerCard: undefined }))
-                    };
-                    
                     // --- CRITICAL FIX FOR 400 ERROR ---
-                    // Forcefully remove 'isTestMode' from the payload if it exists in legacy data.
-                    // This ensures Supabase never sees this unknown column.
-                    // @ts-ignore
-                    if ('isTestMode' in cleanSession) delete cleanSession.isTestMode;
+                    // Explicitly destructure to remove legacy 'isTestMode' property.
+                    // We treat session as 'any' to catch the property even if it's not in the type definition.
+                    const { isTestMode, ...validSession } = session as any;
+
+                    // Create a clean copy to avoid mutation issues and huge base64 strings
+                    const cleanSession = {
+                        ...validSession,
+                        syncStatus: 'synced' as const, 
+                        playerPool: (validSession.playerPool || []).map((p: any) => ({ ...p, photo: undefined, playerCard: undefined }))
+                    };
                     
                     return cleanSession;
                 }).map(s => sanitizeObject(s));

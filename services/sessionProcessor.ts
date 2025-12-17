@@ -32,6 +32,7 @@ export const processFinishedSession = ({
     const playerStatsMap = new Map(allPlayersStats.map(stat => [stat.player.id, stat]));
     
     // List to hold penalty news items
+    // NEWS UPDATE: We no longer generate penalty news, so this array remains empty.
     const penaltyNews: NewsItem[] = [];
 
     // --- 1. UPDATE PLAYERS (Participation & Inactivity Logic) ---
@@ -70,19 +71,7 @@ export const processFinishedSession = ({
                 newRating = Math.max(0, newRating - 1); // Deduct 1 point, but not below 0
                 decayApplied = true;
                 
-                // Add news item about penalty
-                penaltyNews.push({
-                    id: newId(),
-                    playerId: player.id,
-                    playerName: player.nickname,
-                    playerPhoto: player.photo,
-                    type: 'penalty',
-                    message: `${player.nickname} lost 1 rating point due to inactivity.`,
-                    subMessage: '#Inactivity #RatingDecay #ComeBack',
-                    timestamp: new Date().toISOString(),
-                    isHot: false,
-                    statsSnapshot: { rating: newRating, tier: getTierForRating(newRating) }
-                });
+                // News generation for inactivity removed as per request.
             }
 
             return {
