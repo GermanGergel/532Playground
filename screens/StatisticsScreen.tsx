@@ -62,13 +62,11 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
             ? 'bg-transparent' 
             : 'bg-dark-bg';
         
-        // Fix: Added extra bottom padding (pb-8) for export to prevent clipping the last row
-        const paddingClass = isExport ? 'p-4 pb-8' : 'p-4';
+        // Use standard padding for all cards for consistent spacing.
+        const paddingClass = 'p-4';
 
-        // Fix: Removed overflow-hidden for export mode to prevent hard-clipping of logos/shadows
-        const overflowClass = isExport ? '' : 'overflow-hidden';
-
-        return `rounded-2xl ${paddingClass} border border-dark-accent-start/30 ${bgClass} w-full ${overflowClass}`;
+        // Added overflow-hidden to prevent inner content from breaking out of rounded corners
+        return `rounded-2xl ${paddingClass} border border-dark-accent-start/30 ${bgClass} w-full overflow-hidden`;
     };
         
     const cardTitleClasses = "font-bold text-xl mb-4 text-dark-text";
@@ -80,7 +78,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
 
     // FIX: Reduced text size to text-[10px] or text-xs and enforced table-fixed to prevent overflow
     const tableTextClass = "text-[10px] sm:text-xs text-center table-fixed"; 
-    const cellPadding = "py-2 px-0.5";
+    const cellPadding = "py-1.5 px-0.5";
 
     const playerNameClass = isExport 
         ? `${cellPadding} text-left font-semibold truncate max-w-[200px] pr-2` 
@@ -95,6 +93,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                 style={{ boxShadow: isExport ? 'none' : '0 8px 25px -5px rgba(0, 242, 254, 0.1), 0 5px 10px -6px rgba(0, 242, 254, 0.1)' }}
             >
                 <h3 className={cardTitleClasses}>{t.teamStandings}</h3>
+                {/* FIX: overflow-x-auto ensures if content is too wide, only the table scrolls, not the page */}
                 <div className="w-full overflow-x-auto">
                     <table className={`w-full ${tableTextClass} min-w-[280px]`}>
                         <thead>
@@ -113,11 +112,8 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                             {teamStats.map(({ team, gamesPlayed, wins, draws, losses, goalDifference, points }, index) => (
                                 <tr key={team.id} className="border-t border-white/10">
                                     <td className={`${cellPadding} text-left`}>{index + 1}</td>
-                                    {/* Fix: Removed translate-y-2 as it was pushing the last icon outside the container during export */}
-                                    <td className={`${cellPadding}`}>
-                                        <div className="flex justify-center items-center h-full">
-                                            <TeamAvatar team={team} size="xxs" />
-                                        </div>
+                                    <td className={`${cellPadding} flex justify-center items-center`}>
+                                        <TeamAvatar team={team} size="xxs" className={isExport ? 'translate-y-2' : ''} />
                                     </td>
                                     <td className={cellPadding}>{gamesPlayed}</td>
                                     <td className={cellPadding}>{wins}</td>
@@ -140,11 +136,13 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                 style={{ boxShadow: isExport ? 'none' : '0 8px 25px -5px rgba(0, 242, 254, 0.1), 0 5px 10px -6px rgba(0, 242, 254, 0.1)' }}
              >
                 <h3 className={cardTitleClasses}>{t.playerStatistics}</h3>
+                {/* FIX: overflow-x-auto ensures if content is too wide, only the table scrolls, not the page */}
                 <div className="w-full overflow-x-auto">
                     <table className={`w-full ${tableTextClass} min-w-[280px]`}>
                     <thead>
                             <tr className="text-dark-text-secondary">
                                 <th className={`text-left font-normal ${cellPadding}`} style={{ width: '8%' }}>#</th>
+                                {/* Adjusted width to be balanced with container width reduction */}
                                 <th className={`text-left font-normal ${cellPadding}`} style={{ width: isExport ? '42%' : '35%' }}>{t.players}</th>
                                 <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.team}</th>
                                 <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.thGP}</th>
@@ -157,13 +155,13 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                             {sortedPlayers.map((stats, index) => (
                                 <tr key={stats.player.id} className="border-t border-white/10">
                                     <td className={`${cellPadding} text-left`}>{index + 1}</td>
+                                    {/* Updated Name Cell Class with strict truncation */}
                                     <td className={playerNameClass} title={stats.player.nickname}>
                                         {stats.player.nickname}
                                     </td>
-                                    {/* Fix: Removed translate-y-2 to prevent clipping of last row icons */}
                                     <td className={cellPadding}>
                                         <div className="flex justify-center items-center h-full">
-                                            <TeamAvatar team={stats.team} size="xxs" />
+                                            <TeamAvatar team={stats.team} size="xxs" className={isExport ? 'translate-y-2' : ''} />
                                         </div>
                                     </td>
                                     <td className={cellPadding}>{stats.gamesPlayed}</td>
@@ -194,9 +192,9 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                              <li key={game.id} className="flex items-center justify-between py-2 border-t border-white/10 first:border-t-0">
                                 <span className="text-dark-text-secondary text-xs">{t.round} {game.gameNumber}</span>
                                 <div className="flex items-center justify-end gap-2 flex-grow">
-                                    <TeamAvatar team={team1} size="xxs" />
+                                    <TeamAvatar team={team1} size="xxs" className={isExport ? 'translate-y-2' : ''} />
                                     <span className={`font-bold tabular-nums w-16 text-center text-sm`}>{game.team1Score} : {game.team2Score}</span>
-                                    <TeamAvatar team={team2} size="xxs" />
+                                    <TeamAvatar team={team2} size="xxs" className={isExport ? 'translate-y-2' : ''} />
                                 </div>
                             </li>
                         )

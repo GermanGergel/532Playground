@@ -21,8 +21,6 @@ const BrandedShareableReport: React.FC<{
 
     const containerStyle: React.CSSProperties = {
         padding: `${PADDING}px`,
-        // Fix: Increased bottom padding for the branded container to ensure no content touches the edge
-        paddingBottom: `${PADDING + 20}px`,
         backgroundImage: `url("${homeScreenBackground}")`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
