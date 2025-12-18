@@ -78,9 +78,9 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
     const finishedGames = session.games.filter(g => g.status === 'finished');
     const roundsToDisplay = itemLimit ? finishedGames.slice(0, itemLimit) : finishedGames;
 
-    // FIX: Reduced text size to text-[10px] or text-xs and enforced table-fixed to prevent overflow
+    // FIX: Increased py-1.5 to py-2 to give logos more vertical room
     const tableTextClass = "text-[10px] sm:text-xs text-center table-fixed"; 
-    const cellPadding = "py-1.5 px-0.5";
+    const cellPadding = "py-2 px-0.5";
 
     const playerNameClass = isExport 
         ? `${cellPadding} text-left font-semibold truncate max-w-[200px] pr-2` 
@@ -113,9 +113,9 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                             {teamStats.map(({ team, gamesPlayed, wins, draws, losses, goalDifference, points }, index) => (
                                 <tr key={team.id} className="border-t border-white/10">
                                     <td className={`${cellPadding} text-left`}>{index + 1}</td>
-                                    {/* Fix: Removed translate-y-2 as it was pushing the last icon outside the container during export */}
                                     <td className={`${cellPadding}`}>
-                                        <div className="flex justify-center items-center h-full">
+                                        {/* Fix: Added subtle translate-y-[1px] to nudge logo down for better alignment without clipping */}
+                                        <div className="flex justify-center items-center h-full translate-y-[1px]">
                                             <TeamAvatar team={team} size="xxs" />
                                         </div>
                                     </td>
@@ -160,9 +160,9 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                                     <td className={playerNameClass} title={stats.player.nickname}>
                                         {stats.player.nickname}
                                     </td>
-                                    {/* Fix: Removed translate-y-2 to prevent clipping of last row icons */}
                                     <td className={cellPadding}>
-                                        <div className="flex justify-center items-center h-full">
+                                        {/* Fix: Added subtle translate-y-[1px] to nudge logo down for better alignment */}
+                                        <div className="flex justify-center items-center h-full translate-y-[1px]">
                                             <TeamAvatar team={stats.team} size="xxs" />
                                         </div>
                                     </td>
