@@ -8,7 +8,8 @@ import {
     loadLanguageFromDB,
     loadNewsFromDB,
     saveNewsToDB,
-    loadActiveVoicePackFromDB
+    loadActiveVoicePackFromDB,
+    savePlayersToDB
 } from '../db';
 
 interface InitialAppState {
@@ -20,49 +21,50 @@ interface InitialAppState {
     activeVoicePack: number;
 }
 
-/**
- * Loads all initial data from the database, performs any necessary data migrations,
- * and returns the complete initial state for the application.
- */
 export const initializeAppState = async (): Promise<InitialAppState> => {
-    // Note: Audio sync is now deferred to the VoiceSettingsScreen to save bandwidth on startup.
-
-    // 1. Load Active Session
     const loadedSession = await loadActiveSessionFromDB() || null;
     if (loadedSession) {
-        // Ensure data structure integrity for legacy sessions
         loadedSession.playerPool = loadedSession.playerPool || [];
         loadedSession.teams = loadedSession.teams || [];
         loadedSession.games = loadedSession.games || [];
         loadedSession.eventLog = loadedSession.eventLog || [];
     }
 
-    // 2. Load Players and perform migrations
     const loadedPlayersData = await loadPlayersFromDB();
     let initialPlayers: Player[] = Array.isArray(loadedPlayersData) ? loadedPlayersData : [];
     
-    // Migration loop to ensure all required fields exist on player objects
+    let dataRepaired = false;
+
     initialPlayers = initialPlayers.map(p => {
         const migratedPlayer = { ...p };
 
-        // Badge data migration from string array to object counter for older data
+        // --- SILENT RATING RECONCILIATION ---
+        // Fix mismatch: if main rating differs from the one in last analysis, trust analysis
+        if (migratedPlayer.lastRatingChange && typeof migratedPlayer.lastRatingChange.newRating === 'number') {
+            const expectedRating = Math.round(migratedPlayer.lastRatingChange.newRating);
+            if (migratedPlayer.rating !== expectedRating) {
+                migratedPlayer.rating = expectedRating;
+                dataRepaired = true;
+            }
+        }
+
+        // Force integer rating globally
+        if (typeof migratedPlayer.rating === 'number' && !Number.isInteger(migratedPlayer.rating)) {
+            migratedPlayer.rating = Math.round(migratedPlayer.rating);
+            dataRepaired = true;
+        }
+
         let badges: Partial<Record<BadgeType, number>> = {};
         if (Array.isArray(migratedPlayer.badges)) {
             (migratedPlayer.badges as unknown as BadgeType[]).forEach((badge: BadgeType) => {
                 badges[badge] = (badges[badge] || 0) + 1;
             });
-        } else if (migratedPlayer.badges) { // Already an object
-            badges = migratedPlayer.badges;
+            migratedPlayer.badges = badges;
+            dataRepaired = true;
         }
-        migratedPlayer.badges = badges;
-        
-        // --- RECORDS MIGRATION FIX ---
-        // Relaxed logic: We trust the DB structure if it looks like an object with 'value'.
-        // We do NOT check if value > 0 anymore. This allows 0 to be a valid persistent state,
-        // preventing the app from constantly resetting it to a "clean" default and ignoring saved recalculations.
+
         const existingRecords = migratedPlayer.records as any;
         let newRecords: PlayerRecords | null = null;
-
         if (existingRecords && typeof existingRecords === 'object' && !Array.isArray(existingRecords)) {
             newRecords = {
                 bestGoalsInSession: (existingRecords.bestGoalsInSession && typeof existingRecords.bestGoalsInSession.value === 'number') 
@@ -76,51 +78,44 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
                     : { value: 0, sessionId: '' },
             };
         }
-
-        // If records were totally missing or corrupt, initialize defaults.
         if (!newRecords) {
             newRecords = {
                 bestGoalsInSession: { value: 0, sessionId: '' },
                 bestAssistsInSession: { value: 0, sessionId: '' },
                 bestWinRateInSession: { value: 0, sessionId: '' },
             };
+            dataRepaired = true;
         }
         migratedPlayer.records = newRecords;
 
-
-        // Add other missing fields with default values
         migratedPlayer.totalSessionsPlayed = (migratedPlayer.totalSessionsPlayed ?? Math.round(migratedPlayer.totalGames / 15)) || 0;
         migratedPlayer.monthlySessionsPlayed = (migratedPlayer.monthlySessionsPlayed ?? Math.round(migratedPlayer.monthlyGames / 15)) || 0;
-        migratedPlayer.lastRatingChange = migratedPlayer.lastRatingChange || undefined;
         migratedPlayer.sessionHistory = migratedPlayer.sessionHistory || []; 
         migratedPlayer.consecutiveMissedSessions = migratedPlayer.consecutiveMissedSessions || 0;
 
-        // --- NEW: BACKFILL HISTORY DATA FOR CHART ---
-        // If historyData is missing, create a snapshot based on current stats.
-        // This ensures the chart has at least one point to draw (a flat line).
         if (!migratedPlayer.historyData || migratedPlayer.historyData.length === 0) {
             const currentWinRate = migratedPlayer.totalGames > 0 
                 ? Math.round((migratedPlayer.totalWins / migratedPlayer.totalGames) * 100) 
                 : 0;
-            
-            // Create a synthetic "Start" entry
             const initialHistoryEntry: PlayerHistoryEntry = {
-                date: 'Start', // Label for the initial point
+                date: 'Start',
                 rating: migratedPlayer.rating,
                 winRate: currentWinRate,
                 goals: migratedPlayer.totalGoals,
                 assists: migratedPlayer.totalAssists
             };
-            
             migratedPlayer.historyData = [initialHistoryEntry];
+            dataRepaired = true;
         }
 
         return migratedPlayer as Player;
     });
 
-    // 3. Load History and perform migrations
-    // TRAFFIC OPTIMIZATION: Only load the absolutely latest session (limit: 1).
-    // The user can load more by visiting the History screen.
+    // Save repaired data back to DB in background
+    if (dataRepaired) {
+        savePlayersToDB(initialPlayers).catch(e => console.warn("Background migration sync failed", e));
+    }
+
     const loadedHistoryData = await loadHistoryFromDB(1);
     let initialHistory: Session[] = [];
     if (Array.isArray(loadedHistoryData)) {
@@ -133,32 +128,23 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
         }));
     }
 
-    // 4. Load News Feed & EMERGENCY CLEANUP for Egress Leak
-    // TRAFFIC OPTIMIZATION: Only load the last 10 news items (approx 1 session worth).
     const loadedNews = await loadNewsFromDB(10);
     let initialNewsFeed = Array.isArray(loadedNews) ? loadedNews : [];
     
-    // Check for "heavy" news items (base64 images) that cause 5GB egress issues
-    let hasBadData = false;
+    let hasBadNewsData = false;
     initialNewsFeed = initialNewsFeed.map(item => {
         if (item.playerPhoto && item.playerPhoto.startsWith('data:')) {
-            hasBadData = true;
-            // Clean the data: remove the base64 string
+            hasBadNewsData = true;
             return { ...item, playerPhoto: undefined };
         }
         return item;
     });
 
-    if (hasBadData) {
-        console.log("🧹 Cleaning massive Base64 data from News Feed to save bandwidth...");
-        // Save the cleaned data back to Supabase immediately to stop the egress bleeding
+    if (hasBadNewsData) {
         saveNewsToDB(initialNewsFeed);
     }
 
-    // 5. Load Language
     const loadedLang = await loadLanguageFromDB() || 'en';
-
-    // 6. Load Active Voice Pack
     const loadedPack = await loadActiveVoicePackFromDB() || 1;
 
     return {

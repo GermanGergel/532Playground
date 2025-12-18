@@ -14,9 +14,7 @@ interface ProcessedSessionResult {
 
 /**
  * Takes a finished session and all player/news data, processes all calculations
- * (stats, ratings, badges, news), and returns the updated data structures,
- * ready to be saved to the database and state.
- * This function is "pure" and does not have side effects.
+ * (stats, ratings, badges, news), and returns the updated data structures.
  */
 export const processFinishedSession = ({
     session,
@@ -31,8 +29,6 @@ export const processFinishedSession = ({
     const { allPlayersStats } = calculateAllStats(session);
     const playerStatsMap = new Map(allPlayersStats.map(stat => [stat.player.id, stat]));
     
-    // List to hold penalty news items
-    // NEWS UPDATE: We no longer generate penalty news, so this array remains empty.
     const penaltyNews: NewsItem[] = [];
 
     // --- 1. UPDATE PLAYERS (Participation & Inactivity Logic) ---
@@ -40,7 +36,6 @@ export const processFinishedSession = ({
         const sessionStats = playerStatsMap.get(player.id);
         
         if (sessionStats) {
-            // PLAYER PARTICIPATED
             const updatedPlayer: Player = {
                 ...player,
                 totalGames: player.totalGames + sessionStats.gamesPlayed,
@@ -56,56 +51,49 @@ export const processFinishedSession = ({
                 monthlyWins: player.monthlyWins + sessionStats.wins,
                 monthlySessionsPlayed: (player.monthlySessionsPlayed || 0) + 1,
                 lastPlayedAt: new Date().toISOString(),
-                // Reset inactivity counter because they played
                 consecutiveMissedSessions: 0, 
             };
             return updatedPlayer;
         } else {
-            // PLAYER MISSED SESSION (Rating Decay Logic)
             const currentMissed = (player.consecutiveMissedSessions || 0) + 1;
             let newRating = player.rating;
-            let decayApplied = false;
 
-            // Rule: Every 3 missed sessions, deduct 1 point.
             if (currentMissed > 0 && currentMissed % 3 === 0) {
-                newRating = Math.max(0, newRating - 1); // Deduct 1 point, but not below 0
-                decayApplied = true;
-                
-                // News generation for inactivity removed as per request.
+                newRating = Math.max(0, newRating - 1); 
             }
 
             return {
                 ...player,
                 consecutiveMissedSessions: currentMissed,
-                rating: newRating,
-                tier: getTierForRating(newRating), // Update tier if rating dropped
-                // If rating changed due to decay, we could potentially update lastRatingChange, 
-                // but usually we leave that for actual gameplay updates.
+                rating: Math.round(newRating),
+                tier: getTierForRating(Math.round(newRating)),
             };
         }
     });
 
-    // --- 2. CALCULATE RATINGS, BADGES, and FORM (Only for participants) ---
+    // --- 2. CALCULATE RATINGS, BADGES, and FORM ---
     let playersWithCalculatedRatings = playersWithUpdatedStats.map(player => {
         const sessionStats = playerStatsMap.get(player.id);
         if (sessionStats) {
             const badgesEarnedThisSession = calculateEarnedBadges(player, sessionStats, session, allPlayersStats);
             
             const { delta, breakdown } = calculateRatingUpdate(player, sessionStats, session, badgesEarnedThisSession);
-            const newRating = Math.round(player.rating + delta);
+            
+            // --- UNIFIED RATING FIX ---
+            // Calculate once to ensure card header and analysis block are 100% in sync
+            const unifiedNewRating = Math.round(breakdown.newRating);
             
             let newForm: 'hot_streak' | 'stable' | 'cold_streak' = 'stable';
             if (delta >= 0.5) newForm = 'hot_streak';
             else if (delta <= -0.5) newForm = 'cold_streak';
             
-            const newTier = getTierForRating(newRating);
+            const newTier = getTierForRating(unifiedNewRating);
 
             const updatedBadges: Partial<Record<BadgeType, number>> = { ...player.badges };
             badgesEarnedThisSession.forEach(badge => {
                 updatedBadges[badge] = (updatedBadges[badge] || 0) + 1;
             });
             
-            // Session Trend (Win Rates)
             const sessionHistory = [...(player.sessionHistory || [])];
             const sessionWinRate = sessionStats.gamesPlayed > 0 ? Math.round((sessionStats.wins / sessionStats.gamesPlayed) * 100) : 0;
             if (sessionStats.gamesPlayed > 0) {
@@ -113,24 +101,19 @@ export const processFinishedSession = ({
             }
             if (sessionHistory.length > 5) sessionHistory.shift();
             
-            // --- NEW: LONG TERM HISTORY FOR CHART ---
-            // Format: "DD.MM"
             const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
             
             const newHistoryEntry: PlayerHistoryEntry = {
                 date: dateStr,
-                rating: newRating,
+                rating: unifiedNewRating,
                 winRate: sessionWinRate,
-                goals: sessionStats.goals, // STORE SESSION SPECIFIC GOALS, NOT TOTAL
-                assists: sessionStats.assists // STORE SESSION SPECIFIC ASSISTS
+                goals: sessionStats.goals,
+                assists: sessionStats.assists
             };
             
             const historyData = [...(player.historyData || [])];
             historyData.push(newHistoryEntry);
-            
-            // Keep last 12 sessions for chart scrolling
             if (historyData.length > 12) historyData.shift();
-            // ----------------------------------------
 
             const getSafeRecord = (rec: any) => (rec && typeof rec.value === 'number') ? rec : { value: 0, sessionId: '' };
             const safePlayerRecords = (player.records || {}) as any;
@@ -153,41 +136,34 @@ export const processFinishedSession = ({
 
             return { 
                 ...player, 
-                rating: newRating, 
+                rating: unifiedNewRating, 
                 tier: newTier, 
                 form: newForm,
                 badges: updatedBadges,
                 sessionHistory: sessionHistory,
-                historyData: historyData, // Saved here
-                lastRatingChange: { ...breakdown, badgesEarned: badgesEarnedThisSession },
+                historyData: historyData,
+                // Synchronize breakdown object as well
+                lastRatingChange: { ...breakdown, newRating: unifiedNewRating, badgesEarned: badgesEarnedThisSession },
                 records: newRecords,
             };
         }
         return player;
     });
 
-    // --- 3. GENERATE NEWS ---
-    // Standard news for participants
     const newGameplayNews = generateNewsUpdates(oldPlayers, playersWithCalculatedRatings);
-    
-    // Combine gameplay news with penalty news
     const allNewNews = [...newGameplayNews, ...penaltyNews];
-
     const updatedNewsFeed = allNewNews.length > 0
         ? manageNewsFeedSize([...allNewNews, ...newsFeed])
         : newsFeed;
 
-    // --- 4. PREPARE FINAL DATA ---
     const finalSession: Session = { 
         ...session, 
         status: SessionStatus.Completed,
     };
 
-    const playersToSave = playersWithCalculatedRatings;
-
     return {
         updatedPlayers: playersWithCalculatedRatings,
-        playersToSave,
+        playersToSave: playersWithCalculatedRatings,
         finalSession,
         updatedNewsFeed,
     };
