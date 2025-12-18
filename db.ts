@@ -249,14 +249,46 @@ export const loadHistoryFromDB = async (limit?: number) => {
             let q = supabase!.from('sessions').select('*').order('createdAt', { ascending: false });
             if (limit) q = q.limit(limit);
             const { data } = await q;
+            
             if (data) {
                 const cloudIds = new Set(data.map(s => s.id));
-                const merged = [...data.map(s => ({...s, syncStatus: 'synced'})), ...local.filter(l => !cloudIds.has(l.id))];
+                const isExhaustive = limit ? data.length < limit : true;
+                
+                // Рассчитываем временной диапазон загруженных данных для точной синхронизации
+                const cloudTimes = data.map(s => new Date(s.createdAt).getTime());
+                const minCloudTime = data.length > 0 ? Math.min(...cloudTimes) : 0;
+                const maxCloudTime = data.length > 0 ? Math.max(...cloudTimes) : 0;
+
+                const merged = [
+                    ...data.map(s => ({...s, syncStatus: 'synced' as const})), 
+                    ...local.filter(l => {
+                        // 1. Если сессия уже есть в ответе облака — пропускаем (она добавлена выше)
+                        if (cloudIds.has(l.id)) return false;
+                        
+                        // 2. Если сессия локальная (ещё не была синхронизирована) — оставляем
+                        if (l.syncStatus !== 'synced') return true;
+                        
+                        // 3. Если сессия помечена как 'synced', но её нет в текущем ответе облака:
+                        const localTime = new Date(l.createdAt).getTime();
+                        
+                        // А) Если она по дате попадает внутрь диапазона того, что мы скачали — значит она удалена в облаке
+                        if (data.length > 0 && localTime >= minCloudTime && localTime <= maxCloudTime) return false;
+                        
+                        // Б) Если мы скачали всё, что есть в облаке (isExhaustive) и её там нет — она удалена
+                        if (isExhaustive && (data.length === 0 || localTime < minCloudTime)) return false;
+                        
+                        // В) Иначе — она может быть просто «глубже» лимита пагинации, оставляем для безопасности
+                        return true;
+                    })
+                ];
+
                 merged.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
                 await set('history', merged);
                 return limit ? merged.slice(0, limit) : merged;
             }
-        } catch (e) {}
+        } catch (e) {
+            console.error("Error loading history from cloud:", e);
+        }
     }
     return limit ? local.slice(0, limit) : local;
 };
