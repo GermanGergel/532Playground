@@ -19,6 +19,14 @@ export const en = {
     saveChanges: "Save Changes",
     profileLinkCopied: "Profile link copied to clipboard!",
 
+    // Ledger (NEW)
+    ledgerTitle: "LEDGER",
+    ledgerEmpty: "No active session",
+    ledgerCollected: "Collected",
+    ledgerClear: "CLEAR TABLE",
+    ledgerCash: "Cash",
+    ledgerQR: "Transfer/QR",
+
     // Setup
     setupTitle: "Game Setup",
     sessionName: "Session Name",

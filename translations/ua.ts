@@ -1,10 +1,9 @@
-
 export const ua = {
     // Navigation
     navHome: "ГОЛОВНА",
     navLive: "МАТЧ",
     navStatistics: "СТАТИСТИКА",
-    navHistory: "ІСТОРІЯ",
+    navHistory: "ІСТОРИЯ",
     navSettings: "НАЛАШТУВАННЯ",
 
     // General
@@ -18,6 +17,15 @@ export const ua = {
     delete: "Видалити",
     saveChanges: "Зберегти",
     profileLinkCopied: "Посилання на профіль скопійовано!",
+
+    // --- FIX: Added missing Ledger translations for Ukrainian ---
+    // Ledger (NEW)
+    ledgerTitle: "КАСА",
+    ledgerEmpty: "Немає активного тренування",
+    ledgerCollected: "Зібрано",
+    ledgerClear: "ОЧИСТИТИ ТАБЛИЦЮ",
+    ledgerCash: "Готівка",
+    ledgerQR: "Переказ/QR",
 
     // Setup
     setupTitle: "Налаштування Гри",

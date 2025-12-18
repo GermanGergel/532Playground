@@ -3,7 +3,6 @@ export { HomeScreen } from './HomeScreen';
 export { NewGameSetupScreen } from './NewGameSetupScreen';
 export { AssignPlayersScreen } from './AssignPlayersScreen';
 export { LiveMatchScreen } from './LiveMatchScreen';
-// FIX: Corrected typo from BrandedShareableReport to the actually exported ShareableReport.
 export { StatisticsScreen, ShareableReport } from './StatisticsScreen';
 export { SessionReportScreen } from './SessionReportScreen';
 export { HistoryScreen } from './HistoryScreen';
@@ -16,6 +15,7 @@ export { PublicProfileScreen } from './PublicProfileScreen';
 export { NewsFeedScreen } from './NewsFeedScreen';
 export { AnnouncementScreen } from './AnnouncementScreen';
 export { PromoScreen } from './PromoScreen';
-export { PromoAdminScreen } from './PromoAdminScreen'; // New export
+export { PromoAdminScreen } from './PromoAdminScreen';
+export { LedgerScreen } from './LedgerScreen'; // NEW
 export { BrandedHeader, hexToRgba, newId } from './utils';
 export type { ShareableReportProps } from './StatisticsScreen';

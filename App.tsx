@@ -1,13 +1,13 @@
 
 import React from 'react';
-import { Routes, Route, useNavigate, useLocation, matchPath } from 'react-router-dom';
+import { Routes, Route, useLocation, matchPath } from 'react-router-dom';
 import { BottomNav } from './components';
 import { 
     HomeScreen, NewGameSetupScreen, AssignPlayersScreen, LiveMatchScreen, 
     StatisticsScreen, HistoryScreen, SessionReportScreen, SettingsScreen, 
     PlayerHubScreen, PlayerDatabaseScreen, PlayerProfileScreen,
     NewsFeedScreen, VoiceSettingsScreen, AnnouncementScreen, PublicProfileScreen,
-    PromoScreen, PromoAdminScreen
+    PromoScreen, PromoAdminScreen, LedgerScreen
 } from './screens';
 import { useApp } from './context';
 
@@ -34,12 +34,10 @@ const App: React.FC = () => {
   }, [activeSession]);
 
   // RESET PLAYER DATABASE FILTERS
-  // When the user leaves the "Player" ecosystem (Database or Profile), we reset the sort/search.
-  // This satisfies the request: "persist while inside, reset when exit".
   React.useEffect(() => {
       const isPlayerSection = 
           location.pathname.includes('/player-database') || 
-          location.pathname.includes('/player/'); // Matches /player/:id
+          location.pathname.includes('/player/'); 
 
       if (!isPlayerSection) {
           setPlayerDbSort('date');
@@ -47,11 +45,9 @@ const App: React.FC = () => {
       }
   }, [location.pathname, setPlayerDbSort, setPlayerDbSearch]);
 
-  // Only hide navigation on the public profile share link AND the Promo page.
-  // This locks public users into these pages so they can't access Admin features.
   const pathsWithoutNav = [
     '/public-profile/:id',
-    '/promo' // <--- CRITICAL: Hides menu on Promo page so guests can't access admin area
+    '/promo' 
   ];
 
   const showNav = !pathsWithoutNav.some(path => matchPath(path, location.pathname));
@@ -70,6 +66,7 @@ const App: React.FC = () => {
           <Route path="/settings" element={<SettingsScreen />} />
           <Route path="/settings/voice" element={<VoiceSettingsScreen />} />
           <Route path="/settings/promo-admin" element={<PromoAdminScreen />} />
+          <Route path="/ledger" element={<LedgerScreen />} />
           <Route path="/player-hub" element={<PlayerHubScreen />} />
           <Route path="/player-database" element={<PlayerDatabaseScreen />} />
           <Route path="/player/:id" element={<PlayerProfileScreen />} />

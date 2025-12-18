@@ -1,4 +1,3 @@
-
 export const vn = {
     // Navigation
     navHome: "TRANG CHỦ",
@@ -18,6 +17,15 @@ export const vn = {
     delete: "Xóa",
     saveChanges: "Lưu thay đổi",
     profileLinkCopied: "Đã sao chép liên kết hồ sơ!",
+
+    // --- FIX: Added missing Ledger translations for Vietnamese ---
+    // Ledger (NEW)
+    ledgerTitle: "SỔ THU CHI",
+    ledgerEmpty: "Không có buổi tập nào đang diễn ra",
+    ledgerCollected: "Đã thu",
+    ledgerClear: "XÓA BẢNG",
+    ledgerCash: "Tiền mặt",
+    ledgerQR: "Chuyển khoản/QR",
 
     // Setup
     setupTitle: "Thiết Lập Trận Đấu",
@@ -43,7 +51,7 @@ export const vn = {
     startSession: "Bắt Đầu",
     cancelSetup: "Hủy Bỏ",
     autoBalanceConfirmTitle: "Cân bằng đội hình?",
-    autoBalanceConfirmDesc: "Hệ thống sẽ tự động chia lại đội dựa trên chỉ số rating để cân bằng sức mạnh.",
+    autoBalanceConfirmDesc: "Chia đội bằng thuật toán dựa trên rating.",
 
     // Match
     liveMatch: "Trực Tiếp",

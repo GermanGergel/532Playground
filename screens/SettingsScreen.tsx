@@ -6,6 +6,15 @@ import { Card, Button, useTranslation } from '../ui';
 import { isSupabaseConfigured, getCloudPlayerCount } from '../db';
 import { Wand } from '../icons';
 
+// Styled Wallet Icon for Ledger
+const WalletIcon = ({ className }: { className?: string }) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5" />
+        <path d="M16 12h5" />
+        <circle cx="16" cy="12" r="1" />
+    </svg>
+);
+
 export const SettingsScreen: React.FC = () => {
     const t = useTranslation();
     const navigate = useNavigate();
@@ -139,6 +148,16 @@ export const SettingsScreen: React.FC = () => {
                         </div>
                     </Card>
 
+                    {/* Compact Card: Ledger (CASHIER) */}
+                    <Link to="/ledger" className="block">
+                         <Card className={`${cardNeonClasses} !p-3 border-dark-accent-start/30 active:scale-[0.98] transition-transform`}>
+                             <div className="flex justify-center items-center gap-3">
+                                <WalletIcon className="w-6 h-6 text-dark-accent-start" />
+                                <h2 className="font-chakra font-bold text-xl text-white tracking-widest">{t.ledgerTitle}</h2>
+                            </div>
+                        </Card>
+                    </Link>
+
                     {/* Compact Card: Voice Assistant */}
                     <Link to="/settings/voice" className="block">
                          <Card className={`${cardNeonClasses} !p-3`}>
@@ -151,7 +170,6 @@ export const SettingsScreen: React.FC = () => {
             </div>
 
             <div className="p-4 shrink-0 space-y-4">
-                {/* Admin Button for Promo Config */}
                 <Button 
                     variant="ghost" 
                     onClick={() => navigate('/settings/promo-admin')}
