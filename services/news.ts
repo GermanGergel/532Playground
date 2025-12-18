@@ -18,63 +18,77 @@ const getNewsPriority = (item: Omit<NewsItem, 'id' | 'timestamp'>): number => {
     }
 }
 
-export const generateNewsUpdates = (oldPlayers: Player[], newPlayers: Player[]): NewsItem[] => {
+/**
+ * Генерирует новости только для тех, кто реально участвовал в сессии.
+ */
+export const generateNewsUpdates = (
+    oldPlayers: Player[], 
+    newPlayers: Player[], 
+    participatedIds: Set<string>
+): NewsItem[] => {
     const potentialNews: Omit<NewsItem, 'id' | 'timestamp'>[] = [];
     const timestamp = new Date().toISOString();
 
     const oldPlayerMap = new Map(oldPlayers.map(p => [p.id, p]));
 
-    newPlayers.forEach(newPlayer => {
-        const oldPlayer = oldPlayerMap.get(newPlayer.id);
-        if (!oldPlayer) return;
+    // Фильтруем игроков: обрабатываем ТОЛЬКО тех, кто был в этой сессии
+    newPlayers
+        .filter(p => participatedIds.has(p.id))
+        .forEach(newPlayer => {
+            const oldPlayer = oldPlayerMap.get(newPlayer.id);
+            if (!oldPlayer) return;
 
-        checkMilestone(potentialNews, newPlayer, oldPlayer.totalGoals, newPlayer.totalGoals, [50, 100, 200, 300, 400, 500, 1000], 'Goals', 'GOAL MACHINE');
-        checkMilestone(potentialNews, newPlayer, oldPlayer.totalAssists, newPlayer.totalAssists, [50, 100, 150, 200, 300], 'Assists', 'THE ARCHITECT');
-        checkMilestone(potentialNews, newPlayer, oldPlayer.totalWins, newPlayer.totalWins, [50, 100, 200, 300], 'Wins', 'BORN WINNER');
-        checkMilestone(potentialNews, newPlayer, oldPlayer.totalSessionsPlayed, newPlayer.totalSessionsPlayed, [50, 100, 200], 'Sessions', 'CLUB LEGEND');
+            // Проверка милстоунов (только если значение выросло)
+            checkMilestone(potentialNews, newPlayer, oldPlayer.totalGoals, newPlayer.totalGoals, [50, 100, 200, 300, 400, 500, 1000], 'Goals', 'GOAL MACHINE');
+            checkMilestone(potentialNews, newPlayer, oldPlayer.totalAssists, newPlayer.totalAssists, [50, 100, 150, 200, 300], 'Assists', 'THE ARCHITECT');
+            checkMilestone(potentialNews, newPlayer, oldPlayer.totalWins, newPlayer.totalWins, [50, 100, 200, 300], 'Wins', 'BORN WINNER');
+            checkMilestone(potentialNews, newPlayer, oldPlayer.totalSessionsPlayed, newPlayer.totalSessionsPlayed, [50, 100, 200], 'Sessions', 'CLUB LEGEND');
 
-        const oldRank = getTierRank(oldPlayer.tier);
-        const newRank = getTierRank(newPlayer.tier);
-        
-        if (newRank > oldRank && newRank >= 3) {
-            potentialNews.push({
-                playerId: newPlayer.id,
-                playerName: newPlayer.nickname,
-                type: 'tier_up',
-                message: `${newPlayer.nickname} promoted to ${newPlayer.tier.toUpperCase()}`,
-                subMessage: `#LevelUp #${newPlayer.tier}`,
-                isHot: newPlayer.tier === PlayerTier.Legend || newPlayer.tier === PlayerTier.Elite,
-                statsSnapshot: { rating: newPlayer.rating, tier: newPlayer.tier }
-            });
-        }
+            // Повышение тира
+            const oldRank = getTierRank(oldPlayer.tier);
+            const newRank = getTierRank(newPlayer.tier);
+            
+            if (newRank > oldRank && newRank >= 3) {
+                potentialNews.push({
+                    playerId: newPlayer.id,
+                    playerName: newPlayer.nickname,
+                    type: 'tier_up',
+                    message: `${newPlayer.nickname} promoted to ${newPlayer.tier.toUpperCase()}`,
+                    subMessage: `#LevelUp #${newPlayer.tier}`,
+                    isHot: newPlayer.tier === PlayerTier.Legend || newPlayer.tier === PlayerTier.Elite,
+                    statsSnapshot: { rating: newPlayer.rating, tier: newPlayer.tier }
+                });
+            }
 
-        const oldBadges = Object.keys(oldPlayer.badges || {}).length;
-        const newBadges = Object.keys(newPlayer.badges || {}).length;
-        
-        if (newBadges > oldBadges) {
-            const earned = (Object.keys(newPlayer.badges || {}) as BadgeType[]).filter(b => !(oldPlayer.badges || {})[b]);
-            earned.forEach(badge => {
-                const config = getBadgeNewsConfig(badge);
-                if (config) {
-                    potentialNews.push({
-                        playerId: newPlayer.id,
-                        playerName: newPlayer.nickname,
-                        type: 'badge',
-                        message: `${newPlayer.nickname} unlocked ${config.name}`,
-                        subMessage: `${config.hashtags}`,
-                        isHot: config.isHot,
-                        statsSnapshot: { rating: newPlayer.rating, tier: newPlayer.tier }
-                    });
-                }
-            });
-        }
-    });
+            // Новые значки
+            const oldBadgesKeys = Object.keys(oldPlayer.badges || {});
+            const newBadgesKeys = Object.keys(newPlayer.badges || {});
+            
+            if (newBadgesKeys.length > oldBadgesKeys.length) {
+                const earned = (newBadgesKeys as BadgeType[]).filter(b => !(oldPlayer.badges || {})[b]);
+                earned.forEach(badge => {
+                    const config = getBadgeNewsConfig(badge);
+                    if (config) {
+                        potentialNews.push({
+                            playerId: newPlayer.id,
+                            playerName: newPlayer.nickname,
+                            type: 'badge',
+                            message: `${newPlayer.nickname} unlocked ${config.name}`,
+                            subMessage: `${config.hashtags}`,
+                            isHot: config.isHot,
+                            statsSnapshot: { rating: newPlayer.rating, tier: newPlayer.tier }
+                        });
+                    }
+                });
+            }
+        });
 
     const sortedNews = potentialNews
         .map(item => ({ ...item, priority: getNewsPriority(item) }))
         .sort((a, b) => b.priority - a.priority);
         
-    return sortedNews.slice(0, 10).map(item => ({
+    // Ограничиваем количество новостей за одну сессию, чтобы не спамить
+    return sortedNews.slice(0, 15).map(item => ({
         ...item,
         id: newId(),
         timestamp: timestamp
@@ -84,7 +98,6 @@ export const generateNewsUpdates = (oldPlayers: Player[], newPlayers: Player[]):
 /**
  * ОЧИСТКА ЛЕНТЫ.
  * Оставляет новости ТОЛЬКО за последние 24 часа.
- * Старые сессии больше не будут отображаться.
  */
 export const manageNewsFeedSize = (currentFeed: NewsItem[]): NewsItem[] => {
     const now = Date.now();
@@ -96,12 +109,12 @@ export const manageNewsFeedSize = (currentFeed: NewsItem[]): NewsItem[] => {
             // СТРОГО: Только то, что произошло за последние 24 часа.
             return (now - itemTs) < ONE_DAY_MS;
         })
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-        .slice(0, 50); // Лимит количества на всякий случай
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 };
 
 // Helpers
 const checkMilestone = (news: Omit<NewsItem, 'id' | 'timestamp'>[], player: Player, oldVal: number, newVal: number, milestones: number[], label: string, title: string) => {
+    if (oldVal === newVal) return; // Нет изменений — нет новости
     milestones.forEach(m => {
         if (oldVal < m && newVal >= m) {
             news.push({

@@ -12,10 +12,6 @@ interface ProcessedSessionResult {
     updatedNewsFeed: NewsItem[];
 }
 
-/**
- * Takes a finished session and all player/news data, processes all calculations
- * (stats, ratings, badges, news), and returns the updated data structures.
- */
 export const processFinishedSession = ({
     session,
     oldPlayers,
@@ -29,7 +25,8 @@ export const processFinishedSession = ({
     const { allPlayersStats } = calculateAllStats(session);
     const playerStatsMap = new Map(allPlayersStats.map(stat => [stat.player.id, stat]));
     
-    const penaltyNews: NewsItem[] = [];
+    // Собираем ID всех, кто реально был на поле в этой сессии
+    const participatedIds = new Set(allPlayersStats.map(s => s.player.id));
 
     // --- 1. UPDATE PLAYERS (Participation & Inactivity Logic) ---
     let playersWithUpdatedStats = oldPlayers.map(player => {
@@ -79,8 +76,6 @@ export const processFinishedSession = ({
             
             const { delta, breakdown } = calculateRatingUpdate(player, sessionStats, session, badgesEarnedThisSession);
             
-            // --- UNIFIED RATING FIX ---
-            // Calculate once to ensure card header and analysis block are 100% in sync
             const unifiedNewRating = Math.round(breakdown.newRating);
             
             let newForm: 'hot_streak' | 'stable' | 'cold_streak' = 'stable';
@@ -95,6 +90,7 @@ export const processFinishedSession = ({
             });
             
             const sessionHistory = [...(player.sessionHistory || [])];
+            // FIX: Use sessionStats instead of undefined stats variable.
             const sessionWinRate = sessionStats.gamesPlayed > 0 ? Math.round((sessionStats.wins / sessionStats.gamesPlayed) * 100) : 0;
             if (sessionStats.gamesPlayed > 0) {
                 sessionHistory.push({ winRate: sessionWinRate });
@@ -142,7 +138,6 @@ export const processFinishedSession = ({
                 badges: updatedBadges,
                 sessionHistory: sessionHistory,
                 historyData: historyData,
-                // Synchronize breakdown object as well
                 lastRatingChange: { ...breakdown, newRating: unifiedNewRating, badgesEarned: badgesEarnedThisSession },
                 records: newRecords,
             };
@@ -150,10 +145,11 @@ export const processFinishedSession = ({
         return player;
     });
 
-    const newGameplayNews = generateNewsUpdates(oldPlayers, playersWithCalculatedRatings);
-    const allNewNews = [...newGameplayNews, ...penaltyNews];
-    const updatedNewsFeed = allNewNews.length > 0
-        ? manageNewsFeedSize([...allNewNews, ...newsFeed])
+    // Генерируем новости только для ПРИСУТСТВУЮЩИХ (participatedIds)
+    const newGameplayNews = generateNewsUpdates(oldPlayers, playersWithCalculatedRatings, participatedIds);
+    
+    const updatedNewsFeed = newGameplayNews.length > 0
+        ? manageNewsFeedSize([...newGameplayNews, ...newsFeed])
         : newsFeed;
 
     const finalSession: Session = { 

@@ -233,7 +233,9 @@ export const generateDemoData = () => {
     });
     
     // 6. Generate News based on the changes
-    const news = generateNewsUpdates(initialPlayers, updatedPlayers).map(n => ({ ...n, id: newDemoId('news_') }));
+    // FIX: Pass missing participatedIds argument to generateNewsUpdates.
+    const participatedIds = new Set(allPlayersStats.map(s => s.player.id));
+    const news = generateNewsUpdates(initialPlayers, updatedPlayers, participatedIds).map(n => ({ ...n, id: newDemoId('news_') }));
 
     session.playerPool = updatedPlayers;
 
