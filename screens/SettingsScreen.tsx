@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Card, Button, useTranslation } from '../ui';
-import { isSupabaseConfigured, getCloudPlayerCount, clearLocalCacheComplete } from '../db';
-import { Wand, RefreshCw } from '../icons';
+import { isSupabaseConfigured, getCloudPlayerCount } from '../db';
+import { Wand } from '../icons';
 
 // Styled Wallet Icon for Ledger
 const WalletIcon = ({ className }: { className?: string }) => (
@@ -18,10 +18,9 @@ const WalletIcon = ({ className }: { className?: string }) => (
 export const SettingsScreen: React.FC = () => {
     const t = useTranslation();
     const navigate = useNavigate();
-    const { language, setLanguage, allPlayers, fetchHistory } = useApp();
+    const { language, setLanguage, allPlayers } = useApp();
     const [cloudStatus, setCloudStatus] = React.useState<{ connected: boolean, count: number } | null>(null);
     const [isRefreshing, setIsRefreshing] = React.useState(false);
-    const [isRepairing, setIsRepairing] = React.useState(false);
     
     const checkCloud = async () => {
         if (isRefreshing) return;
@@ -37,26 +36,6 @@ export const SettingsScreen: React.FC = () => {
             setCloudStatus({ connected: false, count: 0 });
         }
         setIsRefreshing(false);
-    };
-
-    const handleForceResync = async () => {
-        const warning = 
-            "ATTENTION:\n\n" +
-            "1. All Synced data (Players, Ratings, History) is SAFE in Cloud and will be re-downloaded.\n" +
-            "2. Any UNSYNCED sessions (Yellow icons) will be PERMANENTLY LOST.\n\n" +
-            "Do you want to proceed with full cache reset?";
-            
-        if (!confirm(warning)) return;
-        
-        setIsRepairing(true);
-        try {
-            await clearLocalCacheComplete();
-            // Reload page to trigger full app state re-initialization from cloud
-            window.location.reload();
-        } catch (e) {
-            alert("Reset failed. Please check connection.");
-            setIsRepairing(false);
-        }
     };
 
     useEffect(() => {
@@ -184,22 +163,6 @@ export const SettingsScreen: React.FC = () => {
                             </div>
                         </Card>
                     </Link>
-
-                    {/* MAINTENANCE SECTION */}
-                    <Card className={`${cardNeonClasses} !p-3 border-red-500/20`}>
-                        <div className="flex flex-col gap-2">
-                            <h3 className="text-[10px] font-black text-red-500/50 uppercase tracking-widest text-center">System Maintenance</h3>
-                            <Button 
-                                variant="ghost" 
-                                onClick={handleForceResync} 
-                                disabled={isRepairing}
-                                className="w-full !py-2 !text-xs border border-red-500/30 text-red-400 hover:bg-red-500/10 flex items-center justify-center gap-2"
-                            >
-                                <RefreshCw className={`w-4 h-4 ${isRepairing ? 'animate-spin' : ''}`} />
-                                Wipe & Sync Everything
-                            </Button>
-                        </div>
-                    </Card>
                 </div>
             </div>
 

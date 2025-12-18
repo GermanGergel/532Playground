@@ -108,7 +108,7 @@ export const savePromoData = async (data: PromoData): Promise<boolean> => {
 export const loadPromoData = async (): Promise<PromoData | null> => {
     if (!isSupabaseConfigured()) return null;
     try {
-        const { data, error } = await supabase!.from('settings').select('value').eq('key', SETTINGS_KEY_PROMO).single();
+        const { data, error } = await supabase!.from('settings').select('value').eq('key', SETTINGS_KEY_PROMO).maybeSingle();
         if (error || !data) return null;
         return data.value as PromoData;
     } catch (error) {
@@ -175,7 +175,7 @@ export const loadSinglePlayerFromDB = async (id: string, skipCache: boolean = fa
     }
     if (isSupabaseConfigured()) {
         try {
-            const { data } = await supabase!.from('players').select('*').eq('id', id).single();
+            const { data } = await supabase!.from('players').select('*').eq('id', id).maybeSingle();
             return data as Player;
         } catch (e) { return null; }
     }
@@ -260,14 +260,25 @@ export const loadHistoryFromDB = async (limit?: number) => {
                 const minCloudTime = data.length > 0 ? Math.min(...cloudTimes) : 0;
                 const maxCloudTime = data.length > 0 ? Math.max(...cloudTimes) : 0;
 
+                // Улучшенная фильтрация для удаления "призрачных" сессий
                 const merged = [
                     ...data.map(s => ({...s, syncStatus: 'synced' as const})), 
                     ...local.filter(l => {
+                        // Если сессия есть в облаке — мы её уже добавили выше
                         if (cloudIds.has(l.id)) return false;
+                        
+                        // Если сессия локальная и еще не синхронизирована — оставляем (она новая)
                         if (l.syncStatus !== 'synced') return true;
+                        
+                        // Если сессия помечена как синхронизированная, но её НЕТ в облаке:
                         const localTime = new Date(l.createdAt).getTime();
+                        
+                        // 1. Она попадает в диапазон времени текущего ответа от облака -> Значит удалена!
                         if (data.length > 0 && localTime >= minCloudTime && localTime <= maxCloudTime) return false;
-                        if (isExhaustive && (data.length === 0 || localTime < minCloudTime)) return false;
+                        
+                        // 2. Мы запросили всё (или последние N) и её нет в начале списка -> Значит удалена!
+                        if (isExhaustive && (data.length === 0 || localTime > maxCloudTime)) return false;
+
                         return true;
                     })
                 ];
@@ -292,7 +303,7 @@ export const retrySyncPendingSessions = async () => {
     return h.filter(s => s.syncStatus === 'pending').length;
 };
 
-// --- NEWS FEED (ОГРАНИЧЕНИЕ 24 ЧАСА) ---
+// --- NEWS FEED ---
 export const saveNewsToDB = async (news: NewsItem[]) => {
     const freshNews = news.filter(n => !n.id.startsWith('demo_'));
     if (isSupabaseConfigured()) {
@@ -385,7 +396,7 @@ const ANTHEM_STATUS_KEY = 'anthem_status';
 export const getAnthemStatus = async (): Promise<boolean> => {
     if (!isSupabaseConfigured()) return true;
     try {
-        const { data } = await supabase!.from('settings').select('value').eq('key', ANTHEM_STATUS_KEY).single();
+        const { data } = await supabase!.from('settings').select('value').eq('key', ANTHEM_STATUS_KEY).maybeSingle();
         return (data?.value as any)?.enabled ?? true;
     } catch (e) { return true; }
 };
@@ -422,7 +433,7 @@ export const getSessionAnthemUrl = async (): Promise<string | null> => {
         try {
             const isEnabled = await getAnthemStatus();
             if (!isEnabled) return null;
-            const { data: setting } = await supabase!.from('settings').select('value').eq('key', ANTHEM_UPDATE_KEY).single();
+            const { data: setting } = await supabase!.from('settings').select('value').eq('key', ANTHEM_UPDATE_KEY).maybeSingle();
             const serverTs = (setting?.value as any)?.timestamp;
             const serverDel = (setting?.value as any)?.deleted;
             if (serverDel) { await del(cacheKey); return null; }
