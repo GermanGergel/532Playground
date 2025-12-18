@@ -58,11 +58,6 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
     });
 };
 
-/**
- * ГЛУБОКАЯ РЕКУРСИВНАЯ ОЧИСТКА.
- * Удаляет 'syncStatus' и другие UI-поля на всех уровнях вложенности.
- * Это гарантирует, что Supabase не вернет 400 Bad Request из-за лишних полей.
- */
 const sanitizeObject = (obj: any): any => {
     if (obj === null || obj === undefined) return obj;
     if (typeof obj === 'number') return isNaN(obj) ? 0 : obj;
@@ -70,10 +65,7 @@ const sanitizeObject = (obj: any): any => {
     if (typeof obj === 'object') {
         const newObj: any = {};
         for (const key in obj) {
-            // Удаляем поля, которых нет в схеме базы данных
             if (key === 'syncStatus' || key === 'isTestMode' || key === 'isManual') continue;
-            
-            // Заменяем тяжелые картинки base64 на null для экономии места в БД
             const isImageKey = ['photo', 'playerCard', 'logo', 'playerPhoto'].includes(key);
             if (isImageKey && typeof obj[key] === 'string' && obj[key].startsWith('data:')) {
                 newObj[key] = null; 
@@ -84,6 +76,17 @@ const sanitizeObject = (obj: any): any => {
         return newObj;
     }
     return obj;
+};
+
+// --- MAINTENANCE ---
+export const clearLocalHistory = async () => {
+    await del('history');
+};
+
+export const clearLocalCacheComplete = async () => {
+    await del('history');
+    await del('players');
+    await del('newsFeed');
 };
 
 // --- PROMO PLAYER MANAGEMENT ---
@@ -230,7 +233,6 @@ export const saveHistoryToDB = async (history: Session[]) => {
         try {
             const toSync = real.filter(s => s.status === 'completed' && s.syncStatus !== 'synced');
             if (toSync.length > 0) {
-                // ПРИМЕНЯЕМ ГЛУБОКУЮ ОЧИСТКУ (sanitizeObject)
                 const dbReady = toSync.map(s => sanitizeObject(s));
                 const { error } = await supabase!.from('sessions').upsert(dbReady, { onConflict: 'id' });
                 if (!error) {
@@ -254,7 +256,6 @@ export const loadHistoryFromDB = async (limit?: number) => {
                 const cloudIds = new Set(data.map(s => s.id));
                 const isExhaustive = limit ? data.length < limit : true;
                 
-                // Рассчитываем временной диапазон загруженных данных для точной синхронизации
                 const cloudTimes = data.map(s => new Date(s.createdAt).getTime());
                 const minCloudTime = data.length > 0 ? Math.min(...cloudTimes) : 0;
                 const maxCloudTime = data.length > 0 ? Math.max(...cloudTimes) : 0;
@@ -262,22 +263,11 @@ export const loadHistoryFromDB = async (limit?: number) => {
                 const merged = [
                     ...data.map(s => ({...s, syncStatus: 'synced' as const})), 
                     ...local.filter(l => {
-                        // 1. Если сессия уже есть в ответе облака — пропускаем (она добавлена выше)
                         if (cloudIds.has(l.id)) return false;
-                        
-                        // 2. Если сессия локальная (ещё не была синхронизирована) — оставляем
                         if (l.syncStatus !== 'synced') return true;
-                        
-                        // 3. Если сессия помечена как 'synced', но её нет в текущем ответе облака:
                         const localTime = new Date(l.createdAt).getTime();
-                        
-                        // А) Если она по дате попадает внутрь диапазона того, что мы скачали — значит она удалена в облаке
                         if (data.length > 0 && localTime >= minCloudTime && localTime <= maxCloudTime) return false;
-                        
-                        // Б) Если мы скачали всё, что есть в облаке (isExhaustive) и её там нет — она удалена
                         if (isExhaustive && (data.length === 0 || localTime < minCloudTime)) return false;
-                        
-                        // В) Иначе — она может быть просто «глубже» лимита пагинации, оставляем для безопасности
                         return true;
                     })
                 ];
@@ -286,9 +276,7 @@ export const loadHistoryFromDB = async (limit?: number) => {
                 await set('history', merged);
                 return limit ? merged.slice(0, limit) : merged;
             }
-        } catch (e) {
-            console.error("Error loading history from cloud:", e);
-        }
+        } catch (e) {}
     }
     return limit ? local.slice(0, limit) : local;
 };
@@ -306,37 +294,21 @@ export const retrySyncPendingSessions = async () => {
 
 // --- NEWS FEED (ОГРАНИЧЕНИЕ 24 ЧАСА) ---
 export const saveNewsToDB = async (news: NewsItem[]) => {
-    const now = new Date();
-    const oneDayAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
-    
-    // ПРАВИЛО: Храним только то, что создано за последние 24 часа.
-    const freshNews = news.filter(n => !n.id.startsWith('demo_') && new Date(n.timestamp) > oneDayAgo);
-    
+    const freshNews = news.filter(n => !n.id.startsWith('demo_'));
     if (isSupabaseConfigured()) {
         try {
-            // Удаляем из облака записи старше 24 часов (по желанию, для чистоты базы)
-            // Но главное — мы их не будем запрашивать.
             if (freshNews.length > 0) {
                 await supabase!.from('news').upsert(freshNews.map(n => sanitizeObject(n)), { onConflict: 'id' });
             }
         } catch (e) {}
     }
-    
-    // Локально тоже вычищаем всё старое
     await set('newsFeed', freshNews.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
 };
 
 export const loadNewsFromDB = async (limit?: number) => {
-    const oneDayAgo = new Date(new Date().getTime() - (24 * 60 * 60 * 1000));
-    
     if (isSupabaseConfigured()) {
         try {
-            let q = supabase!
-                .from('news')
-                .select('*')
-                .gt('timestamp', oneDayAgo.toISOString()) // ТОЛЬКО ЗА 24 ЧАСА
-                .order('timestamp', { ascending: false });
-                
+            let q = supabase!.from('news').select('*').order('timestamp', { ascending: false });
             if (limit) q = q.limit(limit);
             const { data } = await q;
             if (data) {
@@ -345,8 +317,7 @@ export const loadNewsFromDB = async (limit?: number) => {
             }
         } catch (e) {}
     }
-    const local = await get<NewsItem[]>('newsFeed') || [];
-    return local.filter(n => new Date(n.timestamp) > oneDayAgo);
+    return await get<NewsItem[]>('newsFeed') || [];
 };
 
 // --- AUDIO & ASSETS ---
@@ -451,17 +422,13 @@ export const getSessionAnthemUrl = async (): Promise<string | null> => {
         try {
             const isEnabled = await getAnthemStatus();
             if (!isEnabled) return null;
-
             const { data: setting } = await supabase!.from('settings').select('value').eq('key', ANTHEM_UPDATE_KEY).single();
             const serverTs = (setting?.value as any)?.timestamp;
             const serverDel = (setting?.value as any)?.deleted;
-
             if (serverDel) { await del(cacheKey); return null; }
-
             const cached = await get<CachedAudio>(cacheKey);
             const localTs = cached?.lastModified ? new Date(cached.lastModified).getTime() : 0;
             const serverTsNum = serverTs ? new Date(serverTs).getTime() : 0;
-
             if (serverTsNum > localTs || !cached) {
                 const { data } = await supabase!.storage.from(MUSIC_BUCKET).download(ANTHEM_FILENAME);
                 if (data) {

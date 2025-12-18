@@ -15,17 +15,11 @@ export const HistoryScreen: React.FC = () => {
     const [sessionToDelete, setSessionToDelete] = React.useState<Session | null>(null);
     const [isLoadingMore, setIsLoadingMore] = React.useState(false);
 
-    // AUTO-SYNC LOGIC:
     useEffect(() => {
         const syncAndRefresh = async () => {
             setIsLoadingMore(true);
-            
-            // 1. Try to push any local-only sessions to the cloud
             await retrySyncPendingSessions(); 
-            
-            // 2. Fetch the latest history (Now showing last 10 sessions)
             await fetchHistory(10); 
-            
             setIsLoadingMore(false);
         };
         syncAndRefresh();
@@ -38,13 +32,8 @@ export const HistoryScreen: React.FC = () => {
 
     const handleDelete = async () => {
         if (!sessionToDelete) return;
-        
-        // --- NUCLEAR DELETE ---
         await deleteSession(sessionToDelete.id);
-
-        // Remove from React State (Visual)
         setHistory(prev => prev.filter(s => s.id !== sessionToDelete.id));
-        
         setIsDeleteModalOpen(false);
         setSessionToDelete(null);
     };
@@ -66,13 +55,11 @@ export const HistoryScreen: React.FC = () => {
                                             <div className="overflow-hidden">
                                                 <h3 className="font-bold text-base truncate flex items-center gap-2">
                                                     {session.sessionName}
-                                                    {/* Yellow Cloud for Pending */}
                                                     {session.syncStatus === 'pending' && <Cloud className="w-4 h-4 text-yellow-400 animate-pulse" />}
                                                 </h3>
                                                 <p className="text-xs text-dark-text-secondary">{new Date(session.date).toLocaleDateString()}</p>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                {/* Green Cloud for Synced */}
                                                 {session.syncStatus === 'synced' && <Cloud className="w-4 h-4 text-[#4CFF5F]" />}
                                                 <span className="text-[9px] font-semibold uppercase px-1.5 py-0.5 bg-dark-bg rounded-full flex-shrink-0 ml-2">{t.finished}</span>
                                             </div>
@@ -80,8 +67,7 @@ export const HistoryScreen: React.FC = () => {
                                     </Card>
                                 </Link>
                                 
-                                {/* DELETE BUTTON: ONLY visible if session is NOT synced (pending) */}
-                                {session.syncStatus === 'pending' && (
+                                {session.syncStatus !== 'synced' && (
                                     <div className="flex flex-col gap-2">
                                         <Button
                                             variant="ghost"
@@ -104,7 +90,6 @@ export const HistoryScreen: React.FC = () => {
                             <div className="w-6 h-6 border-2 border-dark-accent-start border-t-transparent rounded-full animate-spin"></div>
                         </div>
                     )}
-                    {/* Visual cue that only recent history is shown to prevent clutter */}
                     {!isLoadingMore && history.length >= 5 && (
                         <p className="text-center text-[10px] text-dark-text-secondary mt-6 uppercase tracking-widest opacity-50">
                             Showing last 10 sessions
@@ -121,7 +106,7 @@ export const HistoryScreen: React.FC = () => {
              >
                 <div className="flex flex-col gap-4 text-center">
                     <h3 className="text-xl font-bold text-dark-text">{t.confirmDeletion}</h3>
-                    <p className="text-xs text-dark-text-secondary">This session has not been backed up to the cloud. Deleting it will remove it permanently from this device.</p>
+                    <p className="text-xs text-dark-text-secondary">Remove this unsynced session?</p>
                     <div className="flex justify-center gap-3">
                         <Button variant="secondary" onClick={() => setIsDeleteModalOpen(false)} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.cancel}</Button>
                         <Button variant="secondary" className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40" onClick={handleDelete}>{t.delete}</Button>
