@@ -30,67 +30,6 @@ const supabase = (supabaseUrl && supabaseAnonKey)
 
 export const isSupabaseConfigured = () => !!supabase;
 
-// --- PROMO PLAYER MANAGEMENT ---
-const SETTINGS_KEY_PROMO = 'promo_player_config';
-
-export const savePromoData = async (data: PromoData): Promise<boolean> => {
-    if (!isSupabaseConfigured()) return false;
-    try {
-        const { error } = await supabase!
-            .from('settings')
-            .upsert({ 
-                key: SETTINGS_KEY_PROMO, 
-                value: data 
-            }, { onConflict: 'key' });
-            
-        if (error) throw error;
-        return true;
-    } catch (error) {
-        console.error("Failed to save promo data:", error);
-        return false;
-    }
-};
-
-export const loadPromoData = async (): Promise<PromoData | null> => {
-    if (!isSupabaseConfigured()) return null;
-    try {
-        const { data, error } = await supabase!
-            .from('settings')
-            .select('value')
-            .eq('key', SETTINGS_KEY_PROMO)
-            .single();
-            
-        if (error || !data) return null;
-        return data.value as PromoData;
-    } catch (error) {
-        console.error("Failed to load promo data:", error);
-        return null;
-    }
-};
-
-export const uploadPromoImage = async (base64Image: string): Promise<string | null> => {
-    if (!isSupabaseConfigured() || !base64Image) return null;
-    try {
-        const blob = base64ToBlob(base64Image);
-        const filePath = `promo/hero_card_v${Date.now()}.jpg`; 
-
-        const { error: uploadError } = await supabase!.storage
-            .from('player_images')
-            .upload(filePath, blob, { 
-                cacheControl: '3600', 
-                upsert: true 
-            });
-
-        if (uploadError) throw uploadError;
-
-        const { data } = supabase!.storage.from('player_images').getPublicUrl(filePath);
-        return data.publicUrl;
-    } catch (error) {
-        console.error('Error uploading promo image:', error);
-        return null;
-    }
-};
-
 // --- HELPERS ---
 const base64ToBlob = (base64: string): Blob => {
     const parts = base64.split(';base64,');
@@ -101,7 +40,7 @@ const base64ToBlob = (base64: string): Blob => {
     for (let offset = 0; offset < byteCharacters.length; offset += 512) {
         const slice = byteCharacters.slice(offset, offset + 512);
         const byteNumbers = new Array(slice.length);
-        for (let i = 0; i < slice.length; i++) {
+        for (let i = 0; i < byteNumbers.length; i++) {
             byteNumbers[i] = slice.charCodeAt(i);
         }
         const byteArray = new Uint8Array(byteNumbers);
@@ -119,6 +58,11 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
     });
 };
 
+/**
+ * ГЛУБОКАЯ РЕКУРСИВНАЯ ОЧИСТКА.
+ * Удаляет 'syncStatus' и другие UI-поля на всех уровнях вложенности.
+ * Это гарантирует, что Supabase не вернет 400 Bad Request из-за лишних полей.
+ */
 const sanitizeObject = (obj: any): any => {
     if (obj === null || obj === undefined) return obj;
     if (typeof obj === 'number') return isNaN(obj) ? 0 : obj;
@@ -126,7 +70,12 @@ const sanitizeObject = (obj: any): any => {
     if (typeof obj === 'object') {
         const newObj: any = {};
         for (const key in obj) {
-            if ((key === 'photo' || key === 'playerCard' || key === 'logo' || key === 'playerPhoto') && typeof obj[key] === 'string' && obj[key].startsWith('data:')) {
+            // Удаляем поля, которых нет в схеме базы данных
+            if (key === 'syncStatus' || key === 'isTestMode' || key === 'isManual') continue;
+            
+            // Заменяем тяжелые картинки base64 на null для экономии места в БД
+            const isImageKey = ['photo', 'playerCard', 'logo', 'playerPhoto'].includes(key);
+            if (isImageKey && typeof obj[key] === 'string' && obj[key].startsWith('data:')) {
                 newObj[key] = null; 
             } else {
                 newObj[key] = sanitizeObject(obj[key]);
@@ -137,6 +86,47 @@ const sanitizeObject = (obj: any): any => {
     return obj;
 };
 
+// --- PROMO PLAYER MANAGEMENT ---
+const SETTINGS_KEY_PROMO = 'promo_player_config';
+
+export const savePromoData = async (data: PromoData): Promise<boolean> => {
+    if (!isSupabaseConfigured()) return false;
+    try {
+        const { error } = await supabase!
+            .from('settings')
+            .upsert({ key: SETTINGS_KEY_PROMO, value: data }, { onConflict: 'key' });
+        if (error) throw error;
+        return true;
+    } catch (error) {
+        return false;
+    }
+};
+
+export const loadPromoData = async (): Promise<PromoData | null> => {
+    if (!isSupabaseConfigured()) return null;
+    try {
+        const { data, error } = await supabase!.from('settings').select('value').eq('key', SETTINGS_KEY_PROMO).single();
+        if (error || !data) return null;
+        return data.value as PromoData;
+    } catch (error) {
+        return null;
+    }
+};
+
+export const uploadPromoImage = async (base64Image: string): Promise<string | null> => {
+    if (!isSupabaseConfigured() || !base64Image) return null;
+    try {
+        const blob = base64ToBlob(base64Image);
+        const filePath = `promo/hero_card_v${Date.now()}.jpg`; 
+        const { error: uploadError } = await supabase!.storage.from('player_images').upload(filePath, blob, { cacheControl: '3600', upsert: true });
+        if (uploadError) throw uploadError;
+        const { data } = supabase!.storage.from('player_images').getPublicUrl(filePath);
+        return data.publicUrl;
+    } catch (error) {
+        return null;
+    }
+};
+
 // --- PLAYER MANAGEMENT ---
 const BUCKET_NAME = 'player_images';
 
@@ -145,15 +135,11 @@ export const uploadPlayerImage = async (playerId: string, base64Image: string, t
     try {
         const blob = base64ToBlob(base64Image);
         const filePath = `${playerId}/${type}_${Date.now()}.jpeg`;
-        const { error: uploadError } = await supabase!.storage
-            .from(BUCKET_NAME)
-            .upload(filePath, blob, { cacheControl: '31536000', upsert: true });
+        const { error: uploadError } = await supabase!.storage.from(BUCKET_NAME).upload(filePath, blob, { cacheControl: '31536000', upsert: true });
         if (uploadError) throw uploadError;
         const { data } = supabase!.storage.from(BUCKET_NAME).getPublicUrl(filePath);
         return data.publicUrl;
-    } catch (error) {
-        return null;
-    }
+    } catch (error) { return null; }
 };
 
 export const deletePlayerImage = async (imageUrl: string) => {
@@ -197,9 +183,8 @@ export const savePlayersToDB = async (players: Player[]) => {
     const real = players.filter(p => !p.id.startsWith('demo_'));
     if (isSupabaseConfigured()) {
         try {
-            const chunks = real.map(p => sanitizeObject(p));
-            for (let i = 0; i < chunks.length; i++) {
-                await supabase!.from('players').upsert(chunks[i], { onConflict: 'id' });
+            for (const player of real) {
+                await supabase!.from('players').upsert(sanitizeObject(player), { onConflict: 'id' });
             }
         } catch (e) {}
     }
@@ -245,7 +230,8 @@ export const saveHistoryToDB = async (history: Session[]) => {
         try {
             const toSync = real.filter(s => s.status === 'completed' && s.syncStatus !== 'synced');
             if (toSync.length > 0) {
-                const dbReady = toSync.map(s => sanitizeObject({...s, playerPool: s.playerPool.map(p => ({...p, photo: undefined, playerCard: undefined}))}));
+                // ПРИМЕНЯЕМ ГЛУБОКУЮ ОЧИСТКУ (sanitizeObject)
+                const dbReady = toSync.map(s => sanitizeObject(s));
                 const { error } = await supabase!.from('sessions').upsert(dbReady, { onConflict: 'id' });
                 if (!error) {
                     const final = real.map(s => toSync.some(ts => ts.id === s.id) ? {...s, syncStatus: 'synced' as const} : s);
@@ -286,32 +272,49 @@ export const retrySyncPendingSessions = async () => {
     return h.filter(s => s.syncStatus === 'pending').length;
 };
 
-// --- NEWS FEED ---
+// --- NEWS FEED (ОГРАНИЧЕНИЕ 24 ЧАСА) ---
 export const saveNewsToDB = async (news: NewsItem[]) => {
-    const real = news.filter(n => !n.id.startsWith('demo_'));
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+    
+    // ПРАВИЛО: Храним только то, что создано за последние 24 часа.
+    const freshNews = news.filter(n => !n.id.startsWith('demo_') && new Date(n.timestamp) > oneDayAgo);
+    
     if (isSupabaseConfigured()) {
         try {
-            await supabase!.from('news').upsert(real.map(n => sanitizeObject(n)), { onConflict: 'id' });
+            // Удаляем из облака записи старше 24 часов (по желанию, для чистоты базы)
+            // Но главное — мы их не будем запрашивать.
+            if (freshNews.length > 0) {
+                await supabase!.from('news').upsert(freshNews.map(n => sanitizeObject(n)), { onConflict: 'id' });
+            }
         } catch (e) {}
     }
-    const existing = await get<NewsItem[]>('newsFeed') || [];
-    const newsMap = new Map<string, NewsItem>(); // Fixed Map typing
-    existing.forEach(n => newsMap.set(n.id, n));
-    real.forEach(n => newsMap.set(n.id, n));
-    const merged = Array.from(newsMap.values()).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 50);
-    await set('newsFeed', merged);
+    
+    // Локально тоже вычищаем всё старое
+    await set('newsFeed', freshNews.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
 };
 
 export const loadNewsFromDB = async (limit?: number) => {
+    const oneDayAgo = new Date(new Date().getTime() - (24 * 60 * 60 * 1000));
+    
     if (isSupabaseConfigured()) {
         try {
-            let q = supabase!.from('news').select('*').order('timestamp', { ascending: false });
+            let q = supabase!
+                .from('news')
+                .select('*')
+                .gt('timestamp', oneDayAgo.toISOString()) // ТОЛЬКО ЗА 24 ЧАСА
+                .order('timestamp', { ascending: false });
+                
             if (limit) q = q.limit(limit);
             const { data } = await q;
-            return data as NewsItem[];
+            if (data) {
+                await set('newsFeed', data);
+                return data as NewsItem[];
+            }
         } catch (e) {}
     }
-    return await get<NewsItem[]>('newsFeed');
+    const local = await get<NewsItem[]>('newsFeed') || [];
+    return local.filter(n => new Date(n.timestamp) > oneDayAgo);
 };
 
 // --- AUDIO & ASSETS ---
@@ -373,7 +376,7 @@ export const syncAndCacheAudioAssets = async () => {
     } catch (e) {}
 };
 
-// --- ANTHEM LOGIC (TIMESTAMP SYSTEM) ---
+// --- ANTHEM LOGIC ---
 const ANTHEM_STATUS_KEY = 'anthem_status';
 
 export const getAnthemStatus = async (): Promise<boolean> => {

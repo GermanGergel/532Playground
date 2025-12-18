@@ -1,3 +1,4 @@
+
 export const ua = {
     // Navigation
     navHome: "ГОЛОВНА",
@@ -5,6 +6,14 @@ export const ua = {
     navStatistics: "СТАТИСТИКА",
     navHistory: "ІСТОРИЯ",
     navSettings: "НАЛАШТУВАННЯ",
+
+    // Hub
+    hubTitle: "ХАБ КЛУБУ",
+    hubHeroTitle: "ТВІЙ СТАТУС",
+    hubStatsMembers: "Учасників",
+    hubStatsGoals: "Всього Голів",
+    hubStatsAssists: "Всього Асистів",
+    hubJoinSquad: "ВСТУПИТИ В СКЛАД",
 
     // General
     loading: "Завантаження...",
@@ -18,7 +27,6 @@ export const ua = {
     saveChanges: "Зберегти",
     profileLinkCopied: "Посилання на профіль скопійовано!",
 
-    // --- FIX: Added missing Ledger translations for Ukrainian ---
     // Ledger (NEW)
     ledgerTitle: "КАСА",
     ledgerEmpty: "Немає активного тренування",
@@ -35,7 +43,7 @@ export const ua = {
     playersPerTeam: "Гравців у команді",
     matchDuration: "Тривалість (хв)",
     goalsToWin: "Голів до перемоги",
-    autoRotate: "Авто-ротація",
+    autoRotate: "Авто-ротация",
     autoRotateDesc: "Переможець залишається",
     playUntilLossDesc: "Гра до поразки",
     addPlayers: "ОБРАТИ ГРАВЦІВ",
@@ -167,7 +175,7 @@ export const ua = {
     monthlyGoals: "Голи",
     monthlyAssists: "Асисти",
     monthlyWins: "Перемоги",
-    allTimeStats: "За весь час",
+    allTimeStats: "За все час",
     thSessions: "Сес",
     winRate: "% Перемог",
     winLossDraw: "В-Н-П",
@@ -273,7 +281,7 @@ export const ua = {
     badge_fortress_desc: "Відіграти на нуль (0 пропущених) у 3 матчах.",
     badge_club_legend_goals: "Легенда Клубу (Голи)",
     badge_club_legend_goals_desc: "Досягти кар'єрної позначки по голах (40/60/80+).",
-    badge_club_legend_assists: "Легенда Клубу (Асисти)",
+    badge_club_legend_assists: "Легенда Клубу (Ассисты)",
     badge_club_legend_assists_desc: "Досягти кар'єрної позначки по асистах (40/60/80+).",
     badge_veteran: "Ветеран",
     badge_veteran_desc: "Зіграти значну кількість сесій (20/50+).",

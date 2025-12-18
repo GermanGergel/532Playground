@@ -7,10 +7,18 @@ export const ru = {
     navHistory: "ИСТОРИЯ",
     navSettings: "НАСТРОЙКИ",
 
+    // Hub
+    hubTitle: "ХАБ КЛУБА",
+    hubHeroTitle: "ТВОЙ СТАТУС",
+    hubStatsMembers: "Участников",
+    hubStatsGoals: "Всего Голов",
+    hubStatsAssists: "Всего Ассистов",
+    hubJoinSquad: "ВСТУПИТИ В СОСТАВ",
+
     // General
     loading: "Загрузка...",
     continueSession: "ПРОДОЛЖИТЬ СЕССИЮ",
-    newSession: "НОВАЯ СЕССИЯ",
+    newSession: "НОВАЯ СЕСИЯ",
     playerHub: "ИГРОКИ",
     createAnnouncement: "СОЗДАТЬ АНОНС",
     confirm: "Подтвердить",
@@ -19,8 +27,8 @@ export const ru = {
     saveChanges: "Сохранить",
     profileLinkCopied: "Ссылка на профиль скопирована!",
 
-    // Ledger (NEW)
-    ledgerTitle: "КАССА",
+    // Ledger
+    ledgerTitle: "LEDGER",
     ledgerEmpty: "Нет активной тренировки",
     ledgerCollected: "Собрано",
     ledgerClear: "ОЧИСТИТЬ ТАБЛИЦУ",
@@ -58,7 +66,7 @@ export const ru = {
     paused: "ПАУЗА",
     round: "Раунд",
     startGame: "НАЧАТЬ ИГРУ",
-    finishGame: "ЗАВЕРШИТЬ ИГРУ",
+    finishGame: "ЗАВЕРШИТИ ГРУ",
     endSession: "ЗАВЕРШИТЬ СЕССИЮ",
     goal: "ГОЛ",
     assistant: "АССИСТ",

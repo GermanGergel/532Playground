@@ -141,6 +141,14 @@ export const HomeScreen: React.FC = () => {
             </div>
             
             <main className="flex flex-col items-center gap-4 w-full mt-auto">
+                 <Button 
+                    variant="secondary" 
+                    onClick={() => navigate('/hub')} 
+                    className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 border border-dark-accent-start/30"
+                 >
+                    {t.hubTitle}
+                 </Button>
+
                  {activeSession ? (
                     <Button 
                         variant="secondary"

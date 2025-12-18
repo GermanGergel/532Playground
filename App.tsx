@@ -7,7 +7,7 @@ import {
     StatisticsScreen, HistoryScreen, SessionReportScreen, SettingsScreen, 
     PlayerHubScreen, PlayerDatabaseScreen, PlayerProfileScreen,
     NewsFeedScreen, VoiceSettingsScreen, AnnouncementScreen, PublicProfileScreen,
-    PromoScreen, PromoAdminScreen, LedgerScreen
+    PromoScreen, PromoAdminScreen, LedgerScreen, PublicHubScreen
 } from './screens';
 import { useApp } from './context';
 
@@ -15,30 +15,23 @@ const App: React.FC = () => {
   const location = useLocation();
   const { activeSession, setPlayerDbSort, setPlayerDbSearch } = useApp();
 
-  // Add global protection against accidental page reloads during an entire session.
+  // Global protection against reloads
   React.useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
         event.preventDefault();
-        event.returnValue = ''; // Required for some browsers to trigger the prompt
+        event.returnValue = ''; 
     };
-
     if (activeSession) {
         window.addEventListener('beforeunload', handleBeforeUnload);
     } else {
         window.removeEventListener('beforeunload', handleBeforeUnload);
     }
-
-    return () => {
-        window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [activeSession]);
 
-  // RESET PLAYER DATABASE FILTERS
+  // Reset player DB filters when leaving section
   React.useEffect(() => {
-      const isPlayerSection = 
-          location.pathname.includes('/player-database') || 
-          location.pathname.includes('/player/'); 
-
+      const isPlayerSection = location.pathname.includes('/player-database') || location.pathname.includes('/player/'); 
       if (!isPlayerSection) {
           setPlayerDbSort('date');
           setPlayerDbSearch('');
@@ -47,14 +40,20 @@ const App: React.FC = () => {
 
   const pathsWithoutNav = [
     '/public-profile/:id',
-    '/promo' 
+    '/promo',
+    '/hub'
   ];
 
   const showNav = !pathsWithoutNav.some(path => matchPath(path, location.pathname));
+  const isHub = !!matchPath('/hub', location.pathname);
 
   return (
     <div className="min-h-screen bg-dark-bg text-dark-text font-sans selection:bg-dark-accent-start selection:text-dark-bg">
-      <div className={`max-w-md mx-auto min-h-screen relative shadow-2xl shadow-black/50 bg-dark-bg ${showNav ? 'pb-24' : ''}`}>
+      {/* 
+          WEB MODE LOGIC: 
+          If on /hub, we use 'w-full' instead of 'max-w-md mx-auto'.
+      */}
+      <div className={`${isHub ? 'w-full' : 'max-w-md mx-auto'} min-h-screen relative shadow-2xl shadow-black/50 bg-dark-bg ${showNav ? 'pb-24' : ''}`}>
         <Routes>
           <Route path="/" element={<HomeScreen />} />
           <Route path="/setup" element={<NewGameSetupScreen />} />
@@ -74,6 +73,7 @@ const App: React.FC = () => {
           <Route path="/news-feed" element={<NewsFeedScreen />} />
           <Route path="/announcement" element={<AnnouncementScreen />} />
           <Route path="/promo" element={<PromoScreen />} />
+          <Route path="/hub" element={<PublicHubScreen />} />
         </Routes>
         {showNav && <BottomNav />}
       </div>

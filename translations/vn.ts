@@ -1,3 +1,4 @@
+
 export const vn = {
     // Navigation
     navHome: "TRANG CHỦ",
@@ -5,6 +6,14 @@ export const vn = {
     navStatistics: "THỐNG KÊ",
     navHistory: "LỊCH SỬ",
     navSettings: "CÀI ĐẶT",
+
+    // Hub
+    hubTitle: "TRUNG TÂM CLB",
+    hubHeroTitle: "XÁC ĐỊNH",
+    hubStatsMembers: "Thành viên",
+    hubStatsGoals: "Tổng bàn thắng",
+    hubStatsAssists: "Tổng kiến tạo",
+    hubJoinSquad: "GIA NHẬP ĐỘI",
 
     // General
     loading: "Đang tải...",
@@ -18,7 +27,6 @@ export const vn = {
     saveChanges: "Lưu thay đổi",
     profileLinkCopied: "Đã sao chép liên kết hồ sơ!",
 
-    // --- FIX: Added missing Ledger translations for Vietnamese ---
     // Ledger (NEW)
     ledgerTitle: "SỔ THU CHI",
     ledgerEmpty: "Không có buổi tập nào đang diễn ra",
