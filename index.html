@@ -49,8 +49,6 @@
             'gradient-bg': 'gradient-bg 5s ease infinite',
             'score-update': 'score-update 0.5s ease-in-out',
             'pulse': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-            'hud-scan': 'hud-scan 3s linear infinite',
-            'photo-depth': 'photo-depth-entry 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
           },
           keyframes: {
             'gradient-bg': {
@@ -66,25 +64,22 @@
                 '0%, 100%': { opacity: 1 },
                 '50%': { opacity: 0.5 },
             },
-            'hud-scan': {
-              '0%': { top: '-10%' },
-              '100%': { top: '110%' },
-            },
-            'photo-depth-entry': {
-              '0%': { transform: 'scale(1) translateZ(0)' },
-              '100%': { transform: 'scale(1.1) translateZ(50px)' },
-            }
           }
         },
       },
     }
   </script>
   <style>
-    /* CRITICAL FIX FOR SCROLLING */
+    /* CRITICAL FIX FOR SCROLLING: RESTORED NATURAL BEHAVIOR */
     html, body {
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       background-color: #1A1D24; 
+      
+      /* Removed strict touch-action: pan-y to allow diagonal scrolling to propagate naturally */
+      /* Removed strict overscroll-behavior to allow native bounce which helps gesture recognition */
+      
+      /* Hard clips any content overflowing width */
       overflow-x: hidden;
       width: 100%;
       max-width: 100vw;
@@ -97,15 +92,27 @@
         overflow-x: hidden;
     }
 
+    /* Custom Selection Color */
+    ::selection {
+      background-color: #00F2FE;
+      color: #1A1D24;
+      text-shadow: none;
+    }
+    ::-moz-selection { /* Firefox */
+      background-color: #00F2FE;
+      color: #1A1D24;
+      text-shadow: none;
+    }
+    /* Hide Scrollbar Globally for Native Feel */
     ::-webkit-scrollbar {
         width: 0px;
         background: transparent;
         display: none;
     }
     * {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-        box-sizing: border-box;
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+        box-sizing: border-box; /* Global box sizing to prevent padding blowouts */
     }
 
     .gradient-text {
@@ -117,46 +124,7 @@
       background: linear-gradient(90deg, #00F2FE, #4CFF5F);
       background-size: 200% 200%;
     }
-    
-    /* PARALLAX DEPTH EFFECT CLASSES */
-    .photo-parallax-container {
-      perspective: 1200px;
-      transform-style: preserve-3d;
-    }
-    
-    .photo-parallax-layer {
-      will-change: transform;
-      transform-style: preserve-3d;
-    }
-    
-    /* HUD PHOTO EFFECT CLASSES */
-    .photo-hud-container {
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .photo-hud-overlay {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      z-index: 5;
-      background: 
-        radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.4) 100%),
-        repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.05) 0px, rgba(0, 0, 0, 0.05) 1px, transparent 1px, transparent 2px);
-    }
-    
-    .photo-hud-scanner {
-      position: absolute;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: linear-gradient(to right, transparent, #00F2FE, transparent);
-      box-shadow: 0 0 15px #00F2FE;
-      opacity: 0.4;
-      z-index: 6;
-      animation: hud-scan 4s linear infinite;
-    }
-
+    /* Updated for sharper export: Reduced blur radius */
     .neon-text-glow {
       text-shadow: 0 0 2px rgba(0, 242, 254, 0.8), 0 0 5px rgba(76, 255, 95, 0.5);
     }
@@ -179,17 +147,25 @@
       color: #F0F2F5;
       filter: drop-shadow(0 0 2px rgba(240, 242, 245, 0.8));
     }
+    /* Hide spin buttons on number inputs */
     input[type=number]::-webkit-inner-spin-button,
     input[type=number]::-webkit-outer-spin-button {
         -webkit-appearance: none;
         margin: 0;
     }
     input[type=number] {
-        -moz-appearance: textfield;
+        -moz-appearance: textfield; /* Firefox */
     }
   </style>
   <link rel="manifest" href="/manifest.json">
+  
+  <!-- COMPLIANT IOS ICON IMPLEMENTATION -->
+  <!-- 1. Must be a PNG file (not SVG data URI) -->
+  <!-- 2. Must be exactly 180x180 for best results -->
+  <!-- 3. Must be opaque (no transparency) -->
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  
+  <!-- Fallback/Browser Icon -->
   <link rel="icon" type="image/svg+xml" sizes="any" href="/icon.svg?v=7">
   
 <script type="importmap">
