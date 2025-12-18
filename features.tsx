@@ -430,12 +430,16 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
             {/* --- CARD HEADER --- */}
             <div 
                 id={`player-card-header-${player.id}`}
-                className={`relative rounded-3xl h-[440px] overflow-hidden text-white p-4 bg-dark-surface ${cardClass}`}
+                className={`relative rounded-3xl h-[440px] overflow-hidden text-white p-4 bg-dark-surface ${cardClass} photo-hud-container photo-parallax-container`}
             >
-                {/* Div with background-image for High Quality Export */}
+                {/* HUD EFFECT OVERLAY */}
+                <div className="photo-hud-overlay"></div>
+                <div className="photo-hud-scanner"></div>
+
+                {/* Div with background-image for High Quality Export + PARALLAX EFFECT */}
                 {player.playerCard && (
                     <div
-                        className="absolute inset-0 w-full h-full bg-cover bg-no-repeat"
+                        className="absolute inset-0 w-full h-full bg-cover bg-no-repeat photo-parallax-layer animate-photo-depth"
                         style={{
                             backgroundImage: `url(${player.playerCard})`,
                             backgroundPosition: 'center 5%',

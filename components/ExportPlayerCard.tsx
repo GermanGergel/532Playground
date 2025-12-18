@@ -78,7 +78,7 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
                 height: 711,
                 boxShadow: 'inset 0 0 20px 10px rgba(0,0,0,0.5)' // Inner shadow for depth
             }} 
-            className="relative font-chakra bg-dark-surface text-white overflow-hidden"
+            className="relative font-chakra bg-dark-surface text-white overflow-hidden photo-parallax-container"
         >
             {/* Layer 0: Big Name in the back */}
             <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
@@ -93,10 +93,9 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
             {/* Layer 1: Background Image Div (with depth effect) */}
             {player.playerCard ? (
                 <div
-                    className="absolute inset-0 w-full h-full bg-cover bg-center z-10"
+                    className="absolute inset-0 w-full h-full bg-cover bg-center z-10 photo-parallax-layer animate-photo-depth"
                     style={{ 
                         backgroundImage: `url(${player.playerCard})`,
-                        transform: 'scale(1.05) perspective(1000px)', // 3D effect
                     }}
                 />
             ) : (

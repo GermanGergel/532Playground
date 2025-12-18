@@ -43,15 +43,19 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
 
     return (
         <div>
-            <div className={cardClass} style={style}>
+            <div className={`${cardClass} photo-hud-container photo-parallax-container`} style={style}>
                 {player.playerCard && (
                     <div 
-                        className="absolute inset-0 w-full h-full bg-cover bg-no-repeat" 
+                        className="absolute inset-0 w-full h-full bg-cover bg-no-repeat photo-parallax-layer animate-photo-depth" 
                         style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }} 
                     />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
                 
+                {/* HUD EFFECT OVERLAY */}
+                <div className="photo-hud-overlay"></div>
+                <div className="photo-hud-scanner"></div>
+
                 {/* Skills - Left Side (Aligned perfectly with main card) */}
                 {/* HIDE when badge modal is open */}
                 {!isBadgeModalOpen && (

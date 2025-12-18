@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Team, Player } from '../types';
 import { User } from '../icons';
@@ -110,7 +111,7 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, className = 
         xl: 'w-14 h-14',
     };
 
-    const containerClasses = `relative group ${sizeClasses[size]} ${className}`;
+    const containerClasses = `relative group ${sizeClasses[size]} ${className} photo-hud-container photo-parallax-container`;
 
     const commonAvatarClasses = `rounded-full bg-dark-surface border-2 border-white/20 w-full h-full overflow-hidden`;
     
@@ -129,16 +130,20 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, className = 
 
     return (
         <div className={containerClasses} draggable={draggable}>
+             {/* HUD EFFECTS ON AVATAR */}
+             <div className="photo-hud-overlay"></div>
+             <div className="photo-hud-scanner"></div>
+             
              {player?.photo ? (
                 <div
-                    className={`${commonAvatarClasses} bg-cover bg-no-repeat`}
+                    className={`${commonAvatarClasses} bg-cover bg-no-repeat photo-parallax-layer animate-photo-depth`}
                     style={{
                         backgroundImage: `url(${player.photo})`,
                         backgroundPosition: 'center 20%',
                     }}
                 />
             ) : (
-                <div className={`flex items-center justify-center font-bold text-dark-text-secondary ${bgColor} ${commonAvatarClasses}`}>
+                <div className={`flex items-center justify-center font-bold text-dark-text-secondary ${bgColor} ${commonAvatarClasses} photo-parallax-layer animate-photo-depth`}>
                     <User className={`${iconSizeClasses[size]}`} />
                 </div>
             )}
