@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -158,7 +157,7 @@ const NavHubButton: React.FC<{
     >
         <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 
             ${isActive 
-                ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/5 drop-shadow-[0_0_8px_rgba(0,242,254,0.3)] shadow-[0_0_15px_rgba(0,242,254,0.1)]' 
+                ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/5 drop-shadow-[0_0_12px_rgba(0,242,254,0.5)] shadow-[0_0_20px_rgba(0,242,254,0.25)]' 
                 : 'text-white/60 border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/30 hover:text-white hover:shadow-[0_0_12px_rgba(255,255,255,0.15)]'
             }`}>
             {React.cloneElement(icon as React.ReactElement, { className: "w-4 h-4" })}
@@ -523,11 +522,12 @@ export const PublicHubScreen: React.FC = () => {
                 archiveViewDate={archiveViewDate}
                 onHomeClick={() => {
                     setIsDashboardOpen(false);
+                    setDashboardView('dashboard'); // Reset to default view
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
             />
 
-            <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-28 pb-4 md:pb-8 overflow-y-auto overscroll-none ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
+            <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
                 <div className="absolute inset-0 z-0 pointer-events-none">
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
                     <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
