@@ -1,16 +1,17 @@
+
 export const en = {
   // Navigation
   navHome: "Home",
   navLive: "Live",
   navStatistics: "Stats",
-  navHistory: "Archive",
+  navHistory: "History",
   navSettings: "Settings",
 
   // Home & Setup
   hubTitle: "Club Hub",
   continueSession: "Continue Session",
   newSession: "New Session",
-  playerHub: "Players",
+  playerHub: "Player Hub",
   createAnnouncement: "Create Poster",
   setupTitle: "New Session Setup",
   sessionName: "Session Name",
@@ -25,7 +26,7 @@ export const en = {
   addPlayers: "Add Players",
 
   // Assign
-  assignPlayersTitle: "Squad",
+  assignPlayersTitle: "Squad Selection",
   searchOrAddPlayer: "Search or add guest...",
   addPlayer: "Add",
   playerPool: "Waiting List",
@@ -55,10 +56,13 @@ export const en = {
   saveChanges: "Save Changes",
   selectWinnerDesc: "Select the winning team to proceed",
   onBench: "On Bench",
+
+  // FIX: Added missing Legionnaire keys for English translation
   legionnaire_replace: "REPLACE",
   legionnaire_select: "SELECT",
   legionnaire_no_players: "No resting players available",
 
+  // FIX: Added missing Session Summary keys for English translation
   // Session Summary
   summary_title: "SESSION SUMMARY",
   summary_location: "LOCATION",
@@ -75,7 +79,7 @@ export const en = {
   exportStandings: "Export Table",
   exportPlayers: "Export Stats",
   exportRounds: "Export History",
-  exportCombined: "Full Report",
+  exportCombined: "Export Full Report",
   exportJson: "Export JSON",
   saveTable: "Save Table",
   thP: "P",
@@ -83,12 +87,12 @@ export const en = {
   thD: "D",
   thL: "L",
   thGD: "GD",
-  thPts: "PTS",
+  thPts: "Pts",
   players: "Player",
   thGP: "GP",
   thG: "G",
   thA: "A",
-  thTotal: "TOT",
+  thTotal: "Tot",
   hubGoals: "GOALS",
   hubPoints: "PTS",
   hubHome: "HOME",
@@ -108,7 +112,7 @@ export const en = {
   hubAnalytics: "Hub Analytics",
   settingsGenDemoSession: "GENERATE DEMO SESSION",
   settingsGenDemoPlayers: "GENERATE 10 PLAYERS",
-  ledgerTitle: "Ledger",
+  ledgerTitle: "Session Ledger",
   ledgerEmpty: "No Data",
   ledgerCollected: "Collected",
   ledgerClear: "Clear Ledger",
@@ -229,11 +233,11 @@ export const en = {
   noBadges: "No badges yet",
 
   // Hub
-  hubTicker1: "532 PLAYGROUND: WHERE STATISTICS MEET PASSION",
-  hubTicker2: "CHALLENGE. IMPROVE. REPEAT.",
-  hubTicker3: "TRAIN HARD • PLAY SMART • RANK UP",
-  hubTicker4: "RESPECT IS THE FOUNDATION. RIVALRY IS THE FIRE.",
-  hubTicker5: "YOUR STATS. YOUR PROGRESS. YOUR STORY.",
+  hubTicker1: "ELITE PERFORMANCE TRACKING",
+  hubTicker2: "LIVE SESSION DATA",
+  hubTicker3: "GLOBAL RANKINGS",
+  hubTicker4: "PLAYER ANALYTICS",
+  hubTicker5: "MATCH ARCHIVE",
   hubAwaitingStats: "AWAITING DATA",
   hubAnalyzingPerformance: "ANALYZING PERFORMANCE...",
   hubDashboardBtn: "DASHBOARD",
@@ -247,15 +251,16 @@ export const en = {
   hubVitalsTitle: "CLUB VITALS",
   hubStatsMembers: "MEMBERS",
   hubSessionsPlayed: "SESSIONS",
-  hubAvgRating: "AVG RATING",
+  hubAvgRating: "AVG OVR",
   hubLocation: "LOCATION",
   hubTimeFrame: "TIME FRAME",
   hubWeather: "WEATHER",
   hubImpact: "IMPACT",
   hubWelcomeText: "Welcome to the official 532 Playground Hub. Track your stats, compare with others, and rise to the top.",
-  hubLeadersTitle: "Session Leaders",
+  hubLeadersTitle: "Season Leaders",
   hubJoinSquad: "Join the Squad",
 
+  // FIX: Added missing Duel keys for English translation
   // Duel
   duel_title: "Duel Selection",
   duel_id_unit: "IDENTIFY UNIT...",

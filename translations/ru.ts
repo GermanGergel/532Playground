@@ -1,20 +1,21 @@
+
 export const ru = {
   // Navigation
   navHome: "Главная",
   navLive: "Матч",
   navStatistics: "Статистика",
-  navHistory: "Архив",
+  navHistory: "История",
   navSettings: "Настройки",
 
   // Home & Setup
   hubTitle: "Клубный Хаб",
-  continueSession: "Продолжить Сессию",
+  continueSession: "Продолжить",
   newSession: "Новая Сессия",
-  playerHub: "Игроки",
+  playerHub: "Хаб Игроков",
   createAnnouncement: "Создать Афишу",
   setupTitle: "Настройка Сессии",
   sessionName: "Название Сессии",
-  gameParameters: "Параметри Игры",
+  gameParameters: "Параметры Игры",
   numTeams: "Количество Команд",
   playersPerTeam: "Игроков в команде",
   matchDuration: "Длительность (мин)",
@@ -25,7 +26,7 @@ export const ru = {
   addPlayers: "Добавить Игроков",
 
   // Assign
-  assignPlayersTitle: "Составы",
+  assignPlayersTitle: "Формирование Составов",
   searchOrAddPlayer: "Найти или добавить гостя...",
   addPlayer: "Добавить",
   playerPool: "Лист Ожидания",
@@ -55,6 +56,8 @@ export const ru = {
   saveChanges: "Сохранить",
   selectWinnerDesc: "Выберите победителя, чтобы продолжить",
   onBench: "На скамейке",
+
+  // FIX: Added missing Legionnaire keys for Russian translation
   legionnaire_replace: "ЗАМЕНИТЬ",
   legionnaire_select: "ВЫБРАТЬ",
   legionnaire_no_players: "Нет свободных игроков",
@@ -109,7 +112,7 @@ export const ru = {
   hubAnalytics: "Аналитика Хаба",
   settingsGenDemoSession: "СОЗДАТЬ ДЕМО СЕССИЮ",
   settingsGenDemoPlayers: "СОЗДАТЬ 10 ИГРОКОВ",
-  ledgerTitle: "Terminal Ledger",
+  ledgerTitle: "Касса Сессии",
   ledgerEmpty: "Нет Данных",
   ledgerCollected: "Собрано",
   ledgerClear: "Очистить Кассу",
@@ -238,7 +241,7 @@ export const ru = {
   hubAwaitingStats: "ОЖИДАНИЕ ДАННЫХ",
   hubAnalyzingPerformance: "АНАЛИЗ ЭФФЕКТИВНОСТИ...",
   hubDashboardBtn: "ДАШБОРД",
-  hubSessionLeaders: "ЛИДЕРЫ СЕССИИ",
+  hubSessionLeaders: "ЛИДЕРЫ СЕЗОНА",
   hubMatchReport: "ОТЧЕТ О МАТЧЕ",
   hubSessionNews: "РАЗВЕДДАННЫЕ",
   hubSessionSquads: "СОСТАВЫ",
@@ -254,7 +257,7 @@ export const ru = {
   hubWeather: "ПОГОДА",
   hubImpact: "ИМПАКТ",
   hubWelcomeText: "Добро пожаловать в официальный хаб 532 Playground. Следи за статистикой, сравнивай результаты и стремись к вершине.",
-  hubLeadersTitle: "Лидеры Сессии",
+  hubLeadersTitle: "Лидеры Сезона",
   hubJoinSquad: "Вступить в Отряд",
 
   // FIX: Corrected Duel keys for Russian translation (were previously Ukrainian)
@@ -277,7 +280,7 @@ export const ru = {
   feature_stats: "Детальная Статистика",
   feature_stats_desc: "Мы считаем голы, ассисты, победы и многое другое.",
   feature_fair: "Умный Баланс",
-  feature_fair_desc: "Команды балансируются алгоритмом.",
+  feature_fair_desc: "Команды балансуються алгоритмом.",
   roadmap_title: "БУДУЩЕЕ",
   roadmap_video: "Видео Хайлайты",
   roadmap_video_desc: "AI нарезки твоих голов.",
@@ -287,8 +290,8 @@ export const ru = {
   cta_desc: "Напиши нам, чтобы записаться.",
   tap_to_enter: "НАЖМИ, ЧТОБЫ ВОЙТИ",
   hub_section_title: "ЭКОСИСТЕМА КЛУБА",
-  hub_section_desc: "Центральный интеллект.",
-  hub_badge: "ТОЛЬКО ДЛЯ УЧАСНИКОВ",
+  hub_section_desc: "Центральний интеллект.",
+  hub_badge: "ТОЛЬКО ДЛЯ УЧАСТНИКОВ",
   hub_f1: "Рейтинги",
   hub_f2: "Архив",
   hub_f3: "Live Данные",
@@ -337,7 +340,7 @@ export const ru = {
   badge_decisive_factor_desc: "Гол/Ассист в 3 победах",
   badge_unsung_hero: "Неоспіваний Герой",
   badge_unsung_hero_desc: "Больше всех побед, мало очков",
-  badge_first_blood: "Первая Кровь",
+  badge_first_blood: "Первая Кров",
   badge_first_blood_desc: "3x Открывающих гола",
   badge_duplet: "Duplet",
   badge_duplet_desc: "2x Дублі у перемогах",

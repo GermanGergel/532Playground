@@ -1,3 +1,4 @@
+
 export const vn = {
   // Navigation
   navHome: "Trang Chủ",
@@ -25,7 +26,7 @@ export const vn = {
   addPlayers: "Thêm Cầu Thủ",
 
   // Assign
-  assignPlayersTitle: "Đội Hình",
+  assignPlayersTitle: "Chọn Đội Hình",
   searchOrAddPlayer: "Tìm hoặc thêm khách...",
   addPlayer: "Thêm",
   playerPool: "Danh Sách Chờ",
@@ -55,10 +56,13 @@ export const vn = {
   saveChanges: "Lưu Thay Đổi",
   selectWinnerDesc: "Chọn đội thắng để tiếp tục",
   onBench: "Dự Bị",
+
+  // FIX: Added missing Legionnaire keys for Vietnamese translation
   legionnaire_replace: "THAY THẾ",
   legionnaire_select: "CHỌN",
   legionnaire_no_players: "Không có cầu thủ dự bị",
 
+  // FIX: Added missing Session Summary keys for Vietnamese translation
   // Session Summary
   summary_title: "TỔNG KẾT BUỔI TẬP",
   summary_location: "ĐỊA ĐIỂM",
@@ -78,21 +82,21 @@ export const vn = {
   exportCombined: "Báo Cáo Đầy Đủ",
   exportJson: "Xuất JSON",
   saveTable: "Lưu Bảng",
-  thP: "P",
-  thW: "W",
-  thD: "D",
-  thL: "L",
-  thGD: "GD",
-  thPts: "PTS",
+  thP: "Tr",
+  thW: "T",
+  thD: "H",
+  thL: "B",
+  thGD: "HS",
+  thPts: "Đ",
   players: "Cầu Thủ",
-  thGP: "GP",
-  thG: "G",
-  thA: "A",
-  thTotal: "TOT",
+  thGP: "Trận",
+  thG: "Bàn",
+  thA: "KT",
+  thTotal: "Tổng",
   hubGoals: "BÀN THẮNG",
-  hubPoints: "PTS",
+  hubPoints: "ĐIỂM",
   hubHome: "NHÀ",
-  hubResult: "RES",
+  hubResult: "KQ",
   hubAway: "KHÁCH",
 
   // History
@@ -237,7 +241,7 @@ export const vn = {
   hubAwaitingStats: "ĐANG CHỜ DỮ LIỆU",
   hubAnalyzingPerformance: "ĐANG PHÂN TÍCH...",
   hubDashboardBtn: "DASHBOARD",
-  hubSessionLeaders: "DẪN ĐẦU BUỔI TẬP",
+  hubSessionLeaders: "DẪN ĐẦU MÙA GIẢI",
   hubMatchReport: "BÁO CÁO TRẬN ĐẤU",
   hubSessionNews: "TIN TỨC",
   hubSessionSquads: "ĐỘI HÌNH",
@@ -247,13 +251,13 @@ export const vn = {
   hubVitalsTitle: "CHỈ SỐ CLB",
   hubStatsMembers: "THÀNH VIÊN",
   hubSessionsPlayed: "BUỔI TẬP",
-  hubAvgRating: "RATING TB",
+  hubAvgRating: "AVG OVR",
   hubLocation: "ĐỊA ĐIỂM",
   hubTimeFrame: "THỜI GIAN",
   hubWeather: "THỜI TIẾT",
   hubImpact: "TÁC ĐỘNG",
   hubWelcomeText: "Chào mừng đến với Hub 532 Playground chính thức. Theo dõi chỉ số, so sánh với người khác và leo lên đỉnh vinh quang.",
-  hubLeadersTitle: "Dẫn Đầu Buổi Tập",
+  hubLeadersTitle: "Dẫn Đầu Mùa Giải",
   hubJoinSquad: "Tham Gia Đội Hình",
 
   // Duel

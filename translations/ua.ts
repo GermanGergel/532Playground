@@ -1,3 +1,4 @@
+
 export const ua = {
   // Navigation
   navHome: "Головна",
@@ -68,7 +69,7 @@ export const ua = {
   summary_condition: "УМОВИ",
 
   // Stats
-  teamStandings: "Турнірна Таблиця",
+  teamStandings: "Турнирна Таблиця",
   playerStatistics: "Статистика Гравців",
   gameHistory: "Історія Матчів",
   liveStatistics: "Live Статистика",
@@ -230,14 +231,14 @@ export const ua = {
 
   // Hub
   hubTicker1: "ЕЛІТНИЙ ТРЕКІНГ",
-  hubTicker2: "LIVE ДАНІ СЕСІЇ",
+  hubTicker2: "LIVE ДАНІ СЕССИИ",
   hubTicker3: "ГЛОБАЛЬНИЙ РЕЙТИНГ",
   hubTicker4: "АНАЛІТИКА ГРАВЦІВ",
   hubTicker5: "АРХІВ МАТЧІВ",
   hubAwaitingStats: "ОЧІКУВАННЯ ДАНИХ",
   hubAnalyzingPerformance: "АНАЛІЗ ЕФЕКТИВНОСТІ...",
   hubDashboardBtn: "ДАШБОРД",
-  hubSessionLeaders: "ЛІДЕРИ СЕСІЇ",
+  hubSessionLeaders: "ЛІДЕРИ СЕЗОНУ",
   hubMatchReport: "ЗВІТ ПРО МАТЧ",
   hubSessionNews: "РОЗВІДДАНІ",
   hubSessionSquads: "СКЛАДИ",
@@ -246,15 +247,15 @@ export const ua = {
   hubGames: "МАТЧI",
   hubVitalsTitle: "ПОКАЗНИКИ КЛУБУ",
   hubStatsMembers: "УЧАСНИКИ",
-  hubSessionsPlayed: "СЕСІЇ",
+  hubSessionsPlayed: "СЕССІЇ",
   hubAvgRating: "СЕРЕДНІЙ OVR",
   hubLocation: "ЛОКАЦІЯ",
   hubTimeFrame: "ЧАС",
   hubWeather: "ПОГОДА",
   hubImpact: "ІМПАКТ",
   hubWelcomeText: "Ласкаво просимо до офіційного хабу 532 Playground. Слідкуй за статистикою, порівнюй результати та прагни до вершини.",
-  hubLeadersTitle: "Лідери Сесії",
-  hubJoinSquad: "Вступити в Загін",
+  hubLeadersTitle: "Лідери Сезону",
+  hubJoinSquad: "Вступить в Загін",
 
   // Duel
   duel_title: "Вибір Дуелі",
@@ -282,7 +283,7 @@ export const ua = {
   roadmap_leagues: "Ліги",
   roadmap_leagues_desc: "Сезонні кубки та призи.",
   cta_join: "ВСТУПИТИ",
-  cta_desc: "Напиши нам, щоб записатися.",
+  cta_desc: "Напиши нам, щоб записаться.",
   tap_to_enter: "НАТИСНИ, ЩОБ УВІЙТИ",
   hub_section_title: "ЕКОСИСТЕМА КЛУБУ",
   hub_section_desc: "Центральний інтелект.",

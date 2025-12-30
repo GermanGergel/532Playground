@@ -96,7 +96,7 @@ const MotivationalTicker: React.FC = () => {
 };
 
 const StaticSoccerBall: React.FC = () => (
-    <div className="absolute top-1/2 -translate-y-1/2 left-[118px] md:left-[152px] w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none transition-all duration-500">
+    <div className="absolute top-1/2 -translate-y-1/2 left-[135px] md:left-[175px] w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none transition-all duration-500">
         <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] overflow-visible">
             <defs>
                 <radialGradient id="ballShading" cx="40%" cy="35%" r="65%"><stop offset="0%" stopColor="#ffffff" /><stop offset="50%" stopColor="#e2e8f0" /><stop offset="85%" stopColor="#94a3b8" /><stop offset="100%" stopColor="#1e293b" /></radialGradient>
@@ -126,12 +126,12 @@ const StaticSoccerBall: React.FC = () => (
 const HangingTag: React.FC<{ digit: string; label: string; height: number; delay: string; pulseDuration: string }> = ({ digit, label, height, delay, pulseDuration }) => (
     <div className="relative flex flex-col items-center group/fiber">
         <span className="font-black text-2xl md:text-3xl text-[#00F2FE] tracking-tighter z-10 leading-none" style={{ textShadow: '0 0 10px rgba(0,242,254,0.6)' }}>{digit}</span>
-        <div className="absolute top-[22px] w-[0.5px] bg-[#00F2FE]/20 origin-top animate-pendant-swing" style={{ height: `${height}px`, animationDelay: delay, boxShadow: '0 0 3px rgba(0,242,254,0.1)' }}>
+        <div className="absolute top-[26px] w-[0.5px] bg-[#00F2FE]/30 origin-top animate-pendant-swing" style={{ height: `${height}px`, animationDelay: delay, boxShadow: '0 0 3px rgba(0,242,254,0.1)' }}>
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1.2px] h-[3px] bg-[#00F2FE] rounded-full opacity-0 animate-fiber-pulse" style={{ animationDuration: pulseDuration, animationDelay: delay, boxShadow: '0 0 5px #00F2FE' }}></div>
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full pt-0.5">
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full pt-1">
                 <div className="relative flex flex-col items-center">
-                    <div className="absolute inset-0 blur-[6px] bg-[#00F2FE]/15 rounded-full scale-[2] pointer-events-none opacity-40"></div>
-                    <span className="relative text-[8px] font-black tracking-[0.2em] text-[#00F2FE] whitespace-nowrap uppercase italic" style={{ textShadow: '0 0 6px rgba(0,242,254,0.7)' }}>{label}</span>
+                    <div className="absolute inset-0 blur-[8px] bg-[#00F2FE]/20 rounded-full scale-[2.5] pointer-events-none opacity-40"></div>
+                    <span className="relative text-[9px] font-black tracking-[0.25em] text-[#00F2FE] whitespace-nowrap uppercase italic" style={{ textShadow: '0 0 8px rgba(0,242,254,0.8)' }}>{label}</span>
                 </div>
             </div>
         </div>
@@ -209,9 +209,9 @@ const HubNav: React.FC<{
             `}} />
             <div className="flex items-center shrink-0 h-full relative pl-10">
                 <div className="flex items-center">
-                    <HangingTag digit="5" label="PLAYPLAYERS" height={20} delay="0s" pulseDuration="2.8s" />
-                    <HangingTag digit="3" label="SQUADS" height={45} delay="1.5s" pulseDuration="4.2s" />
-                    <HangingTag digit="2" label="GOALS" height={30} delay="0.8s" pulseDuration="3.7s" />
+                    <HangingTag digit="5" label="PLAYPLAYERS" height={38} delay="0s" pulseDuration="2.8s" />
+                    <HangingTag digit="3" label="SQUADS" height={68} delay="1.5s" pulseDuration="4.2s" />
+                    <HangingTag digit="2" label="GOALS" height={48} delay="0.8s" pulseDuration="3.7s" />
                     <div className="h-4 w-px bg-white/15 ml-3 md:ml-4"></div>
                     <div className="flex flex-col space-y-0.5 ml-2">
                         <span className="font-black text-[9px] tracking-[0.15em] text-white uppercase leading-none">Club</span>
@@ -220,7 +220,7 @@ const HubNav: React.FC<{
                     <StaticSoccerBall />
                 </div>
             </div>
-            <div className={`flex-grow h-full overflow-hidden flex items-center ${isDashboardOpen ? 'justify-center px-4' : 'justify-start pl-16 md:pl-28 pr-4'}`}>
+            <div className={`flex-grow h-full overflow-hidden flex items-center ${isDashboardOpen ? 'justify-center px-4' : 'justify-start pl-20 md:pl-36 pr-4'}`}>
                 {isDashboardOpen ? (
                     <div className="flex items-center gap-8 min-w-fit">
                         <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center">
@@ -400,11 +400,13 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                             <p className="font-bold text-white tracking-widest text-sm">OVR</p>
                             <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
                             {player.badges && Object.keys(player.badges).length > 0 && (
-                                <BadgeDisplay badges={player.badges} limit={6} onOpenChange={setIsBadgeModalOpen} />
+                                <div className="text-[#FFD700]">
+                                    <BadgeDisplay badges={player.badges} limit={5} onOpenChange={setIsBadgeModalOpen} />
+                                </div>
                             )}
                         </div>
                     </div>
-                    <div className="text-center flex-shrink-0 relative z-30 pb-1"><h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg">{player.nickname} {player.surname}</h1></div>
+                    <div className="text-center flex-shrink-0 relative z-30 pb-4 md:pb-6"><h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg">{player.nickname} {player.surname}</h1></div>
                 </div>
             </div>
         </div>
@@ -417,7 +419,7 @@ const CinematicStatCard: React.FC<{ value: string | number; label: string; }> = 
             <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-40"></div>
             <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-white/5 to-transparent blur-xl"></div>
             <div className="relative h-full z-10 flex flex-col items-center justify-center gap-2">
-                <span className="font-russo font-black text-7xl text-white tracking-tight leading-none">{value}</span>
+                <span className="font-russo font-black text-7xl text-white tracking-normal leading-none">{value}</span>
                 <span className="font-chakra font-bold text-xs text-white/50 uppercase tracking-[0.2em]">{label}</span>
             </div>
         </div>
@@ -455,7 +457,7 @@ export const PublicHubScreen: React.FC = () => {
     const clubStats = useMemo(() => {
         const confirmedPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
         const totalPlayers = confirmedPlayers.length;
-        const totalSessions = history.length;
+        const totalSessions = history.length + 1; // +1 to offset missing DB record as requested
         const avgRating = totalPlayers > 0 ? Math.round(confirmedPlayers.reduce((sum, p) => sum + p.rating, 0) / totalPlayers) : 0;
         return { totalPlayers, totalSessions, avgRating };
     }, [allPlayers, history]);
