@@ -11,7 +11,7 @@ import {
     saveActiveVoicePackToDB,
     loadHistoryFromDB,
     loadNewsFromDB,
-    fetchRemotePlayers // NEW IMPORT
+    fetchRemotePlayers
 } from './db';
 import { initializeAppState } from './services/appInitializer';
 import { useMatchTimer } from './hooks/useMatchTimer';
@@ -47,6 +47,10 @@ const AppContext = React.createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isLoading, setIsLoading] = React.useState(true);
+  
+  // Safety lock: Don't auto-save to DB until we have confirmed sync with cloud
+  const [isSaveEnabled, setIsSaveEnabled] = React.useState(false);
+
   const [activeSession, setActiveSession] = React.useState<Session | null>(null);
   const [allPlayers, setAllPlayers] = React.useState<Player[]>([]);
   const [history, setHistory] = React.useState<Session[]>([]);
@@ -58,7 +62,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [playerDbSort, setPlayerDbSort] = React.useState<SortBy>('date');
   const [playerDbSearch, setPlayerDbSearch] = React.useState<string>('');
 
-  // --- GLOBAL timer LOGIC (Restored) ---
+  // --- GLOBAL timer LOGIC ---
   const { displayTime } = useMatchTimer(activeSession, setActiveSession, activeVoicePack);
 
   // --- INITIAL DATA LOAD ---
@@ -74,26 +78,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setLanguageState(initialState.language);
             setActiveVoicePackState(initialState.activeVoicePack);
             
-            // 2. BACKGROUND SYNC (The Fix)
-            // Wait 1 second to let UI settle, then fetch fresh data from cloud
+            // Remove Loading Screen quickly for UX
+            setTimeout(() => setIsLoading(false), 500);
+
+            // 2. BACKGROUND SYNC (Crucial for fixing the "65 vs 68" issue)
+            // We do NOT enable saving yet. We wait to see if Cloud has newer data.
             setTimeout(async () => {
-                const remotePlayers = await fetchRemotePlayers();
-                if (remotePlayers && remotePlayers.length > 0) {
-                    console.log("Context: Updating players from background sync");
-                    setAllPlayers(prev => {
-                        // Merge logic if needed, or simple replacement
-                        // For now, simple replacement is safest to fix "stale rating"
-                        return remotePlayers;
-                    });
+                try {
+                    const remotePlayers = await fetchRemotePlayers();
+                    if (remotePlayers && remotePlayers.length > 0) {
+                        console.log("Context: Overwriting local players with fresh Cloud data.");
+                        setAllPlayers(remotePlayers);
+                    }
+                } catch (e) {
+                    console.error("Background sync failed", e);
+                } finally {
+                    // 3. ENABLE SAVING
+                    // Only NOW do we allow the app to write back to the DB.
+                    // This prevents the 'stale local data' from overwriting the 'fresh cloud data' on boot.
+                    console.log("Context: Save Guard Lifted. Auto-save enabled.");
+                    setIsSaveEnabled(true);
                 }
             }, 1000);
 
         } catch (error) {
             console.error("Critical error loading data:", error);
-        } finally {
-            setTimeout(() => {
-                setIsLoading(false);
-            }, 1000);
+            setIsLoading(false);
+            setIsSaveEnabled(true); // Enable anyway so user can at least work offline
         }
     };
 
@@ -130,24 +141,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   // --- PERSISTENCE EFFECT HOOKS (Save to DB) ---
+  // Added !isLoading AND isSaveEnabled checks to all save hooks
 
   React.useEffect(() => {
-    if(!isLoading) {
+    if(!isLoading && isSaveEnabled) {
+        savePlayersToDB(allPlayers);
+    }
+  }, [allPlayers, isLoading, isSaveEnabled]);
+
+  React.useEffect(() => {
+    if(!isLoading && isSaveEnabled) {
         saveActiveSessionToDB(activeSession);
     }
-  }, [activeSession, isLoading]);
+  }, [activeSession, isLoading, isSaveEnabled]);
 
   React.useEffect(() => {
-    if(!isLoading) {
+    if(!isLoading && isSaveEnabled) {
         saveHistoryToDB(history);
     }
-  }, [history, isLoading]);
+  }, [history, isLoading, isSaveEnabled]);
 
   React.useEffect(() => {
-    if(!isLoading) {
+    if(!isLoading && isSaveEnabled) {
         saveNewsToDB(newsFeed);
     }
-  }, [newsFeed, isLoading]);
+  }, [newsFeed, isLoading, isSaveEnabled]);
   
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
