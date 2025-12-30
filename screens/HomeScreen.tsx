@@ -113,22 +113,15 @@ export const HomeScreen: React.FC = () => {
   useEffect(() => {
       const constructUrl = (path: string) => {
           try {
-              // Robust way to get the base URL without duplication issues
-              // window.location.href gives the full current URL. We split at '#' to get the base.
-              let baseUrl = window.location.href.split('#')[0];
-              
-              // Ensure no trailing slash to avoid double slashes with the hash
-              if (baseUrl.endsWith('/')) {
-                  baseUrl = baseUrl.slice(0, -1);
-              }
-
-              // Reconstruct with HashRouter pattern
-              let finalUrl = `${baseUrl}/#${path}`;
+              // Now using BrowserRouter, we don't need to split at '#'
+              // origin is something like https://532playground.com
+              let baseUrl = window.location.origin;
               
               if (customHost.trim()) {
-                  finalUrl = `http://${customHost.trim()}/#${path}`; 
+                  baseUrl = `http://${customHost.trim()}`; 
               }
-              return finalUrl;
+
+              return `${baseUrl}${path}`;
           } catch (e) {
               console.error("Invalid URL construction", e);
               return '';
@@ -138,7 +131,6 @@ export const HomeScreen: React.FC = () => {
       if (isQrModalOpen) {
           setQrUrl(constructUrl('/promo'));
       }
-      // Always keep hub URL ready
       setHubUrl(constructUrl('/hub'));
   }, [isQrModalOpen, customHost]);
 
@@ -211,7 +203,7 @@ export const HomeScreen: React.FC = () => {
               const fullData = {
                   files: [file],
                   title: '532 Club Access',
-                  text: `🎟️ 532 CLUB HUB ACCESS\n\nTap to enter / Нажмите, để vào:\n${hubUrl}`,
+                  text: `🎟️ 532 CLUB HUB ACCESS\n\nTap to enter / Нажмите, чтобы войти:\n${hubUrl}`,
               };
 
               try {

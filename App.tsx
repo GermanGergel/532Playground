@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, useLocation, useNavigate, matchPath } from 'react-router-dom';
 import { BottomNav } from './components';
@@ -17,20 +16,20 @@ const App: React.FC = () => {
   const navigate = useNavigate();
   const { activeSession, setPlayerDbSort, setPlayerDbSearch } = useApp();
 
-  // FORCED RESET TO HOME ON RELOAD (Admin Safeguard)
-  // This ensures that internal management pages always start at HOME after a refresh,
-  // preventing the user from landing deep in a sub-menu without context.
-  // Publicly shared routes (Promo, Hub, Public Profiles) are excluded from this redirect.
+  // --- LEGACY LINK SUPPORT (ПОДДЕРЖКА СТАРЫХ ССЫЛОК) ---
+  // Если пользователь зашел по старой ссылке с # (например, /#/public-profile/ID),
+  // мы автоматически перенаправляем его на новый чистый путь (/public-profile/ID).
+  // Это исправляет проблему, когда игроки попадали на главную вместо своего профиля.
   React.useEffect(() => {
-    const publicBasePaths = ['/promo', '/hub', '/public-profile'];
-    const isPublicPath = publicBasePaths.some(path => location.pathname.startsWith(path));
-    
-    if (!isPublicPath) {
-        navigate('/', { replace: true });
+    const hash = window.location.hash;
+    if (hash && hash.startsWith('#/')) {
+        const cleanPath = hash.replace('#', '');
+        console.log("Redirecting legacy hash link to:", cleanPath);
+        navigate(cleanPath, { replace: true });
     }
-  }, []); // Run only once on application mount
+  }, [navigate]);
 
-  // Global protection against accidental reloads during active session
+  // Глобальная защита от случайной перезагрузки во время активной сессии
   React.useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
         event.preventDefault();
@@ -44,7 +43,7 @@ const App: React.FC = () => {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [activeSession]);
 
-  // Reset player DB filters when leaving the player management section
+  // Сброс фильтров базы игроков при выходе из раздела управления
   React.useEffect(() => {
       const isPlayerSection = location.pathname.includes('/player-database') || location.pathname.includes('/player/'); 
       if (!isPlayerSection) {

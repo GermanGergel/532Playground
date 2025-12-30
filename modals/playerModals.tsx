@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react';
 import { Button, Modal, useTranslation, ToggleSwitch } from '../ui';
 import { Player, SkillType, PlayerStatus, PlayerTier } from '../types';
@@ -205,10 +204,10 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
 
     const getProfileUrl = () => {
         try {
-            const origin = window.location.origin + window.location.pathname;
-            return `${origin}#/public-profile/${player.id}`;
+            // Using clean path for BrowserRouter compatibility
+            return `${window.location.origin}/public-profile/${player.id}`;
         } catch (e) {
-            return `${window.location.origin}/#/public-profile/${player.id}`;
+            return `${window.location.origin}/public-profile/${player.id}`;
         }
     }
     

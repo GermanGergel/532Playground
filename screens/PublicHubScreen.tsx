@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -383,7 +382,7 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
         <div style={podiumGlowStyle} className={`relative group ${isFirst ? 'scale-105 z-20' : 'scale-90 md:scale-100 z-10'} rounded-3xl transition-shadow duration-300`}>
             <div ref={cardRef} className={`interactive-card relative ${isFirst ? 'w-[280px] h-[390px]' : 'w-[260px] h-[360px]'} rounded-3xl p-4 overflow-hidden text-white bg-dark-surface border border-white/10`}>
                 {player.playerCard && (<div className="absolute inset-0 w-full h-full bg-cover bg-no-repeat" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }}/>)}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
                 {!isBadgeModalOpen && (<div className="absolute top-24 left-4 z-20"><div className="space-y-4">{(player.skills || []).map(skill => (
                     <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
                         <StarIcon className="w-4 h-4 text-[#00F2FE]" />
@@ -433,6 +432,16 @@ export const PublicHubScreen: React.FC = () => {
     const [dashboardView, setDashboardView] = useState<any>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
 
+    // Sync body overflow with dashboard state
+    useEffect(() => {
+        if (isDashboardOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [isDashboardOpen]);
+
     const latestSessionDate = useMemo(() => {
         if (!history || history.length === 0) return '';
         return new Date(history[0].date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -463,8 +472,9 @@ export const PublicHubScreen: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen max-h-screen overflow-hidden text-white relative selection:bg-[#00F2FE] selection:text-black bg-[#0a0c10]">
-            <div className={`fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50 z-50`}></div>
+        <div className="min-h-screen text-white relative selection:bg-[#00F2FE] selection:text-black bg-[#0a0c10]">
+            <div className={`fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50 z-[110]`}></div>
+            
             <HubNav 
                 isDashboardOpen={isDashboardOpen} 
                 sessionDate={latestSessionDate} 
@@ -473,7 +483,9 @@ export const PublicHubScreen: React.FC = () => {
                 archiveViewDate={archiveViewDate}
                 onHomeClick={() => setIsDashboardOpen(false)}
             />
-            <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-28 pb-4 md:pb-8 overflow-y-auto overscroll-none ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
+
+            {/* INTELLIGENCE DASHBOARD (FIXED OVERLAY) */}
+            <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-28 pb-4 md:pb-8 overflow-y-auto overscroll-none ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
                 <div className="absolute inset-0 z-0 pointer-events-none">
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
                     <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
@@ -482,12 +494,16 @@ export const PublicHubScreen: React.FC = () => {
                     <ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} />
                 </div>
             </div>
-            <div className={`relative z-10 w-full h-full overflow-y-auto overscroll-none px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}>
+
+            {/* MAIN LANDING PAGE (SCROLLABLE) */}
+            <div className={`relative z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}>
                 <HeroTitle />
+                
                 <div className="text-center mb-12 md:mb-20">
-                    <TrophyIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-4 text-[#00F2FE]" style={{ filter: 'drop-shadow(0 0-10px rgba(0, 242, 254, 0.7))' }} />
+                    <TrophyIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-4 text-[#00F2FE]" style={{ filter: 'drop-shadow(0 0 10px rgba(0, 242, 254, 0.7))' }} />
                     <h2 className="font-orbitron text-xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubLeadersTitle}</h2>
                 </div>
+
                 {displayData.top.length > 0 ? (
                     <div className="flex flex-wrap items-end justify-center gap-4 md:gap-8 w-full">
                         <div className="order-2 md:order-1">{displayData.top[1] && <CinematicCard player={displayData.top[1]} rank={2} />}</div>
@@ -497,8 +513,11 @@ export const PublicHubScreen: React.FC = () => {
                 ) : (
                     <NoLeadersPlaceholder />
                 )}
+
                 <div className="mt-24 md:mt-32 pb-24">
-                    <div className="text-center mb-12 md:mb-20"><h2 className="font-orbitron text-lg md:text-2xl font-black uppercase tracking-[0.15em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubVitalsTitle}</h2></div>
+                    <div className="text-center mb-12 md:mb-20">
+                        <h2 className="font-orbitron text-lg md:text-2xl font-black uppercase tracking-[0.15em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubVitalsTitle}</h2>
+                    </div>
                      <div className="flex flex-col md:flex-row items-center justify-center gap-6 w-full max-w-4xl mx-auto">
                         <CinematicStatCard value={clubStats.totalPlayers} label={t.hubStatsMembers} />
                         <CinematicStatCard value={clubStats.totalSessions} label={t.hubSessionsPlayed} />
@@ -506,13 +525,24 @@ export const PublicHubScreen: React.FC = () => {
                     </div>
                 </div>
                 
-                <div className="relative z-10 bg-transparent pb-24">
+                <div className="relative z-10 bg-transparent pb-32">
                     <footer className="relative py-8 bg-transparent">
                         <div className="text-center px-4">
-                            <button onClick={() => setIsDashboardOpen(true)} className="mx-auto mb-14 block bg-transparent text-[#00F2FE] font-bold text-lg py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(0,242,254,0.4)] hover:shadow-[0_0_25px_rgba(0,242,254,0.6)] hover:bg-[#00F2FE]/10 transition-all transform hover:scale-[1.02] active:scale-95 group animate-pulse" style={{ animationIterationCount: 5 }}><span className="font-chakra font-black text-lg uppercase tracking-[0.2em] group-hover:text-white transition-colors">{t.hubDashboardBtn}</span></button>
+                            <button 
+                                onClick={() => setIsDashboardOpen(true)} 
+                                className="mx-auto mb-14 block bg-transparent text-[#00F2FE] font-bold text-lg py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(0,242,254,0.4)] hover:shadow-[0_0_25px_rgba(0,242,254,0.6)] hover:bg-[#00F2FE]/10 transition-all transform hover:scale-[1.02] active:scale-95 group animate-pulse"
+                            >
+                                <span className="font-chakra font-black text-lg uppercase tracking-[0.2em] group-hover:text-white transition-colors">{t.hubDashboardBtn}</span>
+                            </button>
+
                             <h2 className="font-orbitron text-2xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/90" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubJoinSquad}</h2>
                             <p className="font-chakra text-xs text-white/50 mt-2 mb-6">Connect with us on WhatsApp to book your slot.</p>
-                            <a href={SOCIAL_LINKS.whatsapp} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-3 bg-transparent text-[#25D366] font-bold text-lg py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(37,211,102,0.4)] hover:shadow-[0_0_25px_rgba(37,211,102,0.6)] hover:bg-[#25D366]/10 transition-all transform hover:scale-[1.02] active:scale-95 mb-8"><WhatsApp className="w-5 h-5 fill-current" />WhatsApp</a>
+                            
+                            <a href={SOCIAL_LINKS.whatsapp} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-3 bg-transparent text-[#25D366] font-bold text-lg py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(37,211,102,0.4)] hover:shadow-[0_0_25px_rgba(37,211,102,0.6)] hover:bg-[#25D366]/10 transition-all transform hover:scale-[1.02] active:scale-95 mb-8">
+                                <WhatsApp className="w-5 h-5 fill-current" />
+                                WhatsApp
+                            </a>
+
                             <div className="flex justify-center gap-10">
                                 <a href={SOCIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><YouTubeIcon className="w-7 h-7" /></a>
                                 <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><InstagramIcon className="w-7 h-7" /></a>
