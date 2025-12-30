@@ -1,3 +1,4 @@
+
 import { Session, Player, NewsItem, BadgeType, SessionStatus, PlayerRecords, PlayerHistoryEntry } from '../types';
 import { calculateAllStats } from './statistics';
 import { calculateEarnedBadges, calculateRatingUpdate, getTierForRating } from './rating';
@@ -26,12 +27,17 @@ export const processFinishedSession = ({
     
     // Собираем ID всех, кто реально был на поле в этой сессии
     const participatedIds = new Set(allPlayersStats.map(s => s.player.id));
+    
+    // Временный массив для новостей о штрафах
+    const penaltyNews: NewsItem[] = [];
+    const timestamp = new Date().toISOString();
 
     // --- 1. UPDATE PLAYERS (Participation & Inactivity Logic) ---
     let playersWithUpdatedStats = oldPlayers.map(player => {
         const sessionStats = playerStatsMap.get(player.id);
         
         if (sessionStats) {
+            // PLAYER PLAYED: Update stats normally
             const updatedPlayer: Player = {
                 ...player,
                 totalGames: player.totalGames + sessionStats.gamesPlayed,
@@ -47,18 +53,44 @@ export const processFinishedSession = ({
                 monthlyWins: player.monthlyWins + sessionStats.wins,
                 monthlySessionsPlayed: (player.monthlySessionsPlayed || 0) + 1,
                 lastPlayedAt: new Date().toISOString(),
-                consecutiveMissedSessions: 0, 
+                consecutiveMissedSessions: 0, // Reset inactivity counter
             };
             return updatedPlayer;
         } else {
+            // PLAYER MISSED: Check for inactivity penalty
             const currentMissed = (player.consecutiveMissedSessions || 0) + 1;
             let newRating = player.rating;
+            let penaltyApplied = false;
 
-            // Apply inactivity penalty: -1 point every 3 missed sessions
+            // Apply penalty every 3rd missed session (3, 6, 9...)
             if (currentMissed > 0 && currentMissed % 3 === 0) {
-                // Cannot fall below initialRating (floor)
-                const floor = player.initialRating || 68;
-                newRating = Math.max(floor, newRating - 1); 
+                // Определяем "пол" (нижнюю границу). 
+                // Это СТРОГО стартовый рейтинг игрока. Если его нет в базе (старый аккаунт), берем 68.
+                const floor = player.initialRating !== undefined ? player.initialRating : 68;
+
+                // Рейтинг падает, ТОЛЬКО если он сейчас выше стартового.
+                // Если рейтинг 73, а старт был 70 -> падает до 72.
+                // Если рейтинг 70, а старт был 70 -> НЕ падает.
+                if (newRating > floor) {
+                    newRating -= 1;
+                    penaltyApplied = true;
+                }
+            }
+
+            // Generate Penalty News for transparency
+            if (penaltyApplied) {
+                penaltyNews.push({
+                    id: newId(),
+                    playerId: player.id,
+                    playerName: player.nickname,
+                    type: 'penalty',
+                    message: `${player.nickname} received inactivity penalty (-1 OVR)`,
+                    subMessage: `#Inactive #${currentMissed}Missed`,
+                    timestamp: timestamp,
+                    isHot: false,
+                    statsSnapshot: { rating: newRating, tier: getTierForRating(newRating) },
+                    priority: 5
+                });
             }
 
             return {
@@ -151,8 +183,11 @@ export const processFinishedSession = ({
     // Генерируем новости только для ПРИСУТСТВУЮЩИХ (participatedIds)
     const newGameplayNews = generateNewsUpdates(oldPlayers, playersWithCalculatedRatings, participatedIds);
     
-    const updatedNewsFeed = newGameplayNews.length > 0
-        ? manageNewsFeedSize([...newGameplayNews, ...newsFeed])
+    // Объединяем новости игры и новости штрафов
+    const allNewNews = [...newGameplayNews, ...penaltyNews];
+
+    const updatedNewsFeed = allNewNews.length > 0
+        ? manageNewsFeedSize([...allNewNews, ...newsFeed])
         : newsFeed;
 
     const finalSession: Session = { 

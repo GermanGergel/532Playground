@@ -1,14 +1,16 @@
+
 import React, { useEffect } from 'react';
 import { Page, PageHeader, useTranslation } from '../ui';
 import { NewsItem } from '../types';
-import { StarIcon, Zap } from '../icons';
+import { StarIcon, Zap, ExclamationIcon } from '../icons';
 import { useApp } from '../context';
 
 // =========================================================================
 // STYLE: "MATTE OBSIDIAN" (Unified Design for all news)
 // =========================================================================
 const NewsCard: React.FC<{ item: NewsItem }> = React.memo(({ item }) => {
-    const accentColor = '#00F2FE';
+    const isPenalty = item.type === 'penalty';
+    const accentColor = isPenalty ? '#FF4136' : '#00F2FE';
 
     return (
         <div className="mb-4 relative px-1 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -32,8 +34,10 @@ const NewsCard: React.FC<{ item: NewsItem }> = React.memo(({ item }) => {
                 <div className="relative z-10 pl-3">
                     {/* Meta Header: Icon + Type + Time */}
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-8 h-8 rounded-full bg-[#111] flex items-center justify-center border border-white/5">
-                            {item.isHot ? (
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center border ${isPenalty ? 'bg-red-900/20 border-red-500/30' : 'bg-[#111] border-white/5'}`}>
+                            {isPenalty ? (
+                                <ExclamationIcon className="w-4 h-4" style={{ color: accentColor }} />
+                            ) : item.isHot ? (
                                 <Zap className="w-4 h-4" style={{ color: accentColor }} />
                             ) : (
                                 <StarIcon className="w-4 h-4 text-gray-500" />
@@ -65,7 +69,7 @@ const NewsCard: React.FC<{ item: NewsItem }> = React.memo(({ item }) => {
                             style={{ 
                                 borderColor: accentColor, 
                                 color: accentColor,
-                                boxShadow: `0 0 8px rgba(0, 242, 254, 0.3)`
+                                boxShadow: `0 0 8px ${accentColor}44`
                             }}
                         >
                             {item.subMessage}
