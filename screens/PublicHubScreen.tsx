@@ -62,13 +62,14 @@ const NoLeadersPlaceholder: React.FC = () => {
 };
 
 const MotivationalTicker: React.FC = () => {
-    const t = useTranslation();
+    // Replaced localized phrases with specific hardcoded list as requested
     const phrases = [
-        t.hubTicker1.replace(/\.$/, ""),
-        t.hubTicker2.replace(/\.$/, ""),
-        t.hubTicker3.replace(/\.$/, ""),
-        t.hubTicker4.replace(/\.$/, ""),
-        t.hubTicker5.replace(/\.$/, "")
+        "DATA BUILDS LEGENDS •",
+        "NUMBERS NEVER LIE •",
+        "THE PITCH DECIDES EVERYTHING •",
+        "PERFORMANCE OVER HYPE •",
+        "PROVEN, NOT PROMISED •",
+        "532 — WHERE ELITES PLAY"
     ];
     const cyanColor = '#00F2FE'; 
     return (
@@ -81,14 +82,16 @@ const MotivationalTicker: React.FC = () => {
                 .animate-hub-ticker {
                     display: flex;
                     width: fit-content;
-                    /* ADJUSTED: 33s per request */
-                    animation: hub-ticker 33s linear infinite;
+                    animation: hub-ticker 45s linear infinite;
                 }
             `}} />
-            <div className="animate-hub-ticker whitespace-nowrap flex gap-12">
+            <div className="animate-hub-ticker whitespace-nowrap flex gap-16">
                 {[...phrases, ...phrases].map((phrase, i) => (
-                    // GLOW REDUCED: textShadow opacity changed from 0.5 to 0.2 for softer look
-                    <span key={i} className="text-[12px] md:text-[14px] font-bold tracking-[0.1em] uppercase flex items-center font-russo italic" style={{ color: cyanColor, textShadow: `0 0 10px rgba(0, 242, 254, 0.2)` }}>
+                    <span 
+                        key={i} 
+                        className="text-[14px] md:text-[16px] font-bold tracking-[0.1em] uppercase flex items-center font-inter-tight italic" 
+                        style={{ color: cyanColor, textShadow: `0 0 10px rgba(0, 242, 254, 0.2)` }}
+                    >
                         {phrase}
                     </span>
                 ))}
@@ -98,8 +101,8 @@ const MotivationalTicker: React.FC = () => {
 };
 
 const StaticSoccerBall: React.FC = () => (
-    // ADJUSTED LEFT POSITION: Moved slightly left (135->120 on mobile, 175->160 on desktop) to optimize space but clear text
-    <div className="absolute top-1/2 -translate-y-1/2 left-[120px] md:left-[160px] w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none transition-all duration-500">
+    // UPDATED: Position changed from top-1/2 to bottom-[4px] to sit on the edge
+    <div className="absolute bottom-[4px] left-[120px] md:left-[160px] w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none transition-all duration-500">
         <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] overflow-visible">
             <defs>
                 <radialGradient id="ballShading" cx="40%" cy="35%" r="65%"><stop offset="0%" stopColor="#ffffff" /><stop offset="50%" stopColor="#e2e8f0" /><stop offset="85%" stopColor="#94a3b8" /><stop offset="100%" stopColor="#1e293b" /></radialGradient>
@@ -129,13 +132,11 @@ const StaticSoccerBall: React.FC = () => (
 const HangingTag: React.FC<{ digit: string; label: string; height: number; delay: string; pulseDuration: string }> = ({ digit, label, height, delay, pulseDuration }) => (
     <div className="relative flex flex-col items-center group/fiber">
         <span className="font-black text-2xl md:text-3xl text-[#00F2FE] tracking-tighter z-10 leading-none" style={{ textShadow: '0 0 10px rgba(0,242,254,0.6)' }}>{digit}</span>
-        {/* CHANGED: Opacity changed from /30 to /10 to be barely visible */}
         <div className="absolute top-[26px] w-[0.5px] bg-[#00F2FE]/10 origin-top animate-pendant-swing" style={{ height: `${height}px`, animationDelay: delay, boxShadow: '0 0 3px rgba(0,242,254,0.1)' }}>
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1.2px] h-[3px] bg-[#00F2FE] rounded-full opacity-0 animate-fiber-pulse" style={{ animationDuration: pulseDuration, animationDelay: delay, boxShadow: '0 0 5px #00F2FE' }}></div>
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full pt-1">
                 <div className="relative flex flex-col items-center">
                     <div className="absolute inset-0 blur-[8px] bg-[#00F2FE]/20 rounded-full scale-[2.5] pointer-events-none opacity-40"></div>
-                    {/* CHANGED: Text size 7px, tracking tight to 0.1em for compactness */}
                     <span className="relative text-[7px] font-black tracking-[0.1em] text-[#00F2FE] whitespace-nowrap uppercase italic" style={{ textShadow: '0 0 8px rgba(0,242,254,0.8)' }}>{label}</span>
                 </div>
             </div>
@@ -195,13 +196,14 @@ const HubNav: React.FC<{
         'info': t.information 
     };
 
+    // UPDATED: Height reduced to be slimmer (42px mobile, 54px desktop)
     const navContainerClass = `
         fixed top-3 left-1/2 -translate-x-1/2 z-[100] 
         flex items-center justify-between 
         w-full max-w-[1450px] pr-4 py-0 
         bg-black/95 backdrop-blur-xl rounded-2xl border border-white/10
         shadow-[0_15px_40px_-10px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.05)] 
-        h-[48px] md:h-[58px] transition-all duration-300
+        h-[42px] md:h-[54px] transition-all duration-300
     `;
 
     return (
@@ -214,16 +216,10 @@ const HubNav: React.FC<{
             `}} />
             <div className="flex items-center shrink-0 h-full relative pl-10">
                 <div className="flex items-center">
-                    {/* TYPO FIX: Changed PLAYPLAYERS to PLAYERS */}
-                    
-                    {/* 5 (PLAYERS): Highest pos = Shortest string = Min height (25px) */}
-                    <HangingTag digit="5" label="PLAYERS" height={25} delay="0s" pulseDuration="2.8s" />
-                    
-                    {/* 3 (SQUADS): Mid pos = Mid height (55px) */}
-                    <HangingTag digit="3" label="SQUADS" height={55} delay="1.5s" pulseDuration="4.2s" />
-                    
-                    {/* 2 (GOALS): Lowest pos = Longest string = Max height (85px) */}
-                    <HangingTag digit="2" label="GOALS" height={85} delay="0.8s" pulseDuration="3.7s" />
+                    {/* Adjusted height of hanging tags to fit slimmer bar */}
+                    <HangingTag digit="5" label="PLAYERS" height={20} delay="0s" pulseDuration="2.8s" />
+                    <HangingTag digit="3" label="SQUADS" height={50} delay="1.5s" pulseDuration="4.2s" />
+                    <HangingTag digit="2" label="GOALS" height={80} delay="0.8s" pulseDuration="3.7s" />
                     
                     <div className="h-4 w-px bg-white/15 ml-3 md:ml-4"></div>
                     <div className="flex flex-col space-y-0.5 ml-2">
@@ -234,8 +230,11 @@ const HubNav: React.FC<{
                 </div>
             </div>
             
-            {/* ADJUSTED TICKER CONTAINER: Added pl-14 to clear the ball, pr-10 to clear right side buttons */}
-            <div className={`flex-grow h-full overflow-hidden flex items-center ${isDashboardOpen ? 'justify-center px-4' : 'justify-start pl-14 pr-10'}`}>
+            {/* ADJUSTED TICKER CONTAINER: 
+                pl-24 -> Space from left (ball)
+                pr-4 -> REDUCED from pr-12 to maintain just enough clearance from the Language button
+            */}
+            <div className={`flex-grow h-full overflow-hidden flex items-center ${isDashboardOpen ? 'justify-center px-4' : 'justify-start pl-24 pr-4'}`}>
                 {isDashboardOpen ? (
                     <div className="flex items-center gap-8 min-w-fit">
                         <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center">
@@ -293,14 +292,14 @@ const HubNav: React.FC<{
                 )}
                 <div className="flex items-center gap-2 group h-full relative" ref={dropdownRef}>
                     {!isDashboardOpen && (
-                        <div className="hidden md:flex flex-col items-end justify-center h-full animate-in fade-in duration-500">
+                        <div className="hidden md:flex flex-col items-end justify-center h-full animate-in fade-in duration-500 pr-2">
                             <span className="text-[8px] font-black tracking-[0.2em] text-white/30 uppercase group-hover:text-white transition-colors cursor-default leading-none">Language</span>
                         </div>
                     )}
                     <div className="relative h-full flex items-center justify-center">
                         {isDashboardOpen ? (
                             <button onClick={() => setIsLangOpen(!isLangOpen)} className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 h-full min-w-[50px] group cursor-pointer hover:scale-110`}>
-                                <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isLangOpen ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/5 drop-shadow-[0_0_8px_rgba(0,242,254,0.4)] shadow-[0_0_15px_rgba(0,242,254,0.1)]' : 'text-white/60 border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.1)] hover:border-white/30 hover:text-white hover:shadow-[0_0_12px_rgba(255,255,255,0.15)]' }`}>
+                                <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isLangOpen ? 'text-[#00F2FE]' : 'text-white/60 border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.1)]' }`}>
                                     <span className="font-black text-[10px] uppercase leading-none">{language}</span>
                                 </div>
                                 <span className={`text-[6px] font-black tracking-widest uppercase transition-colors ${isLangOpen ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>LANG</span>
@@ -387,7 +386,6 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
         return { boxShadow: glows[rank] || 'none' };
     }, [rank]);
     
-    // Sort and limit badges to top 5 manually here to avoid counter
     const topBadges = useMemo(() => sortBadgesByPriority(player.badges || {}).slice(0, 5), [player.badges]);
 
     useEffect(() => {
@@ -419,7 +417,6 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                             <p className="font-bold text-white tracking-widest text-sm">OVR</p>
                             <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
                             
-                            {/* MANUAL BADGE LIST - NO COUNTER, FORCED GOLD */}
                             {topBadges.length > 0 && (
                                 <div className="flex flex-col items-center gap-1 mt-2 text-[#FFD700]">
                                     {topBadges.map(badge => (
@@ -431,7 +428,6 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                             )}
                         </div>
                     </div>
-                    {/* ABSOLUTE POSITIONED NAME - MOVED DOWN (bottom-2 instead of bottom-6) */}
                     <div className="absolute bottom-2 left-0 right-0 text-center z-30 px-1">
                         <h1 className="font-black uppercase tracking-tight drop-shadow-lg leading-[0.85]">
                             <span className="text-3xl md:text-4xl block text-white">{player.nickname}</span>
@@ -446,14 +442,12 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
     );
 };
 
-// UPDATED STAT CARD WITH Russo One but WIDER tracking to fix overlap
 const CinematicStatCard: React.FC<{ value: string | number; label: string; }> = ({ value, label }) => (
     <div className="w-full md:flex-1 max-w-xs md:max-w-none h-40">
         <div className="relative rounded-3xl overflow-hidden bg-white/[0.03] border border-white/10 shadow-2xl group transition-all duration-300 hover:border-[#00F2FE]/50 hover:shadow-[0_0_30px_rgba(0,242,254,0.2)] h-full backdrop-blur-md">
             <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-40"></div>
             <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-white/5 to-transparent blur-xl"></div>
             <div className="relative h-full z-10 flex flex-col items-center justify-center gap-2">
-                {/* Changed to font-russo but added tracking-widest to prevent '1' overlapping '7' */}
                 <span className="font-russo font-black text-6xl md:text-7xl text-white tracking-widest leading-none">{value}</span>
                 <span className="font-chakra font-bold text-xs text-white/50 uppercase tracking-[0.2em]">{label}</span>
             </div>
@@ -468,7 +462,6 @@ export const PublicHubScreen: React.FC = () => {
     const [dashboardView, setDashboardView] = useState<any>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
 
-    // Sync body overflow with dashboard state
     useEffect(() => {
         if (isDashboardOpen) {
             document.body.style.overflow = 'hidden';
@@ -485,33 +478,23 @@ export const PublicHubScreen: React.FC = () => {
 
     const displayData = useMemo(() => {
         const confirmedRealPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
-        
-        // --- ПРИОРИТЕТНАЯ СОРТИРОВКА (TIE-BREAKING) ---
         const sorted = [...confirmedRealPlayers].sort((a, b) => {
-            // 1. OVR (Рейтинг) - Основа
             if (b.rating !== a.rating) return b.rating - a.rating;
-
-            // 2. G+A (Голы + Ассисты) - Если рейтинг равен
             const scoreA = (a.totalGoals || 0) + (a.totalAssists || 0);
             const scoreB = (b.totalGoals || 0) + (b.totalAssists || 0);
             if (scoreB !== scoreA) return scoreB - scoreA;
-
-            // 3. Win Rate (Процент побед)
             const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0;
             const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0;
             if (wrB !== wrA) return wrB - wrA;
-
-            // 4. Total Games (Сыгранные матчи)
             return (b.totalGames || 0) - (a.totalGames || 0);
         });
-
         return { top: sorted.slice(0, 3) };
     }, [allPlayers]);
     
     const clubStats = useMemo(() => {
         const confirmedPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
         const totalPlayers = confirmedPlayers.length;
-        const totalSessions = history.length + 1; // +1 to offset missing DB record as requested
+        const totalSessions = history.length + 1; 
         const avgRating = totalPlayers > 0 ? Math.round(confirmedPlayers.reduce((sum, p) => sum + p.rating, 0) / totalPlayers) : 0;
         return { totalPlayers, totalSessions, avgRating };
     }, [allPlayers, history]);
@@ -527,7 +510,6 @@ export const PublicHubScreen: React.FC = () => {
     };
 
     return (
-        // FIX: Added 'overscroll-none' to root div AND forced background style to prevent gray "bounce"
         <div className="min-h-screen text-white relative selection:bg-[#00F2FE] selection:text-black bg-[#0a0c10] pt-px overscroll-none">
             <style dangerouslySetInnerHTML={{__html: `html, body { background-color: #0a0c10; overscroll-behavior-y: none; }`}} />
             
@@ -541,12 +523,10 @@ export const PublicHubScreen: React.FC = () => {
                 archiveViewDate={archiveViewDate}
                 onHomeClick={() => {
                     setIsDashboardOpen(false);
-                    // ADDED: Scroll to top of the page smoothly when closing dashboard
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
             />
 
-            {/* INTELLIGENCE DASHBOARD (FIXED OVERLAY) */}
             <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-28 pb-4 md:pb-8 overflow-y-auto overscroll-none ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
                 <div className="absolute inset-0 z-0 pointer-events-none">
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
@@ -557,7 +537,6 @@ export const PublicHubScreen: React.FC = () => {
                 </div>
             </div>
 
-            {/* MAIN LANDING PAGE (SCROLLABLE) */}
             <div className={`relative z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}>
                 <HeroTitle />
                 
@@ -587,7 +566,6 @@ export const PublicHubScreen: React.FC = () => {
                     </div>
                 </div>
                 
-                {/* CHANGED: Reduced bottom padding from pb-32 to pb-8 to remove excess whitespace */}
                 <div className="relative z-10 bg-transparent pb-8">
                     <footer className="relative py-8 bg-transparent">
                         <div className="text-center px-4">
