@@ -41,7 +41,20 @@ export const PlayerDatabaseScreen: React.FC = () => {
                 if (b.id === 'test-player-showcase') return 1;
                 switch (playerDbSort) {
                     case 'rating':
-                        return b.rating - a.rating;
+                        // --- СИНХРОНИЗИРОВАННАЯ С ПЬЕДЕСТАЛОМ СОРТИРОВКА (TIE-BREAKING) ---
+                        if (b.rating !== a.rating) return b.rating - a.rating;
+                        
+                        // Доп. фильтры (Тай-брейкинг)
+                        const scoreA = (a.totalGoals || 0) + (a.totalAssists || 0);
+                        const scoreB = (b.totalGoals || 0) + (b.totalAssists || 0);
+                        if (scoreB !== scoreA) return scoreB - scoreA;
+                        
+                        const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0;
+                        const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0;
+                        if (wrB !== wrA) return wrB - wrA;
+                        
+                        return (b.totalGames || 0) - (a.totalGames || 0);
+
                     case 'name':
                         return a.nickname.localeCompare(b.nickname);
                     case 'date':
@@ -124,6 +137,7 @@ export const PlayerDatabaseScreen: React.FC = () => {
                         <span className="text-xs font-semibold text-dark-text-secondary">{t.sortBy}</span>
                         <button onClick={() => setPlayerDbSort('rating')} className={sortButtonClass('rating')}>{t.sortByRating}</button>
                         <button onClick={() => setPlayerDbSort('name')} className={sortButtonClass('name')}>{t.sortByName}</button>
+                        {/* Fixed undefined setSortBy variable by changing it to setPlayerDbSort */}
                         <button onClick={() => setPlayerDbSort('date')} className={sortButtonClass('date')}>{t.sortByDate}</button>
                     </div>
                 </div>

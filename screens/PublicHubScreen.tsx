@@ -486,28 +486,22 @@ export const PublicHubScreen: React.FC = () => {
     const displayData = useMemo(() => {
         const confirmedRealPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
         
-        // --- UPDATED SORTING LOGIC (SEASON LEADERS TIE-BREAKING) ---
+        // --- ПРИОРИТЕТНАЯ СОРТИРОВКА (TIE-BREAKING) ---
         const sorted = [...confirmedRealPlayers].sort((a, b) => {
-            // 1. Rating (OVR) Primary
-            if (b.rating !== a.rating) {
-                return b.rating - a.rating;
-            }
+            // 1. OVR (Рейтинг) - Основа
+            if (b.rating !== a.rating) return b.rating - a.rating;
 
-            // 2. G+A (Goals + Assists) Secondary
-            const gaA = (a.totalGoals || 0) + (a.totalAssists || 0);
-            const gaB = (b.totalGoals || 0) + (b.totalAssists || 0);
-            if (gaB !== gaA) {
-                return gaB - gaA;
-            }
+            // 2. G+A (Голы + Ассисты) - Если рейтинг равен
+            const scoreA = (a.totalGoals || 0) + (a.totalAssists || 0);
+            const scoreB = (b.totalGoals || 0) + (b.totalAssists || 0);
+            if (scoreB !== scoreA) return scoreB - scoreA;
 
-            // 3. Win Rate Tertiary
+            // 3. Win Rate (Процент побед)
             const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0;
             const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0;
-            if (wrB !== wrA) {
-                return wrB - wrA;
-            }
+            if (wrB !== wrA) return wrB - wrA;
 
-            // 4. Activity (Total Games) Quaternary
+            // 4. Total Games (Сыгранные матчи)
             return (b.totalGames || 0) - (a.totalGames || 0);
         });
 
