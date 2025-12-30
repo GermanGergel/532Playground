@@ -118,7 +118,22 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, className = 
     // The core properties for making it a circle that hides overflow.
     const baseShapeClasses = `w-full h-full rounded-full overflow-hidden`;
     
-    const imageUrl = player?.photo || player?.playerCard;
+    // --- SYNC LOGIC FIX ---
+    // Ensure the avatar URL (little circle) is strictly synchronized with the player card (profile) version.
+    let imageUrl = player?.photo || player?.playerCard;
+
+    if (player?.playerCard && player?.playerCard.includes('?t=')) {
+        const timestamp = player.playerCard.split('?t=')[1];
+        
+        // If avatar (photo) exists but has old/no timestamp, force it to match the Card's timestamp
+        if (player.photo) {
+            const currentAvatarTs = player.photo.includes('?t=') ? player.photo.split('?t=')[1] : null;
+            if (currentAvatarTs !== timestamp) {
+                const cleanBase = player.photo.split('?')[0];
+                imageUrl = `${cleanBase}?t=${timestamp}`;
+            }
+        }
+    }
 
     const bgColor = React.useMemo(() => {
         if (!player?.id) return 'bg-gray-700';
@@ -136,7 +151,8 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, className = 
     return (
         // The outermost div defines the overall size and gets the custom styling (border/shadow) from the parent.
         // It also ensures the circular shape and hides overflow.
-        <div className={`relative group ${sizeClasses[size]} ${baseShapeClasses} ${className}`} draggable={draggable}>
+        // ADDED: key={imageUrl} to force React to re-mount the component if the URL (timestamp) changes.
+        <div key={imageUrl} className={`relative group ${sizeClasses[size]} ${baseShapeClasses} ${className}`} draggable={draggable}>
              {imageUrl ? (
                 // This inner div is just for the background image, no additional styling that would create a visible square.
                 <div
