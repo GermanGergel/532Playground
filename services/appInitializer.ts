@@ -51,21 +51,16 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
             dataRepaired = true;
         }
 
-        // 2. DATA INTEGRITY CHECKS
-        if (migratedPlayer.lastRatingChange && typeof migratedPlayer.lastRatingChange.newRating === 'number') {
-            const expectedRating = Math.round(migratedPlayer.lastRatingChange.newRating);
-            if (migratedPlayer.rating !== expectedRating) {
-                migratedPlayer.rating = expectedRating;
-                dataRepaired = true;
-            }
-        }
+        // --- REMOVED AGGRESSIVE CHECK HERE ---
+        // Мы удалили блок, который сверял rating с lastRatingChange.newRating.
+        // Теперь ручные изменения рейтинга имеют приоритет над историей сессий.
 
         if (typeof migratedPlayer.rating === 'number' && !Number.isInteger(migratedPlayer.rating)) {
             migratedPlayer.rating = Math.round(migratedPlayer.rating);
             dataRepaired = true;
         }
 
-        // 3. RECALCULATE TIER (Ensure everyone is on the correct tier for their rating)
+        // 2. RECALCULATE TIER (Ensure everyone is on the correct tier for their rating)
         const correctTier = getTierForRating(migratedPlayer.rating);
         if (migratedPlayer.tier !== correctTier) {
             migratedPlayer.tier = correctTier;
@@ -133,7 +128,6 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
         savePlayersToDB(initialPlayers).catch(e => console.warn("Background migration sync failed", e));
     }
 
-    // --- REPLACED: No longer generating demo sessions if history is empty ---
     const loadedHistoryData = await loadHistoryFromDB(10);
     let initialHistory: Session[] = [];
     if (Array.isArray(loadedHistoryData) && loadedHistoryData.length > 0) {

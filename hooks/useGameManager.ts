@@ -6,7 +6,7 @@ import { Session, Game, GameStatus, Goal, GoalPayload, SubPayload, EventLogEntry
 import { playAnnouncement, initAudioContext } from '../lib';
 import { processFinishedSession } from '../services/sessionProcessor';
 import { newId } from '../screens/utils';
-import { savePlayersToDB, saveNewsToDB, saveHistoryLocalOnly } from '../db';
+import { savePlayersToDB, saveNewsToDB, saveHistoryLocalOnly, saveHistoryToDB } from '../db';
 import { useTranslation } from '../ui';
 import { SessionSummaryData } from '../modals/SessionSummaryModal';
 
@@ -19,6 +19,7 @@ export const useGameManager = () => {
     const [isEndSessionModalOpen, setIsEndSessionModalOpen] = React.useState(false);
     const [isSelectWinnerModalOpen, setIsSelectWinnerModalOpen] = React.useState(false);
     const [goalToEdit, setGoalToEdit] = React.useState<Goal | null>(null);
+    const [isSavingSession, setIsSavingSession] = React.useState(false);
     
     // Standard Sub Modal State
     const [subModalState, setSubModalState] = React.useState<{
@@ -474,11 +475,12 @@ export const useGameManager = () => {
         setSubModalState({ isOpen: false });
     };
     
-    // --- INSTANT SAVE LOGIC (Updated to accept Summary Data) ---
+    // --- INSTANT SAVE LOGIC (UPDATED WITH AWAIT) ---
     const handleFinishSession = async (summaryData?: SessionSummaryData) => {
-        if (!activeSession) return;
+        if (!activeSession || isSavingSession) return;
+        setIsSavingSession(true); // Disable double click
 
-        // Apply summary data (Location, Time, Weather) if provided
+        // 1. Apply summary data
         const sessionToProcess = { ...activeSession };
         if (summaryData) {
             sessionToProcess.location = summaryData.location;
@@ -486,7 +488,7 @@ export const useGameManager = () => {
             sessionToProcess.weather = summaryData.weather;
         }
         
-        // 2. Process Data (Synchronous/Fast)
+        // 2. Process Data (Calculate new ratings like 71)
         const {
             updatedPlayers,
             playersToSave,
@@ -501,25 +503,34 @@ export const useGameManager = () => {
         // 3. Mark as pending sync initially
         finalSession.syncStatus = 'pending';
 
-        // 4. Save LOCALLY (Instant)
-        await saveHistoryLocalOnly([finalSession]); // Very fast IDB write
-        
-        // 5. Update React Context (Instant UI feedback)
-        setAllPlayers(updatedPlayers); 
-        setNewsFeed(updatedNewsFeed);
-        setHistory(prev => [finalSession, ...prev]);
-        setActiveSession(null);
-        
-        // 6. Navigate Immediately to History
-        setIsEndSessionModalOpen(false);
-        navigate('/history');
+        try {
+            // 4. Save LOCALLY (Instant)
+            await saveHistoryLocalOnly([finalSession]); 
+            
+            // 5. Update React Context (Instant UI feedback)
+            // This makes the UI show 71 immediately
+            setAllPlayers(updatedPlayers); 
+            setNewsFeed(updatedNewsFeed);
+            setHistory(prev => [finalSession, ...prev]);
+            setActiveSession(null);
+            
+            // 6. CRITICAL: AWAIT DATABASE SAVE
+            // We wait for this to finish to ensure the 71 is written to the cloud 
+            // before we risk the user closing the app.
+            await Promise.all([
+                savePlayersToDB(playersToSave),
+                saveNewsToDB(updatedNewsFeed),
+                saveHistoryToDB([finalSession]) // Also try to sync session immediately
+            ]);
 
-        // 7. Trigger Background Saves (Fire & Forget)
-        // These happen after navigation, so the user doesn't wait
-        savePlayersToDB(playersToSave).catch(e => console.error("BG Player Save Error", e));
-        saveNewsToDB(updatedNewsFeed).catch(e => console.error("BG News Save Error", e));
-        
-        // The History Screen will handle the actual cloud sync of the session itself
+        } catch (error) {
+            console.error("Save Error:", error);
+            // Even if cloud fails, local is saved, so we proceed
+        } finally {
+            setIsEndSessionModalOpen(false);
+            setIsSavingSession(false);
+            navigate('/history');
+        }
     };
     
     const resetSession = () => {

@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from 'react';
 import { Button, Modal, useTranslation, ToggleSwitch } from '../ui';
 import { Player, SkillType, PlayerStatus, PlayerTier } from '../types';
@@ -133,6 +134,19 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
             newStatus = PlayerStatus.Confirmed;
         }
 
+        // Если рейтинг изменился вручную, обновляем и запись о "последней сессии",
+        // чтобы в UI не было путаницы (например, рейтинг 68, а в анализе написано "Новый рейтинг: 65")
+        let updatedLastRatingChange = playerToEdit.lastRatingChange;
+        if (playerToEdit.lastRatingChange && newRatingValue !== playerToEdit.rating) {
+            updatedLastRatingChange = {
+                ...playerToEdit.lastRatingChange,
+                newRating: newRatingValue,
+                // Обнуляем дельту, чтобы показать, что это ручная правка, или оставляем как есть,
+                // но главное - newRating должен совпадать.
+                finalChange: 0 
+            };
+        }
+
         const player: Player = { 
             ...playerToEdit, 
             nickname, 
@@ -143,6 +157,7 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
             tier: newTier,
             skills: currentSkills,
             status: newStatus,
+            lastRatingChange: updatedLastRatingChange
         };
         onSave(player);
         onClose();
