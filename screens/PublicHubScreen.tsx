@@ -157,7 +157,7 @@ const NavHubButton: React.FC<{
     >
         <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 
             ${isActive 
-                ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/5 drop-shadow-[0_0_12px_rgba(0,242,254,0.5)] shadow-[0_0_20px_rgba(0,242,254,0.25)]' 
+                ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 shadow-[0_0_20px_rgba(0,242,254,0.6),inset_0_0_8px_rgba(0,242,254,0.3)]' 
                 : 'text-white/60 border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/30 hover:text-white hover:shadow-[0_0_12px_rgba(255,255,255,0.15)]'
             }`}>
             {React.cloneElement(icon as React.ReactElement, { className: "w-4 h-4" })}
@@ -233,7 +233,7 @@ const HubNav: React.FC<{
                 pl-24 -> Space from left (ball)
                 pr-4 -> REDUCED from pr-12 to maintain just enough clearance from the Language button
             */}
-            <div className={`flex-grow h-full overflow-hidden flex items-center ${isDashboardOpen ? 'justify-center px-4' : 'justify-start pl-24 pr-4'}`}>
+            <div className={`flex-grow h-full overflow-hidden flex items-center ${isDashboardOpen ? 'justify-center px-4' : 'justify-start pl-6 pr-4'}`}>
                 {isDashboardOpen ? (
                     <div className="flex items-center gap-8 min-w-fit">
                         <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center">

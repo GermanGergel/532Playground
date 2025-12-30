@@ -5,8 +5,10 @@ import { NewsItem, Player, PlayerTier, Team } from '../types';
 import { TrophyIcon, Zap, History as HistoryIcon, Users, AwardIcon, StarIcon, Target } from '../icons';
 import { useTranslation } from './ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
+// FIX: Import TeamAvatar component
+import { TeamAvatar } from './avatars';
 
-// --- LOCAL ICONS ---
+// --- LOCAL ICONS FOR WIDGET ---
 const MapPinIcon = ({ className }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
 );
@@ -15,6 +17,12 @@ const ClockIcon = ({ className }: { className?: string }) => (
 );
 const CloudRainIcon = ({ className }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/></svg>
+);
+const CloudIcon = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17.5 19c0-1.7-1.3-3-3-3h-1.1c-.2-3.4-3.1-6-6.5-6-3.8 0-6.8 3.1-6.8 7s3 7 6.8 7h8a4 4 0 0 0 2.6-7.3Z"/></svg>
+);
+const MoonIcon = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
 );
 const TermometerIcon = ({ className }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
@@ -288,7 +296,7 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
     <div className="flex flex-col h-full justify-between py-2">
         <div className="flex items-start gap-3 border-b border-white/5 pb-4">
             <div className="w-10 h-10 rounded-xl bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shrink-0"><MapPinIcon className="w-5 h-5" /></div>
-            <div className="flex flex-col pt-0.5"><span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">{t.hubLocation}</span><span className="font-chakra font-bold text-base text-white uppercase tracking-wide truncate max-w-[200px]">{session.location || "PITCH DATA UNAVAILABLE"}</span></div>
+            <div className="flex flex-col pt-0.5"><span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">{t.hubLocation}</span><span className="font-chakra font-bold text-base text-white uppercase tracking-wide truncate max-w-[200px] md:max-w-[250px]">{session.location || "PITCH DATA UNAVAILABLE"}</span></div>
         </div>
         <div className="flex items-center gap-3 border-b border-white/5 py-4">
             <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0"><ClockIcon className="w-5 h-5" /></div>
@@ -323,18 +331,21 @@ export const PublicHubDashboard: React.FC = () => {
     if (!session) return <StandbyScreen />;
 
     const { teamStats, allPlayersStats } = calculateAllStats(session);
-    const sortedAllPlayers = [...allPlayersStats].sort((a, b) => getImpactScore(b) - getImpactScore(a));
 
-    const top3Players: TopPlayerStats[] = sortedAllPlayers
-        .filter(p => p.gamesPlayed > 0)
-        .slice(0, 3)
-        .map((p, i) => ({ player: p.player, score: getImpactScore(p), rank: (i + 1) as any }));
+    // Sorting for Podium (Impact Score)
+    const sortedForPodium = [...allPlayersStats].sort((a, b) => getImpactScore(b) - getImpactScore(a));
 
+    // Sorting for Table (Goals + Assists)
+    const sortedForTable = [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists));
+
+    const top3Leaders = useMemo(() => [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists) || b.player.rating - a.player.rating), [allPlayersStats]);
     const finishedGames = [...session.games]
         .filter(g => g.status === 'finished')
         .sort((a, b) => a.gameNumber - b.gameNumber);
 
     const thStandings = "py-2 text-white/40 uppercase tracking-tighter text-[8px] font-black text-center sticky top-0 bg-[#1e293b]/50 backdrop-blur-sm z-10 border-b border-white/5";
+    // FIX: Define tdBase class variable for use in table cells.
+    const tdBase = "py-2.5 text-center text-[10px] font-bold transition-colors";
 
     return (
         <div className="h-full flex flex-col animate-in fade-in duration-700 w-full relative p-2 md:p-3">
@@ -347,7 +358,7 @@ export const PublicHubDashboard: React.FC = () => {
                 <div className="col-span-12 md:col-span-9 flex flex-col gap-4 h-full min-h-[600px]">
                     <div className="flex-[4] min-h-0 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200 flex gap-3">
                          <HubCard title={t.hubSessionLeaders} align="right" icon={<AwardIcon />} accent="#FFD700" variant="elite" className="flex-[2] h-full min-h-[350px]" bodyClassName="flex flex-col bg-transparent">
-                            <div className="flex-grow relative"><SessionPodium players={top3Players} t={t} /></div>
+                            <div className="flex-grow relative"><SessionPodium players={top3Leaders} t={t} /></div>
                         </HubCard>
                         <HubCard title={t.hubMatchReport} icon={<Target />} accent="#00F2FE" variant="standings" className="flex-1 h-full min-h-[350px]" bodyClassName="flex flex-col p-5"><MatchEnvironmentWidget session={session} t={t} /></HubCard>
                     </div>
@@ -374,17 +385,17 @@ export const PublicHubDashboard: React.FC = () => {
                                 <tbody>{teamStats.map((stat, idx) => (<tr key={stat.team.id} className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors"><td className="py-1.5 text-center text-[9px] font-bold text-white/30 bg-white/5">{idx + 1}</td><td className="py-1.5 flex justify-center"><SubtleDashboardAvatar team={stat.team} size="xxs" isLight /></td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.gamesPlayed}</td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.wins}</td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.draws}</td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.losses}</td><td className="py-1.5 text-center text-[10px] font-bold text-white/40">{stat.goalDifference > 0 ? `+${stat.goalDifference}` : stat.goalDifference}</td><td className="py-1.5 text-center text-[12px] font-bold text-white bg-white/5">{stat.points}</td></tr>))}</tbody>
                             </table></div>
                     </HubCard>
-                    <HubCard title={<div className="flex gap-14"><button onClick={() => setActiveRightTab('players')} className={`font-russo text-[10px] uppercase tracking-widest ${activeRightTab === 'players' ? 'text-[#00F2FE]' : 'text-white/20'}`}>{t.hubPlayers}</button><button onClick={() => setActiveRightTab('games')} className={`font-russo text-[10px] uppercase tracking-widest ${activeRightTab === 'games' ? 'text-[#00F2FE]' : 'text-white/20'}`}>{t.hubGames}</button></div>} icon={activeRightTab === 'players' ? <Users /> : <HistoryIcon />} variant="standings" accent="#00F2FE" className="flex-grow min-h-0 h-[450px]" bodyClassName="flex flex-col h-full">
+                    <HubCard title={<div className="flex gap-14"><button onClick={() => setActiveRightTab('players')} className={`font-russo text-[10px] uppercase tracking-widest ${activeRightTab === 'players' ? 'text-[#00F2FE]' : 'text-white/20'}`}>{t.hubPlayers}</button><button onClick={() => setActiveRightTab('games')} className={`font-russo text-[10px] uppercase tracking-widest ${activeRightTab === 'games' ? 'text-[#00F2FE]' : 'text-white/20'}`}>{t.hubGames}</button></div>} icon={activeRightTab === 'players' ? <Users /> : <HistoryIcon />} variant="standings" accent="#00F2FE" className="flex-grow min-h-0 h-[450px]" bodyClassName="flex flex-col h-full min-h-0">
                         <div className="flex-grow overflow-y-auto custom-hub-scrollbar h-full">
                             {activeRightTab === 'players' ? (
                                 <table className="w-full table-fixed border-collapse">
                                     <thead><tr><th className={`${thStandings} w-[10%]`}>#</th><th className={`${thStandings} text-left pl-3 w-[45%]`}>{t.players}</th><th className={`${thStandings} w-[15%]`}>{t.thG}</th><th className={`${thStandings} w-[15%]`}>{t.thA}</th><th className={`${thStandings} w-[15%]`}>{t.thTotal}</th></tr></thead>
-                                    <tbody>{sortedAllPlayers.map((ps, idx) => (<tr key={ps.player.id} className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors group"><td className="py-2 text-center text-[9px] font-bold text-white/30 bg-white/[0.02]">{idx + 1}</td><td className="py-2 text-left pl-3 relative overflow-hidden"><div className="absolute left-0 top-1/2 -translate-y-1/2 w-[0.5px] h-4" style={{ backgroundColor: ps.team.color }} /><span className="text-slate-300 font-bold uppercase truncate text-[11px] block w-full pl-1.5">{ps.player.nickname}</span></td><td className="py-2 text-center text-[10px] font-bold text-white/60">{ps.goals}</td><td className="py-2 text-center text-[10px] font-bold text-white/60">{ps.assists}</td><td className="py-2 text-center text-[12px] font-bold text-white bg-white/[0.03]">{ps.goals + ps.assists}</td></tr>))}</tbody>
+                                    <tbody>{sortedForTable.map((ps, idx) => (<tr key={ps.player.id} className="group hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"><td className="py-2 text-center text-[9px] font-bold text-white/30 bg-white/[0.02]">{idx + 1}</td><td className="py-2 text-left pl-3 relative overflow-hidden group-hover:bg-white/5"><div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-3 rounded-r-full" style={{ backgroundColor: ps.team.color }} /><span className="text-slate-300 font-bold uppercase truncate text-[11px] block w-full pl-2 group-hover:text-white transition-colors">{ps.player.nickname || 'Unknown'}</span></td><td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.goals}</td><td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.assists}</td><td className="py-2 text-center text-[12px] font-bold text-white bg-white/[0.03]">{ps.goals + ps.assists}</td></tr>))}</tbody>
                                 </table>
                             ) : (
                                 <table className="w-full table-fixed border-collapse">
-                                    <thead><tr><th className={`${thStandings} w-[15%]`}>#</th><th className={`${thStandings} w-[20%]`}>{t.hubHome}</th><th className={`${thStandings} w-[45%]`}>{t.hubResult}</th><th className={`${thStandings} w-[20%]`}>{t.hubAway}</th></tr></thead>
-                                    <tbody>{finishedGames.map((game) => (<tr key={game.id} className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"><td className="py-3 text-center text-[9px] font-bold text-white/30">{game.gameNumber}</td><td className="py-3 text-center"><SubtleDashboardAvatar team={session.teams.find((t:any) => t.id === game.team1Id)} size="xxs" isLight /></td><td className="py-3 text-center font-bold text-[12px] text-slate-200">{game.team1Score}:{game.team2Score}</td><td className="py-3 text-center"><SubtleDashboardAvatar team={session.teams.find((t:any) => t.id === game.team2Id)} size="xxs" isLight /></td></tr>))}</tbody>
+                                    <thead><tr><th className={`${thStandings} w-[15%]`}>#</th><th className={`${thStandings} w-[25%] text-center`}>{t.hubHome}</th><th className={`${thStandings} w-[35%] text-center`}>{t.hubResult}</th><th className={`${thStandings} w-[25%] text-center`}>{t.hubAway}</th></tr></thead>
+                                    <tbody>{finishedGames.map((game) => (<tr key={game.id} className="group hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"><td className={`${tdBase} text-white/30 font-mono`}>{game.gameNumber}</td><td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team1Id) || {}} size="xxs" isLight={true} /></div></td><td className="py-2.5 text-center"><span className="font-bold text-[11px] md:text-[12px] text-slate-200 tabular-nums tracking-tighter bg-white/5 px-2 py-1 rounded">{game.team1Score} : {game.team2Score}</span></td><td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team2Id) || {}} size="xxs" isLight={true} /></div></td></tr>))}</tbody>
                                 </table>
                             )}
                         </div>
