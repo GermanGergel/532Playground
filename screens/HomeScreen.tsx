@@ -59,7 +59,7 @@ const HubAccessPass: React.FC<{ url: string; qrSrc: string }> = ({ url, qrSrc })
                             </span>
                         </div>
                         
-                        <h1 style={{ fontFamily: '"Russo One", sans-serif', fontSize: '64px', lineHeight: '0.85', color: 'white', margin: 0, tracking: '-0.02em' }}>
+                        <h1 style={{ fontFamily: '"Russo One", sans-serif', fontSize: '64px', lineHeight: '0.85', color: 'white', margin: 0, letterSpacing: '-0.02em' }}>
                             ACCESS<br/><span style={{ color: '#00F2FE', textShadow: '0 0 30px rgba(0, 242, 254, 0.3)' }}>GRANTED</span>
                         </h1>
                     </div>
