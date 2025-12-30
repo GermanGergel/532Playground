@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, useTranslation } from '../ui';
+import { Modal, Button, useTranslation } from '../components/ui';
 import { fetchWeatherForDate } from '../services/weather';
 import { WeatherCondition } from '../types';
 
@@ -68,8 +67,6 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({ isOpen
                 if (weatherData) {
                     setTemperature(Math.round(weatherData.temperature) + 2); // Custom adjustment as per user request (+2)
                     
-                    // Simple mapping based on WMO codes from weather service, or just default to clear
-                    // Since user manually selects, we just provide a good starting point
                     const code = weatherData.weatherCode;
                     if (code >= 51) setCondition('rain');
                     else if (code > 2) setCondition('cloud');
@@ -105,7 +102,6 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({ isOpen
             containerClassName="!bg-[#0a0c10] border border-white/10 shadow-2xl overflow-hidden"
         >
             <div className="relative">
-                {/* Header Decoration */}
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent opacity-50"></div>
                 
                 <h2 className="text-center font-russo text-xl text-white uppercase tracking-wider mb-6 mt-2">
@@ -113,8 +109,6 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({ isOpen
                 </h2>
 
                 <div className="space-y-5">
-                    
-                    {/* 1. LOCATION */}
                     <div>
                         <label className={labelClass}>LOCATION</label>
                         <div className="flex flex-wrap gap-2 mb-2">
@@ -139,8 +133,6 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({ isOpen
                             className={inputClass}
                         />
                     </div>
-
-                    {/* 2. TIME */}
                     <div>
                         <label className={labelClass}>TIME</label>
                         <input 
@@ -150,13 +142,9 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({ isOpen
                             className={`${inputClass} text-center tracking-widest`}
                         />
                     </div>
-
-                    {/* 3. WEATHER */}
                     <div>
                         <label className={labelClass}>WEATHER REPORT</label>
                         <div className="bg-white/5 rounded-2xl p-3 border border-white/5 flex items-center justify-between">
-                            
-                            {/* Temperature Input */}
                             <div className="flex flex-col items-center border-r border-white/10 pr-4">
                                 <div className="flex items-center">
                                     <input 
@@ -169,8 +157,6 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({ isOpen
                                 </div>
                                 <span className="text-[8px] text-white/30 uppercase tracking-widest">TEMP</span>
                             </div>
-
-                            {/* Condition Icons */}
                             <div className="flex gap-2 pl-2">
                                 <button 
                                     onClick={() => setCondition('clear')}
@@ -193,10 +179,7 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({ isOpen
                             </div>
                         </div>
                     </div>
-
                 </div>
-
-                {/* Footer Buttons */}
                 <div className="mt-8 flex flex-col gap-3">
                     <Button 
                         variant="secondary" 

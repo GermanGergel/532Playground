@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useApp } from './context';
@@ -103,8 +102,6 @@ export const BottomNav: React.FC = () => {
     );
 };
 
-// FIX: Added STRICT overflow control. max-w-[100vw] prevents the container from being wider than the viewport.
-// overflow-x-hidden clips anything inside that tries to stick out.
 export const Page: React.FC<{children: React.ReactNode, title?: string, className?: string} & React.HTMLAttributes<HTMLDivElement>> = ({children, title, className = '', ...props}) => (
     <div className={`p-4 pb-28 w-full max-w-[100vw] overflow-x-hidden box-border relative ${className}`} {...props}>
         {title && <h1 className="text-4xl font-bold mb-6">{title}</h1>}
@@ -126,14 +123,21 @@ export const PageHeader: React.FC<{ title: string; children?: React.ReactNode; h
                 </Button>
             )}
             <h1 className="text-2xl font-bold text-center absolute left-1/2 -translate-x-1/2">{title}</h1>
-            <div className="w-9">{children}</div> {/* Spacer to balance the back button */}
+            <div className="w-9">{children}</div>
         </div>
     );
 };
 
-export const Card: React.FC<{title?: string, children: React.ReactNode, className?: string} & React.HTMLAttributes<HTMLDivElement>> = ({title, children, className, ...props}) => (
+interface CardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
+    title?: React.ReactNode;
+    children: React.ReactNode;
+    titleClassName?: string;
+    className?: string;
+}
+
+export const Card: React.FC<CardProps> = ({title, children, className, titleClassName = "", ...props}) => (
     <div className={`relative rounded-2xl bg-dark-surface/80 backdrop-blur-sm border border-white/10 p-3 sm:p-4 ${className}`} {...props}>
-        {title && <h2 className="text-xs font-bold mb-2">{title}</h2>}
+        {title && <h2 className={`text-xs font-bold mb-2 ${titleClassName}`}>{title}</h2>}
         {children}
     </div>
 );
@@ -160,28 +164,5 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({ isOn, onToggle }) =>
 };
 
 export const SessionModeIndicator: React.FC = () => {
-    // INDICATOR DISABLED:
-    // The user requested to remove all logic/UI related to Test vs Real sessions.
-    // Returning null effectively hides the indicators from Match, Assign, etc. without needing to edit every file.
     return null;
-    
-    /* Original Code preserved for reference:
-    const { activeSession } = useApp();
-    if (!activeSession) return null;
-
-    const isTest = activeSession.isTestMode === true;
-    const color = isTest ? '#FF4136' : '#00F2FE'; // Red for test, Neon for real
-    const glowColor = isTest ? 'rgba(255, 65, 54, 0.5)' : 'rgba(0, 242, 254, 0.5)';
-
-    return (
-        <div 
-            className="w-2 h-2 rounded-full flex-shrink-0"
-            style={{ 
-                backgroundColor: color,
-                boxShadow: `0 0 4px ${glowColor}`,
-            }}
-            title={isTest ? 'Test Mode' : 'Real Session'}
-        />
-    );
-    */
 };
