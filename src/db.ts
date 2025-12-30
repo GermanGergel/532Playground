@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
-import { Player, Session, NewsItem, PromoData } from './types';
-import { Language } from './translations/index';
+import { Player, Session, NewsItem, PromoData } from '../types';
+import { Language } from '../translations/index';
 import { get, set, del } from 'idb-keyval';
 
 // --- SUPABASE CONFIGURATION ---

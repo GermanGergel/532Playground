@@ -120,7 +120,7 @@ export const PageHeader: React.FC<{ title: string; children?: React.ReactNode; h
             ) : (
                 <Button variant="ghost" className="!p-2 -ml-2" onClick={() => navigate(-1)}>
                     <ChevronLeft className="w-7 h-7" />
-                </head>
+                </Button>
             )}
             <h1 className="text-2xl font-bold text-center absolute left-1/2 -translate-x-1/2">{title}</h1>
             <div className="w-9">{children}</div>

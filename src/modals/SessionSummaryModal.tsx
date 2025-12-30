@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, useTranslation } from '../components/ui';
-import { fetchWeatherForDate } from '../services/weather';
-import { WeatherCondition } from '../types';
+import { Modal, Button, useTranslation } from '../../ui';
+import { fetchWeatherForDate } from '../../services/weather';
+import { WeatherCondition } from '../../types';
 
 // Local Icons for this modal to ensure style consistency
 const MoonIcon = ({ className }: { className?: string }) => (
