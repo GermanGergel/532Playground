@@ -112,7 +112,7 @@ export const ru = {
   hubAnalytics: "Аналитика Хаба",
   settingsGenDemoSession: "СОЗДАТЬ ДЕМО СЕССИЮ",
   settingsGenDemoPlayers: "СОЗДАТЬ 10 ИГРОКОВ",
-  ledgerTitle: "Касса Сессии",
+  ledgerTitle: "Касса",
   ledgerEmpty: "Нет Данных",
   ledgerCollected: "Собрано",
   ledgerClear: "Очистить Кассу",

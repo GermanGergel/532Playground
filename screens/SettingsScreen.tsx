@@ -1,10 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Card, Button, useTranslation } from '../ui';
-import { isSupabaseConfigured, getCloudPlayerCount, saveHistoryToDB, savePlayersToDB } from '../db';
+import { isSupabaseConfigured, getCloudPlayerCount } from '../db';
 import { Wand, Activity } from '../icons';
-import { generateSingleDemoSession, generateDiverseDemoPlayers } from '../services/demo';
 
 const WalletIcon = ({ className }: { className?: string }) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -17,7 +17,7 @@ const WalletIcon = ({ className }: { className?: string }) => (
 export const SettingsScreen: React.FC = () => {
     const t = useTranslation();
     const navigate = useNavigate();
-    const { language, setLanguage, allPlayers, setAllPlayers, history, setHistory } = useApp();
+    const { language, setLanguage, allPlayers } = useApp();
     const [cloudStatus, setCloudStatus] = React.useState<{ connected: boolean, count: number } | null>(null);
     const [isRefreshing, setIsRefreshing] = React.useState(false);
     
@@ -43,22 +43,6 @@ export const SettingsScreen: React.FC = () => {
     useEffect(() => {
         checkCloud();
     }, []);
-
-    const handleGenDemoSession = async () => {
-        const demoSession = generateSingleDemoSession("Demo Championship", 0);
-        const newHistory = [demoSession, ...history];
-        setHistory(newHistory);
-        await saveHistoryToDB(newHistory);
-        alert("Demo Session Generated!");
-    };
-
-    const handleGenDemoPlayers = async () => {
-        const demoPlayers = generateDiverseDemoPlayers(10);
-        const newPlayersList = [...allPlayers, ...demoPlayers];
-        setAllPlayers(newPlayersList);
-        await savePlayersToDB(newPlayersList);
-        alert("10 Demo Players Added!");
-    };
 
     const langClasses = (lang: string) => `px-3 py-1 rounded-full font-bold transition-colors text-base ${language === lang ? 'gradient-bg text-dark-bg' : 'bg-dark-surface hover:bg-white/10'}`;
 
@@ -195,23 +179,6 @@ export const SettingsScreen: React.FC = () => {
                             </div>
                         </Card>
                     </Link>
-                    
-                    <div className="pt-6 space-y-3">
-                        <Button 
-                            variant="secondary" 
-                            onClick={handleGenDemoSession}
-                            className="w-full !py-3 border-dashed border border-dark-accent-start/30 text-xs tracking-widest uppercase"
-                        >
-                            {t.settingsGenDemoSession}
-                        </Button>
-                        <Button 
-                            variant="secondary" 
-                            onClick={handleGenDemoPlayers}
-                            className="w-full !py-3 border-dashed border border-dark-accent-start/30 text-xs tracking-widest uppercase"
-                        >
-                            {t.settingsGenDemoPlayers}
-                        </Button>
-                    </div>
                 </div>
             </div>
 
@@ -228,7 +195,7 @@ export const SettingsScreen: React.FC = () => {
                 
                 <div className="text-center opacity-40 hover:opacity-100 transition-opacity duration-500">
                     <p className="font-orbitron font-bold text-sm tracking-widest text-dark-accent-start">532 PLAYGROUND</p>
-                    <p className="text-[10px] text-dark-text-secondary font-mono mt-1">v4.0.0 • SYSTEM READY</p>
+                    <p className="text-[10px] text-dark-text-secondary font-mono mt-1">v4.0.1 • SYSTEM READY</p>
                 </div>
             </div>
         </div>
