@@ -151,8 +151,7 @@ export const PlayerProfileScreen: React.FC = () => {
             if (!rawAvatarUrl || !rawCardUrl) { throw new Error("Cloud upload failed."); }
 
             // --- CACHE BUSTING FIX ---
-            // Добавляем уникальную метку времени к URL, чтобы браузер (и компоненты Avatar)
-            // гарантированно загрузили новую картинку, а не брали старую из кэша.
+            // Добавляем ?t=время чтобы телефон думал, что это новая картинка
             const timestamp = Date.now();
             const avatarUrl = `${rawAvatarUrl}?t=${timestamp}`;
             const cardUrl = `${rawCardUrl}?t=${timestamp}`;
