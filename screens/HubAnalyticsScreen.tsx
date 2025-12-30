@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Page, PageHeader, Card, useTranslation, Button } from '../components/ui';
+import { Page, PageHeader, Card, useTranslation, Button } from '../ui';
 import { Activity, RefreshCw, TrophyIcon, History, InfoIcon, LayoutDashboard, Users } from '../icons';
 import { getAnalyticsSummary } from '../db';
 

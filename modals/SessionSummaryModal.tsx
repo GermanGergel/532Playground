@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, useTranslation } from '../components/ui';
+import { Modal, Button, useTranslation } from '../ui';
 import { fetchWeatherForDate } from '../services/weather';
 import { WeatherCondition } from '../types';
 
@@ -76,11 +76,10 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({ isOpen
             const fetchInitialWeather = async () => {
                 setIsLoadingWeather(true);
                 const today = new Date().toISOString().split('T')[0];
-                // Approximate time for weather API (20:00)
                 const weatherData = await fetchWeatherForDate(today, "20:00", "Da Nang");
                 
                 if (weatherData) {
-                    setTemperature(Math.round(weatherData.temperature) + 2); // Custom adjustment as per user request (+2)
+                    setTemperature(Math.round(weatherData.temperature) + 2); 
                     setIsDay(weatherData.isDay);
                     
                     const code = weatherData.weatherCode;
