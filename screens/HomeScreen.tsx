@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Page, Button, useTranslation, Modal } from '../components';
 import { homeScreenBackground } from '../assets';
 import { BrandedHeader } from './utils';
-import { Globe } from '../icons'; // Import the new Globe icon
+import { Globe } from '../icons';
 import html2canvas from 'html2canvas';
 
 // Standardized QR Icon to match other icons structure
@@ -13,15 +14,12 @@ const QrIcon = (props: React.SVGProps<SVGSVGElement>) => (
       <rect x="3" y="3" width="7" height="7"></rect>
       <rect x="14" y="3" width="7" height="7"></rect>
       <rect x="14" y="14" width="7" height="7"></rect>
-      <path d="M3 14h7v7H3z" /> {/* Simplified path for the last rect to match style */}
+      <path d="M3 14h7v7H3z" />
   </svg>
 );
 
-// --- DIGITAL ACCESS PASS COMPONENT (Hidden for Export) ---
+// --- DIGITAL ACCESS PASS COMPONENT (The Premium Obsidian Card) ---
 const HubAccessPass: React.FC<{ url: string; qrSrc: string }> = ({ url, qrSrc }) => {
-    // Extract a cleaner display URL (e.g., just the domain) for visuals
-    const displayUrl = "532PLAYGROUND.COM"; 
-
     return (
         <div 
             id="hub-access-card"
@@ -32,65 +30,72 @@ const HubAccessPass: React.FC<{ url: string; qrSrc: string }> = ({ url, qrSrc })
                 top: 0,
                 left: '-9999px',
                 zIndex: -10,
-                backgroundColor: '#0a0c10',
+                backgroundColor: '#05070a', // Deepest black
                 backgroundImage: `
-                    radial-gradient(circle at 100% 0%, #1e293b 0%, transparent 50%),
-                    radial-gradient(circle at 0% 100%, #00F2FE10 0%, transparent 50%),
+                    radial-gradient(circle at 20% 20%, rgba(0, 242, 254, 0.05) 0%, transparent 50%),
                     url("https://www.transparenttextures.com/patterns/carbon-fibre.png")
                 `,
-                backgroundSize: 'cover, cover, auto',
+                backgroundSize: 'cover, auto',
                 overflow: 'hidden',
-                borderRadius: '24px',
+                borderRadius: '28px',
                 fontFamily: '"Chakra Petch", sans-serif',
                 color: 'white',
-                border: '1px solid #334155'
+                border: '1px solid rgba(255,255,255,0.08)',
+                display: 'flex'
             }}
         >
-            {/* Design Elements */}
-            <div style={{ position: 'absolute', top: '30px', right: '30px', width: '100px', height: '100px', background: '#00F2FE', filter: 'blur(80px)', opacity: 0.2 }}></div>
+            {/* Top Border Glow */}
+            <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: '1px', background: 'linear-gradient(90deg, transparent, #00F2FE, transparent)', opacity: 0.6 }}></div>
             
-            {/* Strip */}
-            <div style={{ position: 'absolute', left: '40px', top: '0', bottom: '0', width: '2px', background: 'linear-gradient(to bottom, transparent, #00F2FE, transparent)', opacity: 0.5 }}></div>
+            {/* Design Element: Decorative Numbers */}
+            <div style={{ position: 'absolute', bottom: '-20px', left: '40px', fontSize: '120px', fontWeight: 900, color: 'rgba(255,255,255,0.03)', fontFamily: '"Russo One", sans-serif', letterSpacing: '-0.05em', zIndex: 0 }}>
+                532
+            </div>
 
-            <div style={{ display: 'flex', height: '100%', padding: '40px 40px 40px 70px', position: 'relative', zIndex: 10 }}>
-                {/* Left Side: Branding */}
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                    <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                            <div style={{ width: '8px', height: '8px', background: '#00F2FE', borderRadius: '50%', boxShadow: '0 0 10px #00F2FE' }}></div>
-                            <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#94a3b8', letterSpacing: '0.2em', textTransform: 'uppercase' }}>
-                                OFFICIAL CLUB HUB
-                            </span>
-                        </div>
-                        
-                        <h1 style={{ fontFamily: '"Russo One", sans-serif', fontSize: '56px', lineHeight: '0.9', color: 'white', margin: 0, textShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
-                            ACCESS<br/><span style={{ color: '#00F2FE' }}>GRANTED</span>
-                        </h1>
+            <div style={{ flex: 1, padding: '40px 0 40px 50px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', zIndex: 10 }}>
+                <div>
+                    <div style={{ display: 'flex', itemsCenter: 'center', gap: '10px', marginBottom: '20px' }}>
+                        <div style={{ width: '6px', height: '6px', background: '#00F2FE', borderRadius: '50%', boxShadow: '0 0 10px #00F2FE' }}></div>
+                        <span style={{ fontSize: '11px', fontWeight: 900, color: '#00F2FE', letterSpacing: '0.3em', textTransform: 'uppercase', opacity: 0.8 }}>
+                            OFFICIAL ACCESS PASS
+                        </span>
                     </div>
                     
-                    <div>
-                        <p style={{ margin: 0, fontSize: '14px', color: '#64748b', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
-                            ID: {Math.floor(Math.random() * 1000000).toString(16).toUpperCase()}
-                        </p>
-                        <p style={{ margin: '5px 0 0 0', fontSize: '16px', fontWeight: 'bold', color: 'white', letterSpacing: '0.1em' }}>
-                            {displayUrl}
-                        </p>
+                    <h1 style={{ fontFamily: '"Russo One", sans-serif', fontSize: '64px', lineHeight: '0.85', color: 'white', margin: 0, textShadow: '0 10px 30px rgba(0,0,0,0.8)' }}>
+                        CLUB<br/><span style={{ color: '#00F2FE' }}>HUB</span>
+                    </h1>
+                    
+                    <div style={{ marginTop: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '10px', fontWeight: 'bold', padding: '2px 8px', borderRadius: '4px', background: 'rgba(0, 242, 254, 0.1)', border: '1px solid rgba(0, 242, 254, 0.3)', color: '#00F2FE' }}>STATUS: ACTIVE</span>
+                        <span style={{ fontSize: '10px', fontWeight: 'bold', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.1em' }}>ENC_TYPE: RSA_2048</span>
                     </div>
                 </div>
+                
+                <div style={{ borderLeft: '2px solid #00F2FE', paddingLeft: '15px' }}>
+                    <p style={{ margin: 0, fontSize: '18px', fontWeight: 900, color: 'white', letterSpacing: '0.05em', fontFamily: '"Russo One", sans-serif' }}>
+                        532PLAYGROUND.COM
+                    </p>
+                    <p style={{ margin: '2px 0 0 0', fontSize: '9px', color: 'rgba(255,255,255,0.4)', tracking: '0.1em' }}>
+                        INTELLIGENCE • RANKINGS • LIVE STATS
+                    </p>
+                </div>
+            </div>
 
-                {/* Right Side: QR Card */}
-                <div style={{ width: '160px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ 
-                        background: 'white', 
-                        padding: '12px', 
-                        borderRadius: '16px', 
-                        boxShadow: '0 20px 40px -10px rgba(0,0,0,0.5)'
-                    }}>
-                        <img src={qrSrc} alt="Hub QR" style={{ width: '136px', height: '136px', display: 'block' }} />
-                    </div>
-                    <div style={{ marginTop: '16px', textAlign: 'center' }}>
-                        <span style={{ display: 'block', fontSize: '10px', fontWeight: 'bold', color: '#00F2FE', letterSpacing: '0.2em', textTransform: 'uppercase' }}>SCAN TO ENTER</span>
-                    </div>
+            <div style={{ width: '220px', background: 'rgba(255,255,255,0.02)', borderLeft: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 10 }}>
+                {/* QR Container */}
+                <div style={{ 
+                    background: 'white', 
+                    padding: '10px', 
+                    borderRadius: '20px', 
+                    boxShadow: '0 20px 40px -10px rgba(0,0,0,0.8)',
+                    transform: 'rotate(2deg)'
+                }}>
+                    <img src={qrSrc} alt="Hub QR" style={{ width: '130px', height: '130px', display: 'block' }} />
+                </div>
+                
+                <div style={{ marginTop: '25px', textAlign: 'center', transform: 'rotate(2deg)' }}>
+                    <span style={{ display: 'block', fontSize: '9px', fontWeight: 900, color: 'white', letterSpacing: '0.4em', textTransform: 'uppercase', opacity: 0.5 }}>SCAN TO JOIN</span>
+                    <span style={{ display: 'block', fontSize: '8px', fontMono: 'monospace', color: '#00F2FE', marginTop: '5px' }}>ID: {Math.floor(Math.random() * 1000000).toString(16).toUpperCase()}</span>
                 </div>
             </div>
         </div>
@@ -104,8 +109,6 @@ export const HomeScreen: React.FC = () => {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isGeneratingCard, setIsGeneratingCard] = useState(false);
   
-  // Custom Host for local testing
-  const [customHost, setCustomHost] = useState('');
   const [qrUrl, setQrUrl] = useState('');
   const [hubUrl, setHubUrl] = useState('');
 
@@ -113,14 +116,7 @@ export const HomeScreen: React.FC = () => {
   useEffect(() => {
       const constructUrl = (path: string) => {
           try {
-              // Now using BrowserRouter, we don't need to split at '#'
-              // origin is something like https://532playground.com
               let baseUrl = window.location.origin;
-              
-              if (customHost.trim()) {
-                  baseUrl = `http://${customHost.trim()}`; 
-              }
-
               return `${baseUrl}${path}`;
           } catch (e) {
               console.error("Invalid URL construction", e);
@@ -132,7 +128,7 @@ export const HomeScreen: React.FC = () => {
           setQrUrl(constructUrl('/promo'));
       }
       setHubUrl(constructUrl('/hub'));
-  }, [isQrModalOpen, customHost]);
+  }, [isQrModalOpen]);
 
   const handleContinue = () => {
     if (activeSession) {
@@ -145,7 +141,6 @@ export const HomeScreen: React.FC = () => {
   };
 
   const handleStartNewSession = () => {
-    // Directly navigate to setup, defaulting to Real Training
     navigate('/setup');
   };
 
@@ -176,20 +171,17 @@ export const HomeScreen: React.FC = () => {
 
       const cardElement = document.getElementById('hub-access-card');
       if (!cardElement) {
-          console.error("Hub Access Card element not found");
           handleShareLink(hubUrl, '532 Playground Club Hub');
           setIsGeneratingCard(false);
           return;
       }
 
-      // Ensure fonts are loaded
       await document.fonts.ready;
-      await new Promise(resolve => setTimeout(resolve, 200));
 
       try {
           const canvas = await html2canvas(cardElement, {
-              backgroundColor: '#0a0c10',
-              scale: 2, 
+              backgroundColor: '#05070a',
+              scale: 3, 
               useCORS: true,
               logging: false,
           });
@@ -199,28 +191,23 @@ export const HomeScreen: React.FC = () => {
           if (blob) {
               const file = new File([blob], '532_Access_Pass.png', { type: 'image/png' });
               
-              // Explicitly putting the link in the TEXT field so it appears in the caption
               const fullData = {
                   files: [file],
                   title: '532 Club Access',
-                  text: `🎟️ 532 CLUB HUB ACCESS\n\nTap to enter / Нажмите, чтобы войти:\n${hubUrl}`,
+                  text: `🎟️ 532 CLUB HUB ACCESS\n\nLive Ratings, Rankings & Archive:\n${hubUrl}`,
               };
 
               try {
-                  // Attempt share
                   if (navigator.share && navigator.canShare && navigator.canShare(fullData)) {
                       await navigator.share(fullData);
                   } else {
-                      throw new Error("Share API not fully supported");
+                      throw new Error("Share API not supported");
                   }
               } catch (shareErr) {
-                  // Fallback for desktop/unsupported browsers: download the image
                   const link = document.createElement('a');
                   link.download = '532_Access_Pass.png';
                   link.href = canvas.toDataURL();
                   link.click();
-                  
-                  // Also copy link as backup
                   await navigator.clipboard.writeText(hubUrl);
                   alert("Access Pass downloaded! Link copied to clipboard.");
               }
@@ -233,12 +220,9 @@ export const HomeScreen: React.FC = () => {
       }
   };
 
-  // Generate QR Code URLs using API
   const promoQrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(qrUrl)}&bgcolor=1A1D24&color=00F2FE&qzone=1&ecc=L`;
-  // Use high-contrast QR for the generated card (White background for better scanning)
   const hubQrForCard = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(hubUrl)}&qzone=0&ecc=M`;
 
-  // Unified button style for top-right controls
   const controlButtonClass = "w-12 h-12 flex items-center justify-center bg-dark-surface/80 rounded-full border shadow-[0_0_15px_rgba(0,242,254,0.2)] active:scale-95 transition-all hover:bg-dark-surface hover:scale-110";
 
   return (
@@ -247,7 +231,7 @@ export const HomeScreen: React.FC = () => {
         {/* Hidden Access Card for Generation */}
         <HubAccessPass url={hubUrl} qrSrc={hubQrForCard} />
 
-        {/* QR Code / Recruit Modal */}
+        {/* RECRUIT MODAL */}
         <Modal
             isOpen={isQrModalOpen}
             onClose={() => setIsQrModalOpen(false)}
@@ -268,12 +252,6 @@ export const HomeScreen: React.FC = () => {
                     </a>
                 </div>
 
-                <div className="w-full bg-black/40 rounded-lg p-3 border border-white/5">
-                    <p className="text-[10px] text-gray-400 text-center mb-1 truncate">
-                        Link: {qrUrl}
-                    </p>
-                </div>
-
                 <div className="flex flex-col gap-2 w-full">
                     <Button variant="secondary" onClick={() => handleShareLink(qrUrl, 'Join the club!')} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">
                         SHARE LINK
@@ -286,9 +264,8 @@ export const HomeScreen: React.FC = () => {
         </Modal>
         
         <div className="flex flex-col min-h-[calc(100vh-8rem)] justify-between relative">
-             {/* Top Right Controls Container */}
              <div className="absolute top-4 right-0 z-50 flex flex-row gap-3 items-center">
-                 {/* Globe Button (Public Hub) - DIRECT SHARE GENERATION */}
+                 {/* Hub Button */}
                  <button 
                     onClick={handleShareHub}
                     disabled={isGeneratingCard}
@@ -302,7 +279,7 @@ export const HomeScreen: React.FC = () => {
                     )}
                  </button>
 
-                 {/* QR Button (Recruit) */}
+                 {/* Recruit Button */}
                  <button 
                     onClick={() => setIsQrModalOpen(true)}
                     className={`${controlButtonClass} text-dark-accent-start border-dark-accent-start/30`}
@@ -314,9 +291,7 @@ export const HomeScreen: React.FC = () => {
 
              <BrandedHeader className="mt-12" />
 
-            <div className="flex-grow flex items-center justify-center">
-               {/* Empty center space */}
-            </div>
+            <div className="flex-grow flex items-center justify-center"></div>
             
             <main className="flex flex-col items-center gap-4 w-full mt-auto">
                  <Button 
