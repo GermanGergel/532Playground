@@ -8,6 +8,7 @@ import { processFinishedSession } from '../services/sessionProcessor';
 import { newId } from '../screens/utils';
 import { savePlayersToDB, saveNewsToDB, saveHistoryLocalOnly } from '../db';
 import { useTranslation } from '../ui';
+import { SessionSummaryData } from '../modals/SessionSummaryModal';
 
 export const useGameManager = () => {
     const { activeSession, setActiveSession, setHistory, setAllPlayers, setNewsFeed, allPlayers: oldPlayersState, newsFeed, activeVoicePack } = useApp();
@@ -473,11 +474,17 @@ export const useGameManager = () => {
         setSubModalState({ isOpen: false });
     };
     
-    // --- INSTANT SAVE LOGIC ---
-    const handleFinishSession = async () => {
+    // --- INSTANT SAVE LOGIC (Updated to accept Summary Data) ---
+    const handleFinishSession = async (summaryData?: SessionSummaryData) => {
         if (!activeSession) return;
 
-        // No test mode checks anymore. All sessions proceed to processing.
+        // Apply summary data (Location, Time, Weather) if provided
+        const sessionToProcess = { ...activeSession };
+        if (summaryData) {
+            sessionToProcess.location = summaryData.location;
+            sessionToProcess.timeString = summaryData.timeString;
+            sessionToProcess.weather = summaryData.weather;
+        }
         
         // 2. Process Data (Synchronous/Fast)
         const {
@@ -486,7 +493,7 @@ export const useGameManager = () => {
             finalSession,
             updatedNewsFeed
         } = processFinishedSession({
-            session: activeSession,
+            session: sessionToProcess,
             oldPlayers: oldPlayersState,
             newsFeed: newsFeed,
         });

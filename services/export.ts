@@ -1,8 +1,15 @@
+
 import { Session, EventType, GoalPayload, SubPayload, StartRoundPayload } from '../types';
 import html2canvas from 'html2canvas'; // Import html2canvas
 
 // Data Export Utilities
-export const formatDate = (date: Date) => date.toISOString().split('T')[0];
+// FIX: Using local date components instead of toISOString() to avoid UTC-shift errors (e.g. 23rd becoming 22nd)
+export const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
 
 export const exportSessionAsJson = async (session: Session) => {
     const { eventLog } = session;

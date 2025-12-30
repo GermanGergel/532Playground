@@ -13,9 +13,8 @@ export enum PlayerStatus {
 export enum PlayerTier {
     Legend = 'legend',
     Elite = 'elite',
-    Strong = 'strong',
-    Average = 'average',
-    Developing = 'developing'
+    Pro = 'pro',
+    Regular = 'regular'
 }
 
 export type PlayerForm = 'hot_streak' | 'stable' | 'cold_streak';
@@ -73,6 +72,7 @@ export interface Player {
     totalLosses: number;
     totalSessionsPlayed: number;
     rating: number;
+    initialRating: number; // The floor below which rating cannot fall
     tier: PlayerTier;
     monthlyGoals: number;
     monthlyAssists: number;
@@ -199,6 +199,8 @@ export interface EventLogEntry {
 
 export type SyncState = 'synced' | 'pending' | 'error';
 
+export type WeatherCondition = 'clear' | 'cloud' | 'rain' | 'storm';
+
 export interface Session {
     id: string;
     sessionName: string;
@@ -215,6 +217,13 @@ export interface Session {
     playerPool: Player[];
     eventLog: EventLogEntry[];
     syncStatus?: SyncState;
+    // New Fields for Match Report
+    location?: string;
+    timeString?: string; // e.g. "19:30 - 21:00"
+    weather?: {
+        temperature: number;
+        condition: WeatherCondition;
+    };
 }
 
 export type NewsType = 'tier_up' | 'badge' | 'milestone' | 'hot_streak' | 'penalty';

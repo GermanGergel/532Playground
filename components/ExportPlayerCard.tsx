@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Player, BadgeType, PlayerStatus, SkillType } from '../types';
+import { Player, BadgeType, PlayerStatus, SkillType, PlayerForm } from '../types';
 import { useTranslation } from '../ui';
 import { BadgeIcon, getBadgePriority } from '../features';
 import { StarIcon } from '../icons';
@@ -41,7 +41,6 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
     const countryCodeAlpha2 = React.useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
 
     const topBadges = React.useMemo(() => {
-        // Priority Sort - Take top 6 to fit the footer nicely
         return Object.entries(player.badges || {})
             .map(([badge]) => badge as BadgeType)
             .sort((a, b) => getBadgePriority(b) - getBadgePriority(a))
@@ -76,11 +75,11 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
             style={{ 
                 width: 400, 
                 height: 711,
-                boxShadow: 'inset 0 0 20px 10px rgba(0,0,0,0.5)' // Inner shadow for depth
+                boxShadow: 'inset 0 0 20px 10px rgba(0,0,0,0.5)'
             }} 
-            className="relative font-chakra bg-dark-surface text-white overflow-hidden"
+            className="relative font-chakra bg-dark-bg text-white overflow-hidden"
         >
-            {/* Layer 0: Big Name in the back */}
+            {/* Background Branding Name */}
             <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
                 <h2 
                     className="font-blackops text-[130px] uppercase text-white/10 -rotate-90 origin-center tracking-widest"
@@ -90,32 +89,28 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
                 </h2>
             </div>
             
-            {/* Layer 1: Background Image Div (with depth effect) */}
+            {/* Main Player Photo */}
             {player.playerCard ? (
                 <div
                     className="absolute inset-0 w-full h-full bg-cover bg-center z-10"
                     style={{ 
                         backgroundImage: `url(${player.playerCard})`,
-                        transform: 'scale(1.05) perspective(1000px)', // 3D effect
+                        transform: 'scale(1.05)',
                     }}
                 />
             ) : (
                 <div className="absolute inset-0 bg-dark-bg z-10"></div>
             )}
 
-
-            {/* Layer 2: Gradient Overlay */}
+            {/* Cinematic Gradient */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent z-20" />
 
-            {/* Layer 3: Content Wrapper */}
             <div className="relative z-30 flex flex-col h-full p-6">
-                {/* Header */}
                 <header className="flex justify-between items-start">
                     <div>
                         <p className="font-blackops text-2xl text-dark-accent-start accent-text-glow">532</p>
                         <p className="text-xs tracking-[0.2em] font-semibold text-white/80">PLAYGROUND</p>
                         {countryCodeAlpha2 && (
-                            // Flag moved lower (mt-4)
                             <img 
                                 src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`}
                                 alt={`${player.countryCode} flag`}
@@ -124,24 +119,27 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
                         )}
                     </div>
                     <div className="text-right flex flex-col items-end">
-                        <p className="font-orbitron font-bold text-5xl text-dark-accent-start accent-text-glow" style={{ textShadow: '0 0 8px rgba(0, 242, 254, 0.8)' }}>
+                        <p className="font-orbitron font-bold text-6xl text-dark-accent-start accent-text-glow leading-none" style={{ textShadow: '0 0 8px rgba(0, 242, 254, 0.8)' }}>
                             {player.rating}
                         </p>
-                        {/* OVG Label pushed down (mt-3) */}
-                        <div className="mt-3 text-right">
-                            <p className="text-xl tracking-widest">OVG</p>
-                            <p className="text-sm font-semibold uppercase text-white/90">{t[`tier${player.tier.charAt(0).toUpperCase() + player.tier.slice(1)}`as keyof typeof t]}</p>
+                        {/* UPDATED: Increased gap (mt-6) between rating and OVR/Tier info */}
+                        <div className="mt-6 flex flex-col items-end">
+                            <p className="text-xl tracking-widest leading-none font-bold">OVR</p>
+                            {/* Uses the generic t key format: tierLegend, tierElite, tierPro, tierRegular */}
+                            <p className="text-sm font-semibold uppercase text-white/80 mt-1">{t[`tier${player.tier.charAt(0).toUpperCase() + player.tier.slice(1)}`as keyof typeof t]}</p>
                         </div>
                     </div>
                 </header>
                 
-                {/* Skills moved: aligned left with padding (left-6) and positioned vertically below flag (top-36) */}
-                <div className="absolute top-36 left-6 z-30">
-                    <div className="space-y-3">
+                {/* Fixed Skill Alignment */}
+                <div className="absolute top-40 left-6 z-30">
+                    <div className="space-y-4">
                         {(player.skills || []).slice(0, 5).map(skill => (
-                            <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
-                                <StarIcon className="w-4 h-4 text-[#00F2FE]" style={{ filter: 'drop-shadow(0 0 3px #00F2FE)'}} />
-                                <span className="font-bold text-xs text-white tracking-wider leading-none relative -top-[1px]" style={{ textShadow: '0 1px 3px #000' }}>
+                            <div key={skill} className="flex items-center gap-2 h-6" title={t[`skill_${skill}` as keyof typeof t] || skill}>
+                                <div className="shrink-0 flex items-center justify-center w-5 h-5">
+                                    <StarIcon className="w-5 h-5 text-[#00F2FE]" style={{ filter: 'drop-shadow(0 0 3px #00F2FE)'}} />
+                                </div>
+                                <span className="font-black text-[12px] text-white tracking-widest leading-none" style={{ textShadow: '0 1px 4px #000' }}>
                                     {skillAbbreviations[skill]}
                                 </span>
                             </div>
@@ -151,21 +149,18 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
 
                 <div className="flex-grow" />
 
-                {/* Player Name */}
                 <section className="text-center mb-5">
                     <h1 className="font-russo text-4xl uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] leading-tight">
                         {player.nickname} {player.surname}
                     </h1>
                 </section>
 
-                {/* Key Stats */}
                 <section className="flex justify-around items-center my-1 py-2 border-t-2 border-dark-accent-start/30">
                     <Stat value={player.totalGoals} label={t.monthlyGoals} />
                     <Stat value={player.totalAssists} label={t.monthlyAssists} />
                     <Stat value={winRate} label={t.winRate} />
                 </section>
 
-                {/* Club Rankings */}
                 {rankings && (
                     <section className="mt-2 mb-2 py-3 border-y-2 border-dark-accent-start/30">
                         <div className="grid grid-cols-3 gap-2 divide-x divide-white/10 items-center">
@@ -176,7 +171,6 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
                     </section>
                 )}
 
-                {/* Footer: BADGES STRIP (Replaces Text) */}
                 <footer className="h-14 mt-auto border-t border-white/10 flex items-center">
                     <div className="flex justify-evenly items-center w-full px-1">
                         {topBadges.length > 0 ? topBadges.map(badge => (

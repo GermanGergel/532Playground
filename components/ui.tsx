@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { NavLink, useNavigate } from 'react-router-dom';
@@ -48,7 +47,6 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, 
   };
   const paddingClass = size === 'xs' ? 'p-4' : 'p-6';
   
-  // Use Portal to render modal at body level, bypassing parent z-index/stacking contexts
   return createPortal(
     <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-[9999] p-4 backdrop-blur-sm">
       <div className={`relative bg-dark-surface text-dark-text rounded-2xl shadow-2xl w-full ${sizeClasses[size]} ${paddingClass} border border-white/10 ${containerClassName}`}>
@@ -107,8 +105,6 @@ export const BottomNav: React.FC = () => {
     );
 };
 
-// FIX: Added STRICT overflow control. max-w-[100vw] prevents the container from being wider than the viewport.
-// overflow-x-hidden clips anything inside that tries to stick out.
 export const Page: React.FC<{children: React.ReactNode, title?: string, className?: string} & React.HTMLAttributes<HTMLDivElement>> = ({children, title, className = '', ...props}) => (
     <div className={`p-4 pb-28 w-full max-w-[100vw] overflow-x-hidden box-border relative ${className}`} {...props}>
         {title && <h1 className="text-4xl font-bold mb-6">{title}</h1>}
@@ -130,14 +126,20 @@ export const PageHeader: React.FC<{ title: string; children?: React.ReactNode; h
                 </Button>
             )}
             <h1 className="text-2xl font-bold text-center absolute left-1/2 -translate-x-1/2">{title}</h1>
-            <div className="w-9">{children}</div> {/* Spacer to balance the back button */}
+            <div className="w-9">{children}</div>
         </div>
     );
 };
 
-export const Card: React.FC<{title?: string, children: React.ReactNode, className?: string} & React.HTMLAttributes<HTMLDivElement>> = ({title, children, className, ...props}) => (
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+    title?: React.ReactNode;
+    children: React.ReactNode;
+    titleClassName?: string;
+}
+
+export const Card: React.FC<CardProps> = ({title, children, className, titleClassName = "", ...props}) => (
     <div className={`relative rounded-2xl bg-dark-surface/80 backdrop-blur-sm border border-white/10 p-3 sm:p-4 ${className}`} {...props}>
-        {title && <h2 className="text-xs font-bold mb-2">{title}</h2>}
+        {title && <h2 className={`text-xs font-bold mb-2 ${titleClassName}`}>{title}</h2>}
         {children}
     </div>
 );

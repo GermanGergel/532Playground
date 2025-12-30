@@ -1,213 +1,526 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-import { Player, PlayerStatus } from '../types';
-import { TrophyIcon, Users, WhatsApp, BarChartDynamic, StarIcon, ChevronLeft, Zap } from '../icons';
-import { PlayerAvatar } from '../components/avatars';
+import { Player, PlayerStatus, PlayerForm, SkillType } from '../types';
+import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, FacebookIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon } from '../icons';
+import { PlayerAvatar, TeamAvatar } from '../components/avatars';
+import { Language } from '../translations/index';
+import { BadgeDisplay } from '../features';
+import { useTranslation } from '../ui';
+import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
+import { ClubIntelligenceDashboard } from '../components/ClubIntelligenceDashboard';
+import { RadioPlayer } from '../components/RadioPlayer';
 
 // --- SUB-COMPONENTS ---
 
-const CinematicBackground: React.FC = () => {
-    return (
-        <div className="fixed inset-0 z-0 bg-[#0a0c10] pointer-events-none overflow-hidden">
-            {/* TOP: Cinematic Line & Glow */}
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent opacity-100 z-50"></div>
-            <div className="absolute top-0 left-0 right-0 h-96 bg-gradient-to-b from-[#00F2FE]/10 to-transparent blur-[120px] opacity-40"></div>
-            
-            {/* BOTTOM: Cinematic Line & Glow (Pinned) */}
-            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent opacity-100 z-50"></div>
-            <div className="absolute bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-[#00F2FE]/10 to-transparent blur-[120px] opacity-40"></div>
+const skillAbbreviations: Record<SkillType, string> = {
+    goalkeeper: 'GK', power_shot: 'PS', technique: 'TQ', defender: 'DF', 
+    playmaker: 'PM', finisher: 'FN', versatile: 'VS', tireless_motor: 'TM', leader: 'LD',
+};
 
-            {/* Accent light blobs for depth */}
-            <div className="absolute top-[20%] left-[-10%] w-[40%] h-[40%] rounded-full bg-[#00F2FE]/5 blur-[120px]"></div>
-            <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[#4CFF5F]/5 blur-[120px]"></div>
+const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
+    const config = {
+        hot_streak: { color: '#4CFF5F' }, stable: { color: '#A9B1BD' }, cold_streak: { color: '#FF4136' },
+    };
+    const currentForm = config[form] || config.stable;
+    const commonProps: React.SVGProps<SVGSVGElement> = {
+        width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: currentForm.color,
+        strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round",
+    };
+    switch (form) {
+        case 'hot_streak': return <svg {...commonProps}><path d="M12 19V5m-6 7l6-6 6 6"/></svg>;
+        case 'cold_streak': return <svg {...commonProps}><path d="M12 5v14M12 5v14M5 12l7 7 7-7"/></svg>;
+        default: return <svg {...commonProps}><path d="M5 12h14m-6-6l6 6-6 6"/></svg>;
+    }
+};
+
+const NoLeadersPlaceholder: React.FC = () => {
+    const t = useTranslation();
+    return (
+        <div className="w-full max-w-2xl mx-auto py-20 flex flex-col items-center justify-center relative">
+            <div className="absolute inset-0 bg-[#00F2FE]/5 blur-[60px] rounded-full animate-pulse"></div>
+            <div className="relative z-10 flex flex-col items-center gap-6 opacity-30">
+                <div className="w-20 h-20 rounded-full border-2 border-dashed border-[#00F2FE] animate-spin-slow flex items-center justify-center">
+                    <TrophyIcon className="w-10 h-10 text-[#00F2FE]" />
+                </div>
+                <div className="text-center">
+                    <h3 className="font-orbitron text-lg font-black text-white tracking-[0.4em] uppercase">
+                        {t.hubAwaitingStats}
+                    </h3>
+                    <p className="font-chakra text-[10px] text-white/50 tracking-[0.2em] mt-2 uppercase">
+                        {t.hubAnalyzingPerformance}
+                    </p>
+                </div>
+            </div>
+            <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                .animate-spin-slow { animation: spin-slow 15s linear infinite; }
+            `}} />
         </div>
     );
 };
 
-const FloatingNav: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+const MotivationalTicker: React.FC = () => {
+    const t = useTranslation();
+    const phrases = [
+        t.hubTicker1,
+        t.hubTicker2,
+        t.hubTicker3,
+        t.hubTicker4,
+        t.hubTicker5
+    ];
+    const cyanColor = '#00F2FE'; 
     return (
-        <nav className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center justify-between w-[97%] px-8 py-2.5 bg-[#0a0c10]/80 backdrop-blur-xl border border-[#1e293b] rounded-2xl shadow-[0_15px_40px_rgba(0,0,0,0.7)]">
-            <div className="flex items-center gap-8">
-                <button onClick={onBack} className="group p-1.5 bg-white/5 rounded-xl border border-white/10 hover:border-[#00F2FE] hover:bg-[#00F2FE]/10 transition-all">
-                    <ChevronLeft className="w-5 h-5 text-white group-hover:text-[#00F2FE]" />
-                </button>
-                <div className="flex items-baseline gap-3">
-                    <span className="font-black text-3xl text-white tracking-tighter">532</span>
-                    <div className="h-4 w-px bg-white/20"></div>
-                    <span className="font-bold text-[10px] tracking-[0.4em] text-[#00F2FE] uppercase">Command Center</span>
-                </div>
-            </div>
-            
-            <div className="hidden xl:flex gap-12 items-center">
-                {['Analytics', 'Deployment', 'Hall of Fame', 'Network'].map((item, i) => (
-                    <span key={item} className={`text-[10px] font-black tracking-[0.3em] uppercase cursor-pointer transition-all hover:text-white ${i === 0 ? 'text-[#00F2FE]' : 'text-white/30'}`}>
-                        {item}
+        <div className="relative w-full h-full overflow-hidden flex items-center">
+            <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes hub-ticker {
+                    0% { transform: translateX(0); }
+                    100% { transform: translateX(-50%); }
+                }
+                .animate-hub-ticker {
+                    display: flex;
+                    width: fit-content;
+                    animation: hub-ticker 35s linear infinite;
+                }
+            `}} />
+            <div className="animate-hub-ticker whitespace-nowrap flex gap-12">
+                {[...phrases, ...phrases].map((phrase, i) => (
+                    <span key={i} className="text-[12px] md:text-[14px] font-bold tracking-[0.15em] uppercase flex items-center font-chakra" style={{ color: cyanColor, textShadow: `0 0 8px rgba(0, 242, 254, 0.4), 0 0 15px rgba(0, 242, 254, 0.1)` }}>
+                        {phrase}
                     </span>
                 ))}
             </div>
+        </div>
+    );
+};
 
-            <div className="flex items-center gap-4">
-                 <div className="flex flex-col items-end">
-                    <span className="text-[8px] font-mono text-[#4CFF5F] animate-pulse tracking-widest">UPLINK_STABLE</span>
-                    <span className="text-[10px] font-black text-white/30 tracking-widest uppercase">Node: DN_CENTRAL</span>
-                 </div>
+const StaticSoccerBall: React.FC = () => (
+    <div className="absolute bottom-[-1px] left-[118px] md:left-[152px] w-9 h-9 md:w-10 md:h-10 shrink-0 z-10 pointer-events-none transition-all duration-500">
+        <div className="absolute bottom-[-1px] left-1/2 -translate-x-1/2 w-[80%] h-[2px] bg-black/80 blur-[2px] rounded-full"></div>
+        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] overflow-visible">
+            <defs>
+                <radialGradient id="ballShading" cx="40%" cy="35%" r="65%"><stop offset="0%" stopColor="#ffffff" /><stop offset="50%" stopColor="#e2e8f0" /><stop offset="85%" stopColor="#94a3b8" /><stop offset="100%" stopColor="#1e293b" /></radialGradient>
+                <linearGradient id="hatBodyGradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#ff4d4d" /><stop offset="40%" stopColor="#e60000" /><stop offset="100%" stopColor="#990000" /></linearGradient>
+                <radialGradient id="pompomGradient" cx="40%" cy="35%" r="50%"><stop offset="0%" stopColor="#ffffff" /><stop offset="70%" stopColor="#f1f5f9" /><stop offset="100%" stopColor="#cbd5e1" /></radialGradient>
+                <filter id="hatShadow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.5" /><feOffset dx="0" dy="2" result="offsetblur" /><feComponentTransfer><feFuncA type="linear" slope="0.4" /></feComponentTransfer><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+                <filter id="furTexture"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" result="noise" /><feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" /></filter>
+            </defs>
+            <circle cx="50" cy="50" r="48" fill="url(#ballShading)" />
+            <g stroke="#000" strokeWidth="0.8" fill="none" opacity="0.25">
+                <path d="M50 32 L68 45 L61 66 L39 66 L32 45 Z" /><path d="M50 32 L50 2" /><path d="M68 45 L95 38" /><path d="M61 66 L82 92" /><path d="M39 66 L18 92" /><path d="M32 45 L5 38" /><path d="M18 92 Q 50 98 82 92" /><path d="M5 38 Q 4 15 50 2" /><path d="M95 38 Q 96 15 50 2" />
+            </g>
+            <text x="51" y="52" textAnchor="middle" fill="#0f172a" className="font-aldrich font-black uppercase" style={{ fontSize: '17px', letterSpacing: '-0.02em', transform: 'scaleX(0.85) rotate(-3deg)', transformOrigin: 'center' }}>SELECT</text>
+            <text x="50" y="61" textAnchor="middle" fill="#475569" className="font-chakra font-black uppercase" style={{ fontSize: '3.2px', letterSpacing: '0.1em', opacity: 0.8, transform: 'rotate(-3deg)', transformOrigin: 'center' }}>Professional Futsal</text>
+            <ellipse cx="40" cy="25" rx="20" ry="10" fill="white" opacity="0.3" transform="rotate(-15, 40, 25)" />
+            <g transform="translate(0, -25)" filter="url(#hatShadow)">
+                <path d="M 18 42 L 18 20 C 18 -15, 88 -18, 90 25 L 82 42 Z" fill="url(#hatBodyGradient)" stroke="#7f1d1d" strokeWidth="0.3" />
+                <path d="M 22 25 C 22 -5, 75 -10, 80 20" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" opacity="0.1" />
+                <circle cx="90" cy="25" r="8.5" fill="url(#pompomGradient)" stroke="#94a3b8" strokeWidth="0.1" /><circle cx="90" cy="25" r="8.5" fill="black" opacity="0.05" transform="translate(-1, 1)" />
+                <g filter="url(#furTexture)"><path d="M 8 40 Q 50 25 92 40 Q 96 48 92 55 Q 50 40 8 55 Q 4 48 8 40 Z" fill="#FFFFFF" stroke="#f1f5f9" strokeWidth="0.2" /></g>
+                <path d="M 12 48 Q 50 38 88 48" fill="none" stroke="#cbd5e1" strokeWidth="0.5" opacity="0.3" />
+            </g>
+        </svg>
+    </div>
+);
+
+const HangingTag: React.FC<{ digit: string; label: string; height: number; delay: string; pulseDuration: string }> = ({ digit, label, height, delay, pulseDuration }) => (
+    <div className="relative flex flex-col items-center group/fiber">
+        <span className="font-black text-2xl md:text-3xl text-[#00F2FE] tracking-tighter z-10" style={{ textShadow: '0 0 10px rgba(0,242,254,0.6)' }}>{digit}</span>
+        <div className="absolute top-[28px] w-[0.5px] bg-[#00F2FE]/10 origin-top animate-pendant-swing" style={{ height: `${height}px`, animationDelay: delay, boxShadow: '0 0 3px rgba(0,242,254,0.1)' }}>
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1.2px] h-[3px] bg-[#00F2FE] rounded-full opacity-0 animate-fiber-pulse" style={{ animationDuration: pulseDuration, animationDelay: delay, boxShadow: '0 0 5px #00F2FE' }}></div>
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full pt-0.5">
+                <div className="relative flex flex-col items-center">
+                    <div className="absolute inset-0 blur-[6px] bg-[#00F2FE]/15 rounded-full scale-[2] pointer-events-none opacity-40"></div>
+                    <span className="relative text-[8px] font-black tracking-[0.2em] text-[#00F2FE] whitespace-nowrap uppercase italic" style={{ textShadow: '0 0 6px rgba(0,242,254,0.7)' }}>{label}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+);
+
+const NavHubButton: React.FC<{ 
+    title: string; 
+    icon: React.ReactNode; 
+    isActive: boolean; 
+    onClick: () => void;
+    isDisabled?: boolean;
+}> = ({ title, icon, isActive, onClick, isDisabled }) => (
+    <button 
+        onClick={isDisabled ? undefined : onClick}
+        className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 h-full min-w-[50px] group
+            ${isDisabled ? 'opacity-10 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-110'}`}
+    >
+        <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 
+            ${isActive 
+                ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/5 drop-shadow-[0_0_8px_rgba(0,242,254,0.3)] shadow-[0_0_15px_rgba(0,242,254,0.1)]' 
+                : 'text-white/60 border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/30 hover:text-white hover:shadow-[0_0_12px_rgba(255,255,255,0.15)]'
+            }`}>
+            {React.cloneElement(icon as React.ReactElement, { className: "w-4 h-4" })}
+        </div>
+        <span className={`text-[6px] font-black tracking-widest uppercase transition-colors ${isActive ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>
+            {title}
+        </span>
+    </button>
+);
+
+const HubNav: React.FC<{ 
+    isDashboardOpen: boolean; 
+    sessionDate?: string;
+    activeTab: string;
+    onTabChange: (tab: any) => void;
+    archiveViewDate: string | null;
+    onHomeClick: () => void;
+}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick }) => {
+    const { language, setLanguage } = useApp();
+    const t = useTranslation();
+    const [isLangOpen, setIsLangOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const languages: { code: Language; label: string }[] = [ { code: 'en', label: 'EN' }, { code: 'ua', label: 'UA' }, { code: 'vn', label: 'VN' }, { code: 'ru', label: 'RU' } ];
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => { if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) { setIsLangOpen(false); } };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const tabTitles: Record<string, string> = { 
+        'dashboard': t.hubDashboardBtn, 
+        'roster': t.playerHub, 
+        'archive': t.navHistory, 
+        'info': t.information 
+    };
+
+    const navContainerClass = `
+        fixed top-3 left-1/2 -translate-x-1/2 z-[100] 
+        flex items-center justify-between 
+        w-full max-w-[1450px] pr-4 py-0 
+        bg-gradient-to-b from-[#0f1115] via-[#07080a] to-[#020203]
+        backdrop-blur-2xl rounded-2xl border border-black/80
+        shadow-[0_8px_30px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.12),inset_0_-1px_0_rgba(255,255,255,0.05)] 
+        h-[48px] md:h-[58px] transition-all duration-300
+    `;
+
+    return (
+        <nav className={navContainerClass}>
+            <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes pendant-swing { 0% { transform: rotate(-0.5deg); } 50% { transform: rotate(0.5deg); } 100% { transform: rotate(-0.5deg); } }
+                @keyframes fiber-pulse { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+                .animate-pendant-swing { animation: pendant-swing 5s ease-in-out infinite; }
+                .animate-fiber-pulse { animation: fiber-pulse 3.5s linear infinite; }
+            `}} />
+            <div className="flex items-center shrink-0 h-full relative pl-10">
+                <div className="flex items-center">
+                    <HangingTag digit="5" label="PLAYERS" height={25} delay="0s" pulseDuration="2.8s" />
+                    <HangingTag digit="3" label="SQUADS" height={75} delay="1.5s" pulseDuration="4.2s" />
+                    <HangingTag digit="2" label="GOALS" height={50} delay="0.8s" pulseDuration="3.7s" />
+                    <div className="h-4 w-px bg-white/15 ml-2 md:ml-3"></div>
+                    <div className="flex flex-col space-y-0.5 ml-2">
+                        <span className="font-black text-[9px] tracking-[0.15em] text-white uppercase leading-none">Club</span>
+                        <span className="font-black text-[7px] tracking-[0.15em] text-white/30 uppercase leading-none">Center</span>
+                    </div>
+                    <StaticSoccerBall />
+                </div>
+            </div>
+            <div className={`flex-grow h-full overflow-hidden flex items-center ${isDashboardOpen ? 'justify-center px-4' : 'justify-start pl-16 md:pl-24 pr-4'}`}>
+                {isDashboardOpen ? (
+                    <div className="flex items-center gap-8 min-w-fit">
+                        <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center">
+                            {activeTab === 'dashboard' ? (
+                                <>
+                                    <span className="font-russo text-[7px] text-[#00F2FE] tracking-[0.3em] uppercase leading-none opacity-80 mb-0.5">SESSION BROADCAST</span>
+                                    <span className="font-chakra text-sm md:text-lg font-bold text-white tracking-widest leading-none">{sessionDate || 'LIVE'}</span>
+                                </>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center">
+                                    {activeTab === 'archive' && archiveViewDate ? (
+                                        <>
+                                            <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none" style={{ textShadow: '0 0 25px rgba(255, 255, 255, 0.2)' }}>{archiveViewDate}</span>
+                                            <span className="text-[7px] md:text-[8px] font-chakra font-black text-[#00F2FE] uppercase tracking-[0.4em] mt-0.5 ml-1 opacity-90 shadow-[0_0_10px_rgba(0,242,254,0.4)]">ARCHIVE</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none" style={{ textShadow: '0 0 25px rgba(255, 255, 255, 0.2)' }}>{tabTitles[activeTab] || 'DASHBOARD'}</span>
+                                            {activeTab === 'archive' && !archiveViewDate && (
+                                                <span className="text-[7px] md:text-[8px] font-chakra font-black text-[#00F2FE] uppercase tracking-[0.4em] mt-0.5 ml-1 opacity-90 shadow-[0_0_10px_rgba(0,242,254,0.4)]">HISTORY</span>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                ) : (
+                    <MotivationalTicker />
+                )}
+            </div>
+            <div className="flex items-center gap-1 md:gap-3 shrink-0 h-full py-1">
+                {isDashboardOpen && (
+                    <div className="flex items-center gap-2 md:gap-4 mr-2 h-full animate-in fade-in slide-in-from-right-3 duration-500">
+                        <div className="mr-3 flex items-center border-r border-white/10 pr-4 gap-3">
+                            <button 
+                                onClick={onHomeClick}
+                                className="flex flex-col items-center justify-center gap-1 transition-all duration-300 group cursor-pointer hover:scale-110"
+                                title="Home"
+                            >
+                                <div className="w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 text-white/60 border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/30 hover:text-white hover:shadow-[0_0_12px_rgba(255,255,255,0.15)]">
+                                    <Home className="w-4 h-4" />
+                                </div>
+                                <span className="text-[6px] font-black tracking-widest uppercase text-white/30 group-hover:text-white/60 transition-colors">
+                                    {t.navHome}
+                                </span>
+                            </button>
+                            <RadioPlayer />
+                        </div>
+                        <NavHubButton title={t.hubDashboardBtn} icon={<LayoutDashboard />} isActive={activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} />
+                        <NavHubButton title={t.playerHub} icon={<Users />} isActive={activeTab === 'roster' || activeTab === 'duel'} onClick={() => onTabChange('roster')} />
+                        <NavHubButton title={t.navHistory} icon={<HistoryIcon />} isActive={activeTab === 'archive'} onClick={() => onTabChange('archive')} />
+                        <NavHubButton title={t.information} icon={<InfoIcon />} isActive={activeTab === 'info'} onClick={() => onTabChange('info')} />
+                    </div>
+                )}
+                <div className="flex items-center gap-2 group h-full relative" ref={dropdownRef}>
+                    {!isDashboardOpen && (
+                        <div className="hidden md:flex flex-col items-end justify-center h-full animate-in fade-in duration-500">
+                            <span className="text-[8px] font-black tracking-[0.2em] text-white/30 uppercase group-hover:text-white transition-colors cursor-default leading-none">Language</span>
+                        </div>
+                    )}
+                    <div className="relative h-full flex items-center justify-center">
+                        {isDashboardOpen ? (
+                            <button onClick={() => setIsLangOpen(!isLangOpen)} className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 h-full min-w-[50px] group cursor-pointer hover:scale-110`}>
+                                <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isLangOpen ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/5 drop-shadow-[0_0_8px_rgba(0,242,254,0.4)] shadow-[0_0_15px_rgba(0,242,254,0.1)]' : 'text-white/60 border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.1)] hover:border-white/30 hover:text-white hover:shadow-[0_0_12px_rgba(255,255,255,0.15)]' }`}>
+                                    <span className="font-black text-[10px] uppercase leading-none">{language}</span>
+                                </div>
+                                <span className={`text-[6px] font-black tracking-widest uppercase transition-colors ${isLangOpen ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>LANG</span>
+                            </button>
+                        ) : (
+                            <button onClick={() => setIsLangOpen(!isLangOpen)} className="w-8 h-8 rounded-full border border-white/20 bg-black/60 flex items-center justify-center transition-all shadow-[0_0_10px_rgba(255,255,255,0.15)] hover:border-white/60 hover:bg-white/5 hover:shadow-[0_0_15px_rgba(255,255,255,0.3)] group/lang">
+                                <span className="text-[9px] font-black text-white/80 group-hover/lang:text-white uppercase leading-none transition-colors" style={{ textShadow: '0 0 5px rgba(255,255,255,0.3)' }}>{language}</span>
+                            </button>
+                        )}
+                        {isLangOpen && (
+                            <div className="absolute left-1/2 -translate-x-1/2 w-9 bg-[#05070a] border border-white/10 rounded-full shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200 z-[200]" style={{ top: isDashboardOpen ? 'calc(100% - 2px)' : '100%', marginTop: isDashboardOpen ? '0' : '8px' }}>
+                                <div className="py-1 flex flex-col items-center gap-1">
+                                    {languages.map((lang) => (
+                                        <button key={lang.code} onClick={() => { setLanguage(lang.code); setIsLangOpen(false); }} className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 ${language === lang.code ? 'bg-[#00F2FE]/10 text-[#00F2FE] border border-[#00F2FE]/30 shadow-[0_0_8px_rgba(0,242,254,0.2)]' : 'text-white/40 hover:text-white hover:bg-white/10' }`}><span className="text-[8px] font-black uppercase leading-none">{lang.label}</span></button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
         </nav>
     );
 };
 
-const HeroTitle: React.FC = () => {
+const DispersingWord: React.FC<{ words: string[] }> = ({ words }) => {
+    const [index, setIndex] = useState(0);
+    const [state, setState] = useState<'entering' | 'active' | 'exiting'>('entering');
+    useEffect(() => {
+        const cycle = async () => {
+            setState('entering');
+            setTimeout(() => setState('active'), 1200);
+            setTimeout(() => { setState('exiting'); setTimeout(() => { setIndex((prev) => (prev + 1) % words.length); }, 1200); }, 5000);
+        };
+        cycle();
+        const interval = setInterval(cycle, 6500);
+        return () => clearInterval(interval);
+    }, [words.length]);
+    const getStyles = () => {
+        switch (state) {
+            case 'entering': return "scale-[0.4] opacity-0 blur-[40px] translate-z-[-200px]";
+            case 'active': return "scale-[1.1] opacity-100 blur-0 translate-z-0";
+            case 'exiting': return "scale-[0.8] opacity-0 blur-[30px] translate-z-[-100px]";
+            default: return "";
+        }
+    };
     return (
-        <div className="text-center mt-48 mb-32 relative">
+        <span className="relative inline-block h-[1.1em] min-w-[280px] md:min-w-[500px] align-top text-center perspective-1000">
+            <span className={`block text-transparent bg-clip-text bg-gradient-to-b from-[#00F2FE] to-[#00F2FE]/50 transition-all duration-[1200ms] ease-[cubic-bezier(0.2,0,0.2,1)] ${getStyles()}`} style={{ textShadow: state === 'active' ? '0 0 30px rgba(0, 242, 254, 0.3)' : 'none' }}>{words[index]}</span>
+            {state === 'active' && (<span className="absolute inset-0 text-transparent bg-clip-text bg-gradient-to-b from-[#00F2FE] to-transparent pointer-events-none z-0 opacity-20" style={{ filter: 'blur(20px)', WebkitTextFillColor: 'transparent' }}>{words[index]}</span>)}
+        </span>
+    );
+};
+
+const HeroTitle: React.FC = () => {
+    const t = useTranslation();
+    const words = ["GAME", "LEGACY", "VICTORY"];
+    return (
+        <div className="text-center mt-32 md:mt-44 mb-12 md:mb-16 relative">
             <div className="inline-block relative">
-                <span className="block text-xs font-black tracking-[1.5em] text-[#00F2FE] uppercase mb-6 opacity-60">High Performance Ecosystem</span>
-                <h1 className="font-russo text-7xl md:text-[10rem] text-white leading-none uppercase tracking-tighter drop-shadow-2xl">
-                    CLUB <span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/10">OPERATIONS</span>
+                <h1 className="font-russo text-4xl md:text-[9rem] leading-[1.1] uppercase tracking-tighter drop-shadow-2xl">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/20">DEFINE YOUR</span> <br />
+                    <DispersingWord words={words} />
                 </h1>
-                <div className="mt-12 h-px w-64 bg-[#00F2FE] mx-auto shadow-[0_0_20px_#00F2FE]"></div>
+                <div className="mt-8 mb-10 max-w-lg mx-auto px-4">
+                    <p className="font-chakra text-[10px] md:text-xs text-white/50 font-medium uppercase tracking-[0.3em] lifestyle-relaxed leading-loose">
+                        {t.hubWelcomeText}
+                    </p>
+                </div>
+                <div className="mt-6 h-px w-48 md:w-64 bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent mx-auto opacity-60 shadow-[0_0_10px_#00F2FE]"></div>
             </div>
         </div>
     );
 };
 
 const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, rank }) => {
+    const cardRef = useRef<HTMLDivElement>(null);
+    const t = useTranslation();
     const isFirst = rank === 1;
-    const accent = isFirst ? '#FFD700' : rank === 2 ? '#C0C0C0' : '#CD7F32';
-    
+    const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
+    const countryCodeAlpha2 = useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
+    const podiumGlowStyle = useMemo(() => {
+        const glows: Record<number, string> = { 1: '0 25px 40px -20px rgba(255, 215, 0, 0.5)', 2: '0 20px 35px -15px rgba(192, 192, 192, 0.5)', 3: '0 20px 35px -15px rgba(205, 127, 50, 0.6)' };
+        return { boxShadow: glows[rank] || 'none' };
+    }, [rank]);
+    useEffect(() => {
+        const card = cardRef.current; if (!card) return;
+        const handleMouseMove = (e: MouseEvent) => { const rect = card.getBoundingClientRect(); const x = e.clientX - rect.left; const y = e.clientY - rect.top; card.style.setProperty('--mouse-x', `${x}px`); card.style.setProperty('--mouse-y', `${y}px`); };
+        card.addEventListener('mousemove', handleMouseMove);
+        return () => { card.addEventListener('mousemove', handleMouseMove); };
+    }, []);
     return (
-        <div className={`relative flex flex-col items-center group transition-all duration-700 ${isFirst ? 'scale-110 z-20' : 'scale-100 z-10 opacity-80 hover:opacity-100'}`}>
-            <div className={`relative ${isFirst ? 'w-[320px] h-[440px]' : 'w-[260px] h-[360px] mt-12'} bg-[#0a0c10] border border-[#1e293b] rounded-[2.5rem] shadow-2xl flex flex-col items-center justify-center p-10 overflow-hidden group-hover:border-[#00F2FE]/50 transition-all`}>
-                
-                <div className="absolute top-0 left-0 w-px h-full bg-gradient-to-b from-transparent via-[#1e293b] to-transparent opacity-50"></div>
-                <div className="absolute top-0 right-0 w-px h-full bg-gradient-to-b from-transparent via-[#1e293b] to-transparent opacity-50"></div>
-
-                <div className="absolute top-8 left-1/2 -translate-x-1/2 px-6 py-1.5 rounded-full bg-white/5 border border-white/10">
-                    <span className="text-xs font-black font-orbitron tracking-widest" style={{ color: accent }}>RANK #{rank}</span>
-                </div>
-
-                <div className="mb-8 transform transition-transform group-hover:scale-110 duration-500">
-                    <PlayerAvatar player={player} size={isFirst ? "xl" : "lg"} />
-                </div>
-                
-                <div className="w-full text-center">
-                    <h4 className="font-russo text-3xl text-white truncate uppercase tracking-wider mb-3">{player.nickname}</h4>
-                    <div className="inline-flex items-center gap-4 px-6 py-3 bg-white/[0.03] rounded-2xl border border-white/5">
-                        <span className="text-[10px] font-black text-white/30 tracking-[0.3em]">OVR</span>
-                        <span className="text-4xl font-black text-[#00F2FE]" style={{ textShadow: '0 0 20px rgba(0,242,254,0.5)' }}>{player.rating}</span>
+        <div style={podiumGlowStyle} className={`relative group ${isFirst ? 'scale-105 z-20' : 'scale-90 md:scale-100 z-10'} rounded-3xl transition-shadow duration-300`}>
+            <div ref={cardRef} className={`interactive-card relative ${isFirst ? 'w-[280px] h-[390px]' : 'w-[260px] h-[360px]'} rounded-3xl p-4 overflow-hidden text-white bg-dark-surface border border-white/10`}>
+                {player.playerCard && (<div className="absolute inset-0 w-full h-full bg-cover bg-no-repeat" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }}/>)}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                {!isBadgeModalOpen && (<div className="absolute top-24 left-4 z-20"><div className="space-y-4">{(player.skills || []).map(skill => (
+                    <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
+                        <StarIcon className="w-4 h-4 text-[#00F2FE]" />
+                        <span className="font-bold text-xs text-white tracking-wider">{skillAbbreviations[skill]}</span>
                     </div>
+                ))}</div></div>)}
+                <div className="relative z-10 h-full flex flex-col justify-between">
+                     <div className="flex justify-between items-start">
+                        <div>
+                            <p style={{ color: '#00F2FE' }} className="text-base font-black leading-none">532</p>
+                            <p className="text-white text-[7px] font-bold tracking-[0.15em] font-chakra leading-none mt-1">PLAYGROUND</p>
+                            {countryCodeAlpha2 && (<img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} alt={`${player.countryCode} flag`} className="w-6 h-auto mt-3 rounded-sm"/>)}
+                        </div>
+                        <div className="flex flex-col items-center max-w-[50%]">
+                            <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
+                            <p className="font-bold text-white tracking-widest text-sm">OVR</p>
+                            <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
+                            {player.badges && Object.keys(player.badges).length > 0 && (
+                                <BadgeDisplay badges={player.badges} limit={6} onOpenChange={setIsBadgeModalOpen} />
+                            )}
+                        </div>
+                    </div>
+                    <div className="text-center flex-shrink-0 relative z-30 pb-1"><h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg">{player.nickname} {player.surname}</h1></div>
                 </div>
-
-                <div className={`absolute bottom-0 left-0 right-0 h-1.5 bg-gradient-to-r from-transparent via-${isFirst ? '[#FFD700]' : '[#00F2FE]'} to-transparent opacity-40`} />
-            </div>
-            
-            <div className="mt-8 flex items-center gap-4">
-                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: accent, boxShadow: `0 0 15px ${accent}` }}></div>
-                <span className="text-xs font-black text-white/40 tracking-[0.5em] uppercase">{player.tier}</span>
             </div>
         </div>
     );
 };
 
-const MetricWidget: React.FC<{ label: string, value: number, color: string, icon: React.FC<any> }> = ({ label, value, color, icon: Icon }) => {
-    return (
-        <div className="relative group overflow-hidden bg-[#0a0c10] border border-[#1e293b] rounded-[2.5rem] p-10 transition-all hover:border-[#00F2FE]/40 shadow-2xl flex-1">
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#1e293b] to-transparent opacity-50"></div>
-            
-            <div className="flex items-center justify-between mb-8">
-                <div className="p-4 bg-white/5 rounded-2xl border border-white/10 group-hover:border-[#00F2FE]/30 transition-all">
-                    <Icon className="w-8 h-8" style={{ color }} />
-                </div>
-                <span className="text-xs font-mono text-white/10 tracking-widest">DATA_POINT_REF_{Math.floor(Math.random()*9999)}</span>
-            </div>
-
-            <div className="flex flex-col">
-                <span className="text-8xl font-black text-white tracking-tighter mb-4 group-hover:text-[#00F2FE] transition-colors tabular-nums">{value}</span>
-                <span className="text-sm font-black text-white/30 tracking-[0.5em] uppercase">{label}</span>
-            </div>
-
-            {/* Background Icon Watermark */}
-            <div className="absolute bottom-[-30px] right-[-30px] opacity-[0.03] transform -rotate-12">
-                <Icon className="w-48 h-48 text-white" />
+const CinematicStatCard: React.FC<{ value: string | number; label: string; }> = ({ value, label }) => (
+    <div className="w-full md:flex-1 max-w-xs md:max-w-none h-40">
+        <div className="relative rounded-3xl overflow-hidden bg-white/[0.03] border border-white/10 shadow-2xl group transition-all duration-300 hover:border-[#00F2FE]/50 hover:shadow-[0_0_30px_rgba(0,242,254,0.2)] h-full backdrop-blur-md">
+            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-40"></div>
+            <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-white/5 to-transparent blur-xl"></div>
+            <div className="relative h-full z-10 flex flex-col items-center justify-center gap-2">
+                <span className="font-russo font-black text-7xl text-white tracking-tight leading-none">{value}</span>
+                <span className="font-chakra font-bold text-xs text-white/50 uppercase tracking-[0.2em]">{label}</span>
             </div>
         </div>
-    );
-};
-
-// --- MAIN SCREEN ---
+    </div>
+);
 
 export const PublicHubScreen: React.FC = () => {
     const navigate = useNavigate();
-    const { allPlayers } = useApp();
-    
-    const stats = useMemo(() => {
-        const confirmed = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
-        const sorted = [...confirmed].sort((a, b) => b.rating - a.rating);
-        return {
-            top: sorted.slice(0, 3),
-            totalGoals: sorted.reduce((acc, p) => acc + (p.totalGoals || 0), 0),
-            totalAssists: sorted.reduce((acc, p) => acc + (p.totalAssists || 0), 0),
-            totalCount: confirmed.length
-        };
+    const { allPlayers, history } = useApp();
+    const [isDashboardOpen, setIsDashboardOpen] = useState(false);
+    const [dashboardView, setDashboardView] = useState<any>('dashboard');
+    const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
+
+    const latestSessionDate = useMemo(() => {
+        if (!history || history.length === 0) return '';
+        return new Date(history[0].date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    }, [history]);
+
+    const displayData = useMemo(() => {
+        const confirmedRealPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
+        const sorted = [...confirmedRealPlayers].sort((a, b) => b.rating - a.rating);
+        return { top: sorted.slice(0, 3) };
     }, [allPlayers]);
+    
+    const clubStats = useMemo(() => {
+        const confirmedPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
+        const totalPlayers = confirmedPlayers.length;
+        const totalSessions = history.length;
+        const avgRating = totalPlayers > 0 ? Math.round(confirmedPlayers.reduce((sum, p) => sum + p.rating, 0) / totalPlayers) : 0;
+        return { totalPlayers, totalSessions, avgRating };
+    }, [allPlayers, history]);
+    
+    const t = useTranslation();
+
+    const SOCIAL_LINKS = {
+        whatsapp: "https://chat.whatsapp.com/CAJnChuM4lQFf3s2YUnhQr",
+        facebook: "https://www.facebook.com/share/g/1ANVC1p1K5/",
+        youtube: "https://youtube.com/@playground532?si=_NqI_aOcvmjlSMFn",
+        instagram: "https://www.instagram.com/532playground?igsh=MTdzdHpwMjY3aHN4cg%3D%3D&utm_source=qr",
+        tiktok: "https://www.tiktok.com/@532playground",
+    };
 
     return (
-        <div className="min-h-screen text-white relative selection:bg-[#00F2FE] selection:text-black overflow-x-hidden">
-            <CinematicBackground />
-            <FloatingNav onBack={() => navigate('/')} />
-
-            <div className="relative z-10 w-full px-12 pb-40">
+        <div className="min-h-screen max-h-screen overflow-hidden text-white relative selection:bg-[#00F2FE] selection:text-black bg-[#0a0c10]">
+            <div className={`fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50 z-50`}></div>
+            <HubNav 
+                isDashboardOpen={isDashboardOpen} 
+                sessionDate={latestSessionDate} 
+                activeTab={dashboardView}
+                onTabChange={setDashboardView}
+                archiveViewDate={archiveViewDate}
+                onHomeClick={() => setIsDashboardOpen(false)}
+            />
+            <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-28 pb-4 md:pb-8 overflow-y-auto overscroll-none ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
+                <div className="absolute inset-0 z-0 pointer-events-none">
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
+                    <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+                </div>
+                <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10">
+                    <ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} />
+                </div>
+            </div>
+            <div className={`relative z-10 w-full h-full overflow-y-auto overscroll-none px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}>
                 <HeroTitle />
-
-                {/* PODIUM SECTION - Full Width Distribution */}
-                <div className="flex flex-wrap items-end justify-center gap-20 mb-48 w-full">
-                    {stats.top[1] && <CinematicCard player={stats.top[1]} rank={2} />}
-                    {stats.top[0] && <CinematicCard player={stats.top[0]} rank={1} />}
-                    {stats.top[2] && <CinematicCard player={stats.top[2]} rank={3} />}
+                <div className="text-center mb-12 md:mb-20">
+                    <TrophyIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-4 text-[#00F2FE]" style={{ filter: 'drop-shadow(0 0-10px rgba(0, 242, 254, 0.7))' }} />
+                    <h2 className="font-orbitron text-xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubLeadersTitle}</h2>
                 </div>
-
-                {/* METRICS SECTION - Stretching grid */}
-                <div className="mb-48">
-                    <div className="flex items-center gap-10 mb-16 px-4">
-                        <Zap className="w-6 h-6 text-[#00F2FE] animate-pulse" />
-                        <h3 className="text-sm font-black tracking-[0.8em] text-white/40 uppercase">Strategic Deployment Metrics</h3>
-                        <div className="flex-grow h-px bg-gradient-to-r from-[#1e293b] via-transparent to-transparent"></div>
+                {displayData.top.length > 0 ? (
+                    <div className="flex flex-wrap items-end justify-center gap-4 md:gap-8 w-full">
+                        <div className="order-2 md:order-1">{displayData.top[1] && <CinematicCard player={displayData.top[1]} rank={2} />}</div>
+                        <div className="order-1 md:order-2">{displayData.top[0] && <CinematicCard player={displayData.top[0]} rank={1} />}</div>
+                        <div className="order-3 md:order-3">{displayData.top[2] && <CinematicCard player={displayData.top[2]} rank={3} />}</div>
                     </div>
-                    
-                    <div className="flex flex-col lg:flex-row gap-10 w-full">
-                        <MetricWidget label="Elite Personnel" value={stats.totalCount} color="#00F2FE" icon={Users} />
-                        <MetricWidget label="Offensive Strikes" value={stats.totalGoals} color="#4CFF5F" icon={TrophyIcon} />
-                        <MetricWidget label="Tactical Support" value={stats.totalAssists} color="#FFD700" icon={BarChartDynamic} />
+                ) : (
+                    <NoLeadersPlaceholder />
+                )}
+                <div className="mt-24 md:mt-32 pb-24">
+                    <div className="text-center mb-12 md:mb-20"><h2 className="font-orbitron text-lg md:text-2xl font-black uppercase tracking-[0.15em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubVitalsTitle}</h2></div>
+                     <div className="flex flex-col md:flex-row items-center justify-center gap-6 w-full max-w-4xl mx-auto">
+                        <CinematicStatCard value={clubStats.totalPlayers} label={t.hubStatsMembers} />
+                        <CinematicStatCard value={clubStats.totalSessions} label={t.hubSessionsPlayed} />
+                        <CinematicStatCard value={clubStats.avgRating} label={t.hubAvgRating} />
                     </div>
                 </div>
-
-                {/* CTA / FOOTER - Wide Panel */}
-                <div className="relative overflow-hidden rounded-[4rem] bg-[#0a0c10] border border-[#1e293b] p-20 md:p-32 text-center shadow-2xl w-full">
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1px] bg-gradient-to-r from-transparent via-[#00F2FE]/50 to-transparent"></div>
-                    
-                    <h2 className="font-russo text-6xl md:text-9xl mb-10 uppercase tracking-tighter">Ready to Deploy?</h2>
-                    <p className="text-base md:text-2xl text-white/30 mb-20 uppercase tracking-[0.6em] max-w-4xl mx-auto leading-relaxed">
-                        Secure your position in the high-performance futsal community of Da Nang
-                    </p>
-                    
-                    <div className="flex flex-col md:flex-row justify-center gap-12">
-                        <a 
-                            href="https://chat.whatsapp.com/CAJnChuM4lQFf3s2YUnhQr" 
-                            target="_blank" 
-                            rel="noreferrer"
-                            className="group relative inline-flex items-center justify-center gap-8 bg-[#00F2FE] px-24 py-8 rounded-[2rem] shadow-[0_0_50px_rgba(0,242,254,0.3)] transition-all hover:scale-105 active:scale-95 overflow-hidden"
-                        >
-                            <WhatsApp className="w-10 h-10 fill-current text-black" />
-                            <span className="font-black text-2xl text-black tracking-[0.2em]">JOIN THE SQUAD</span>
-                        </a>
-                        
-                        <button 
-                            className="px-24 py-8 rounded-[2rem] border border-[#1e293b] bg-white/5 hover:bg-[#00F2FE]/10 hover:border-[#00F2FE]/50 transition-all text-2xl font-black tracking-[0.2em] text-white/60 hover:text-white"
-                        >
-                            ACCESS PROTOCOL
-                        </button>
-                    </div>
+                
+                <div className="relative z-10 bg-transparent pb-24">
+                    <footer className="relative py-8 bg-transparent">
+                        <div className="text-center px-4">
+                            <button onClick={() => setIsDashboardOpen(true)} className="mx-auto mb-14 block bg-transparent text-[#00F2FE] font-bold text-lg py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(0,242,254,0.4)] hover:shadow-[0_0_25px_rgba(0,242,254,0.6)] hover:bg-[#00F2FE]/10 transition-all transform hover:scale-[1.02] active:scale-95 group animate-pulse" style={{ animationIterationCount: 5 }}><span className="font-chakra font-black text-lg uppercase tracking-[0.2em] group-hover:text-white transition-colors">{t.hubDashboardBtn}</span></button>
+                            <h2 className="font-orbitron text-2xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/90" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubJoinSquad}</h2>
+                            <p className="font-chakra text-xs text-white/50 mt-2 mb-6">Connect with us on WhatsApp to book your slot.</p>
+                            <a href={SOCIAL_LINKS.whatsapp} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-3 bg-transparent text-[#25D366] font-bold text-lg py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(37,211,102,0.4)] hover:shadow-[0_0_25px_rgba(37,211,102,0.6)] hover:bg-[#25D366]/10 transition-all transform hover:scale-[1.02] active:scale-95 mb-8"><WhatsApp className="w-5 h-5 fill-current" />WhatsApp</a>
+                            <div className="flex justify-center gap-10">
+                                <a href={SOCIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><YouTubeIcon className="w-7 h-7" /></a>
+                                <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><InstagramIcon className="w-7 h-7" /></a>
+                                <a href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><FacebookIcon className="w-7 h-7" /></a>
+                                <a href={SOCIAL_LINKS.tiktok} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><TikTokIcon className="w-7 h-7" /></a>
+                            </div>
+                        </div>
+                    </footer>
                 </div>
             </div>
         </div>

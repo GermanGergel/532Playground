@@ -12,6 +12,13 @@
     <meta name="apple-mobile-web-app-title" content="532 Playground">
     <meta name="mobile-web-app-capable" content="yes">
     
+    <!-- Open Graph / Social Media Meta Tags -->
+    <meta property="og:title" content="532 PLAYGROUND">
+    <meta property="og:description" content="Official Club Hub. Statistics, Rankings, and Match Intelligence.">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1518091043644-c1d4457512c6?q=80&w=1200&auto=format&fit=crop">
+    <meta property="og:url" content="https://532playground.com">
+    <meta property="og:type" content="website">
+    
     <!-- Theme Color matches app background -->
     <meta name="theme-color" content="#1A1D24">
     
@@ -49,6 +56,7 @@
             'gradient-bg': 'gradient-bg 5s ease infinite',
             'score-update': 'score-update 0.5s ease-in-out',
             'pulse': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'slide-up': 'slide-up 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards',
           },
           keyframes: {
             'gradient-bg': {
@@ -64,6 +72,10 @@
                 '0%, 100%': { opacity: 1 },
                 '50%': { opacity: 0.5 },
             },
+            'slide-up': {
+              '0%': { transform: 'translateY(100%)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' },
+            },
           }
         },
       },
@@ -76,10 +88,9 @@
       -moz-osx-font-smoothing: grayscale;
       background-color: #1A1D24; 
       
-      /* Removed strict touch-action: pan-y to allow diagonal scrolling to propagate naturally */
-      /* Removed strict overscroll-behavior to allow native bounce which helps gesture recognition */
+      /* Запрещаем системный отскок всей страницы */
+      overscroll-behavior: none;
       
-      /* Hard clips any content overflowing width */
       overflow-x: hidden;
       width: 100%;
       max-width: 100vw;
@@ -159,13 +170,7 @@
   </style>
   <link rel="manifest" href="/manifest.json">
   
-  <!-- COMPLIANT IOS ICON IMPLEMENTATION -->
-  <!-- 1. Must be a PNG file (not SVG data URI) -->
-  <!-- 2. Must be exactly 180x180 for best results -->
-  <!-- 3. Must be opaque (no transparency) -->
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-  
-  <!-- Fallback/Browser Icon -->
   <link rel="icon" type="image/svg+xml" sizes="any" href="/icon.svg?v=7">
   
 <script type="importmap">

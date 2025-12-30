@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button, Modal, useTranslation } from '../ui';
 import { Goal, GoalPayload, Game, Session, Team, Player } from '../types';
@@ -169,8 +168,8 @@ export const SelectWinnerModal: React.FC<{
             <div className="flex flex-col items-center gap-3 pt-4">
                 <h3 className="text-center text-xs font-normal text-dark-text-secondary mt-4 mb-2">{t.selectWinnerDesc}</h3>
                 <div className="flex justify-around w-full">
-                     <TeamAvatar team={team1} size="lg" onClick={() => onSelect(team1.id)} />
-                     <TeamAvatar team={team2} size="lg" onClick={() => onSelect(team2.id)} />
+                     <TeamAvatar team={team1} size="lg" hollow={true} onClick={() => onSelect(team1.id)} />
+                     <TeamAvatar team={team2} size="lg" hollow={true} onClick={() => onSelect(team2.id)} />
                 </div>
             </div>
         </Modal>
@@ -215,8 +214,7 @@ export const SubstitutionModal: React.FC<{
     );
 };
 
-// --- LEGIONNAIRE MODAL (REDESIGNED) ---
-// Now matches the Badge Modal "Cinematic" style (Opaque Black + Neon)
+// --- LEGIONNAIRE MODAL ---
 export interface LegionnaireModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -227,8 +225,7 @@ export interface LegionnaireModalProps {
 }
 
 export const LegionnaireModal: React.FC<LegionnaireModalProps> = ({ isOpen, onClose, onSelect, restingTeam, session, playerOut }) => {
-    
-    // Candidates are strictly from the resting team
+    const t = useTranslation();
     const candidates = restingTeam 
         ? restingTeam.playerIds.map(id => session.playerPool.find(p => p.id === id)).filter(Boolean) as Player[]
         : [];
@@ -240,26 +237,22 @@ export const LegionnaireModal: React.FC<LegionnaireModalProps> = ({ isOpen, onCl
             isOpen={isOpen}
             onClose={onClose}
             size="xs"
-            // KEY CHANGE: Matching the Badge Modal style (Opaque black, cinematic border)
             containerClassName="!w-[300px] !p-0 !bg-[#0a0c10] !border !border-[#1e293b] !shadow-2xl overflow-hidden relative"
             hideCloseButton
         >
-            {/* Top Cinematic Line (Yellow Glow) */}
             <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#FFD700] to-transparent opacity-100 z-50"></div>
             <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-[#FFD700]/10 to-transparent blur-xl pointer-events-none z-0"></div>
 
-            {/* Header */}
             <div className="p-4 border-b border-white/5 flex justify-between items-center bg-[#0a0c10] relative z-10">
                 <div className="flex flex-col">
                     <span className="text-[9px] font-black text-[#FFD700] tracking-[0.2em] uppercase">LEGIONNAIRE</span>
                     <h3 className="font-bold text-white uppercase tracking-wide">
-                        REPLACE <span className="text-[#FFD700]">{playerOut.nickname}</span>
+                        {t.legionnaire_replace} <span className="text-[#FFD700]">{playerOut.nickname}</span>
                     </h3>
                 </div>
                 <button onClick={onClose} className="text-gray-500 hover:text-white"><XCircle className="w-6 h-6" /></button>
             </div>
 
-            {/* Content: Clean List */}
             <div className="flex-1 overflow-y-auto max-h-[50vh] bg-[#0a0c10] p-2 relative z-10">
                 <div className="flex flex-col gap-1">
                     {candidates.length > 0 ? candidates.map(p => (
@@ -269,15 +262,14 @@ export const LegionnaireModal: React.FC<LegionnaireModalProps> = ({ isOpen, onCl
                             className="w-full p-3 rounded-xl bg-transparent hover:bg-[#FFD700]/10 border border-transparent hover:border-[#FFD700]/30 flex items-center justify-between group transition-all"
                         >
                             <span className="font-bold text-lg text-white group-hover:text-[#FFD700]">{p.nickname}</span>
-                            <span className="text-[10px] font-bold text-gray-500 font-mono group-hover:text-[#FFD700] border border-gray-700 group-hover:border-[#FFD700] px-2 py-0.5 rounded">SELECT</span>
+                            <span className="text-[10px] font-bold text-gray-500 font-mono group-hover:text-[#FFD700] border border-gray-700 group-hover:border-[#FFD700] px-2 py-0.5 rounded">{t.legionnaire_select}</span>
                         </button>
                     )) : (
-                        <p className="text-center text-dark-text-secondary py-4 text-xs">No resting players available.</p>
+                        <p className="text-center text-dark-text-secondary py-4 text-xs">{t.legionnaire_no_players}</p>
                     )}
                 </div>
             </div>
             
-            {/* Footer Stripe */}
             <div className="h-1 w-full bg-gradient-to-r from-transparent via-[#FFD700]/30 to-transparent relative z-10"></div>
         </Modal>
     );

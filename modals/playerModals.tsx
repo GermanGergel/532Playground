@@ -88,9 +88,8 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
     const getTierForRating = (rating: number): PlayerTier => {
         if (rating >= 89) return PlayerTier.Legend;
         if (rating >= 79) return PlayerTier.Elite;
-        if (rating >= 69) return PlayerTier.Strong;
-        if (rating >= 58) return PlayerTier.Average;
-        return PlayerTier.Developing;
+        if (rating >= 73) return PlayerTier.Pro;
+        return PlayerTier.Regular;
     };
 
     React.useEffect(() => {
@@ -125,11 +124,13 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
     const handleSave = () => {
         if (!playerToEdit) return;
         
-        const newRating = typeof rating === 'number' ? rating : playerToEdit.rating;
-        const newTier = getTierForRating(newRating);
+        const newRatingValue = typeof rating === 'number' ? rating : playerToEdit.rating;
+        const newTier = getTierForRating(newRatingValue);
 
         let newStatus = playerToEdit.status;
-        if (newRating > 0) {
+        const newInitialRating = newRatingValue;
+
+        if (newRatingValue > 0) {
             newStatus = PlayerStatus.Confirmed;
         }
 
@@ -138,7 +139,8 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
             nickname, 
             surname, 
             countryCode: countryCode.toUpperCase(),
-            rating: newRating,
+            rating: newRatingValue,
+            initialRating: newInitialRating,
             tier: newTier,
             skills: currentSkills,
             status: newStatus,
@@ -201,18 +203,12 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
     const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
     const [isGenerating, setIsGenerating] = useState(false);
 
-    // Safe URL Construction using new URL API to handle all base cases properly
     const getProfileUrl = () => {
         try {
-            const url = new URL(window.location.href);
-            // Clean pathname for BrowserRouter (no hash)
-            url.pathname = `/public-profile/${player.id}`;
-            url.hash = ''; // Ensure hash is cleared
-            url.search = ''; // Clean params
-            return url.toString();
+            const origin = window.location.origin + window.location.pathname;
+            return `${origin}#/public-profile/${player.id}`;
         } catch (e) {
-            // Fallback for clean URL
-            return `${window.location.origin}/public-profile/${player.id}`;
+            return `${window.location.origin}/#/public-profile/${player.id}`;
         }
     }
     
@@ -222,7 +218,6 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
         if (isOpen) {
             const generateQrCode = async () => {
                 try {
-                    // QR Code styling to match the user's screenshot
                     const response = await fetch(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(profileUrl)}&bgcolor=1A1D24&color=00F2FE&qzone=1&ecc=H`);
                     if (!response.ok) throw new Error('Failed to fetch QR code');
                     const blob = await response.blob();
@@ -244,7 +239,7 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
         setIsGenerating(true);
         try {
             const canvas = await html2canvas(cardRef.current, { 
-                backgroundColor: '#1A1D24', // Explicit background for safety
+                backgroundColor: '#1A1D24',
                 scale: 3, 
                 useCORS: true 
             });
@@ -262,7 +257,6 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
                     text: profileUrl,
                 });
             } else {
-                // Fallback to download if sharing is not supported
                 const dataUrl = URL.createObjectURL(file);
                 const link = document.createElement('a');
                 link.download = file.name;
@@ -274,63 +268,68 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
             }
         } catch (error: any) {
             console.error("Sharing failed:", error);
-            if (error.name !== 'AbortError') { // Don't alert if user cancels share dialog
+            if (error.name !== 'AbortError') {
                 alert("Could not share image. It has been downloaded instead.");
             }
         } finally {
             setIsGenerating(false);
-            onClose(); // Close modal after action
+            onClose();
         }
     };
     
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="sm" hideCloseButton>
+        <Modal isOpen={isOpen} onClose={onClose} size="xs" hideCloseButton containerClassName="!p-4">
              <div className="flex flex-col items-center gap-4">
                  <div 
                     ref={cardRef} 
-                    className="w-[340px] bg-[#1A1D24] rounded-2xl p-6 flex flex-col items-center gap-6 border-2 border-dark-accent-start/50 shadow-[0_0_20px_rgba(0,242,254,0.3)]"
+                    className="w-full bg-[#1A1D24] rounded-2xl p-4 flex flex-col items-center gap-4 border border-dark-accent-start/30 shadow-[0_0_15px_rgba(0,242,254,0.15)]"
                 >
-                    {/* Header */}
                     <div className="text-center">
-                        <h1 className="font-russo text-3xl flex items-baseline">
+                        <h1 className="font-russo text-2xl flex items-baseline justify-center">
                             <span className="text-dark-accent-start">532</span>
-                            <span className="text-white ml-2 text-xl">PLAYGROUND</span>
+                            <span className="text-white ml-1.5 text-base">PLAYGROUND</span>
                         </h1>
-                        <p className="text-[10px] font-semibold tracking-[0.25em] text-dark-text-secondary mt-2">
+                        <p className="text-[8px] font-black tracking-[0.2em] text-dark-text-secondary mt-1 uppercase">
                             OFFICIAL ACCESS CARD
                         </p>
                     </div>
                     
-                    {/* Player Name */}
-                    <h2 className="font-russo text-4xl text-white uppercase tracking-wide text-center">
+                    <h2 className="font-russo text-2xl text-white uppercase tracking-wide text-center leading-tight">
                         {player.nickname} {player.surname}
                     </h2>
 
-                    {/* QR Code with wider gradient border */}
-                    <div className="p-3 rounded-2xl bg-gradient-to-br from-dark-accent-start to-green-400">
-                        <div className="bg-[#1A1D24] p-1.5 rounded-xl">
+                    <div className="p-2 rounded-xl bg-gradient-to-br from-dark-accent-start to-green-400">
+                        <div className="bg-[#1A1D24] p-1 rounded-lg">
                             {qrCodeDataUrl ? (
-                                <img src={qrCodeDataUrl} alt="QR Code" className="w-40 h-40 rounded-lg" />
+                                <img src={qrCodeDataUrl} alt="QR Code" className="w-32 h-32 rounded-md" />
                             ) : (
-                                <div className="w-40 h-40 flex items-center justify-center">
-                                    <div className="w-8 h-8 border-2 border-dashed border-dark-accent-start rounded-full animate-spin"></div>
+                                <div className="w-32 h-32 flex items-center justify-center">
+                                    <div className="w-6 h-6 border-2 border-dashed border-dark-accent-start rounded-full animate-spin"></div>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {/* Footer */}
-                    <p className="text-sm font-semibold tracking-[0.2em] text-dark-text-secondary">
+                    <p className="text-[9px] font-bold tracking-[0.2em] text-dark-text-secondary/60 uppercase">
                         {t.scanToOpen}
                     </p>
                 </div>
 
-                {/* Simplified Buttons */}
-                <div className="w-full max-w-[340px] flex flex-col gap-3 pt-4">
-                     <Button variant="secondary" onClick={handleShareViaApp} className="w-full shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">
-                        {isGenerating ? "Generating..." : t.shareViaApp}
+                <div className="w-full flex flex-col gap-2">
+                     <Button 
+                        variant="secondary" 
+                        onClick={handleShareViaApp} 
+                        className="w-full !py-3 !text-sm font-chakra font-bold tracking-widest shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 border border-dark-accent-start/30"
+                    >
+                        {isGenerating ? "..." : t.shareViaApp.toUpperCase()}
                     </Button>
-                    <Button variant="secondary" onClick={onClose} className="w-full mt-2 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.cancel}</Button>
+                    <Button 
+                        variant="secondary" 
+                        onClick={onClose} 
+                        className="w-full !py-3 !text-sm font-chakra font-bold tracking-widest bg-dark-surface/40 hover:bg-white/5 border border-white/10"
+                    >
+                        {t.cancel.toUpperCase()}
+                    </Button>
                 </div>
             </div>
         </Modal>

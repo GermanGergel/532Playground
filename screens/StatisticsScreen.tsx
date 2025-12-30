@@ -62,23 +62,25 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
             ? 'bg-transparent' 
             : 'bg-dark-bg';
         
-        // Fix: Added extra bottom padding (pb-8) for export to prevent clipping the last row
-        const paddingClass = isExport ? 'p-4 pb-8' : 'p-4';
+        // FIX: Increased bottom padding for export to prevent clipping the last row
+        const paddingClass = isExport ? 'p-4 pb-12' : 'p-4';
 
         // Fix: Removed overflow-hidden for export mode to prevent hard-clipping of logos
         const overflowClass = isExport ? '' : 'overflow-hidden';
+        
+        // FIX: Ensure card takes full height of parent flex container in export mode
+        const heightClass = isExport ? 'h-full flex flex-col' : '';
 
-        return `rounded-2xl ${paddingClass} border border-dark-accent-start/30 ${bgClass} w-full ${overflowClass}`;
+        return `rounded-2xl ${paddingClass} border border-dark-accent-start/30 ${bgClass} w-full ${overflowClass} ${heightClass}`;
     };
         
-    const cardTitleClasses = "font-bold text-xl mb-4 text-dark-text";
+    const cardTitleClasses = "font-bold text-xl mb-4 text-dark-text shrink-0";
     
     const sortedPlayers = allPlayersStats.sort((a,b) => (b.goals + b.assists) - (a.goals + a.assists));
     
     const finishedGames = session.games.filter(g => g.status === 'finished');
     const roundsToDisplay = itemLimit ? finishedGames.slice(0, itemLimit) : finishedGames;
 
-    // FIX: Increased py-1.5 to py-2 to give logos more vertical room
     const tableTextClass = "text-[10px] sm:text-xs text-center table-fixed"; 
     const cellPadding = "py-2 px-0.5";
 
@@ -87,7 +89,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
         : `${cellPadding} text-left font-semibold truncate pr-2 max-w-[80px] sm:max-w-[100px]`;
 
     return (
-        <div className="space-y-6 w-full max-w-full">
+        <div className={`space-y-6 w-full max-w-full ${isExport ? 'h-full flex flex-col' : ''}`}>
             {/* Team Standings */}
             {(!visibleSection || visibleSection === 'standings') && (
             <div 
@@ -114,9 +116,8 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                                 <tr key={team.id} className="border-t border-white/10">
                                     <td className={`${cellPadding} text-left`}>{index + 1}</td>
                                     <td className={`${cellPadding}`}>
-                                        {/* Fix: Added subtle translate-y-[1px] to nudge logo down for better alignment without clipping */}
-                                        <div className="flex justify-center items-center h-full translate-y-[1px]">
-                                            <TeamAvatar team={team} size="xxs" />
+                                        <div className="flex justify-center items-center h-full">
+                                            <TeamAvatar team={team} size="xxs" hollow={true} />
                                         </div>
                                     </td>
                                     <td className={cellPadding}>{gamesPlayed}</td>
@@ -161,9 +162,8 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                                         {stats.player.nickname}
                                     </td>
                                     <td className={cellPadding}>
-                                        {/* Fix: Added subtle translate-y-[1px] to nudge logo down for better alignment */}
-                                        <div className="flex justify-center items-center h-full translate-y-[1px]">
-                                            <TeamAvatar team={stats.team} size="xxs" />
+                                        <div className="flex justify-center items-center h-full">
+                                            <TeamAvatar team={stats.team} size="xxs" hollow={true} />
                                         </div>
                                     </td>
                                     <td className={cellPadding}>{stats.gamesPlayed}</td>
@@ -185,18 +185,18 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                 style={{ fontVariantNumeric: 'tabular-nums', boxShadow: isExport ? 'none' : '0 8px 25px -5px rgba(0, 242, 254, 0.1), 0 5px 10px -6px rgba(0, 242, 254, 0.1)' }}
              >
                 <h3 className={cardTitleClasses}>{t.gameHistory}</h3>
-                <ul>
+                <ul className="flex-grow">
                     {roundsToDisplay.map((game, index) => {
                         const team1 = session.teams.find(t => t.id === game.team1Id);
                         const team2 = session.teams.find(t => t.id === game.team2Id);
                         if (!team1 || !team2) return null;
                         return (
                              <li key={game.id} className="flex items-center justify-between py-2 border-t border-white/10 first:border-t-0">
-                                <span className="text-dark-text-secondary text-xs">{t.round} {game.gameNumber}</span>
-                                <div className="flex items-center justify-end gap-2 flex-grow">
-                                    <TeamAvatar team={team1} size="xxs" />
-                                    <span className={`font-bold tabular-nums w-16 text-center text-sm`}>{game.team1Score} : {game.team2Score}</span>
-                                    <TeamAvatar team={team2} size="xxs" />
+                                <span className="text-dark-text-secondary text-[10px] sm:text-xs shrink-0">{t.round} {game.gameNumber}</span>
+                                <div className="flex items-center justify-end gap-3 flex-grow">
+                                    <TeamAvatar team={team1} size="xxs" hollow={true} />
+                                    <span className={`font-bold tabular-nums w-14 sm:w-16 text-center text-sm leading-none`}>{game.team1Score} : {game.team2Score}</span>
+                                    <TeamAvatar team={team2} size="xxs" hollow={true} />
                                 </div>
                             </li>
                         )

@@ -1,12 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Card, Button, useTranslation } from '../ui';
-import { isSupabaseConfigured, getCloudPlayerCount } from '../db';
-import { Wand } from '../icons';
+import { isSupabaseConfigured, getCloudPlayerCount, saveHistoryToDB, savePlayersToDB } from '../db';
+import { Wand, Activity } from '../icons';
+import { generateSingleDemoSession, generateDiverseDemoPlayers } from '../services/demo';
 
-// Styled Wallet Icon for Ledger
 const WalletIcon = ({ className }: { className?: string }) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
         <path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5" />
@@ -18,10 +17,13 @@ const WalletIcon = ({ className }: { className?: string }) => (
 export const SettingsScreen: React.FC = () => {
     const t = useTranslation();
     const navigate = useNavigate();
-    const { language, setLanguage, allPlayers } = useApp();
+    const { language, setLanguage, allPlayers, setAllPlayers, history, setHistory } = useApp();
     const [cloudStatus, setCloudStatus] = React.useState<{ connected: boolean, count: number } | null>(null);
     const [isRefreshing, setIsRefreshing] = React.useState(false);
     
+    // Определение текущего эндпоинта Supabase для отображения
+    const dbEndpoint = (process.env.VITE_SUPABASE_URL || '').split('//')[1]?.split('.')[0]?.toUpperCase() || 'LOCAL';
+
     const checkCloud = async () => {
         if (isRefreshing) return;
         setIsRefreshing(true);
@@ -41,6 +43,22 @@ export const SettingsScreen: React.FC = () => {
     useEffect(() => {
         checkCloud();
     }, []);
+
+    const handleGenDemoSession = async () => {
+        const demoSession = generateSingleDemoSession("Demo Championship", 0);
+        const newHistory = [demoSession, ...history];
+        setHistory(newHistory);
+        await saveHistoryToDB(newHistory);
+        alert("Demo Session Generated!");
+    };
+
+    const handleGenDemoPlayers = async () => {
+        const demoPlayers = generateDiverseDemoPlayers(10);
+        const newPlayersList = [...allPlayers, ...demoPlayers];
+        setAllPlayers(newPlayersList);
+        await savePlayersToDB(newPlayersList);
+        alert("10 Demo Players Added!");
+    };
 
     const langClasses = (lang: string) => `px-3 py-1 rounded-full font-bold transition-colors text-base ${language === lang ? 'gradient-bg text-dark-bg' : 'bg-dark-surface hover:bg-white/10'}`;
 
@@ -93,10 +111,15 @@ export const SettingsScreen: React.FC = () => {
                             <h3 className="text-[10px] font-bold tracking-[0.2em] text-dark-text-secondary uppercase mb-0.5 group-hover:text-white transition-colors">
                                 DATABASE UPLINK
                             </h3>
-                            <div className="flex items-center gap-2">
-                                <span className="text-xl font-black italic tracking-wider" style={theme.textStyle}>
+                            <div className="flex flex-col">
+                                <span className="text-xl font-black italic tracking-wider leading-none" style={theme.textStyle}>
                                     {isOnline ? 'SYSTEM ONLINE' : 'LOCAL MODE'}
                                 </span>
+                                {isOnline && (
+                                    <span className="text-[8px] font-mono text-white/30 mt-1 uppercase tracking-widest">
+                                        ID: {dbEndpoint}
+                                    </span>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -163,6 +186,32 @@ export const SettingsScreen: React.FC = () => {
                             </div>
                         </Card>
                     </Link>
+
+                    <Link to="/settings/analytics" className="block">
+                         <Card className={`${cardNeonClasses} !p-3`}>
+                             <div className="flex justify-center items-center gap-3">
+                                <Activity className="w-6 h-6 text-[#00F2FE]" />
+                                <h2 className="font-chakra font-bold text-xl text-white tracking-wider">{t.hubAnalytics}</h2>
+                            </div>
+                        </Card>
+                    </Link>
+                    
+                    <div className="pt-6 space-y-3">
+                        <Button 
+                            variant="secondary" 
+                            onClick={handleGenDemoSession}
+                            className="w-full !py-3 border-dashed border border-dark-accent-start/30 text-xs tracking-widest uppercase"
+                        >
+                            {t.settingsGenDemoSession}
+                        </Button>
+                        <Button 
+                            variant="secondary" 
+                            onClick={handleGenDemoPlayers}
+                            className="w-full !py-3 border-dashed border border-dark-accent-start/30 text-xs tracking-widest uppercase"
+                        >
+                            {t.settingsGenDemoPlayers}
+                        </Button>
+                    </div>
                 </div>
             </div>
 

@@ -4,11 +4,10 @@ import { PlayerStats } from './statistics';
 
 // RATING CALCULATION LOGIC
 export const getTierForRating = (rating: number): PlayerTier => {
-    if (rating >= 89) return PlayerTier.Legend;
+    if (rating >= 87) return PlayerTier.Legend;
     if (rating >= 79) return PlayerTier.Elite;
-    if (rating >= 69) return PlayerTier.Strong;
-    if (rating >= 58) return PlayerTier.Average;
-    return PlayerTier.Developing;
+    if (rating >= 73) return PlayerTier.Pro;
+    return PlayerTier.Regular;
 };
 
 // --- "532 PRO" HYBRID RATING ENGINE with MATCH CONTEXT & REPUTATION ---

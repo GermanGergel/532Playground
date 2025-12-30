@@ -1,3 +1,4 @@
+
 import React from 'react';
 // FIX: Import directly from component files instead of barrel file to avoid import errors.
 import { Button, Card, useTranslation, Modal, SessionModeIndicator } from '../ui';
@@ -121,6 +122,7 @@ export const AssignPlayersScreen: React.FC = () => {
                             <TeamAvatar 
                                 team={team} 
                                 size="lg" 
+                                hollow={true}
                                 onClick={() => openColorPicker(team)}
                                 countText={`${team.playerIds.length}/${activeSession.playersPerTeam}`}
                             />
@@ -164,6 +166,7 @@ export const AssignPlayersScreen: React.FC = () => {
                                                     key={team.id}
                                                     team={team}
                                                     size="xs"
+                                                    hollow={true}
                                                     onClick={() => handleAssignPlayer(player.id, team.id)}
                                                     className={team.playerIds.includes(player.id) ? 'ring-2 ring-white' : ''}
                                                 />

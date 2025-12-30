@@ -5,7 +5,7 @@ import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { Card, useTranslation, Button } from '../ui';
 import { LastSessionBreakdown, ClubRankings, BestSessionCard, PlayerProgressChart } from './PlayerCardAnalytics';
 import { BadgeIcon, BadgeDisplay } from '../features';
-import { TrophyIcon, StarIcon, ChevronLeft } from '../icons';
+import { TrophyIcon, StarIcon, ChevronLeft, InfoIcon, LightbulbIcon, Zap, ExclamationIcon, RefreshCw, Users } from '../icons';
 
 type View = 'main' | 'stats' | 'awards' | 'info';
 
@@ -30,15 +30,54 @@ const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
     }
 };
 
-// Read-only version of the main PlayerCard (Visual Clone of features.tsx)
+// --- CUSTOM BUTTON FOR PROMO SCREEN (BENTO STYLE) ---
+const PromoStyledButton: React.FC<{ onClick: () => void; children: React.ReactNode; className?: string }> = ({ onClick, children, className }) => (
+    <button 
+        onClick={onClick} 
+        className={`relative overflow-hidden rounded-xl bg-gradient-to-br from-[#161b22] to-[#0a0d14] border border-white/[0.06] p-4 text-center font-chakra font-bold text-xl tracking-wider text-white shadow-lg transition-all duration-300 hover:border-[#00F2FE]/30 hover:scale-[1.02] active:scale-95 group ${className}`}
+    >
+        {/* Mesh Texture Overlay */}
+        <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0" style={{ 
+            backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`,
+            backgroundSize: '4px 4px'
+        }}></div>
+
+        {/* Ambient Glow */}
+        <div className="absolute -top-10 -left-10 w-20 h-20 bg-[#00F2FE]/[0.1] rounded-full blur-[30px] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-0"></div>
+        
+        <span className="relative z-10">{children}</span>
+    </button>
+);
+
+// --- BENTO CONTAINER FOR STATS (Mimics PromoBento) ---
+const PromoStatsContainer: React.FC<{ children: React.ReactNode; title?: string }> = ({ children, title }) => (
+    <div className={`
+        relative overflow-hidden rounded-3xl 
+        bg-gradient-to-br from-[#161b22] to-[#0a0d14]
+        border border-white/[0.06]
+        shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.05)]
+        group p-4
+    `}>
+        {/* Texture */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ 
+            backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`,
+            backgroundSize: '4px 4px'
+        }}></div>
+        {/* Ambient Glow */}
+        <div className="absolute -top-10 -left-10 w-20 h-20 bg-[#00F2FE]/[0.05] rounded-full blur-[30px] pointer-events-none z-0 group-hover:bg-[#00F2FE]/10 transition-colors"></div>
+        {title && (
+            <h2 className="text-[10px] tracking-tighter opacity-70 uppercase font-bold text-white mb-2 ml-1 relative z-10">
+                {title}
+            </h2>
+        )}
+        <div className="relative z-10">{children}</div>
+    </div>
+);
+
 const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties }> = ({ player, style }) => {
     const t = useTranslation();
     const countryCodeAlpha2 = React.useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
-    
-    // Exact styling from features.tsx
     const cardClass = "relative rounded-3xl h-[440px] overflow-hidden text-white p-4 bg-dark-surface border border-white/10 shadow-[0_0_20px_rgba(0,242,254,0.3)]";
-
-    // STATE: Track badge modal state to hide skills
     const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
 
     return (
@@ -51,9 +90,6 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
                     />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-                
-                {/* Skills - Left Side (Aligned perfectly with main card) */}
-                {/* HIDE when badge modal is open */}
                 {!isBadgeModalOpen && (
                     <div className="absolute top-24 left-4 z-20">
                         <div className="space-y-4">
@@ -66,35 +102,22 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
                         </div>
                     </div>
                 )}
-
                 <div className="relative z-10 h-full flex flex-col justify-between">
-                    {/* Top Row */}
                     <div className="flex justify-between items-start">
-                        {/* Logo & Flag */}
                         <div>
                             <p style={{ color: '#00F2FE' }} className="text-base font-black leading-none">532</p>
                             <p className="text-white text-[7px] font-bold tracking-[0.15em] leading-none mt-1">PLAYGROUND</p>
                             {countryCodeAlpha2 && <img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} alt={`${player.countryCode} flag`} className="w-6 h-auto mt-3 rounded-sm" />}
                         </div>
-                        
-                        {/* Rating, Form & Badges (Right Side) */}
                         <div className="flex flex-col items-center max-w-[50%]">
                             <div className="text-4xl font-black leading-none" style={{ color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
-                            <p className="font-bold text-white tracking-widest text-sm">OVG</p>
+                            <p className="font-bold text-white tracking-widest text-sm mt-2">OVR</p>
                             <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
-                            
-                            {/* Updated to use BadgeDisplay component with limit 6 */}
                             {player.badges && Object.keys(player.badges).length > 0 && (
-                                <BadgeDisplay 
-                                    badges={player.badges} 
-                                    limit={6}
-                                    onOpenChange={setIsBadgeModalOpen} 
-                                />
+                                <BadgeDisplay badges={player.badges} limit={6} onOpenChange={setIsBadgeModalOpen} />
                             )}
                         </div>
                     </div>
-                    
-                    {/* Footer: Name - Added flex-shrink-0 to prevent disappearing */}
                     <div className="text-center flex-shrink-0 relative z-30 pb-1">
                         <h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg leading-none mb-1">
                             {player.nickname} {player.surname}
@@ -108,7 +131,7 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
 
 const SubViewHeader: React.FC<{ title: string, onBack: () => void }> = ({ title, onBack }) => (
     <div className="flex items-center justify-between mb-6">
-        <Button variant="ghost" className="!p-2 -ml-2" onClick={onBack}>
+        <Button variant="ghost" className="!p-2 -ml-2 text-white hover:text-[#00F2FE] transition-colors" onClick={onBack}>
             <ChevronLeft className="w-7 h-7" />
         </Button>
         <h2 className="text-xl font-bold text-center absolute left-1/2 -translate-x-1/2">{title}</h2>
@@ -158,7 +181,7 @@ const SessionTrendChart: React.FC<{ history?: Player['sessionHistory']; t: any }
     );
 };
 
-const StatsView: React.FC<{ player: Player; onBack: () => void }> = ({ player, onBack }) => {
+const StatsView: React.FC<{ player: Player; onBack: () => void; isPromo?: boolean }> = ({ player, onBack, isPromo }) => {
     const t = useTranslation();
     const winRate = player.totalGames > 0 ? `${Math.round((player.totalWins / player.totalGames) * 100)}%` : 'N/A';
     const goalsPerSession = player.totalSessionsPlayed > 0 ? (player.totalGoals / player.totalSessionsPlayed).toFixed(2) : '0.00';
@@ -169,37 +192,89 @@ const StatsView: React.FC<{ player: Player; onBack: () => void }> = ({ player, o
         <div><p className={`text-base font-bold`}>{value}</p><p className="text-[10px] text-dark-text-secondary uppercase">{label}</p></div>
     );
 
+    // Conditional Wrapper Component based on isPromo
+    const Wrapper: React.FC<{ title?: string; children: React.ReactNode }> = ({ title, children }) => {
+        if (isPromo) {
+            return <PromoStatsContainer title={title}>{children}</PromoStatsContainer>;
+        }
+        return <Card title={title} className={cardNeonClasses}>{children}</Card>;
+    };
+
     return (
         <div>
             <SubViewHeader title={t.statistics} onBack={onBack} />
             <div className="space-y-3">
-                <PlayerProgressChart history={player.historyData || []} />
                 
-                {player.lastRatingChange && <LastSessionBreakdown player={player} />}
-                <BestSessionCard player={player} />
-                <ClubRankings player={player} />
-                <Card title={t.allTimeStats} className={cardNeonClasses}><div className="grid grid-cols-4 gap-2 text-center">
-                    <StatItem label={t.thSessions} value={player.totalSessionsPlayed} />
-                    <StatItem label={t.thG} value={player.totalGoals} />
-                    <StatItem label={t.thA} value={player.totalAssists} />
-                    <StatItem label={t.winRate.toUpperCase()} value={winRate} />
-                </div></Card>
-                <Card title={t.monthlyStatsTitle} className={cardNeonClasses}><div className="grid grid-cols-4 gap-2 text-center">
-                    <StatItem label={t.session.toUpperCase()} value={player.monthlySessionsPlayed} />
-                    <StatItem label={t.monthlyGoals.toUpperCase()} value={player.monthlyGoals} />
-                    <StatItem label={t.monthlyAssists.toUpperCase()} value={player.monthlyAssists} />
-                    <StatItem label={t.monthlyWins.toUpperCase()} value={player.monthlyWins} />
-                </div></Card>
-                 <Card title="Career Averages" className={cardNeonClasses}><div className="grid grid-cols-2 gap-2 text-center">
-                    <StatItem label={t.goalsPerSession} value={goalsPerSession} />
-                    <StatItem label={t.assistsPerSession} value={assistsPerSession} />
-                </div></Card>
-                <Card title={`${t.winLossDraw} (${player.totalWins}W ${player.totalDraws}D ${player.totalLosses}L)`} className={cardNeonClasses}>
+                {/* 1. Progress Chart */}
+                {isPromo ? (
+                    <PromoStatsContainer>
+                        <PlayerProgressChart history={player.historyData || []} usePromoStyle={true} />
+                    </PromoStatsContainer>
+                ) : (
+                    <PlayerProgressChart history={player.historyData || []} />
+                )}
+
+                {/* 2. Last Session Breakdown */}
+                {player.lastRatingChange && (
+                    isPromo ? (
+                        <PromoStatsContainer>
+                            <LastSessionBreakdown player={player} usePromoStyle={true} />
+                        </PromoStatsContainer>
+                    ) : (
+                        <LastSessionBreakdown player={player} />
+                    )
+                )}
+
+                {/* 3. Best Session */}
+                {isPromo ? (
+                    <PromoStatsContainer>
+                        <BestSessionCard player={player} usePromoStyle={true} />
+                    </PromoStatsContainer>
+                ) : (
+                    <BestSessionCard player={player} />
+                )}
+
+                {/* 4. Club Rankings */}
+                {isPromo ? (
+                    <PromoStatsContainer>
+                        <ClubRankings player={player} usePromoStyle={true} />
+                    </PromoStatsContainer>
+                ) : (
+                    <ClubRankings player={player} />
+                )}
+
+                <Wrapper title={t.allTimeStats}>
+                    <div className="grid grid-cols-4 gap-2 text-center">
+                        <StatItem label={t.thSessions} value={player.totalSessionsPlayed} />
+                        <StatItem label={t.winRate.toUpperCase()} value={winRate} />
+                        <StatItem label={t.thG} value={player.totalGoals} />
+                        <StatItem label={t.thA} value={player.totalAssists} />
+                    </div>
+                </Wrapper>
+
+                <Wrapper title={t.monthlyStatsTitle}>
+                    <div className="grid grid-cols-4 gap-2 text-center">
+                        <StatItem label={t.session.toUpperCase()} value={player.monthlySessionsPlayed} />
+                        <StatItem label={t.monthlyGoals.toUpperCase()} value={player.monthlyGoals} />
+                        <StatItem label={t.monthlyAssists.toUpperCase()} value={player.monthlyAssists} />
+                        <StatItem label={t.monthlyWins.toUpperCase()} value={player.monthlyWins} />
+                    </div>
+                </Wrapper>
+
+                <Wrapper title="Career Averages">
+                    <div className="grid grid-cols-2 gap-2 text-center">
+                        <StatItem label={t.goalsPerSession} value={goalsPerSession} />
+                        <StatItem label={t.assistsPerSession} value={assistsPerSession} />
+                    </div>
+                </Wrapper>
+
+                <Wrapper title={`${t.winLossDraw} (${player.totalWins}W ${player.totalDraws}D ${player.totalLosses}L)`}>
                     <WLDBar wins={player.totalWins} draws={player.totalDraws} losses={player.totalLosses} total={player.totalGames} t={t} />
-                </Card>
-                <Card title={t.sessionTrend} className={cardNeonClasses}>
+                </Wrapper>
+
+                <Wrapper title={t.sessionTrend}>
                     <SessionTrendChart history={player.sessionHistory} t={t} />
-                </Card>
+                </Wrapper>
             </div>
         </div>
     );
@@ -225,12 +300,8 @@ const AwardsView: React.FC<{ player: Player; onBack: () => void }> = ({ player, 
                 {ALL_BADGES.map(badge => {
                     const isEarned = player.badges && player.badges[badge];
                     const count = player.badges?.[badge];
-                    
                     return (
-                        <div 
-                            key={badge} 
-                            className="flex flex-col items-center text-center transition-all duration-300"
-                        >
+                        <div key={badge} className="flex flex-col items-center text-center transition-all duration-300">
                             <div className={`relative transition-all duration-300 ${!isEarned ? 'filter grayscale opacity-30' : ''}`}>
                                 <BadgeIcon 
                                     badge={badge} 
@@ -264,50 +335,110 @@ const InfoView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         'mercenary', 'double_agent', 'joker', 'crisis_manager', 'iron_lung'
     ];
     const ALL_SKILLS: SkillType[] = ['goalkeeper', 'power_shot', 'technique', 'defender', 'playmaker', 'finisher', 'versatile', 'tireless_motor', 'leader'];
+    
+    // --- APPLIED "BADGE OVERFLOW" STYLE TO INFO VIEW CONTAINER ---
     return (
-        <div>
-            <SubViewHeader title={t.information} onBack={onBack} />
-            <div className="space-y-8">
-                <div>
-                    <h3 className="text-lg font-bold mb-3">{t.ratingCalculationTitle}</h3>
-                    <p className="text-sm text-dark-text-secondary">{t.ratingCalculationDesc}</p>
-                    <div className="mt-4 p-3 bg-dark-bg/50 rounded-lg border border-white/10">
-                        <h4 className="font-bold mb-2 text-dark-text">{t.ratingCalculationExamplesTitle}</h4>
-                        <ul className="text-xs text-dark-text-secondary list-disc list-inside space-y-1">
-                            <li>{t.ratingExampleWinStrong}</li>
-                            <li>{t.ratingExampleWinClose}</li>
-                            <li>{t.ratingExampleDraw}</li>
-                            <li>{t.ratingExampleLossClose}</li>
-                            <li>{t.ratingExampleLossHeavy}</li>
-                            <li>{t.ratingExampleGoal}</li>
-                            <li>{t.ratingExampleAssist}</li>
-                            <li>{t.ratingExampleCleanSheet}</li>
-                        </ul>
+        <div 
+            className="pb-10 !bg-[#0a0c10] !border !border-[#1e293b] !shadow-2xl overflow-hidden relative rounded-3xl"
+        >
+            {/* DECORATIVE HEADER ELEMENTS */}
+            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent opacity-100 z-50"></div>
+            <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-[#00F2FE]/10 to-transparent blur-xl pointer-events-none z-0"></div>
+
+            <div className="relative z-10 p-4">
+                <SubViewHeader title={t.information} onBack={onBack} />
+                <div className="space-y-8">
+                    {/* 1. Rating */}
+                    <div>
+                        <h3 className="text-lg font-bold mb-3 flex items-center gap-2"><InfoIcon className="w-5 h-5 text-dark-accent-start" /> {t.ratingCalculationTitle}</h3>
+                        <p className="text-sm text-dark-text-secondary mb-4">{t.ratingCalculationDesc}</p>
+                        <div className="p-4 bg-dark-bg/50 rounded-2xl border border-white/10 space-y-4">
+                            <ul className="text-xs text-dark-text-secondary space-y-2">
+                                <li className="flex justify-between border-b border-white/5 pb-1"><span>{t.ratingExampleWinStrong}</span></li>
+                                <li className="flex justify-between border-b border-white/5 pb-1"><span>{t.ratingExampleWinClose}</span></li>
+                                <li className="flex justify-between border-b border-white/5 pb-1"><span>{t.ratingExampleDraw}</span></li>
+                                <li className="flex justify-between border-b border-white/5 pb-1"><span>{t.ratingExampleLossClose}</span></li>
+                                <li className="flex justify-between border-b border-white/5 pb-1"><span>{t.ratingExampleLossHeavy}</span></li>
+                                <li className="flex justify-between border-b border-white/5 pb-1"><span>{t.ratingExampleGoal}</span></li>
+                                <li className="flex justify-between"><span>{t.ratingExampleCleanSheet}</span></li>
+                            </ul>
+                            <div className="grid grid-cols-2 gap-2 pt-2">
+                                <div className="p-2 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                                    <h5 className="text-[10px] font-black text-amber-500 uppercase flex items-center gap-1"><RefreshCw className="w-3 h-3" /> {t.infoInactivityTitle}</h5>
+                                    <p className="text-[9px] text-white/50 mt-1">{t.infoInactivityDesc}</p>
+                                </div>
+                                <div className="p-2 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                                    <h5 className="text-[10px] font-black text-blue-400 uppercase">🛡️ Safety</h5>
+                                    <p className="text-[9px] text-white/50 mt-1">{t.infoRatingProtection}</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                 <div className="pt-6 border-t border-white/10">
-                    <h3 className="text-lg font-bold mb-3">{t.badgeBonusTitle}</h3>
-                    <p className="text-sm text-dark-text-secondary">{t.badgeBonusDesc}</p>
-                    <div className="mt-4 p-3 bg-dark-bg/50 rounded-lg border border-white/10">
-                        <p className="text-xs text-dark-text-secondary mb-2">{t.badgeBonusExampleNote}</p>
-                        <ul className="text-xs text-dark-text list-disc list-inside space-y-1 font-semibold">
-                           <li>{t.badgeBonusMvp}</li>
-                           <li>{t.badgeBonusTopScorer}</li>
-                        </ul>
+
+                    {/* 2. Legionnaire */}
+                    <div className="pt-6 border-t border-white/10">
+                        <h3 className="text-lg font-bold mb-3 flex items-center gap-2"><Users className="w-5 h-5 text-purple-500" /> {t.infoLegionnaireTitle}</h3>
+                        <div className="p-4 bg-purple-500/5 border border-purple-500/10 rounded-2xl">
+                            <p className="text-sm text-white/70 leading-relaxed">{t.infoLegionnaireDesc}</p>
+                        </div>
                     </div>
-                </div>
-                <div className="pt-6 border-t border-white/10">
-                    <h3 className="text-lg font-bold mb-3 flex items-center gap-2"><StarIcon className="w-5 h-5" /> {t.keySkillsTitle}</h3>
-                    <p className="text-sm text-dark-text-secondary mb-3">{t.keySkillsDesc}</p>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                        {ALL_SKILLS.map(skill => (<div key={skill} className="flex items-center gap-2"><StarIcon className="w-3 h-3 text-dark-accent-start flex-shrink-0" /><p className="text-sm">{t[`skill_${skill}` as keyof typeof t]}</p></div>))}
+
+                    {/* 3. Discipline */}
+                    <div className="pt-6 border-t border-white/10">
+                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><ExclamationIcon className="w-5 h-5 text-red-500" /> {t.disciplineTitle}</h3>
+                        <div className="grid grid-cols-1 gap-3">
+                            <div className="p-3 bg-red-500/5 border border-red-500/20 rounded-xl flex justify-between items-center">
+                                <div>
+                                    <h5 className="text-xs font-black text-white uppercase">{t.ruleHandballTitle}</h5>
+                                    <p className="text-[10px] text-white/50">{t.ruleHandballPenalty}</p>
+                                </div>
+                                <span className="text-[10px] font-black bg-red-500 px-2 py-0.5 rounded">1 MIN</span>
+                            </div>
+                            <div className="p-3 bg-white/5 border border-white/10 rounded-xl flex justify-between items-center">
+                                <div>
+                                    <h5 className="text-xs font-black text-white uppercase">{t.ruleNoShowTitle}</h5>
+                                    <p className="text-[10px] text-white/50">{t.ruleNoShowPenalty}</p>
+                                </div>
+                                <span className="text-[10px] font-black text-dark-accent-start">50K VND</span>
+                            </div>
+                            <div className="p-3 bg-white/5 border border-white/10 rounded-xl flex justify-between items-center">
+                                <div>
+                                    <h5 className="text-xs font-black text-white uppercase">{t.ruleLateTitle}</h5>
+                                    <p className="text-[10px] text-white/50">{t.ruleLatePenalty}</p>
+                                </div>
+                                <span className="text-[10px] font-black text-dark-accent-start">20K VND</span>
+                            </div>
+                        </div>
                     </div>
-                    <p className="text-xs text-dark-text-secondary mt-4 italic">{t.keySkillsAdminNote}</p>
-                </div>
-                <div className="pt-6 border-t border-white/10">
-                    <h3 className="text-lg font-bold mb-3 flex items-center gap-2"><TrophyIcon className="w-5 h-5" /> {t.badges}</h3>
-                    <div className="space-y-4 pt-2">
-                        {ALL_BADGES.map(badge => (<div key={badge} className="flex items-start gap-3"><BadgeIcon badge={badge} className="w-8 h-8 flex-shrink-0" /><div><p className="text-sm font-semibold leading-tight">{t[`badge_${badge}` as keyof typeof t]}</p><p className="text-xs text-dark-text-secondary leading-snug mt-0.5">{t[`badge_${badge}_desc` as keyof typeof t]}</p></div></div>))}
+
+                    {/* 4. Badge Bonuses */}
+                     <div className="pt-6 border-t border-white/10">
+                        <h3 className="text-lg font-bold mb-3 flex items-center gap-2"><LightbulbIcon className="w-5 h-5 text-emerald-500" /> {t.badgeBonusTitle}</h3>
+                        <p className="text-sm text-dark-text-secondary mb-3">{t.badgeBonusDesc}</p>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl text-center">
+                                <span className="text-xs font-bold text-white">{t.badgeBonusMvp}</span>
+                            </div>
+                            <div className="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl text-center">
+                                <span className="text-xs font-bold text-white">{t.badgeBonusTopScorer}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 5. Skills */}
+                    <div className="pt-6 border-t border-white/10">
+                        <h3 className="text-lg font-bold mb-3 flex items-center gap-2"><StarIcon className="w-5 h-5 text-dark-accent-start" /> {t.keySkillsTitle}</h3>
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                            {ALL_SKILLS.map(skill => (<div key={skill} className="flex items-center gap-2"><StarIcon className="w-3 h-3 text-dark-accent-start flex-shrink-0" /><p className="text-sm">{t[`skill_${skill}` as keyof typeof t]}</p></div>))}
+                        </div>
+                    </div>
+
+                    {/* 6. Badges */}
+                    <div className="pt-6 border-t border-white/10">
+                        <h3 className="text-lg font-bold mb-3 flex items-center gap-2"><TrophyIcon className="w-5 h-5 text-yellow-500" /> {t.badges}</h3>
+                        <div className="space-y-4 pt-2">
+                            {ALL_BADGES.map(badge => (<div key={badge} className="flex items-start gap-3"><BadgeIcon badge={badge} className="w-8 h-8 flex-shrink-0" /><div><p className="text-sm font-semibold leading-tight">{t[`badge_${badge}` as keyof typeof t]}</p><p className="text-xs text-dark-text-secondary leading-snug mt-0.5">{t[`badge_${badge}_desc` as keyof typeof t]}</p></div></div>))}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -315,33 +446,39 @@ const InfoView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     );
 };
 
-const MainCardView: React.FC<{ player: Player, onNavigate: (view: View) => void, cardStyle?: React.CSSProperties }> = ({ player, onNavigate, cardStyle }) => {
+const MainCardView: React.FC<{ player: Player, onNavigate: (view: View) => void, cardStyle?: React.CSSProperties, isPromo?: boolean }> = ({ player, onNavigate, cardStyle, isPromo }) => {
     const t = useTranslation();
-    const buttonClasses = "w-full !py-3 flex items-center justify-center shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 border border-dark-accent-start/30 font-chakra font-bold text-xl tracking-wider";
+    // Default Button Classes
+    const defaultButtonClasses = "w-full !py-3 flex items-center justify-center shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 border border-dark-accent-start/30 font-chakra font-bold text-xl tracking-wider";
+    
+    // Logic to choose which button component to render
+    const ButtonComponent = isPromo ? PromoStyledButton : Button;
+    const buttonProps = isPromo ? {} : { variant: 'secondary' as const, className: defaultButtonClasses };
+
     return (
         <div>
             <ReadOnlyPlayerCard player={player} style={cardStyle} />
             <div className="flex flex-col gap-4 mt-6">
-                <Button variant="secondary" onClick={() => onNavigate('stats')} className={buttonClasses}>{t.statistics}</Button>
-                <Button variant="secondary" onClick={() => onNavigate('awards')} className={buttonClasses}>{t.awards}</Button>
-                <Button variant="secondary" onClick={() => onNavigate('info')} className={buttonClasses}>{t.information}</Button>
+                <ButtonComponent onClick={() => onNavigate('stats')} {...buttonProps}>{t.statistics}</ButtonComponent>
+                <ButtonComponent onClick={() => onNavigate('awards')} {...buttonProps}>{t.awards}</ButtonComponent>
+                <ButtonComponent onClick={() => onNavigate('info')} {...buttonProps}>{t.information}</ButtonComponent>
             </div>
         </div>
     );
 };
 
-export const PublicPlayerCard: React.FC<{ player: Player; cardStyle?: React.CSSProperties; compact?: boolean }> = ({ player, cardStyle }) => {
+export const PublicPlayerCard: React.FC<{ player: Player; cardStyle?: React.CSSProperties; compact?: boolean; isPromo?: boolean }> = ({ player, cardStyle, isPromo }) => {
     const [view, setView] = React.useState<View>('main');
 
     switch (view) {
         case 'stats':
-            return <StatsView player={player} onBack={() => setView('main')} />;
+            return <StatsView player={player} onBack={() => setView('main')} isPromo={isPromo} />;
         case 'awards':
             return <AwardsView player={player} onBack={() => setView('main')} />;
         case 'info':
             return <InfoView onBack={() => setView('main')} />;
         case 'main':
         default:
-            return <MainCardView player={player} onNavigate={setView} cardStyle={cardStyle} />;
+            return <MainCardView player={player} onNavigate={setView} cardStyle={cardStyle} isPromo={isPromo} />;
     }
 };

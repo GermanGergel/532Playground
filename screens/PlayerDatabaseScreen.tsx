@@ -52,6 +52,7 @@ export const PlayerDatabaseScreen: React.FC = () => {
     }, [allPlayers, statusToShow, playerDbSearch, playerDbSort]);
 
     const handleAddPlayer = (nickname: string) => {
+        const startRating = 68;
         const newPlayer: Player = {
             id: newId(),
             nickname,
@@ -61,7 +62,9 @@ export const PlayerDatabaseScreen: React.FC = () => {
             status: PlayerStatus.Unconfirmed,
             totalGoals: 0, totalAssists: 0, totalGames: 0, totalWins: 0, totalDraws: 0, totalLosses: 0,
             totalSessionsPlayed: 0,
-            rating: 60, tier: getTierForRating(60),
+            rating: startRating, 
+            initialRating: startRating, // Set floor to 68
+            tier: getTierForRating(startRating),
             monthlyGoals: 0, monthlyAssists: 0, monthlyGames: 0, monthlyWins: 0,
             monthlySessionsPlayed: 0,
             form: 'stable', badges: {}, skills: [], lastPlayedAt: new Date().toISOString(),
@@ -80,8 +83,8 @@ export const PlayerDatabaseScreen: React.FC = () => {
         switch(tier) {
             case PlayerTier.Legend: return '!shadow-purple-400/30 !border-purple-400/50';
             case PlayerTier.Elite: return '!shadow-yellow-400/30 !border-yellow-400/50';
-            case PlayerTier.Strong: return '!shadow-slate-300/30 !border-slate-300/50';
-            case PlayerTier.Average: return '!shadow-cyan-400/30 !border-cyan-400/50';
+            case PlayerTier.Pro: return '!shadow-slate-300/30 !border-slate-300/50';
+            case PlayerTier.Regular: return '!shadow-cyan-400/30 !border-cyan-400/50';
             default: return '';
         }
     };
@@ -144,7 +147,7 @@ export const PlayerDatabaseScreen: React.FC = () => {
                                             </span>
                                         )}
                                         {player.status === PlayerStatus.Confirmed && (
-                                            <span className="font-black text-lg text-dark-text mr-2">OVG {player.rating}</span>
+                                            <span className="font-black text-lg text-dark-text mr-2">OVR {player.rating}</span>
                                         )}
                                     </div>
                                 </Card>

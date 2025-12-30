@@ -86,15 +86,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   // --- LAZY LOADING METHODS (Fixed with useCallback to prevent loops) ---
-  // Updated to accept limit
+  // Updated to preserve demo sessions in memory when loading real ones from DB
   const fetchHistory = React.useCallback(async (limit?: number) => {
-      const historyData = await loadHistoryFromDB(limit);
-      if (historyData) setHistory(historyData);
+      const dbHistory = await loadHistoryFromDB(limit);
+      if (dbHistory) {
+          setHistory(prev => {
+              // Extract demo items from current state
+              const demoItems = prev.filter(s => s.id.startsWith('demo_'));
+              // Get unique IDs from DB history
+              const dbIds = new Set(dbHistory.map(s => s.id));
+              // Filter out any demo items that might somehow exist in DB (shouldn't happen)
+              const uniqueDemoItems = demoItems.filter(d => !dbIds.has(d.id));
+              
+              // Combine and re-sort
+              return [...uniqueDemoItems, ...dbHistory].sort((a, b) => 
+                  new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+              );
+          });
+      }
   }, []);
 
   const fetchFullNews = React.useCallback(async () => {
       const fullNews = await loadNewsFromDB(); // No limit = full fetch
-      if (fullNews) setNewsFeed(fullNews);
+      if (fullNews) {
+          setNewsFeed(prev => {
+              const demoNews = prev.filter(n => n.id.startsWith('demo_'));
+              const dbIds = new Set(fullNews.map(n => n.id));
+              const uniqueDemoNews = demoNews.filter(dn => !dbIds.has(dn.id));
+              return [...uniqueDemoNews, ...fullNews].sort((a, b) => 
+                  new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+              );
+          });
+      }
   }, []);
 
   // --- PERSISTENCE EFFECT HOOKS (Save to DB) ---

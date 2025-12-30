@@ -1,4 +1,3 @@
-
 import { WeatherData, getWeatherIconType } from './weather';
 
 interface PosterData {
@@ -89,16 +88,14 @@ export const generateAndSharePoster = async (options: PosterData) => {
             ctx.shadowColor = 'rgba(0,0,0,0.5)';
             ctx.shadowBlur = 5;
             
-            // ADJUSTED ICON POSITION (Updated based on feedback)
-            // Was: S * 85 (too far left), headerY + S * 14 (too low)
-            // New: S * 70 (Closer to right), headerY + S * 10 (Higher)
+            // ADJUSTED ICON POSITION
             ctx.drawImage(iconImg, W - P - S * 70, headerY + S * 10, S * 28, S * 28);
             
             ctx.fillStyle = '#FFF';
             ctx.font = `bold ${S * 28}px "Teko"`;
             ctx.textAlign = 'right';
-            // Corrected: Temperature adjustment from +3 to +1
-            ctx.fillText(`${Math.round(options.weather.temperature) + 1}°`, W - P, headerY + S * 35);
+            // UPDATED: Temperature adjustment set to +2 to match real local conditions
+            ctx.fillText(`${Math.round(options.weather.temperature) + 2}°`, W - P, headerY + S * 35);
             ctx.shadowBlur = 0;
             ctx.textAlign = 'left';
         } catch (e) {
@@ -206,8 +203,6 @@ export const generateAndSharePoster = async (options: PosterData) => {
         try {
             await navigator.share({ files: [file] });
         } catch (error: any) {
-            // AbortError is triggered when the user cancels the share dialog.
-            // We should not treat this as a failure.
             if (error.name === 'AbortError') {
                 console.log('Share cancelled by user.');
                 return;

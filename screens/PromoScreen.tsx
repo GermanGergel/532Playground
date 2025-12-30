@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { PublicPlayerCard } from '../components/PublicPlayerCard';
 import { LastSessionBreakdown } from '../components/PlayerCardAnalytics';
 import { Player, PlayerStatus, PlayerTier } from '../types';
-import { WhatsApp, TrophyIcon, VideoCamera, BarChartDynamic } from '../icons';
+import { WhatsApp, TrophyIcon, VideoCamera, BarChartDynamic, FacebookIcon, YouTubeIcon, InstagramIcon, TikTokIcon, LayoutDashboard, Target, Zap, Cloud, MapPinIcon, History } from '../icons'; 
 import { BrandedHeader } from './utils';
 import { loadPromoData, getSessionAnthemUrl } from '../db';
 import { useApp } from '../context';
@@ -27,6 +26,7 @@ const DEFAULT_PROMO_PLAYER: Player = {
     status: PlayerStatus.Confirmed,
     countryCode: 'VN',
     rating: 94,
+    initialRating: 94,
     tier: PlayerTier.Legend,
     playerCard: "https://images.unsplash.com/photo-1560272564-c83b66b1ad12?q=80&w=800&auto=format&fit=crop", 
     totalGoals: 142,
@@ -67,8 +67,7 @@ const DEFAULT_PROMO_PLAYER: Player = {
     ]
 };
 
-// --- CONTENT TRANSLATIONS ---
-// We map the global language codes to these keys. 'ua' will fallback to 'ru' or 'en' for promo text if not explicitly defined here.
+// --- CONTENT TRANSLATIONS (REFINED) ---
 const TEXT = {
     en: {
         hero_title: "PLAY LIKE A PRO",
@@ -88,49 +87,75 @@ const TEXT = {
         roadmap_leagues_desc: "Compete for the seasonal cup and prizes.",
         cta_join: "JOIN THE SQUAD",
         cta_desc: "Connect with us on WhatsApp to book your slot.",
-        tap_to_enter: "TAP TO ENTER"
+        tap_to_enter: "TAP TO ENTER",
+        
+        // Hub Section
+        hub_section_title: "CLUB INTELLIGENCE",
+        hub_section_desc: "The central nervous system of the club. Access restricted to active players.",
+        hub_badge: "MEMBER EXCLUSIVE",
+        hub_f1: "Global Rankings",
+        hub_f2: "Match Archive",
+        hub_f3: "Live Updates",
+        hub_f4: "Deep Analytics"
     },
     vn: {
-        hero_title: "CHƠI NHƯ CHUYÊN NGHIỆP",
-        hero_subtitle: "Cộng đồng futsal hiện đại nhất tại Đà Nẵng.",
-        feature_card: "Thẻ Cầu Thủ Của Bạn",
-        feature_card_desc: "Sở hữu thẻ riêng. Chỉ số cập nhật tự động sau mỗi trận dựa trên phong độ thực tế.",
+        hero_title: "CHƠI NHƯ DÂN CHUYÊN",
+        hero_subtitle: "Cộng đồng Futsal hiện đại nhất tại Đà Nẵng.",
+        feature_card: "Thẻ Cầu Thủ Riêng",
+        feature_card_desc: "Sở hữu tấm thẻ độc bản. Chỉ số cập nhật tự động sau mỗi trận dựa trên phong độ thực tế của bạn.",
         feature_live: "Cập Nhật Rating Tức Thì",
-        feature_live_desc: "Xem chính xác hiệu suất của bạn ảnh hưởng thế nào đến xếp hạng sau mỗi buổi tập.",
+        feature_live_desc: "Theo dõi trực tiếp hiệu suất của bạn ảnh hưởng thế nào đến rating ngay sau buổi tập.",
         feature_stats: "Thống Kê Chi Tiết",
-        feature_stats_desc: "Theo dõi bàn thắng, kiến tạo, trận thắng. Con số khẳng định đẳng cấp.",
+        feature_stats_desc: "Chúng tôi ghi lại mọi thông số: bàn thắng, kiến tạo, trận thắng. Con số khẳng định đẳng cấp.",
         feature_fair: "Hệ Thống Cân Bằng",
-        feature_fair_desc: "Chia đội bằng thuật toán. Người chơi mới cần qua 3 trận định vị (calibration) để có xếp hạng chuẩn.",
+        feature_fair_desc: "Chia đội bằng thuật toán thông minh. Người chơi mới có 3 trận định vị để xác định trình độ chuẩn.",
         roadmap_title: "TƯƠNG LAI CỦA BÓNG ĐÁ",
         roadmap_video: "Video Highlights",
-        roadmap_video_desc: "Clip bàn thắng đẹp nhất của bạn (Sắp ra mắt).",
-        roadmap_leagues: "Giải Đấu & Cup",
-        roadmap_leagues_desc: "Cạnh tranh cho cúp mùa giải và giải thưởng.",
+        roadmap_video_desc: "Clip AI ghi lại những siêu phẩm của bạn (Sắp ra mắt).",
+        roadmap_leagues: "Giải Đấu & Cúp",
+        roadmap_leagues_desc: "Tranh tài giành cúp vô địch mùa giải và nhiều phần quà hấp dẫn.",
         cta_join: "THAM GIA NGAY",
-        cta_desc: "Liên hệ qua WhatsApp để đặt chỗ.",
-        tap_to_enter: "CHẠM ĐỂ VÀO"
+        cta_desc: "Liên hệ qua WhatsApp để đặt slot thi đấu.",
+        tap_to_enter: "NHẤN ĐỂ VÀO",
+
+        // Hub Section
+        hub_section_title: "HỆ SINH THÁI CLB",
+        hub_section_desc: "Hệ thống dữ liệu trung tâm của câu lạc bộ. Đặc quyền dành cho thành viên chính thức.",
+        hub_badge: "DÀNH CHO THÀNH VIÊN",
+        hub_f1: "Bảng Xếp Hạng",
+        hub_f2: "Lịch Sử Đấu",
+        hub_f3: "Cập Nhật Live",
+        hub_f4: "Phân Tích Sâu"
     },
     ru: {
         hero_title: "ИГРАЙ КАК ПРОФИ",
         hero_subtitle: "Самое технологичное футбольное комьюнити в Дананге.",
-        feature_card: "Твоя Личная Карточка",
-        feature_card_desc: "Как в FIFA. Рейтинг обновляется автоматически после каждой игры на основе реальных результатів.",
-        feature_live: "Живое Обновление Рейтинга",
-        feature_live_desc: "Смотри, как именно твоя игра влияет на рейтинг сразу после сессии.",
-        feature_stats: "Детальная Статистика",
-        feature_stats_desc: "Мы считаем всё: голы, ассисты, победы. Цифры определяют твой статус в клубе.",
-        feature_fair: "Умный Баланс Команд",
-        feature_fair_desc: "Алгоритм делит составы по силе. Новички проходят калибровку (3 игры), чтобы система определила их точный уровень.",
+        feature_card: "Твоя личная карта",
+        feature_card_desc: "Получи свою карточку. Рейтинг обновляется автоматически после каждой игры на основе твоих реальных успехов.",
+        feature_live: "Живое обновление рейтинга",
+        feature_live_desc: "Смотри, как именно твоя игра повлияла на рейтинг сразу после финального свистка.",
+        feature_stats: "Детальная статистика",
+        feature_stats_desc: "Мы считаем всё: голы, пасы, победы и сухие матчи. Цифры определяют твой статус.",
+        feature_fair: "Умный баланс команд",
+        feature_fair_desc: "Алгоритм делит составы по силе. Новички проходят калибровку из 3 игр для определения точного уровня.",
         roadmap_title: "ПЛАНЫ НА БУДУЩЕЕ",
-        roadmap_video: "Видео Хайлайты",
-        roadmap_video_desc: "Нарезки твоих лучших голов после матча (Скоро).",
+        roadmap_video: "Видео-хайлайты",
+        roadmap_video_desc: "Нарезки твоих лучших голов, созданные нейросетью (Скоро).",
         roadmap_leagues: "Турниры и Лиги",
-        roadmap_leagues_desc: "Борись за кубок сезона и призы.",
+        roadmap_leagues_desc: "Борись за кубок сезона и ценные призы от клуба.",
         cta_join: "ВСТУПИТЬ В КЛУБ",
         cta_desc: "Напиши нам в WhatsApp, чтобы записаться на игру.",
-        tap_to_enter: "НАЖМИ, ЧТОБЫ ВОЙТИ"
+        tap_to_enter: "НАЖМИ, ЧТОБЫ ВОЙТИ",
+
+        // Hub Section
+        hub_section_title: "ЭКОСИСТЕМА КЛУБА",
+        hub_section_desc: "Центральный интеллект. Доступ только для действующих игроков.",
+        hub_badge: "ТОЛЬКО ДЛЯ УЧАСТНИКОВ",
+        hub_f1: "Рейтинги Клуба",
+        hub_f2: "Архив Матчей",
+        hub_f3: "Live Данные",
+        hub_f4: "Аналитика"
     },
-    // Adding UA support to TEXT object to avoid crashes, mapping close to RU or EN
     ua: {
         hero_title: "ГРАЙ ЯК ПРОФІ",
         hero_subtitle: "Найтехнологічніша футбольна спільнота в Данангу.",
@@ -149,18 +174,25 @@ const TEXT = {
         roadmap_leagues_desc: "Борись за кубок сезону та призи.",
         cta_join: "ВСТУПИТИ В КЛУБ",
         cta_desc: "Напиши нам у WhatsApp, щоб записатися на гру.",
-        tap_to_enter: "НАТИСНИ, ЩОБ УВІЙТИ"
+        tap_to_enter: "НАТИСНИ, ЩОБ УВІЙТИ",
+
+        // Hub Section
+        hub_section_title: "ЕКОСИСТЕМА КЛУБУ",
+        hub_section_desc: "Центральний інтелект. Доступ тільки для діючих гравців.",
+        hub_badge: "ТІЛЬКИ ДЛЯ УЧАСНИКІВ",
+        hub_f1: "Рейтинги Клубу",
+        hub_f2: "Архів Матчів",
+        hub_f3: "Live Дані",
+        hub_f4: "Аналітика"
     }
 };
 
-// Unified Intro Component (Matches Public Profile Style)
 const PromoIntro: React.FC<{ onEnter: () => void, lang: Language }> = ({ onEnter, lang }) => (
     <div 
         onClick={onEnter}
         className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#1A1D24] cursor-pointer group select-none animate-in fade-in duration-500"
     >
         <div className="relative flex flex-col items-center justify-center w-64 h-64 transition-transform duration-300 group-active:scale-95">
-            {/* Rotating Ring */}
             <div className="absolute inset-0 animate-spin" style={{ animationDuration: '3s' }}>
                 <svg viewBox="0 0 100 100" className="w-full h-full">
                     <defs><linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#00F2FE" stopOpacity="1" /><stop offset="100%" stopColor="#00F2FE" stopOpacity="0" /></linearGradient></defs>
@@ -168,13 +200,11 @@ const PromoIntro: React.FC<{ onEnter: () => void, lang: Language }> = ({ onEnter
                 </svg>
             </div>
             
-            {/* Content - Just Text, No Icon */}
             <div className="flex flex-col items-center justify-center z-10">
                 <h1 className="text-5xl font-black text-[#00F2FE] tracking-tighter" style={{ textShadow: '0 0 15px rgba(0, 242, 254, 0.5)' }}>532</h1>
                 <h2 className="text-xl font-bold text-white tracking-[0.2em] mt-1">PLAYGROUND</h2>
             </div>
             
-            {/* CTA Text */}
             <p className="absolute -bottom-10 text-lg font-bold text-white animate-pulse tracking-widest text-center whitespace-nowrap drop-shadow-[0_0_5px_rgba(0,242,254,0.5)]">
                 {TEXT[lang]?.tap_to_enter || TEXT['en'].tap_to_enter}
             </p>
@@ -182,16 +212,103 @@ const PromoIntro: React.FC<{ onEnter: () => void, lang: Language }> = ({ onEnter
     </div>
 );
 
+// --- BENTO STYLE CARD (Replicated from Club Hub) ---
+const PromoBento: React.FC<{ children: React.ReactNode, className?: string, accent?: string }> = ({ children, className = "", accent = "#00F2FE" }) => (
+    <div className={`
+        relative overflow-hidden rounded-3xl 
+        bg-gradient-to-br from-[#161b22] to-[#0a0d14]
+        border border-white/[0.06]
+        shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.05)]
+        group
+        ${className}
+    `}>
+        {/* Texture */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ 
+            backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`,
+            backgroundSize: '4px 4px'
+        }}></div>
+
+        {/* Ambient Glow */}
+        <div className="absolute -top-10 -left-10 w-32 h-32 rounded-full blur-[50px] opacity-10 pointer-events-none z-0 transition-opacity duration-700 group-hover:opacity-20" style={{ backgroundColor: accent }}></div>
+        
+        {/* Hover Shine */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.01] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-0"></div>
+
+        <div className="relative z-10">
+            {children}
+        </div>
+    </div>
+);
+
+// --- CLUB HUB PROMO BLOCK (UPDATED COMPACT DESIGN) ---
+const HubPromoSection: React.FC<{ t: any }> = ({ t }) => {
+    
+    const FeatureItem = ({ icon: Icon, text }: { icon: any, text: string }) => (
+        <div className="flex flex-col items-center justify-center p-2 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-[#00F2FE]/30 transition-all group backdrop-blur-sm h-16 w-16">
+            <Icon className="w-4 h-4 text-white/40 group-hover:text-[#00F2FE] mb-1 transition-colors" />
+            <span className="text-[7px] font-bold text-white/60 uppercase tracking-wider text-center leading-tight group-hover:text-white transition-colors">
+                {text}
+            </span>
+        </div>
+    );
+
+    return (
+        <div className="px-4 py-4 relative max-w-sm mx-auto">
+            {/* Cinematic Container - COMPACT */}
+            <div className="relative rounded-3xl overflow-hidden border border-[#00F2FE]/20 bg-[#0a0c10] shadow-[0_0_30px_rgba(0,242,254,0.1)]">
+                
+                {/* Background Effects */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-[#00F2FE]/5 via-transparent to-transparent"></div>
+                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] pointer-events-none"></div>
+
+                <div className="p-5 relative z-10 flex flex-col items-center">
+                    
+                    {/* Header Row */}
+                    <div className="flex items-center gap-3 w-full mb-4 border-b border-white/5 pb-3">
+                        <div className="w-10 h-10 rounded-xl bg-[#00F2FE]/10 flex items-center justify-center border border-[#00F2FE]/50 shadow-[0_0_15px_rgba(0,242,254,0.3)] shrink-0">
+                            <LayoutDashboard className="w-5 h-5 text-[#00F2FE]" />
+                        </div>
+                        <div className="flex flex-col items-start">
+                            <h2 className="font-russo text-lg uppercase text-white tracking-wider leading-none">
+                                {t.hub_section_title}
+                            </h2>
+                            <p className="font-chakra text-[9px] text-white/50 leading-tight mt-1 max-w-[200px] text-left">
+                                {t.hub_section_desc}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Features Grid - Horizontal Row */}
+                    <div className="flex justify-between w-full gap-2 mb-4 px-1">
+                        <FeatureItem icon={TrophyIcon} text={t.hub_f1} />
+                        <FeatureItem icon={History} text={t.hub_f2} />
+                        <FeatureItem icon={Zap} text={t.hub_f3} />
+                        <FeatureItem icon={BarChartDynamic} text={t.hub_f4} />
+                    </div>
+
+                    {/* Footer Badge */}
+                    <div className="w-full flex justify-center">
+                        <div className="px-4 py-1.5 rounded-full bg-[#00F2FE]/5 border border-[#00F2FE]/20 flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#00F2FE] animate-pulse"></div>
+                            <span className="text-[8px] font-black text-[#00F2FE] tracking-[0.2em] uppercase">
+                                {t.hub_badge}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 export const PromoScreen: React.FC = () => {
-    // USE GLOBAL CONTEXT for language to ensure child components (cards, badges) translate too
     const { language, setLanguage } = useApp();
     const [showcasePlayer, setShowcasePlayer] = useState<Player>(DEFAULT_PROMO_PLAYER);
     const [isLoading, setIsLoading] = useState(true);
-    const [showIntro, setShowIntro] = useState(true); // Control the entry screen
+    const [showIntro, setShowIntro] = useState(true); 
     const [anthemUrl, setAnthemUrl] = useState<string | null>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
     
-    // Derived text based on global language
     const t = TEXT[language] || TEXT['en'];
 
     const LangBtn = ({ l, label }: { l: Language, label: string }) => (
@@ -238,167 +355,169 @@ export const PromoScreen: React.FC = () => {
         if (anthemUrl) {
             const audio = new Audio(anthemUrl);
             audio.loop = true;
-            audio.volume = 0.6; // Slightly lower volume for background
+            audio.volume = 0.6; 
             audio.play().catch(e => console.error("Audio autoplay prevented", e));
             audioRef.current = audio;
         }
     };
 
     return (
-        <div className="min-h-screen bg-[#1A1D24] text-white font-sans overflow-x-hidden selection:bg-[#00F2FE] selection:text-black">
+        <div className="relative min-h-screen bg-[#0a0c10] text-white font-sans overflow-hidden selection:bg-[#00F2FE] selection:text-black">
             
-            {showIntro && <PromoIntro onEnter={handleEnter} lang={language} />}
-
-            {/* 1. HEADER SECTION */}
-            <div className="relative pt-6 pb-2 px-4 text-center z-20">
-                {/* Background Glow */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[#00F2FE] rounded-full blur-[120px] opacity-10 pointer-events-none"></div>
-
-                {/* 1. Language Switcher (Top Center) */}
-                <div className="flex justify-center gap-2 mb-3 relative z-10">
-                    <LangBtn l="en" label="EN" />
-                    <LangBtn l="vn" label="VN" />
-                    <LangBtn l="ru" label="RU" />
-                    <LangBtn l="ua" label="UA" />
-                </div>
-
-                {/* 2. Logo (Centered below Lang) */}
-                <div className="relative z-10 mb-2 transform scale-90">
-                    <BrandedHeader className="justify-center" />
-                </div>
-
-                {/* 3. Hero Text (Lowered & Smaller) */}
-                <div className="relative z-10 mt-3">
-                    <h1 className="text-xl font-black font-russo uppercase leading-none mb-2 tracking-wide text-white drop-shadow-lg">
-                        {t.hero_title}
-                    </h1>
-                    <p className="text-xs text-[#A9B1BD] max-w-xs mx-auto leading-relaxed">
-                        {t.hero_subtitle}
-                    </p>
-                </div>
+            {/* Background Layers - ABSOLUTE to this container */}
+            <div className="absolute inset-0 z-0 pointer-events-none">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
+                <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
             </div>
 
-            {/* 2. THE CARD SHOWCASE (Full Size Standard Card) */}
-            <div className="relative px-4 pb-8">
-                <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent opacity-30"></div>
-                
-                <div className="mb-4 text-center pt-4">
-                    <h2 className="text-lg font-bold font-orbitron text-[#00F2FE] mb-1">{t.feature_card}</h2>
-                    <p className="text-[10px] text-gray-400 max-w-xs mx-auto leading-tight">{t.feature_card_desc}</p>
+            {/* Main Content Wrapper (z-10 to stay above background) */}
+            <div className="relative z-10">
+                {showIntro && <PromoIntro onEnter={handleEnter} lang={language} />}
+
+                {/* HEADER SECTION */}
+                <div className="relative pt-6 pb-2 px-4 text-center z-20">
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-[#00F2FE] rounded-full blur-[120px] opacity-10 pointer-events-none"></div>
+
+                    <div className="flex justify-center gap-2 mb-3 relative z-10">
+                        <LangBtn l="en" label="EN" />
+                        <LangBtn l="vn" label="VN" />
+                        <LangBtn l="ru" label="RU" />
+                        <LangBtn l="ua" label="UA" />
+                    </div>
+
+                    <div className="relative z-10 mb-2 transform scale-90">
+                        <BrandedHeader className="justify-center" />
+                    </div>
+
+                    <div className="relative z-10 mt-3">
+                        <h1 className="text-xl font-black font-russo uppercase leading-none mb-2 tracking-wide text-white drop-shadow-lg">
+                            {t.hero_title}
+                        </h1>
+                        <p className="text-xs text-[#A9B1BD] max-w-xs mx-auto leading-relaxed">
+                            {t.hero_subtitle}
+                        </p>
+                    </div>
                 </div>
 
-                <div className="relative max-w-sm mx-auto">
-                    {isLoading ? (
-                        <div className="h-[440px] w-full flex items-center justify-center bg-white/5 rounded-3xl border border-white/10">
-                            <div className="animate-spin w-8 h-8 border-2 border-[#00F2FE] rounded-full border-t-transparent"></div>
-                        </div>
-                    ) : (
-                        <div className="transform scale-95 origin-top animate-in fade-in zoom-in duration-500">
-                            <PublicPlayerCard player={showcasePlayer} />
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* 2.5 LAST SESSION BREAKDOWN (NEW ADDITION) */}
-            <div className="relative px-4 pb-8 max-w-sm mx-auto">
-                <div className="mb-3 text-center">
-                    <h2 className="text-lg font-bold font-orbitron text-[#4CFF5F] mb-1">{t.feature_live}</h2>
-                    <p className="text-[10px] text-gray-400 max-w-xs mx-auto leading-tight">{t.feature_live_desc}</p>
-                </div>
-                {/* Reusing the component, ensuring it renders fully visible */}
-                <div className="bg-[#1A1D24] p-1 rounded-2xl">
-                    <LastSessionBreakdown player={showcasePlayer} />
-                </div>
-            </div>
-
-            {/* 3. FEATURES GRID */}
-            <div className="px-6 py-10 bg-black/20 relative">
-                <div className="grid gap-6 max-w-md mx-auto">
+                {/* THE CARD SHOWCASE */}
+                <div className="relative px-4 pb-8">
+                    <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent opacity-30"></div>
                     
-                    {/* Stats */}
-                    <div className="flex gap-4 items-start">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center border border-white/10 shrink-0">
-                            <BarChartDynamic className="w-5 h-5 text-[#00F2FE]" />
-                        </div>
-                        <div>
-                            <h3 className="text-base font-bold text-white mb-1">{t.feature_stats}</h3>
-                            <p className="text-xs text-gray-400 leading-relaxed">{t.feature_stats_desc}</p>
-                        </div>
+                    <div className="mb-4 text-center pt-4">
+                        <h2 className="text-lg font-bold font-orbitron text-[#00F2FE] mb-1">{t.feature_card}</h2>
+                        <p className="text-[10px] text-gray-400 max-w-xs mx-auto leading-tight">{t.feature_card_desc}</p>
                     </div>
 
-                    {/* Fair Play & Equipment */}
-                    <div className="flex gap-4 items-start">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center border border-white/10 shrink-0">
-                            <TrophyIcon className="w-5 h-5 text-[#4CFF5F]" />
-                        </div>
-                        <div>
-                            <h3 className="text-base font-bold text-white mb-1">{t.feature_fair}</h3>
-                            <p className="text-xs text-gray-400 leading-relaxed">{t.feature_fair_desc}</p>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-            {/* 4. ROADMAP (Coming Soon) */}
-            <div className="px-6 py-12 text-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#00F2FE]/5 to-transparent pointer-events-none"></div>
-                <h2 className="text-lg font-black font-orbitron tracking-widest text-white/80 mb-8 border-b border-white/10 pb-3 inline-block">
-                    {t.roadmap_title}
-                </h2>
-
-                <div className="grid gap-4 max-w-sm mx-auto">
-                    <div className="bg-[#242831] border border-white/10 p-4 rounded-2xl relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 bg-red-500 text-white text-[9px] font-bold px-2 py-1 rounded-bl-lg">SOON</div>
-                        <VideoCamera className="w-6 h-6 text-red-500 mb-2 mx-auto" />
-                        <h3 className="font-bold text-sm text-white mb-1">{t.roadmap_video}</h3>
-                        <p className="text-[10px] text-gray-400">{t.roadmap_video_desc}</p>
-                    </div>
-
-                    <div className="bg-[#242831] border border-white/10 p-4 rounded-2xl relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 bg-yellow-500 text-black text-[9px] font-bold px-2 py-1 rounded-bl-lg">PLANNED</div>
-                        <TrophyIcon className="w-6 h-6 text-yellow-500 mb-2 mx-auto" />
-                        <h3 className="font-bold text-sm text-white mb-1">{t.roadmap_leagues}</h3>
-                        <p className="text-[10px] text-gray-400">{t.roadmap_leagues_desc}</p>
+                    <div className="relative max-w-sm mx-auto">
+                        {isLoading ? (
+                            <div className="h-[440px] w-full flex items-center justify-center bg-white/5 rounded-3xl border border-white/10">
+                                <div className="animate-spin w-8 h-8 border-2 border-[#00F2FE] rounded-full border-t-transparent"></div>
+                            </div>
+                        ) : (
+                            <div className="transform scale-95 origin-top animate-in fade-in zoom-in duration-500">
+                                <PublicPlayerCard player={showcasePlayer} isPromo={true} />
+                            </div>
+                        )}
                     </div>
                 </div>
-            </div>
 
-            {/* 5. CTA / SOCIALS (Updated with REAL LINKS) */}
-            <div className="px-6 pt-6 pb-20 bg-gradient-to-t from-black via-[#1A1D24] to-[#1A1D24]">
-                <div className="max-w-sm mx-auto text-center">
-                    <h2 className="text-2xl font-black font-russo text-white mb-2">{t.cta_join}</h2>
-                    <p className="text-xs text-gray-400 mb-6">{t.cta_desc}</p>
+                {/* LAST SESSION BREAKDOWN (UPDATED TO BENTO STYLE) */}
+                <div className="relative px-4 pb-4 max-w-sm mx-auto">
+                    <div className="mb-3 text-center">
+                        <h2 className="text-lg font-bold font-orbitron text-[#4CFF5F] mb-1">{t.feature_live}</h2>
+                        <p className="text-[10px] text-gray-400 max-w-xs mx-auto leading-tight">{t.feature_live_desc}</p>
+                    </div>
+                    {/* BENTO WRAPPER APPLIED HERE */}
+                    <PromoBento className="p-2" accent="#4CFF5F">
+                        <LastSessionBreakdown player={showcasePlayer} usePromoStyle={true} />
+                    </PromoBento>
+                </div>
 
-                    {/* WhatsApp Button (Primary) */}
-                    <a 
-                        href={SOCIAL_LINKS.whatsapp} 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="flex items-center justify-center gap-3 w-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-lg py-3.5 rounded-xl shadow-[0_0_20px_rgba(37,211,102,0.4)] transition-all transform hover:scale-[1.02] active:scale-95 mb-4"
-                    >
-                        <WhatsApp className="w-5 h-5 fill-current" />
-                        WhatsApp
-                    </a>
+                {/* --- NEW SECTION: CLUB ECOSYSTEM (COMPACT) --- */}
+                <HubPromoSection t={t} />
 
-                    {/* Facebook Button (Secondary) */}
-                    <a 
-                        href={SOCIAL_LINKS.facebook} 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="flex items-center justify-center gap-3 w-full bg-[#1877F2] hover:bg-[#166fe5] text-white font-bold text-base py-3 rounded-xl shadow-lg transition-all active:scale-95 mb-8"
-                    >
-                        {/* Facebook Icon SVG */}
-                        <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                        Facebook
-                    </a>
+                {/* FEATURES GRID (UPDATED TO BENTO STYLE) */}
+                <div className="px-6 py-10 border-y border-white/5 relative">
+                    <div className="grid gap-4 max-w-md mx-auto">
+                        {/* FEATURE 1 */}
+                        <PromoBento className="p-4 flex items-start gap-4 hover:border-[#00F2FE]/30 transition-colors" accent="#00F2FE">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center border border-white/10 shrink-0">
+                                <BarChartDynamic className="w-5 h-5 text-[#00F2FE]" />
+                            </div>
+                            <div>
+                                <h3 className="text-base font-bold text-white mb-1">{t.feature_stats}</h3>
+                                <p className="text-xs text-gray-400 leading-relaxed">{t.feature_stats_desc}</p>
+                            </div>
+                        </PromoBento>
 
-                    {/* Small Icons Row */}
-                    <div className="flex justify-center gap-8 opacity-70">
-                        <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noreferrer" className="hover:text-[#E1306C] transition-colors"><svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
-                        <a href={SOCIAL_LINKS.youtube} target="_blank" rel="noreferrer" className="hover:text-[#FF0000] transition-colors"><svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg></a>
-                        <a href={SOCIAL_LINKS.tiktok} target="_blank" rel="noreferrer" className="hover:text-white transition-colors"><svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.35-1.17 1.09-1.07 1.93.03.58.01 1.16.44 1.57.48.46 1.16.51 1.79.61 1.62.25 3.13-.59 3.63-2.26.29-1.33.17-2.73.19-4.08.02-4.01 0-8.01 0-12.01z"/></svg></a>
+                        {/* FEATURE 2 */}
+                        <PromoBento className="p-4 flex items-start gap-4 hover:border-[#4CFF5F]/30 transition-colors" accent="#4CFF5F">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center border border-white/10 shrink-0">
+                                <TrophyIcon className="w-5 h-5 text-[#4CFF5F]" />
+                            </div>
+                            <div>
+                                <h3 className="text-base font-bold text-white mb-1">{t.feature_fair}</h3>
+                                <p className="text-xs text-gray-400 leading-relaxed">{t.feature_fair_desc}</p>
+                            </div>
+                        </PromoBento>
+                    </div>
+                </div>
+
+                {/* ROADMAP (UPDATED TO BENTO STYLE) */}
+                <div className="px-6 py-12 text-center relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#00F2FE]/5 to-transparent pointer-events-none"></div>
+                    <h2 className="text-lg font-black font-orbitron tracking-widest text-white/80 mb-8 border-b border-white/10 pb-3 inline-block">
+                        {t.roadmap_title}
+                    </h2>
+
+                    <div className="grid gap-4 max-sm mx-auto">
+                        <PromoBento className="p-4 relative" accent="#ef4444">
+                            <div className="absolute top-0 right-0 bg-red-500 text-white text-[9px] font-bold px-2 py-1 rounded-bl-lg z-10">SOON</div>
+                            <VideoCamera className="w-6 h-6 text-red-500 mb-2 mx-auto" />
+                            <h3 className="font-bold text-sm text-white mb-1">{t.roadmap_video}</h3>
+                            <p className="text-[10px] text-gray-400">{t.roadmap_video_desc}</p>
+                        </PromoBento>
+
+                        <PromoBento className="p-4 relative" accent="#fbbf24">
+                            <div className="absolute top-0 right-0 bg-yellow-500 text-black text-[9px] font-bold px-2 py-1 rounded-bl-lg z-10">PLANNED</div>
+                            <TrophyIcon className="w-6 h-6 text-yellow-500 mb-2 mx-auto" />
+                            <h3 className="font-bold text-sm text-white mb-1">{t.roadmap_leagues}</h3>
+                            <p className="text-[10px] text-gray-400">{t.roadmap_leagues_desc}</p>
+                        </PromoBento>
+                    </div>
+                </div>
+
+                {/* CTA / SOCIALS */}
+                <div className="px-6 pt-6 pb-20 bg-gradient-to-t from-black via-black/80 to-transparent">
+                    <div className="max-w-sm mx-auto text-center">
+                        <h2 className="text-2xl font-black font-russo text-white mb-2">{t.cta_join}</h2>
+                        <p className="text-xs text-gray-400 mb-6">{t.cta_desc}</p>
+
+                        <a 
+                            href={SOCIAL_LINKS.whatsapp} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="flex items-center justify-center gap-3 w-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-lg py-3.5 rounded-xl shadow-[0_0_20px_rgba(37,211,102,0.4)] transition-all transform hover:scale-[1.02] active:scale-95 mb-4"
+                        >
+                            <WhatsApp className="w-5 h-5 fill-current" />
+                            WhatsApp
+                        </a>
+
+                        <a 
+                            href={SOCIAL_LINKS.facebook} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="flex items-center justify-center gap-3 w-full bg-[#1877F2] hover:bg-[#166fe5] text-white font-bold text-base py-3 rounded-xl shadow-lg transition-all active:scale-95 mb-8"
+                        >
+                            <FacebookIcon className="w-5 h-5 fill-current" />
+                            Facebook
+                        </a>
+
+                        <div className="flex justify-center gap-8 opacity-70">
+                            <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noreferrer" className="hover:text-[#E1306C] transition-colors"><InstagramIcon className="w-6 h-6" /></a>
+                            <a href={SOCIAL_LINKS.youtube} target="_blank" rel="noreferrer" className="hover:text-[#FF0000] transition-colors"><YouTubeIcon className="w-6 h-6" /></a>
+                            <a href={SOCIAL_LINKS.tiktok} target="_blank" rel="noreferrer" className="hover:text-white transition-colors"><TikTokIcon className="w-6 h-6" /></a>
+                        </div>
                     </div>
                 </div>
             </div>

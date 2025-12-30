@@ -11,6 +11,7 @@ import {
     loadActiveVoicePackFromDB,
     savePlayersToDB
 } from '../db';
+import { getTierForRating } from './rating'; // Import tier calculation
 
 interface InitialAppState {
     session: Session | null;
@@ -38,8 +39,19 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
     initialPlayers = initialPlayers.map(p => {
         const migratedPlayer = { ...p };
 
-        // --- SILENT RATING RECONCILIATION ---
-        // Fix mismatch: if main rating differs from the one in last analysis, trust analysis
+        // 1. SAFE RATING FLOOR MIGRATION
+        if (migratedPlayer.initialRating === undefined || migratedPlayer.initialRating === null) {
+            migratedPlayer.initialRating = 68; // New club standard
+            dataRepaired = true;
+        }
+        
+        // Ensure rating is not below floor
+        if (migratedPlayer.rating < 68) {
+            migratedPlayer.rating = 68;
+            dataRepaired = true;
+        }
+
+        // 2. DATA INTEGRITY CHECKS
         if (migratedPlayer.lastRatingChange && typeof migratedPlayer.lastRatingChange.newRating === 'number') {
             const expectedRating = Math.round(migratedPlayer.lastRatingChange.newRating);
             if (migratedPlayer.rating !== expectedRating) {
@@ -48,9 +60,15 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
             }
         }
 
-        // Force integer rating globally
         if (typeof migratedPlayer.rating === 'number' && !Number.isInteger(migratedPlayer.rating)) {
             migratedPlayer.rating = Math.round(migratedPlayer.rating);
+            dataRepaired = true;
+        }
+
+        // 3. RECALCULATE TIER (Ensure everyone is on the correct tier for their rating)
+        const correctTier = getTierForRating(migratedPlayer.rating);
+        if (migratedPlayer.tier !== correctTier) {
+            migratedPlayer.tier = correctTier;
             dataRepaired = true;
         }
 
@@ -111,14 +129,14 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
         return migratedPlayer as Player;
     });
 
-    // Save repaired data back to DB in background
     if (dataRepaired) {
         savePlayersToDB(initialPlayers).catch(e => console.warn("Background migration sync failed", e));
     }
 
-    const loadedHistoryData = await loadHistoryFromDB(1);
+    // --- REPLACED: No longer generating demo sessions if history is empty ---
+    const loadedHistoryData = await loadHistoryFromDB(10);
     let initialHistory: Session[] = [];
-    if (Array.isArray(loadedHistoryData)) {
+    if (Array.isArray(loadedHistoryData) && loadedHistoryData.length > 0) {
         initialHistory = loadedHistoryData.map((s: any) => ({
             ...s,
             teams: s.teams || [],
@@ -126,6 +144,8 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
             playerPool: s.playerPool || [],
             eventLog: s.eventLog || []
         }));
+    } else {
+        initialHistory = []; // Clean state for Standalone mode
     }
 
     const loadedNews = await loadNewsFromDB(10);

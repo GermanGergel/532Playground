@@ -22,7 +22,7 @@ const BrandedShareableReport: React.FC<{
     const containerStyle: React.CSSProperties = {
         padding: `${PADDING}px`,
         // Fix: Added extra padding at bottom to prevent edge clipping
-        paddingBottom: `${PADDING + 20}px`,
+        paddingBottom: `${PADDING + 40}px`,
         backgroundImage: `url("${homeScreenBackground}")`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
@@ -144,10 +144,11 @@ export const SessionReportScreen: React.FC = () => {
                         backgroundImage: `url("${combinedExportBackground}")`
                     }}
                 >
-                    <div className="flex w-full items-start gap-4">
+                    {/* FIX: Using items-stretch to align bottom edges of both tables */}
+                    <div className="flex w-full items-stretch gap-4">
                         <div className="w-[60%] flex flex-col items-center">
                             <ShareableReport session={session} visibleSection="players" isExport={true} />
-                            <div className="mt-4 font-bold text-lg text-white">
+                            <div className="mt-8 font-bold text-lg text-white shrink-0">
                                 #532Playground #SessionReport
                             </div>
                         </div>

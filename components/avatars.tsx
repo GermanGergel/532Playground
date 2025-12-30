@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Team, Player } from '../types';
 import { User } from '../icons';
@@ -9,9 +10,11 @@ interface TeamAvatarProps {
   className?: string;
   playerCount?: number;
   countText?: string;
+  isLight?: boolean; // New prop for light backgrounds
+  hollow?: boolean; // If true, the T-shirt fill will be transparent
 }
 
-export const TeamAvatar: React.FC<TeamAvatarProps> = ({ team, size = 'sm', onClick, className = '', playerCount, countText }) => {
+export const TeamAvatar: React.FC<TeamAvatarProps> = ({ team, size = 'sm', onClick, className = '', playerCount, countText, isLight = false, hollow = false }) => {
     const sizeClassesMap = {
         xxs: { container: 'w-6 h-6' },
         xs: { container: 'w-8 h-8' },
@@ -24,7 +27,8 @@ export const TeamAvatar: React.FC<TeamAvatarProps> = ({ team, size = 'sm', onCli
     const teamColor = team.color || '#A9B1BD';
     const showCircularText = !team.logo && (size === 'lg' || size === 'xl');
 
-    const baseClasses = `relative flex items-center justify-center rounded-full font-bold transition-transform transform active:scale-95 shadow-lg bg-dark-surface`;
+    // Updated baseClasses to handle isLight prop
+    const baseClasses = `relative flex items-center justify-center rounded-full font-bold transition-transform transform active:scale-95 shadow-lg ${isLight ? 'bg-transparent' : 'bg-dark-surface'}`;
     
     const badge = playerCount !== undefined && (
         <div className="absolute -top-1 -right-1 bg-dark-accent-start text-dark-bg rounded-full w-6 h-6 flex items-center justify-center font-bold text-sm border-2 border-dark-bg">
@@ -56,10 +60,11 @@ export const TeamAvatar: React.FC<TeamAvatarProps> = ({ team, size = 'sm', onCli
             ) : (
                 <div className="relative w-full h-full">
                     <div 
-                        className={`${baseClasses} w-full h-full`}
+                        className={`${baseClasses} w-full h-full flex items-center justify-center`}
                     >
-                         <svg width="80%" height="80%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: teamColor }}>
-                            <path d="M20.38 3.46L16 2a4 4 0 0 0-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99 .84H6v10c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" stroke={teamColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                         {/* UPDATED: Added conditional fillOpacity based on hollow prop */}
+                         <svg className="w-2/3 h-2/3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: teamColor }}>
+                            <path d="M20.38 3.46L16 2a4 4 0 0 0-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99 .84H6v10c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" fill={teamColor} fillOpacity={hollow ? "0" : "0.35"} stroke={teamColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                          </svg>
                     </div>
                     {showCircularText && (
@@ -91,7 +96,7 @@ export const TeamAvatar: React.FC<TeamAvatarProps> = ({ team, size = 'sm', onCli
 
 interface PlayerAvatarProps {
   player?: Player;
-  className?: string;
+  className?: string; // This className applies to the outermost div of the PlayerAvatar component
   size?: 'sm' | 'md' | 'lg' | 'xl';
   draggable?: boolean;
 }
@@ -110,10 +115,11 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, className = 
         xl: 'w-14 h-14',
     };
 
-    const containerClasses = `relative group ${sizeClasses[size]} ${className}`;
-
-    const commonAvatarClasses = `rounded-full bg-dark-surface border-2 border-white/20 w-full h-full overflow-hidden`;
+    // The core properties for making it a circle that hides overflow.
+    const baseShapeClasses = `w-full h-full rounded-full overflow-hidden`;
     
+    const imageUrl = player?.photo || player?.playerCard;
+
     const bgColor = React.useMemo(() => {
         if (!player?.id) return 'bg-gray-700';
         const colors = ['bg-red-500/80', 'bg-green-500/80', 'bg-blue-500/80', 'bg-yellow-500/80', 'bg-indigo-500/80', 'bg-pink-500/80', 'bg-purple-500/80'];
@@ -128,17 +134,21 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, className = 
     }, [player?.id]);
 
     return (
-        <div className={containerClasses} draggable={draggable}>
-             {player?.photo ? (
+        // The outermost div defines the overall size and gets the custom styling (border/shadow) from the parent.
+        // It also ensures the circular shape and hides overflow.
+        <div className={`relative group ${sizeClasses[size]} ${baseShapeClasses} ${className}`} draggable={draggable}>
+             {imageUrl ? (
+                // This inner div is just for the background image, no additional styling that would create a visible square.
                 <div
-                    className={`${commonAvatarClasses} bg-cover bg-no-repeat`}
+                    className={`${baseShapeClasses} bg-cover bg-no-repeat`} // baseShapeClasses ensure it fills the parent and is circular.
                     style={{
-                        backgroundImage: `url(${player.photo})`,
+                        backgroundImage: `url(${imageUrl})`,
                         backgroundPosition: 'center 20%',
                     }}
                 />
             ) : (
-                <div className={`flex items-center justify-center font-bold text-dark-text-secondary ${bgColor} ${commonAvatarClasses}`}>
+                // The fallback placeholder div. This needs its own background and border for the "empty" state.
+                <div className={`flex items-center justify-center font-bold text-dark-text-secondary ${bgColor} ${baseShapeClasses} border-2 border-white/20`}>
                     <User className={`${iconSizeClasses[size]}`} />
                 </div>
             )}

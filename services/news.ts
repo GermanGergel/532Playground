@@ -134,9 +134,8 @@ const getTierRank = (tier: PlayerTier): number => {
     switch (tier) {
         case PlayerTier.Legend: return 5;
         case PlayerTier.Elite: return 4;
-        case PlayerTier.Strong: return 3;
-        case PlayerTier.Average: return 2;
-        case PlayerTier.Developing: return 1;
+        case PlayerTier.Pro: return 3;
+        case PlayerTier.Regular: return 1;
         default: return 0;
     }
 };

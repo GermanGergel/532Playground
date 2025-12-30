@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Team, Player, PlayerTier, PlayerStatus, BadgeType, PlayerForm, SkillType } from './types';
 import { getPlayerKeyStats } from './services/statistics';
@@ -20,7 +19,8 @@ import {
     // New Legionnaire Icons
     MercenaryBadgeIcon, DoubleAgentBadgeIcon, JokerBadgeIcon, CrisisManagerBadgeIcon, IronLungBadgeIcon,
     TrophyIcon,
-    XCircle
+    XCircle,
+    Globe
 } from './icons';
 
 // Feature Components
@@ -260,17 +260,16 @@ export const sortBadgesByPriority = (badges: Partial<Record<BadgeType, number>>)
     });
 };
 
-// --- BADGE DISPLAY COMPONENT (The "6+1" System) ---
+// --- BADGE DISPLAY COMPONENT (The "5+1" System) ---
 export const BadgeDisplay: React.FC<{ 
     badges: Partial<Record<BadgeType, number>>; 
-    limit?: number; // Kept as prop, but we default/force new logic below
+    limit?: number;
     size?: 'sm' | 'md' | 'lg';
-    onOpenChange?: (isOpen: boolean) => void; // New prop to signal parent
+    onOpenChange?: (isOpen: boolean) => void;
 }> = ({ badges, limit, size = 'md', onOpenChange }) => {
     const t = useTranslation();
     const [isModalOpen, setIsModalOpen] = useState(false);
     
-    // Sync internal modal state with parent
     useEffect(() => {
         if (onOpenChange) {
             onOpenChange(isModalOpen);
@@ -281,8 +280,7 @@ export const BadgeDisplay: React.FC<{
     
     if (sortedBadges.length === 0) return null;
 
-    // --- NEW LOGIC: 6 ICONS + 1 CIRCLE (if overflow) ---
-    const DISPLAY_LIMIT = 6;
+    const DISPLAY_LIMIT = 5;
     const showCounter = sortedBadges.length > DISPLAY_LIMIT;
     const renderBadges = showCounter ? sortedBadges.slice(0, DISPLAY_LIMIT) : sortedBadges; 
     const counterValue = sortedBadges.length - DISPLAY_LIMIT;
@@ -321,15 +319,11 @@ export const BadgeDisplay: React.FC<{
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 size="sm" 
-                // STYLE: Opaque Black #0a0c10. z-[9999] provided by Portal but kept here for clarity.
                 containerClassName="!w-[300px] !max-w-[90vw] !p-0 !bg-[#0a0c10] !border !border-[#1e293b] !shadow-2xl overflow-hidden relative"
                 hideCloseButton
             >
-                {/* Top Cinematic Line (Neon Glow) */}
                 <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent opacity-100 z-50"></div>
                 <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-[#00F2FE]/10 to-transparent blur-xl pointer-events-none z-0"></div>
-
-                {/* Header: Solid Dark */}
                 <div className="p-4 border-b border-white/5 flex justify-between items-center bg-[#0a0c10] relative z-10">
                     <div className="flex items-center gap-3">
                         <h3 className="font-black text-lg text-white uppercase tracking-widest">{t.awards}</h3>
@@ -337,39 +331,30 @@ export const BadgeDisplay: React.FC<{
                             {sortedBadges.length}
                         </span>
                     </div>
-                    <button 
-                        onClick={() => setIsModalOpen(false)} 
-                        className="text-gray-500 hover:text-white transition-colors"
-                    >
+                    <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-white transition-colors">
                         <XCircle className="w-6 h-6" />
                     </button>
                 </div>
-
-                {/* Content: Clean List, Solid Background */}
                 <div className="flex-1 overflow-y-auto max-h-[50vh] bg-[#0a0c10] p-2 relative z-10">
-                    {sortedBadges.map((badge, index) => {
-                        return (
-                            <div 
-                                key={badge} 
-                                className="flex items-center gap-4 p-3 rounded-xl transition-all border border-transparent border-b-white/5 last:border-b-0 hover:bg-[#00F2FE]/10 hover:border-[#00F2FE]/30 hover:shadow-[0_0_15px_rgba(0,242,254,0.15)] group"
-                            >
-                                <div className="shrink-0 relative">
-                                    <BadgeIcon badge={badge} className="w-10 h-10" count={badges[badge]} />
-                                </div>
-                                <div className="flex-grow min-w-0">
-                                    <h4 className="font-bold text-sm text-white leading-tight truncate tracking-wide group-hover:text-[#00F2FE] transition-colors">
-                                        {t[`badge_${badge}` as keyof typeof t]}
-                                    </h4>
-                                    <p className="text-[10px] text-gray-400 leading-snug mt-1 line-clamp-2">
-                                        {t[`badge_${badge}_desc` as keyof typeof t]}
-                                    </p>
-                                </div>
+                    {sortedBadges.map((badge) => (
+                        <div 
+                            key={badge} 
+                            className="flex items-center gap-4 p-3 rounded-xl transition-all border border-transparent border-b-white/5 last:border-b-0 hover:bg-[#00F2FE]/10 hover:border-[#00F2FE]/30 hover:shadow-[0_0_15px_rgba(0,242,254,0.15)] group"
+                        >
+                            <div className="shrink-0 relative">
+                                <BadgeIcon badge={badge} className="w-10 h-10" count={badges[badge]} />
                             </div>
-                        );
-                    })}
+                            <div className="flex-grow min-w-0">
+                                <h4 className="font-bold text-sm text-white leading-tight truncate tracking-wide group-hover:text-[#00F2FE] transition-colors">
+                                    {t[`badge_${badge}` as keyof typeof t]}
+                                </h4>
+                                <p className="text-[10px] text-gray-400 leading-snug mt-1 line-clamp-2">
+                                    {t[`badge_${badge}_desc` as keyof typeof t]}
+                                </p>
+                            </div>
+                        </div>
+                    ))}
                 </div>
-                
-                {/* Footer Stripe */}
                 <div className="h-1 w-full bg-gradient-to-r from-transparent via-[#00F2FE]/30 to-transparent relative z-10"></div>
             </Modal>
         </>
@@ -382,7 +367,6 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
     const keyStats = React.useMemo(() => getPlayerKeyStats(player), [player]);
     const countryCodeAlpha2 = React.useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
     
-    // STATE: Track if badge modal is open
     const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
 
     const winRate = player.totalGames > 0 ? `${Math.round((player.totalWins / player.totalGames) * 100)}%` : 'N/A';
@@ -398,27 +382,15 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
     );
     
     const WLDBar: React.FC<{ wins: number; draws: number; losses: number; total: number }> = ({ wins, draws, losses, total }) => {
-        if (total === 0) return <div className="text-center text-xs text-dark-text-secondary py-2">{t.noBadges}</div>; // Placeholder for no games played yet
+        if (total === 0) return <div className="text-center text-xs text-dark-text-secondary py-2">{t.noBadges}</div>;
         const winP = (wins / total) * 100;
         const drawP = (draws / total) * 100;
         const lossP = (losses / total) * 100;
         return (
             <div className="flex w-full h-1.5 rounded-full overflow-hidden bg-dark-bg text-dark-bg text-[10px] font-bold">
-                {wins > 0 && (
-                    <div className="flex items-center justify-center" style={{ width: `${winP}%`, backgroundColor: '#4CFF5F' }}>
-                        {/* {wins}W */}
-                    </div>
-                )}
-                {draws > 0 && (
-                    <div className="flex items-center justify-center" style={{ width: `${drawP}%`, backgroundColor: '#A9B1BD' }}>
-                        {/* {draws}D */}
-                    </div>
-                )}
-                {losses > 0 && (
-                    <div className="flex items-center justify-center" style={{ width: `${lossP}%`, backgroundColor: '#FF4136' }}>
-                        {/* {losses}L */}
-                    </div>
-                )}
+                {wins > 0 && <div style={{ width: `${winP}%`, backgroundColor: '#4CFF5F' }} />}
+                {draws > 0 && <div style={{ width: `${drawP}%`, backgroundColor: '#A9B1BD' }} />}
+                {losses > 0 && <div style={{ width: `${lossP}%`, backgroundColor: '#FF4136' }} />}
             </div>
         );
     };
@@ -427,30 +399,23 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
 
     return (
         <div id={`player-card-container-${player.id}`}>
-            {/* --- CARD HEADER --- */}
             <div 
                 id={`player-card-header-${player.id}`}
                 className={`relative rounded-3xl h-[440px] overflow-hidden text-white p-4 bg-dark-surface ${cardClass}`}
             >
-                {/* Div with background-image for High Quality Export */}
                 {player.playerCard && (
                     <div
                         className="absolute inset-0 w-full h-full bg-cover bg-no-repeat"
-                        style={{
-                            backgroundImage: `url(${player.playerCard})`,
-                            backgroundPosition: 'center 5%',
-                        }}
+                        style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }}
                     />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
                 
-                {/* SKILLS SECTION: Condition Rendering - Hides when badge modal is open */}
                 {!isBadgeModalOpen && (
                     <div className="absolute top-24 left-4 z-20">
                         <div className="space-y-4">
                             {(player.skills || []).map(skill => (
                                 <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
-                                    {/* Removed filter drop-shadow for flat look to prevent blur artifacts */}
                                     <StarIcon className="w-4 h-4 text-[#00F2FE]" />
                                     <span className="font-bold text-xs text-white tracking-wider">{skillAbbreviations[skill]}</span>
                                 </div>
@@ -460,9 +425,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                 )}
 
                 <div className="relative z-10 h-full flex flex-col justify-between">
-                     {/* Top section for logo and rating */}
-                    <div className="flex justify-between items-start">
-                        {/* Logo & Flag */}
+                     <div className="flex justify-between items-start">
                         <div>
                             <p style={{ color: '#00F2FE' }} className="text-base font-black leading-none">532</p>
                             <p className="text-white text-[7px] font-bold tracking-[0.15em] leading-none mt-1">PLAYGROUND</p>
@@ -474,29 +437,24 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                                 />
                             )}
                         </div>
-                         {/* Rating, Form & Badges */}
                         <div className="flex flex-col items-center max-w-[50%]">
-                            {/* KEEP FLAT: No text-shadow on the rating number for clean export */}
                             <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>
                                 {player.rating}
                             </div>
-                            <p className="font-bold text-white tracking-widest text-sm">OVG</p>
+                            <p className="font-bold text-white tracking-widest text-sm mt-2">OVR</p>
                             <div className="mt-1">
                                 <FormArrowIndicator form={player.form} />
                             </div>
                             
-                            {/* UPDATED: Passing callback to hide skills, LIMIT 6 */}
                             {player.badges && Object.keys(player.badges).length > 0 && (
                                 <BadgeDisplay 
                                     badges={player.badges} 
-                                    limit={6} 
                                     onOpenChange={setIsBadgeModalOpen} 
                                 />
                             )}
                         </div>
                     </div>
 
-                    {/* Bottom section for name - Added flex-shrink-0 to prevent disappearing */}
                     <div className="text-center flex-shrink-0 relative z-30 pb-1">
                         <h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg">{player.nickname} {player.surname}</h1>
                     </div>
@@ -545,7 +503,6 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                     <SessionTrendChart history={player.sessionHistory} />
                 </Card>
                 
-                {/* --- ACTION BUTTONS (Reorganized into a grid) --- */}
                 <div className="grid grid-cols-2 gap-3 player-card-actions">
                     <Button variant="secondary" onClick={onEdit} className={`!py-3 !px-4 font-chakra text-xl tracking-wider ${cardClass}`}>{t.editData}</Button>
                     <Button variant="secondary" onClick={onUploadCard} className={`!py-3 !px-4 font-chakra text-xl tracking-wider ${cardClass}`}>{t.uploadPhoto}</Button>
@@ -556,7 +513,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                         {t.shareProfile}
                     </Button>
                 </div>
-                <Button variant="secondary" className={`w-full font-chakra text-xl tracking-wider ${cardClass} player-card-actions`} onClick={onDelete}>{t.deletePlayer}</Button>
+                <Button variant="secondary" className="w-full font-chakra text-xl tracking-wider ${cardClass} player-card-actions" onClick={onDelete}>{t.deletePlayer}</Button>
             </div>
         </div>
     );

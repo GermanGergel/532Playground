@@ -15,15 +15,22 @@ class AudioManager {
 
     private constructor() {
         if (typeof document !== 'undefined') {
+            // Агрессивное пробуждение при возврате в приложение
             document.addEventListener('visibilitychange', () => {
-                if (!document.hidden) this.resumeContext();
+                if (!document.hidden) {
+                    console.log('📱 App visible, forcing audio wake up...');
+                    this.forceResume();
+                }
             });
+
+            // Глобальные слушатели жестов для разблокировки звука
             const unlockHandler = () => {
-                this.resumeContext();
+                this.forceResume();
                 this.isUnlocked = true;
             };
-            window.addEventListener('click', unlockHandler);
-            window.addEventListener('touchstart', unlockHandler);
+            window.addEventListener('click', unlockHandler, { capture: true });
+            window.addEventListener('touchstart', unlockHandler, { capture: true });
+            window.addEventListener('mousedown', unlockHandler, { capture: true });
         }
     }
 
@@ -43,16 +50,27 @@ class AudioManager {
         return this.context;
     }
 
-    public async resumeContext() {
+    /**
+     * Принудительное возобновление контекста. 
+     * Вызывается при кликах и возврате в приложение.
+     */
+    public async forceResume() {
         const ctx = this.getContext();
-        if (ctx.state === 'suspended') {
+        if (ctx.state !== 'running') {
             try {
                 await ctx.resume();
-                console.log('🔊 AudioContext Resumed');
+                // На некоторых устройствах нужно "протолкнуть" тишину для активации
+                this.playSilence();
+                console.log('🔊 AudioContext Resumed state:', ctx.state);
             } catch (e) {
                 console.warn('🔊 Failed to resume AudioContext', e);
             }
         }
+    }
+
+    // Алиас для старого кода
+    public async resumeContext() {
+        return this.forceResume();
     }
 
     private base64ToArrayBuffer(base64: string): ArrayBuffer {
@@ -91,7 +109,9 @@ class AudioManager {
             return;
         }
 
-        await this.resumeContext();
+        // Каждый раз перед проигрыванием проверяем статус контекста
+        await this.forceResume();
+        
         const ctx = this.getContext();
         const cacheKey = `${voicePackId}_${key}`;
 
@@ -121,11 +141,13 @@ class AudioManager {
 
     private playSilence() {
         const ctx = this.getContext();
-        const buffer = ctx.createBuffer(1, 1, 22050);
-        const source = ctx.createBufferSource();
-        source.buffer = buffer;
-        source.connect(ctx.destination);
-        source.start(0);
+        try {
+            const buffer = ctx.createBuffer(1, 1, 22050);
+            const source = ctx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(ctx.destination);
+            source.start(0);
+        } catch (e) {}
     }
 
     private stopActiveSource() {
@@ -170,7 +192,7 @@ if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
 }
 
 export const audioManager = AudioManager.getInstance();
-export const initAudioContext = () => audioManager.resumeContext();
+export const initAudioContext = () => audioManager.forceResume();
 export const playAnnouncement = (key: string, fallbackText: string, activeVoicePack: number = 1) => {
     audioManager.play(key, fallbackText, activeVoicePack);
 };

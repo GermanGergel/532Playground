@@ -1,4 +1,3 @@
-
 import { Session, Player, NewsItem, BadgeType, SessionStatus, PlayerRecords, PlayerHistoryEntry } from '../types';
 import { calculateAllStats } from './statistics';
 import { calculateEarnedBadges, calculateRatingUpdate, getTierForRating } from './rating';
@@ -55,8 +54,11 @@ export const processFinishedSession = ({
             const currentMissed = (player.consecutiveMissedSessions || 0) + 1;
             let newRating = player.rating;
 
+            // Apply inactivity penalty: -1 point every 3 missed sessions
             if (currentMissed > 0 && currentMissed % 3 === 0) {
-                newRating = Math.max(0, newRating - 1); 
+                // Cannot fall below initialRating (floor)
+                const floor = player.initialRating || 68;
+                newRating = Math.max(floor, newRating - 1); 
             }
 
             return {
@@ -76,7 +78,9 @@ export const processFinishedSession = ({
             
             const { delta, breakdown } = calculateRatingUpdate(player, sessionStats, session, badgesEarnedThisSession);
             
-            const unifiedNewRating = Math.round(breakdown.newRating);
+            // Apply Rating Floor (cannot drop below starting rating even if performance was poor)
+            const floor = player.initialRating || 68;
+            const unifiedNewRating = Math.max(floor, Math.round(breakdown.newRating));
             
             let newForm: 'hot_streak' | 'stable' | 'cold_streak' = 'stable';
             if (delta >= 0.5) newForm = 'hot_streak';
@@ -90,7 +94,6 @@ export const processFinishedSession = ({
             });
             
             const sessionHistory = [...(player.sessionHistory || [])];
-            // FIX: Use sessionStats instead of undefined stats variable.
             const sessionWinRate = sessionStats.gamesPlayed > 0 ? Math.round((sessionStats.wins / sessionStats.gamesPlayed) * 100) : 0;
             if (sessionStats.gamesPlayed > 0) {
                 sessionHistory.push({ winRate: sessionWinRate });

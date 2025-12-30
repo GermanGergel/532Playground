@@ -2,12 +2,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-import { Button, Modal, Page, useTranslation, SessionModeIndicator } from '../ui';
+import { Button, Page, useTranslation, SessionModeIndicator } from '../ui';
 import { TeamAvatar } from '../components/avatars';
 import { StarIcon, Plus, Pause, Play, Edit3, TransferIcon } from '../icons';
-import { Session, Game, GameStatus, Goal, Team, Player } from '../types';
+import { Session, GameStatus, Team, Player } from '../types';
 import { audioManager } from '../lib'; // Import Manager directly
-import { GoalModal, EditGoalModal, EndSessionModal, SelectWinnerModal, SubstitutionModal, LegionnaireModal } from '../modals';
+import { GoalModal, EditGoalModal, SelectWinnerModal, SubstitutionModal, LegionnaireModal, SessionSummaryModal } from '../modals';
 import { hexToRgba } from './utils';
 import { useGameManager } from '../hooks/useGameManager';
 
@@ -148,7 +148,7 @@ export const LiveMatchScreen: React.FC = () => {
 
             // 2. Setup iOS unlock handler (plays silence on first touch)
             const handleInteraction = () => {
-                audioManager.play('silence', '', activeVoicePack);
+                audioManager.forceResume(); // Более надежное пробуждение
                 // Remove listeners after first successful unlock
                 window.removeEventListener('click', handleInteraction);
                 window.removeEventListener('touchstart', handleInteraction);
@@ -208,6 +208,7 @@ export const LiveMatchScreen: React.FC = () => {
     // --- HANDLERS ---
     
     const handleTransferToggle = (teamId: string) => {
+        audioManager.forceResume(); // Побудка звука при нажатии
         if (transferModeTeamId === teamId) {
             setTransferModeTeamId(null); // Toggle Off
         } else {
@@ -216,6 +217,7 @@ export const LiveMatchScreen: React.FC = () => {
     };
 
     const handlePlayerClick = (teamId: string, playerOutId: string) => {
+        audioManager.forceResume(); // Побудка звука при нажатии
         const team = activeSession.teams.find(t => t.id === teamId);
         if (!team) return;
 
@@ -236,13 +238,15 @@ export const LiveMatchScreen: React.FC = () => {
     };
 
     return (
-        <div className="pb-28 flex flex-col min-h-screen">
+        <div className="pb-28 flex flex-col min-h-screen" onClick={() => audioManager.forceResume()}>
             <GoalModal isOpen={!!scoringTeamForModal} onClose={() => setScoringTeamForModal(null)} onSave={handleGoalSave} game={currentGame} session={activeSession} scoringTeamId={scoringTeamForModal} />
             <EditGoalModal isOpen={!!goalToEdit} onClose={() => setGoalToEdit(null)} onSave={handleGoalUpdate} goal={goalToEdit} game={currentGame} session={activeSession} />
-            <EndSessionModal 
-                isOpen={isEndSessionModalOpen} 
-                onClose={() => setIsEndSessionModalOpen(false)} 
-                onConfirm={handleFinishSession} 
+            
+            {/* UPDATED: Replaced simple EndSessionModal with SessionSummaryModal */}
+            <SessionSummaryModal 
+                isOpen={isEndSessionModalOpen}
+                onClose={() => setIsEndSessionModalOpen(false)}
+                onConfirm={handleFinishSession}
             />
             
             <SelectWinnerModal isOpen={isSelectWinnerModalOpen} onClose={() => {}} onSelect={finishCurrentGameAndSetupNext} team1={team1} team2={team2}/>
@@ -294,7 +298,7 @@ export const LiveMatchScreen: React.FC = () => {
                             {/* Team 1 Column */}
                             <div className="relative flex flex-col items-center gap-2 pt-4">
                                 {showIndicators && <GameIndicators count={team1.consecutiveGames} color={team1.color} />}
-                                <TeamAvatar team={team1} size="lg" />
+                                <TeamAvatar team={team1} size="lg" hollow={true} />
                                 <div className="flex justify-center items-center h-6 mt-2 gap-1">
                                     {(team1.bigStars ?? 0) > 0 && Array.from({ length: team1.bigStars ?? 0 }).map((_, i) => (
                                         <StarIcon
@@ -320,7 +324,7 @@ export const LiveMatchScreen: React.FC = () => {
                             {/* Team 2 Column */}
                             <div className="relative flex flex-col items-center gap-2 pt-4">
                                 {showIndicators && <GameIndicators count={team2.consecutiveGames} color={team2.color} />}
-                                <TeamAvatar team={team2} size="lg" />
+                                <TeamAvatar team={team2} size="lg" hollow={true} />
                                 <div className="flex justify-center items-center h-6 mt-2 gap-1">
                                     {(team2.bigStars ?? 0) > 0 && Array.from({ length: team2.bigStars ?? 0 }).map((_, i) => (
                                         <StarIcon
@@ -344,7 +348,7 @@ export const LiveMatchScreen: React.FC = () => {
                 <div className="grid grid-cols-3 items-center w-full mt-2">
                     <div className="flex justify-center">
                          <button 
-                            onClick={() => setScoringTeamForModal(team1.id)} 
+                            onClick={() => { audioManager.forceResume(); setScoringTeamForModal(team1.id); }} 
                             disabled={!isGameActive && !isGamePaused}
                             className="w-14 h-14 rounded-full flex items-center justify-center border-2 transition-transform active:scale-90 disabled:opacity-50"
                             style={{ borderColor: team1.color, boxShadow: `0 0 12px ${team1.color}`}}
@@ -354,14 +358,14 @@ export const LiveMatchScreen: React.FC = () => {
                     </div>
                     <div className="flex justify-center items-center">
                         {!isGamePending && (
-                            <Button onClick={handleTogglePause} variant="ghost" className="!p-2">
+                            <Button onClick={() => { audioManager.forceResume(); handleTogglePause(); }} variant="ghost" className="!p-2">
                                 {isGameActive ? <Pause className="w-8 h-8"/> : <Play className="w-8 h-8"/>}
                             </Button>
                         )}
                     </div>
                     <div className="flex justify-center">
                         <button 
-                            onClick={() => setScoringTeamForModal(team2.id)} 
+                            onClick={() => { audioManager.forceResume(); setScoringTeamForModal(team2.id); }} 
                             disabled={!isGameActive && !isGamePaused}
                             className="w-14 h-14 rounded-full flex items-center justify-center border-2 transition-transform active:scale-90 disabled:opacity-50"
                             style={{ borderColor: team2.color, boxShadow: `0 0 12px ${team2.color}`}}
@@ -374,7 +378,7 @@ export const LiveMatchScreen: React.FC = () => {
                 <div className="py-4 space-y-3 shrink-0 max-w-xl mx-auto w-full">
                      <Button 
                         variant="secondary"
-                        onClick={isGamePending ? handleStartGame : () => finishCurrentGameAndSetupNext()} 
+                        onClick={() => { audioManager.forceResume(); isGamePending ? handleStartGame() : finishCurrentGameAndSetupNext(); }} 
                         disabled={!isGamePending && !canFinishGame}
                         className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
                     >
@@ -398,7 +402,7 @@ export const LiveMatchScreen: React.FC = () => {
                                             {assistant && <span className="text-xs text-dark-text-secondary"> (A: {assistant.nickname})</span>}
                                         </p>
                                     </div>
-                                    <Button variant="ghost" className="!p-1 !rounded-md flex-shrink-0" onClick={() => setGoalToEdit(goal)}>
+                                    <Button variant="ghost" className="!p-1 !rounded-md flex-shrink-0" onClick={() => { audioManager.forceResume(); setGoalToEdit(goal); }}>
                                         <Edit3 className="w-3.5 h-3.5" />
                                     </Button>
                                 </li>
@@ -432,7 +436,7 @@ export const LiveMatchScreen: React.FC = () => {
             </div>
 
             <div className="mt-auto shrink-0 py-4 px-4 max-w-xl mx-auto w-full">
-                 <Button variant="secondary" className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40" onClick={() => setIsEndSessionModalOpen(true)}>{t.endSession}</Button>
+                 <Button variant="secondary" className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40" onClick={() => { audioManager.forceResume(); setIsEndSessionModalOpen(true); }}>{t.endSession}</Button>
             </div>
         </div>
     );

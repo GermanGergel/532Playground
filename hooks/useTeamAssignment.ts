@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -65,6 +64,7 @@ export const useTeamAssignment = () => {
             if (existingPlayer) {
                 playerToAdd = existingPlayer;
             } else {
+                const startRating = 68;
                 playerToAdd = {
                     id: newId(),
                     nickname: player.nickname,
@@ -74,7 +74,9 @@ export const useTeamAssignment = () => {
                     status: PlayerStatus.Unconfirmed,
                     totalGoals: 0, totalAssists: 0, totalGames: 0, totalWins: 0, totalDraws: 0, totalLosses: 0,
                     totalSessionsPlayed: 0,
-                    rating: 60, tier: getTierForRating(60),
+                    rating: startRating,
+                    initialRating: startRating, // Set floor to 68
+                    tier: getTierForRating(startRating),
                     monthlyGoals: 0, monthlyAssists: 0, monthlyGames: 0, monthlyWins: 0,
                     monthlySessionsPlayed: 0,
                     form: 'stable', badges: {}, skills: [], lastPlayedAt: new Date().toISOString(),

@@ -12,7 +12,6 @@ export const LedgerScreen: React.FC = () => {
     const t = useTranslation();
     const { activeSession, history } = useApp();
     const [payments, setPayments] = useState<LedgerData>({});
-    const [isDemoMode, setIsDemoMode] = useState(false);
 
     // 1. ОПРЕДЕЛЯЕМ ЦЕЛЕВУЮ СЕССИЮ
     // Если есть активная — берем её. Если нет — берем самую последнюю из истории.
@@ -22,9 +21,8 @@ export const LedgerScreen: React.FC = () => {
         return null;
     }, [activeSession, history]);
 
-    // Ключ в базе данных привязан к ID конкретной сессии
+    // Ключ в базе данных жестко привязан к ID конкретной сессии
     const getLedgerKey = () => {
-        if (isDemoMode) return 'ledger_demo';
         return subjectSession ? `ledger_v4_session_${subjectSession.id}` : 'ledger_default';
     };
 
@@ -37,7 +35,7 @@ export const LedgerScreen: React.FC = () => {
             else setPayments({});
         };
         loadLedger();
-    }, [subjectSession?.id, isDemoMode]);
+    }, [subjectSession?.id]);
 
     // 3. ОБРАБОТКА ОПЛАТЫ
     const handleTogglePayment = async (playerId: string, method: PaymentMethod) => {
@@ -50,47 +48,26 @@ export const LedgerScreen: React.FC = () => {
         await set(getLedgerKey(), updated);
     };
 
-    // 4. ОЧИСТКА (только статусов оплаты)
+    // 4. ОЧИСТКА (только статусов оплаты для текущей сессии)
     const handleClear = async () => {
-        setPayments({});
-        await del(getLedgerKey());
+        if (window.confirm("Очистить все отметки об оплате для этой сессии?")) {
+            setPayments({});
+            await del(getLedgerKey());
+        }
     };
 
-    // --- DEMO DATA ---
-    const demoPlayers: Partial<Player>[] = [
-        { id: 'demo1', nickname: 'MAVERICK' },
-        { id: 'demo2', nickname: 'DIMA_K' },
-        { id: 'demo3', nickname: 'SERGEI_FOOT' },
-        { id: 'demo4', nickname: 'MAX_G' },
-        { id: 'demo5', nickname: 'ALEX_PRO' },
-        { id: 'demo6', nickname: 'IVAN_S' },
-        { id: 'demo7', nickname: 'NIKITA' },
-    ];
-
-    const playersToDisplay = isDemoMode 
-        ? demoPlayers 
-        : (subjectSession?.playerPool || []);
-
+    const playersToDisplay = subjectSession?.playerPool || [];
     const collectedCount = Object.values(payments).filter(v => v !== null).length;
     const totalCount = playersToDisplay.length;
 
-    // Состояние "Пусто" только если вообще никогда не было сессий
-    if (!subjectSession && !isDemoMode) {
+    // Состояние "Пусто" только если вообще никогда не было сессий и нет активной
+    if (!subjectSession) {
         return (
             <Page>
                 <PageHeader title={t.ledgerTitle} />
-                <div className="flex flex-col items-center justify-center h-80 space-y-6">
-                    <div className="text-center space-y-2 opacity-30">
-                        <p className="text-xl font-black uppercase tracking-[0.2em]">{t.ledgerEmpty}</p>
-                        <p className="text-[10px] font-mono italic">NO SESSION DATA FOUND IN DATABASE</p>
-                    </div>
-                    <Button 
-                        variant="secondary" 
-                        onClick={() => setIsDemoMode(true)}
-                        className="border border-dark-accent-start/30 !py-3 !px-8 text-sm font-chakra tracking-widest"
-                    >
-                        ПОСМОТРЕТЬ ДЕМО
-                    </Button>
+                <div className="flex flex-col items-center justify-center h-80 opacity-30 text-center space-y-2">
+                    <p className="text-xl font-black uppercase tracking-[0.2em]">{t.ledgerEmpty}</p>
+                    <p className="text-[10px] font-mono italic">AWAITING FIRST SESSION DATA</p>
                 </div>
             </Page>
         );
@@ -107,10 +84,10 @@ export const LedgerScreen: React.FC = () => {
                         {activeSession ? 'CURRENT SESSION' : 'LATEST RECORDED SESSION'}
                     </span>
                     <span className="text-sm font-bold text-white uppercase tracking-wider truncate max-w-[250px]">
-                        {isDemoMode ? 'DEMO SQUAD' : subjectSession?.sessionName}
+                        {subjectSession.sessionName}
                     </span>
                     <span className="text-[8px] text-dark-text-secondary font-mono mt-1 opacity-50">
-                        {isDemoMode ? 'PREVIEW MODE' : new Date(subjectSession?.date || '').toLocaleDateString()}
+                        {new Date(subjectSession.date).toLocaleDateString()}
                     </span>
                 </div>
             </div>
@@ -134,7 +111,7 @@ export const LedgerScreen: React.FC = () => {
             {/* Список игроков */}
             <div className="space-y-1.5 mb-8">
                 {playersToDisplay.map(player => {
-                    const status = payments[player.id!];
+                    const status = payments[player.id];
                     return (
                         <div 
                             key={player.id} 
@@ -151,7 +128,7 @@ export const LedgerScreen: React.FC = () => {
                             <div className="flex gap-1.5">
                                 {/* Кнопка Наличные */}
                                 <button
-                                    onClick={() => handleTogglePayment(player.id!, 'cash')}
+                                    onClick={() => handleTogglePayment(player.id, 'cash')}
                                     className={`w-11 h-9 rounded-lg flex items-center justify-center text-lg transition-all duration-300 border ${
                                         status === 'cash' 
                                         ? 'bg-green-500/20 border-green-500 shadow-[0_0_12px_rgba(76,255,95,0.4)]' 
@@ -163,7 +140,7 @@ export const LedgerScreen: React.FC = () => {
 
                                 {/* Кнопка Перевод/QR */}
                                 <button
-                                    onClick={() => handleTogglePayment(player.id!, 'qr')}
+                                    onClick={() => handleTogglePayment(player.id, 'qr')}
                                     className={`w-11 h-9 rounded-lg flex items-center justify-center text-lg transition-all duration-300 border ${
                                         status === 'qr' 
                                         ? 'bg-dark-accent-start/20 border-dark-accent-start shadow-[0_0_12px_rgba(0,242,254,0.4)]' 
@@ -187,14 +164,6 @@ export const LedgerScreen: React.FC = () => {
                 >
                     {t.ledgerClear}
                 </Button>
-                {isDemoMode && (
-                    <button 
-                        onClick={() => setIsDemoMode(false)}
-                        className="w-full mt-4 text-[10px] font-bold text-white/40 underline uppercase tracking-widest"
-                    >
-                        EXIT PREVIEW
-                    </button>
-                )}
             </div>
         </Page>
     );
