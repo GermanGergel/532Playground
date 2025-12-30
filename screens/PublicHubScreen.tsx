@@ -63,12 +63,13 @@ const NoLeadersPlaceholder: React.FC = () => {
 
 const MotivationalTicker: React.FC = () => {
     const t = useTranslation();
+    // UPDATED SLOGANS: More punchy, elite, and data-driven
     const phrases = [
-        t.hubTicker1,
-        t.hubTicker2,
-        t.hubTicker3,
-        t.hubTicker4,
-        t.hubTicker5
+        "NO STATS. NO GLORY.",
+        "DATA DEFINES LEGENDS.",
+        "ELEVATE YOUR GAME.",
+        "THE PITCH NEVER LIES.",
+        "532: WHERE ELITES PLAY."
     ];
     const cyanColor = '#00F2FE'; 
     return (
@@ -81,7 +82,7 @@ const MotivationalTicker: React.FC = () => {
                 .animate-hub-ticker {
                     display: flex;
                     width: fit-content;
-                    animation: hub-ticker 35s linear infinite;
+                    animation: hub-ticker 40s linear infinite;
                 }
             `}} />
             <div className="animate-hub-ticker whitespace-nowrap flex gap-12">
@@ -133,8 +134,8 @@ const HangingTag: React.FC<{ digit: string; label: string; height: number; delay
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full pt-1">
                 <div className="relative flex flex-col items-center">
                     <div className="absolute inset-0 blur-[8px] bg-[#00F2FE]/20 rounded-full scale-[2.5] pointer-events-none opacity-40"></div>
-                    {/* CHANGED: Text size increased to 7px */}
-                    <span className="relative text-[7px] font-black tracking-[0.25em] text-[#00F2FE] whitespace-nowrap uppercase italic" style={{ textShadow: '0 0 8px rgba(0,242,254,0.8)' }}>{label}</span>
+                    {/* CHANGED: Text size 7px, tracking tight to 0.1em for compactness */}
+                    <span className="relative text-[7px] font-black tracking-[0.1em] text-[#00F2FE] whitespace-nowrap uppercase italic" style={{ textShadow: '0 0 8px rgba(0,242,254,0.8)' }}>{label}</span>
                 </div>
             </div>
         </div>
@@ -212,10 +213,16 @@ const HubNav: React.FC<{
             `}} />
             <div className="flex items-center shrink-0 h-full relative pl-10">
                 <div className="flex items-center">
-                    {/* ADJUSTED TAG HEIGHTS FOR LADDER EFFECT (25, 55, 85) */}
-                    <HangingTag digit="5" label="PLAYPLAYERS" height={25} delay="0s" pulseDuration="2.8s" />
+                    {/* UPDATED HEIGHTS FOR REVERSE LADDER EFFECT (Low -> Mid -> High) */}
+                    {/* 5 (PLAYPLAYERS): Longest string = Lowest pos = Max height (85px) */}
+                    <HangingTag digit="5" label="PLAYPLAYERS" height={85} delay="0s" pulseDuration="2.8s" />
+                    
+                    {/* 3 (SQUADS): Medium string = Mid pos = Mid height (55px) */}
                     <HangingTag digit="3" label="SQUADS" height={55} delay="1.5s" pulseDuration="4.2s" />
-                    <HangingTag digit="2" label="GOALS" height={85} delay="0.8s" pulseDuration="3.7s" />
+                    
+                    {/* 2 (GOALS): Shortest string = Highest pos = Min height (25px) */}
+                    <HangingTag digit="2" label="GOALS" height={25} delay="0.8s" pulseDuration="3.7s" />
+                    
                     <div className="h-4 w-px bg-white/15 ml-3 md:ml-4"></div>
                     <div className="flex flex-col space-y-0.5 ml-2">
                         <span className="font-black text-[9px] tracking-[0.15em] text-white uppercase leading-none">Club</span>
@@ -398,7 +405,7 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                         <span className="font-bold text-xs text-white tracking-wider">{skillAbbreviations[skill]}</span>
                     </div>
                 ))}</div></div>)}
-                <div className="relative z-10 h-full flex flex-col justify-between">
+                <div className="relative z-10 h-full flex flex-col">
                      <div className="flex justify-between items-start">
                         <div>
                             <p style={{ color: '#00F2FE' }} className="text-base font-black leading-none">532</p>
@@ -422,10 +429,13 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                             )}
                         </div>
                     </div>
-                    {/* Raised Name Position */}
-                    <div className="text-center flex-shrink-0 relative z-30 pb-10 md:pb-12">
-                        <h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg leading-[0.9]">
-                            {player.nickname} <br/> <span className="text-2xl">{player.surname}</span>
+                    {/* ABSOLUTE POSITIONED NAME - Guaranteed same distance from bottom for everyone */}
+                    <div className="absolute bottom-6 left-0 right-0 text-center z-30 px-1">
+                        <h1 className="font-black uppercase tracking-tight drop-shadow-lg leading-[0.85]">
+                            <span className="text-3xl md:text-4xl block text-white">{player.nickname}</span>
+                            {player.surname && (
+                                <span className="text-lg md:text-xl block text-white/90 mt-1">{player.surname}</span>
+                            )}
                         </h1>
                     </div>
                 </div>
