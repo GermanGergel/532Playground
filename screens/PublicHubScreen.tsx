@@ -6,7 +6,7 @@ import { Player, PlayerStatus, PlayerForm, SkillType } from '../types';
 import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, FacebookIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon } from '../icons';
 import { PlayerAvatar, TeamAvatar } from '../components/avatars';
 import { Language } from '../translations/index';
-import { BadgeDisplay } from '../features';
+import { BadgeDisplay, BadgeIcon, sortBadgesByPriority } from '../features';
 import { useTranslation } from '../ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { ClubIntelligenceDashboard } from '../components/ClubIntelligenceDashboard';
@@ -96,7 +96,8 @@ const MotivationalTicker: React.FC = () => {
 };
 
 const StaticSoccerBall: React.FC = () => (
-    <div className="absolute top-1/2 -translate-y-1/2 left-[135px] md:left-[175px] w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none transition-all duration-500">
+    // ADJUSTED LEFT POSITION: Moved slightly left (135->120 on mobile, 175->160 on desktop) to optimize space but clear text
+    <div className="absolute top-1/2 -translate-y-1/2 left-[120px] md:left-[160px] w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none transition-all duration-500">
         <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] overflow-visible">
             <defs>
                 <radialGradient id="ballShading" cx="40%" cy="35%" r="65%"><stop offset="0%" stopColor="#ffffff" /><stop offset="50%" stopColor="#e2e8f0" /><stop offset="85%" stopColor="#94a3b8" /><stop offset="100%" stopColor="#1e293b" /></radialGradient>
@@ -209,9 +210,10 @@ const HubNav: React.FC<{
             `}} />
             <div className="flex items-center shrink-0 h-full relative pl-10">
                 <div className="flex items-center">
-                    <HangingTag digit="5" label="PLAYPLAYERS" height={38} delay="0s" pulseDuration="2.8s" />
-                    <HangingTag digit="3" label="SQUADS" height={68} delay="1.5s" pulseDuration="4.2s" />
-                    <HangingTag digit="2" label="GOALS" height={48} delay="0.8s" pulseDuration="3.7s" />
+                    {/* ADJUSTED TAG HEIGHTS FOR LADDER EFFECT (25, 55, 85) */}
+                    <HangingTag digit="5" label="PLAYPLAYERS" height={25} delay="0s" pulseDuration="2.8s" />
+                    <HangingTag digit="3" label="SQUADS" height={55} delay="1.5s" pulseDuration="4.2s" />
+                    <HangingTag digit="2" label="GOALS" height={85} delay="0.8s" pulseDuration="3.7s" />
                     <div className="h-4 w-px bg-white/15 ml-3 md:ml-4"></div>
                     <div className="flex flex-col space-y-0.5 ml-2">
                         <span className="font-black text-[9px] tracking-[0.15em] text-white uppercase leading-none">Club</span>
@@ -220,7 +222,9 @@ const HubNav: React.FC<{
                     <StaticSoccerBall />
                 </div>
             </div>
-            <div className={`flex-grow h-full overflow-hidden flex items-center ${isDashboardOpen ? 'justify-center px-4' : 'justify-start pl-20 md:pl-36 pr-4'}`}>
+            
+            {/* ADJUSTED TICKER CONTAINER: REDUCED PADDING LEFT to maximize space next to ball */}
+            <div className={`flex-grow h-full overflow-hidden flex items-center ${isDashboardOpen ? 'justify-center px-4' : 'justify-start pl-6'}`}>
                 {isDashboardOpen ? (
                     <div className="flex items-center gap-8 min-w-fit">
                         <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center">
@@ -371,6 +375,10 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
         const glows: Record<number, string> = { 1: '0 25px 40px -20px rgba(255, 215, 0, 0.5)', 2: '0 20px 35px -15px rgba(192, 192, 192, 0.5)', 3: '0 20px 35px -15px rgba(205, 127, 50, 0.6)' };
         return { boxShadow: glows[rank] || 'none' };
     }, [rank]);
+    
+    // Sort and limit badges to top 5 manually here to avoid counter
+    const topBadges = useMemo(() => sortBadgesByPriority(player.badges || {}).slice(0, 5), [player.badges]);
+
     useEffect(() => {
         const card = cardRef.current; if (!card) return;
         const handleMouseMove = (e: MouseEvent) => { const rect = card.getBoundingClientRect(); const x = e.clientX - rect.left; const y = e.clientY - rect.top; card.style.setProperty('--mouse-x', `${x}px`); card.style.setProperty('--mouse-y', `${y}px`); };
@@ -399,14 +407,25 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                             <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
                             <p className="font-bold text-white tracking-widest text-sm">OVR</p>
                             <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
-                            {player.badges && Object.keys(player.badges).length > 0 && (
-                                <div className="text-[#FFD700]">
-                                    <BadgeDisplay badges={player.badges} limit={5} onOpenChange={setIsBadgeModalOpen} />
+                            
+                            {/* MANUAL BADGE LIST - NO COUNTER, FORCED GOLD */}
+                            {topBadges.length > 0 && (
+                                <div className="flex flex-col items-center gap-1 mt-2 text-[#FFD700]">
+                                    {topBadges.map(badge => (
+                                        <div key={badge} className="drop-shadow-[0_0_5px_rgba(255,215,0,0.5)]">
+                                            <BadgeIcon badge={badge} className="w-7 h-7" />
+                                        </div>
+                                    ))}
                                 </div>
                             )}
                         </div>
                     </div>
-                    <div className="text-center flex-shrink-0 relative z-30 pb-4 md:pb-6"><h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg">{player.nickname} {player.surname}</h1></div>
+                    {/* Raised Name Position */}
+                    <div className="text-center flex-shrink-0 relative z-30 pb-10 md:pb-12">
+                        <h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg leading-[0.9]">
+                            {player.nickname} <br/> <span className="text-2xl">{player.surname}</span>
+                        </h1>
+                    </div>
                 </div>
             </div>
         </div>
@@ -473,7 +492,10 @@ export const PublicHubScreen: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen text-white relative selection:bg-[#00F2FE] selection:text-black bg-[#0a0c10] pt-px">
+        // FIX: Added 'overscroll-none' to root div AND forced background style to prevent gray "bounce"
+        <div className="min-h-screen text-white relative selection:bg-[#00F2FE] selection:text-black bg-[#0a0c10] pt-px overscroll-none">
+            <style dangerouslySetInnerHTML={{__html: `html, body { background-color: #0a0c10; overscroll-behavior-y: none; }`}} />
+            
             <div className={`fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50 z-[110]`}></div>
             
             <HubNav 
