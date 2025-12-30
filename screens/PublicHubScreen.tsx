@@ -63,7 +63,6 @@ const NoLeadersPlaceholder: React.FC = () => {
 
 const MotivationalTicker: React.FC = () => {
     const t = useTranslation();
-    // UPDATED: Using translation keys for multilingual support
     const phrases = [
         t.hubTicker1,
         t.hubTicker2,
@@ -88,8 +87,8 @@ const MotivationalTicker: React.FC = () => {
             `}} />
             <div className="animate-hub-ticker whitespace-nowrap flex gap-12">
                 {[...phrases, ...phrases].map((phrase, i) => (
-                    // FONT CHANGE: Changed from font-chakra to font-russo and added italic
-                    <span key={i} className="text-[12px] md:text-[14px] font-bold tracking-[0.1em] uppercase flex items-center font-russo italic" style={{ color: cyanColor, textShadow: `0 0 10px rgba(0, 242, 254, 0.5)` }}>
+                    // GLOW REDUCED: textShadow opacity changed from 0.5 to 0.2 for softer look
+                    <span key={i} className="text-[12px] md:text-[14px] font-bold tracking-[0.1em] uppercase flex items-center font-russo italic" style={{ color: cyanColor, textShadow: `0 0 10px rgba(0, 242, 254, 0.2)` }}>
                         {phrase}
                     </span>
                 ))}
@@ -215,10 +214,10 @@ const HubNav: React.FC<{
             `}} />
             <div className="flex items-center shrink-0 h-full relative pl-10">
                 <div className="flex items-center">
-                    {/* CHANGED HEIGHTS FOR DESCENDING STAIRS EFFECT (High -> Mid -> Low) */}
+                    {/* TYPO FIX: Changed PLAYPLAYERS to PLAYERS */}
                     
-                    {/* 5 (PLAYPLAYERS): Highest pos = Shortest string = Min height (25px) */}
-                    <HangingTag digit="5" label="PLAYPLAYERS" height={25} delay="0s" pulseDuration="2.8s" />
+                    {/* 5 (PLAYERS): Highest pos = Shortest string = Min height (25px) */}
+                    <HangingTag digit="5" label="PLAYERS" height={25} delay="0s" pulseDuration="2.8s" />
                     
                     {/* 3 (SQUADS): Mid pos = Mid height (55px) */}
                     <HangingTag digit="3" label="SQUADS" height={55} delay="1.5s" pulseDuration="4.2s" />
@@ -447,13 +446,15 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
     );
 };
 
+// UPDATED STAT CARD WITH FONT FIX FOR OVERLAP (Using Orbitron)
 const CinematicStatCard: React.FC<{ value: string | number; label: string; }> = ({ value, label }) => (
     <div className="w-full md:flex-1 max-w-xs md:max-w-none h-40">
         <div className="relative rounded-3xl overflow-hidden bg-white/[0.03] border border-white/10 shadow-2xl group transition-all duration-300 hover:border-[#00F2FE]/50 hover:shadow-[0_0_30px_rgba(0,242,254,0.2)] h-full backdrop-blur-md">
             <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-40"></div>
             <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-white/5 to-transparent blur-xl"></div>
             <div className="relative h-full z-10 flex flex-col items-center justify-center gap-2">
-                <span className="font-russo font-black text-7xl text-white tracking-normal leading-none">{value}</span>
+                {/* Changed to font-orbitron and increased tracking to prevent '1' overlapping '7' */}
+                <span className="font-orbitron font-black text-6xl md:text-7xl text-white tracking-widest leading-none">{value}</span>
                 <span className="font-chakra font-bold text-xs text-white/50 uppercase tracking-[0.2em]">{label}</span>
             </div>
         </div>
