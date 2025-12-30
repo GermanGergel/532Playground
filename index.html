@@ -13,17 +13,15 @@
     <meta name="mobile-web-app-capable" content="yes">
     
     <!-- Open Graph / Social Media Meta Tags -->
-    <!-- UPDATED: Premium Branding for Telegram/WhatsApp previews -->
     <meta property="og:title" content="532 CLUB HUB // INTELLIGENCE">
     <meta property="og:description" content="Access Restricted. Live Ratings, Global Rankings, and Advanced Match Analytics. Tap to authenticate.">
     
-    <!-- Using a high-quality dark themed soccer/tech image that fits the 532 brand better than a generic trophy -->
-    <meta property="og:image" content="https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=1200&auto=format&fit=crop">
+    <!-- UPDATED: Premium dark imagery instead of generic trophy -->
+    <meta property="og:image" content="https://images.unsplash.com/photo-1551952237-954a0e68786c?q=80&w=1200&auto=format&fit=crop">
     
     <meta property="og:url" content="https://532playground.com">
     <meta property="og:type" content="website">
     
-    <!-- Theme Color matches app background -->
     <meta name="theme-color" content="#1A1D24">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -56,31 +54,6 @@
             'dark-accent-end': '#4CFF5F',
             'dark-danger': '#7F1D1D',
           },
-          animation: {
-            'gradient-bg': 'gradient-bg 5s ease infinite',
-            'score-update': 'score-update 0.5s ease-in-out',
-            'pulse': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-            'slide-up': 'slide-up 0.5s cubic-bezier(0.23, 1, 0.32, 1) forwards',
-          },
-          keyframes: {
-            'gradient-bg': {
-              '0%, 100%': { 'background-position': '0% 50%' },
-              '50%': { 'background-position': '100% 50%' },
-            },
-            'score-update': {
-              '0%': { transform: 'scale(1)' },
-              '50%': { transform: 'scale(1.5)' },
-              '100%': { transform: 'scale(1)' },
-            },
-            'pulse': {
-                '0%, 100%': { opacity: 1 },
-                '50%': { opacity: 0.5 },
-            },
-            'slide-up': {
-              '0%': { transform: 'translateY(100%)', opacity: '0' },
-              '100%': { transform: 'translateY(0)', opacity: '1' },
-            },
-          }
         },
       },
     }
@@ -88,54 +61,15 @@
   <style>
     html, body {
       -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
       background-color: #1A1D24; 
       margin: 0;
       padding: 0;
       min-height: 100%;
     }
-
-    #root {
-        width: 100%;
-        min-height: 100%;
-    }
-
-    ::selection {
-      background-color: #00F2FE;
-      color: #1A1D24;
-    }
-    
-    ::-webkit-scrollbar {
-        width: 0px;
-        background: transparent;
-        display: none;
-    }
-    * {
-        scrollbar-width: none;
-        box-sizing: border-box;
-    }
-
-    .gradient-text {
-      background: linear-gradient(90deg, #00F2FE, #4CFF5F);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .gradient-bg {
-      background: linear-gradient(90deg, #00F2FE, #4CFF5F);
-      background-size: 200% 200%;
-    }
-    .neon-text-glow {
-      text-shadow: 0 0 2px rgba(0, 242, 254, 0.8), 0 0 5px rgba(76, 255, 95, 0.5);
-    }
-    .accent-text-glow {
-      text-shadow: 0 0 3px #00F2FE;
-    }
+    #root { width: 100%; min-height: 100%; }
+    ::-webkit-scrollbar { width: 0px; display: none; }
+    * { scrollbar-width: none; box-sizing: border-box; }
   </style>
-  <link rel="manifest" href="/manifest.json">
-  
-  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-  <link rel="icon" type="image/svg+xml" sizes="any" href="/icon.svg?v=7">
-  
 <script type="importmap">
 {
   "imports": {
