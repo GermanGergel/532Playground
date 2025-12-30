@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Team, Player, PlayerTier, PlayerStatus, BadgeType, PlayerForm, SkillType } from './types';
 import { getPlayerKeyStats } from './services/statistics';
@@ -12,13 +11,12 @@ import {
     FirstBloodBadgeIcon, DupletBadgeIcon, MaestroBadgeIcon, ComebackKingsBadgeIcon,
     FortressBadgeIcon, ClubLegendBadgeIcon, VeteranBadgeIcon,
     SessionTopScorerBadgeIcon, StableStrikerBadgeIcon, VictoryFinisherBadgeIcon,
-    // FIX: Corrected import name from Passing_StreakBadgeIcon to PassingStreakBadgeIcon
+    /* FIX: Corrected import name from Passing_StreakBadgeIcon to PassingStreakBadgeIcon */
     SessionTopAssistantBadgeIcon, PassingStreakBadgeIcon, TeamConductorBadgeIcon,
     TenInfluenceBadgeIcon, MasteryBalanceBadgeIcon, KeyPlayerBadgeIcon,
     WinLeaderBadgeIcon, IronStreakBadgeIcon, UndefeatedBadgeIcon,
     DominantParticipantBadgeIcon, Career100WinsBadgeIcon, Career150InfluenceBadgeIcon,
     CareerSuperVeteranBadgeIcon,
-    // New Legionnaire Icons
     MercenaryBadgeIcon, DoubleAgentBadgeIcon, JokerBadgeIcon, CrisisManagerBadgeIcon, IronLungBadgeIcon,
     TrophyIcon,
     XCircle,
@@ -147,8 +145,9 @@ export const BadgeDisplay: React.FC<{
     limit?: number;
     size?: 'sm' | 'md' | 'lg';
     onOpenChange?: (isOpen: boolean) => void;
-    hideCounter?: boolean; // NEW PROP
-}> = ({ badges, limit, size = 'md', onOpenChange, hideCounter = false }) => {
+    hideCounter?: boolean;
+    interactive?: boolean; // Новый проп
+}> = ({ badges, limit, size = 'md', onOpenChange, hideCounter = false, interactive = true }) => {
     const t = useTranslation();
     const [isModalOpen, setIsModalOpen] = useState(false);
     
@@ -169,44 +168,50 @@ export const BadgeDisplay: React.FC<{
         <>
             <div className="mt-3 flex flex-col items-center gap-1">
                 {renderBadges.map(badge => (
-                    <div key={badge} title={t[`badge_${badge}` as keyof typeof t]} className="cursor-pointer hover:scale-110 transition-transform relative z-10" onClick={(e) => { e.stopPropagation(); setIsModalOpen(true); }}>
+                    <div 
+                        key={badge} 
+                        title={t[`badge_${badge}` as keyof typeof t]} 
+                        className={`transition-transform relative z-10 ${interactive ? 'cursor-pointer hover:scale-110' : 'cursor-default'}`} 
+                        onClick={interactive ? (e) => { e.stopPropagation(); setIsModalOpen(true); } : undefined}
+                    >
                         <BadgeIcon badge={badge} count={badges[badge]} className={iconSize} />
                     </div>
                 ))}
-                {showCounter && (
+                {showCounter && interactive && (
                     <button onClick={(e) => { e.stopPropagation(); setIsModalOpen(true); }} className={`${counterSize} rounded-full bg-dark-surface border border-dark-text-secondary/50 flex items-center justify-center font-bold text-white hover:bg-dark-accent-start/20 hover:border-dark-accent-start transition-all cursor-pointer z-10`} title="View all badges">
                         +{counterValue}
                     </button>
                 )}
             </div>
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="sm" containerClassName="!w-[300px] !max-w-[90vw] !p-0 !bg-[#0a0c10] !border !border-[#1e293b] !shadow-2xl overflow-hidden relative" hideCloseButton>
-                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent opacity-100 z-50"></div>
-                <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-[#00F2FE]/10 to-transparent blur-xl pointer-events-none z-0"></div>
-                <div className="p-4 border-b border-white/5 flex justify-between items-center bg-[#0a0c10] relative z-10">
-                    <div className="flex items-center gap-3">
-                        <h3 className="font-black text-lg text-white uppercase tracking-widest">{t.awards}</h3>
-                        <span className="bg-[#00F2FE]/10 border border-[#00F2FE]/30 text-[#00F2FE] px-2 py-0.5 rounded text-xs font-black font-mono">{sortedBadges.length}</span>
-                    </div>
-                    <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-white transition-colors"><XCircle className="w-6 h-6" /></button>
-                </div>
-                <div className="flex-1 overflow-y-auto max-h-[50vh] bg-[#0a0c10] p-2 relative z-10">
-                    {sortedBadges.map((badge) => (
-                        <div key={badge} className="flex items-center gap-4 p-3 rounded-xl transition-all border border-transparent border-b-white/5 last:border-b-0 hover:bg-[#00F2FE]/10 hover:border-[#00F2FE]/30 hover:shadow-[0_0_15px_rgba(0,242,254,0.15)] group">
-                            <div className="shrink-0 relative"><BadgeIcon badge={badge} className="w-10 h-10" count={badges[badge]} /></div>
-                            <div className="flex-grow min-w-0">
-                                <h4 className="font-bold text-sm text-white leading-tight truncate tracking-wide group-hover:text-[#00F2FE] transition-colors">{t[`badge_${badge}` as keyof typeof t]}</h4>
-                                <p className="text-[10px] text-gray-400 leading-snug mt-1 line-clamp-2">{t[`badge_${badge}_desc` as keyof typeof t]}</p>
-                            </div>
+            {interactive && (
+                <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="sm" containerClassName="!w-[300px] !max-w-[90vw] !p-0 !bg-[#0a0c10] !border !border-[#1e293b] !shadow-2xl overflow-hidden relative" hideCloseButton>
+                    <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent opacity-100 z-50"></div>
+                    <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-[#00F2FE]/10 to-transparent blur-xl pointer-events-none z-0"></div>
+                    <div className="p-4 border-b border-white/5 flex justify-between items-center bg-[#0a0c10] relative z-10">
+                        <div className="flex items-center gap-3">
+                            <h3 className="font-black text-lg text-white uppercase tracking-widest">{t.awards}</h3>
+                            <span className="bg-[#00F2FE]/10 border border-[#00F2FE]/30 text-[#00F2FE] px-2 py-0.5 rounded text-xs font-black font-mono">{sortedBadges.length}</span>
                         </div>
-                    ))}
-                </div>
-                <div className="h-1 w-full bg-gradient-to-r from-transparent via-[#00F2FE]/30 to-transparent relative z-10"></div>
-            </Modal>
+                        <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-white transition-colors"><XCircle className="w-6 h-6" /></button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto max-h-[50vh] bg-[#0a0c10] p-2 relative z-10">
+                        {sortedBadges.map((badge) => (
+                            <div key={badge} className="flex items-center gap-4 p-3 rounded-xl transition-all border border-transparent border-b-white/5 last:border-b-0 hover:bg-[#00F2FE]/10 hover:border-[#00F2FE]/30 hover:shadow-[0_0_15px_rgba(0,242,254,0.15)] group">
+                                <div className="shrink-0 relative"><BadgeIcon badge={badge} className="w-10 h-10" count={badges[badge]} /></div>
+                                <div className="flex-grow min-w-0">
+                                    <h4 className="font-bold text-sm text-white leading-tight truncate tracking-wide group-hover:text-[#00F2FE] transition-colors">{t[`badge_${badge}` as keyof typeof t]}</h4>
+                                    <p className="text-[10px] text-gray-400 leading-snug mt-1 line-clamp-2">{t[`badge_${badge}_desc` as keyof typeof t]}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="h-1 w-full bg-gradient-to-r from-transparent via-[#00F2FE]/30 to-transparent relative z-10"></div>
+                </Modal>
+            )}
         </>
     );
 };
 
-// FIX: Added missing SessionTrendChart definition needed by PlayerCard
 const SessionTrendChart: React.FC<{ history?: Player['sessionHistory'] }> = ({ history }) => {
     const t = useTranslation();
     const safeHistory = history || [];
@@ -235,7 +240,6 @@ const SessionTrendChart: React.FC<{ history?: Player['sessionHistory'] }> = ({ h
         </div>
     );
 };
-
 
 export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete, onUploadCard, onConfirmInitialRating, onDownloadCard, onShareProfile, isDownloading }) => {
     const t = useTranslation();

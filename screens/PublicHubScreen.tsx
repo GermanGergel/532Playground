@@ -192,8 +192,8 @@ const HubNav: React.FC<{
     const navContainerClass = `
         fixed top-0 left-0 right-0 z-[100] 
         flex items-center justify-between 
-        w-full max-w-[1450px] mx-auto pr-4 py-2 
-        bg-[#05070a] border-b border-white/5
+        w-full mx-auto pr-4 py-2 
+        bg-[#05070a]
         h-[58px] md:h-[68px] transition-all duration-300
     `;
 
@@ -398,7 +398,7 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                             <p className="font-bold text-white tracking-widest text-sm">OVR</p>
                             <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
                             {player.badges && Object.keys(player.badges).length > 0 && (
-                                <BadgeDisplay badges={player.badges} limit={6} onOpenChange={setIsBadgeModalOpen} hideCounter={true} />
+                                <BadgeDisplay badges={player.badges} limit={5} onOpenChange={setIsBadgeModalOpen} hideCounter={true} interactive={false} />
                             )}
                         </div>
                     </div>
