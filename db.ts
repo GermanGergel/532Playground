@@ -133,7 +133,6 @@ export const uploadPromoImage = async (base64Image: string): Promise<string | nu
 const BUCKET_NAME = 'player_images';
 
 export const uploadPlayerImage = async (playerId: string, base64Image: string, type: 'avatar' | 'card'): Promise<string | null> => {
-    if (playerId.startsWith('demo_')) return null; // Never upload demo assets
     if (!isSupabaseConfigured() || !base64Image) return null;
     try {
         const blob = base64ToBlob(base64Image);
@@ -155,7 +154,6 @@ export const deletePlayerImage = async (imageUrl: string) => {
 };
 
 export const saveSinglePlayerToDB = async (player: Player) => {
-    if (player.id.startsWith('demo_')) return; // Filter out demo units
     if (isSupabaseConfigured()) {
         try {
             await supabase!.from('players').upsert(sanitizeObject(player), { onConflict: 'id' });
@@ -183,7 +181,7 @@ export const loadSinglePlayerFromDB = async (id: string, skipCache: boolean = fa
 };
 
 export const savePlayersToDB = async (players: Player[]) => {
-    const real = players.filter(p => !p.id.startsWith('demo_')); // Strict ephemeral filter
+    const real = players; 
     if (isSupabaseConfigured()) {
         try {
             for (const player of real) {
@@ -215,7 +213,6 @@ export const getCloudPlayerCount = async () => {
 
 // --- SESSION MANAGEMENT ---
 export const saveActiveSessionToDB = async (s: Session | null) => {
-    if (s && s.id.startsWith('demo_')) return; // Filter out demo sessions
     if (s) await set('activeSession', s);
     else if (!s) await del('activeSession');
 };
@@ -223,13 +220,12 @@ export const saveActiveSessionToDB = async (s: Session | null) => {
 export const loadActiveSessionFromDB = async () => await get<Session>('activeSession');
 
 export const saveHistoryLocalOnly = async (h: Session[]) => {
-    const real = h.filter(s => !s.id.startsWith('demo_'));
-    const sorted = [...real].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const sorted = [...h].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     await set('history', sorted);
 };
 
 export const saveHistoryToDB = async (history: Session[]) => {
-    const real = history.filter(s => !s.id.startsWith('demo_'));
+    const real = history;
     await saveHistoryLocalOnly(real);
     if (isSupabaseConfigured()) {
         try {
@@ -262,25 +258,14 @@ export const loadHistoryFromDB = async (limit?: number) => {
                 const minCloudTime = data.length > 0 ? Math.min(...cloudTimes) : 0;
                 const maxCloudTime = data.length > 0 ? Math.max(...cloudTimes) : 0;
 
-                // Улучшенная фильтрация для удаления "призрачных" сессий
                 const merged = [
                     ...data.map(s => ({...s, syncStatus: 'synced' as const})), 
                     ...local.filter(l => {
-                        // Если сессия есть в облаке — мы её уже добавили выше
                         if (cloudIds.has(l.id)) return false;
-                        
-                        // Если сессия локальная и еще не синхронизирована — оставляем (она новая)
                         if (l.syncStatus !== 'synced') return true;
-                        
-                        // Если сессия помечена как синхронизированная, но её НЕТ в облаке:
                         const localTime = new Date(l.createdAt).getTime();
-                        
-                        // 1. Она попадает в диапазон времени текущего ответа от облака -> Значит удалена!
                         if (data.length > 0 && localTime >= minCloudTime && localTime <= maxCloudTime) return false;
-                        
-                        // 2. Мы запросили всё (или последние N) и её нет в начале списка -> Значит удалена!
                         if (isExhaustive && (data.length === 0 || localTime > maxCloudTime)) return false;
-
                         return true;
                     })
                 ];
@@ -307,7 +292,7 @@ export const retrySyncPendingSessions = async () => {
 
 // --- NEWS FEED ---
 export const saveNewsToDB = async (news: NewsItem[]) => {
-    const freshNews = news.filter(n => !n.id.startsWith('demo_'));
+    const freshNews = news;
     if (isSupabaseConfigured()) {
         try {
             if (freshNews.length > 0) {
@@ -445,7 +430,7 @@ export const getSessionAnthemUrl = async (): Promise<string | null> => {
             if (serverTsNum > localTs || !cached) {
                 const { data } = await supabase!.storage.from(MUSIC_BUCKET).download(ANTHEM_FILENAME);
                 if (data) {
-                    await set(cacheKey, { data: await blobToBase64(data), lastModified: serverTs || new Date().toISOString() });
+                    await set(cacheKey, { data: await blobToBase64(blob), lastModified: serverTs || new Date().toISOString() });
                     return URL.createObjectURL(data);
                 }
             }
@@ -464,35 +449,26 @@ export const logAnalyticsEvent = async (eventType: string, eventData?: string) =
             event_type: eventType,
             event_data: eventData
         });
-    } catch (e) {
-        // Silent failure to prevent app breakage
-    }
+    } catch (e) { }
 };
 
-// UPDATED: Now returns two sets of data: Total and Recent (24h)
 export const getAnalyticsSummary = async (): Promise<{ total: Record<string, number>, recent: Record<string, number> }> => {
     if (!isSupabaseConfigured()) return { total: {}, recent: {} };
     try {
-        // We now select created_at to filter by time
         const { data, error } = await supabase!.from('hub_analytics').select('event_type, event_data, created_at');
         if (error) return { total: {}, recent: {} };
         
         const summaryTotal: Record<string, number> = {};
         const summaryRecent: Record<string, number> = {};
-        
         const now = new Date().getTime();
         const oneDayMs = 24 * 60 * 60 * 1000;
 
         data.forEach((row: any) => {
             const isRecent = (now - new Date(row.created_at).getTime()) < oneDayMs;
-
-            // 1. Process Base Event Type
             summaryTotal[row.event_type] = (summaryTotal[row.event_type] || 0) + 1;
             if (isRecent) {
                 summaryRecent[row.event_type] = (summaryRecent[row.event_type] || 0) + 1;
             }
-
-            // 2. Process Specific Data (if exists)
             if (row.event_data) {
                 const specificKey = `${row.event_type}:${row.event_data}`;
                 summaryTotal[specificKey] = (summaryTotal[specificKey] || 0) + 1;
@@ -501,7 +477,6 @@ export const getAnalyticsSummary = async (): Promise<{ total: Record<string, num
                 }
             }
         });
-        
         return { total: summaryTotal, recent: summaryRecent };
     } catch (e) {
         return { total: {}, recent: {} };

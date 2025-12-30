@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, useTranslation } from '../ui';
+import { Modal, Button, useTranslation } from '../components/ui';
 import { fetchWeatherForDate } from '../services/weather';
 import { WeatherCondition } from '../types';
 
@@ -76,12 +76,10 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({ isOpen
             const fetchInitialWeather = async () => {
                 setIsLoadingWeather(true);
                 const today = new Date().toISOString().split('T')[0];
-                
-                // Fetch using city name "Da Nang"
                 const weatherData = await fetchWeatherForDate(today, "20:00", "Da Nang");
                 
                 if (weatherData) {
-                    setTemperature(Math.round(weatherData.temperature) + 2); // Custom adjustment (+2) verified
+                    setTemperature(Math.round(weatherData.temperature) + 2); 
                     setIsDay(weatherData.isDay);
                     
                     const code = weatherData.weatherCode;
@@ -91,7 +89,6 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({ isOpen
                 }
                 setIsLoadingWeather(false);
             };
-            
             fetchInitialWeather();
         }
     }, [isOpen]);
@@ -119,123 +116,46 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({ isOpen
             containerClassName="!bg-[#0a0c10] border border-white/10 shadow-2xl overflow-hidden !p-5 max-w-[320px] w-full"
         >
             <div className="relative flex flex-col gap-4">
-                {/* Header Decoration */}
                 <div className="absolute -top-5 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent opacity-50"></div>
-                
                 <h2 className="text-center font-russo text-xl text-white uppercase tracking-wider mb-2 mt-2">
                     {t.summary_title}
                 </h2>
-
                 <div className="space-y-3">
-                    
-                    {/* 1. LOCATION */}
                     <div>
                         <label className={labelClass}>{t.summary_location}</label>
                         <div className="flex flex-wrap gap-2 mb-2">
                             {PREDEFINED_LOCATIONS.map(loc => (
-                                <button
-                                    key={loc}
-                                    onClick={() => setLocation(loc)}
-                                    className={`px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider border transition-all truncate max-w-full ${
-                                        location === loc 
-                                        ? 'bg-[#00F2FE]/20 border-[#00F2FE] text-[#00F2FE]' 
-                                        : 'bg-white/5 border-white/5 text-white/40 hover:bg-white/10'
-                                    }`}
-                                >
-                                    {loc}
-                                </button>
+                                <button key={loc} onClick={() => setLocation(loc)} className={`px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider border transition-all truncate max-w-full ${location === loc ? 'bg-[#00F2FE]/20 border-[#00F2FE] text-[#00F2FE]' : 'bg-white/5 border-white/5 text-white/40 hover:bg-white/10'}`}>{loc}</button>
                             ))}
                         </div>
-                        <input 
-                            type="text" 
-                            value={location} 
-                            onChange={(e) => setLocation(e.target.value)} 
-                            className={inputClass}
-                        />
+                        <input type="text" value={location} onChange={(e) => setLocation(e.target.value)} className={inputClass} />
                     </div>
-
-                    {/* 2. TIME & TEMP ROW */}
                     <div className="grid grid-cols-2 gap-3">
                         <div>
                             <label className={labelClass}>{t.summary_time}</label>
-                            <input 
-                                type="text" 
-                                value={timeString} 
-                                onChange={(e) => setTimeString(e.target.value)} 
-                                className={`${inputClass} text-center`}
-                            />
+                            <input type="text" value={timeString} onChange={(e) => setTimeString(e.target.value)} className={`${inputClass} text-center`}/>
                         </div>
-                        
                         <div>
                             <label className={labelClass}>{t.summary_temp}</label>
                             <div className="flex items-center bg-black/40 border border-white/10 rounded-lg p-1.5 h-[34px]">
-                                <input 
-                                    type="number" 
-                                    value={temperature}
-                                    onChange={(e) => setTemperature(parseInt(e.target.value) || 0)}
-                                    className="w-full bg-transparent text-lg font-russo text-white text-center focus:outline-none"
-                                />
+                                <input type="number" value={temperature} onChange={(e) => setTemperature(parseInt(e.target.value) || 0)} className="w-full bg-transparent text-lg font-russo text-white text-center focus:outline-none"/>
                                 <span className="text-xs font-russo text-white/50 pr-1">°C</span>
                             </div>
                         </div>
                     </div>
-
-                    {/* 3. CONDITION ICONS */}
                     <div>
                         <label className={labelClass}>{t.summary_condition}</label>
                         <div className="flex gap-2">
-                            {/* Sun (Clear Day) */}
-                            <button 
-                                onClick={() => { setCondition('clear'); setIsDay(true); }}
-                                className={`flex-1 h-9 rounded-lg flex items-center justify-center border transition-all ${condition === 'clear' && isDay ? 'bg-[#FFA500]/20 border-[#FFA500] text-[#FFA500]' : 'bg-white/5 border-white/5 text-white/20'}`}
-                            >
-                                <SunIcon className="w-4 h-4" />
-                            </button>
-
-                            {/* Moon (Clear Night) */}
-                            <button 
-                                onClick={() => { setCondition('clear'); setIsDay(false); }}
-                                className={`flex-1 h-9 rounded-lg flex items-center justify-center border transition-all ${condition === 'clear' && !isDay ? 'bg-[#FFD700]/20 border-[#FFD700] text-[#FFD700]' : 'bg-white/5 border-white/5 text-white/20'}`}
-                            >
-                                <MoonIcon className="w-4 h-4" />
-                            </button>
-
-                            {/* Cloud */}
-                            <button 
-                                onClick={() => setCondition('cloud')}
-                                className={`flex-1 h-9 rounded-lg flex items-center justify-center border transition-all ${condition === 'cloud' ? 'bg-slate-500/20 border-slate-400 text-slate-300' : 'bg-white/5 border-white/5 text-white/20'}`}
-                            >
-                                <CloudIcon className="w-4 h-4" />
-                            </button>
-
-                            {/* Rain */}
-                            <button 
-                                onClick={() => setCondition('rain')}
-                                className={`flex-1 h-9 rounded-lg flex items-center justify-center border transition-all ${condition === 'rain' ? 'bg-[#00F2FE]/20 border-[#00F2FE] text-[#00F2FE]' : 'bg-white/5 border-white/5 text-white/20'}`}
-                            >
-                                <RainIcon className="w-4 h-4" />
-                            </button>
+                            <button onClick={() => { setCondition('clear'); setIsDay(true); }} className={`flex-1 h-9 rounded-lg flex items-center justify-center border transition-all ${condition === 'clear' && isDay ? 'bg-[#FFA500]/20 border-[#FFA500] text-[#FFA500]' : 'bg-white/5 border-white/5 text-white/20'}`}><SunIcon className="w-4 h-4" /></button>
+                            <button onClick={() => { setCondition('clear'); setIsDay(false); }} className={`flex-1 h-9 rounded-lg flex items-center justify-center border transition-all ${condition === 'clear' && !isDay ? 'bg-[#FFD700]/20 border-[#FFD700] text-[#FFD700]' : 'bg-white/5 border-white/5 text-white/20'}`}><MoonIcon className="w-4 h-4" /></button>
+                            <button onClick={() => setCondition('cloud')} className={`flex-1 h-9 rounded-lg flex items-center justify-center border transition-all ${condition === 'cloud' ? 'bg-slate-500/20 border-slate-400 text-slate-300' : 'bg-white/5 border-white/5 text-white/20'}`}><CloudIcon className="w-4 h-4" /></button>
+                            <button onClick={() => setCondition('rain')} className={`flex-1 h-9 rounded-lg flex items-center justify-center border transition-all ${condition === 'rain' ? 'bg-[#00F2FE]/20 border-[#00F2FE] text-[#00F2FE]' : 'bg-white/5 border-white/5 text-white/20'}`}><RainIcon className="w-4 h-4" /></button>
                         </div>
                     </div>
-
                 </div>
-
-                {/* Footer Buttons */}
                 <div className="mt-2 flex gap-3">
-                    <Button 
-                        variant="ghost" 
-                        onClick={onClose} 
-                        className="flex-1 bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-bold text-white/50 hover:text-white h-10 rounded-xl"
-                    >
-                        {t.cancel.toUpperCase()}
-                    </Button>
-                    <Button 
-                        variant="secondary" 
-                        onClick={handleConfirm} 
-                        className="flex-1 font-chakra font-bold text-sm tracking-wider h-10 shadow-[0_0_15px_rgba(0,242,254,0.15)] border border-[#00F2FE]/30 hover:bg-[#00F2FE]/10 rounded-xl"
-                    >
-                        {t.confirm.toUpperCase()}
-                    </Button>
+                    <Button variant="ghost" onClick={onClose} className="flex-1 bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-bold text-white/50 hover:text-white h-10 rounded-xl">{t.cancel.toUpperCase()}</Button>
+                    <Button variant="secondary" onClick={handleConfirm} className="flex-1 font-chakra font-bold text-sm tracking-wider h-10 shadow-[0_0_15px_rgba(0,242,254,0.15)] border border-[#00F2FE]/30 hover:bg-[#00F2FE]/10 rounded-xl">{t.confirm.toUpperCase()}</Button>
                 </div>
             </div>
         </Modal>

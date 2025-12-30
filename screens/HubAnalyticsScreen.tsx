@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Page, PageHeader, Card, useTranslation, Button } from '../ui';
+import { Page, PageHeader, Card, useTranslation, Button } from '../components/ui';
 import { Activity, RefreshCw, TrophyIcon, History, InfoIcon, LayoutDashboard, Users } from '../icons';
 import { getAnalyticsSummary } from '../db';
 
@@ -19,7 +19,6 @@ export const HubAnalyticsScreen: React.FC = () => {
         fetchData();
     }, []);
 
-    // FIX: Added safer data access with defaults to prevent build crashes
     const getVal = (key: string, mode: 'total' | 'recent' = 'total'): number => {
         const section = data[mode];
         return section ? (section[key] || 0) : 0;
@@ -84,30 +83,23 @@ export const HubAnalyticsScreen: React.FC = () => {
                     <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
                 </Button>
             </PageHeader>
-            
             <div className="relative w-full max-w-md mx-auto overflow-hidden rounded-3xl border border-white/10 shadow-2xl">
                 <div className="absolute inset-0 z-0 pointer-events-none">
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
                     <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
                 </div>
-
                 <div className="relative z-10 p-5 space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                         <Card className="!p-4 bg-gradient-to-br from-[#161b22] to-black border-white/10 flex flex-col items-center justify-center min-h-[120px] bg-opacity-80 backdrop-blur-sm shadow-[0_0_20px_rgba(0,242,254,0.1)]">
                             <Activity className="w-6 h-6 text-[#00F2FE] mb-2 opacity-80" />
-                            <span className="text-4xl font-black text-white font-russo tracking-tighter">
-                                {totalInteractions}
-                            </span>
+                            <span className="text-4xl font-black text-white font-russo tracking-tighter">{totalInteractions}</span>
                             {recentInteractions > 0 ? (
-                                <span className="text-sm font-bold text-[#4CFF5F] tracking-tight mb-1 flex items-center gap-1">
-                                    +{recentInteractions} <span className="text-[8px] text-[#4CFF5F]/70 font-normal uppercase">24h</span>
-                                </span>
+                                <span className="text-sm font-bold text-[#4CFF5F] tracking-tight mb-1 flex items-center gap-1">+{recentInteractions} <span className="text-[8px] text-[#4CFF5F]/70 font-normal uppercase">24h</span></span>
                             ) : (
                                 <span className="text-[9px] text-white/20 mt-1 font-mono">NO RECENT ACTIVITY</span>
                             )}
                             <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mt-1">Total Actions</span>
                         </Card>
-
                         <div className="grid grid-rows-2 gap-3">
                             <Card className="!p-3 bg-white/5 border-white/10 flex items-center justify-between backdrop-blur-sm hover:bg-white/10 transition-colors">
                                 <div className="flex flex-col">
@@ -129,13 +121,11 @@ export const HubAnalyticsScreen: React.FC = () => {
                             </Card>
                         </div>
                     </div>
-
                     <Card className="!p-5 bg-black/40 border-white/10 backdrop-blur-md">
                         <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-2">
                             <h3 className="text-xs font-black text-white uppercase tracking-widest">Traffic Analysis</h3>
                             <span className="text-[8px] font-mono text-[#4CFF5F] uppercase">24H Trend</span>
                         </div>
-                        
                         <div className="mb-4">
                             <div className="flex justify-between items-end mb-1">
                                 <div className="flex items-center gap-2">
@@ -144,11 +134,7 @@ export const HubAnalyticsScreen: React.FC = () => {
                                 </div>
                                 <div className="flex items-baseline gap-1.5">
                                     <span className="text-lg font-black leading-none font-mono text-white">{getRosterTotal()}</span>
-                                    {getRosterRecent() > 0 && (
-                                        <span className="text-[9px] font-bold text-[#4CFF5F] animate-pulse">
-                                            +{getRosterRecent()} ↗
-                                        </span>
-                                    )}
+                                    {getRosterRecent() > 0 && <span className="text-[9px] font-bold text-[#4CFF5F] animate-pulse">+{getRosterRecent()} ↗</span>}
                                     <span className="text-[9px] text-white/30 font-mono w-8 text-right">({calcPercent(getRosterTotal())}%)</span>
                                 </div>
                             </div>
@@ -157,34 +143,10 @@ export const HubAnalyticsScreen: React.FC = () => {
                                 <div className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${calcPercent(getRosterTotal())}%`, backgroundColor: '#4CFF5F', boxShadow: '0 0 8px #4CFF5F' }}></div>
                             </div>
                         </div>
-
-                        <StatBar 
-                            label="Dashboard Views" 
-                            metricKey="view_tab:dashboard"
-                            color="#ffffff" 
-                            icon={LayoutDashboard} 
-                        />
-                        
-                        <StatBar 
-                            label="Archive / History" 
-                            metricKey="view_tab:archive"
-                            color="#00F2FE" 
-                            icon={History} 
-                        />
-
-                        <StatBar 
-                            label="Info & Rules" 
-                            metricKey="view_tab:info"
-                            color="#A9B1BD" 
-                            icon={InfoIcon} 
-                        />
-
-                        <StatBar 
-                            label="Duel Simulations" 
-                            metricKey="start_duel"
-                            color="#FFD700" 
-                            icon={TrophyIcon} 
-                        />
+                        <StatBar label="Dashboard Views" metricKey="view_tab:dashboard" color="#ffffff" icon={LayoutDashboard} />
+                        <StatBar label="Archive / History" metricKey="view_tab:archive" color="#00F2FE" icon={History} />
+                        <StatBar label="Info & Rules" metricKey="view_tab:info" color="#A9B1BD" icon={InfoIcon} />
+                        <StatBar label="Duel Simulations" metricKey="start_duel" color="#FFD700" icon={TrophyIcon} />
                     </Card>
                 </div>
             </div>
