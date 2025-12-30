@@ -95,8 +95,7 @@ const MotivationalTicker: React.FC = () => {
 };
 
 const StaticSoccerBall: React.FC = () => (
-    <div className="absolute bottom-[-1px] left-[118px] md:left-[152px] w-9 h-9 md:w-10 md:h-10 shrink-0 z-10 pointer-events-none transition-all duration-500">
-        <div className="absolute bottom-[-1px] left-1/2 -translate-x-1/2 w-[80%] h-[2px] bg-black/80 blur-[2px] rounded-full"></div>
+    <div className="absolute top-1/2 -translate-y-1/2 left-[135px] md:left-[170px] w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none transition-all duration-500">
         <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] overflow-visible">
             <defs>
                 <radialGradient id="ballShading" cx="40%" cy="35%" r="65%"><stop offset="0%" stopColor="#ffffff" /><stop offset="50%" stopColor="#e2e8f0" /><stop offset="85%" stopColor="#94a3b8" /><stop offset="100%" stopColor="#1e293b" /></radialGradient>
@@ -125,8 +124,8 @@ const StaticSoccerBall: React.FC = () => (
 
 const HangingTag: React.FC<{ digit: string; label: string; height: number; delay: string; pulseDuration: string }> = ({ digit, label, height, delay, pulseDuration }) => (
     <div className="relative flex flex-col items-center group/fiber">
-        <span className="font-black text-2xl md:text-3xl text-[#00F2FE] tracking-tighter z-10" style={{ textShadow: '0 0 10px rgba(0,242,254,0.6)' }}>{digit}</span>
-        <div className="absolute top-[28px] w-[0.5px] bg-[#00F2FE]/10 origin-top animate-pendant-swing" style={{ height: `${height}px`, animationDelay: delay, boxShadow: '0 0 3px rgba(0,242,254,0.1)' }}>
+        <span className="font-black text-2xl md:text-3xl text-[#00F2FE] tracking-tighter z-10 leading-none" style={{ textShadow: '0 0 10px rgba(0,242,254,0.6)' }}>{digit}</span>
+        <div className="absolute top-[22px] w-[0.5px] bg-[#00F2FE]/20 origin-top animate-pendant-swing" style={{ height: `${height}px`, animationDelay: delay, boxShadow: '0 0 3px rgba(0,242,254,0.1)' }}>
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1.2px] h-[3px] bg-[#00F2FE] rounded-full opacity-0 animate-fiber-pulse" style={{ animationDuration: pulseDuration, animationDelay: delay, boxShadow: '0 0 5px #00F2FE' }}></div>
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full pt-0.5">
                 <div className="relative flex flex-col items-center">
@@ -194,9 +193,8 @@ const HubNav: React.FC<{
         fixed top-3 left-1/2 -translate-x-1/2 z-[100] 
         flex items-center justify-between 
         w-full max-w-[1450px] pr-4 py-0 
-        bg-gradient-to-b from-[#0f1115] via-[#07080a] to-[#020203]
-        backdrop-blur-2xl rounded-2xl border border-black/80
-        shadow-[0_8px_30px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.12),inset_0_-1px_0_rgba(255,255,255,0.05)] 
+        bg-black/90 backdrop-blur-xl rounded-2xl border border-white/10
+        shadow-[0_15px_40px_-10px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.05)] 
         h-[48px] md:h-[58px] transition-all duration-300
     `;
 
@@ -210,10 +208,10 @@ const HubNav: React.FC<{
             `}} />
             <div className="flex items-center shrink-0 h-full relative pl-10">
                 <div className="flex items-center">
-                    <HangingTag digit="5" label="PLAYERS" height={25} delay="0s" pulseDuration="2.8s" />
-                    <HangingTag digit="3" label="SQUADS" height={75} delay="1.5s" pulseDuration="4.2s" />
-                    <HangingTag digit="2" label="GOALS" height={50} delay="0.8s" pulseDuration="3.7s" />
-                    <div className="h-4 w-px bg-white/15 ml-2 md:ml-3"></div>
+                    <HangingTag digit="5" label="PLAYERS" height={20} delay="0s" pulseDuration="2.8s" />
+                    <HangingTag digit="3" label="SQUADS" height={45} delay="1.5s" pulseDuration="4.2s" />
+                    <HangingTag digit="2" label="GOALS" height={30} delay="0.8s" pulseDuration="3.7s" />
+                    <div className="h-4 w-px bg-white/15 ml-3 md:ml-4"></div>
                     <div className="flex flex-col space-y-0.5 ml-2">
                         <span className="font-black text-[9px] tracking-[0.15em] text-white uppercase leading-none">Club</span>
                         <span className="font-black text-[7px] tracking-[0.15em] text-white/30 uppercase leading-none">Center</span>
@@ -221,7 +219,7 @@ const HubNav: React.FC<{
                     <StaticSoccerBall />
                 </div>
             </div>
-            <div className={`flex-grow h-full overflow-hidden flex items-center ${isDashboardOpen ? 'justify-center px-4' : 'justify-start pl-16 md:pl-24 pr-4'}`}>
+            <div className={`flex-grow h-full overflow-hidden flex items-center ${isDashboardOpen ? 'justify-center px-4' : 'justify-start pl-16 md:pl-28 pr-4'}`}>
                 {isDashboardOpen ? (
                     <div className="flex items-center gap-8 min-w-fit">
                         <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center">
@@ -391,21 +389,26 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                 ))}</div></div>)}
                 <div className="relative z-10 h-full flex flex-col justify-between">
                      <div className="flex justify-between items-start">
-                        <div>
+                        <div className="relative z-20">
                             <p style={{ color: '#00F2FE' }} className="text-base font-black leading-none">532</p>
                             <p className="text-white text-[7px] font-bold tracking-[0.15em] font-chakra leading-none mt-1">PLAYGROUND</p>
                             {countryCodeAlpha2 && (<img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} alt={`${player.countryCode} flag`} className="w-6 h-auto mt-3 rounded-sm"/>)}
                         </div>
-                        <div className="flex flex-col items-center max-w-[50%]">
+                        <div className="flex flex-col items-center max-w-[50%] relative z-20">
                             <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
                             <p className="font-bold text-white tracking-widest text-sm">OVR</p>
                             <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
                             {player.badges && Object.keys(player.badges).length > 0 && (
-                                <BadgeDisplay badges={player.badges} limit={6} onOpenChange={setIsBadgeModalOpen} />
+                                <BadgeDisplay badges={player.badges} limit={6} onOpenChange={setIsBadgeModalOpen} hideCounter={true} />
                             )}
                         </div>
                     </div>
-                    <div className="text-center flex-shrink-0 relative z-30 pb-1"><h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg">{player.nickname} {player.surname}</h1></div>
+                    {/* FIXED: Name Lifted and z-index adjusted to be behind foreground labels/icons but visible */}
+                    <div className="absolute bottom-8 left-0 right-0 px-4 text-center z-10">
+                        <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tight drop-shadow-[0_5px_15px_rgba(0,0,0,0.9)] leading-[0.85] text-white">
+                            {player.nickname}<br/>{player.surname}
+                        </h1>
+                    </div>
                 </div>
             </div>
         </div>
@@ -456,7 +459,8 @@ export const PublicHubScreen: React.FC = () => {
     const clubStats = useMemo(() => {
         const confirmedPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
         const totalPlayers = confirmedPlayers.length;
-        const totalSessions = history.length;
+        // ADDED +1 to history length to account for the missing database entry as requested
+        const totalSessions = history.length + 1;
         const avgRating = totalPlayers > 0 ? Math.round(confirmedPlayers.reduce((sum, p) => sum + p.rating, 0) / totalPlayers) : 0;
         return { totalPlayers, totalSessions, avgRating };
     }, [allPlayers, history]);

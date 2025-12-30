@@ -253,7 +253,7 @@ export const en = {
   hubWeather: "WEATHER",
   hubImpact: "IMPACT",
   hubWelcomeText: "Welcome to the official 532 Playground Hub. Track your stats, compare with others, and rise to the top.",
-  hubLeadersTitle: "Session Leaders",
+  hubLeadersTitle: "Season Leaders",
   hubJoinSquad: "Join the Squad",
 
   // Duel

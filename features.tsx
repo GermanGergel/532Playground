@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Team, Player, PlayerTier, PlayerStatus, BadgeType, PlayerForm, SkillType } from './types';
 import { getPlayerKeyStats } from './services/statistics';
@@ -11,6 +12,7 @@ import {
     FirstBloodBadgeIcon, DupletBadgeIcon, MaestroBadgeIcon, ComebackKingsBadgeIcon,
     FortressBadgeIcon, ClubLegendBadgeIcon, VeteranBadgeIcon,
     SessionTopScorerBadgeIcon, StableStrikerBadgeIcon, VictoryFinisherBadgeIcon,
+    // FIX: Corrected import name from Passing_StreakBadgeIcon to PassingStreakBadgeIcon
     SessionTopAssistantBadgeIcon, PassingStreakBadgeIcon, TeamConductorBadgeIcon,
     TenInfluenceBadgeIcon, MasteryBalanceBadgeIcon, KeyPlayerBadgeIcon,
     WinLeaderBadgeIcon, IronStreakBadgeIcon, UndefeatedBadgeIcon,
@@ -36,7 +38,6 @@ interface PlayerCardProps {
     isDownloading?: boolean;
 }
 
-// FIX: Updated BadgeIcon to accept and pass through SVG props like `style`.
 interface BadgeIconProps extends React.SVGProps<SVGSVGElement> {
     badge: BadgeType;
     count?: number;
@@ -60,7 +61,6 @@ export const BadgeIcon: React.FC<BadgeIconProps> = ({ badge, count, className, .
         club_legend_goals: { Icon: ClubLegendBadgeIcon, colorClass: 'badge-glow-gold' },
         club_legend_assists: { Icon: ClubLegendBadgeIcon, colorClass: 'badge-glow-gold' },
         veteran: { Icon: VeteranBadgeIcon, colorClass: 'badge-glow-gold' },
-        // New Badges
         session_top_scorer: { Icon: SessionTopScorerBadgeIcon, colorClass: 'badge-glow-gold' },
         stable_striker: { Icon: StableStrikerBadgeIcon, colorClass: 'badge-glow-gold' },
         victory_finisher: { Icon: VictoryFinisherBadgeIcon, colorClass: 'badge-glow-gold' },
@@ -77,7 +77,6 @@ export const BadgeIcon: React.FC<BadgeIconProps> = ({ badge, count, className, .
         career_100_wins: { Icon: Career100WinsBadgeIcon, colorClass: 'badge-glow-gold' },
         career_150_influence: { Icon: Career150InfluenceBadgeIcon, colorClass: 'badge-glow-gold' },
         career_super_veteran: { Icon: CareerSuperVeteranBadgeIcon, colorClass: 'badge-glow-gold' },
-        // Legionnaire Badges (TURQUOISE)
         mercenary: { Icon: MercenaryBadgeIcon, colorClass: 'badge-glow-turquoise' },
         double_agent: { Icon: DoubleAgentBadgeIcon, colorClass: 'badge-glow-turquoise' },
         joker: { Icon: JokerBadgeIcon, colorClass: 'badge-glow-turquoise' },
@@ -106,183 +105,61 @@ export const BadgeIcon: React.FC<BadgeIconProps> = ({ badge, count, className, .
 };
 
 const skillAbbreviations: Record<SkillType, string> = {
-    goalkeeper: 'GK',
-    power_shot: 'PS',
-    technique: 'TQ',
-    defender: 'DF',
-    playmaker: 'PM',
-    finisher: 'FN',
-    versatile: 'VS',
-    tireless_motor: 'TM',
-    leader: 'LD',
+    goalkeeper: 'GK', power_shot: 'PS', technique: 'TQ', defender: 'DF', 
+    playmaker: 'PM', finisher: 'FN', versatile: 'VS', tireless_motor: 'TM', leader: 'LD',
 };
 
 const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
     const config = {
-        hot_streak: { color: '#4CFF5F' },
-        stable: { color: '#A9B1BD' },
-        cold_streak: { color: '#FF4136' },
+        hot_streak: { color: '#4CFF5F' }, stable: { color: '#A9B1BD' }, cold_streak: { color: '#FF4136' },
     };
     const currentForm = config[form] || config.stable;
-    
     const commonProps: React.SVGProps<SVGSVGElement> = {
-        width: "24",
-        height: "24",
-        viewBox: "0 0 24 24",
-        fill: "none",
-        stroke: currentForm.color,
-        strokeWidth: "2.5",
-        strokeLinecap: "round",
-        strokeLinejoin: "round",
+        width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: currentForm.color,
+        strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round",
     };
-
     switch (form) {
-        case 'hot_streak':
-            return (
-                <svg {...commonProps}><path d="M12 19V5m-6 7l6-6 6 6"/></svg>
-            );
-        case 'cold_streak':
-            return (
-                <svg {...commonProps}><path d="M12 5v14M12 5v14M5 12l7 7 7-7"/></svg>
-            );
-        case 'stable':
-        default:
-            return (
-                <svg {...commonProps}><path d="M5 12h14m-6-6l6 6-6 6"/></svg>
-            );
+        case 'hot_streak': return <svg {...commonProps}><path d="M12 19V5m-6 7l6-6 6 6"/></svg>;
+        case 'cold_streak': return <svg {...commonProps}><path d="M12 5v14M12 5v14M5 12l7 7 7-7"/></svg>;
+        default: return <svg {...commonProps}><path d="M5 12h14m-6-6l6 6-6 6"/></svg>;
     }
 };
 
-const SessionTrendChart: React.FC<{ history?: Player['sessionHistory'] }> = ({ history = [] }) => {
-    const t = useTranslation();
-
-    const displayData = Array.from({ length: 5 }).map((_, i) => {
-        const item = history[history.length - 5 + i];
-        return item ? { winRate: item.winRate } : { winRate: 0 };
-    });
-
-    const getBarColor = (winRate: number) => {
-        if (winRate > 60) return '#4CFF5F'; // green
-        if (winRate < 40) return '#FF4136'; // red
-        return '#A9B1BD'; // gray
-    };
-
-    const hexToRgba = (hex: string, alpha: number) => {
-        const r = parseInt(hex.slice(1, 3), 16);
-        const g = parseInt(hex.slice(3, 5), 16);
-        const b = parseInt(hex.slice(5, 7), 16);
-        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-    };
-
-    return (
-        <div className="flex justify-around items-end h-16 px-2 pt-2">
-            {displayData.map((session, index) => {
-                const height = session.winRate > 0 ? `${Math.max(session.winRate, 15)}%` : '5%';
-                const color = getBarColor(session.winRate);
-
-                return (
-                    <div
-                        key={index}
-                        className="w-2.5 rounded-t-full transition-all duration-500 ease-out"
-                        style={{
-                            height: height,
-                            background: `linear-gradient(to top, ${hexToRgba(color, 0.1)}, ${color})`,
-                            boxShadow: `0 0 4px ${color}`,
-                            opacity: session.winRate > 0 ? 1 : 0.2,
-                        }}
-                        title={`${t.winRate}: ${session.winRate > 0 ? session.winRate + '%' : 'N/A'}`}
-                    />
-                );
-            })}
-        </div>
-    );
-};
-
-// --- BADGE SORTING & DISPLAY UTILS ---
-
 const BADGE_PRIORITY: Record<BadgeType, number> = {
-    // 1. Career Legends & High Difficulty
-    'career_100_wins': 100,
-    'career_150_influence': 99,
-    'career_super_veteran': 98,
-    'dynasty': 95,
-    
-    // 2. Legionnaire (New & Cool)
-    'double_agent': 90,
-    'mercenary': 89,
-    'iron_lung': 88,
-    'crisis_manager': 87,
-    'joker': 86,
-
-    // 3. Top Session Performance
-    'mvp': 85,
-    'goleador': 80,
-    'assistant': 80,
-    'fortress': 75,
-    'undefeated': 75,
-    'club_legend_goals': 70,
-    'club_legend_assists': 70,
-    
-    // 4. Strong Gameplay
-    'session_top_scorer': 65,
-    'session_top_assistant': 65,
-    'win_leader': 60,
-    'perfect_finish': 60,
-    'comeback_kings': 60,
-    'sniper': 60,
-    'decisive_factor': 55,
-    
-    // 5. Standard
-    'ten_influence': 50,
-    'mastery_balance': 50,
-    'iron_streak': 45,
-    'key_player': 45,
-    'team_conductor': 40,
-    'passing_streak': 40,
-    'stable_striker': 40,
-    'victory_finisher': 40,
-    
-    // 6. Common
-    'first_blood': 30,
-    'duplet': 30,
-    'maestro': 30,
-    'unsung_hero': 25,
-    'dominant_participant': 20,
-    'veteran': 10
+    'career_100_wins': 100, 'career_150_influence': 99, 'career_super_veteran': 98, 'dynasty': 95,
+    'double_agent': 90, 'mercenary': 89, 'iron_lung': 88, 'crisis_manager': 87, 'joker': 86,
+    'mvp': 85, 'goleador': 80, 'assistant': 80, 'fortress': 75, 'undefeated': 75,
+    'club_legend_goals': 70, 'club_legend_assists': 70, 'session_top_scorer': 65, 'session_top_assistant': 65,
+    'win_leader': 60, 'perfect_finish': 60, 'comeback_kings': 60, 'sniper': 60, 'decisive_factor': 55,
+    'ten_influence': 50, 'mastery_balance': 50, 'iron_streak': 45, 'key_player': 45,
+    'team_conductor': 40, 'passing_streak': 40, 'stable_striker': 40, 'victory_finisher': 40,
+    'first_blood': 30, 'duplet': 30, 'maestro': 30, 'unsung_hero': 25, 'dominant_participant': 20, 'veteran': 10
 };
 
 export const getBadgePriority = (badge: BadgeType): number => BADGE_PRIORITY[badge] || 0;
 
 export const sortBadgesByPriority = (badges: Partial<Record<BadgeType, number>>): BadgeType[] => {
-    return (Object.keys(badges) as BadgeType[]).sort((a, b) => {
-        // Sort by Priority Descending
-        return getBadgePriority(b) - getBadgePriority(a);
-    });
+    return (Object.keys(badges) as BadgeType[]).sort((a, b) => getBadgePriority(b) - getBadgePriority(a));
 };
 
-// --- BADGE DISPLAY COMPONENT (The "5+1" System) ---
 export const BadgeDisplay: React.FC<{ 
     badges: Partial<Record<BadgeType, number>>; 
     limit?: number;
     size?: 'sm' | 'md' | 'lg';
     onOpenChange?: (isOpen: boolean) => void;
-}> = ({ badges, limit, size = 'md', onOpenChange }) => {
+    hideCounter?: boolean; // NEW PROP
+}> = ({ badges, limit, size = 'md', onOpenChange, hideCounter = false }) => {
     const t = useTranslation();
     const [isModalOpen, setIsModalOpen] = useState(false);
     
-    useEffect(() => {
-        if (onOpenChange) {
-            onOpenChange(isModalOpen);
-        }
-    }, [isModalOpen, onOpenChange]);
+    useEffect(() => { if (onOpenChange) onOpenChange(isModalOpen); }, [isModalOpen, onOpenChange]);
 
     const sortedBadges = sortBadgesByPriority(badges);
-    
     if (sortedBadges.length === 0) return null;
 
-    const DISPLAY_LIMIT = 5;
-    const showCounter = sortedBadges.length > DISPLAY_LIMIT;
-    const renderBadges = showCounter ? sortedBadges.slice(0, DISPLAY_LIMIT) : sortedBadges; 
+    const DISPLAY_LIMIT = limit || 5;
+    const showCounter = !hideCounter && sortedBadges.length > DISPLAY_LIMIT;
+    const renderBadges = showCounter || hideCounter ? sortedBadges.slice(0, DISPLAY_LIMIT) : sortedBadges; 
     const counterValue = sortedBadges.length - DISPLAY_LIMIT;
 
     const iconSize = size === 'sm' ? 'w-5 h-5' : size === 'lg' ? 'w-9 h-9' : 'w-7 h-7';
@@ -290,67 +167,35 @@ export const BadgeDisplay: React.FC<{
 
     return (
         <>
-            {/* Main Display Grid - VERTICAL COLUMN */}
             <div className="mt-3 flex flex-col items-center gap-1">
                 {renderBadges.map(badge => (
-                    <div 
-                        key={badge} 
-                        title={t[`badge_${badge}` as keyof typeof t]}
-                        className="cursor-pointer hover:scale-110 transition-transform relative z-10"
-                        onClick={(e) => { e.stopPropagation(); setIsModalOpen(true); }}
-                    >
+                    <div key={badge} title={t[`badge_${badge}` as keyof typeof t]} className="cursor-pointer hover:scale-110 transition-transform relative z-10" onClick={(e) => { e.stopPropagation(); setIsModalOpen(true); }}>
                         <BadgeIcon badge={badge} count={badges[badge]} className={iconSize} />
                     </div>
                 ))}
-
                 {showCounter && (
-                    <button 
-                        onClick={(e) => { e.stopPropagation(); setIsModalOpen(true); }}
-                        className={`${counterSize} rounded-full bg-dark-surface border border-dark-text-secondary/50 flex items-center justify-center font-bold text-white hover:bg-dark-accent-start/20 hover:border-dark-accent-start transition-all cursor-pointer z-10`}
-                        title="View all badges"
-                    >
+                    <button onClick={(e) => { e.stopPropagation(); setIsModalOpen(true); }} className={`${counterSize} rounded-full bg-dark-surface border border-dark-text-secondary/50 flex items-center justify-center font-bold text-white hover:bg-dark-accent-start/20 hover:border-dark-accent-start transition-all cursor-pointer z-10`} title="View all badges">
                         +{counterValue}
                     </button>
                 )}
             </div>
-
-            {/* EXPANDED MODAL - REDESIGNED ("News Cinematic" Style - Monolithic & Opaque) */}
-            <Modal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                size="sm" 
-                containerClassName="!w-[300px] !max-w-[90vw] !p-0 !bg-[#0a0c10] !border !border-[#1e293b] !shadow-2xl overflow-hidden relative"
-                hideCloseButton
-            >
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} size="sm" containerClassName="!w-[300px] !max-w-[90vw] !p-0 !bg-[#0a0c10] !border !border-[#1e293b] !shadow-2xl overflow-hidden relative" hideCloseButton>
                 <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent opacity-100 z-50"></div>
                 <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-[#00F2FE]/10 to-transparent blur-xl pointer-events-none z-0"></div>
                 <div className="p-4 border-b border-white/5 flex justify-between items-center bg-[#0a0c10] relative z-10">
                     <div className="flex items-center gap-3">
                         <h3 className="font-black text-lg text-white uppercase tracking-widest">{t.awards}</h3>
-                        <span className="bg-[#00F2FE]/10 border border-[#00F2FE]/30 text-[#00F2FE] px-2 py-0.5 rounded text-xs font-black font-mono">
-                            {sortedBadges.length}
-                        </span>
+                        <span className="bg-[#00F2FE]/10 border border-[#00F2FE]/30 text-[#00F2FE] px-2 py-0.5 rounded text-xs font-black font-mono">{sortedBadges.length}</span>
                     </div>
-                    <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-white transition-colors">
-                        <XCircle className="w-6 h-6" />
-                    </button>
+                    <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-white transition-colors"><XCircle className="w-6 h-6" /></button>
                 </div>
                 <div className="flex-1 overflow-y-auto max-h-[50vh] bg-[#0a0c10] p-2 relative z-10">
                     {sortedBadges.map((badge) => (
-                        <div 
-                            key={badge} 
-                            className="flex items-center gap-4 p-3 rounded-xl transition-all border border-transparent border-b-white/5 last:border-b-0 hover:bg-[#00F2FE]/10 hover:border-[#00F2FE]/30 hover:shadow-[0_0_15px_rgba(0,242,254,0.15)] group"
-                        >
-                            <div className="shrink-0 relative">
-                                <BadgeIcon badge={badge} className="w-10 h-10" count={badges[badge]} />
-                            </div>
+                        <div key={badge} className="flex items-center gap-4 p-3 rounded-xl transition-all border border-transparent border-b-white/5 last:border-b-0 hover:bg-[#00F2FE]/10 hover:border-[#00F2FE]/30 hover:shadow-[0_0_15px_rgba(0,242,254,0.15)] group">
+                            <div className="shrink-0 relative"><BadgeIcon badge={badge} className="w-10 h-10" count={badges[badge]} /></div>
                             <div className="flex-grow min-w-0">
-                                <h4 className="font-bold text-sm text-white leading-tight truncate tracking-wide group-hover:text-[#00F2FE] transition-colors">
-                                    {t[`badge_${badge}` as keyof typeof t]}
-                                </h4>
-                                <p className="text-[10px] text-gray-400 leading-snug mt-1 line-clamp-2">
-                                    {t[`badge_${badge}_desc` as keyof typeof t]}
-                                </p>
+                                <h4 className="font-bold text-sm text-white leading-tight truncate tracking-wide group-hover:text-[#00F2FE] transition-colors">{t[`badge_${badge}` as keyof typeof t]}</h4>
+                                <p className="text-[10px] text-gray-400 leading-snug mt-1 line-clamp-2">{t[`badge_${badge}_desc` as keyof typeof t]}</p>
                             </div>
                         </div>
                     ))}
@@ -361,24 +206,48 @@ export const BadgeDisplay: React.FC<{
     );
 };
 
+// FIX: Added missing SessionTrendChart definition needed by PlayerCard
+const SessionTrendChart: React.FC<{ history?: Player['sessionHistory'] }> = ({ history }) => {
+    const t = useTranslation();
+    const safeHistory = history || [];
+    const displayData = Array.from({ length: 5 }).map((_, i) => {
+        const item = safeHistory[safeHistory.length - 5 + i];
+        return item ? { winRate: item.winRate } : { winRate: 0 };
+    });
+    const getBarColor = (winRate: number) => {
+        if (winRate > 60) return '#4CFF5F';
+        if (winRate < 40) return '#FF4136';
+        return '#A9B1BD';
+    };
+    const hexToRgbaLocal = (hex: string, alpha: number) => {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    };
+    return (
+        <div className="flex justify-around items-end h-16 px-2 pt-2">
+            {displayData.map((session, index) => {
+                const height = session.winRate > 0 ? `${Math.max(session.winRate, 15)}%` : '5%';
+                const color = getBarColor(session.winRate);
+                return <div key={index} className="w-2.5 rounded-t-full transition-all duration-500 ease-out" style={{ height: height, background: `linear-gradient(to top, ${hexToRgbaLocal(color, 0.1)}, ${color})`, boxShadow: `0 0 4px ${color}`, opacity: session.winRate > 0 ? 1 : 0.2, }} title={`${t.winRate}: ${session.winRate > 0 ? session.winRate + '%' : 'N/A'}`} />;
+            })}
+        </div>
+    );
+};
+
 
 export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete, onUploadCard, onConfirmInitialRating, onDownloadCard, onShareProfile, isDownloading }) => {
     const t = useTranslation();
     const keyStats = React.useMemo(() => getPlayerKeyStats(player), [player]);
     const countryCodeAlpha2 = React.useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
-    
     const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
-
     const winRate = player.totalGames > 0 ? `${Math.round((player.totalWins / player.totalGames) * 100)}%` : 'N/A';
     const goalsPerSession = player.totalSessionsPlayed > 0 ? (player.totalGoals / player.totalSessionsPlayed).toFixed(2) : '0.00';
     const assistsPerSession = player.totalSessionsPlayed > 0 ? (player.totalAssists / player.totalSessionsPlayed).toFixed(2) : '0.00';
 
-
     const StatItem: React.FC<{ label: string; value: string | number; isKeyStat?: boolean }> = ({ label, value, isKeyStat }) => (
-        <div>
-            <p className={`text-base font-bold ${isKeyStat ? 'key-stat-glow' : ''}`}>{value}</p>
-            <p className="text-[10px] text-dark-text-secondary uppercase">{label}</p>
-        </div>
+        <div><p className={`text-base font-bold ${isKeyStat ? 'key-stat-glow' : ''}`}>{value}</p><p className="text-[10px] text-dark-text-secondary uppercase">{label}</p></div>
     );
     
     const WLDBar: React.FC<{ wins: number; draws: number; losses: number; total: number }> = ({ wins, draws, losses, total }) => {
@@ -399,18 +268,9 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
 
     return (
         <div id={`player-card-container-${player.id}`}>
-            <div 
-                id={`player-card-header-${player.id}`}
-                className={`relative rounded-3xl h-[440px] overflow-hidden text-white p-4 bg-dark-surface ${cardClass}`}
-            >
-                {player.playerCard && (
-                    <div
-                        className="absolute inset-0 w-full h-full bg-cover bg-no-repeat"
-                        style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }}
-                    />
-                )}
+            <div id={`player-card-header-${player.id}`} className={`relative rounded-3xl h-[440px] overflow-hidden text-white p-4 bg-dark-surface ${cardClass}`}>
+                {player.playerCard && <div className="absolute inset-0 w-full h-full bg-cover bg-no-repeat" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }} />}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-                
                 {!isBadgeModalOpen && (
                     <div className="absolute top-24 left-4 z-20">
                         <div className="space-y-4">
@@ -423,96 +283,34 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                         </div>
                     </div>
                 )}
-
                 <div className="relative z-10 h-full flex flex-col justify-between">
                      <div className="flex justify-between items-start">
                         <div>
                             <p style={{ color: '#00F2FE' }} className="text-base font-black leading-none">532</p>
                             <p className="text-white text-[7px] font-bold tracking-[0.15em] leading-none mt-1">PLAYGROUND</p>
-                            {countryCodeAlpha2 && (
-                                <img 
-                                    src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`}
-                                    alt={`${player.countryCode} flag`}
-                                    className="w-6 h-auto mt-3 rounded-sm"
-                                />
-                            )}
+                            {countryCodeAlpha2 && <img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} alt={`${player.countryCode} flag`} className="w-6 h-auto mt-3 rounded-sm" />}
                         </div>
                         <div className="flex flex-col items-center max-w-[50%]">
-                            <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>
-                                {player.rating}
-                            </div>
+                            <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
                             <p className="font-bold text-white tracking-widest text-sm mt-2">OVR</p>
-                            <div className="mt-1">
-                                <FormArrowIndicator form={player.form} />
-                            </div>
-                            
-                            {player.badges && Object.keys(player.badges).length > 0 && (
-                                <BadgeDisplay 
-                                    badges={player.badges} 
-                                    onOpenChange={setIsBadgeModalOpen} 
-                                />
-                            )}
+                            <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
+                            {player.badges && Object.keys(player.badges).length > 0 && <BadgeDisplay badges={player.badges} onOpenChange={setIsBadgeModalOpen} />}
                         </div>
                     </div>
-
-                    <div className="text-center flex-shrink-0 relative z-30 pb-1">
-                        <h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg">{player.nickname} {player.surname}</h1>
-                    </div>
+                    <div className="text-center flex-shrink-0 relative z-30 pb-1"><h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg">{player.nickname} {player.surname}</h1></div>
                 </div>
             </div>
             
             <div className="space-y-3 pt-4">
                  {player.lastRatingChange && player.status === PlayerStatus.Confirmed && <LastSessionBreakdown player={player} />}
                  <BestSessionCard player={player} />
-                 {player.status === PlayerStatus.Confirmed && (
-                    <Card title={t.clubRankings} className={cardClass}>
-                        <ClubRankings player={player} />
-                    </Card>
-                 )}
-
-                 <Card id={`all-time-stats-${player.id}`} title={t.allTimeStats} className={cardClass}>
-                     <div className="grid grid-cols-4 gap-2 text-center">
-                        <StatItem label={t.thSessions} value={player.totalSessionsPlayed} />
-                        <StatItem label={t.thG} value={player.totalGoals} />
-                        <StatItem label={t.thA} value={player.totalAssists} />
-                        <StatItem label={t.winRate.toUpperCase()} value={winRate} isKeyStat={keyStats.isTopWinner} />
-                    </div>
-                 </Card>
-
-                 <Card title="Career Averages" className={cardClass}>
-                    <div className="grid grid-cols-2 gap-2 text-center">
-                        <StatItem label={t.goalsPerSession} value={goalsPerSession} />
-                        <StatItem label={t.assistsPerSession} value={assistsPerSession} />
-                    </div>
-                </Card>
-
-                 <Card id={`monthly-stats-${player.id}`} title={t.monthlyStatsTitle} className={cardClass}>
-                     <div className="grid grid-cols-4 gap-2 text-center">
-                        <StatItem label={t.session.toUpperCase()} value={player.monthlySessionsPlayed} />
-                        <StatItem label={t.monthlyGoals.toUpperCase()} value={player.monthlyGoals} />
-                        <StatItem label={t.monthlyAssists.toUpperCase()} value={player.monthlyAssists} />
-                        <StatItem label={t.monthlyWins.toUpperCase()} value={player.monthlyWins} />
-                    </div>
-                 </Card>
-                 
-                 <Card id={`wld-bar-${player.id}`} title={`${t.winLossDraw} (${player.totalWins}W ${player.totalDraws}D ${player.totalLosses}L)`} className={`${cardClass} !p-3`}>
-                    <WLDBar wins={player.totalWins} draws={player.totalDraws} losses={player.totalLosses} total={player.totalGames} />
-                 </Card>
-
-                <Card id={`session-trend-${player.id}`} title={t.sessionTrend} className={cardClass}>
-                    <SessionTrendChart history={player.sessionHistory} />
-                </Card>
-                
-                <div className="grid grid-cols-2 gap-3 player-card-actions">
-                    <Button variant="secondary" onClick={onEdit} className={`!py-3 !px-4 font-chakra text-xl tracking-wider ${cardClass}`}>{t.editData}</Button>
-                    <Button variant="secondary" onClick={onUploadCard} className={`!py-3 !px-4 font-chakra text-xl tracking-wider ${cardClass}`}>{t.uploadPhoto}</Button>
-                    <Button variant="secondary" className={`w-full font-chakra text-xl tracking-wider ${cardClass}`} onClick={onDownloadCard} disabled={isDownloading}>
-                        {isDownloading ? 'Exporting...' : t.downloadCard}
-                    </Button>
-                    <Button variant="secondary" className={`w-full font-chakra text-xl tracking-wider ${cardClass}`} onClick={onShareProfile}>
-                        {t.shareProfile}
-                    </Button>
-                </div>
+                 {player.status === PlayerStatus.Confirmed && <Card title={t.clubRankings} className={cardClass}><ClubRankings player={player} /></Card>}
+                 <Card id={`all-time-stats-${player.id}`} title={t.allTimeStats} className={cardClass}><div className="grid grid-cols-4 gap-2 text-center"><StatItem label={t.thSessions} value={player.totalSessionsPlayed} /><StatItem label={t.thG} value={player.totalGoals} /><StatItem label={t.thA} value={player.totalAssists} /><StatItem label={t.winRate.toUpperCase()} value={winRate} isKeyStat={keyStats.isTopWinner} /></div></Card>
+                 <Card title="Career Averages" className={cardClass}><div className="grid grid-cols-2 gap-2 text-center"><StatItem label={t.goalsPerSession} value={goalsPerSession} /><StatItem label={t.assistsPerSession} value={assistsPerSession} /></div></Card>
+                 <Card id={`monthly-stats-${player.id}`} title={t.monthlyStatsTitle} className={cardClass}><div className="grid grid-cols-4 gap-2 text-center"><StatItem label={t.session.toUpperCase()} value={player.monthlySessionsPlayed} /><StatItem label={t.monthlyGoals.toUpperCase()} value={player.monthlyGoals} /><StatItem label={t.monthlyAssists.toUpperCase()} value={player.monthlyAssists} /><StatItem label={t.monthlyWins.toUpperCase()} value={player.monthlyWins} /></div></Card>
+                 <Card id={`wld-bar-${player.id}`} title={`${t.winLossDraw} (${player.totalWins}W ${player.totalDraws}D ${player.totalLosses}L)`} className={`${cardClass} !p-3`}><WLDBar wins={player.totalWins} draws={player.totalDraws} losses={player.totalLosses} total={player.totalGames} /></Card>
+                 <Card id={`session-trend-${player.id}`} title={t.sessionTrend} className={cardClass}><SessionTrendChart history={player.sessionHistory} /></Card>
+                <div className="grid grid-cols-2 gap-3 player-card-actions"><Button variant="secondary" onClick={onEdit} className={`!py-3 !px-4 font-chakra text-xl tracking-wider ${cardClass}`}>{t.editData}</Button><Button variant="secondary" onClick={onUploadCard} className={`!py-3 !px-4 font-chakra text-xl tracking-wider ${cardClass}`}>{t.uploadPhoto}</Button><Button variant="secondary" className={`w-full font-chakra text-xl tracking-wider ${cardClass}`} onClick={onDownloadCard} disabled={isDownloading}>{isDownloading ? 'Exporting...' : t.downloadCard}</Button><Button variant="secondary" className={`w-full font-chakra text-xl tracking-wider ${cardClass}`} onClick={onShareProfile}>{t.shareProfile}</Button></div>
                 <Button variant="secondary" className="w-full font-chakra text-xl tracking-wider ${cardClass} player-card-actions" onClick={onDelete}>{t.deletePlayer}</Button>
             </div>
         </div>
