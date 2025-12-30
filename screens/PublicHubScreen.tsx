@@ -96,8 +96,8 @@ const MotivationalTicker: React.FC = () => {
 };
 
 const StaticSoccerBall: React.FC = () => (
-    // POSITION ADJUSTMENT: Moved slightly left again as requested (120->100 on mobile, 160->140 on desktop)
-    <div className="absolute top-1/2 -translate-y-1/2 left-[100px] md:left-[140px] w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none transition-all duration-500">
+    // ADJUSTED LEFT POSITION: Moved slightly left (135->120 on mobile, 175->160 on desktop) to optimize space but clear text
+    <div className="absolute top-1/2 -translate-y-1/2 left-[120px] md:left-[160px] w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none transition-all duration-500">
         <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] overflow-visible">
             <defs>
                 <radialGradient id="ballShading" cx="40%" cy="35%" r="65%"><stop offset="0%" stopColor="#ffffff" /><stop offset="50%" stopColor="#e2e8f0" /><stop offset="85%" stopColor="#94a3b8" /><stop offset="100%" stopColor="#1e293b" /></radialGradient>
@@ -126,15 +126,13 @@ const StaticSoccerBall: React.FC = () => (
 
 const HangingTag: React.FC<{ digit: string; label: string; height: number; delay: string; pulseDuration: string }> = ({ digit, label, height, delay, pulseDuration }) => (
     <div className="relative flex flex-col items-center group/fiber">
-        {/* SIZE RESTORED: Back to smaller original sizes (text-xl instead of 2xl/3xl) */}
-        <span className="font-black text-xl md:text-2xl text-[#00F2FE] tracking-tighter z-10 leading-none" style={{ textShadow: '0 0 10px rgba(0,242,254,0.6)' }}>{digit}</span>
+        <span className="font-black text-2xl md:text-3xl text-[#00F2FE] tracking-tighter z-10 leading-none" style={{ textShadow: '0 0 10px rgba(0,242,254,0.6)' }}>{digit}</span>
         <div className="absolute top-[26px] w-[0.5px] bg-[#00F2FE]/30 origin-top animate-pendant-swing" style={{ height: `${height}px`, animationDelay: delay, boxShadow: '0 0 3px rgba(0,242,254,0.1)' }}>
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1.2px] h-[3px] bg-[#00F2FE] rounded-full opacity-0 animate-fiber-pulse" style={{ animationDuration: pulseDuration, animationDelay: delay, boxShadow: '0 0 5px #00F2FE' }}></div>
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full pt-1">
                 <div className="relative flex flex-col items-center">
                     <div className="absolute inset-0 blur-[8px] bg-[#00F2FE]/20 rounded-full scale-[2.5] pointer-events-none opacity-40"></div>
-                    {/* SIZE RESTORED: Smaller label size */}
-                    <span className="relative text-[7px] font-black tracking-[0.25em] text-[#00F2FE] whitespace-nowrap uppercase italic" style={{ textShadow: '0 0 8px rgba(0,242,254,0.8)' }}>{label}</span>
+                    <span className="relative text-[6px] font-black tracking-[0.25em] text-[#00F2FE] whitespace-nowrap uppercase italic" style={{ textShadow: '0 0 8px rgba(0,242,254,0.8)' }}>{label}</span>
                 </div>
             </div>
         </div>
@@ -212,6 +210,7 @@ const HubNav: React.FC<{
             `}} />
             <div className="flex items-center shrink-0 h-full relative pl-10">
                 <div className="flex items-center">
+                    {/* ADJUSTED TAG HEIGHTS FOR LADDER EFFECT (25, 55, 85) */}
                     <HangingTag digit="5" label="PLAYPLAYERS" height={25} delay="0s" pulseDuration="2.8s" />
                     <HangingTag digit="3" label="SQUADS" height={55} delay="1.5s" pulseDuration="4.2s" />
                     <HangingTag digit="2" label="GOALS" height={85} delay="0.8s" pulseDuration="3.7s" />
@@ -224,8 +223,8 @@ const HubNav: React.FC<{
                 </div>
             </div>
             
-            {/* PADDING ADJUSTMENT: Starts at 145px/190px to ensure gap between ball and ticker */}
-            <div className={`flex-grow h-full overflow-hidden flex items-center ${isDashboardOpen ? 'justify-center px-4' : 'justify-start pl-[145px] md:pl-[190px]'}`}>
+            {/* ADJUSTED TICKER CONTAINER: REDUCED PADDING LEFT to maximize space next to ball */}
+            <div className={`flex-grow h-full overflow-hidden flex items-center ${isDashboardOpen ? 'justify-center px-4' : 'justify-start pl-6'}`}>
                 {isDashboardOpen ? (
                     <div className="flex items-center gap-8 min-w-fit">
                         <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center">
@@ -380,11 +379,6 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
     // Sort and limit badges to top 5 manually here to avoid counter
     const topBadges = useMemo(() => sortBadgesByPriority(player.badges || {}).slice(0, 5), [player.badges]);
 
-    // DYNAMIC FONT SIZING FOR LONG NAMES
-    const isLongName = (player.nickname.length > 7 || player.surname.length > 7);
-    const titleClass = isLongName ? "text-3xl" : "text-4xl";
-    const subtitleClass = isLongName ? "text-xl" : "text-2xl";
-
     useEffect(() => {
         const card = cardRef.current; if (!card) return;
         const handleMouseMove = (e: MouseEvent) => { const rect = card.getBoundingClientRect(); const x = e.clientX - rect.left; const y = e.clientY - rect.top; card.style.setProperty('--mouse-x', `${x}px`); card.style.setProperty('--mouse-y', `${y}px`); };
@@ -426,10 +420,10 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                             )}
                         </div>
                     </div>
-                    {/* Raised Name Position with Dynamic Size */}
+                    {/* Raised Name Position */}
                     <div className="text-center flex-shrink-0 relative z-30 pb-10 md:pb-12">
-                        <h1 className={`${titleClass} font-black uppercase tracking-tight drop-shadow-lg leading-[0.9]`}>
-                            {player.nickname} <br/> <span className={subtitleClass}>{player.surname}</span>
+                        <h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg leading-[0.9]">
+                            {player.nickname} <br/> <span className="text-2xl">{player.surname}</span>
                         </h1>
                     </div>
                 </div>
