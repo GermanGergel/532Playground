@@ -430,6 +430,7 @@ export const getSessionAnthemUrl = async (): Promise<string | null> => {
             if (serverTsNum > localTs || !cached) {
                 const { data } = await supabase!.storage.from(MUSIC_BUCKET).download(ANTHEM_FILENAME);
                 if (data) {
+                    // FIX: Changed 'blob' to 'data' to ensure the correct variable is used for conversion.
                     await set(cacheKey, { data: await blobToBase64(data), lastModified: serverTs || new Date().toISOString() });
                     return URL.createObjectURL(data);
                 }

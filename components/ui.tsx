@@ -131,7 +131,6 @@ export const PageHeader: React.FC<{ title: string; children?: React.ReactNode; h
     );
 };
 
-// Исправленный интерфейс CardProps
 interface CardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
     title?: React.ReactNode;
     children: React.ReactNode;

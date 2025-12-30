@@ -3,21 +3,7 @@ import { Modal, Button, useTranslation } from '../components/ui';
 import { fetchWeatherForDate } from '../services/weather';
 import { WeatherCondition } from '../types';
 
-// Local Icons
-const SunIcon = ({ className }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-        <circle cx="12" cy="12" r="4" />
-        <path d="M12 2v2" />
-        <path d="M12 20v2" />
-        <path d="m4.93 4.93 1.41 1.41" />
-        <path d="m17.66 17.66 1.41 1.41" />
-        <path d="M2 12h2" />
-        <path d="M20 12h2" />
-        <path d="m6.34 17.66-1.41 1.41" />
-        <path d="m19.07 4.93-1.41 1.41" />
-    </svg>
-);
-
+// Local Icons for this modal to ensure style consistency
 const MoonIcon = ({ className }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
         <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
@@ -36,6 +22,20 @@ const RainIcon = ({ className }: { className?: string }) => (
         <path d="M16 14v6" />
         <path d="M8 14v6" />
         <path d="M12 16v6" />
+    </svg>
+);
+
+const SunIcon = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <circle cx="12" cy="12" r="4" />
+        <path d="M12 2v2" />
+        <path d="M12 20v2" />
+        <path d="m4.93 4.93 1.41 1.41" />
+        <path d="m17.66 17.66 1.41 1.41" />
+        <path d="M2 12h2" />
+        <path d="M20 12h2" />
+        <path d="m6.34 17.66-1.41 1.41" />
+        <path d="m19.07 4.93-1.41 1.41" />
     </svg>
 );
 
@@ -76,10 +76,11 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({ isOpen
             const fetchInitialWeather = async () => {
                 setIsLoadingWeather(true);
                 const today = new Date().toISOString().split('T')[0];
+                // Approximate time for weather API (20:00)
                 const weatherData = await fetchWeatherForDate(today, "20:00", "Da Nang");
                 
                 if (weatherData) {
-                    setTemperature(Math.round(weatherData.temperature) + 2); 
+                    setTemperature(Math.round(weatherData.temperature) + 2); // Custom adjustment as per user request (+2)
                     setIsDay(weatherData.isDay);
                     
                     const code = weatherData.weatherCode;
@@ -89,6 +90,7 @@ export const SessionSummaryModal: React.FC<SessionSummaryModalProps> = ({ isOpen
                 }
                 setIsLoadingWeather(false);
             };
+            
             fetchInitialWeather();
         }
     }, [isOpen]);
