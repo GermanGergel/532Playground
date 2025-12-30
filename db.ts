@@ -1,30 +1,50 @@
+
 import { createClient } from '@supabase/supabase-js';
 import { Player, Session, NewsItem, PromoData } from './types';
 import { Language } from './translations/index';
 import { get, set, del } from 'idb-keyval';
 
 // --- SUPABASE CONFIGURATION ---
-const getEnvVar = (key: string) => {
-    try {
-        // @ts-ignore
-        if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
-            // @ts-ignore
-            return import.meta.env[key];
-        }
-    } catch (e) { }
-    try {
-        if (typeof process !== 'undefined' && process.env && process.env[key]) {
-            return process.env[key];
-        }
-    } catch (e) { }
-    return undefined;
-};
+// FIX: Мы удалили функцию getEnvVar, потому что она скрывала ключи от сборщика Vite.
+// Для продакшена необходимо прямое обращение к import.meta.env.VITE_...
 
-const supabaseUrl = getEnvVar('VITE_SUPABASE_URL');
-const supabaseAnonKey = getEnvVar('VITE_SUPABASE_ANON_KEY');
+let supabaseUrl = '';
+let supabaseAnonKey = '';
+
+try {
+    // @ts-ignore
+    if (typeof import.meta !== 'undefined' && import.meta.env) {
+        // ПРЯМОЕ ОБРАЩЕНИЕ (Обязательно для Vite build)
+        // @ts-ignore
+        supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        // @ts-ignore
+        supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    }
+} catch (e) {}
+
+// Fallback (на всякий случай)
+if (!supabaseUrl || !supabaseAnonKey) {
+    try {
+        if (typeof process !== 'undefined' && process.env) {
+            supabaseUrl = process.env.VITE_SUPABASE_URL || '';
+            supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || '';
+        }
+    } catch (e) {}
+}
 
 const supabase = (supabaseUrl && supabaseAnonKey) 
-    ? createClient(supabaseUrl, supabaseAnonKey) 
+    ? createClient(supabaseUrl, supabaseAnonKey, {
+        auth: {
+            persistSession: true,
+            autoRefreshToken: true
+        },
+        // Явно добавляем заголовок apikey, чтобы избежать ошибки 400/401
+        global: {
+            headers: {
+                'apikey': supabaseAnonKey
+            }
+        }
+    }) 
     : null;
 
 export const isSupabaseConfigured = () => !!supabase;

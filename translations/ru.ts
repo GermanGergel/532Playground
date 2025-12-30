@@ -232,12 +232,12 @@ export const ru = {
   badges: "Значки",
   noBadges: "Нет значков",
 
-  // Hub
-  hubTicker1: "ЭЛИТНЫЙ ТРЕКИНГ",
-  hubTicker2: "LIVE ДАННЫЕ СЕССИИ",
-  hubTicker3: "ГЛОБАЛЬНЫЙ РЕЙТИНГ",
-  hubTicker4: "АНАЛИТИКА ИГРОКОВ",
-  hubTicker5: "АРХИВ МАТЧЕЙ",
+  // Hub - UPDATED SLOGANS
+  hubTicker1: "НЕТ СТАТИСТИКИ — НЕТ СЛАВЫ.",
+  hubTicker2: "ДАННЫЕ ОПРЕДЕЛЯЮТ ЛЕГЕНД.",
+  hubTicker3: "ПОДНИМИ СВОЮ ИГРУ.",
+  hubTicker4: "ПОЛЕ НИКОГДА НЕ ВРЕТ.",
+  hubTicker5: "532: ГДЕ ИГРАЕТ ЭЛИТА.",
   hubAwaitingStats: "ОЖИДАНИЕ ДАННЫХ",
   hubAnalyzingPerformance: "АНАЛИЗ ЭФФЕКТИВНОСТИ...",
   hubDashboardBtn: "ДАШБОРД",

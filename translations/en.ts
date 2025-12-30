@@ -232,12 +232,12 @@ export const en = {
   badges: "Badges",
   noBadges: "No badges yet",
 
-  // Hub
-  hubTicker1: "ELITE PERFORMANCE TRACKING",
-  hubTicker2: "LIVE SESSION DATA",
-  hubTicker3: "GLOBAL RANKINGS",
-  hubTicker4: "PLAYER ANALYTICS",
-  hubTicker5: "MATCH ARCHIVE",
+  // Hub - UPDATED SLOGANS
+  hubTicker1: "NO STATS. NO GLORY.",
+  hubTicker2: "DATA DEFINES LEGENDS.",
+  hubTicker3: "ELEVATE YOUR GAME.",
+  hubTicker4: "THE PITCH NEVER LIES.",
+  hubTicker5: "532: WHERE ELITES PLAY.",
   hubAwaitingStats: "AWAITING DATA",
   hubAnalyzingPerformance: "ANALYZING PERFORMANCE...",
   hubDashboardBtn: "DASHBOARD",

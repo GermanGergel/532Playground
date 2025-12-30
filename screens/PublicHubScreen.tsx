@@ -63,13 +63,13 @@ const NoLeadersPlaceholder: React.FC = () => {
 
 const MotivationalTicker: React.FC = () => {
     const t = useTranslation();
-    // UPDATED SLOGANS: More punchy, elite, and data-driven
+    // UPDATED: Using translation keys for multilingual support
     const phrases = [
-        "NO STATS. NO GLORY.",
-        "DATA DEFINES LEGENDS.",
-        "ELEVATE YOUR GAME.",
-        "THE PITCH NEVER LIES.",
-        "532: WHERE ELITES PLAY."
+        t.hubTicker1,
+        t.hubTicker2,
+        t.hubTicker3,
+        t.hubTicker4,
+        t.hubTicker5
     ];
     const cyanColor = '#00F2FE'; 
     return (
@@ -82,12 +82,14 @@ const MotivationalTicker: React.FC = () => {
                 .animate-hub-ticker {
                     display: flex;
                     width: fit-content;
-                    animation: hub-ticker 40s linear infinite;
+                    /* ADJUSTED: 33s per request */
+                    animation: hub-ticker 33s linear infinite;
                 }
             `}} />
             <div className="animate-hub-ticker whitespace-nowrap flex gap-12">
                 {[...phrases, ...phrases].map((phrase, i) => (
-                    <span key={i} className="text-[12px] md:text-[14px] font-bold tracking-[0.15em] uppercase flex items-center font-chakra" style={{ color: cyanColor, textShadow: `0 0 8px rgba(0, 242, 254, 0.4), 0 0 15px rgba(0, 242, 254, 0.1)` }}>
+                    // FONT CHANGE: Changed from font-chakra to font-russo and added italic
+                    <span key={i} className="text-[12px] md:text-[14px] font-bold tracking-[0.1em] uppercase flex items-center font-russo italic" style={{ color: cyanColor, textShadow: `0 0 10px rgba(0, 242, 254, 0.5)` }}>
                         {phrase}
                     </span>
                 ))}
@@ -213,15 +215,16 @@ const HubNav: React.FC<{
             `}} />
             <div className="flex items-center shrink-0 h-full relative pl-10">
                 <div className="flex items-center">
-                    {/* UPDATED HEIGHTS FOR REVERSE LADDER EFFECT (Low -> Mid -> High) */}
-                    {/* 5 (PLAYPLAYERS): Longest string = Lowest pos = Max height (85px) */}
-                    <HangingTag digit="5" label="PLAYPLAYERS" height={85} delay="0s" pulseDuration="2.8s" />
+                    {/* CHANGED HEIGHTS FOR DESCENDING STAIRS EFFECT (High -> Mid -> Low) */}
                     
-                    {/* 3 (SQUADS): Medium string = Mid pos = Mid height (55px) */}
+                    {/* 5 (PLAYPLAYERS): Highest pos = Shortest string = Min height (25px) */}
+                    <HangingTag digit="5" label="PLAYPLAYERS" height={25} delay="0s" pulseDuration="2.8s" />
+                    
+                    {/* 3 (SQUADS): Mid pos = Mid height (55px) */}
                     <HangingTag digit="3" label="SQUADS" height={55} delay="1.5s" pulseDuration="4.2s" />
                     
-                    {/* 2 (GOALS): Shortest string = Highest pos = Min height (25px) */}
-                    <HangingTag digit="2" label="GOALS" height={25} delay="0.8s" pulseDuration="3.7s" />
+                    {/* 2 (GOALS): Lowest pos = Longest string = Max height (85px) */}
+                    <HangingTag digit="2" label="GOALS" height={85} delay="0.8s" pulseDuration="3.7s" />
                     
                     <div className="h-4 w-px bg-white/15 ml-3 md:ml-4"></div>
                     <div className="flex flex-col space-y-0.5 ml-2">
@@ -405,7 +408,7 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                         <span className="font-bold text-xs text-white tracking-wider">{skillAbbreviations[skill]}</span>
                     </div>
                 ))}</div></div>)}
-                <div className="relative z-10 h-full flex flex-col">
+                <div className="relative z-10 h-full flex flex-col justify-between">
                      <div className="flex justify-between items-start">
                         <div>
                             <p style={{ color: '#00F2FE' }} className="text-base font-black leading-none">532</p>
@@ -429,8 +432,8 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                             )}
                         </div>
                     </div>
-                    {/* ABSOLUTE POSITIONED NAME - Guaranteed same distance from bottom for everyone */}
-                    <div className="absolute bottom-6 left-0 right-0 text-center z-30 px-1">
+                    {/* ABSOLUTE POSITIONED NAME - MOVED DOWN (bottom-2 instead of bottom-6) */}
+                    <div className="absolute bottom-2 left-0 right-0 text-center z-30 px-1">
                         <h1 className="font-black uppercase tracking-tight drop-shadow-lg leading-[0.85]">
                             <span className="text-3xl md:text-4xl block text-white">{player.nickname}</span>
                             {player.surname && (
@@ -560,7 +563,8 @@ export const PublicHubScreen: React.FC = () => {
                     </div>
                 </div>
                 
-                <div className="relative z-10 bg-transparent pb-32">
+                {/* CHANGED: Reduced bottom padding from pb-32 to pb-8 to remove excess whitespace */}
+                <div className="relative z-10 bg-transparent pb-8">
                     <footer className="relative py-8 bg-transparent">
                         <div className="text-center px-4">
                             <button 

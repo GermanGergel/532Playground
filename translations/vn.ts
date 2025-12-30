@@ -232,12 +232,12 @@ export const vn = {
   badges: "Huy Hiệu",
   noBadges: "Chưa có huy hiệu",
 
-  // Hub
-  hubTicker1: "THEO DÕI HIỆU SUẤT",
-  hubTicker2: "DỮ LIỆU TRỰC TIẾP",
-  hubTicker3: "BẢNG XẾP HẠNG",
-  hubTicker4: "PHÂN TÍCH CẦU THỦ",
-  hubTicker5: "LƯU TRỮ TRẬN ĐẤU",
+  // Hub - UPDATED SLOGANS
+  hubTicker1: "KHÔNG THỐNG KÊ. KHÔNG VINH QUANG.",
+  hubTicker2: "DỮ LIỆU ĐỊNH DANH HUYỀN THOẠI.",
+  hubTicker3: "NÂNG TẦM TRẬN ĐẤU.",
+  hubTicker4: "SÂN CỎ KHÔNG BAO GIỜ NÓI DỐI.",
+  hubTicker5: "532: SÂN CHƠI CỦA TINH ANH.",
   hubAwaitingStats: "ĐANG CHỜ DỮ LIỆU",
   hubAnalyzingPerformance: "ĐANG PHÂN TÍCH...",
   hubDashboardBtn: "DASHBOARD",

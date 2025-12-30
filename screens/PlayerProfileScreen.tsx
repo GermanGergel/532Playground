@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -145,13 +146,23 @@ export const PlayerProfileScreen: React.FC = () => {
                 uploadPlayerImage(player.id, avatarImage, 'avatar'),
                 uploadPlayerImage(player.id, cardImage, 'card'),
             ];
-            const [avatarUrl, cardUrl] = await Promise.all(uploadPromises);
-            if (!avatarUrl || !cardUrl) { throw new Error("Cloud upload failed."); }
+            const [rawAvatarUrl, rawCardUrl] = await Promise.all(uploadPromises);
+            
+            if (!rawAvatarUrl || !rawCardUrl) { throw new Error("Cloud upload failed."); }
+
+            // --- CACHE BUSTING FIX ---
+            // Добавляем уникальную метку времени к URL, чтобы браузер (и компоненты Avatar)
+            // гарантированно загрузили новую картинку, а не брали старую из кэша.
+            const timestamp = Date.now();
+            const avatarUrl = `${rawAvatarUrl}?t=${timestamp}`;
+            const cardUrl = `${rawCardUrl}?t=${timestamp}`;
+
             const deletePromises = [
                 player.photo ? deletePlayerImage(player.photo) : Promise.resolve(),
                 player.playerCard ? deletePlayerImage(player.playerCard) : Promise.resolve(),
             ];
             await Promise.all(deletePromises);
+            
             const updatedPlayer: Player = { ...player, photo: avatarUrl, playerCard: cardUrl, status: PlayerStatus.Confirmed };
             setAllPlayers(prev => prev.map(p => p.id === player.id ? updatedPlayer : p));
             await saveSinglePlayerToDB(updatedPlayer);

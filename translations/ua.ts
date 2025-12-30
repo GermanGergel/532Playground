@@ -20,7 +20,7 @@ export const ua = {
   playersPerTeam: "Гравців у команді",
   matchDuration: "Тривалість (хв)",
   goalsToWin: "Голи для перемоги",
-  autoRotate: "Авто-ротація",
+  autoRotate: "Auto-ротація",
   autoRotateDesc: "Переможець залишається",
   playUntilLossDesc: "Гра до поразки",
   addPlayers: "Додати Гравців",
@@ -56,10 +56,13 @@ export const ua = {
   saveChanges: "Зберегти",
   selectWinnerDesc: "Виберіть переможця, щоб продовжити",
   onBench: "На лавці",
+
+  // FIX: Added missing Legionnaire keys for Ukrainian translation
   legionnaire_replace: "ЗАМІНИТИ",
   legionnaire_select: "ВИБРАТИ",
   legionnaire_no_players: "Немає вільних гравців",
 
+  // FIX: Added missing Session Summary keys for Ukrainian translation
   // Session Summary
   summary_title: "ПІДСУМКИ СЕСІЇ",
   summary_location: "ЛОКАЦІЯ",
@@ -79,21 +82,21 @@ export const ua = {
   exportCombined: "Повний Звіт",
   exportJson: "Експорт JSON",
   saveTable: "Зберегти Таблицю",
-  thP: "P",
-  thW: "W",
-  thD: "D",
-  thL: "L",
-  thGD: "GD",
-  thPts: "PTS",
+  thP: "І",
+  thW: "В",
+  thD: "Н",
+  thL: "П",
+  thGD: "РМ",
+  thPts: "Очки",
   players: "Гравець",
-  thGP: "GP",
-  thG: "G",
-  thA: "A",
-  thTotal: "TOT",
+  thGP: "Ігор",
+  thG: "Г",
+  thA: "А",
+  thTotal: "Всього",
   hubGoals: "ГОЛИ",
-  hubPoints: "PTS",
+  hubPoints: "ОЧКИ",
   hubHome: "ВДОМА",
-  hubResult: "RES",
+  hubResult: "РАХУНОК",
   hubAway: "ГОСТІ",
 
   // History
@@ -187,7 +190,7 @@ export const ua = {
   monthlyAssists: "Асисти",
   monthlyWins: "Перемоги",
   session: "Сесії",
-  information: "Інформация",
+  information: "Інформація",
   statistics: "Статистика",
 
   // Info Content
@@ -229,12 +232,12 @@ export const ua = {
   badges: "Значки",
   noBadges: "Немає значків",
 
-  // Hub
-  hubTicker1: "ЕЛІТНИЙ ТРЕКІНГ",
-  hubTicker2: "LIVE ДАНІ СЕССИИ",
-  hubTicker3: "ГЛОБАЛЬНИЙ РЕЙТИНГ",
-  hubTicker4: "АНАЛІТИКА ГРАВЦІВ",
-  hubTicker5: "АРХІВ МАТЧІВ",
+  // Hub - UPDATED SLOGANS
+  hubTicker1: "НЕМАЄ СТАТИСТИКИ — НЕМАЄ СЛАВИ.",
+  hubTicker2: "ДАНІ ВИЗНАЧАЮТЬ ЛЕГЕНД.",
+  hubTicker3: "ПІДНІМИ СВОЮ ГРУ.",
+  hubTicker4: "ПОЛЕ НІКОЛИ НЕ БРЕШЕ.",
+  hubTicker5: "532: ДЕ ГРАЄ ЕЛІТА.",
   hubAwaitingStats: "ОЧІКУВАННЯ ДАНИХ",
   hubAnalyzingPerformance: "АНАЛІЗ ЕФЕКТИВНОСТІ...",
   hubDashboardBtn: "ДАШБОРД",
