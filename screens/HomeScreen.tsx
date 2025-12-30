@@ -53,7 +53,7 @@ const HubAccessPass: React.FC<{ url: string; qrSrc: string }> = ({ url, qrSrc })
                 <div style={{ flex: 1.2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-                            <div style={{ width: '10px', height: '10px', background: '#00F2FE', borderRadius: '2px', boxShadow: '0 0 15px #00F2FE', animation: 'pulse 2s infinite' }}></div>
+                            <div style={{ width: '10px', height: '10px', background: '#00F2FE', borderRadius: '2px', boxShadow: '0 0 15px #00F2FE' }}></div>
                             <span style={{ fontSize: '12px', fontWeight: '900', color: '#94a3b8', letterSpacing: '0.4em', textTransform: 'uppercase' }}>
                                 OFFICIAL CLUB HUB
                             </span>
@@ -146,10 +146,10 @@ export const HomeScreen: React.FC = () => {
           if (blob) {
               const file = new File([blob], '532_Access_Pass.png', { type: 'image/png' });
               
-              // CRITICAL: We send the link ONLY in the text description to merge into one block
+              // КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: Не отправляем title, чтобы мессенджер не плодил заголовки.
+              // Отправляем файл и текст как подпись (caption) к нему.
               const shareData = {
                   files: [file],
-                  title: '532 Club Access',
                   text: `🎟️ 532 CLUB HUB ACCESS\n\nTap to enter / Нажмите, чтобы войти:\n${hubUrl}`,
               };
 
