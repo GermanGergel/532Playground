@@ -338,7 +338,16 @@ export const PublicHubDashboard: React.FC = () => {
     // Sorting for Table (Goals + Assists)
     const sortedForTable = [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists));
 
-    const top3Leaders = useMemo(() => [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists) || b.player.rating - a.player.rating), [allPlayersStats]);
+    // FIX: Correctly format data for the Podium component to match TopPlayerStats[] type
+    const top3PodiumPlayers: TopPlayerStats[] = sortedForPodium
+        .filter(p => p.gamesPlayed > 0)
+        .slice(0, 3)
+        .map((p, i) => ({
+            player: p.player,
+            score: getImpactScore(p),
+            rank: (i + 1) as 1 | 2 | 3
+        }));
+
     const finishedGames = [...session.games]
         .filter(g => g.status === 'finished')
         .sort((a, b) => a.gameNumber - b.gameNumber);
@@ -358,7 +367,7 @@ export const PublicHubDashboard: React.FC = () => {
                 <div className="col-span-12 md:col-span-9 flex flex-col gap-4 h-full min-h-[600px]">
                     <div className="flex-[4] min-h-0 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200 flex gap-3">
                          <HubCard title={t.hubSessionLeaders} align="right" icon={<AwardIcon />} accent="#FFD700" variant="elite" className="flex-[2] h-full min-h-[350px]" bodyClassName="flex flex-col bg-transparent">
-                            <div className="flex-grow relative"><SessionPodium players={top3Leaders} t={t} /></div>
+                            <div className="flex-grow relative"><SessionPodium players={top3PodiumPlayers} t={t} /></div>
                         </HubCard>
                         <HubCard title={t.hubMatchReport} icon={<Target />} accent="#00F2FE" variant="standings" className="flex-1 h-full min-h-[350px]" bodyClassName="flex flex-col p-5"><MatchEnvironmentWidget session={session} t={t} /></HubCard>
                     </div>
