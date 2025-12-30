@@ -5,7 +5,6 @@ import { Language } from './translations/index';
 import { get, set, del } from 'idb-keyval';
 
 // --- SUPABASE CONFIGURATION (HARDENED) ---
-// Функция для безопасного получения ключей в любой среде (Vite, локально и т.д.)
 const getEnvVar = (key: string) => {
     try {
         // @ts-ignore
@@ -25,7 +24,6 @@ const getEnvVar = (key: string) => {
 const supabaseUrl = getEnvVar('VITE_SUPABASE_URL');
 const supabaseAnonKey = getEnvVar('VITE_SUPABASE_ANON_KEY');
 
-// Логируем статус (для отладки в консоли браузера)
 console.log("DB Init:", supabaseUrl ? "URL Found" : "No URL", supabaseAnonKey ? "Key Found" : "No Key");
 
 const supabase = (supabaseUrl && supabaseAnonKey) 
@@ -80,7 +78,6 @@ const sanitizeObject = (obj: any): any => {
         const newObj: any = {};
         for (const key in obj) {
             if (key === 'syncStatus' || key === 'isTestMode' || key === 'isManual') continue;
-            // Не сохраняем base64 строки (картинки) напрямую в JSON базы данных, только ссылки
             const isImageKey = ['photo', 'playerCard', 'logo', 'playerPhoto'].includes(key);
             if (isImageKey && typeof obj[key] === 'string' && obj[key].startsWith('data:')) {
                 newObj[key] = null; 
@@ -153,7 +150,6 @@ export const uploadPlayerImage = async (playerId: string, base64Image: string, t
     try {
         const blob = base64ToBlob(base64Image);
         const filePath = `${playerId}/${type}_${Date.now()}.jpeg`;
-        // cacheControl 0 to force refresh
         const { error: uploadError } = await supabase!.storage.from(BUCKET_NAME).upload(filePath, blob, { cacheControl: '0', upsert: true });
         if (uploadError) throw uploadError;
         const { data } = supabase!.storage.from(BUCKET_NAME).getPublicUrl(filePath);
@@ -165,35 +161,28 @@ export const deletePlayerImage = async (imageUrl: string) => {
     if (!isSupabaseConfigured() || !imageUrl || !imageUrl.startsWith('https://')) return;
     try {
         const url = new URL(imageUrl);
-        // Удаляем параметры запроса (например ?t=...) перед поиском пути
         const path = url.pathname.split(`/${BUCKET_NAME}/`)[1];
         if (path) await supabase!.storage.from(BUCKET_NAME).remove([path]);
     } catch (error) {}
 };
 
-// CRITICAL FIX: Always try to save to cloud first, then update local cache
 export const saveSinglePlayerToDB = async (player: Player) => {
-    // 1. Сразу сохраняем в локальный кеш, чтобы UI обновился мгновенно
+    // 1. Local update first
     const all = await get<Player[]>('players') || [];
     const idx = all.findIndex(p => p.id === player.id);
     if (idx > -1) all[idx] = player; else all.push(player);
     await set('players', all);
 
-    // 2. Отправляем в базу данных
+    // 2. Cloud update
     if (isSupabaseConfigured()) {
         try {
             console.log(`[DB] Saving player ${player.nickname}...`);
             const { error } = await supabase!.from('players').upsert(sanitizeObject(player), { onConflict: 'id' });
-            if (error) {
-                console.error("[DB] Save Error:", error);
-            } else {
-                console.log("[DB] Player saved successfully.");
-            }
+            if (error) console.error("[DB] Save Error:", error);
+            else console.log("[DB] Player saved to cloud.");
         } catch (error) {
             console.error("[DB] Connection failed:", error);
         }
-    } else {
-        console.warn("[DB] Supabase not configured! Changes will be lost on refresh.");
     }
 };
 
@@ -218,16 +207,13 @@ export const savePlayersToDB = async (players: Player[]) => {
 
     if (isSupabaseConfigured()) {
         try {
-            // Bulk upsert is efficient
             const sanitizedPlayers = real.map(p => sanitizeObject(p));
-            const { error } = await supabase!.from('players').upsert(sanitizedPlayers, { onConflict: 'id' });
-            if (error) console.error("Bulk Save Error:", error);
-        } catch (e) {
-            console.error("Bulk Save Exception:", e);
-        }
+            await supabase!.from('players').upsert(sanitizedPlayers, { onConflict: 'id' });
+        } catch (e) {}
     }
 };
 
+// Standard load (prefers cloud if works, else local)
 export const loadPlayersFromDB = async () => {
     if (isSupabaseConfigured()) {
         try {
@@ -239,6 +225,26 @@ export const loadPlayersFromDB = async () => {
         } catch (e) {}
     }
     return await get<Player[]>('players');
+};
+
+// NEW: Forced Cloud Fetch (Ignores local cache initially)
+export const fetchRemotePlayers = async (): Promise<Player[] | null> => {
+    if (!isSupabaseConfigured()) return null;
+    try {
+        console.log("[DB] Force syncing players from cloud...");
+        const { data, error } = await supabase!.from('players').select('*');
+        if (!error && data) {
+            console.log(`[DB] Cloud sync success: ${data.length} players found.`);
+            // Update local cache immediately
+            await set('players', data);
+            return data as Player[];
+        } else {
+            console.error("[DB] Cloud sync failed or returned empty:", error);
+        }
+    } catch (e) {
+        console.error("[DB] Cloud sync exception:", e);
+    }
+    return null;
 };
 
 export const getCloudPlayerCount = async () => {

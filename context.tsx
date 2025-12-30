@@ -10,7 +10,8 @@ import {
     saveNewsToDB,
     saveActiveVoicePackToDB,
     loadHistoryFromDB,
-    loadNewsFromDB
+    loadNewsFromDB,
+    fetchRemotePlayers // NEW IMPORT
 } from './db';
 import { initializeAppState } from './services/appInitializer';
 import { useMatchTimer } from './hooks/useMatchTimer';
@@ -31,7 +32,7 @@ interface AppContextType {
   activeVoicePack: number;
   setActiveVoicePack: (packNumber: number) => void;
   isLoading: boolean;
-  displayTime: number; // Re-introduced for global timer
+  displayTime: number; 
   fetchHistory: (limit?: number) => Promise<void>;
   fetchFullNews: () => Promise<void>;
   
@@ -60,10 +61,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // --- GLOBAL timer LOGIC (Restored) ---
   const { displayTime } = useMatchTimer(activeSession, setActiveSession, activeVoicePack);
 
-  // --- INITIAL DATA LOAD (Now handled by appInitializer service) ---
+  // --- INITIAL DATA LOAD ---
   React.useEffect(() => {
     const initApp = async () => {
         try {
+            // 1. Initial Load (Likely Local Cache)
             const initialState = await initializeAppState();
             setActiveSession(initialState.session);
             setAllPlayers(initialState.players);
@@ -71,34 +73,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setNewsFeed(initialState.newsFeed);
             setLanguageState(initialState.language);
             setActiveVoicePackState(initialState.activeVoicePack);
+            
+            // 2. BACKGROUND SYNC (The Fix)
+            // Wait 1 second to let UI settle, then fetch fresh data from cloud
+            setTimeout(async () => {
+                const remotePlayers = await fetchRemotePlayers();
+                if (remotePlayers && remotePlayers.length > 0) {
+                    console.log("Context: Updating players from background sync");
+                    setAllPlayers(prev => {
+                        // Merge logic if needed, or simple replacement
+                        // For now, simple replacement is safest to fix "stale rating"
+                        return remotePlayers;
+                    });
+                }
+            }, 1000);
+
         } catch (error) {
             console.error("Critical error loading data:", error);
         } finally {
-            // Add a small artificial delay if data loads too fast, 
-            // so the user can actually see the cool animation (optional, implies polish)
             setTimeout(() => {
                 setIsLoading(false);
-            }, 1500);
+            }, 1000);
         }
     };
 
     initApp();
   }, []);
 
-  // --- LAZY LOADING METHODS (Fixed with useCallback to prevent loops) ---
-  // Updated to preserve demo sessions in memory when loading real ones from DB
+  // --- LAZY LOADING METHODS ---
   const fetchHistory = React.useCallback(async (limit?: number) => {
       const dbHistory = await loadHistoryFromDB(limit);
       if (dbHistory) {
           setHistory(prev => {
-              // Extract demo items from current state
               const demoItems = prev.filter(s => s.id.startsWith('demo_'));
-              // Get unique IDs from DB history
               const dbIds = new Set(dbHistory.map(s => s.id));
-              // Filter out any demo items that might somehow exist in DB (shouldn't happen)
               const uniqueDemoItems = demoItems.filter(d => !dbIds.has(d.id));
-              
-              // Combine and re-sort
               return [...uniqueDemoItems, ...dbHistory].sort((a, b) => 
                   new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
               );
