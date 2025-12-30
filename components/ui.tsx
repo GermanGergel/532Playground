@@ -131,7 +131,8 @@ export const PageHeader: React.FC<{ title: string; children?: React.ReactNode; h
     );
 };
 
-interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+// FIX: Added Omit to resolve TS2430 error and title type conflict
+interface CardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> {
     title?: React.ReactNode;
     children: React.ReactNode;
     titleClassName?: string;

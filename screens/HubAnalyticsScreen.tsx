@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Page, PageHeader, Card, useTranslation, Button } from '../ui';
 import { Activity, RefreshCw, TrophyIcon, History, InfoIcon, LayoutDashboard, Users } from '../icons';
@@ -20,13 +19,12 @@ export const HubAnalyticsScreen: React.FC = () => {
         fetchData();
     }, []);
 
-    // Helper to safe get value explicitly as number. 
-    // Uses Optional Chaining to prevent "undefined is not an object" error.
+    // FIX: Added safer data access with defaults to prevent build crashes
     const getVal = (key: string, mode: 'total' | 'recent' = 'total'): number => {
-        return data?.[mode]?.[key] || 0;
+        const section = data[mode];
+        return section ? (section[key] || 0) : 0;
     };
 
-    // Calculate total interactions just by summing the base event types
     const totalInteractions: number = 
         getVal('view_tab') + 
         getVal('start_duel') + 
@@ -39,7 +37,6 @@ export const HubAnalyticsScreen: React.FC = () => {
         getVal('play_radio', 'recent') + 
         getVal('view_player', 'recent');
     
-    // Percentages
     const calcPercent = (val: number) => totalInteractions > 0 ? Math.round((val / totalInteractions) * 100) : 0;
 
     const StatBar = ({ label, metricKey, color, icon: Icon }: { label: string, metricKey: string, color: string, icon: any }) => {
@@ -64,12 +61,10 @@ export const HubAnalyticsScreen: React.FC = () => {
                     </div>
                 </div>
                 <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden relative">
-                    {/* Background Total Bar */}
                     <div 
                         className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out opacity-30"
                         style={{ width: `${calcPercent(valueTotal)}%`, backgroundColor: color }}
                     ></div>
-                    {/* Foreground Recent Bar (Visualizes recent impact relative to total) */}
                      <div 
                         className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out"
                         style={{ width: `${calcPercent(valueTotal)}%`, backgroundColor: color, boxShadow: `0 0 8px ${color}` }}
@@ -79,7 +74,6 @@ export const HubAnalyticsScreen: React.FC = () => {
         );
     };
 
-    // Custom aggregation for complex metrics
     const getRosterTotal = () => (getVal('view_tab:roster', 'total') || 0) + (getVal('view_player', 'total') || 0);
     const getRosterRecent = () => (getVal('view_tab:roster', 'recent') || 0) + (getVal('view_player', 'recent') || 0);
 
@@ -91,19 +85,13 @@ export const HubAnalyticsScreen: React.FC = () => {
                 </Button>
             </PageHeader>
             
-            {/* TERMINAL CONTAINER WRAPPER */}
             <div className="relative w-full max-w-md mx-auto overflow-hidden rounded-3xl border border-white/10 shadow-2xl">
-                
-                {/* BACKGROUND LAYERS (Copied from Club Hub) */}
                 <div className="absolute inset-0 z-0 pointer-events-none">
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
                     <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
                 </div>
 
-                {/* CONTENT LAYER */}
                 <div className="relative z-10 p-5 space-y-4">
-                    
-                    {/* Main Stats Grid */}
                     <div className="grid grid-cols-2 gap-3">
                         <Card className="!p-4 bg-gradient-to-br from-[#161b22] to-black border-white/10 flex flex-col items-center justify-center min-h-[120px] bg-opacity-80 backdrop-blur-sm shadow-[0_0_20px_rgba(0,242,254,0.1)]">
                             <Activity className="w-6 h-6 text-[#00F2FE] mb-2 opacity-80" />
@@ -142,14 +130,12 @@ export const HubAnalyticsScreen: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Detailed Breakdown */}
                     <Card className="!p-5 bg-black/40 border-white/10 backdrop-blur-md">
                         <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-2">
                             <h3 className="text-xs font-black text-white uppercase tracking-widest">Traffic Analysis</h3>
                             <span className="text-[8px] font-mono text-[#4CFF5F] uppercase">24H Trend</span>
                         </div>
                         
-                        {/* Custom Logic for Combined "Roster" Metric */}
                         <div className="mb-4">
                             <div className="flex justify-between items-end mb-1">
                                 <div className="flex items-center gap-2">
@@ -167,9 +153,7 @@ export const HubAnalyticsScreen: React.FC = () => {
                                 </div>
                             </div>
                             <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden relative">
-                                {/* Total bg */}
                                 <div className="absolute top-0 left-0 h-full rounded-full opacity-30" style={{ width: `${calcPercent(getRosterTotal())}%`, backgroundColor: '#4CFF5F' }}></div>
-                                {/* Recent fg */}
                                 <div className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${calcPercent(getRosterTotal())}%`, backgroundColor: '#4CFF5F', boxShadow: '0 0 8px #4CFF5F' }}></div>
                             </div>
                         </div>
