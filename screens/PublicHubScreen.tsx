@@ -64,11 +64,11 @@ const NoLeadersPlaceholder: React.FC = () => {
 const MotivationalTicker: React.FC = () => {
     const t = useTranslation();
     const phrases = [
-        t.hubTicker1,
-        t.hubTicker2,
-        t.hubTicker3,
-        t.hubTicker4,
-        t.hubTicker5
+        t.hubTicker1.replace(/\.$/, ""),
+        t.hubTicker2.replace(/\.$/, ""),
+        t.hubTicker3.replace(/\.$/, ""),
+        t.hubTicker4.replace(/\.$/, ""),
+        t.hubTicker5.replace(/\.$/, "")
     ];
     const cyanColor = '#00F2FE'; 
     return (
@@ -446,15 +446,15 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
     );
 };
 
-// UPDATED STAT CARD WITH FONT FIX FOR OVERLAP (Using Orbitron)
+// UPDATED STAT CARD WITH Russo One but WIDER tracking to fix overlap
 const CinematicStatCard: React.FC<{ value: string | number; label: string; }> = ({ value, label }) => (
     <div className="w-full md:flex-1 max-w-xs md:max-w-none h-40">
         <div className="relative rounded-3xl overflow-hidden bg-white/[0.03] border border-white/10 shadow-2xl group transition-all duration-300 hover:border-[#00F2FE]/50 hover:shadow-[0_0_30px_rgba(0,242,254,0.2)] h-full backdrop-blur-md">
             <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-40"></div>
             <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-white/5 to-transparent blur-xl"></div>
             <div className="relative h-full z-10 flex flex-col items-center justify-center gap-2">
-                {/* Changed to font-orbitron and increased tracking to prevent '1' overlapping '7' */}
-                <span className="font-orbitron font-black text-6xl md:text-7xl text-white tracking-widest leading-none">{value}</span>
+                {/* Changed to font-russo but added tracking-widest to prevent '1' overlapping '7' */}
+                <span className="font-russo font-black text-6xl md:text-7xl text-white tracking-widest leading-none">{value}</span>
                 <span className="font-chakra font-bold text-xs text-white/50 uppercase tracking-[0.2em]">{label}</span>
             </div>
         </div>
@@ -520,7 +520,11 @@ export const PublicHubScreen: React.FC = () => {
                 activeTab={dashboardView}
                 onTabChange={setDashboardView}
                 archiveViewDate={archiveViewDate}
-                onHomeClick={() => setIsDashboardOpen(false)}
+                onHomeClick={() => {
+                    setIsDashboardOpen(false);
+                    // ADDED: Scroll to top of the page smoothly when closing dashboard
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
             />
 
             {/* INTELLIGENCE DASHBOARD (FIXED OVERLAY) */}
