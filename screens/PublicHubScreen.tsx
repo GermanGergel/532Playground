@@ -151,8 +151,8 @@ const NavHubButton: React.FC<{
     >
         <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 
             ${isActive 
-                ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/5 drop-shadow-[0_0_8px_rgba(0,242,254,0.3)] shadow-[0_0_15px_rgba(0,242,254,0.1)]' 
-                : 'text-white/60 border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/30 hover:text-white hover:shadow-[0_0_12px_rgba(255,255,255,0.15)]'
+                ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 drop-shadow-[0_0_12px_rgba(0,242,254,0.4)]' 
+                : 'text-white/60 border-white/10 bg-black/20 hover:border-white/30 hover:text-white hover:shadow-[0_0_12px_rgba(255,255,255,0.1)]'
             }`}>
             {React.cloneElement(icon as React.ReactElement, { className: "w-4 h-4" })}
         </div>
@@ -189,12 +189,14 @@ const HubNav: React.FC<{
         'info': t.information 
     };
 
+    // FIXED: Navigation container is now a floating "island" to restore 3D look
     const navContainerClass = `
-        fixed top-0 left-0 right-0 z-[100] 
+        fixed top-3 left-1/2 -translate-x-1/2 z-[100] 
         flex items-center justify-between 
-        w-full mx-auto pr-4 py-2 
-        bg-[#05070a]
-        h-[58px] md:h-[68px] transition-all duration-300
+        w-[95%] max-w-[1420px] px-4 py-0 
+        bg-[#0c0e14]/90 backdrop-blur-md rounded-2xl border border-white/10
+        shadow-[0_20px_50px_-10px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.05)] 
+        h-[54px] md:h-[64px] transition-all duration-300
     `;
 
     return (
@@ -283,7 +285,7 @@ const HubNav: React.FC<{
                     <div className="relative h-full flex items-center justify-center">
                         {isDashboardOpen ? (
                             <button onClick={() => setIsLangOpen(!isLangOpen)} className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 h-full min-w-[50px] group cursor-pointer hover:scale-110`}>
-                                <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isLangOpen ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/5 drop-shadow-[0_0_8px_rgba(0,242,254,0.4)] shadow-[0_0_15px_rgba(0,242,254,0.1)]' : 'text-white/60 border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.1)] hover:border-white/30 hover:text-white hover:shadow-[0_0_12px_rgba(255,255,255,0.15)]' }`}>
+                                <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isLangOpen ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 drop-shadow-[0_0_10px_rgba(0,242,254,0.4)] shadow-[0_0_15px_rgba(0,242,254,0.1)]' : 'text-white/60 border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.1)] hover:border-white/30 hover:text-white hover:shadow-[0_0_12px_rgba(255,255,255,0.15)]' }`}>
                                     <span className="font-black text-[10px] uppercase leading-none">{language}</span>
                                 </div>
                                 <span className={`text-[6px] font-black tracking-widest uppercase transition-colors ${isLangOpen ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>LANG</span>
@@ -377,7 +379,7 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
     }, []);
     return (
         <div style={podiumGlowStyle} className={`relative group ${isFirst ? 'scale-105 z-20' : 'scale-90 md:scale-100 z-10'} rounded-3xl transition-shadow duration-300`}>
-            <div ref={cardRef} className={`interactive-card relative ${isFirst ? 'w-[280px] h-[390px]' : 'w-[260px] h-[360px]'} rounded-3xl p-4 overflow-hidden text-white bg-dark-surface border border-white/10`}>
+            <div ref={cardRef} className={`interactive-card relative ${isFirst ? 'w-[280px] h-[390px]' : 'w-[260px] h-[360px]'} rounded-3xl p-4 overflow-hidden text-white bg-dark-surface border border-white/10 shadow-2xl`}>
                 {player.playerCard && (<div className="absolute inset-0 w-full h-full bg-cover bg-no-repeat" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }}/>)}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
                 {!isBadgeModalOpen && (<div className="absolute top-24 left-4 z-20"><div className="space-y-4">{(player.skills || []).map(skill => (
@@ -402,8 +404,8 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                             )}
                         </div>
                     </div>
-                    {/* FIXED: Name Lifted and z-index adjusted to be behind foreground labels/icons but visible */}
-                    <div className="absolute bottom-8 left-0 right-0 px-4 text-center z-10">
+                    {/* Name Adjusted: Lowered from bottom-8 to bottom-3 for better visual balance */}
+                    <div className="absolute bottom-3 left-0 right-0 px-4 text-center z-10">
                         <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tight drop-shadow-[0_5px_15px_rgba(0,0,0,0.9)] leading-[0.85] text-white">
                             {player.nickname}<br/>{player.surname}
                         </h1>
@@ -474,7 +476,7 @@ export const PublicHubScreen: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen text-white relative selection:bg-[#00F2FE] selection:text-black bg-[#05070a]">
+        <div className="min-h-screen text-white relative selection:bg-[#00F2FE] selection:text-black bg-[#1A1D24]">
             
             <HubNav 
                 isDashboardOpen={isDashboardOpen} 
@@ -486,9 +488,9 @@ export const PublicHubScreen: React.FC = () => {
             />
 
             {/* INTELLIGENCE DASHBOARD (FIXED OVERLAY) */}
-            <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-4 md:pb-8 overflow-y-auto overscroll-none ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
+            <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-28 pb-4 md:pb-8 overflow-y-auto overscroll-none ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
                 <div className="absolute inset-0 z-0 pointer-events-none">
-                    <div className="absolute inset-0 bg-[#05070a]"></div>
+                    <div className="absolute inset-0 bg-[#1A1D24]"></div>
                     <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
                 </div>
                 <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10">
@@ -531,7 +533,7 @@ export const PublicHubScreen: React.FC = () => {
                         <div className="text-center px-4">
                             <button 
                                 onClick={() => setIsDashboardOpen(true)} 
-                                className="mx-auto mb-14 block bg-transparent text-[#00F2FE] font-bold text-lg py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(0,242,254,0.4)] hover:shadow-[0_0_25px_rgba(0,242,254,0.6)] hover:bg-[#00F2FE]/10 transition-all transform hover:scale-[1.02] active:scale-95 group animate-pulse"
+                                className="mx-auto mb-14 block bg-dark-surface text-[#00F2FE] border border-[#00F2FE]/30 font-bold text-lg py-3.5 px-10 rounded-2xl shadow-[0_15px_35px_-10px_rgba(0,242,254,0.3)] hover:shadow-[0_20px_45px_-10px_rgba(0,242,254,0.5)] hover:bg-[#00F2FE]/5 transition-all transform hover:scale-[1.02] active:scale-95 group"
                             >
                                 <span className="font-chakra font-black text-lg uppercase tracking-[0.2em] group-hover:text-white transition-colors">{t.hubDashboardBtn}</span>
                             </button>
