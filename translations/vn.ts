@@ -51,7 +51,7 @@ export const vn = {
   ownGoal: "Phản Lưới",
   withoutAssist: "Solo / Không có kiến tạo",
   editGoal: "Sửa Bàn Thắng",
-  scorer: "Sát thủ",
+  scorer: "Người Ghi Bàn",
   saveChanges: "Lưu Thay Đổi",
   selectWinnerDesc: "Chọn đội thắng để tiếp tục",
   onBench: "Dự Bị",
@@ -253,7 +253,7 @@ export const vn = {
   hubWeather: "THỜI TIẾT",
   hubImpact: "TÁC ĐỘNG",
   hubWelcomeText: "Chào mừng đến với Hub 532 Playground chính thức. Theo dõi chỉ số, so sánh với người khác và leo lên đỉnh vinh quang.",
-  hubLeadersTitle: "Dẫn đầu mùa giải",
+  hubLeadersTitle: "Dẫn Đầu Buổi Tập",
   hubJoinSquad: "Tham Gia Đội Hình",
 
   // Duel
@@ -376,7 +376,7 @@ export const vn = {
   badge_undefeated: "Bất Bại",
   badge_undefeated_desc: "Không thua (tối thiểu 6 trận)",
   badge_dominant_participant: "Kẻ Thống Trị",
-  badge_dominant_participant_desc: "10+ Games played",
+  badge_dominant_participant_desc: "Đá 10+ trận",
   badge_career_100_wins: "Trăm Trận Thắng",
   badge_career_100_wins_desc: "100 Trận Thắng Sự Nghiệp",
   badge_career_150_influence: "Biểu Tượng",

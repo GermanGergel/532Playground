@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Player, PlayerTier, PlayerStatus, BadgeType, PlayerForm, SkillType } from '../types';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
@@ -117,8 +118,7 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
                             )}
                         </div>
                     </div>
-                    {/* Name Adjusted: Increased pb-3 for better readability from the bottom edge */}
-                    <div className="text-center flex-shrink-0 relative z-30 pb-3">
+                    <div className="text-center flex-shrink-0 relative z-30 pb-1">
                         <h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg leading-none mb-1">
                             {player.nickname} {player.surname}
                         </h1>

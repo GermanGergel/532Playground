@@ -59,6 +59,7 @@ export const ru = {
   legionnaire_select: "ВЫБРАТЬ",
   legionnaire_no_players: "Нет свободных игроков",
 
+  // FIX: Added missing Session Summary keys for Russian translation
   // Session Summary
   summary_title: "ИТОГИ СЕССИИ",
   summary_location: "ЛОКАЦИЯ",
@@ -245,7 +246,7 @@ export const ru = {
   hubPlayers: "ИГРОКИ",
   hubGames: "МАТЧИ",
   hubVitalsTitle: "ПОКАЗАТЕЛИ КЛУБА",
-  hubStatsMembers: "УЧАСНИКИ",
+  hubStatsMembers: "УЧАСТНИКИ",
   hubSessionsPlayed: "СЕССИИ",
   hubAvgRating: "СРЕДНИЙ OVR",
   hubLocation: "ЛОКАЦИЯ",
@@ -253,9 +254,10 @@ export const ru = {
   hubWeather: "ПОГОДА",
   hubImpact: "ИМПАКТ",
   hubWelcomeText: "Добро пожаловать в официальный хаб 532 Playground. Следи за статистикой, сравнивай результаты и стремись к вершине.",
-  hubLeadersTitle: "Лидеры сезона",
+  hubLeadersTitle: "Лидеры Сессии",
   hubJoinSquad: "Вступить в Отряд",
 
+  // FIX: Corrected Duel keys for Russian translation (were previously Ukrainian)
   // Duel
   duel_title: "Выбор дуэли",
   duel_id_unit: "ОПОЗНАНИЕ ЮНИТА...",
@@ -278,7 +280,7 @@ export const ru = {
   feature_fair_desc: "Команды балансируются алгоритмом.",
   roadmap_title: "БУДУЩЕЕ",
   roadmap_video: "Видео Хайлайты",
-  roadmap_video_desc: "AI нарезки твой голов.",
+  roadmap_video_desc: "AI нарезки твоих голов.",
   roadmap_leagues: "Лиги",
   roadmap_leagues_desc: "Сезонные кубки и призы.",
   cta_join: "ВСТУПИТЬ",

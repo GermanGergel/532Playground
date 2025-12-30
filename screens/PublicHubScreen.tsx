@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -95,7 +96,7 @@ const MotivationalTicker: React.FC = () => {
 };
 
 const StaticSoccerBall: React.FC = () => (
-    <div className="absolute top-1/2 -translate-y-1/2 left-[135px] md:left-[170px] w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none transition-all duration-500">
+    <div className="absolute top-1/2 -translate-y-1/2 left-[118px] md:left-[152px] w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none transition-all duration-500">
         <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] overflow-visible">
             <defs>
                 <radialGradient id="ballShading" cx="40%" cy="35%" r="65%"><stop offset="0%" stopColor="#ffffff" /><stop offset="50%" stopColor="#e2e8f0" /><stop offset="85%" stopColor="#94a3b8" /><stop offset="100%" stopColor="#1e293b" /></radialGradient>
@@ -151,8 +152,8 @@ const NavHubButton: React.FC<{
     >
         <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 
             ${isActive 
-                ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 drop-shadow-[0_0_12px_rgba(0,242,254,0.4)]' 
-                : 'text-white/60 border-white/10 bg-black/20 hover:border-white/30 hover:text-white hover:shadow-[0_0_12px_rgba(255,255,255,0.1)]'
+                ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/5 drop-shadow-[0_0_8px_rgba(0,242,254,0.3)] shadow-[0_0_15px_rgba(0,242,254,0.1)]' 
+                : 'text-white/60 border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/30 hover:text-white hover:shadow-[0_0_12px_rgba(255,255,255,0.15)]'
             }`}>
             {React.cloneElement(icon as React.ReactElement, { className: "w-4 h-4" })}
         </div>
@@ -189,14 +190,13 @@ const HubNav: React.FC<{
         'info': t.information 
     };
 
-    // FIXED: Navigation container is now a floating "island" to restore 3D look
     const navContainerClass = `
         fixed top-3 left-1/2 -translate-x-1/2 z-[100] 
         flex items-center justify-between 
-        w-[95%] max-w-[1420px] px-4 py-0 
-        bg-[#0c0e14]/90 backdrop-blur-md rounded-2xl border border-white/10
-        shadow-[0_20px_50px_-10px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.05)] 
-        h-[54px] md:h-[64px] transition-all duration-300
+        w-full max-w-[1450px] pr-4 py-0 
+        bg-black/95 backdrop-blur-xl rounded-2xl border border-white/10
+        shadow-[0_15px_40px_-10px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.05)] 
+        h-[48px] md:h-[58px] transition-all duration-300
     `;
 
     return (
@@ -209,7 +209,7 @@ const HubNav: React.FC<{
             `}} />
             <div className="flex items-center shrink-0 h-full relative pl-10">
                 <div className="flex items-center">
-                    <HangingTag digit="5" label="PLAYERS" height={20} delay="0s" pulseDuration="2.8s" />
+                    <HangingTag digit="5" label="PLAYPLAYERS" height={20} delay="0s" pulseDuration="2.8s" />
                     <HangingTag digit="3" label="SQUADS" height={45} delay="1.5s" pulseDuration="4.2s" />
                     <HangingTag digit="2" label="GOALS" height={30} delay="0.8s" pulseDuration="3.7s" />
                     <div className="h-4 w-px bg-white/15 ml-3 md:ml-4"></div>
@@ -285,7 +285,7 @@ const HubNav: React.FC<{
                     <div className="relative h-full flex items-center justify-center">
                         {isDashboardOpen ? (
                             <button onClick={() => setIsLangOpen(!isLangOpen)} className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 h-full min-w-[50px] group cursor-pointer hover:scale-110`}>
-                                <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isLangOpen ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 drop-shadow-[0_0_10px_rgba(0,242,254,0.4)] shadow-[0_0_15px_rgba(0,242,254,0.1)]' : 'text-white/60 border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.1)] hover:border-white/30 hover:text-white hover:shadow-[0_0_12px_rgba(255,255,255,0.15)]' }`}>
+                                <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isLangOpen ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/5 drop-shadow-[0_0_8px_rgba(0,242,254,0.4)] shadow-[0_0_15px_rgba(0,242,254,0.1)]' : 'text-white/60 border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.1)] hover:border-white/30 hover:text-white hover:shadow-[0_0_12px_rgba(255,255,255,0.15)]' }`}>
                                     <span className="font-black text-[10px] uppercase leading-none">{language}</span>
                                 </div>
                                 <span className={`text-[6px] font-black tracking-widest uppercase transition-colors ${isLangOpen ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>LANG</span>
@@ -379,7 +379,7 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
     }, []);
     return (
         <div style={podiumGlowStyle} className={`relative group ${isFirst ? 'scale-105 z-20' : 'scale-90 md:scale-100 z-10'} rounded-3xl transition-shadow duration-300`}>
-            <div ref={cardRef} className={`interactive-card relative ${isFirst ? 'w-[280px] h-[390px]' : 'w-[260px] h-[360px]'} rounded-3xl p-4 overflow-hidden text-white bg-dark-surface border border-white/10 shadow-2xl`}>
+            <div ref={cardRef} className={`interactive-card relative ${isFirst ? 'w-[280px] h-[390px]' : 'w-[260px] h-[360px]'} rounded-3xl p-4 overflow-hidden text-white bg-dark-surface border border-white/10`}>
                 {player.playerCard && (<div className="absolute inset-0 w-full h-full bg-cover bg-no-repeat" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }}/>)}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
                 {!isBadgeModalOpen && (<div className="absolute top-24 left-4 z-20"><div className="space-y-4">{(player.skills || []).map(skill => (
@@ -390,26 +390,21 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                 ))}</div></div>)}
                 <div className="relative z-10 h-full flex flex-col justify-between">
                      <div className="flex justify-between items-start">
-                        <div className="relative z-20">
+                        <div>
                             <p style={{ color: '#00F2FE' }} className="text-base font-black leading-none">532</p>
                             <p className="text-white text-[7px] font-bold tracking-[0.15em] font-chakra leading-none mt-1">PLAYGROUND</p>
                             {countryCodeAlpha2 && (<img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} alt={`${player.countryCode} flag`} className="w-6 h-auto mt-3 rounded-sm"/>)}
                         </div>
-                        <div className="flex flex-col items-center max-w-[50%] relative z-20">
+                        <div className="flex flex-col items-center max-w-[50%]">
                             <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
                             <p className="font-bold text-white tracking-widest text-sm">OVR</p>
                             <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
                             {player.badges && Object.keys(player.badges).length > 0 && (
-                                <BadgeDisplay badges={player.badges} limit={5} onOpenChange={setIsBadgeModalOpen} hideCounter={true} interactive={false} />
+                                <BadgeDisplay badges={player.badges} limit={6} onOpenChange={setIsBadgeModalOpen} />
                             )}
                         </div>
                     </div>
-                    {/* Name Adjusted: Lowered from bottom-8 to bottom-3 for better visual balance */}
-                    <div className="absolute bottom-3 left-0 right-0 px-4 text-center z-10">
-                        <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tight drop-shadow-[0_5px_15px_rgba(0,0,0,0.9)] leading-[0.85] text-white">
-                            {player.nickname}<br/>{player.surname}
-                        </h1>
-                    </div>
+                    <div className="text-center flex-shrink-0 relative z-30 pb-1"><h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg">{player.nickname} {player.surname}</h1></div>
                 </div>
             </div>
         </div>
@@ -460,7 +455,7 @@ export const PublicHubScreen: React.FC = () => {
     const clubStats = useMemo(() => {
         const confirmedPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
         const totalPlayers = confirmedPlayers.length;
-        const totalSessions = history.length + 1;
+        const totalSessions = history.length;
         const avgRating = totalPlayers > 0 ? Math.round(confirmedPlayers.reduce((sum, p) => sum + p.rating, 0) / totalPlayers) : 0;
         return { totalPlayers, totalSessions, avgRating };
     }, [allPlayers, history]);
@@ -476,7 +471,8 @@ export const PublicHubScreen: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen text-white relative selection:bg-[#00F2FE] selection:text-black bg-[#1A1D24]">
+        <div className="min-h-screen text-white relative selection:bg-[#00F2FE] selection:text-black bg-[#0a0c10] pt-px">
+            <div className={`fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50 z-[110]`}></div>
             
             <HubNav 
                 isDashboardOpen={isDashboardOpen} 
@@ -490,7 +486,7 @@ export const PublicHubScreen: React.FC = () => {
             {/* INTELLIGENCE DASHBOARD (FIXED OVERLAY) */}
             <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-28 pb-4 md:pb-8 overflow-y-auto overscroll-none ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
                 <div className="absolute inset-0 z-0 pointer-events-none">
-                    <div className="absolute inset-0 bg-[#1A1D24]"></div>
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
                     <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
                 </div>
                 <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10">
@@ -533,7 +529,7 @@ export const PublicHubScreen: React.FC = () => {
                         <div className="text-center px-4">
                             <button 
                                 onClick={() => setIsDashboardOpen(true)} 
-                                className="mx-auto mb-14 block bg-dark-surface text-[#00F2FE] border border-[#00F2FE]/30 font-bold text-lg py-3.5 px-10 rounded-2xl shadow-[0_15px_35px_-10px_rgba(0,242,254,0.3)] hover:shadow-[0_20px_45px_-10px_rgba(0,242,254,0.5)] hover:bg-[#00F2FE]/5 transition-all transform hover:scale-[1.02] active:scale-95 group"
+                                className="mx-auto mb-14 block bg-transparent text-[#00F2FE] font-bold text-lg py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(0,242,254,0.4)] hover:shadow-[0_0_25px_rgba(0,242,254,0.6)] hover:bg-[#00F2FE]/10 transition-all transform hover:scale-[1.02] active:scale-95 group animate-pulse"
                             >
                                 <span className="font-chakra font-black text-lg uppercase tracking-[0.2em] group-hover:text-white transition-colors">{t.hubDashboardBtn}</span>
                             </button>
