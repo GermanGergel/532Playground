@@ -231,14 +231,7 @@ export const vn = {
   noBadges: "Chưa có huy hiệu",
 
   // Hub
-  hubTickerPhrases: [
-    "DỮ LIỆU TẠO NÊN HUYỀN THOẠI •",
-    "CON SỐ KHÔNG BAO GIỜ NÓI DỐI •",
-    "SÂN CỎ QUYẾT ĐỊNH TẤT CẢ •",
-    "HIỆU SUẤT TRÊN HẾT •",
-    "PROVEN, NOT PROMISED •",
-    "532 — NƠI HỘI TỤ TINH ANH"
-  ],
+  hubTickerPhrases: "DỮ LIỆU TẠO NÊN HUYỀN THOẠI | CON SỐ KHÔNG BAO GIỜ NÓI DỐI | SÂN CỎ QUYẾT ĐỊNH TẤT CẢ | HIỆU SUẤT TRÊN HẾT | PROVEN, NOT PROMISED | 532 — NƠI HỘI TỤ TINH ANH",
   hubBroadcastHeader: "TRỰC TIẾP",
   hubIntelligenceHeader: "BẢN TIN TÌNH BÁO",
   hubSquadsHeader: "ĐỘI HÌNH BUỔI TẬP",
@@ -398,7 +391,7 @@ export const vn = {
   badge_double_agent: "Điệp Viên Hai Mang",
   badge_double_agent_desc: "3 Thắng cho mỗi đội",
   badge_joker: "Joker",
-  badge_joker_desc: "Ghi bàn/KT khi là Lính Lê Dương",
+  badge_joker_desc: "Bàn thắng/KT khi là Lính Lê Dương",
   badge_crisis_manager: "Quản Lý Khủng Hoảng",
   badge_crisis_manager_desc: "2+ G/A khi là Lính Lê Dương",
   badge_iron_lung: "Phổi Sắt",

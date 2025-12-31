@@ -135,7 +135,7 @@ export const ua = {
   sortByRating: "Рейтинг",
   sortByName: "Ім'я",
   sortByDate: "Дата",
-  unconfirmedBadge: "НОВЫЙ",
+  unconfirmedBadge: "НОВИЙ",
   noPlayersFound: "Гравців не знайдено.",
   addPlayerManually: "Додати Вручну",
   nickname: "Нікнейм",
@@ -198,7 +198,7 @@ export const ua = {
   ratingExampleWinStrong: "Впевнена перемога (+2GD): +1.3 очка",
   ratingExampleWinClose: "Звичайна перемога: +1.0 очко",
   ratingExampleDraw: "Нічия: +0.4 очка",
-  ratingExampleLossClose: "Поразка: -0.5 очок",
+  ratingExampleLossClose: "Пораження: -0.5 очок",
   ratingExampleLossHeavy: "Велика поразка (-2GD): -0.8 очок",
   ratingExampleGoal: "Гол: +1.0 очко (Нападник +1.2)",
   ratingExampleAssist: "Асис: +0.7 очок (Плеймейкер +1.0)",
@@ -231,13 +231,7 @@ export const ua = {
   noBadges: "Немає значків",
 
   // Hub
-  hubTickerPhrases: [
-    "ДАНІ СТВОРЮЮТЬ ЛЕГЕНД •",
-    "ЧИСЛА НІКОЛИ НЕ БРЕШУТЬ •",
-    "ПОЛЕ ВИРІШУЄ ВСЕ •",
-    "РЕЗУЛЬТАТ ВАЖЛИВІШИЙ ЗА СЛОВА •",
-    "532 — ДЕ ГРАЄ ЕЛІТА"
-  ],
+  hubTickerPhrases: "ДАНІ СТВОРЮЮТЬ ЛЕГЕНД | ЧИСЛА НІКОЛИ НЕ БРЕШУТЬ | ПОЛЕ ВИРІШУЄ ВСЕ | РЕЗУЛЬТАТ ВАЖЛИВІШИЙ ЗА СЛОВА | 532 — ДЕ ГРАЄ ЕЛІТА",
   hubBroadcastHeader: "ТРАНСЛЯЦІЯ",
   hubIntelligenceHeader: "РОЗВІДДАНИЙ КАНАЛ",
   hubSquadsHeader: "СКЛАДИ СЕСІЇ",
@@ -402,15 +396,6 @@ export const ua = {
   badge_crisis_manager_desc: "2+ Г/А будучи Легионером",
   badge_iron_lung: "Залізні Легені",
   badge_iron_lung_desc: "Серія Перемога-Перемога-Перемога",
-
-  // Duel
-  duel_title: "Вибір Дуелі",
-  duel_id_unit: "ОПОЗНАННЯ ЮНІТА...",
-  duel_initiate: "ЗАПУСТИТИ ПОСЛІДОВНІСТЬ",
-  duel_sector_empty: "Сектор порожній",
-  duel_complete: "ПОСЛІДОВНІСТЬ ЗАВЕРШЕНА",
-  duel_score: "РАХУНОК",
-  duel_verified: "Індекс ефективності підтверджено",
   
   // Announcements
   announcement_start_match: "Початок Матчу",

@@ -57,12 +57,10 @@ export const vn = {
   selectWinnerDesc: "Chọn đội thắng để tiếp tục",
   onBench: "Dự Bị",
 
-  // FIX: Added missing Legionnaire keys for Vietnamese translation
   legionnaire_replace: "THAY THẾ",
   legionnaire_select: "CHỌN",
   legionnaire_no_players: "Không có cầu thủ dự bị",
 
-  // FIX: Added missing Session Summary keys for Vietnamese translation
   // Session Summary
   summary_title: "TỔNG KẾT BUỔI TẬP",
   summary_location: "ĐỊA ĐIỂM",
@@ -112,7 +110,7 @@ export const vn = {
   hubAnalytics: "Phân Tích Hub",
   settingsGenDemoSession: "TẠO BUỔI TẬP DEMO",
   settingsGenDemoPlayers: "TẠO 10 CẦU THỦ DEMO",
-  ledgerTitle: "Sổ Quỹ",
+  ledgerTitle: "Sổ Quỹ Buổi Tập",
   ledgerEmpty: "Không Có Dữ Liệu",
   ledgerCollected: "Đã Thu",
   ledgerClear: "Xóa Sổ Quỹ",
@@ -145,7 +143,7 @@ export const vn = {
 
   // Player Profile
   playerProfile: "Hồ Sơ Cầu Thủ",
-  deletePlayer: "Vô hiệu hóa",
+  deletePlayer: "Xóa Cầu Thủ",
   deletePlayerConfirm: "Bạn có chắc muốn xóa {playerName}?",
   uploadPhoto: "Tải Ảnh",
   fromCamera: "Chụp Ảnh",
@@ -232,15 +230,8 @@ export const vn = {
   badges: "Huy Hiệu",
   noBadges: "Chưa có huy hiệu",
 
-  // Hub - UPDATED SLOGANS
-  hubTickerPhrases: [
-    "DỮ LIỆU TẠO NÊN HUYỀN THOẠI •",
-    "CON SỐ KHÔNG BAO GIỜ NÓI DỐI •",
-    "SÂN CỎ QUYẾT ĐỊNH TẤT CẢ •",
-    "HIỆU SUẤT TRÊN HẾT •",
-    "PROVEN, NOT PROMISED •",
-    "532 — NƠI HỘI TỤ TINH ANH"
-  ],
+  // Hub
+  hubTickerPhrases: "DỮ LIỆU TẠO NÊN HUYỀN THOẠI | CON SỐ KHÔNG BAO GIỜ NÓI DỐI | SÂN CỎ QUYẾT ĐỊNH TẤT CẢ | HIỆU SUẤT TRÊN HẾT | PROVEN, NOT PROMISED | 532 — NƠI HỘI TỤ TINH ANH",
   hubBroadcastHeader: "TRỰC TIẾP",
   hubIntelligenceHeader: "BẢN TIN TÌNH BÁO",
   hubSquadsHeader: "ĐỘI HÌNH BUỔI TẬP",
@@ -267,7 +258,7 @@ export const vn = {
   hubWelcomeText: "Chào mừng đến với Hub 532 Playground chính thức. Theo dõi chỉ số, so sánh với người khác và leo lên đỉnh vinh quang.",
   hubLeadersTitle: "Dẫn Đầu Buổi Tập",
   hubJoinSquad: "Tham Gia Đội Hình",
-
+  
   // Duel
   duel_title: "Chọn Đối Thủ",
   duel_id_unit: "XÁC MINH CẦU THỦ...",

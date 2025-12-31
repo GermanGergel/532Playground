@@ -182,6 +182,7 @@ export const en = {
   thSessions: "Sess",
   winRate: "Win %",
   goalsPerSession: "Goals/Sess",
+  requestedEntityNotFound: "Requested entity was not found. Please select a valid API key.",
   assistsPerSession: "Assists/Sess",
   monthlyStatsTitle: "Monthly Stats",
   monthlyGoals: "Goals",
@@ -231,14 +232,7 @@ export const en = {
   noBadges: "No badges yet",
 
   // Hub
-  hubTickerPhrases: [
-    "DATA BUILDS LEGENDS •",
-    "NUMBERS NEVER LIE •",
-    "THE PITCH DECIDES EVERYTHING •",
-    "PERFORMANCE OVER HYPE •",
-    "PROVEN, NOT PROMISED •",
-    "532 — WHERE ELITES PLAY"
-  ],
+  hubTickerPhrases: "DATA BUILDS LEGENDS | NUMBERS NEVER LIE | THE PITCH DECIDES EVERYTHING | PERFORMANCE OVER HYPE | PROVEN, NOT PROMISED | 532 — WHERE ELITES PLAY",
   hubBroadcastHeader: "SESSION BROADCAST",
   hubIntelligenceHeader: "INTELLIGENCE FEED",
   hubSquadsHeader: "SESSION SQUADS",

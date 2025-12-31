@@ -63,13 +63,10 @@ const NoLeadersPlaceholder: React.FC = () => {
 
 const MotivationalTicker: React.FC = () => {
     const t = useTranslation();
-    // FIX: Access hubTickerPhrases from translation object
-    const phrases = t.hubTickerPhrases || [
-        "DATA BUILDS LEGENDS •",
-        "NUMBERS NEVER LIE •",
-        "THE PITCH DECIDES EVERYTHING •",
-        "532 — WHERE ELITES PLAY"
-    ];
+    // FIX: Access hubTickerPhrases and split by pipe
+    const tickerString = t.hubTickerPhrases || "DATA BUILDS LEGENDS | NUMBERS NEVER LIE | THE PITCH DECIDES EVERYTHING | 532 — WHERE ELITES PLAY";
+    const phrases = tickerString.split(' | ');
+    
     const cyanColor = '#00F2FE'; 
     return (
         <div className="relative w-full h-full overflow-hidden flex items-center">
@@ -91,7 +88,7 @@ const MotivationalTicker: React.FC = () => {
                         className="text-[14px] md:text-[16px] font-bold tracking-[0.1em] uppercase flex items-center font-inter-tight italic" 
                         style={{ color: cyanColor, textShadow: `0 0 10px rgba(0, 242, 254, 0.2)` }}
                     >
-                        {phrase}
+                        {phrase} •
                     </span>
                 ))}
             </div>
@@ -232,7 +229,6 @@ const HubNav: React.FC<{
                         <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center">
                             {activeTab === 'dashboard' ? (
                                 <>
-                                    {/* FIX: Access hubBroadcastHeader from translation object */}
                                     <span className="font-russo text-[7px] text-[#00F2FE] tracking-[0.3em] uppercase leading-none opacity-80 mb-0.5">{t.hubBroadcastHeader}</span>
                                     <span className="font-chakra text-sm md:text-lg font-bold text-white tracking-widest leading-none">{sessionDate || 'LIVE'}</span>
                                 </>
@@ -407,7 +403,7 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                         </div>
                         <div className="flex flex-col items-center max-w-[50%]">
                             <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
-                            <p className="font-bold text-white tracking-widest text-sm">OVR</p>
+                            <p className="font-bold text-white tracking-widest text-sm mt-2">OVR</p>
                             <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
                             
                             {topBadges.length > 0 && (
@@ -526,7 +522,6 @@ export const PublicHubScreen: React.FC = () => {
                     <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
                 </div>
                 <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10">
-                    {/* FIX: Use setArchiveViewDate function for onArchiveViewChange callback */}
                     <ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} />
                 </div>
             </div>
