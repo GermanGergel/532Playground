@@ -228,14 +228,13 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void }> 
     const goalsPerSession = player.totalSessionsPlayed > 0 ? (player.totalGoals / player.totalSessionsPlayed).toFixed(2) : '0.00';
     const assistsPerSession = player.totalSessionsPlayed > 0 ? (player.totalAssists / player.totalSessionsPlayed).toFixed(2) : '0.00';
 
-    // DYNAMIC NEON PERIMETER STYLE
+    // ATMOSPHERIC UNDERGLOW STYLE (NO BORDER, SOFT RADIUS)
     const tierColor = TIER_COLORS[player.tier] || '#00F2FE';
     const perimeterStyle: React.CSSProperties = {
-        border: `1px solid ${tierColor}33`,
-        boxShadow: `0 0 25px -5px ${tierColor}44, inset 0 0 15px -10px ${tierColor}66`,
+        border: 'none',
+        boxShadow: `0 0 100px -20px ${tierColor}44`, // Soft massive glow from under the blocks
         borderRadius: '2.5rem',
-        background: 'rgba(10, 12, 16, 0.4)',
-        backdropFilter: 'blur(8px)'
+        background: 'transparent',
     };
 
     return (
@@ -257,7 +256,7 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void }> 
                         <div className="w-10"></div> 
                     </div>
 
-                    {/* NEON PERIMETER WRAPPER */}
+                    {/* UNDERGLOW WRAPPER */}
                     <div className="flex-grow p-4 md:p-8" style={perimeterStyle}>
                         <div className="space-y-6">
                             <div className="flex flex-col md:flex-row gap-6 items-stretch">
