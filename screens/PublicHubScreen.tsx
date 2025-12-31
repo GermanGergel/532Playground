@@ -505,15 +505,6 @@ export const PublicHubScreen: React.FC = () => {
         <div className="min-h-screen text-white relative selection:bg-[#00F2FE] selection:text-black bg-[#0a0c10] pt-px overscroll-none">
             <style dangerouslySetInnerHTML={{__html: `
                 html, body { background-color: #0a0c10; overscroll-behavior-y: none; }
-                .text-outline-podium {
-                    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.08);
-                    color: transparent;
-                }
-                @keyframes broadcast-blink {
-                    0%, 100% { opacity: 1; }
-                    50% { opacity: 0.3; }
-                }
-                .animate-broadcast-blink { animation: broadcast-blink 2s infinite; }
             `}} />
             
             <div className={`fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50 z-[110]`}></div>
@@ -544,36 +535,9 @@ export const PublicHubScreen: React.FC = () => {
             <div className={`relative z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}>
                 <HeroTitle />
                 
-                {/* --- CINEMATIC PODIUM AREA --- */}
+                {/* --- MAIN PODIUM AREA (Season Leaders) --- */}
                 <div className="relative w-full max-w-6xl mx-auto mb-24">
-                    {/* Background "TONIGHT" Outline Text */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[60%] z-0 pointer-events-none w-full text-center">
-                        <h2 className="font-blackops text-[180px] md:text-[340px] uppercase leading-none text-outline-podium italic select-none opacity-40">
-                            TONIGHT
-                        </h2>
-                    </div>
-
-                    {/* Broadcast Style Header Bar */}
-                    <div className="relative z-30 mb-16 flex flex-col items-center">
-                        <div className="flex items-center gap-4 px-6 py-2 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl">
-                            <div className="flex items-center gap-2 border-r border-white/10 pr-4">
-                                <div className="w-2.5 h-2.5 bg-red-600 rounded-full animate-broadcast-blink shadow-[0_0_8px_red]"></div>
-                                <span className="font-mono text-[10px] font-black tracking-widest text-white/80">LIVE_LINK</span>
-                            </div>
-                            <h2 className="font-orbitron text-xs md:text-sm font-black uppercase tracking-[0.4em] text-[#00F2FE]">
-                                SESSION VANGUARD // ELITE HUB
-                            </h2>
-                            <div className="hidden md:flex items-center gap-2 border-l border-white/10 pl-4">
-                                <span className="font-mono text-[9px] text-white/30 uppercase">SIGNAL: VERIFIED</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Podium Grid */}
                     <div className="relative z-20">
-                        {/* Light Ray Aura for the 1st Place (central ray) */}
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#00F2FE]/10 rounded-full blur-[100px] pointer-events-none animate-pulse"></div>
-
                         {displayData.top.length > 0 ? (
                             <div className="flex flex-wrap items-end justify-center gap-4 md:gap-12 w-full perspective-1000">
                                 <div className="order-2 md:order-1 transition-transform duration-500 hover:translate-z-10">{displayData.top[1] && <CinematicCard player={displayData.top[1]} rank={2} />}</div>
@@ -583,12 +547,6 @@ export const PublicHubScreen: React.FC = () => {
                         ) : (
                             <NoLeadersPlaceholder />
                         )}
-                    </div>
-                    
-                    {/* Footnote Decoration */}
-                    <div className="mt-12 flex justify-center gap-32 opacity-20 pointer-events-none">
-                        <span className="font-mono text-[8px] tracking-[0.5em] text-white">X_REF: 45.12N / 10.33E</span>
-                        <span className="font-mono text-[8px] tracking-[0.5em] text-white">STATUS: PERFORMANCE_OPTIMAL</span>
                     </div>
                 </div>
 
