@@ -62,13 +62,12 @@ const NoLeadersPlaceholder: React.FC = () => {
 };
 
 const MotivationalTicker: React.FC = () => {
-    // Replaced localized phrases with specific hardcoded list as requested
-    const phrases = [
+    const t = useTranslation();
+    // FIX: Access hubTickerPhrases from translation object
+    const phrases = t.hubTickerPhrases || [
         "DATA BUILDS LEGENDS •",
         "NUMBERS NEVER LIE •",
         "THE PITCH DECIDES EVERYTHING •",
-        "PERFORMANCE OVER HYPE •",
-        "PROVEN, NOT PROMISED •",
         "532 — WHERE ELITES PLAY"
     ];
     const cyanColor = '#00F2FE'; 
@@ -101,7 +100,6 @@ const MotivationalTicker: React.FC = () => {
 };
 
 const StaticSoccerBall: React.FC = () => (
-    // UPDATED: Position changed from top-1/2 to bottom-[4px] to sit on the edge
     <div className="absolute bottom-[4px] left-[120px] md:left-[160px] w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none transition-all duration-500">
         <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] overflow-visible">
             <defs>
@@ -196,8 +194,6 @@ const HubNav: React.FC<{
         'info': t.information 
     };
 
-    // UPDATED: Shadow is significantly softer. 
-    // No more heavy black падающая тень that causes the visual break.
     const navContainerClass = `
         fixed top-3 left-1/2 -translate-x-1/2 z-[100] 
         flex items-center justify-between 
@@ -217,7 +213,6 @@ const HubNav: React.FC<{
             `}} />
             <div className="flex items-center shrink-0 h-full relative pl-10">
                 <div className="flex items-center">
-                    {/* Adjusted height of hanging tags to fit slimmer bar */}
                     <HangingTag digit="5" label="PLAYERS" height={20} delay="0s" pulseDuration="2.8s" />
                     <HangingTag digit="3" label="SQUADS" height={50} delay="1.5s" pulseDuration="4.2s" />
                     <HangingTag digit="2" label="GOALS" height={80} delay="0.8s" pulseDuration="3.7s" />
@@ -231,14 +226,14 @@ const HubNav: React.FC<{
                 </div>
             </div>
             
-            {/* ADJUSTED TICKER CONTAINER: Increased padding to move ticker away from ball */}
             <div className={`flex-grow h-full overflow-hidden flex items-center ${isDashboardOpen ? 'justify-center px-4' : 'justify-start pl-12 pr-4'}`}>
                 {isDashboardOpen ? (
                     <div className="flex items-center gap-8 min-w-fit">
                         <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center">
                             {activeTab === 'dashboard' ? (
                                 <>
-                                    <span className="font-russo text-[7px] text-[#00F2FE] tracking-[0.3em] uppercase leading-none opacity-80 mb-0.5">SESSION BROADCAST</span>
+                                    {/* FIX: Access hubBroadcastHeader from translation object */}
+                                    <span className="font-russo text-[7px] text-[#00F2FE] tracking-[0.3em] uppercase leading-none opacity-80 mb-0.5">{t.hubBroadcastHeader}</span>
                                     <span className="font-chakra text-sm md:text-lg font-bold text-white tracking-widest leading-none">{sessionDate || 'LIVE'}</span>
                                 </>
                             ) : (
@@ -528,10 +523,10 @@ export const PublicHubScreen: React.FC = () => {
 
             <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
                 <div className="absolute inset-0 z-0 pointer-events-none">
-                    {/* UPDATED: Removed fixed bg-[05070a] to allow nested gradients to fill the whole space */}
                     <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
                 </div>
                 <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10">
+                    {/* FIX: Use setArchiveViewDate function for onArchiveViewChange callback */}
                     <ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} />
                 </div>
             </div>

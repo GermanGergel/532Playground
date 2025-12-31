@@ -1,3 +1,4 @@
+
 export const vn = {
   // Navigation
   navHome: "Trang Chủ",
@@ -56,12 +57,10 @@ export const vn = {
   selectWinnerDesc: "Chọn đội thắng để tiếp tục",
   onBench: "Dự Bị",
 
-  // FIX: Added missing Legionnaire keys for Vietnamese translation
   legionnaire_replace: "THAY THẾ",
   legionnaire_select: "CHỌN",
   legionnaire_no_players: "Không có cầu thủ dự bị",
 
-  // FIX: Added missing Session Summary keys for Vietnamese translation
   // Session Summary
   summary_title: "TỔNG KẾT BUỔI TẬP",
   summary_location: "ĐỊA ĐIỂM",
@@ -111,7 +110,7 @@ export const vn = {
   hubAnalytics: "Phân Tích Hub",
   settingsGenDemoSession: "TẠO BUỔI TẬP DEMO",
   settingsGenDemoPlayers: "TẠO 10 CẦU THỦ DEMO",
-  ledgerTitle: "Sổ Quỹ",
+  ledgerTitle: "Sổ Quỹ Buổi Tập",
   ledgerEmpty: "Không Có Dữ Liệu",
   ledgerCollected: "Đã Thu",
   ledgerClear: "Xóa Sổ Quỹ",
@@ -232,11 +231,19 @@ export const vn = {
   noBadges: "Chưa có huy hiệu",
 
   // Hub
-  hubTicker1: "THEO DÕI HIỆU SUẤT",
-  hubTicker2: "DỮ LIỆU TRỰC TIẾP",
-  hubTicker3: "BẢNG XẾP HẠNG",
-  hubTicker4: "PHÂN TÍCH CẦU THỦ",
-  hubTicker5: "LƯU TRỮ TRẬN ĐẤU",
+  hubTickerPhrases: [
+    "DỮ LIỆU TẠO NÊN HUYỀN THOẠI •",
+    "CON SỐ KHÔNG BAO GIỜ NÓI DỐI •",
+    "SÂN CỎ QUYẾT ĐỊNH TẤT CẢ •",
+    "HIỆU SUẤT TRÊN HẾT •",
+    "PROVEN, NOT PROMISED •",
+    "532 — NƠI HỘI TỤ TINH ANH"
+  ],
+  hubBroadcastHeader: "TRỰC TIẾP",
+  hubIntelligenceHeader: "BẢN TIN TÌNH BÁO",
+  hubSquadsHeader: "ĐỘI HÌNH BUỔI TẬP",
+  hubVitalsHeader: "CHỈ SỐ CLB",
+  hubGlobalDistribution: "PHÂN PHỐI TOÀN CẦU",
   hubAwaitingStats: "ĐANG CHỜ DỮ LIỆU",
   hubAnalyzingPerformance: "ĐANG PHÂN TÍCH...",
   hubDashboardBtn: "DASHBOARD",
@@ -259,7 +266,6 @@ export const vn = {
   hubLeadersTitle: "Dẫn Đầu Buổi Tập",
   hubJoinSquad: "Tham Gia Đội Hình",
   
-  // FIX: Added missing Duel keys for Vietnamese translation
   // Duel
   duel_title: "Chọn Đối Thủ",
   duel_id_unit: "XÁC MINH CẦU THỦ...",
@@ -379,8 +385,8 @@ export const vn = {
   badge_iron_streak_desc: "Chuỗi 5 trận thắng",
   badge_undefeated: "Bất Bại",
   badge_undefeated_desc: "Không thua (tối thiểu 6 trận)",
-  badge_dominant_participant: "Đá 10+ trận",
-  badge_dominant_participant_desc: "10+ Games played",
+  badge_dominant_participant: "Kẻ Thống Trị",
+  badge_dominant_participant_desc: "Đá 10+ trận",
   badge_career_100_wins: "Trăm Trận Thắng",
   badge_career_100_wins_desc: "100 Trận Thắng Sự Nghiệp",
   badge_career_150_influence: "Biểu Tượng",

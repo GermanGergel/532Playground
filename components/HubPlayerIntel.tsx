@@ -91,7 +91,7 @@ const TerminalStat = ({ label, value, color = "#fff", subValue, size = "text-xl"
 
 // --- RE-DESIGNED STAT BLOCKS ---
 
-const TerminalLastSession = ({ player }: { player: Player }) => {
+const TerminalLastSession = ({ player, t }: { player: Player, t: any }) => {
     const b = player.lastRatingChange;
     if (!b) return <div className="text-center py-6 opacity-10 text-[9px] uppercase font-black">No Data</div>;
 
@@ -120,9 +120,9 @@ const TerminalLastSession = ({ player }: { player: Player }) => {
             
             <div className="grid grid-cols-3 gap-1">
                 {[
-                    { l: 'Team', v: b.teamPerformance },
-                    { l: 'Indiv', v: b.individualPerformance },
-                    { l: 'Badge', v: b.badgeBonus }
+                    { l: t.lastSessionAnalysis_team, v: b.teamPerformance },
+                    { l: t.lastSessionAnalysis_indiv, v: b.individualPerformance },
+                    { l: t.lastSessionAnalysis_badge, v: b.badgeBonus }
                 ].map(stat => (
                     <div key={stat.l} className="bg-black/30 p-1.5 rounded-xl border border-white/5 text-center shadow-inner">
                         <span className={`text-[9px] font-bold block leading-none ${stat.v > 0 ? 'text-white' : stat.v < 0 ? 'text-red-400' : 'text-white/40'}`} style={{ textShadow: 'none' }}>
@@ -223,13 +223,11 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void }> 
     return (
         <div className="absolute inset-0 z-20 flex flex-col animate-in fade-in duration-700 rounded-[2.5rem] overflow-hidden">
             <div className="absolute inset-0 z-0 pointer-events-none">
-                {/* Радиальный градиент в более темной гамме (темнее, чем на дашборде) */}
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#01040a] to-black"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] pointer-events-none"></div>
             </div>
 
             <div className="relative z-10 flex-grow overflow-y-auto custom-hub-scrollbar">
-                {/* FIX: Increased padding bottom (pb-48) to ensure last element (Awards) is fully visible above browser chrome */}
                 <div className="w-full max-w-5xl mx-auto px-6 md:px-12 lg:px-20 py-8 pb-48 flex flex-col h-full">
                     <div className="flex items-center justify-between mb-6 shrink-0">
                         <button onClick={onBack} className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:border-[#00F2FE] hover:bg-[#00F2FE]/10 transition-all shadow-lg">
@@ -269,7 +267,7 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void }> 
                                 <BentoBox className="h-full" contentClassName="h-full flex flex-col justify-center">
                                     <IntelHeader title={t.lastSessionAnalysis} icon={BarChartDynamic} />
                                     <div className="flex-grow flex flex-col justify-center">
-                                        <TerminalLastSession player={player} />
+                                        <TerminalLastSession player={player} t={t} />
                                     </div>
                                 </BentoBox>
 

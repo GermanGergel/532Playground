@@ -233,6 +233,19 @@ export const en = {
   noBadges: "No badges yet",
 
   // Hub - UPDATED SLOGANS
+  hubTickerPhrases: [
+    "DATA BUILDS LEGENDS •",
+    "NUMBERS NEVER LIE •",
+    "THE PITCH DECIDES EVERYTHING •",
+    "PERFORMANCE OVER HYPE •",
+    "PROVEN, NOT PROMISED •",
+    "532 — WHERE ELITES PLAY"
+  ],
+  hubBroadcastHeader: "SESSION BROADCAST",
+  hubIntelligenceHeader: "INTELLIGENCE FEED",
+  hubSquadsHeader: "SESSION SQUADS",
+  hubVitalsHeader: "CLUB VITALS",
+  hubGlobalDistribution: "GLOBAL DISTRIBUTION",
   hubTicker1: "NO STATS. NO GLORY.",
   hubTicker2: "DATA DEFINES LEGENDS.",
   hubTicker3: "ELEVATE YOUR GAME.",

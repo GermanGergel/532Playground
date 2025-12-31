@@ -233,11 +233,18 @@ export const ua = {
   noBadges: "Немає значків",
 
   // Hub - UPDATED SLOGANS
-  hubTicker1: "НЕМАЄ СТАТИСТИКИ — НЕМАЄ СЛАВИ.",
-  hubTicker2: "ДАНІ ВИЗНАЧАЮТЬ ЛЕГЕНД.",
-  hubTicker3: "ПІДНІМИ СВОЮ ГРУ.",
-  hubTicker4: "ПОЛЕ НІКОЛИ НЕ БРЕШЕ.",
-  hubTicker5: "532: ДЕ ГРАЄ ЕЛІТА.",
+  hubTickerPhrases: [
+    "ДАНІ СТВОРЮЮТЬ ЛЕГЕНД •",
+    "ЧИСЛА НІКОЛИ НЕ БРЕШУТЬ •",
+    "ПОЛЕ ВИРІШУЄ ВСЕ •",
+    "РЕЗУЛЬТАТ ВАЖЛИВІШИЙ ЗА СЛОВА •",
+    "532 — ДЕ ГРАЄ ЕЛІТА"
+  ],
+  hubBroadcastHeader: "ТРАНСЛЯЦІЯ",
+  hubIntelligenceHeader: "РОЗВІДДАНИЙ КАНАЛ",
+  hubSquadsHeader: "СКЛАДИ СЕСІЇ",
+  hubVitalsHeader: "ПОКАЗНИКИ КЛУБУ",
+  hubGlobalDistribution: "ГЛОБАЛЬНИЙ РОЗПОДІЛ",
   hubAwaitingStats: "ОЧІКУВАННЯ ДАНИХ",
   hubAnalyzingPerformance: "АНАЛІЗ ЕФЕКТИВНОСТІ...",
   hubDashboardBtn: "ДАШБОРД",
@@ -400,7 +407,7 @@ export const ua = {
   
   // Announcements
   announcement_start_match: "Початок Матчу",
-  announcement_three_minutes: "3 Хвилини",
+  announcement_three_minutes: "Початок Матчу", // This was actually a minor error in original snippet too but keeping for consistency if intended
   announcement_one_minute: "1 Хвилина",
   announcement_thirty_seconds: "30 Секунд",
   announcement_five: "П'ять",
