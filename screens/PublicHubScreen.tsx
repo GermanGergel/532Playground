@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-import { Player, PlayerStatus, PlayerForm, SkillType } from '../types';
+import { Player, PlayerStatus, PlayerForm, SkillType, PlayerTier } from '../types';
 import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, FacebookIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon } from '../icons';
 import { PlayerAvatar, TeamAvatar } from '../components/avatars';
 import { Language } from '../translations/index';
@@ -145,7 +145,7 @@ const NavHubButton: React.FC<{
     title: string; 
     icon: React.ReactNode; 
     isActive: boolean; 
-    onClick: () => void;
+    onClick: () => void; 
     isDisabled?: boolean;
 }> = ({ title, icon, isActive, onClick, isDisabled }) => (
     <button 
@@ -339,8 +339,8 @@ const DispersingWord: React.FC<{ words: string[] }> = ({ words }) => {
     };
     return (
         <span className="relative inline-block h-[1.1em] min-w-[280px] md:min-w-[500px] align-top text-center perspective-1000">
-            <span className={`block text-transparent bg-clip-text bg-gradient-to-b from-white to-white/20 transition-all duration-[1200ms] ease-[cubic-bezier(0.2,0,0.2,1)] ${getStyles()}`} style={{ textShadow: state === 'active' ? '0 0 30px rgba(255, 255, 255, 0.1)' : 'none' }}>{words[index]}</span>
-            {state === 'active' && (<span className="absolute inset-0 text-transparent bg-clip-text bg-gradient-to-b from-white to-transparent pointer-events-none z-0 opacity-20" style={{ filter: 'blur(20px)', WebkitTextFillColor: 'transparent' }}>{words[index]}</span>)}
+            <span className={`block text-transparent bg-clip-text bg-gradient-to-b from-[#00F2FE] to-[#00F2FE]/30 transition-all duration-[1200ms] ease-[cubic-bezier(0.2,0,0.2,1)] ${getStyles()}`} style={{ textShadow: state === 'active' ? '0 0 30px rgba(0, 242, 254, 0.5)' : 'none' }}>{words[index]}</span>
+            {state === 'active' && (<span className="absolute inset-0 text-transparent bg-clip-text bg-gradient-to-b from-[#00F2FE] to-transparent pointer-events-none z-0 opacity-20" style={{ filter: 'blur(20px)', WebkitTextFillColor: 'transparent' }}>{words[index]}</span>)}
         </span>
     );
 };
@@ -450,7 +450,8 @@ export const PublicHubScreen: React.FC = () => {
     const navigate = useNavigate();
     const { allPlayers, history } = useApp();
     const [isDashboardOpen, setIsDashboardOpen] = useState(false);
-    const [dashboardView, setDashboardView] = useState<any>('dashboard');
+    // FIX: Explicitly typed the dashboardView state to match the expected view types in ClubIntelligenceDashboard.
+    const [dashboardView, setDashboardView] = useState<'dashboard' | 'roster' | 'archive' | 'tournaments' | 'league' | 'info' | 'duel'>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
 
     useEffect(() => {
