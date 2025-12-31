@@ -12,7 +12,8 @@ import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { ClubIntelligenceDashboard } from '../components/ClubIntelligenceDashboard';
 import { RadioPlayer } from '../components/RadioPlayer';
 
-// ... (Остальные вспомогательные компоненты без изменений) ...
+// --- SUB-COMPONENTS ---
+
 const skillAbbreviations: Record<SkillType, string> = {
     goalkeeper: 'GK', power_shot: 'PS', technique: 'TQ', defender: 'DF', 
     playmaker: 'PM', finisher: 'FN', versatile: 'VS', tireless_motor: 'TM', leader: 'LD',
@@ -52,11 +53,16 @@ const NoLeadersPlaceholder: React.FC = () => {
                     </p>
                 </div>
             </div>
+            <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                .animate-spin-slow { animation: spin-slow 15s linear infinite; }
+            `}} />
         </div>
     );
 };
 
 const MotivationalTicker: React.FC = () => {
+    // Replaced localized phrases with specific hardcoded list as requested
     const phrases = [
         "DATA BUILDS LEGENDS •",
         "NUMBERS NEVER LIE •",
@@ -95,6 +101,7 @@ const MotivationalTicker: React.FC = () => {
 };
 
 const StaticSoccerBall: React.FC = () => (
+    // UPDATED: Position changed from top-1/2 to bottom-[4px] to sit on the edge
     <div className="absolute bottom-[4px] left-[120px] md:left-[160px] w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none transition-all duration-500">
         <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] overflow-visible">
             <defs>
@@ -130,7 +137,7 @@ const HangingTag: React.FC<{ digit: string; label: string; height: number; delay
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full pt-1">
                 <div className="relative flex flex-col items-center">
                     <div className="absolute inset-0 blur-[8px] bg-[#00F2FE]/20 rounded-full scale-[2.5] pointer-events-none opacity-40"></div>
-                    <span className="relative text-[7px] font-black tracking-[0.1em] text-[#00F2FE] whitespace-nowrap uppercase italic" style={{ textShadow: '0 0 8px rgba(0, 242, 254, 0.8)' }}>{label}</span>
+                    <span className="relative text-[7px] font-black tracking-[0.1em] text-[#00F2FE] whitespace-nowrap uppercase italic" style={{ textShadow: '0 0 8px rgba(0,242,254,0.8)' }}>{label}</span>
                 </div>
             </div>
         </div>
@@ -189,6 +196,8 @@ const HubNav: React.FC<{
         'info': t.information 
     };
 
+    // UPDATED: Shadow is significantly softer. 
+    // No more heavy black падающая тень that causes the visual break.
     const navContainerClass = `
         fixed top-3 left-1/2 -translate-x-1/2 z-[100] 
         flex items-center justify-between 
@@ -208,6 +217,7 @@ const HubNav: React.FC<{
             `}} />
             <div className="flex items-center shrink-0 h-full relative pl-10">
                 <div className="flex items-center">
+                    {/* Adjusted height of hanging tags to fit slimmer bar */}
                     <HangingTag digit="5" label="PLAYERS" height={20} delay="0s" pulseDuration="2.8s" />
                     <HangingTag digit="3" label="SQUADS" height={50} delay="1.5s" pulseDuration="4.2s" />
                     <HangingTag digit="2" label="GOALS" height={80} delay="0.8s" pulseDuration="3.7s" />
@@ -221,6 +231,7 @@ const HubNav: React.FC<{
                 </div>
             </div>
             
+            {/* ADJUSTED TICKER CONTAINER: Increased padding to move ticker away from ball */}
             <div className={`flex-grow h-full overflow-hidden flex items-center ${isDashboardOpen ? 'justify-center px-4' : 'justify-start pl-12 pr-4'}`}>
                 {isDashboardOpen ? (
                     <div className="flex items-center gap-8 min-w-fit">
@@ -510,20 +521,17 @@ export const PublicHubScreen: React.FC = () => {
                 archiveViewDate={archiveViewDate}
                 onHomeClick={() => {
                     setIsDashboardOpen(false);
-                    setDashboardView('dashboard');
+                    setDashboardView('dashboard'); // Reset to default view
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
             />
 
-            {/* 
-                Изменено: Обертка Дашборда теперь занимает всё пространство снизу (pb-4 вместо pb-8/12).
-                Это позволяет плашкам внутри доходить до низа.
-            */}
-            <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-4 overflow-y-auto overscroll-none ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
+            <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
                 <div className="absolute inset-0 z-0 pointer-events-none">
+                    {/* UPDATED: Removed fixed bg-[05070a] to allow nested gradients to fill the whole space */}
                     <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
                 </div>
-                <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10 h-full">
+                <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10">
                     <ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} />
                 </div>
             </div>
