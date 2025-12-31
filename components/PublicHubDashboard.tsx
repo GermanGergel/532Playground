@@ -367,7 +367,7 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
 // --- MAIN DASHBOARD EXPORT ---
 
 export const PublicHubDashboard: React.FC = () => {
-    const { history, newsFeed } = useApp();
+    const { history, newsFeed, allPlayers } = useApp();
     const t = useTranslation();
     const [activeRightTab, setActiveRightTab] = useState<'players' | 'games'>('players');
 
@@ -376,7 +376,20 @@ export const PublicHubDashboard: React.FC = () => {
     // --- STANDBY TRIGGER ---
     if (!session) return <StandbyScreen />;
 
-    const { teamStats, allPlayersStats } = calculateAllStats(session);
+    // 1. CALCULATE BASE STATS
+    const { teamStats, allPlayersStats: rawPlayersStats } = calculateAllStats(session);
+
+    // 2. SYNCHRONIZE WITH LIVE DATABASE
+    // This is the CRITICAL fix: replace player snapshot with current global data
+    const allPlayersStats = useMemo(() => {
+        return rawPlayersStats.map(stat => {
+            const latestPlayer = allPlayers.find(p => p.id === stat.player.id);
+            return {
+                ...stat,
+                player: latestPlayer || stat.player
+            };
+        });
+    }, [rawPlayersStats, allPlayers]);
 
     // Sorting for Podium (Impact Score)
     const sortedForPodium = [...allPlayersStats].sort((a, b) => getImpactScore(b) - getImpactScore(a));

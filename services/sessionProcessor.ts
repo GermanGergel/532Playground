@@ -1,3 +1,4 @@
+
 import { Session, Player, NewsItem, BadgeType, SessionStatus, PlayerRecords, PlayerHistoryEntry } from '../types';
 import { calculateAllStats } from './statistics';
 import { calculateEarnedBadges, calculateRatingUpdate, getTierForRating } from './rating';
@@ -68,6 +69,8 @@ export const processFinishedSession = ({
                 const floor = player.initialRating !== undefined ? player.initialRating : 68;
 
                 // Рейтинг падает, ТОЛЬКО если он сейчас выше стартового.
+                // Если рейтинг 73, а старт был 70 -> падает до 72.
+                // Если рейтинг 70, а старт был 70 -> НЕ падает.
                 if (newRating > floor) {
                     newRating -= 1;
                     penaltyApplied = true;
@@ -187,12 +190,9 @@ export const processFinishedSession = ({
         ? manageNewsFeedSize([...allNewNews, ...newsFeed])
         : newsFeed;
 
-    // FIX: Обновляем playerPool внутри сессии актуальными данными игроков (с уже начисленным рейтингом)
-    // Это гарантирует, что Club Hub (взяв историю[0]) отобразит новые цифры.
     const finalSession: Session = { 
         ...session, 
         status: SessionStatus.Completed,
-        playerPool: playersWithCalculatedRatings.filter(p => participatedIds.has(p.id))
     };
 
     return {
