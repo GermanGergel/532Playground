@@ -20,7 +20,6 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
     const [hubSortBy, setHubSortBy] = useState<'name' | 'rating' | 'date'>('rating');
     const [hubSearch, setHubSearch] = useState('');
 
-    // Analytics: Track Tab Changes
     useEffect(() => {
         logAnalyticsEvent('view_tab', currentView);
     }, [currentView]);
@@ -32,7 +31,6 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
         if (currentView !== 'roster' && currentView !== 'duel') {
              setSelectedPlayerId(null);
         }
-        // Reset archive view date if not in archive
         if (currentView !== 'archive' && onArchiveViewChange) {
             onArchiveViewChange(null);
         }
@@ -46,9 +44,11 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
 
     return (
         <div className="w-full h-full animate-in fade-in duration-700">
-            {/* Content Container */}
-            {/* UPDATED: Changed h-screen calc to use dvh (Dynamic Viewport Height) for better mobile support */}
-            <div className="w-full h-[calc(100vh-110px)] md:h-[calc(100dvh-110px)] min-h-[650px] relative">
+            {/* 
+                Изменено: h-full вместо фиксированного calc. 
+                Это позволяет плашке растягиваться до границ, заданных в PublicHubScreen.
+            */}
+            <div className="w-full h-full relative">
                 {currentView === 'dashboard' && <PublicHubDashboard />}
                 {currentView === 'roster' && (
                     selectedPlayerId ? (

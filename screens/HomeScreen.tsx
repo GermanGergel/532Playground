@@ -34,23 +34,24 @@ export const HomeScreen: React.FC = () => {
     navigate('/setup');
   };
 
-  // ФИНАЛЬНОЕ РЕШЕНИЕ: Делимся ТОЛЬКО ссылкой.
-  // Это заставляет Telegram развернуть Rich Preview на основе мета-тегов из index.html
+  // NEW: Optimized Sharing Logic for "One Block" Link Preview
   const handleShareHub = async () => {
       if (isSharing) return;
       setIsSharing(true);
 
-      // Добавляем ПРАВИЛЬНЫЙ cache-buster через знак вопроса
-      const cacheBustUrl = `${hubUrl}?u=${Date.now()}`;
+      const shareData = {
+          title: '532 CLUB HUB',
+          text: 'Check live stats, rankings, and match intelligence on 532 Playground.',
+          url: hubUrl,
+      };
 
       try {
-          if (navigator.share) {
-              await navigator.share({
-                  url: cacheBustUrl
-              });
+          if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+              await navigator.share(shareData);
           } else {
-              await navigator.clipboard.writeText(cacheBustUrl);
-              alert("Link copied!");
+              // Fallback: Copy to clipboard
+              await navigator.clipboard.writeText(hubUrl);
+              alert("Club Hub link copied to clipboard!");
           }
       } catch (error) {
           console.error("Error sharing hub link:", error);
@@ -62,11 +63,15 @@ export const HomeScreen: React.FC = () => {
   const promoUrl = `${window.location.origin}/promo`;
 
   const handleSharePromoLink = async () => {
+      const shareData = {
+          title: '532 Playground',
+          text: 'Join the club:',
+          url: promoUrl,
+      };
+
       try {
-          if (navigator.share) {
-              await navigator.share({
-                  url: promoUrl,
-              });
+          if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+              await navigator.share(shareData);
           } else {
               await navigator.clipboard.writeText(promoUrl);
               alert("Link copied!");
