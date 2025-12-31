@@ -196,13 +196,13 @@ const HubNav: React.FC<{
         'info': t.information 
     };
 
-    // UPDATED: Height reduced to be slimmer (42px mobile, 54px desktop)
+    // UPDATED: Shadow is now softer and includes an accent glow to blend with background lighting
     const navContainerClass = `
         fixed top-3 left-1/2 -translate-x-1/2 z-[100] 
         flex items-center justify-between 
         w-full max-w-[1450px] pr-4 py-0 
-        bg-black/95 backdrop-blur-xl rounded-2xl border border-white/10
-        shadow-[0_15px_40px_-10px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.05)] 
+        bg-black/85 backdrop-blur-xl rounded-2xl border border-white/10
+        shadow-[0_20px_40px_-15px_rgba(0,0,0,0.7),0_0_20px_rgba(0,242,254,0.05),inset_0_1px_0_rgba(255,255,255,0.05)] 
         h-[42px] md:h-[54px] transition-all duration-300
     `;
 
