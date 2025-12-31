@@ -182,8 +182,8 @@ export const HubRoster: React.FC<HubRosterProps> = ({ onSelectPlayer, sortBy, se
     return (
         <div className="absolute inset-0 flex flex-col animate-in fade-in duration-700 overflow-hidden rounded-[2.5rem]">
             <div className="absolute inset-0 z-0 pointer-events-none">
-                {/* UPDATED: Changed from radial-gradient to solid dark to remove upper glow */}
-                <div className="absolute inset-0 bg-[#05070a]"></div>
+                {/* Радиальный градиент в более темной гамме (темнее, чем на дашборде) */}
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#01040a] to-black"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] pointer-events-none"></div>
             </div>
             
