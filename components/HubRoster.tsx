@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApp } from '../context';
 import { PlayerTier, PlayerStatus, Player } from '../types';
@@ -180,9 +181,9 @@ export const HubRoster: React.FC<HubRosterProps> = ({ onSelectPlayer, sortBy, se
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] pointer-events-none"></div>
             </div>
             
-            {/* UPDATED: Minimalistic spacing to lift everything up */}
-            <div className="pt-2 mb-2 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4 px-10 relative z-10">
-                <div className="flex items-center gap-10 ml-4 md:ml-32 transition-all duration-500">
+            {/* TOP NAVIGATION BLOCK */}
+            <div className="pt-2 mb-2 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4 px-10 md:px-24 lg:px-32 relative z-10">
+                <div className="flex items-center gap-10 ml-4 transition-all duration-500">
                     <div className="max-w-fit">
                         <h3 className="font-russo text-[18px] uppercase tracking-[0.1em] text-white italic leading-tight whitespace-nowrap" style={{ textShadow: '0 0 20px rgba(255,255,255,0.2)' }}>{t.hubPlayers}</h3>
                         <div className="h-[2px] w-full bg-[#00F2FE] mt-2 rounded-full shadow-[0_0_10px_rgba(0,242,254,0.5)]"></div>
@@ -206,9 +207,9 @@ export const HubRoster: React.FC<HubRosterProps> = ({ onSelectPlayer, sortBy, se
                 </div>
             </div>
             
-            {/* UPDATED: Reduced top padding to move list closer to header */}
-            <div className="flex-grow overflow-y-auto px-10 pt-2 custom-hub-scrollbar relative z-10">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-24 max-w-7xl mx-auto">
+            {/* PLAYER PLAQUES CONTAINER (UPDATED: Squeezed width and increased top padding) */}
+            <div className="flex-grow overflow-y-auto px-14 md:px-36 lg:px-56 pt-12 custom-hub-scrollbar relative z-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-24 gap-y-5 pb-24 max-w-7xl mx-auto">
                     {confirmedPersonnel.map((person, idx) => {
                         const tierColor = TIER_COLORS[person.tier] || '#94a3b8';
                         return (
