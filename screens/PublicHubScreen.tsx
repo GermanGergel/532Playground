@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-import { Player, PlayerStatus, PlayerForm, SkillType, PlayerTier } from '../types';
+import { Player, PlayerStatus, PlayerForm, SkillType } from '../types';
 import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, FacebookIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon } from '../icons';
 import { PlayerAvatar, TeamAvatar } from '../components/avatars';
 import { Language } from '../translations/index';
@@ -450,8 +450,8 @@ export const PublicHubScreen: React.FC = () => {
     const navigate = useNavigate();
     const { allPlayers, history } = useApp();
     const [isDashboardOpen, setIsDashboardOpen] = useState(false);
-    // FIX: Explicitly typed the dashboardView state to match the expected view types in ClubIntelligenceDashboard.
-    const [dashboardView, setDashboardView] = useState<'dashboard' | 'roster' | 'archive' | 'tournaments' | 'league' | 'info' | 'duel'>('dashboard');
+    // FIX: Replaced setDashboardView('dashboard') with useState('dashboard') to fix "variable used before declaration" error
+    const [dashboardView, setDashboardView] = useState('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
 
     useEffect(() => {
