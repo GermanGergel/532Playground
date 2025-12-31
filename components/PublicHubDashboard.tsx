@@ -114,7 +114,8 @@ const HubCard: React.FC<{
         titleColor = 'text-white';
         iconBg = 'bg-white/10 border-white/20';
     } else if (isElite) {
-        bgStyleClass = 'bg-[#010413] border-white/10';
+        // UPDATED: Darkened Elite background (leaders section)
+        bgStyleClass = 'bg-[#020308] border-white/10';
         headerStyleClass = 'bg-transparent !border-0';
         titleColor = 'text-white'; 
         iconBg = 'bg-white/5 border-white/10 text-[#FFD700]';
@@ -127,15 +128,23 @@ const HubCard: React.FC<{
 
     return (
         <div className={`relative overflow-hidden rounded-[1.5rem] flex flex-col border ${bgStyleClass} ${className} group/card`}>
-            {/* --- TEXTURE LAYERS (Added from HubPlayerIntel) --- */}
+            {/* --- TEXTURE LAYERS --- */}
             {/* Dynamic Mesh Texture Overlay */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ 
                 backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`,
                 backgroundSize: '4px 4px'
             }}></div>
 
-            {/* Pulsing Ambient Light */}
-            <div className="absolute -top-10 -left-10 w-40 h-40 bg-[#00F2FE]/[0.03] rounded-full blur-[40px] pointer-events-none z-0 animate-pulse" style={{ animationDuration: '4s' }}></div>
+            {/* UPDATED: Added Stardust/Dust effect specifically for Elite Leaders card */}
+            {isElite && (
+                <div 
+                    className="absolute inset-0 opacity-[0.04] pointer-events-none z-0 mix-blend-screen"
+                    style={{ backgroundImage: `url('https://www.transparenttextures.com/patterns/stardust.png')` }}
+                ></div>
+            )}
+
+            {/* Pulsing Ambient Light - Tuned for softer glow */}
+            <div className={`absolute -top-10 -left-10 w-40 h-40 ${isElite ? 'bg-[#00F2FE]/[0.05]' : 'bg-[#00F2FE]/[0.03]'} rounded-full blur-[45px] pointer-events-none z-0 animate-pulse`} style={{ animationDuration: '6s' }}></div>
             
             {/* Hover Shine Effect */}
             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.01] to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-700 z-0"></div>
@@ -144,7 +153,6 @@ const HubCard: React.FC<{
             <div className={`relative z-10 py-1.5 px-4 flex items-center justify-between shrink-0 ${headerStyleClass} ${isRight ? 'flex-row-reverse' : ''}`}>
                  <div className={`flex items-center gap-2 relative z-10 ${isRight ? 'flex-row-reverse' : ''}`}>
                     <div className={`w-4 h-4 rounded-md flex items-center justify-center shadow-sm border ${iconBg}`} style={{ color: accent }}>
-                        {/* FIX: Added type parameter <any> to React.ReactElement cast to satisfy TypeScript for className property usage in cloneElement. */}
                         {React.cloneElement(icon as React.ReactElement<any>, { className: "w-2.5 h-2.5" })}
                     </div>
                     {typeof title === 'string' ? <h3 className={`font-russo text-[10px] uppercase tracking-widest ${titleColor}`}>{title}</h3> : title}
