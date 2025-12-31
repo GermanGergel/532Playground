@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { useApp } from '../context';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
@@ -92,11 +93,11 @@ const HubCard: React.FC<{
     title: React.ReactNode; 
     icon: React.ReactNode; 
     children: React.ReactNode; 
-    className?: string;
-    accent?: string;
+    className?: string; 
+    accent?: string; 
     variant?: 'default' | 'dark' | 'midnight' | 'glass' | 'ocean' | 'elite' | 'standings' | 'obsidian';
-    bodyClassName?: string;
-    headerExtra?: React.ReactNode;
+    bodyClassName?: string; 
+    headerExtra?: React.ReactNode; 
     align?: 'left' | 'right';
 }> = ({ title, icon, children, className = "", accent = "#00F2FE", variant = 'default', bodyClassName = "", headerExtra, align = 'left' }) => {
     const isElite = variant === 'elite';
@@ -214,8 +215,8 @@ const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any
 );
 
 interface TopPlayerStats {
-    player: Player;
-    score: number;
+    player: Player; 
+    score: number; 
     rank: 1 | 2 | 3;
 }
 
@@ -263,24 +264,44 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
     );
 };
 
-const NewsVanguardCard: React.FC<{ item: NewsItem }> = ({ item }) => (
-    <div className="mb-3 relative px-1 animate-in fade-in slide-in-from-right-4 duration-500">
-        <div className="relative rounded-2xl overflow-hidden p-3.5 border border-white/5 bg-gradient-to-br from-[#161a21] to-[#0c0e12]">
-            <div className="absolute top-3.5 left-0 w-1 h-6 rounded-r-full bg-[#00F2FE]" style={{ boxShadow: '0 0 8px #00F2FE' }}></div>
-            <div className="flex items-center justify-between gap-3 pl-2">
-                <div className="flex-grow min-w-0">
-                    <div className="flex items-center gap-2 mb-1.5">
-                        <span className="text-[7px] font-black tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-sm bg-white/5 text-[#00F2FE]">{item.type.replace('_', ' ')}</span>
-                        <span className="text-[7px] font-mono text-white/20">{new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+const NewsVanguardCard: React.FC<{ item: NewsItem }> = ({ item }) => {
+    const accentColor = '#818cf8'; // Indigo accent to match weather
+    
+    return (
+        <div className="mb-3 relative px-1 animate-in fade-in slide-in-from-right-4 duration-500">
+            {/* 
+                STYLED AS BROTHER TO WEATHER WIDGET:
+                - bg-gradient-to-br from-indigo-900/40 to-black
+                - border-indigo-500/20
+                - diagonal-striped texture
+            */}
+            <div className="relative rounded-2xl overflow-hidden p-3.5 border border-indigo-500/20 bg-gradient-to-br from-indigo-900/40 to-black">
+                {/* Diagonal Stripe Texture Overlay */}
+                <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-striped-brick.png')]"></div>
+                
+                <div className="absolute top-3.5 left-0 w-1.5 h-7 rounded-r-full bg-[#818cf8]" style={{ boxShadow: '0 0 10px #818cf8' }}></div>
+                
+                <div className="relative z-10 flex items-center justify-between gap-3 pl-3">
+                    <div className="flex-grow min-w-0">
+                        <div className="flex items-center gap-2 mb-1.5">
+                            <span className="text-[7px] font-black tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-sm bg-white/5 text-indigo-300">
+                                {item.type.replace('_', ' ')}
+                            </span>
+                            <span className="text-[7px] font-mono text-white/20">
+                                {new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+                            </span>
+                        </div>
+                        <h4 className="text-[12px] font-black text-slate-100 uppercase truncate tracking-wide">{item.playerName}</h4>
+                        <p className="text-[10px] text-indigo-100/40 leading-tight mt-1 truncate italic font-chakra border-l border-white/5 pl-2">
+                            {item.message.replace(item.playerName, '').trim() || item.subMessage}
+                        </p>
                     </div>
-                    <h4 className="text-[12px] font-black text-slate-200 uppercase truncate">{item.playerName}</h4>
-                    <p className="text-[10px] text-white/40 leading-tight mt-1 truncate italic font-chakra border-l border-white/5 pl-2">{item.message.replace(item.playerName, '').trim() || item.subMessage}</p>
+                    {item.isHot && <Zap className="w-3.5 h-3.5 text-indigo-400 animate-pulse drop-shadow-[0_0_5px_#818cf8]" />}
                 </div>
-                {item.isHot && <Zap className="w-3.5 h-3.5 text-[#00F2FE] animate-pulse" />}
             </div>
         </div>
-    </div>
-);
+    );
+};
 
 const getImpactScore = (stats: PlayerStats): number => {
     let score = 0;
