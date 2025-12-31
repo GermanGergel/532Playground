@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -62,6 +61,7 @@ const NoLeadersPlaceholder: React.FC = () => {
 };
 
 const MotivationalTicker: React.FC = () => {
+    // Replaced localized phrases with specific hardcoded list as requested
     const phrases = [
         "DATA BUILDS LEGENDS •",
         "NUMBERS NEVER LIE •",
@@ -100,6 +100,7 @@ const MotivationalTicker: React.FC = () => {
 };
 
 const StaticSoccerBall: React.FC = () => (
+    // UPDATED: Position changed from top-1/2 to bottom-[4px] to sit on the edge
     <div className="absolute bottom-[4px] left-[120px] md:left-[160px] w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none transition-all duration-500">
         <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] overflow-visible">
             <defs>
@@ -159,6 +160,7 @@ const NavHubButton: React.FC<{
                 ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 shadow-[0_0_15px_rgba(0,242,254,0.5),inset_0_0_6px_rgba(0,242,254,0.2)]' 
                 : 'text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.2)] hover:border-white/40 hover:text-white hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]'
             }`}>
+            {/* FIX: Added type parameter <any> to React.ReactElement cast to satisfy TypeScript for className property usage in cloneElement. */}
             {React.cloneElement(icon as React.ReactElement<any>, { className: "w-4 h-4" })}
         </div>
         <span className={`text-[6px] font-black tracking-widest uppercase transition-colors ${isActive ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>
@@ -194,6 +196,7 @@ const HubNav: React.FC<{
         'info': t.information 
     };
 
+    // UPDATED: Height reduced to be slimmer (42px mobile, 54px desktop)
     const navContainerClass = `
         fixed top-3 left-1/2 -translate-x-1/2 z-[100] 
         flex items-center justify-between 
@@ -213,6 +216,7 @@ const HubNav: React.FC<{
             `}} />
             <div className="flex items-center shrink-0 h-full relative pl-10">
                 <div className="flex items-center">
+                    {/* Adjusted height of hanging tags to fit slimmer bar */}
                     <HangingTag digit="5" label="PLAYERS" height={20} delay="0s" pulseDuration="2.8s" />
                     <HangingTag digit="3" label="SQUADS" height={50} delay="1.5s" pulseDuration="4.2s" />
                     <HangingTag digit="2" label="GOALS" height={80} delay="0.8s" pulseDuration="3.7s" />
@@ -226,6 +230,7 @@ const HubNav: React.FC<{
                 </div>
             </div>
             
+            {/* ADJUSTED TICKER CONTAINER: Increased padding to move ticker away from ball */}
             <div className={`flex-grow h-full overflow-hidden flex items-center ${isDashboardOpen ? 'justify-center px-4' : 'justify-start pl-12 pr-4'}`}>
                 {isDashboardOpen ? (
                     <div className="flex items-center gap-8 min-w-fit">
@@ -503,9 +508,7 @@ export const PublicHubScreen: React.FC = () => {
 
     return (
         <div className="min-h-screen text-white relative selection:bg-[#00F2FE] selection:text-black bg-[#0a0c10] pt-px overscroll-none">
-            <style dangerouslySetInnerHTML={{__html: `
-                html, body { background-color: #0a0c10; overscroll-behavior-y: none; }
-            `}} />
+            <style dangerouslySetInnerHTML={{__html: `html, body { background-color: #0a0c10; overscroll-behavior-y: none; }`}} />
             
             <div className={`fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50 z-[110]`}></div>
             
@@ -517,7 +520,7 @@ export const PublicHubScreen: React.FC = () => {
                 archiveViewDate={archiveViewDate}
                 onHomeClick={() => {
                     setIsDashboardOpen(false);
-                    setDashboardView('dashboard'); 
+                    setDashboardView('dashboard'); // Reset to default view
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
             />
@@ -535,20 +538,20 @@ export const PublicHubScreen: React.FC = () => {
             <div className={`relative z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}>
                 <HeroTitle />
                 
-                {/* --- MAIN PODIUM AREA (Season Leaders) --- */}
-                <div className="relative w-full max-w-6xl mx-auto mb-24">
-                    <div className="relative z-20">
-                        {displayData.top.length > 0 ? (
-                            <div className="flex flex-wrap items-end justify-center gap-4 md:gap-12 w-full perspective-1000">
-                                <div className="order-2 md:order-1 transition-transform duration-500 hover:translate-z-10">{displayData.top[1] && <CinematicCard player={displayData.top[1]} rank={2} />}</div>
-                                <div className="order-1 md:order-2 transition-transform duration-500 hover:translate-z-20 scale-105">{displayData.top[0] && <CinematicCard player={displayData.top[0]} rank={1} />}</div>
-                                <div className="order-3 md:order-3 transition-transform duration-500 hover:translate-z-10">{displayData.top[2] && <CinematicCard player={displayData.top[2]} rank={3} />}</div>
-                            </div>
-                        ) : (
-                            <NoLeadersPlaceholder />
-                        )}
-                    </div>
+                <div className="text-center mb-12 md:mb-20">
+                    <TrophyIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-4 text-[#00F2FE]" style={{ filter: 'drop-shadow(0 0 10px rgba(0, 242, 254, 0.7))' }} />
+                    <h2 className="font-orbitron text-xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubLeadersTitle}</h2>
                 </div>
+
+                {displayData.top.length > 0 ? (
+                    <div className="flex flex-wrap items-end justify-center gap-4 md:gap-8 w-full">
+                        <div className="order-2 md:order-1">{displayData.top[1] && <CinematicCard player={displayData.top[1]} rank={2} />}</div>
+                        <div className="order-1 md:order-2">{displayData.top[0] && <CinematicCard player={displayData.top[0]} rank={1} />}</div>
+                        <div className="order-3 md:order-3">{displayData.top[2] && <CinematicCard player={displayData.top[2]} rank={3} />}</div>
+                    </div>
+                ) : (
+                    <NoLeadersPlaceholder />
+                )}
 
                 <div className="mt-24 md:mt-32 pb-24">
                     <div className="text-center mb-12 md:mb-20">
