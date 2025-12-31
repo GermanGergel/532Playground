@@ -35,7 +35,8 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
     return (
         <div className="absolute inset-0 z-20 flex flex-col animate-in fade-in duration-500 rounded-[2.5rem] overflow-hidden">
             <div className="absolute inset-0 z-0 pointer-events-none">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
+                {/* ОБНОВЛЕННЫЙ ФОН: Более темная гамма для соответствия Player Hub */}
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#01040a] to-black"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
             </div>
             

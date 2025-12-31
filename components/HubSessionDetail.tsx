@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState } from 'react';
 import { Session, WeatherCondition } from '../types';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
@@ -108,8 +109,8 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
     
     const cleanTeamName = (name: string) => name.replace(/Squad/gi, '').replace(/Team/gi, '').replace(/\s+/g, ' ').trim();
 
-    // FIXED: thClass is now strictly bg-[#020617] to prevent light bars falling out in both Standings and Player Stats
-    const thClass = "py-2.5 text-white/40 uppercase tracking-tighter text-[9px] font-black text-center sticky top-0 bg-[#020617] z-20 border-b border-white/5";
+    // thClass uses the middle point color to blend nicely
+    const thClass = "py-2.5 text-white/40 uppercase tracking-tighter text-[9px] font-black text-center sticky top-0 bg-[#01040a] z-20 border-b border-white/5";
     const tdBase = "py-2 text-center text-[10px] font-bold transition-colors";
     const tdText = `${tdBase} text-slate-300`;
     const tdAccent = `${tdBase} text-white font-black text-[11px]`;
@@ -117,7 +118,8 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
     return (
         <div className="absolute inset-0 z-30 flex flex-col animate-in slide-in-from-right duration-500 overflow-hidden rounded-[2.5rem]">
             <div className="absolute inset-0 z-0 pointer-events-none">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
+                {/* ОБНОВЛЕННЫЙ ФОН: Более темная гамма для соответствия Player Hub */}
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#01040a] to-black"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
             </div>
             <div className="pt-6 pb-4 px-8 flex items-center justify-between shrink-0 z-10">
