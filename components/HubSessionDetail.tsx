@@ -27,9 +27,24 @@ const MoonIcon = ({ className }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
 );
 
+// --- IMPACT SCORE LOGIC (Synced with Dashboard) ---
+const getImpactScore = (stats: PlayerStats): number => {
+    let score = 0;
+    const nonCleanSheetWins = stats.wins - (stats.cleanSheetWins || 0);
+
+    score += nonCleanSheetWins * 2.0;
+    score += (stats.cleanSheetWins || 0) * 2.5;
+    score += stats.draws * 0.5;
+    score += stats.goals * 1.0;
+    score += stats.assists * 1.0;
+    score -= stats.ownGoals * 1.0;
+
+    return score;
+};
+
 const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: Session }> = ({ topPlayers, session }) => {
     const data = {
-        location: session.location || "DA NANG SPORT CENTER",
+        location: session.location || "PITCH DATA UNAVAILABLE",
         time: session.timeString || "19:30 - 21:00",
         temp: session.weather ? `${session.weather.temperature}°C` : "26°C",
         condition: session.weather?.condition ? session.weather.condition.toUpperCase() : "CLEAR"
@@ -37,44 +52,70 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
 
     const getWeatherIcon = (cond: WeatherCondition | string) => {
         const c = cond.toLowerCase();
-        if (c.includes('rain')) return <CloudRainIcon className="w-7 h-7 text-white/80" />;
-        if (c.includes('cloud')) return <CloudIcon className="w-7 h-7 text-white/80" />;
-        return <MoonIcon className="w-7 h-7 text-white/80" />;
+        if (c.includes('rain')) return <CloudRainIcon className="w-5 h-5 text-white/80" />;
+        if (c.includes('cloud')) return <CloudIcon className="w-5 h-5 text-white/80" />;
+        return <MoonIcon className="w-5 h-5 text-white/80" />;
     };
 
     return (
-        <div className="flex flex-col h-full py-2 overflow-hidden">
-            <div className="flex flex-col gap-4 shrink-0">
-                <div className="flex items-center gap-3 border-b border-white/5 pb-3">
-                    <div className="w-10 h-10 rounded-xl bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shrink-0"><MapPinIcon className="w-5 h-5" /></div>
-                    <div className="flex flex-col"><span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">LOCATION</span><span className="font-chakra font-bold text-base text-white uppercase tracking-wide truncate max-w-[180px] md:max-w-[250px]">{data.location}</span></div>
-                </div>
-                <div className="flex items-center justify-between border-b border-white/5 pb-3">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0"><ClockIcon className="w-5 h-5" /></div>
-                        <div className="flex flex-col"><span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">TIME</span><span className="font-mono font-bold text-base text-white tracking-widest leading-none">{data.time}</span></div>
+        <div className="flex flex-col h-full overflow-hidden">
+            {/* COMPACT TOP INFO SECTION */}
+            <div className="grid grid-cols-1 gap-2 shrink-0">
+                <div className="flex items-center gap-2 bg-white/[0.02] border border-white/5 rounded-xl p-2">
+                    <div className="w-8 h-8 rounded-lg bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shrink-0"><MapPinIcon className="w-4 h-4" /></div>
+                    <div className="flex flex-col min-w-0">
+                        <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.2em]">LOCATION</span>
+                        <span className="font-chakra font-bold text-xs text-white uppercase tracking-wide truncate">{data.location}</span>
                     </div>
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-indigo-900/20 rounded-lg border border-indigo-500/20">
-                        <div className="flex flex-col items-end"><span className="font-russo text-xl text-white leading-none">{data.temp}</span><span className="text-[7px] font-bold text-indigo-300 uppercase tracking-wider">{data.condition}</span></div>
+                </div>
+                
+                <div className="flex items-center justify-between gap-2">
+                    <div className="flex-grow flex items-center gap-2 bg-white/[0.02] border border-white/5 rounded-xl p-2">
+                        <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0"><ClockIcon className="w-4 h-4" /></div>
+                        <div className="flex flex-col">
+                            <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.2em]">TIME</span>
+                            <span className="font-mono font-bold text-xs text-white tracking-widest">{data.time}</span>
+                        </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 px-3 h-12 bg-indigo-900/20 rounded-xl border border-indigo-500/20 shrink-0">
+                        <div className="flex flex-col items-end">
+                            <span className="font-russo text-lg text-white leading-none">{data.temp}</span>
+                            <span className="text-[6px] font-bold text-indigo-300 uppercase tracking-wider">{data.condition}</span>
+                        </div>
                         {getWeatherIcon(data.condition)}
                     </div>
                 </div>
             </div>
-            <div className="mt-4 flex-grow flex flex-col min-h-0">
-                <div className="flex items-center gap-2 mb-2 opacity-80 shrink-0"><TrophyIcon className="w-3 h-3 text-[#FFD700]" /><span className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">SESSION LEADERS</span></div>
-                <div className="flex-grow overflow-y-auto custom-hub-scrollbar pr-1">
-                    <div className="flex flex-col gap-1.5 bg-black/20 rounded-xl p-2 border border-white/5">
-                        {topPlayers.slice(0, 3).map((stat, idx) => ( 
-                            <div key={stat.player.id} className="flex items-center justify-between p-1.5 rounded-lg bg-white/[0.03] border border-white/5">
-                                <div className="flex items-center gap-3">
-                                    <span className="text-sm w-5 text-center">{idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'}</span>
-                                    <span className={`font-russo text-xs uppercase tracking-wide ${idx === 0 ? 'text-[#FFD700]' : idx === 1 ? 'text-slate-300' : 'text-amber-700'}`}>{stat.player.nickname || 'Unknown'}</span>
+
+            {/* SYNCED LEADERS SECTION (Using Impact Score) */}
+            <div className="mt-3 flex-grow flex flex-col min-h-0">
+                <div className="flex items-center gap-2 mb-1.5 opacity-80 shrink-0">
+                    <TrophyIcon className="w-2.5 h-2.5 text-[#FFD700]" />
+                    <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em]">SESSION LEADERS (IMPACT)</span>
+                </div>
+                
+                <div className="flex-grow overflow-y-auto custom-hub-scrollbar pr-0.5">
+                    <div className="flex flex-col gap-1">
+                        {topPlayers.slice(0, 3).map((stat, idx) => {
+                            const impact = getImpactScore(stat);
+                            return (
+                                <div key={stat.player.id} className="flex items-center justify-between p-2 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.05] transition-colors">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-5 h-5 rounded-lg bg-black/40 flex items-center justify-center border border-white/5 text-[10px]">
+                                            {idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'}
+                                        </div>
+                                        <span className={`font-russo text-[10px] uppercase tracking-wide truncate max-w-[120px] ${idx === 0 ? 'text-[#FFD700]' : idx === 1 ? 'text-slate-300' : 'text-amber-700'}`}>
+                                            {stat.player.nickname || 'Unknown'}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0 bg-black/20 px-2 py-1 rounded-lg border border-white/5">
+                                        <span className="font-mono font-black text-[11px] text-white leading-none">{impact.toFixed(1)}</span>
+                                        <span className="text-[6px] text-[#00F2FE] font-black tracking-widest uppercase">PTS</span>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-2 pr-2">
-                                    <div className="flex flex-col items-end leading-none"><span className="font-mono font-bold text-sm text-white">{stat.goals + stat.assists}</span><span className="text-[6px] text-white/20 uppercase font-bold tracking-wider">PTS</span></div>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             </div>
@@ -87,7 +128,7 @@ const HubCard: React.FC<{ title: React.ReactNode; icon: React.ReactNode; childre
         <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#161b22] to-[#0a0d14] border border-white/[0.06] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.05)] group/bento flex flex-col ${className}`}>
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`, backgroundSize: '4px 4px' }}></div>
             <div className="absolute -top-10 -left-10 w-40 h-40 bg-[#00F2FE]/[0.03] rounded-full blur-[40px] pointer-events-none z-0 animate-pulse" style={{ animationDuration: '4s' }}></div>
-            <div className="relative py-3 px-5 flex items-center justify-between shrink-0 bg-transparent border-b border-white/5 z-10">
+            <div className="relative py-2.5 px-5 flex items-center justify-between shrink-0 bg-transparent border-b border-white/5 z-10">
                  <div className="flex items-center gap-3 relative z-10 w-full">
                     <div className="w-5 h-5 rounded-md flex items-center justify-center shadow-sm border bg-white/10 border-white/20 text-white" style={{ color: accent }}>
                         {React.cloneElement(icon as React.ReactElement<any>, { className: "w-3 h-3" })}
@@ -95,7 +136,7 @@ const HubCard: React.FC<{ title: React.ReactNode; icon: React.ReactNode; childre
                     <div className="flex-grow">{typeof title === 'string' ? <h3 className="font-russo text-[11px] uppercase tracking-widest text-white">{title}</h3> : title}</div>
                  </div>
             </div>
-            <div className={`relative overflow-hidden flex flex-col z-10 ${bodyClassName}`}>{children}</div>
+            <div className={`relative overflow-hidden flex flex-col z-10 flex-grow ${bodyClassName}`}>{children}</div>
         </div>
     );
 };
@@ -104,13 +145,18 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
     const t = useTranslation();
     const [activeTab, setActiveTab] = useState<'players' | 'matches'>('players');
     const { teamStats, allPlayersStats } = useMemo(() => calculateAllStats(session), [session]);
-    const sortedPlayers = useMemo(() => [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists)), [allPlayersStats]);
+    
+    // UPDATED: Sync leaders logic with Dashboard (Impact Score)
+    const sortedByImpact = useMemo(() => {
+        return [...allPlayersStats].sort((a, b) => getImpactScore(b) - getImpactScore(a));
+    }, [allPlayersStats]);
+
+    // For the table, we still keep G+A sorting as secondary view
+    const sortedByStats = useMemo(() => [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists)), [allPlayersStats]);
+    
     const finishedGames = session.games.filter(g => g.status === 'finished');
     
-    const cleanTeamName = (name: string) => name.replace(/Squad/gi, '').replace(/Team/gi, '').replace(/\s+/g, ' ').trim();
-
-    // UPDATED: thClass now uses semi-transparent white with backdrop-blur instead of solid black
-    const thClass = "py-2.5 text-white/40 uppercase tracking-tighter text-[9px] font-black text-center sticky top-0 bg-white/5 backdrop-blur-md z-20 border-b border-white/5";
+    const thClass = "py-2.5 text-white/40 uppercase tracking-tighter text-[9px] font-black text-center sticky top-0 bg-transparent backdrop-blur-md z-20 border-b border-white/5";
     const tdBase = "py-2 text-center text-[10px] font-bold transition-colors";
     const tdText = `${tdBase} text-slate-300`;
     const tdAccent = `${tdBase} text-white font-black text-[11px]`;
@@ -121,7 +167,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#01040a] to-black"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
             </div>
-            <div className="pt-6 pb-4 px-8 flex items-center justify-between shrink-0 z-10">
+            <div className="pt-5 pb-3 px-8 flex items-center justify-between shrink-0 z-10">
                 <button onClick={onBack} className="flex items-center gap-3 group transition-all ml-4 md:ml-40 hover:scale-110 active:scale-95">
                     <div className="p-2.5 rounded-full bg-white/5 border border-white/10 shadow-lg group-hover:border-[#00F2FE] group-hover:text-[#00F2FE] group-hover:bg-[#00F2FE]/10 transition-all">
                         <ChevronLeft className="w-4 h-4 text-white group-hover:text-[#00F2FE]" />
@@ -129,17 +175,16 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                 </button>
             </div>
             <div className="flex-grow px-2 md:px-6 pb-4 overflow-hidden relative z-10 flex flex-col">
-                <div className="max-w-6xl mx-auto w-full h-full flex flex-col gap-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 items-start w-full pt-4 h-full min-h-0">
-                        <div className="flex flex-col gap-5 w-full h-full min-h-0">
-                            <HubCard title="TEAM STANDINGS" icon={<TrophyIcon />} accent="#FFD700" className="shrink-0 max-h-[45%] flex flex-col">
+                <div className="max-w-6xl mx-auto w-full h-full flex flex-col gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch w-full h-full min-h-0">
+                        <div className="flex flex-col gap-4 w-full h-full min-h-0">
+                            <HubCard title="TEAM STANDINGS" icon={<TrophyIcon />} accent="#FFD700" className="shrink-0 max-h-[40%] flex flex-col">
                                 <div className="p-1 overflow-y-auto custom-hub-scrollbar">
                                     <table className="w-full table-fixed border-collapse">
                                         <thead>
                                             <tr>
-                                                <th className={`${thClass} w-[10%]`}></th>
-                                                {/* UPDATED: "TEAM" changed to "SQUAD" and aligned left */}
-                                                <th className={`${thClass} w-[45%] text-left pl-6`}>SQUAD</th>
+                                                <th className={`${thClass} w-[8%]`}></th>
+                                                <th className={`${thClass} w-[47%] text-left pl-1`}>SQUAD</th>
                                                 <th className={`${thClass} w-[10%]`}>P</th>
                                                 <th className={`${thClass} w-[10%]`}>W</th>
                                                 <th className={`${thClass} w-[10%]`}>D</th>
@@ -147,17 +192,15 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {teamStats.map((stat, idx) => (
+                                            {teamStats.map((stat) => (
                                                 <tr key={stat.team.id} className="group border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
-                                                    {/* UPDATED: Removed digits 1, 2, 3 */}
                                                     <td className={`${tdBase}`}></td>
                                                     <td className={`${tdText}`}>
-                                                        {/* UPDATED: Aligned items to start and shifted left with pl-2 */}
-                                                        <div className="flex items-center justify-start gap-4 pl-2">
+                                                        <div className="flex items-center justify-start gap-3">
                                                             <TeamAvatar team={stat.team} size="xxs" isLight={true} />
                                                             <div className="flex flex-col items-start leading-none min-w-[60px]">
                                                                 <span className="text-[10px] font-black tracking-tight text-white uppercase group-hover:text-[#00F2FE] transition-colors">
-                                                                    SQUAD {cleanTeamName(stat.team.name || '')}
+                                                                    SQUAD
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -172,8 +215,8 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                     </table>
                                 </div>
                             </HubCard>
-                            <HubCard title="MATCH REPORT" icon={<Target />} accent="#00F2FE" className="w-full flex-grow min-h-0" bodyClassName="p-4 h-full">
-                                <ArchiveEnvironmentWidget topPlayers={sortedPlayers} session={session} />
+                            <HubCard title="MATCH REPORT" icon={<Target />} accent="#00F2FE" className="w-full flex-grow min-h-0" bodyClassName="p-4">
+                                <ArchiveEnvironmentWidget topPlayers={sortedByImpact} session={session} />
                             </HubCard>
                         </div>
                         <div className="w-full h-full min-h-0">
@@ -197,7 +240,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {sortedPlayers.map((ps, idx) => (
+                                                {sortedByStats.map((ps, idx) => (
                                                     <tr key={ps.player.id} className="group hover:bg-white/5 transition-colors border-b border-white/5 last:border-0">
                                                         <td className={`${tdBase} text-white/30 font-mono`}>{idx + 1}</td>
                                                         <td className="py-2 text-left pl-4 relative overflow-hidden group-hover:bg-white/5">
