@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Team, Player, PlayerTier, PlayerStatus, BadgeType, PlayerForm, SkillType } from './types';
 import { getPlayerKeyStats } from './services/statistics';
@@ -36,7 +37,7 @@ interface PlayerCardProps {
     isDownloading?: boolean;
 }
 
-// FIX: Updated BadgeIcon to accept and pass through SVG props like `style`.
+// FIX: Updated BadgeIcon to properly apply glow classes
 interface BadgeIconProps extends React.SVGProps<SVGSVGElement> {
     badge: BadgeType;
     count?: number;

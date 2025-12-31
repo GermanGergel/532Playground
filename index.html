@@ -13,11 +13,9 @@
     <meta name="mobile-web-app-capable" content="yes">
     
     <!-- Open Graph / Social Media Meta Tags -->
-    <!-- UPDATED: Premium Branding for Telegram/WhatsApp previews -->
     <meta property="og:title" content="532 CLUB HUB // ACCESS GRANTED">
     <meta property="og:description" content="Official Club Intelligence. Live Ratings, Global Rankings, and Advanced Match Analytics. Tap to authenticate.">
     
-    <!-- Изображение для превью (заглушка, можно заменить на логотип клуба) -->
     <meta property="og:image" content="https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=1200&auto=format&fit=crop">
     
     <meta property="og:url" content="https://532playground.com">
@@ -130,6 +128,33 @@
     }
     .accent-text-glow {
       text-shadow: 0 0 3px #00F2FE;
+    }
+
+    /* БЕЙДЖИ: ФИНАЛЬНАЯ ПОКРАСКА */
+    /* Используем fill и stroke для SVG, чтобы гарантированно перебить currentColor */
+    .badge-glow-gold, 
+    .badge-glow-gold svg {
+      color: #FFD700 !important;
+      fill: none !important;
+      stroke: #FFD700 !important;
+      filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.7));
+    }
+    
+    /* Для иконок, где есть внутренние элементы с заливкой currentColor */
+    .badge-glow-gold svg [fill="currentColor"] {
+        fill: #FFD700 !important;
+    }
+
+    .badge-glow-turquoise,
+    .badge-glow-turquoise svg {
+      color: #00F2FE !important;
+      fill: none !important;
+      stroke: #00F2FE !important;
+      filter: drop-shadow(0 0 5px rgba(0, 242, 254, 0.7));
+    }
+
+    .badge-glow-turquoise svg [fill="currentColor"] {
+        fill: #00F2FE !important;
     }
   </style>
   <link rel="manifest" href="/manifest.json">
