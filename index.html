@@ -12,14 +12,18 @@
     <meta name="apple-mobile-web-app-title" content="532 Playground">
     <meta name="mobile-web-app-capable" content="yes">
     
-    <!-- Open Graph / Social Media Meta Tags -->
-    <meta property="og:title" content="532 CLUB HUB // ACCESS GRANTED">
-    <meta property="og:description" content="Official Club Intelligence. Live Ratings, Global Rankings, and Advanced Match Analytics. Tap to authenticate.">
+    <!-- Open Graph / Social Media Meta Tags (Optimized for Telegram/WhatsApp) -->
+    <meta property="og:title" content="532 CLUB HUB // INTELLIGENCE">
+    <meta property="og:description" content="Official Club Hub. Live OVR Ratings, Seasonal Rankings, and Match Analytics.">
     
-    <meta property="og:image" content="https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=1200&auto=format&fit=crop">
+    <!-- Premium background image for the link preview -->
+    <meta property="og:image" content="https://images.unsplash.com/photo-1522778119026-d647f0596c20?q=80&w=1200&auto=format&fit=crop">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
     
-    <meta property="og:url" content="https://532playground.com">
+    <meta property="og:url" content="https://532playground.vercel.app/hub">
     <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
     
     <!-- Theme Color matches app background -->
     <meta name="theme-color" content="#1A1D24">
@@ -131,7 +135,6 @@
     }
 
     /* БЕЙДЖИ: ФИНАЛЬНАЯ ПОКРАСКА */
-    /* Используем fill и stroke для SVG, чтобы гарантированно перебить currentColor */
     .badge-glow-gold, 
     .badge-glow-gold svg {
       color: #FFD700 !important;
@@ -140,7 +143,6 @@
       filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.7));
     }
     
-    /* Для иконок, где есть внутренние элементы с заливкой currentColor */
     .badge-glow-gold svg [fill="currentColor"] {
         fill: #FFD700 !important;
     }
