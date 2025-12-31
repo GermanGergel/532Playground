@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { useApp } from '../context';
 import { HubProgressChart } from './HubAnalytics';
@@ -106,7 +107,7 @@ const TerminalLastSession = ({ player }: { player: Player }) => {
                 
                 <div className="flex flex-col items-center w-12">
                     <span className={`text-lg font-black leading-none ${b.finalChange >= 0 ? 'text-green-400' : 'text-red-400'}`} style={{ textShadow: 'none' }}>
-                        {b.finalChange >= 0 ? '+' : ''}{b.finalChange.toFixed(1)}
+                        {b.finalChange > 0 ? '+' : ''}{b.finalChange.toFixed(1)}
                     </span>
                     <span className="text-[6px] text-white/40 uppercase font-black tracking-widest mt-1 block">DELTA</span>
                 </div>
@@ -124,7 +125,9 @@ const TerminalLastSession = ({ player }: { player: Player }) => {
                     { l: 'Badge', v: b.badgeBonus }
                 ].map(stat => (
                     <div key={stat.l} className="bg-black/30 p-1.5 rounded-xl border border-white/5 text-center shadow-inner">
-                        <span className="text-[9px] font-bold text-white block leading-none" style={{ textShadow: 'none' }}>+{stat.v.toFixed(1)}</span>
+                        <span className={`text-[9px] font-bold block leading-none ${stat.v > 0 ? 'text-white' : stat.v < 0 ? 'text-red-400' : 'text-white/40'}`} style={{ textShadow: 'none' }}>
+                            {stat.v > 0 ? '+' : ''}{stat.v.toFixed(1)}
+                        </span>
                         <span className="text-[5px] text-white/20 uppercase font-black tracking-tighter block mt-0.5">{stat.l}</span>
                     </div>
                 ))}
@@ -218,9 +221,10 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void }> 
     const assistsPerSession = player.totalSessionsPlayed > 0 ? (player.totalAssists / player.totalSessionsPlayed).toFixed(2) : '0.00';
 
     return (
-        <div className="absolute inset-0 z-20 flex flex-col animate-in fade-in duration-500 rounded-[2.5rem] overflow-hidden">
+        <div className="absolute inset-0 z-20 flex flex-col animate-in fade-in duration-700 rounded-[2.5rem] overflow-hidden">
             <div className="absolute inset-0 z-0 pointer-events-none">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
+                {/* UPDATED: Changed from radial-gradient to solid dark to remove upper glow */}
+                <div className="absolute inset-0 bg-[#05070a]"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
             </div>
 

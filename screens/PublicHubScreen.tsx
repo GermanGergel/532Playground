@@ -527,7 +527,8 @@ export const PublicHubScreen: React.FC = () => {
 
             <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
                 <div className="absolute inset-0 z-0 pointer-events-none">
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
+                    {/* UPDATED: Changed from radial-gradient to solid dark to remove upper glow and make background look deeper */}
+                    <div className="absolute inset-0 bg-[#05070a]"></div>
                     <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
                 </div>
                 <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10">
