@@ -235,7 +235,8 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
 
     const MiniCard = ({ p }: { p: TopPlayerStats }) => {
         const countryCodeAlpha2 = useMemo(() => p.player.countryCode ? convertCountryCodeAlpha3ToAlpha2(p.player.countryCode) : null, [p.player.countryCode]);
-        const sizeClasses = p.rank === 1 ? 'w-[100px] h-[140px] md:w-[120px] md:h-[165px] z-20' : 'w-[85px] h-[115px] md:w-[100px] md:h-[135px] z-10';
+        // UPDATED: Sized MiniCards to fit slightly wider pedestals
+        const sizeClasses = p.rank === 1 ? 'w-[110px] h-[155px] md:w-[135px] md:h-[185px] z-20' : 'w-[95px] h-[130px] md:w-[115px] md:h-[155px] z-10';
         return (
             <div className={`relative rounded-lg overflow-hidden border border-white/20 shadow-lg flex flex-col shrink-0 ${sizeClasses}`}>
                 {p.player.playerCard ? <div className="absolute inset-0 bg-cover bg-no-repeat" style={{ backgroundImage: `url(${p.player.playerCard})`, backgroundPosition: 'center 5%' }} /> : <div className="absolute inset-0 bg-gradient-to-b from-slate-700 to-slate-900" />}
@@ -265,9 +266,10 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
 
     return (
         <div className="flex items-end justify-center gap-3 h-full px-4 relative">
-            <div className="w-[100px] md:w-[125px] h-full flex flex-col justify-end z-10"><PodiumSpot p={p2} rank={2} height="90px" color="#94a3b8" delay="delay-100" /></div>
-            <div className="w-[100px] md:w-[125px] h-full flex flex-col justify-end z-20 pb-4"><PodiumSpot p={p1} rank={1} height="130px" color="#FFD700" delay="delay-0" /></div>
-            <div className="w-[100px] md:w-[125px] h-full flex flex-col justify-end z-10"><PodiumSpot p={p3} rank={3} height="60px" color="#CD7F32" delay="delay-200" /></div>
+            {/* UPDATED: Increased container widths for all pedestals (w-[110px] -> w-[125px] on mobile, md:w-[155px] on desktop) */}
+            <div className="w-[110px] md:w-[155px] h-full flex flex-col justify-end z-10 shrink-0"><PodiumSpot p={p2} rank={2} height="90px" color="#94a3b8" delay="delay-100" /></div>
+            <div className="w-[125px] md:w-[175px] h-full flex flex-col justify-end z-20 pb-4 shrink-0"><PodiumSpot p={p1} rank={1} height="130px" color="#FFD700" delay="delay-0" /></div>
+            <div className="w-[110px] md:w-[155px] h-full flex flex-col justify-end z-10 shrink-0"><PodiumSpot p={p3} rank={3} height="60px" color="#CD7F32" delay="delay-200" /></div>
         </div>
     );
 };
