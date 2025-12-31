@@ -17,6 +17,7 @@ export const HomeScreen: React.FC = () => {
 
   useEffect(() => {
       const baseUrl = window.location.origin;
+      // Using a small query param can help bypass initial social media link cache if testing
       setHubUrl(`${baseUrl}/hub`);
   }, []);
 
@@ -34,14 +35,14 @@ export const HomeScreen: React.FC = () => {
     navigate('/setup');
   };
 
-  // NEW: Optimized Sharing Logic for "One Block" Link Preview
+  // UPDATED: Simple URL sharing triggers the rich meta preview in messengers
   const handleShareHub = async () => {
       if (isSharing) return;
       setIsSharing(true);
 
       const shareData = {
           title: '532 CLUB HUB',
-          text: 'Check live stats, rankings, and match intelligence on 532 Playground.',
+          text: 'Check out the official 532 Playground Club Hub for live statistics and rankings.',
           url: hubUrl,
       };
 
