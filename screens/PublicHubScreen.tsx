@@ -70,8 +70,6 @@ const MotivationalTicker: React.FC = () => {
         "PROVEN, NOT PROMISED •",
         "532 — WHERE ELITES PLAY"
     ];
-    // Changed from #00F2FE to white to match "DEFINE YOUR" title
-    const tickerColor = 'rgba(255, 255, 255, 0.9)'; 
     return (
         <div className="relative w-full h-full overflow-hidden flex items-center">
             <style dangerouslySetInnerHTML={{ __html: `
@@ -89,8 +87,8 @@ const MotivationalTicker: React.FC = () => {
                 {[...phrases, ...phrases].map((phrase, i) => (
                     <span 
                         key={i} 
-                        className="text-[14px] md:text-[16px] font-bold tracking-[0.1em] uppercase flex items-center font-inter-tight italic" 
-                        style={{ color: tickerColor, textShadow: `0 0 10px rgba(255, 255, 255, 0.1)` }}
+                        className="text-[14px] md:text-[16px] font-bold tracking-[0.1em] uppercase flex items-center font-inter-tight italic text-transparent bg-clip-text bg-gradient-to-b from-white to-white/20" 
+                        style={{ textShadow: `0 0 15px rgba(255, 255, 255, 0.05)` }}
                     >
                         {phrase}
                     </span>
