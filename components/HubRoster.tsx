@@ -5,11 +5,11 @@ import { Search, XCircle, Zap } from '../icons';
 import { Modal, useTranslation } from '../ui';
 import { PlayerAvatar } from './avatars';
 
-const RoundPlayerAvatar: React.FC<{ photo?: string; tierColor: string }> = ({ photo, tierColor }) => (
+const HubPortraitAvatar: React.FC<{ photo?: string; tierColor: string }> = ({ photo, tierColor }) => (
     <div 
-        className="relative w-[60px] h-[60px] rounded-full overflow-hidden bg-[#0C0E12] transition-all duration-500 ease-out z-10 
+        className="relative w-[62px] h-[78px] rounded-[1.2rem] overflow-hidden bg-[#0C0E12] transition-all duration-500 ease-out z-10 
         border border-white/20 
-        group-hover:scale-115 group-hover:-translate-y-2 
+        group-hover:scale-110 group-hover:-translate-y-1
         group-hover:border-[color:var(--tier-color)]
         group-hover:shadow-[0_10px_20px_-5px_rgba(0,0,0,0.5),0_0_15px_var(--tier-color)]"
         style={{ 
@@ -17,8 +17,11 @@ const RoundPlayerAvatar: React.FC<{ photo?: string; tierColor: string }> = ({ ph
         }}
     >
         <div 
-            className="absolute inset-0 bg-cover bg-center transition-transform duration-700" 
-            style={{ backgroundImage: photo ? `url(${photo})` : 'none' }}
+            className="absolute inset-0 bg-cover transition-transform duration-700" 
+            style={{ 
+                backgroundImage: photo ? `url(${photo})` : 'none',
+                backgroundPosition: 'center 12%' // Поднимаем фокус на лицо
+            }}
         >
             {!photo && (
                 <div className="absolute inset-0 flex items-center justify-center bg-white/5">
@@ -26,7 +29,9 @@ const RoundPlayerAvatar: React.FC<{ photo?: string; tierColor: string }> = ({ ph
                 </div>
             )}
         </div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-white/10 opacity-50"></div>
+        {/* Градиентная маска для объема */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-white/10 opacity-60"></div>
+        <div className="absolute inset-0 border border-white/5 pointer-events-none rounded-[1.1rem]"></div>
     </div>
 );
 
@@ -208,11 +213,11 @@ export const HubRoster: React.FC<HubRosterProps> = ({ onSelectPlayer, sortBy, se
             
             {/* PLAYER PLAQUES CONTAINER */}
             <div className="flex-grow overflow-y-auto px-6 md:px-12 lg:px-20 pt-12 custom-hub-scrollbar relative z-10">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5 pb-24 max-w-7xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 pb-24 max-w-7xl mx-auto">
                     {confirmedPersonnel.map((person, idx) => {
                         const tierColor = TIER_COLORS[person.tier] || '#94a3b8';
                         return (
-                            <div key={person.id} onClick={() => person.id && onSelectPlayer(person.id)} className="group relative flex items-center justify-between h-[74px] w-full rounded-2xl transition-all duration-500 cursor-pointer" style={{ '--tier-color': tierColor } as React.CSSProperties}>
+                            <div key={person.id} onClick={() => person.id && onSelectPlayer(person.id)} className="group relative flex items-center justify-between h-[84px] w-full rounded-2xl transition-all duration-500 cursor-pointer" style={{ '--tier-color': tierColor } as React.CSSProperties}>
                                 <div className="absolute inset-0 rounded-2xl overflow-hidden z-1 bg-gradient-to-br from-[#161b22] to-[#0a0d14] border border-white/[0.06] group-hover:border-[var(--tier-color)] transition-all duration-500 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.05)] group-hover:shadow-[0_0_20px_var(--tier-color)]">
                                     <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`, backgroundSize: '4px 4px' }}></div>
                                     <div className="absolute -top-10 -left-10 w-20 h-20 bg-[var(--tier-color)] rounded-full blur-[40px] pointer-events-none opacity-5 group-hover:opacity-20 transition-opacity"></div>
@@ -220,7 +225,12 @@ export const HubRoster: React.FC<HubRosterProps> = ({ onSelectPlayer, sortBy, se
                                 </div>
                                 <div className="relative z-10 h-full w-full flex items-center px-4 gap-4">
                                     <span className="font-mono text-[10px] text-white/5 w-5 shrink-0 font-black tracking-tighter group-hover:text-white/10 transition-colors">{(idx + 1).toString().padStart(2, '0')}</span>
-                                    <div className="shrink-0 transition-transform duration-500"><RoundPlayerAvatar photo={person.playerCard} tierColor={tierColor} /></div>
+                                    
+                                    {/* ОБНОВЛЕННЫЙ АВАТАР - КАПСУЛА */}
+                                    <div className="shrink-0 transition-transform duration-500">
+                                        <HubPortraitAvatar photo={person.playerCard} tierColor={tierColor} />
+                                    </div>
+
                                     <div className="flex flex-col gap-0.5 flex-grow min-w-0">
                                         <span className="font-chakra font-black text-base text-white/80 uppercase tracking-wide group-hover:text-white transition-colors truncate leading-tight">{person.nickname}</span>
                                         <div className="flex items-center gap-2">
@@ -228,7 +238,7 @@ export const HubRoster: React.FC<HubRosterProps> = ({ onSelectPlayer, sortBy, se
                                             <div className="h-[1px] w-4 bg-white/5 rounded-full"></div>
                                         </div>
                                     </div>
-                                    <div className="flex flex-col items-end shrink-0 w-24">
+                                    <div className="flex flex-col items-end shrink-0 w-20">
                                         <div className="flex items-baseline gap-1.5">
                                             <span className="font-russo text-3xl text-white/90 group-hover:text-[var(--tier-color)] group-hover:scale-110 transition-all duration-500 leading-none" style={{ textShadow: '0 0 10px rgba(0,0,0,0.5)' }}>{person.rating}</span>
                                             <div className="flex flex-col items-start leading-none mb-0.5"><span className="font-mono font-black text-[7px] text-white/20 group-hover:text-[var(--tier-color)] uppercase tracking-[0.1em] transition-colors">OVR</span></div>
