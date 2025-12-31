@@ -114,7 +114,6 @@ const HubCard: React.FC<{
         titleColor = 'text-white';
         iconBg = 'bg-white/10 border-white/20';
     } else if (isElite) {
-        // UPDATED: Darkened Elite background (leaders section)
         bgStyleClass = 'bg-[#020308] border-white/10';
         headerStyleClass = 'bg-transparent !border-0';
         titleColor = 'text-white'; 
@@ -129,13 +128,11 @@ const HubCard: React.FC<{
     return (
         <div className={`relative overflow-hidden rounded-[1.5rem] flex flex-col border ${bgStyleClass} ${className} group/card`}>
             {/* --- TEXTURE LAYERS --- */}
-            {/* Dynamic Mesh Texture Overlay */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ 
                 backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`,
                 backgroundSize: '4px 4px'
             }}></div>
 
-            {/* UPDATED: Added Stardust/Dust effect specifically for Elite Leaders card */}
             {isElite && (
                 <div 
                     className="absolute inset-0 opacity-[0.04] pointer-events-none z-0 mix-blend-screen"
@@ -143,12 +140,9 @@ const HubCard: React.FC<{
                 ></div>
             )}
 
-            {/* Pulsing Ambient Light - Tuned for softer glow */}
             <div className={`absolute -top-10 -left-10 w-40 h-40 ${isElite ? 'bg-[#00F2FE]/[0.05]' : 'bg-[#00F2FE]/[0.03]'} rounded-full blur-[45px] pointer-events-none z-0 animate-pulse`} style={{ animationDuration: '6s' }}></div>
             
-            {/* Hover Shine Effect */}
             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.01] to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-700 z-0"></div>
-            {/* ------------------------------------------------ */}
 
             <div className={`relative z-10 py-1.5 px-4 flex items-center justify-between shrink-0 ${headerStyleClass} ${isRight ? 'flex-row-reverse' : ''}`}>
                  <div className={`flex items-center gap-2 relative z-10 ${isRight ? 'flex-row-reverse' : ''}`}>
@@ -172,7 +166,6 @@ const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any
             const teamPlayers = team.playerIds.map(pid => players.find(p => p.id === pid)).filter(Boolean) as Player[];
             const avgOvr = teamPlayers.length > 0 ? Math.round(teamPlayers.reduce((sum, p) => sum + p.rating, 0) / teamPlayers.length) : 0;
             
-            // Calculate Goals & Synergy
             let goals = 0;
             let assistedGoals = 0;
             session.games.filter((g: any) => g.status === 'finished').forEach((g: any) => {
@@ -203,7 +196,6 @@ const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any
                         })}
                     </div>
                     
-                    {/* FOOTER STATS: GOALS & SYNERGY */}
                     <div className="py-2 border-t border-white/5 bg-black/40 flex items-center divide-x divide-white/10">
                         <div className="flex-1 flex flex-col items-center justify-center">
                             <span className="text-[12px] font-black text-slate-200 leading-none">{goals}</span>
@@ -235,7 +227,6 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
 
     const MiniCard = ({ p }: { p: TopPlayerStats }) => {
         const countryCodeAlpha2 = useMemo(() => p.player.countryCode ? convertCountryCodeAlpha3ToAlpha2(p.player.countryCode) : null, [p.player.countryCode]);
-        // UPDATED: Sized MiniCards to fit slightly wider pedestals
         const sizeClasses = p.rank === 1 ? 'w-[110px] h-[155px] md:w-[135px] md:h-[185px] z-20' : 'w-[95px] h-[130px] md:w-[115px] md:h-[155px] z-10';
         return (
             <div className={`relative rounded-lg overflow-hidden border border-white/20 shadow-lg flex flex-col shrink-0 ${sizeClasses}`}>
@@ -256,41 +247,52 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
     };
 
     const PodiumSpot = ({ p, rank, height, color, delay }: { p?: TopPlayerStats, rank: number, height: string, color: string, delay: string }) => (
-        <div className={`flex flex-col items-center justify-end h-full ${delay} animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both`}>
+        <div className={`flex flex-col items-center justify-end h-full ${delay} animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both relative`}>
+            {/* Volumetric Spotlight Effect for Rank 1 */}
+            {rank === 1 && (
+                <div className="absolute top-[-100px] left-1/2 -translate-x-1/2 w-[300px] h-[500px] bg-gradient-to-b from-[#FFD700]/[0.08] to-transparent clip-path-spotlight pointer-events-none blur-3xl z-0"></div>
+            )}
+            
+            {/* Background Tactical Number */}
+            <span className="absolute bottom-10 left-1/2 -translate-x-1/2 font-blackops text-[120px] md:text-[180px] text-white/[0.03] select-none pointer-events-none z-0 leading-none">
+                {rank}
+            </span>
+
             {p ? <div className="mb-3 relative z-20 flex flex-col items-center w-full px-1"><MiniCard p={p} /></div> : <div className="mb-12 opacity-10"><div className="w-12 h-16 rounded border-2 border-dashed border-white/30"></div></div>}
-            <div className="w-full relative overflow-hidden backdrop-blur-md rounded-t-xl flex flex-col items-center justify-center pt-2 pb-1" style={{ height: height, background: `linear-gradient(to bottom, ${color}35, ${color}08, transparent)`, borderTop: `2px solid ${color}` }}>
-                {p && <div className="relative z-10 flex flex-col items-center"><span className="font-russo text-xl text-white leading-none">{p.score.toFixed(1)}</span><span className="text-[6px] font-black text-white/40 uppercase tracking-widest mt-0.5">{t.hubImpact}</span></div>}
+            
+            <div className="w-full relative overflow-hidden backdrop-blur-md rounded-t-xl flex flex-col items-center justify-center pt-2 pb-1.5 z-10" style={{ height: height, background: `linear-gradient(to bottom, ${color}35, ${color}08, transparent)`, borderTop: `2px solid ${color}` }}>
+                {p && (
+                    <div className="relative z-10 flex flex-col items-center">
+                        <span className="font-russo text-xl text-white leading-none tracking-tighter">{p.score.toFixed(1)}</span>
+                        <span className="text-[5.5px] font-black text-white/50 uppercase tracking-[0.2em] mt-1">{t.hubImpact}</span>
+                    </div>
+                )}
             </div>
         </div>
     );
 
     return (
         <div className="flex items-end justify-center gap-3 h-full px-4 relative">
-            {/* UPDATED: Increased container widths for all pedestals (w-[110px] -> w-[125px] on mobile, md:w-[155px] on desktop) */}
+            <style dangerouslySetInnerHTML={{ __html: `
+                .clip-path-spotlight { clip-path: polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%); }
+                .font-blackops { font-family: 'Black Ops One', cursive; }
+            `}} />
             <div className="w-[110px] md:w-[155px] h-full flex flex-col justify-end z-10 shrink-0"><PodiumSpot p={p2} rank={2} height="90px" color="#94a3b8" delay="delay-100" /></div>
             <div className="w-[125px] md:w-[175px] h-full flex flex-col justify-end z-20 pb-4 shrink-0"><PodiumSpot p={p1} rank={1} height="130px" color="#FFD700" delay="delay-0" /></div>
-            <div className="w-[110px] md:w-[155px] h-full flex flex-col justify-end z-10 shrink-0"><PodiumSpot p={p3} rank={3} height="60px" color="#CD7F32" delay="delay-200" /></div>
+            {/* UPDATED: Height set to 75px for Rank 3 to ensure labels don't clip at the bottom */}
+            <div className="w-[110px] md:w-[155px] h-full flex flex-col justify-end z-10 shrink-0"><PodiumSpot p={p3} rank={3} height="75px" color="#CD7F32" delay="delay-200" /></div>
         </div>
     );
 };
 
 const NewsVanguardCard: React.FC<{ item: NewsItem }> = ({ item }) => {
-    const accentColor = '#818cf8'; // Indigo accent to match weather
+    const accentColor = '#818cf8'; 
     
     return (
         <div className="mb-3 relative px-1 animate-in fade-in slide-in-from-right-4 duration-500">
-            {/* 
-                STYLED AS BROTHER TO WEATHER WIDGET:
-                - bg-gradient-to-br from-indigo-900/40 to-black
-                - border-indigo-500/20
-                - diagonal-striped texture
-            */}
             <div className="relative rounded-2xl overflow-hidden p-3.5 border border-indigo-500/20 bg-gradient-to-br from-indigo-900/40 to-black">
-                {/* Diagonal Stripe Texture Overlay */}
                 <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-striped-brick.png')]"></div>
-                
                 <div className="absolute top-3.5 left-0 w-1.5 h-7 rounded-r-full bg-[#818cf8]" style={{ boxShadow: '0 0 10px #818cf8' }}></div>
-                
                 <div className="relative z-10 flex items-center justify-between gap-3 pl-3">
                     <div className="flex-grow min-w-0">
                         <div className="flex items-center gap-2 mb-1.5">
@@ -334,14 +336,11 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
         if (c.includes('rain') || c.includes('storm')) return <CloudRainIcon className="w-16 h-16 text-white" />;
         if (c.includes('cloud') || c.includes('fog')) return <CloudIcon className="w-16 h-16 text-white" />;
         
-        // Assume night for clear conditions to match history screen logic
         const startTimeHour = session.timeString ? parseInt(session.timeString.split(':')[0], 10) : 19;
         const isNight = startTimeHour >= 18 || startTimeHour < 6;
         if (isNight) {
             return <MoonIcon className="w-16 h-16 text-white" />;
         }
-        // Fallback to sun icon if it's day, but the logic primarily uses Moon for 'clear' at night.
-        // As a default for clear, Moon is safer for evening sessions.
         return <MoonIcon className="w-16 h-16 text-white" />;
     };
 
@@ -357,7 +356,6 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
             </div>
             <div className="flex-grow flex flex-col justify-end pt-2">
                 <div className="relative rounded-2xl bg-gradient-to-br from-indigo-900/40 to-black border border-indigo-500/20 p-4 flex items-center justify-between overflow-hidden">
-                    {/* --- ADDED TEXTURE OVERLAY HERE (UPDATED to match Archive Cards) --- */}
                     <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-striped-brick.png')]"></div>
                     
                     <div className="relative z-10 flex flex-col">
@@ -383,14 +381,11 @@ export const PublicHubDashboard: React.FC = () => {
 
     const session = history[0];
     
-    // --- STANDBY TRIGGER ---
     if (!session) return <StandbyScreen />;
 
-    // 1. CALCULATE BASE STATS
+    // FIX: Change rawPlayersStats to allPlayersStats and extract teamStats
     const { teamStats, allPlayersStats: rawPlayersStats } = calculateAllStats(session);
 
-    // 2. SYNCHRONIZE WITH LIVE DATABASE
-    // This is the CRITICAL fix: replace player snapshot with current global data
     const allPlayersStats = useMemo(() => {
         return rawPlayersStats.map(stat => {
             const latestPlayer = allPlayers.find(p => p.id === stat.player.id);
@@ -401,13 +396,10 @@ export const PublicHubDashboard: React.FC = () => {
         });
     }, [rawPlayersStats, allPlayers]);
 
-    // Sorting for Podium (Impact Score)
     const sortedForPodium = [...allPlayersStats].sort((a, b) => getImpactScore(b) - getImpactScore(a));
 
-    // Sorting for Table (Goals + Assists)
     const sortedForTable = [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists));
 
-    // FIX: Correctly format data for the Podium component to match TopPlayerStats[] type
     const top3PodiumPlayers: TopPlayerStats[] = sortedForPodium
         .filter(p => p.gamesPlayed > 0)
         .slice(0, 3)
@@ -422,17 +414,13 @@ export const PublicHubDashboard: React.FC = () => {
         .sort((a, b) => a.gameNumber - b.gameNumber);
 
     const thStandings = "py-2 text-white/40 uppercase tracking-tighter text-[8px] font-black text-center sticky top-0 bg-[#1e293b]/50 backdrop-blur-sm z-10 border-b border-white/5";
-    // FIX: Define tdBase class variable for use in table cells.
     const tdBase = "py-2.5 text-center text-[10px] font-bold transition-colors";
 
     return (
         <div className="h-full flex flex-col animate-in fade-in duration-700 w-full relative p-2 md:p-3">
             <div className="absolute -top-24 bottom-0 -left-4 -right-4 z-0 pointer-events-none rounded-[2rem] overflow-hidden">
-                {/* UPDATED: Center of lighting moved to 20% down to smooth transition with nav bar */}
-                {/* The gradient now starts high up to fill space behind the nav */}
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center_20%,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-                {/* TOP SMOOTHING LAYER: Deep fade to hide the break under the nav bar */}
                 <div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-b from-black via-transparent to-transparent pointer-events-none"></div>
             </div>
 
