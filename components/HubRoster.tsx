@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApp } from '../context';
 import { PlayerTier, PlayerStatus, Player } from '../types';
@@ -207,9 +206,9 @@ export const HubRoster: React.FC<HubRosterProps> = ({ onSelectPlayer, sortBy, se
                 </div>
             </div>
             
-            {/* PLAYER PLAQUES CONTAINER (UPDATED: Squeezed width and increased top padding) */}
-            <div className="flex-grow overflow-y-auto px-14 md:px-36 lg:px-56 pt-12 custom-hub-scrollbar relative z-10">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-24 gap-y-5 pb-24 max-w-7xl mx-auto">
+            {/* PLAYER PLAQUES CONTAINER */}
+            <div className="flex-grow overflow-y-auto px-6 md:px-12 lg:px-20 pt-12 custom-hub-scrollbar relative z-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5 pb-24 max-w-7xl mx-auto">
                     {confirmedPersonnel.map((person, idx) => {
                         const tierColor = TIER_COLORS[person.tier] || '#94a3b8';
                         return (
