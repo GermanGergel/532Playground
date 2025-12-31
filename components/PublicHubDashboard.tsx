@@ -6,6 +6,7 @@ import { NewsItem, Player, PlayerTier, Team, WeatherCondition } from '../types';
 import { TrophyIcon, Zap, History as HistoryIcon, Users, AwardIcon, StarIcon, Target } from '../icons';
 import { useTranslation } from './ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
+// FIX: Import TeamAvatar component
 import { TeamAvatar } from './avatars';
 
 // --- LOCAL ICONS FOR WIDGET ---
@@ -410,7 +411,7 @@ export const PublicHubDashboard: React.FC = () => {
                     </div>
 
                     <div className="flex-[3] min-h-0 shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <HubCard title={t.hubIntelligenceHeader} icon={<Zap />} accent="#00F2FE" variant="standings" className="h-full min-h-0" bodyClassName="p-0 flex flex-col">
+                        <HubCard title={t.hubSessionNews} icon={<Zap />} accent="#00F2FE" variant="standings" className="h-full min-h-0" bodyClassName="p-0 flex flex-col">
                             <div className="flex-grow relative overflow-hidden">
                                 <div className="absolute inset-0 overflow-y-auto custom-hub-scrollbar p-3 bg-black/10">
                                     {newsFeed.slice(0, 15).map(item => <NewsVanguardCard key={item.id} item={item} />)}
@@ -420,7 +421,7 @@ export const PublicHubDashboard: React.FC = () => {
                                 <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-[#020617] to-transparent z-20" />
                             </div>
                         </HubCard>
-                        <HubCard title={t.hubSquadsHeader} icon={<Target />} variant="standings" className="h-full min-h-0" bodyClassName="flex flex-col"><TacticalRosters teams={session.teams} players={session.playerPool} session={session} t={t} /></HubCard>
+                        <HubCard title={t.hubSessionSquads} icon={<Target />} variant="standings" className="h-full min-h-0" bodyClassName="flex flex-col"><TacticalRosters teams={session.teams} players={session.playerPool} session={session} t={t} /></HubCard>
                     </div>
                 </div>
 

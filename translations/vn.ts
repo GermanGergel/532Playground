@@ -57,10 +57,12 @@ export const vn = {
   selectWinnerDesc: "Chọn đội thắng để tiếp tục",
   onBench: "Dự Bị",
 
+  // FIX: Added missing Legionnaire keys for Vietnamese translation
   legionnaire_replace: "THAY THẾ",
   legionnaire_select: "CHỌN",
   legionnaire_no_players: "Không có cầu thủ dự bị",
 
+  // FIX: Added missing Session Summary keys for Vietnamese translation
   // Session Summary
   summary_title: "TỔNG KẾT BUỔI TẬP",
   summary_location: "ĐỊA ĐIỂM",
@@ -110,7 +112,7 @@ export const vn = {
   hubAnalytics: "Phân Tích Hub",
   settingsGenDemoSession: "TẠO BUỔI TẬP DEMO",
   settingsGenDemoPlayers: "TẠO 10 CẦU THỦ DEMO",
-  ledgerTitle: "Sổ Quỹ Buổi Tập",
+  ledgerTitle: "Sổ Quỹ",
   ledgerEmpty: "Không Có Dữ Liệu",
   ledgerCollected: "Đã Thu",
   ledgerClear: "Xóa Sổ Quỹ",
@@ -143,7 +145,7 @@ export const vn = {
 
   // Player Profile
   playerProfile: "Hồ Sơ Cầu Thủ",
-  deletePlayer: "Xóa Cầu Thủ",
+  deletePlayer: "Vô hiệu hóa",
   deletePlayerConfirm: "Bạn có chắc muốn xóa {playerName}?",
   uploadPhoto: "Tải Ảnh",
   fromCamera: "Chụp Ảnh",
@@ -230,17 +232,16 @@ export const vn = {
   badges: "Huy Hiệu",
   noBadges: "Chưa có huy hiệu",
 
-  // Hub
-  hubTickerPhrases: "DỮ LIỆU TẠO NÊN HUYỀN THOẠI | CON SỐ KHÔNG BAO GIỜ NÓI DỐI | SÂN CỎ QUYẾT ĐỊNH TẤT CẢ | HIỆU SUẤT TRÊN HẾT | PROVEN, NOT PROMISED | 532 — NƠI HỘI TỤ TINH ANH",
-  hubBroadcastHeader: "TRỰC TIẾP",
-  hubIntelligenceHeader: "BẢN TIN TÌNH BÁO",
-  hubSquadsHeader: "ĐỘI HÌNH BUỔI TẬP",
-  hubVitalsHeader: "CHỈ SỐ CLB",
-  hubGlobalDistribution: "PHÂN PHỐI TOÀN CẦU",
+  // Hub - UPDATED SLOGANS
+  hubTicker1: "KHÔNG THỐNG KÊ. KHÔNG VINH QUANG.",
+  hubTicker2: "DỮ LIỆU ĐỊNH DANH HUYỀN THOẠI.",
+  hubTicker3: "NÂNG TẦM TRẬN ĐẤU.",
+  hubTicker4: "SÂN CỎ KHÔNG BAO GIỜ NÓI DỐI.",
+  hubTicker5: "532: SÂN CHƠI CỦA TINH ANH.",
   hubAwaitingStats: "ĐANG CHỜ DỮ LIỆU",
   hubAnalyzingPerformance: "ĐANG PHÂN TÍCH...",
   hubDashboardBtn: "DASHBOARD",
-  hubSessionLeaders: "DẪN ĐẦU BUỔI TẬP",
+  hubSessionLeaders: "DẪN ĐẦU MÙA GIẢI",
   hubMatchReport: "BÁO CÁO TRẬN ĐẤU",
   hubSessionNews: "TIN TỨC",
   hubSessionSquads: "ĐỘI HÌNH",
@@ -250,15 +251,15 @@ export const vn = {
   hubVitalsTitle: "CHỈ SỐ CLB",
   hubStatsMembers: "THÀNH VIÊN",
   hubSessionsPlayed: "BUỔI TẬP",
-  hubAvgRating: "RATING TB",
+  hubAvgRating: "AVG OVR",
   hubLocation: "ĐỊA ĐIỂM",
   hubTimeFrame: "THỜI GIAN",
   hubWeather: "THỜI TIẾT",
   hubImpact: "TÁC ĐỘNG",
   hubWelcomeText: "Chào mừng đến với Hub 532 Playground chính thức. Theo dõi chỉ số, so sánh với người khác và leo lên đỉnh vinh quang.",
-  hubLeadersTitle: "Dẫn Đầu Buổi Tập",
+  hubLeadersTitle: "Dẫn Đầu Mùa Giải",
   hubJoinSquad: "Tham Gia Đội Hình",
-  
+
   // Duel
   duel_title: "Chọn Đối Thủ",
   duel_id_unit: "XÁC MINH CẦU THỦ...",

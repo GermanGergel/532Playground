@@ -42,7 +42,7 @@ const getImpactScore = (stats: PlayerStats): number => {
     return score;
 };
 
-const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: Session, t: any }> = ({ topPlayers, session, t }) => {
+const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: Session }> = ({ topPlayers, session }) => {
     const data = {
         location: session.location || "PITCH DATA UNAVAILABLE",
         time: session.timeString || "19:30 - 21:00",
@@ -59,11 +59,12 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
+            {/* COMPACT TOP INFO SECTION */}
             <div className="grid grid-cols-1 gap-2 shrink-0">
                 <div className="flex items-center gap-2 bg-white/[0.02] border border-white/5 rounded-xl p-2">
                     <div className="w-8 h-8 rounded-lg bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shrink-0"><MapPinIcon className="w-4 h-4" /></div>
                     <div className="flex flex-col min-w-0">
-                        <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.2em]">{t.hubLocation}</span>
+                        <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.2em]">LOCATION</span>
                         <span className="font-chakra font-bold text-xs text-white uppercase tracking-wide truncate">{data.location}</span>
                     </div>
                 </div>
@@ -72,7 +73,7 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
                     <div className="flex-grow flex items-center gap-2 bg-white/[0.02] border border-white/5 rounded-xl p-2">
                         <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0"><ClockIcon className="w-4 h-4" /></div>
                         <div className="flex flex-col">
-                            <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.2em]">{t.hubTimeFrame}</span>
+                            <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.2em]">TIME</span>
                             <span className="font-mono font-bold text-xs text-white tracking-widest">{data.time}</span>
                         </div>
                     </div>
@@ -87,10 +88,11 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
                 </div>
             </div>
 
+            {/* SYNCED LEADERS SECTION (Using Impact Score) */}
             <div className="mt-3 flex-grow flex flex-col min-h-0">
                 <div className="flex items-center gap-2 mb-1.5 opacity-80 shrink-0">
                     <TrophyIcon className="w-2.5 h-2.5 text-[#FFD700]" />
-                    <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em]">{t.hubSessionLeaders}</span>
+                    <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em]">SESSION LEADERS (IMPACT)</span>
                 </div>
                 
                 <div className="flex-grow overflow-y-auto custom-hub-scrollbar pr-0.5">
@@ -172,19 +174,19 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                 <div className="max-w-6xl mx-auto w-full h-full flex flex-col gap-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch w-full h-full min-h-0">
                         <div className="flex flex-col gap-4 w-full h-full min-h-0">
-                            <HubCard title={t.hubTeamStandings} icon={<TrophyIcon />} accent="#FFD700" className="shrink-0 max-h-[45%] flex flex-col">
+                            <HubCard title="TEAM STANDINGS" icon={<TrophyIcon />} accent="#FFD700" className="shrink-0 max-h-[45%] flex flex-col">
                                 <div className="p-1 overflow-y-auto custom-hub-scrollbar">
                                     <table className="w-full table-fixed border-collapse">
                                         <thead>
                                             <tr>
                                                 <th className={`${thClass} w-[12%]`}>#</th>
-                                                <th className={`${thClass} w-[28%] text-left pl-3`}>{t.team}</th>
-                                                <th className={`${thClass} w-[10%]`}>{t.thP}</th>
-                                                <th className={`${thClass} w-[10%]`}>{t.thW}</th>
-                                                <th className={`${thClass} w-[10%]`}>{t.thD}</th>
-                                                <th className={`${thClass} w-[10%]`}>{t.thL}</th>
-                                                <th className={`${thClass} w-[10%]`}>{t.thGD}</th>
-                                                <th className={`${thClass} w-[10%] text-white`}>{t.hubPoints}</th>
+                                                <th className={`${thClass} w-[28%] text-left pl-3`}>TEAM</th>
+                                                <th className={`${thClass} w-[10%]`}>P</th>
+                                                <th className={`${thClass} w-[10%]`}>W</th>
+                                                <th className={`${thClass} w-[10%]`}>D</th>
+                                                <th className={`${thClass} w-[10%]`}>L</th>
+                                                <th className={`${thClass} w-[10%]`}>GD</th>
+                                                <th className={`${thClass} w-[10%] text-white`}>PTS</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -211,16 +213,16 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                     </table>
                                 </div>
                             </HubCard>
-                            <HubCard title={t.hubMatchReport} icon={<Target />} accent="#00F2FE" className="w-full flex-grow min-h-0" bodyClassName="p-4">
-                                <ArchiveEnvironmentWidget topPlayers={sortedByImpact} session={session} t={t} />
+                            <HubCard title="MATCH REPORT" icon={<Target />} accent="#00F2FE" className="w-full flex-grow min-h-0" bodyClassName="p-4">
+                                <ArchiveEnvironmentWidget topPlayers={sortedByImpact} session={session} />
                             </HubCard>
                         </div>
                         <div className="w-full h-full min-h-0">
                             <HubCard title={
                                 <div className="flex items-center gap-4 md:gap-6">
-                                    <button onClick={() => setActiveTab('players')} className={`font-russo text-[8px] md:text-[9px] uppercase tracking-widest transition-all ${activeTab === 'players' ? 'text-[#00F2FE]' : 'text-white/20'}`}>{t.playerStatistics}</button>
+                                    <button onClick={() => setActiveTab('players')} className={`font-russo text-[8px] md:text-[9px] uppercase tracking-widest transition-all ${activeTab === 'players' ? 'text-[#00F2FE]' : 'text-white/20'}`}>PLAYER STATISTICS</button>
                                     <div className="w-px h-3 bg-white/10"></div>
-                                    <button onClick={() => setActiveTab('matches')} className={`font-russo text-[8px] md:text-[9px] uppercase tracking-widest transition-all ${activeTab === 'matches' ? 'text-[#00F2FE]' : 'text-white/20'}`}>{t.gameHistory}</button>
+                                    <button onClick={() => setActiveTab('matches')} className={`font-russo text-[8px] md:text-[9px] uppercase tracking-widest transition-all ${activeTab === 'matches' ? 'text-[#00F2FE]' : 'text-white/20'}`}>MATCH HISTORY</button>
                                 </div>
                             } icon={activeTab === 'players' ? <Users /> : <HistoryIcon />} accent="#00F2FE" className="h-full flex flex-col" bodyClassName="flex flex-col h-full min-h-0">
                                 <div className="flex-grow overflow-y-auto custom-hub-scrollbar p-1">
@@ -229,10 +231,10 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                             <thead>
                                                 <tr>
                                                     <th className={`${thClass} w-[10%]`}>#</th>
-                                                    <th className={`${thClass} w-[50%] text-left pl-4`}>{t.players}</th>
-                                                    <th className={`${thClass} w-[12%]`}>{t.thG}</th>
-                                                    <th className={`${thClass} w-[12%]`}>{t.thA}</th>
-                                                    <th className={`${thClass} w-[16%] text-white`}>{t.thTotal}</th>
+                                                    <th className={`${thClass} w-[50%] text-left pl-4`}>PLAYER</th>
+                                                    <th className={`${thClass} w-[12%]`}>G</th>
+                                                    <th className={`${thClass} w-[12%]`}>A</th>
+                                                    <th className={`${thClass} w-[16%] text-white`}>TOT</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -255,9 +257,9 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                             <thead>
                                                 <tr>
                                                     <th className={`${thClass} w-[15%]`}>#</th>
-                                                    <th className={`${thClass} w-[25%] text-center`}>{t.hubHome}</th>
-                                                    <th className={`${thClass} w-[35%] text-center`}>{t.hubResult}</th>
-                                                    <th className={`${thClass} w-[25%] text-center`}>{t.hubAway}</th>
+                                                    <th className={`${thClass} w-[25%] text-center`}>HOME</th>
+                                                    <th className={`${thClass} w-[35%] text-center`}>RESULT</th>
+                                                    <th className={`${thClass} w-[25%] text-center`}>AWAY</th>
                                                 </tr>
                                             </thead>
                                             <tbody>

@@ -31,7 +31,7 @@ export const ua = {
   addPlayer: "Додати",
   playerPool: "Лист Очікування",
   allPlayersAssigned: "Всі гравці розподілені",
-  autoBalanceTeams: "Auto-Баланс",
+  autoBalanceTeams: "Авто-Баланс",
   autoBalanceConfirmTitle: "Автобаланс команд?",
   autoBalanceConfirmDesc: "Гравці будуть перерозподілені за рейтингом.",
   startSession: "Почати Сесію",
@@ -57,10 +57,12 @@ export const ua = {
   selectWinnerDesc: "Виберіть переможця, щоб продовжити",
   onBench: "На лавці",
 
+  // FIX: Added missing Legionnaire keys for Ukrainian translation
   legionnaire_replace: "ЗАМІНИТИ",
   legionnaire_select: "ВИБРАТИ",
   legionnaire_no_players: "Немає вільних гравців",
 
+  // FIX: Added missing Session Summary keys for Ukrainian translation
   // Session Summary
   summary_title: "ПІДСУМКИ СЕСІЇ",
   summary_location: "ЛОКАЦІЯ",
@@ -106,11 +108,11 @@ export const ua = {
   // Settings
   settingsTitle: "Налаштування",
   language: "Мова",
-  voiceAssistant: "Голосовий ассистент",
+  voiceAssistant: "Голосовий асистент",
   hubAnalytics: "Аналітика Хабу",
   settingsGenDemoSession: "СТВОРИТИ ДЕМО СЕСІЮ",
   settingsGenDemoPlayers: "СТВОРИТИ 10 ГРАВЦІВ",
-  ledgerTitle: "Каса Сесії",
+  ledgerTitle: "Каса",
   ledgerEmpty: "Немає Даних",
   ledgerCollected: "Зібрано",
   ledgerClear: "Очистити Касу",
@@ -198,7 +200,7 @@ export const ua = {
   ratingExampleWinStrong: "Впевнена перемога (+2GD): +1.3 очка",
   ratingExampleWinClose: "Звичайна перемога: +1.0 очко",
   ratingExampleDraw: "Нічия: +0.4 очка",
-  ratingExampleLossClose: "Пораження: -0.5 очок",
+  ratingExampleLossClose: "Поразка: -0.5 очок",
   ratingExampleLossHeavy: "Велика поразка (-2GD): -0.8 очок",
   ratingExampleGoal: "Гол: +1.0 очко (Нападник +1.2)",
   ratingExampleAssist: "Асис: +0.7 очок (Плеймейкер +1.0)",
@@ -230,13 +232,12 @@ export const ua = {
   badges: "Значки",
   noBadges: "Немає значків",
 
-  // Hub
-  hubTickerPhrases: "ДАНІ СТВОРЮЮТЬ ЛЕГЕНД | ЧИСЛА НІКОЛИ НЕ БРЕШУТЬ | ПОЛЕ ВИРІШУЄ ВСЕ | РЕЗУЛЬТАТ ВАЖЛИВІШИЙ ЗА СЛОВА | 532 — ДЕ ГРАЄ ЕЛІТА",
-  hubBroadcastHeader: "ТРАНСЛЯЦІЯ",
-  hubIntelligenceHeader: "РОЗВІДДАНИЙ КАНАЛ",
-  hubSquadsHeader: "СКЛАДИ СЕСІЇ",
-  hubVitalsHeader: "ПОКАЗНИКИ КЛУБУ",
-  hubGlobalDistribution: "ГЛОБАЛЬНИЙ РОЗПОДІЛ",
+  // Hub - UPDATED SLOGANS
+  hubTicker1: "НЕМАЄ СТАТИСТИКИ — НЕМАЄ СЛАВИ.",
+  hubTicker2: "ДАНІ ВИЗНАЧАЮТЬ ЛЕГЕНД.",
+  hubTicker3: "ПІДНІМИ СВОЮ ГРУ.",
+  hubTicker4: "ПОЛЕ НІКОЛИ НЕ БРЕШЕ.",
+  hubTicker5: "532: ДЕ ГРАЄ ЕЛІТА.",
   hubAwaitingStats: "ОЧІКУВАННЯ ДАНИХ",
   hubAnalyzingPerformance: "АНАЛІЗ ЕФЕКТИВНОСТІ...",
   hubDashboardBtn: "ДАШБОРД",

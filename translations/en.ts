@@ -57,10 +57,12 @@ export const en = {
   selectWinnerDesc: "Select the winning team to proceed",
   onBench: "On Bench",
 
+  // FIX: Added missing Legionnaire keys for English translation
   legionnaire_replace: "REPLACE",
   legionnaire_select: "SELECT",
   legionnaire_no_players: "No resting players available",
 
+  // FIX: Added missing Session Summary keys for English translation
   // Session Summary
   summary_title: "SESSION SUMMARY",
   summary_location: "LOCATION",
@@ -110,7 +112,7 @@ export const en = {
   hubAnalytics: "Hub Analytics",
   settingsGenDemoSession: "GENERATE DEMO SESSION",
   settingsGenDemoPlayers: "GENERATE 10 PLAYERS",
-  ledgerTitle: "Session Ledger",
+  ledgerTitle: "Ledger",
   ledgerEmpty: "No Data",
   ledgerCollected: "Collected",
   ledgerClear: "Clear Ledger",
@@ -230,13 +232,12 @@ export const en = {
   badges: "Badges",
   noBadges: "No badges yet",
 
-  // Hub
-  hubTickerPhrases: "DATA BUILDS LEGENDS | NUMBERS NEVER LIE | THE PITCH DECIDES EVERYTHING | PERFORMANCE OVER HYPE | PROVEN, NOT PROMISED | 532 — WHERE ELITES PLAY",
-  hubBroadcastHeader: "SESSION BROADCAST",
-  hubIntelligenceHeader: "INTELLIGENCE FEED",
-  hubSquadsHeader: "SESSION SQUADS",
-  hubVitalsHeader: "CLUB VITALS",
-  hubGlobalDistribution: "GLOBAL DISTRIBUTION",
+  // Hub - UPDATED SLOGANS
+  hubTicker1: "NO STATS. NO GLORY.",
+  hubTicker2: "DATA DEFINES LEGENDS.",
+  hubTicker3: "ELEVATE YOUR GAME.",
+  hubTicker4: "THE PITCH NEVER LIES.",
+  hubTicker5: "532: WHERE ELITES PLAY.",
   hubAwaitingStats: "AWAITING DATA",
   hubAnalyzingPerformance: "ANALYZING PERFORMANCE...",
   hubDashboardBtn: "DASHBOARD",
@@ -250,15 +251,16 @@ export const en = {
   hubVitalsTitle: "CLUB VITALS",
   hubStatsMembers: "MEMBERS",
   hubSessionsPlayed: "SESSIONS",
-  hubAvgRating: "AVG RATING",
+  hubAvgRating: "AVG OVR",
   hubLocation: "LOCATION",
   hubTimeFrame: "TIME FRAME",
   hubWeather: "WEATHER",
   hubImpact: "IMPACT",
   hubWelcomeText: "Welcome to the official 532 Playground Hub. Track your stats, compare with others, and rise to the top.",
-  hubLeadersTitle: "Session Leaders",
+  hubLeadersTitle: "Season Leaders",
   hubJoinSquad: "Join the Squad",
 
+  // FIX: Added missing Duel keys for English translation
   // Duel
   duel_title: "Duel Selection",
   duel_id_unit: "IDENTIFY UNIT...",

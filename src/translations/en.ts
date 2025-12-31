@@ -1,4 +1,3 @@
-
 export const en = {
   // Navigation
   navHome: "Home",
@@ -57,10 +56,12 @@ export const en = {
   selectWinnerDesc: "Select the winning team to proceed",
   onBench: "On Bench",
 
+  // FIX: Added missing Legionnaire keys for English translation
   legionnaire_replace: "REPLACE",
   legionnaire_select: "SELECT",
   legionnaire_no_players: "No resting players available",
 
+  // FIX: Added missing Session Summary keys for English translation
   // Session Summary
   summary_title: "SESSION SUMMARY",
   summary_location: "LOCATION",
@@ -182,7 +183,6 @@ export const en = {
   thSessions: "Sess",
   winRate: "Win %",
   goalsPerSession: "Goals/Sess",
-  requestedEntityNotFound: "Requested entity was not found. Please select a valid API key.",
   assistsPerSession: "Assists/Sess",
   monthlyStatsTitle: "Monthly Stats",
   monthlyGoals: "Goals",
@@ -232,12 +232,11 @@ export const en = {
   noBadges: "No badges yet",
 
   // Hub
-  hubTickerPhrases: "DATA BUILDS LEGENDS | NUMBERS NEVER LIE | THE PITCH DECIDES EVERYTHING | PERFORMANCE OVER HYPE | PROVEN, NOT PROMISED | 532 — WHERE ELITES PLAY",
-  hubBroadcastHeader: "SESSION BROADCAST",
-  hubIntelligenceHeader: "INTELLIGENCE FEED",
-  hubSquadsHeader: "SESSION SQUADS",
-  hubVitalsHeader: "CLUB VITALS",
-  hubGlobalDistribution: "GLOBAL DISTRIBUTION",
+  hubTicker1: "ELITE PERFORMANCE TRACKING",
+  hubTicker2: "LIVE SESSION DATA",
+  hubTicker3: "GLOBAL RANKINGS",
+  hubTicker4: "PLAYER ANALYTICS",
+  hubTicker5: "MATCH ARCHIVE",
   hubAwaitingStats: "AWAITING DATA",
   hubAnalyzingPerformance: "ANALYZING PERFORMANCE...",
   hubDashboardBtn: "DASHBOARD",
@@ -260,6 +259,7 @@ export const en = {
   hubLeadersTitle: "Session Leaders",
   hubJoinSquad: "Join the Squad",
 
+  // FIX: Added missing Duel keys for English translation
   // Duel
   duel_title: "Duel Selection",
   duel_id_unit: "IDENTIFY UNIT...",

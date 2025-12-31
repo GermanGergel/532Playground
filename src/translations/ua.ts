@@ -1,4 +1,3 @@
-
 export const ua = {
   // Navigation
   navHome: "Головна",
@@ -31,7 +30,7 @@ export const ua = {
   addPlayer: "Додати",
   playerPool: "Лист Очікування",
   allPlayersAssigned: "Всі гравці розподілені",
-  autoBalanceTeams: "Auto-Баланс",
+  autoBalanceTeams: "Авто-Баланс",
   autoBalanceConfirmTitle: "Автобаланс команд?",
   autoBalanceConfirmDesc: "Гравці будуть перерозподілені за рейтингом.",
   startSession: "Почати Сесію",
@@ -57,10 +56,12 @@ export const ua = {
   selectWinnerDesc: "Виберіть переможця, щоб продовжити",
   onBench: "На лавці",
 
+  // FIX: Added missing Legionnaire keys for Ukrainian translation
   legionnaire_replace: "ЗАМІНИТИ",
   legionnaire_select: "ВИБРАТИ",
   legionnaire_no_players: "Немає вільних гравців",
 
+  // FIX: Added missing Session Summary keys for Ukrainian translation
   // Session Summary
   summary_title: "ПІДСУМКИ СЕСІЇ",
   summary_location: "ЛОКАЦІЯ",
@@ -70,7 +71,7 @@ export const ua = {
   summary_condition: "УМОВИ",
 
   // Stats
-  teamStandings: "Турнирна Таблиця",
+  teamStandings: "Турнірна Таблиця",
   playerStatistics: "Статистика Гравців",
   gameHistory: "Історія Матчів",
   liveStatistics: "Live Статистика",
@@ -106,7 +107,7 @@ export const ua = {
   // Settings
   settingsTitle: "Налаштування",
   language: "Мова",
-  voiceAssistant: "Голосовий ассистент",
+  voiceAssistant: "Голосовий асистент",
   hubAnalytics: "Аналітика Хабу",
   settingsGenDemoSession: "СТВОРИТИ ДЕМО СЕСІЮ",
   settingsGenDemoPlayers: "СТВОРИТИ 10 ГРАВЦІВ",
@@ -135,7 +136,7 @@ export const ua = {
   sortByRating: "Рейтинг",
   sortByName: "Ім'я",
   sortByDate: "Дата",
-  unconfirmedBadge: "НОВИЙ",
+  unconfirmedBadge: "НОВЫЙ",
   noPlayersFound: "Гравців не знайдено.",
   addPlayerManually: "Додати Вручну",
   nickname: "Нікнейм",
@@ -179,7 +180,7 @@ export const ua = {
   winLossDraw: "Статистика В-Н-П",
   sessionTrend: "Тренд Форми",
   allTimeStats: "Кар'єра",
-  thSessions: "Сесія",
+  thSessions: "Сесії",
   winRate: "% Перемог",
   goalsPerSession: "Гол/Сесія",
   assistsPerSession: "Ас/Сесія",
@@ -198,10 +199,10 @@ export const ua = {
   ratingExampleWinStrong: "Впевнена перемога (+2GD): +1.3 очка",
   ratingExampleWinClose: "Звичайна перемога: +1.0 очко",
   ratingExampleDraw: "Нічия: +0.4 очка",
-  ratingExampleLossClose: "Пораження: -0.5 очок",
-  ratingExampleLossHeavy: "Велика поразка (-2GD): -0.8 очок",
+  ratingExampleLossClose: "Поразка: -0.5 очок",
+  ratingExampleLossHeavy: "Великі поразка (-2GD): -0.8 очок",
   ratingExampleGoal: "Гол: +1.0 очко (Нападник +1.2)",
-  ratingExampleAssist: "Асис: +0.7 очок (Плеймейкер +1.0)",
+  ratingExampleAssist: "Асист: +0.7 очок (Плеймейкер +1.0)",
   ratingExampleCleanSheet: "Сухий матч: +1.0 очко (Захисник +2.0)",
   infoInactivityTitle: "Інактив",
   infoInactivityDesc: "-1 OVR за кожні 3 пропущенні сесії.",
@@ -220,7 +221,7 @@ export const ua = {
   ruleLatePenalty: "ШТРАФ 20K",
   ruleRespectTitle: "Повага",
   ruleRespectDesc: "Неспортивна поведінка або агресія.",
-  ruleRespectPenalty: "БАН НА СЕСІЮ",
+  ruleRespectPenalty: "БАН НА СЕССІЮ",
   badgeBonusTitle: "Бонуси Значків",
   badgeBonusDesc: "Заробляйте значки, щоб підвищити рейтинг матчу.",
   badgeBonusMvp: "MVP: +0.4 очка",
@@ -231,42 +232,32 @@ export const ua = {
   noBadges: "Немає значків",
 
   // Hub
-  hubTickerPhrases: "ДАНІ СТВОРЮЮТЬ ЛЕГЕНД | ЧИСЛА НІКОЛИ НЕ БРЕШУТЬ | ПОЛЕ ВИРІШУЄ ВСЕ | РЕЗУЛЬТАТ ВАЖЛИВІШИЙ ЗА СЛОВА | 532 — ДЕ ГРАЄ ЕЛІТА",
-  hubBroadcastHeader: "ТРАНСЛЯЦІЯ",
-  hubIntelligenceHeader: "РОЗВІДДАНИЙ КАНАЛ",
-  hubSquadsHeader: "СКЛАДИ СЕСІЇ",
-  hubVitalsHeader: "ПОКАЗНИКИ КЛУБУ",
-  hubGlobalDistribution: "ГЛОБАЛЬНИЙ РОЗПОДІЛ",
+  hubTicker1: "ЕЛІТНИЙ ТРЕКІНГ",
+  hubTicker2: "LIVE ДАНІ СЕССИИ",
+  hubTicker3: "ГЛОБАЛЬНИЙ РЕЙТИНГ",
+  hubTicker4: "АНАЛІТИКА ГРАВЦІВ",
+  hubTicker5: "АРХІВ МАТЧІВ",
   hubAwaitingStats: "ОЧІКУВАННЯ ДАНИХ",
   hubAnalyzingPerformance: "АНАЛІЗ ЕФЕКТИВНОСТІ...",
   hubDashboardBtn: "ДАШБОРД",
-  hubSessionLeaders: "ЛІДЕРИ СЕЗОНУ",
+  hubSessionLeaders: "ЛІДЕРИ СЕССІЇ",
   hubMatchReport: "ЗВІТ ПРО МАТЧ",
   hubSessionNews: "РОЗВІДДАНІ",
   hubSessionSquads: "СКЛАДИ",
   hubTeamStandings: "ТАБЛИЦЯ",
   hubPlayers: "ГРАВЦІ",
-  hubGames: "МАТЧI",
+  hubGames: "МАТЧИ",
   hubVitalsTitle: "ПОКАЗНИКИ КЛУБУ",
   hubStatsMembers: "УЧАСНИКИ",
   hubSessionsPlayed: "СЕССІЇ",
   hubAvgRating: "СЕРЕДНІЙ OVR",
-  hubLocation: "ЛОКАЦІЯ",
+  hubLocation: "ЛОКАЦИЯ",
   hubTimeFrame: "ЧАС",
   hubWeather: "ПОГОДА",
   hubImpact: "ІМПАКТ",
   hubWelcomeText: "Ласкаво просимо до офіційного хабу 532 Playground. Слідкуй за статистикою, порівнюй результати та прагни до вершини.",
-  hubLeadersTitle: "Лідери Сезону",
-  hubJoinSquad: "Вступить в Загін",
-
-  // Duel
-  duel_title: "Вибір Дуелі",
-  duel_id_unit: "ОПОЗНАННЯ ЮНІТА...",
-  duel_initiate: "ЗАПУСТИТИ ПОСЛІДОВНІСТЬ",
-  duel_sector_empty: "Сектор порожній",
-  duel_complete: "ПОСЛІДОВНІСТЬ ЗАВЕРШЕНА",
-  duel_score: "РАХУНОК",
-  duel_verified: "Індекс ефективності підтверджено",
+  hubLeadersTitle: "Лідери Сесії",
+  hubJoinSquad: "Вступити в Загін",
   
   // Promo
   hero_title: "ГРАЙ ЯК ПРОФІ",
@@ -285,7 +276,7 @@ export const ua = {
   roadmap_leagues: "Ліги",
   roadmap_leagues_desc: "Сезонні кубки та призи.",
   cta_join: "ВСТУПИТИ",
-  cta_desc: "Напиши нам, щоб записаться.",
+  cta_desc: "Напиши нам, щоб записатися.",
   tap_to_enter: "НАТИСНИ, ЩОБ УВІЙТИ",
   hub_section_title: "ЕКОСИСТЕМА КЛУБУ",
   hub_section_desc: "Центральний інтелект.",
@@ -396,6 +387,16 @@ export const ua = {
   badge_crisis_manager_desc: "2+ Г/А будучи Легионером",
   badge_iron_lung: "Залізні Легені",
   badge_iron_lung_desc: "Серія Перемога-Перемога-Перемога",
+
+  // FIX: Added missing Duel keys for Ukrainian translation
+  // Duel
+  duel_title: "Вибір Дуелі",
+  duel_id_unit: "ОПОЗНАННЯ ЮНІТА...",
+  duel_initiate: "ЗАПУСТИТИ ПОСЛІДОВНІСТЬ",
+  duel_sector_empty: "Сектор порожній",
+  duel_complete: "ПОСЛІДОВНІСТЬ ЗАВЕРШЕНА",
+  duel_score: "РАХУНОК",
+  duel_verified: "Індекс ефективності підтверджено",
   
   // Announcements
   announcement_start_match: "Початок Матчу",

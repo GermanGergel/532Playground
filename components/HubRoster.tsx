@@ -21,7 +21,7 @@ const HubPortraitAvatar: React.FC<{ photo?: string; tierColor: string }> = ({ ph
             className="absolute inset-0 bg-cover transition-transform duration-700" 
             style={{ 
                 backgroundImage: photo ? `url(${photo})` : 'none',
-                backgroundPosition: 'center 12%' 
+                backgroundPosition: 'center 12%' // Поднимаем фокус на лицо
             }}
         >
             {!photo && (
@@ -30,6 +30,7 @@ const HubPortraitAvatar: React.FC<{ photo?: string; tierColor: string }> = ({ ph
                 </div>
             )}
         </div>
+        {/* Градиентная маска для объема */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-white/10 opacity-60"></div>
         <div className="absolute inset-0 border border-white/5 pointer-events-none rounded-[1.1rem]"></div>
     </div>
@@ -181,10 +182,12 @@ export const HubRoster: React.FC<HubRosterProps> = ({ onSelectPlayer, sortBy, se
     return (
         <div className="absolute inset-0 flex flex-col animate-in fade-in duration-700 overflow-hidden rounded-[2.5rem]">
             <div className="absolute -top-24 bottom-0 -left-4 -right-4 z-0 pointer-events-none">
+                {/* Радиальный градиент в более темной гамме (темнее, чем на дашборде) */}
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#01040a] to-black"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] pointer-events-none"></div>
             </div>
             
+            {/* TOP NAVIGATION BLOCK */}
             <div className="pt-2 mb-2 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4 px-10 md:px-24 lg:px-32 relative z-10">
                 <div className="flex items-center gap-10 ml-4 transition-all duration-500">
                     <div className="max-w-fit">
@@ -210,6 +213,7 @@ export const HubRoster: React.FC<HubRosterProps> = ({ onSelectPlayer, sortBy, se
                 </div>
             </div>
             
+            {/* PLAYER PLAQUES CONTAINER */}
             <div className="flex-grow overflow-y-auto px-6 md:px-12 lg:px-20 pt-12 custom-hub-scrollbar relative z-10">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 pb-24 max-w-7xl mx-auto">
                     {confirmedPersonnel.map((person, idx) => {
@@ -224,6 +228,7 @@ export const HubRoster: React.FC<HubRosterProps> = ({ onSelectPlayer, sortBy, se
                                 <div className="relative z-10 h-full w-full flex items-center px-4 gap-4">
                                     <span className="font-mono text-[10px] text-white/5 w-5 shrink-0 font-black tracking-tighter group-hover:text-white/10 transition-colors">{(idx + 1).toString().padStart(2, '0')}</span>
                                     
+                                    {/* ОБНОВЛЕННЫЙ АВАТАР - КАПСУЛА */}
                                     <div className="shrink-0 transition-transform duration-500">
                                         <HubPortraitAvatar photo={person.playerCard} tierColor={tierColor} />
                                     </div>
