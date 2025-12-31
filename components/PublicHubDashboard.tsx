@@ -417,12 +417,13 @@ export const PublicHubDashboard: React.FC = () => {
 
     return (
         <div className="h-full flex flex-col animate-in fade-in duration-700 w-full relative p-2 md:p-3">
-            <div className="absolute inset-0 z-0 pointer-events-none rounded-[2rem] overflow-hidden">
+            <div className="absolute -top-24 bottom-0 -left-4 -right-4 z-0 pointer-events-none rounded-[2rem] overflow-hidden">
                 {/* UPDATED: Center of lighting moved to 20% down to smooth transition with nav bar */}
+                {/* The gradient now starts high up to fill space behind the nav */}
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center_20%,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
                 {/* TOP SMOOTHING LAYER: Deep fade to hide the break under the nav bar */}
-                <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black via-black/20 to-transparent pointer-events-none"></div>
+                <div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-b from-black via-transparent to-transparent pointer-events-none"></div>
             </div>
 
             <div className="flex-grow grid grid-cols-12 gap-4 min-h-0 items-start relative z-10">

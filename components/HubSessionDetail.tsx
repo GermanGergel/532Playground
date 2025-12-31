@@ -109,8 +109,8 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
     
     const cleanTeamName = (name: string) => name.replace(/Squad/gi, '').replace(/Team/gi, '').replace(/\s+/g, ' ').trim();
 
-    // thClass uses the middle point color to blend nicely
-    const thClass = "py-2.5 text-white/40 uppercase tracking-tighter text-[9px] font-black text-center sticky top-0 bg-[#01040a] z-20 border-b border-white/5";
+    // UPDATED: thClass now uses semi-transparent white with backdrop-blur instead of solid black
+    const thClass = "py-2.5 text-white/40 uppercase tracking-tighter text-[9px] font-black text-center sticky top-0 bg-white/5 backdrop-blur-md z-20 border-b border-white/5";
     const tdBase = "py-2 text-center text-[10px] font-bold transition-colors";
     const tdText = `${tdBase} text-slate-300`;
     const tdAccent = `${tdBase} text-white font-black text-[11px]`;
@@ -118,7 +118,6 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
     return (
         <div className="absolute inset-0 z-30 flex flex-col animate-in slide-in-from-right duration-500 overflow-hidden rounded-[2.5rem]">
             <div className="absolute inset-0 z-0 pointer-events-none">
-                {/* ОБНОВЛЕННЫЙ ФОН: Более темная гамма для соответствия Player Hub */}
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#01040a] to-black"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
             </div>
@@ -138,8 +137,9 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                     <table className="w-full table-fixed border-collapse">
                                         <thead>
                                             <tr>
-                                                <th className={`${thClass} w-[10%]`}>#</th>
-                                                <th className={`${thClass} w-[45%] text-center`}>TEAM</th>
+                                                <th className={`${thClass} w-[10%]`}></th>
+                                                {/* UPDATED: "TEAM" changed to "SQUAD" and aligned left */}
+                                                <th className={`${thClass} w-[45%] text-left pl-6`}>SQUAD</th>
                                                 <th className={`${thClass} w-[10%]`}>P</th>
                                                 <th className={`${thClass} w-[10%]`}>W</th>
                                                 <th className={`${thClass} w-[10%]`}>D</th>
@@ -149,9 +149,11 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                         <tbody>
                                             {teamStats.map((stat, idx) => (
                                                 <tr key={stat.team.id} className="group border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
-                                                    <td className={`${tdBase} text-white/30 font-mono`}>{idx + 1}</td>
+                                                    {/* UPDATED: Removed digits 1, 2, 3 */}
+                                                    <td className={`${tdBase}`}></td>
                                                     <td className={`${tdText}`}>
-                                                        <div className="flex items-center justify-center gap-3">
+                                                        {/* UPDATED: Aligned items to start and shifted left with pl-2 */}
+                                                        <div className="flex items-center justify-start gap-4 pl-2">
                                                             <TeamAvatar team={stat.team} size="xxs" isLight={true} />
                                                             <div className="flex flex-col items-start leading-none min-w-[60px]">
                                                                 <span className="text-[10px] font-black tracking-tight text-white uppercase group-hover:text-[#00F2FE] transition-colors">
