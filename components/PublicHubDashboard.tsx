@@ -217,7 +217,6 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
 
     const MiniCard = ({ p }: { p: TopPlayerStats }) => {
         const countryCodeAlpha2 = useMemo(() => p.player.countryCode ? convertCountryCodeAlpha3ToAlpha2(p.player.countryCode) : null, [p.player.countryCode]);
-        // Увеличены размеры карточек: MVP 120->140, Sides 100->115 (Desktop)
         const sizeClasses = p.rank === 1 ? 'w-[120px] h-[165px] md:w-[150px] md:h-[210px] z-20' : 'w-[100px] h-[135px] md:w-[120px] md:h-[165px] z-10';
         return (
             <div className={`relative rounded-lg overflow-hidden border border-white/20 shadow-2xl flex flex-col shrink-0 ${sizeClasses}`}>
@@ -247,8 +246,7 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
     );
 
     return (
-        <div className="flex items-end justify-center gap-4 md:gap-8 h-full px-4 relative">
-            {/* MVP теперь занимает больше места по ширине 125->170 */}
+        <div className="flex items-end justify-center gap-4 md:gap-8 h-full px-4 relative pb-4">
             <div className="w-[110px] md:w-[140px] h-full flex flex-col justify-end z-10"><PodiumSpot p={p2} rank={2} height="110px" color="#94a3b8" delay="delay-100" /></div>
             <div className="w-[130px] md:w-[170px] h-full flex flex-col justify-end z-20 pb-4"><PodiumSpot p={p1} rank={1} height="150px" color="#FFD700" delay="delay-0" /></div>
             <div className="w-[110px] md:w-[140px] h-full flex flex-col justify-end z-10"><PodiumSpot p={p3} rank={3} height="80px" color="#CD7F32" delay="delay-200" /></div>
@@ -396,11 +394,11 @@ export const PublicHubDashboard: React.FC = () => {
 
             <div className="flex-grow grid grid-cols-12 gap-4 min-h-0 items-start relative z-10">
                 <div className="col-span-12 md:col-span-9 flex flex-col gap-4 h-full min-h-[600px]">
-                    <div className="flex-[4] min-h-0 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200 flex gap-3">
-                         <HubCard title={t.hubSessionLeaders} align="right" icon={<AwardIcon />} accent="#FFD700" variant="elite" className="flex-[2] h-full min-h-[350px]" bodyClassName="flex flex-col bg-transparent">
-                            <div className="flex-grow relative"><SessionPodium players={top3PodiumPlayers} t={t} /></div>
+                    <div className="flex-[5] min-h-0 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200 flex gap-3">
+                         <HubCard title={t.hubSessionLeaders} align="right" icon={<AwardIcon />} accent="#FFD700" variant="elite" className="flex-[2] h-full min-h-[420px]" bodyClassName="flex flex-col bg-transparent">
+                            <div className="flex-grow relative overflow-visible"><SessionPodium players={top3PodiumPlayers} t={t} /></div>
                         </HubCard>
-                        <HubCard title={t.hubMatchReport} icon={<Target />} accent="#00F2FE" variant="standings" className="flex-1 h-full min-h-[350px]" bodyClassName="flex flex-col p-5"><MatchEnvironmentWidget session={session} t={t} /></HubCard>
+                        <HubCard title={t.hubMatchReport} icon={<Target />} accent="#00F2FE" variant="standings" className="flex-1 h-full min-h-[420px]" bodyClassName="flex flex-col p-5"><MatchEnvironmentWidget session={session} t={t} /></HubCard>
                     </div>
 
                     <div className="flex-[3] min-h-0 shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
