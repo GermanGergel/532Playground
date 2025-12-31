@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { useApp } from '../context';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
-import { NewsItem, Player, PlayerTier, Team } from '../types';
+import { NewsItem, Player, PlayerTier, Team, WeatherCondition } from '../types';
 import { TrophyIcon, Zap, History as HistoryIcon, Users, AwardIcon, StarIcon, Target } from '../icons';
 import { useTranslation } from './ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
@@ -143,7 +143,8 @@ const HubCard: React.FC<{
             <div className={`relative z-10 py-1.5 px-4 flex items-center justify-between shrink-0 ${headerStyleClass} ${isRight ? 'flex-row-reverse' : ''}`}>
                  <div className={`flex items-center gap-2 relative z-10 ${isRight ? 'flex-row-reverse' : ''}`}>
                     <div className={`w-4 h-4 rounded-md flex items-center justify-center shadow-sm border ${iconBg}`} style={{ color: accent }}>
-                        {React.cloneElement(icon as React.ReactElement, { className: "w-2.5 h-2.5" })}
+                        {/* FIX: Added type parameter <any> to React.ReactElement cast to satisfy TypeScript for className property usage in cloneElement. */}
+                        {React.cloneElement(icon as React.ReactElement<any>, { className: "w-2.5 h-2.5" })}
                     </div>
                     {typeof title === 'string' ? <h3 className={`font-russo text-[10px] uppercase tracking-widest ${titleColor}`}>{title}</h3> : title}
                  </div>
@@ -283,40 +284,64 @@ const NewsVanguardCard: React.FC<{ item: NewsItem }> = ({ item }) => (
 
 const getImpactScore = (stats: PlayerStats): number => {
     let score = 0;
-    score += stats.wins * 3.0;
-    score += stats.draws * 1.0;
-    score += stats.cleanSheets * 2.5; 
-    score += stats.goals * 1.5;
-    score += stats.assists * 1.2;
-    score -= stats.ownGoals * 2.0;
+    const nonCleanSheetWins = stats.wins - (stats.cleanSheetWins || 0);
+
+    score += nonCleanSheetWins * 2.0;
+    score += (stats.cleanSheetWins || 0) * 2.5;
+    score += stats.draws * 0.5;
+    score += stats.goals * 1.0;
+    score += stats.assists * 1.0;
+    score -= stats.ownGoals * 1.0;
+
     return score;
 };
 
-const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t }) => (
-    <div className="flex flex-col h-full justify-between py-2">
-        <div className="flex items-start gap-3 border-b border-white/5 pb-4">
-            <div className="w-10 h-10 rounded-xl bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shrink-0"><MapPinIcon className="w-5 h-5" /></div>
-            <div className="flex flex-col pt-0.5"><span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">{t.hubLocation}</span><span className="font-chakra font-bold text-base text-white uppercase tracking-wide truncate max-w-[200px] md:max-w-[250px]">{session.location || "PITCH DATA UNAVAILABLE"}</span></div>
-        </div>
-        <div className="flex items-center gap-3 border-b border-white/5 py-4">
-            <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0"><ClockIcon className="w-5 h-5" /></div>
-            <div className="flex flex-col"><span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">{t.hubTimeFrame}</span><span className="font-mono font-bold text-xl text-white tracking-widest">{session.timeString || "19:30 - 21:00"}</span></div>
-        </div>
-        <div className="flex-grow flex flex-col justify-end pt-2">
-            <div className="relative rounded-2xl bg-gradient-to-br from-indigo-900/40 to-black border border-indigo-500/20 p-4 flex items-center justify-between overflow-hidden">
-                {/* --- ADDED TEXTURE OVERLAY HERE (UPDATED to match Archive Cards) --- */}
-                <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-striped-brick.png')]"></div>
-                
-                <div className="relative z-10 flex flex-col">
-                    <span className="text-[9px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-1">{t.hubWeather}</span>
-                    <div className="flex items-baseline gap-1"><span className="font-russo text-4xl text-white leading-none">{session.weather?.temperature || 26}°C</span><TermometerIcon className="w-4 h-4 text-white/40" /></div>
-                    <span className="font-chakra text-xs text-indigo-200 font-bold uppercase tracking-wider mt-1">{session.weather?.condition || "CLEAR"}</span>
+const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t }) => {
+    
+    const getWeatherIcon = (cond: WeatherCondition | string = 'clear') => {
+        const c = cond.toLowerCase();
+        if (c.includes('rain') || c.includes('storm')) return <CloudRainIcon className="w-16 h-16 text-white" />;
+        if (c.includes('cloud') || c.includes('fog')) return <CloudIcon className="w-16 h-16 text-white" />;
+        
+        // Assume night for clear conditions to match history screen logic
+        const startTimeHour = session.timeString ? parseInt(session.timeString.split(':')[0], 10) : 19;
+        const isNight = startTimeHour >= 18 || startTimeHour < 6;
+        if (isNight) {
+            return <MoonIcon className="w-16 h-16 text-white" />;
+        }
+        // Fallback to sun icon if it's day, but the logic primarily uses Moon for 'clear' at night.
+        // As a default for clear, Moon is safer for evening sessions.
+        return <MoonIcon className="w-16 h-16 text-white" />;
+    };
+
+    return (
+        <div className="flex flex-col h-full justify-between py-2">
+            <div className="flex items-start gap-3 border-b border-white/5 pb-4">
+                <div className="w-10 h-10 rounded-xl bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shrink-0"><MapPinIcon className="w-5 h-5" /></div>
+                <div className="flex flex-col pt-0.5"><span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">{t.hubLocation}</span><span className="font-chakra font-bold text-base text-white uppercase tracking-wide truncate max-w-[200px] md:max-w-[250px]">{session.location || "PITCH DATA UNAVAILABLE"}</span></div>
+            </div>
+            <div className="flex items-center gap-3 border-b border-white/5 py-4">
+                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0"><ClockIcon className="w-5 h-5" /></div>
+                <div className="flex flex-col"><span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">{t.hubTimeFrame}</span><span className="font-mono font-bold text-xl text-white tracking-widest">{session.timeString || "19:30 - 21:00"}</span></div>
+            </div>
+            <div className="flex-grow flex flex-col justify-end pt-2">
+                <div className="relative rounded-2xl bg-gradient-to-br from-indigo-900/40 to-black border border-indigo-500/20 p-4 flex items-center justify-between overflow-hidden">
+                    {/* --- ADDED TEXTURE OVERLAY HERE (UPDATED to match Archive Cards) --- */}
+                    <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-striped-brick.png')]"></div>
+                    
+                    <div className="relative z-10 flex flex-col">
+                        <span className="text-[9px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-1">{t.hubWeather}</span>
+                        <div className="flex items-baseline gap-1"><span className="font-russo text-4xl text-white leading-none">{session.weather?.temperature || 26}°C</span><TermometerIcon className="w-4 h-4 text-white/40" /></div>
+                        <span className="font-chakra text-xs text-indigo-200 font-bold uppercase tracking-wider mt-1">{session.weather?.condition || "CLEAR"}</span>
+                    </div>
+                    <div className="relative z-10">
+                        {getWeatherIcon(session.weather?.condition)}
+                    </div>
                 </div>
-                <div className="relative z-10"><CloudRainIcon className="w-16 h-16 text-white" /></div>
             </div>
         </div>
-    </div>
-);
+    );
+};
 
 // --- MAIN DASHBOARD EXPORT ---
 

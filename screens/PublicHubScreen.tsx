@@ -157,10 +157,11 @@ const NavHubButton: React.FC<{
     >
         <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 
             ${isActive 
-                ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 shadow-[0_0_20px_rgba(0,242,254,0.6),inset_0_0_8px_rgba(0,242,254,0.3)]' 
-                : 'text-white/60 border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/30 hover:text-white hover:shadow-[0_0_12px_rgba(255,255,255,0.15)]'
+                ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 shadow-[0_0_15px_rgba(0,242,254,0.5),inset_0_0_6px_rgba(0,242,254,0.2)]' 
+                : 'text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.2)] hover:border-white/40 hover:text-white hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]'
             }`}>
-            {React.cloneElement(icon as React.ReactElement, { className: "w-4 h-4" })}
+            {/* FIX: Added type parameter <any> to React.ReactElement cast to satisfy TypeScript for className property usage in cloneElement. */}
+            {React.cloneElement(icon as React.ReactElement<any>, { className: "w-4 h-4" })}
         </div>
         <span className={`text-[6px] font-black tracking-widest uppercase transition-colors ${isActive ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>
             {title}
@@ -229,11 +230,8 @@ const HubNav: React.FC<{
                 </div>
             </div>
             
-            {/* ADJUSTED TICKER CONTAINER: 
-                pl-24 -> Space from left (ball)
-                pr-4 -> REDUCED from pr-12 to maintain just enough clearance from the Language button
-            */}
-            <div className={`flex-grow h-full overflow-hidden flex items-center ${isDashboardOpen ? 'justify-center px-4' : 'justify-start pl-6 pr-4'}`}>
+            {/* ADJUSTED TICKER CONTAINER: Increased padding to move ticker away from ball */}
+            <div className={`flex-grow h-full overflow-hidden flex items-center ${isDashboardOpen ? 'justify-center px-4' : 'justify-start pl-12 pr-4'}`}>
                 {isDashboardOpen ? (
                     <div className="flex items-center gap-8 min-w-fit">
                         <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center">
@@ -274,7 +272,7 @@ const HubNav: React.FC<{
                                 className="flex flex-col items-center justify-center gap-1 transition-all duration-300 group cursor-pointer hover:scale-110"
                                 title="Home"
                             >
-                                <div className="w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 text-white/60 border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/30 hover:text-white hover:shadow-[0_0_12px_rgba(255,255,255,0.15)]">
+                                <div className="w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.2)] hover:border-white/40 hover:text-white hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]">
                                     <Home className="w-4 h-4" />
                                 </div>
                                 <span className="text-[6px] font-black tracking-widest uppercase text-white/30 group-hover:text-white/60 transition-colors">

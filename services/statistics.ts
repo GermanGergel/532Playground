@@ -12,7 +12,8 @@ export interface PlayerStats {
     wins: number;
     draws: number;
     losses: number;
-    cleanSheets: number; // Added for new rating system
+    cleanSheets: number;
+    cleanSheetWins: number;
 }
 
 interface TeamStats {
@@ -59,6 +60,7 @@ export const calculateAllStats = (session: Session) => {
             draws: 0,
             losses: 0,
             cleanSheets: 0,
+            cleanSheetWins: 0,
         };
     }).filter(Boolean) as PlayerStats[];
 
@@ -139,7 +141,12 @@ export const calculateAllStats = (session: Session) => {
                 const conceded = isTeam1 ? game.team2Score : game.team1Score;
                 if (conceded === 0) ps.cleanSheets++;
 
-                if(game.winnerTeamId === ps.team.id) ps.wins++;
+                if(game.winnerTeamId === ps.team.id) {
+                    ps.wins++;
+                    if (conceded === 0) {
+                        ps.cleanSheetWins++;
+                    }
+                }
                 else if (game.isDraw) ps.draws++;
                 else ps.losses++;
             }
