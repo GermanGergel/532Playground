@@ -146,20 +146,16 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
     const [activeTab, setActiveTab] = useState<'players' | 'matches'>('players');
     const { teamStats, allPlayersStats } = useMemo(() => calculateAllStats(session), [session]);
     
-    // UPDATED: Sync leaders logic with Dashboard (Impact Score)
     const sortedByImpact = useMemo(() => {
         return [...allPlayersStats].sort((a, b) => getImpactScore(b) - getImpactScore(a));
     }, [allPlayersStats]);
 
-    // For the table, we still keep G+A sorting as secondary view
     const sortedByStats = useMemo(() => [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists)), [allPlayersStats]);
     
     const finishedGames = session.games.filter(g => g.status === 'finished');
     
-    const thClass = "py-2.5 text-white/40 uppercase tracking-tighter text-[9px] font-black text-center sticky top-0 bg-transparent backdrop-blur-md z-20 border-b border-white/5";
-    const tdBase = "py-2 text-center text-[10px] font-bold transition-colors";
-    const tdText = `${tdBase} text-slate-300`;
-    const tdAccent = `${tdBase} text-white font-black text-[11px]`;
+    const thClass = "py-2 text-white/40 uppercase tracking-tighter text-[8px] font-black text-center sticky top-0 bg-transparent backdrop-blur-sm z-10 border-b border-white/5";
+    const tdBase = "py-1.5 text-center text-[10px] font-bold transition-colors";
 
     return (
         <div className="absolute inset-0 z-30 flex flex-col animate-in slide-in-from-right duration-500 overflow-hidden rounded-[2.5rem]">
@@ -178,37 +174,39 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                 <div className="max-w-6xl mx-auto w-full h-full flex flex-col gap-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch w-full h-full min-h-0">
                         <div className="flex flex-col gap-4 w-full h-full min-h-0">
-                            <HubCard title="TEAM STANDINGS" icon={<TrophyIcon />} accent="#FFD700" className="shrink-0 max-h-[40%] flex flex-col">
+                            <HubCard title="TEAM STANDINGS" icon={<TrophyIcon />} accent="#FFD700" className="shrink-0 max-h-[45%] flex flex-col">
                                 <div className="p-1 overflow-y-auto custom-hub-scrollbar">
                                     <table className="w-full table-fixed border-collapse">
                                         <thead>
                                             <tr>
-                                                <th className={`${thClass} w-[8%]`}></th>
-                                                <th className={`${thClass} w-[47%] text-left pl-1`}>SQUAD</th>
+                                                <th className={`${thClass} w-[12%]`}>#</th>
+                                                <th className={`${thClass} w-[28%] text-left pl-3`}>TEAM</th>
                                                 <th className={`${thClass} w-[10%]`}>P</th>
                                                 <th className={`${thClass} w-[10%]`}>W</th>
                                                 <th className={`${thClass} w-[10%]`}>D</th>
-                                                <th className={`${thClass} w-[15%] text-white`}>PTS</th>
+                                                <th className={`${thClass} w-[10%]`}>L</th>
+                                                <th className={`${thClass} w-[10%]`}>GD</th>
+                                                <th className={`${thClass} w-[10%] text-white`}>PTS</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {teamStats.map((stat) => (
+                                            {teamStats.map((stat, idx) => (
                                                 <tr key={stat.team.id} className="group border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
-                                                    <td className={`${tdBase}`}></td>
-                                                    <td className={`${tdText}`}>
-                                                        <div className="flex items-center justify-start gap-3">
+                                                    <td className={`${tdBase} text-white/30 bg-white/5`}>{idx + 1}</td>
+                                                    <td className={`${tdBase} text-left pl-3`}>
+                                                        <div className="flex items-center justify-start gap-2">
                                                             <TeamAvatar team={stat.team} size="xxs" isLight={true} />
-                                                            <div className="flex flex-col items-start leading-none min-w-[60px]">
-                                                                <span className="text-[10px] font-black tracking-tight text-white uppercase group-hover:text-[#00F2FE] transition-colors">
-                                                                    SQUAD
-                                                                </span>
-                                                            </div>
+                                                            <span className="text-[9px] font-black tracking-tight text-slate-300 uppercase group-hover:text-white transition-colors">
+                                                                SQUAD
+                                                            </span>
                                                         </div>
                                                     </td>
-                                                    <td className={tdText}>{stat.gamesPlayed}</td>
-                                                    <td className={tdText}>{stat.wins}</td>
-                                                    <td className={tdText}>{stat.draws}</td>
-                                                    <td className={tdAccent}>{stat.points}</td>
+                                                    <td className={`${tdBase} text-slate-300`}>{stat.gamesPlayed}</td>
+                                                    <td className={`${tdBase} text-slate-300`}>{stat.wins}</td>
+                                                    <td className={`${tdBase} text-slate-300`}>{stat.draws}</td>
+                                                    <td className={`${tdBase} text-slate-300`}>{stat.losses}</td>
+                                                    <td className={`${tdBase} text-white/40`}>{stat.goalDifference > 0 ? `+${stat.goalDifference}` : stat.goalDifference}</td>
+                                                    <td className={`${tdBase} text-white bg-white/5 font-black text-[11px]`}>{stat.points}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -247,9 +245,9 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                                             <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-3 rounded-r-full" style={{ backgroundColor: ps.team.color }} />
                                                             <span className="text-slate-300 font-bold uppercase truncate text-[10px] block w-full pl-2 group-hover:text-white transition-colors">{ps.player.nickname || 'Unknown'}</span>
                                                         </td>
-                                                        <td className={`${tdText} text-white/70 font-mono`}>{ps.goals}</td>
-                                                        <td className={`${tdText} text-white/70 font-mono`}>{ps.assists}</td>
-                                                        <td className={tdAccent}>{ps.goals + ps.assists}</td>
+                                                        <td className={`${tdBase} text-white/70 font-mono`}>{ps.goals}</td>
+                                                        <td className={`${tdBase} text-white/70 font-mono`}>{ps.assists}</td>
+                                                        <td className={`${tdBase} text-white font-black text-[11px]`}>{ps.goals + ps.assists}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
