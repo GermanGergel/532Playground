@@ -57,12 +57,10 @@ export const vn = {
   selectWinnerDesc: "Chọn đội thắng để tiếp tục",
   onBench: "Dự Bị",
 
-  // FIX: Added missing Legionnaire keys for Vietnamese translation
   legionnaire_replace: "THAY THẾ",
   legionnaire_select: "CHỌN",
   legionnaire_no_players: "Không có cầu thủ dự bị",
 
-  // FIX: Added missing Session Summary keys for Vietnamese translation
   // Session Summary
   summary_title: "TỔNG KẾT BUỔI TẬP",
   summary_location: "ĐỊA ĐIỂM",
@@ -145,7 +143,7 @@ export const vn = {
 
   // Player Profile
   playerProfile: "Hồ Sơ Cầu Thủ",
-  deletePlayer: "Vô hiệu hóa",
+  deletePlayer: "Xóa Cầu Thủ",
   deletePlayerConfirm: "Bạn có chắc muốn xóa {playerName}?",
   uploadPhoto: "Tải Ảnh",
   fromCamera: "Chụp Ảnh",
@@ -233,15 +231,15 @@ export const vn = {
   noBadges: "Chưa có huy hiệu",
 
   // Hub - UPDATED SLOGANS
-  hubTicker1: "KHÔNG THỐNG KÊ. KHÔNG VINH QUANG.",
-  hubTicker2: "DỮ LIỆU ĐỊNH DANH HUYỀN THOẠI.",
-  hubTicker3: "NÂNG TẦM TRẬN ĐẤU.",
-  hubTicker4: "SÂN CỎ KHÔNG BAO GIỜ NÓI DỐI.",
-  hubTicker5: "532: SÂN CHƠI CỦA TINH ANH.",
+  hubTicker1: "NO STATS. NO GLORY.",
+  hubTicker2: "DATA DEFINES LEGENDS.",
+  hubTicker3: "ELEVATE YOUR GAME.",
+  hubTicker4: "THE PITCH NEVER LIES.",
+  hubTicker5: "532: WHERE ELITES PLAY.",
   hubAwaitingStats: "ĐANG CHỜ DỮ LIỆU",
   hubAnalyzingPerformance: "ĐANG PHÂN TÍCH...",
   hubDashboardBtn: "DASHBOARD",
-  hubSessionLeaders: "DẪN ĐẦU MÙA GIẢI",
+  hubSessionLeaders: "DẪN ĐẦU BUỔI TẬP",
   hubMatchReport: "BÁO CÁO TRẬN ĐẤU",
   hubSessionNews: "TIN TỨC",
   hubSessionSquads: "ĐỘI HÌNH",
@@ -258,7 +256,7 @@ export const vn = {
   hubImpact: "TÁC ĐỘNG",
   hubWelcomeText: "Chào mừng đến với Hub 532 Playground chính thức. Theo dõi chỉ số, so sánh với người khác và leo lên đỉnh vinh quang.",
   hubLeadersTitle: "Dẫn Đầu Mùa Giải",
-  hubJoinSquad: "Tham Gia Đội Hình",
+  hubJoinSquad: "Vào Câu Lạc Bộ",
 
   // Duel
   duel_title: "Chọn Đối Thủ",
@@ -278,14 +276,14 @@ export const vn = {
   feature_live_desc: "Theo dõi tác động lên rating.",
   feature_stats: "Thống Kê Chi Tiết",
   feature_stats_desc: "Ghi lại bàn thắng, kiến tạo, thắng thua.",
-  feature_fair: "Cân Bằng Thông Minh",
+  feature_fair: "Thiết kế thông minh",
   feature_fair_desc: "Chia đội bằng thuật toán.",
   roadmap_title: "TƯƠNG LAI",
   roadmap_video: "Video Highlights",
   roadmap_video_desc: "Clip AI ghi bàn.",
   roadmap_leagues: "Giải Đấu",
   roadmap_leagues_desc: "Tranh cúp mùa giải.",
-  cta_join: "THAM GIA NGAY",
+  cta_join: "VÀO CÂU LẠC BỘ",
   cta_desc: "Liên hệ để đặt slot.",
   tap_to_enter: "NHẤN ĐỂ VÀO",
   hub_section_title: "HỆ SINH THÁI CLB",

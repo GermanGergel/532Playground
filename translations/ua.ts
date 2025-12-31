@@ -31,8 +31,8 @@ export const ua = {
   addPlayer: "Додати",
   playerPool: "Лист Очікування",
   allPlayersAssigned: "Всі гравці розподілені",
-  autoBalanceTeams: "Авто-Баланс",
-  autoBalanceConfirmTitle: "Автобаланс команд?",
+  autoBalanceTeams: "Auto-Баланс",
+  autoBalanceConfirmTitle: "Auto-баланс команд?",
   autoBalanceConfirmDesc: "Гравці будуть перерозподілені за рейтингом.",
   startSession: "Почати Сесію",
   cancelSetup: "Скасувати",
@@ -45,7 +45,7 @@ export const ua = {
   paused: "ПАУЗА",
   round: "Раунд",
   startGame: "Почати Гру",
-  finishGame: "Завершити Гру",
+  finishGame: "Завершить Гру",
   endSession: "Завершити Сесію",
   goal: "Гол",
   assistant: "Асист",
@@ -57,12 +57,10 @@ export const ua = {
   selectWinnerDesc: "Виберіть переможця, щоб продовжити",
   onBench: "На лавці",
 
-  // FIX: Added missing Legionnaire keys for Ukrainian translation
   legionnaire_replace: "ЗАМІНИТИ",
   legionnaire_select: "ВИБРАТИ",
   legionnaire_no_players: "Немає вільних гравців",
 
-  // FIX: Added missing Session Summary keys for Ukrainian translation
   // Session Summary
   summary_title: "ПІДСУМКИ СЕСІЇ",
   summary_location: "ЛОКАЦІЯ",
@@ -130,7 +128,7 @@ export const ua = {
 
   // Player Hub
   newPlayerManagement: "Новий Рекрут",
-  playerDatabase: "Base Даних",
+  playerDatabase: "База Даних",
   clubNews: "Новости Клубу",
   searchPlayers: "Пошук гравців...",
   sortBy: "Сортування:",
@@ -232,7 +230,7 @@ export const ua = {
   badges: "Значки",
   noBadges: "Немає значків",
 
-  // Hub - UPDATED SLOGANS
+  // Hub
   hubTicker1: "НЕМАЄ СТАТИСТИКИ — НЕМАЄ СЛАВИ.",
   hubTicker2: "ДАНІ ВИЗНАЧАЮТЬ ЛЕГЕНД.",
   hubTicker3: "ПІДНІМИ СВОЮ ГРУ.",
@@ -241,7 +239,7 @@ export const ua = {
   hubAwaitingStats: "ОЧІКУВАННЯ ДАНИХ",
   hubAnalyzingPerformance: "АНАЛІЗ ЕФЕКТИВНОСТІ...",
   hubDashboardBtn: "ДАШБОРД",
-  hubSessionLeaders: "ЛІДЕРИ СЕЗОНУ",
+  hubSessionLeaders: "ЛІДЕРИ СЕСІЇ",
   hubMatchReport: "ЗВІТ ПРО МАТЧ",
   hubSessionNews: "РОЗВІДДАНІ",
   hubSessionSquads: "СКЛАДИ",
@@ -252,13 +250,13 @@ export const ua = {
   hubStatsMembers: "УЧАСНИКИ",
   hubSessionsPlayed: "СЕССІЇ",
   hubAvgRating: "СЕРЕДНІЙ OVR",
-  hubLocation: "ЛОКАЦІЯ",
+  hubLocation: "ЛОКАЦИЯ",
   hubTimeFrame: "ЧАС",
   hubWeather: "ПОГОДА",
   hubImpact: "ІМПАКТ",
   hubWelcomeText: "Ласкаво просимо до офіційного хабу 532 Playground. Слідкуй за статистикою, порівнюй результати та прагни до вершини.",
   hubLeadersTitle: "Лідери Сезону",
-  hubJoinSquad: "Вступить в Загін",
+  hubJoinSquad: "Вступити у клуб",
 
   // Duel
   duel_title: "Вибір Дуелі",
@@ -266,7 +264,7 @@ export const ua = {
   duel_initiate: "ЗАПУСТИТИ ПОСЛІДОВНІСТЬ",
   duel_sector_empty: "Сектор порожній",
   duel_complete: "ПОСЛІДОВНІСТЬ ЗАВЕРШЕНА",
-  duel_score: "РАХУНОК",
+  duel_score: "СЧЕТ",
   duel_verified: "Індекс ефективності підтверджено",
   
   // Promo
@@ -285,7 +283,7 @@ export const ua = {
   roadmap_video_desc: "AI нарізки твоїх голів.",
   roadmap_leagues: "Ліги",
   roadmap_leagues_desc: "Сезонні кубки та призи.",
-  cta_join: "ВСТУПИТИ",
+  cta_join: "ВСТУПИТИ У КЛУБ",
   cta_desc: "Напиши нам, щоб записаться.",
   tap_to_enter: "НАТИСНИ, ЩОБ УВІЙТИ",
   hub_section_title: "ЕКОСИСТЕМА КЛУБУ",
@@ -349,9 +347,9 @@ export const ua = {
   badge_comeback_kings_desc: "3x Вольові перемоги",
   badge_fortress: "Фортеця",
   badge_fortress_desc: "3x Сухі перемоги",
-  badge_club_legend_goals: "Легенда Клубу (Г)",
+  badge_club_legend_goals: "Легенда Клуба (Г)",
   badge_club_legend_goals_desc: "Досягнуто рубіж голів",
-  badge_club_legend_assists: "Легенда Клубу (А)",
+  badge_club_legend_assists: "Легенда Клуба (А)",
   badge_club_legend_assists_desc: "Досягнуто рубіж асистів",
   badge_veteran: "Vетеран",
   badge_veteran_desc: "Досягнуто рубіж сесій",

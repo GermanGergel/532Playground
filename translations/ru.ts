@@ -57,12 +57,10 @@ export const ru = {
   selectWinnerDesc: "Выберите победителя, чтобы продолжить",
   onBench: "На скамейке",
 
-  // FIX: Added missing Legionnaire keys for Russian translation
   legionnaire_replace: "ЗАМЕНИТЬ",
   legionnaire_select: "ВЫБРАТЬ",
   legionnaire_no_players: "Нет свободных игроков",
 
-  // FIX: Added missing Session Summary keys for Russian translation
   // Session Summary
   summary_title: "ИТОГИ СЕССИИ",
   summary_location: "ЛОКАЦИЯ",
@@ -131,7 +129,7 @@ export const ru = {
   // Player Hub
   newPlayerManagement: "Новый Рекрут",
   playerDatabase: "База Данных",
-  clubNews: "Новости Клубу",
+  clubNews: "Новости Клуба",
   searchPlayers: "Поиск игроков...",
   sortBy: "Сортировка:",
   sortByRating: "Рейтинг",
@@ -232,7 +230,7 @@ export const ru = {
   badges: "Значки",
   noBadges: "Нет значков",
 
-  // Hub - UPDATED SLOGANS
+  // Hub
   hubTicker1: "НЕТ СТАТИСТИКИ — НЕТ СЛАВЫ.",
   hubTicker2: "ДАННЫЕ ОПРЕДЕЛЯЮТ ЛЕГЕНД.",
   hubTicker3: "ПОДНИМИ СВОЮ ИГРУ.",
@@ -241,7 +239,7 @@ export const ru = {
   hubAwaitingStats: "ОЖИДАНИЕ ДАННЫХ",
   hubAnalyzingPerformance: "АНАЛИЗ ЭФФЕКТИВНОСТИ...",
   hubDashboardBtn: "ДАШБОРД",
-  hubSessionLeaders: "ЛИДЕРЫ СЕЗОНА",
+  hubSessionLeaders: "ЛИДЕРЫ СЕССИИ",
   hubMatchReport: "ОТЧЕТ О МАТЧЕ",
   hubSessionNews: "РАЗВЕДДАННЫЕ",
   hubSessionSquads: "СОСТАВЫ",
@@ -249,7 +247,7 @@ export const ru = {
   hubPlayers: "ИГРОКИ",
   hubGames: "МАТЧИ",
   hubVitalsTitle: "ПОКАЗАТЕЛИ КЛУБА",
-  hubStatsMembers: "УЧАСТНИКИ",
+  hubStatsMembers: "УЧАСНИКИ",
   hubSessionsPlayed: "СЕССИИ",
   hubAvgRating: "СРЕДНИЙ OVR",
   hubLocation: "ЛОКАЦИЯ",
@@ -258,9 +256,8 @@ export const ru = {
   hubImpact: "ИМПАКТ",
   hubWelcomeText: "Добро пожаловать в официальный хаб 532 Playground. Следи за статистикой, сравнивай результаты и стремись к вершине.",
   hubLeadersTitle: "Лидеры Сезона",
-  hubJoinSquad: "Вступить в Отряд",
+  hubJoinSquad: "Вступить в Клуб",
 
-  // FIX: Corrected Duel keys for Russian translation (were previously Ukrainian)
   // Duel
   duel_title: "Выбор дуэли",
   duel_id_unit: "ОПОЗНАНИЕ ЮНИТА...",
@@ -282,29 +279,29 @@ export const ru = {
   feature_fair: "Умный Баланс",
   feature_fair_desc: "Команды балансуються алгоритмом.",
   roadmap_title: "БУДУЩЕЕ",
-  roadmap_video: "Видео Хайлайты",
-  roadmap_video_desc: "AI нарезки твоих голов.",
-  roadmap_leagues: "Лиги",
-  roadmap_leagues_desc: "Сезонные кубки и призы.",
-  cta_join: "ВСТУПИТЬ",
+  roadmap_video: "Видео Хайлайти",
+  roadmap_video_desc: "AI нарізки твоїх голів.",
+  roadmap_leagues: "Ліги",
+  roadmap_leagues_desc: "Сезонні кубки та призи.",
+  cta_join: "ВСТУПИТЬ В КЛУБ",
   cta_desc: "Напиши нам, чтобы записаться.",
   tap_to_enter: "НАЖМИ, ЧТОБЫ ВОЙТИ",
   hub_section_title: "ЭКОСИСТЕМА КЛУБА",
   hub_section_desc: "Центральний интеллект.",
-  hub_badge: "ТОЛЬКО ДЛЯ УЧАСТНИКОВ",
+  hub_badge: "ТОЛЬКО ДЛЯ УЧАСНИКОВ",
   hub_f1: "Рейтинги",
   hub_f2: "Архив",
   hub_f3: "Live Данные",
   hub_f4: "Аналитика",
 
   // Poster
-  announcementGeneratorTitle: "Генератор Афиш",
+  announcementGeneratorTitle: "Генератор Афіш",
   posterDate: "Дата",
-  posterTime: "Начало",
-  posterEndTime: "Конец",
-  uploadBackground: "Загрузить Фон",
-  changeBackground: "Сменить Фон",
-  generateAndShare: "Создать и Поделиться",
+  posterTime: "Початок",
+  posterEndTime: "Кінець",
+  uploadBackground: "Завантажити Фон",
+  changeBackground: "Змінити Фон",
+  generateAndShare: "Створити та Поділитися",
 
   // Skills
   skill_goalkeeper: "Вратарь",
@@ -332,12 +329,12 @@ export const ru = {
   badge_dynasty_desc: "Серия из 9 побед",
   badge_sniper: "Снайпер",
   badge_sniper_desc: "3x Победный гол с разницей в 1",
-  badge_assistant: "Ассистент",
+  badge_assistant: "Асистент",
   badge_assistant_desc: "6+ Ассистов за сессию",
   badge_mvp: "MVP",
   badge_mvp_desc: "5Г + 5А + 5П",
   badge_decisive_factor: "Решающий Фактор",
-  badge_decisive_factor_desc: "Гол/Ассист в 3 победах",
+  badge_decisive_factor_desc: "Гол/Ассист у 3 перемогах",
   badge_unsung_hero: "Неоспіваний Герой",
   badge_unsung_hero_desc: "Больше всех побед, мало очков",
   badge_first_blood: "Первая Кров",

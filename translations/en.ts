@@ -57,12 +57,10 @@ export const en = {
   selectWinnerDesc: "Select the winning team to proceed",
   onBench: "On Bench",
 
-  // FIX: Added missing Legionnaire keys for English translation
   legionnaire_replace: "REPLACE",
   legionnaire_select: "SELECT",
   legionnaire_no_players: "No resting players available",
 
-  // FIX: Added missing Session Summary keys for English translation
   // Session Summary
   summary_title: "SESSION SUMMARY",
   summary_location: "LOCATION",
@@ -232,7 +230,7 @@ export const en = {
   badges: "Badges",
   noBadges: "No badges yet",
 
-  // Hub - UPDATED SLOGANS
+  // Hub
   hubTicker1: "NO STATS. NO GLORY.",
   hubTicker2: "DATA DEFINES LEGENDS.",
   hubTicker3: "ELEVATE YOUR GAME.",
@@ -258,9 +256,8 @@ export const en = {
   hubImpact: "IMPACT",
   hubWelcomeText: "Welcome to the official 532 Playground Hub. Track your stats, compare with others, and rise to the top.",
   hubLeadersTitle: "Season Leaders",
-  hubJoinSquad: "Join the Squad",
+  hubJoinSquad: "Join the Club",
 
-  // FIX: Added missing Duel keys for English translation
   // Duel
   duel_title: "Duel Selection",
   duel_id_unit: "IDENTIFY UNIT...",
@@ -286,7 +283,7 @@ export const en = {
   roadmap_video_desc: "AI clips of your goals.",
   roadmap_leagues: "Leagues",
   roadmap_leagues_desc: "Seasonal cups and prizes.",
-  cta_join: "JOIN SQUAD",
+  cta_join: "JOIN THE CLUB",
   cta_desc: "Contact us to play.",
   tap_to_enter: "TAP TO ENTER",
   hub_section_title: "CLUB ECOSYSTEM",
