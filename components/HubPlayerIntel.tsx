@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { useApp } from '../context';
 import { HubProgressChart } from './HubAnalytics';
 import { StarIcon, TrophyIcon, BarChartDynamic, History as HistoryIcon, Zap, Users, ChevronLeft, AwardIcon, Target, Calendar } from '../icons';
-import { PlayerForm, SkillType, Player, PlayerStatus, BadgeType } from '../types';
+import { PlayerForm, SkillType, Player, PlayerStatus, BadgeType, PlayerTier } from '../types';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { BadgeIcon } from '../features';
 import { translations } from '../translations/index';
@@ -36,6 +36,14 @@ const ALL_BADGES: BadgeType[] = [
     'career_100_wins', 'career_150_influence', 'career_super_veteran',
     'mercenary', 'double_agent', 'joker', 'crisis_manager', 'iron_lung'
 ];
+
+// TIER COLORS FOR GLOW
+const TIER_COLORS = {
+    [PlayerTier.Legend]: '#d946ef', // Fuchsia/Purple
+    [PlayerTier.Elite]: '#fbbf24',  // Amber/Gold
+    [PlayerTier.Pro]: '#E2E8F0',    // Slate/Silver
+    [PlayerTier.Regular]: '#00F2FE' // Cyan/Blue
+};
 
 // CLEANED HEADER
 const IntelHeader = ({ title, icon: Icon, accent = "#00F2FE" }: any) => (
@@ -220,18 +228,28 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void }> 
     const goalsPerSession = player.totalSessionsPlayed > 0 ? (player.totalGoals / player.totalSessionsPlayed).toFixed(2) : '0.00';
     const assistsPerSession = player.totalSessionsPlayed > 0 ? (player.totalAssists / player.totalSessionsPlayed).toFixed(2) : '0.00';
 
+    // DYNAMIC NEON PERIMETER STYLE
+    const tierColor = TIER_COLORS[player.tier] || '#00F2FE';
+    const perimeterStyle: React.CSSProperties = {
+        border: `1px solid ${tierColor}33`,
+        boxShadow: `0 0 25px -5px ${tierColor}44, inset 0 0 15px -10px ${tierColor}66`,
+        borderRadius: '2.5rem',
+        background: 'rgba(10, 12, 16, 0.4)',
+        backdropFilter: 'blur(8px)'
+    };
+
     return (
-        <div className="absolute inset-0 z-20 flex flex-col animate-in fade-in duration-700 rounded-[2.5rem] overflow-hidden">
+        <div className="absolute inset-0 z-20 flex flex-col animate-in fade-in duration-700 overflow-hidden rounded-[2.5rem]">
             <div className="absolute inset-0 z-0 pointer-events-none">
-                {/* Радиальный градиент в более темной гамме (темнее, чем на дашборде) */}
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#01040a] to-black"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] pointer-events-none"></div>
             </div>
 
             <div className="relative z-10 flex-grow overflow-y-auto custom-hub-scrollbar">
-                {/* FIX: Increased padding bottom (pb-48) to ensure last element (Awards) is fully visible above browser chrome */}
-                <div className="w-full max-w-5xl mx-auto px-6 md:px-12 lg:px-20 py-8 pb-48 flex flex-col h-full">
-                    <div className="flex items-center justify-between mb-6 shrink-0">
+                <div className="w-full max-w-5xl mx-auto px-4 md:px-12 lg:px-20 py-6 pb-48 flex flex-col h-full">
+                    
+                    {/* BACK BUTTON ROW */}
+                    <div className="flex items-center justify-between mb-6 shrink-0 px-2">
                         <button onClick={onBack} className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:border-[#00F2FE] hover:bg-[#00F2FE]/10 transition-all shadow-lg">
                             <ChevronLeft className="w-5 h-5 text-white" />
                         </button>
@@ -239,166 +257,169 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void }> 
                         <div className="w-10"></div> 
                     </div>
 
-                    <div className="flex-grow space-y-6">
-                        <div className="flex flex-col md:flex-row gap-6 items-stretch">
-                            <div className="w-full max-w-[240px] mx-auto md:mx-0 md:max-w-none md:w-[220px] shrink-0 flex flex-col">
-                                <div className="relative aspect-[2.8/4] md:aspect-auto w-full rounded-3xl overflow-hidden border border-white/15 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.08)] bg-gradient-to-br from-[#161b22] to-[#0a0d14] h-full">
-                                    {player.playerCard && <div className="absolute inset-0 bg-cover bg-no-repeat grayscale-[0.2] opacity-80" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }}/>}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
-                                    <div className="absolute inset-0 p-4 flex flex-col justify-between pointer-events-none">
-                                        <div className="flex justify-between items-start">
-                                            <div className="flex flex-col items-start">
-                                                <span className="font-black text-xl text-[#00F2FE] leading-none">532</span>
-                                                <span className="text-white text-[6px] font-bold tracking-[0.15em] leading-none mt-1">PLAYGROUND</span>
-                                                {countryCodeAlpha2 && <img src={`https://flagcdn.com/w80/${countryCodeAlpha2.toLowerCase()}.png`} className="w-4 h-auto mt-2 rounded-sm opacity-60" alt="flag" />}
-                                            </div>
-                                            <div className="flex flex-col items-end">
-                                                <div className="text-3xl font-black text-[#00F2FE] leading-none" style={{ textShadow: 'none' }}>{player.rating}</div>
-                                                <p className="font-black text-[8px] tracking-[0.2em] text-white mt-1">OVR</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-center">
-                                            <h1 className="font-russo text-2xl uppercase tracking-tighter text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] truncate w-full px-1">{player.nickname}</h1>
-                                            <p className="text-[7px] font-black text-white/40 uppercase tracking-[0.4em] mt-1">{player.tier}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <BentoBox className="h-full" contentClassName="h-full flex flex-col justify-center">
-                                    <IntelHeader title={t.lastSessionAnalysis} icon={BarChartDynamic} />
-                                    <div className="flex-grow flex flex-col justify-center">
-                                        <TerminalLastSession player={player} />
-                                    </div>
-                                </BentoBox>
-
-                                <BentoBox className="h-full" contentClassName="h-full flex flex-col">
-                                    <IntelHeader title={t.sessionTrend} icon={Zap} accent="#4CFF5F" />
-                                    <div className="flex-grow flex flex-col justify-start space-y-1">
-                                        <div className="grid grid-cols-3 gap-2 items-center bg-black/30 p-1.5 rounded-2xl border border-white/5 shadow-inner">
-                                            <TerminalStat label="Current Form" value={player.form.split('_')[0].toUpperCase()} color={player.form === 'hot_streak' ? '#4CFF5F' : player.form === 'cold_streak' ? '#FF4136' : '#fff'} />
-                                            <TerminalStat label="Win Ratio" value={winRate} color="#00F2FE" />
-                                            <div className="flex justify-center"><FormArrowIndicator form={player.form} /></div>
-                                        </div>
-                                        <div className="py-1 bg-black/30 rounded-2xl border border-white/5 mt-auto shadow-inner">
-                                            <TerminalSessionTrend history={player.sessionHistory} />
-                                        </div>
-                                        {player.skills && player.skills.length > 0 && (
-                                            <div className="pt-2">
-                                                <div className="flex flex-wrap justify-center gap-3 mt-1 pb-1">
-                                                    {player.skills.slice(0,3).map(skill => (
-                                                        <div key={skill} className="flex items-center gap-1 transition-all">
-                                                            <StarIcon className="w-2.5 h-2.5 text-[#00F2FE]" />
-                                                            <span className="text-[8px] font-black text-white/80 uppercase tracking-tight">
-                                                                {t[`skill_${skill}` as keyof typeof t]}
-                                                            </span>
-                                                        </div>
-                                                    ))}
+                    {/* NEON PERIMETER WRAPPER */}
+                    <div className="flex-grow p-4 md:p-8" style={perimeterStyle}>
+                        <div className="space-y-6">
+                            <div className="flex flex-col md:flex-row gap-6 items-stretch">
+                                <div className="w-full max-w-[240px] mx-auto md:mx-0 md:max-w-none md:w-[220px] shrink-0 flex flex-col">
+                                    <div className="relative aspect-[2.8/4] md:aspect-auto w-full rounded-3xl overflow-hidden border border-white/15 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.08)] bg-gradient-to-br from-[#161b22] to-[#0a0d14] h-full">
+                                        {player.playerCard && <div className="absolute inset-0 bg-cover bg-no-repeat grayscale-[0.2] opacity-80" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }}/>}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+                                        <div className="absolute inset-0 p-4 flex flex-col justify-between pointer-events-none">
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex flex-col items-start">
+                                                    <span className="font-black text-xl text-[#00F2FE] leading-none">532</span>
+                                                    <span className="text-white text-[6px] font-bold tracking-[0.15em] leading-none mt-1">PLAYGROUND</span>
+                                                    {countryCodeAlpha2 && <img src={`https://flagcdn.com/w80/${countryCodeAlpha2.toLowerCase()}.png`} className="w-4 h-auto mt-2 rounded-sm opacity-60" alt="flag" />}
+                                                </div>
+                                                <div className="flex flex-col items-end">
+                                                    <div className="text-3xl font-black text-[#00F2FE] leading-none" style={{ textShadow: 'none' }}>{player.rating}</div>
+                                                    <p className="font-black text-[8px] tracking-[0.2em] text-white mt-1">OVR</p>
                                                 </div>
                                             </div>
-                                        )}
-                                    </div>
-                                </BentoBox>
-
-                                <BentoBox className="!p-2 h-full" contentClassName="h-full flex flex-col">
-                                    <IntelHeader title={t.clubRankings} icon={Users} accent="#FF00D6" />
-                                    <div className="flex-grow flex flex-col justify-center pt-1 pb-1 px-1">
-                                        <div className="grid grid-cols-3 gap-0.5 text-center w-full">
-                                            <TerminalStat label="SCORER" value={rankings.goals} subValue={`/${rankings.total}`} color="#fff" />
-                                            <TerminalStat label="ASSISTANT" value={rankings.assists} subValue={`/${rankings.total}`} color="#fff" />
-                                            <TerminalStat label="RATING" value={rankings.rating} subValue={`/${rankings.total}`} color="#fff" />
+                                            <div className="text-center">
+                                                <h1 className="font-russo text-2xl uppercase tracking-tighter text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] truncate w-full px-1">{player.nickname}</h1>
+                                                <p className="text-[7px] font-black text-white/40 uppercase tracking-[0.4em] mt-1">{player.tier}</p>
+                                            </div>
                                         </div>
                                     </div>
-                                </BentoBox>
+                                </div>
 
-                                <BentoBox className="!p-2 h-full" contentClassName="h-full flex flex-col justify-center">
-                                    <IntelHeader title={t.monthlyStatsTitle} icon={Calendar} />
+                                <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <BentoBox className="h-full" contentClassName="h-full flex flex-col justify-center">
+                                        <IntelHeader title={t.lastSessionAnalysis} icon={BarChartDynamic} />
+                                        <div className="flex-grow flex flex-col justify-center">
+                                            <TerminalLastSession player={player} />
+                                        </div>
+                                    </BentoBox>
+
+                                    <BentoBox className="h-full" contentClassName="h-full flex flex-col">
+                                        <IntelHeader title={t.sessionTrend} icon={Zap} accent="#4CFF5F" />
+                                        <div className="flex-grow flex flex-col justify-start space-y-1">
+                                            <div className="grid grid-cols-3 gap-2 items-center bg-black/30 p-1.5 rounded-2xl border border-white/5 shadow-inner">
+                                                <TerminalStat label="Current Form" value={player.form.split('_')[0].toUpperCase()} color={player.form === 'hot_streak' ? '#4CFF5F' : player.form === 'cold_streak' ? '#FF4136' : '#fff'} />
+                                                <TerminalStat label="Win Ratio" value={winRate} color="#00F2FE" />
+                                                <div className="flex justify-center"><FormArrowIndicator form={player.form} /></div>
+                                            </div>
+                                            <div className="py-1 bg-black/30 rounded-2xl border border-white/5 mt-auto shadow-inner">
+                                                <TerminalSessionTrend history={player.sessionHistory} />
+                                            </div>
+                                            {player.skills && player.skills.length > 0 && (
+                                                <div className="pt-2">
+                                                    <div className="flex flex-wrap justify-center gap-3 mt-1 pb-1">
+                                                        {player.skills.slice(0,3).map(skill => (
+                                                            <div key={skill} className="flex items-center gap-1 transition-all">
+                                                                <StarIcon className="w-2.5 h-2.5 text-[#00F2FE]" />
+                                                                <span className="text-[8px] font-black text-white/80 uppercase tracking-tight">
+                                                                    {t[`skill_${skill}` as keyof typeof t]}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </BentoBox>
+
+                                    <BentoBox className="!p-2 h-full" contentClassName="h-full flex flex-col">
+                                        <IntelHeader title={t.clubRankings} icon={Users} accent="#FF00D6" />
+                                        <div className="flex-grow flex flex-col justify-center pt-1 pb-1 px-1">
+                                            <div className="grid grid-cols-3 gap-0.5 text-center w-full">
+                                                <TerminalStat label="SCORER" value={rankings.goals} subValue={`/${rankings.total}`} color="#fff" />
+                                                <TerminalStat label="ASSISTANT" value={rankings.assists} subValue={`/${rankings.total}`} color="#fff" />
+                                                <TerminalStat label="RATING" value={rankings.rating} subValue={`/${rankings.total}`} color="#fff" />
+                                            </div>
+                                        </div>
+                                    </BentoBox>
+
+                                    <BentoBox className="!p-2 h-full" contentClassName="h-full flex flex-col justify-center">
+                                        <IntelHeader title={t.monthlyStatsTitle} icon={Calendar} />
+                                        <div className="flex-grow flex flex-col justify-center">
+                                            <div className="grid grid-cols-2 gap-y-1.5 gap-x-1 pt-1 pb-1 h-full items-center">
+                                                <TerminalStat size="text-lg" label={t.monthlyWins} value={player.monthlyWins} color="#fff" />
+                                                <TerminalStat size="text-lg" label={t.monthlyGoals} value={player.monthlyGoals} />
+                                                <TerminalStat size="text-lg" label={t.monthlyAssists} value={player.monthlyAssists} />
+                                                <TerminalStat size="text-lg" label={t.session} value={player.monthlySessionsPlayed} />
+                                            </div>
+                                        </div>
+                                    </BentoBox>
+                                </div>
+                            </div>
+
+                            <div className="w-full">
+                                <BentoBox noPadding className="h-[280px] w-full" contentClassName="h-full">
+                                    <div className="h-full w-full">
+                                        <HubProgressChart headerTitle={t.statistics} history={player.historyData || []} />
+                                    </div>
+                                </BentoBox>
+                            </div>
+
+                            <BentoBox className="!py-3 px-6">
+                                <div className="flex flex-col md:flex-row items-center gap-6">
+                                    <div className="shrink-0"><IntelHeader title={t.winLossDraw} icon={TrophyIcon} accent="#FFD700" /></div>
+                                    <div className="flex-grow w-full space-y-1.5 pt-0.5">
+                                        <div className="flex w-full h-2 rounded-full overflow-hidden bg-black/50 border border-white/5 shadow-inner">
+                                            <div style={{ width: `${(player.totalWins / (player.totalGames || 1)) * 100}%` }} className="bg-[#4CFF5F] shadow-[0_0_8px_#4CFF5F44]" />
+                                            <div style={{ width: `${(player.totalDraws / (player.totalGames || 1)) * 100}%` }} className="bg-white/20" />
+                                            <div style={{ width: `${(player.totalLosses / (player.totalGames || 1)) * 100}%` }} className="bg-[#FF4136] shadow-[0_0_8px_#FF413644]" />
+                                        </div>
+                                    </div>
+                                    <div className="shrink-0 flex items-center gap-6 font-russo">
+                                        <div className="flex flex-col items-center"><span className="text-lg text-[#4CFF5F] leading-none">{player.totalWins}</span><span className="text-[6px] text-white/20 uppercase font-black tracking-tighter">Wins</span></div>
+                                        <div className="flex flex-col items-center"><span className="text-lg text-white/40 leading-none">{player.totalDraws}</span><span className="text-[6px] text-white/20 uppercase font-black tracking-tighter">Draws</span></div>
+                                        <div className="flex flex-col items-center"><span className="text-lg text-[#FF4136] leading-none">{player.totalLosses}</span><span className="text-[6px] text-white/20 uppercase font-black tracking-tighter">Losses</span></div>
+                                    </div>
+                                </div>
+                            </BentoBox>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <BentoBox className="h-full" contentClassName="h-full">
+                                    <IntelHeader title={t.allTimeStats} icon={HistoryIcon} />
+                                    <div className="grid grid-cols-2 gap-y-3">
+                                        <TerminalStat size="text-lg" label={t.thSessions} value={player.totalSessionsPlayed} />
+                                        <TerminalStat size="text-lg" label={t.winRate} value={winRate} color="#fff" />
+                                        <TerminalStat size="text-lg" label={t.thG} value={player.totalGoals} />
+                                        <TerminalStat size="text-lg" label={t.thA} value={player.totalAssists} />
+                                    </div>
+                                </BentoBox>
+                                <BentoBox className="h-full" contentClassName="h-full flex flex-col">
+                                    <IntelHeader title="Career Averages" icon={StarIcon} accent="#FFD700" />
                                     <div className="flex-grow flex flex-col justify-center">
-                                        <div className="grid grid-cols-2 gap-y-1.5 gap-x-1 pt-1 pb-1 h-full items-center">
-                                            <TerminalStat size="text-lg" label={t.monthlyWins} value={player.monthlyWins} color="#fff" />
-                                            <TerminalStat size="text-lg" label={t.monthlyGoals} value={player.monthlyGoals} />
-                                            <TerminalStat size="text-lg" label={t.monthlyAssists} value={player.monthlyAssists} />
-                                            <TerminalStat size="text-lg" label={t.session} value={player.monthlySessionsPlayed} />
+                                        <div className="grid grid-cols-2 gap-2 items-center justify-items-center h-full">
+                                            <TerminalStat size="text-lg" label={t.goalsPerSession} value={goalsPerSession} color="#fff" />
+                                            <TerminalStat size="text-lg" label={t.assistsPerSession} value={assistsPerSession} color="#fff" />
+                                        </div>
+                                    </div>
+                                </BentoBox>
+                                <BentoBox className="h-full" contentClassName="h-full flex flex-col">
+                                    <IntelHeader title={t.bestSessionTitle} icon={TrophyIcon} accent="#FFD700" />
+                                    <div className="flex-grow flex flex-col justify-center">
+                                        <div className="grid grid-cols-3 gap-1 items-center justify-items-center h-full">
+                                            <TerminalStat size="text-lg" label="G" value={player.records?.bestGoalsInSession?.value || 0} />
+                                            <TerminalStat size="text-lg" label="A" value={player.records?.bestAssistsInSession?.value || 0} />
+                                            <TerminalStat size="text-lg" label="Win%" value={`${player.records?.bestWinRateInSession?.value || 0}%`} color="#fff" />
                                         </div>
                                     </div>
                                 </BentoBox>
                             </div>
-                        </div>
 
-                        <div className="w-full">
-                            <BentoBox noPadding className="h-[280px] w-full" contentClassName="h-full">
-                                <div className="h-full w-full">
-                                    <HubProgressChart headerTitle={t.statistics} history={player.historyData || []} />
+                            <BentoBox className="mb-12">
+                                <IntelHeader title="Awards Catalog" icon={AwardIcon} accent="#FF00D6" />
+                                <div className="grid grid-cols-8 sm:grid-cols-10 lg:grid-cols-12 gap-3">
+                                    {ALL_BADGES.map(badge => {
+                                        const isEarned = !!(player.badges && player.badges[badge]);
+                                        return (
+                                            <div 
+                                                key={badge} 
+                                                className={`transition-all duration-500 transform hover:scale-125 cursor-help ${!isEarned ? 'opacity-[0.03] grayscale' : ''}`}
+                                            >
+                                                <BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-8 h-8" />
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </BentoBox>
                         </div>
-
-                        <BentoBox className="!py-3 px-6">
-                            <div className="flex flex-col md:flex-row items-center gap-6">
-                                <div className="shrink-0"><IntelHeader title={t.winLossDraw} icon={TrophyIcon} accent="#FFD700" /></div>
-                                <div className="flex-grow w-full space-y-1.5 pt-0.5">
-                                    <div className="flex w-full h-2 rounded-full overflow-hidden bg-black/50 border border-white/5 shadow-inner">
-                                        <div style={{ width: `${(player.totalWins / (player.totalGames || 1)) * 100}%` }} className="bg-[#4CFF5F] shadow-[0_0_8px_#4CFF5F44]" />
-                                        <div style={{ width: `${(player.totalDraws / (player.totalGames || 1)) * 100}%` }} className="bg-white/20" />
-                                        <div style={{ width: `${(player.totalLosses / (player.totalGames || 1)) * 100}%` }} className="bg-[#FF4136] shadow-[0_0_8px_#FF413644]" />
-                                    </div>
-                                </div>
-                                <div className="shrink-0 flex items-center gap-6 font-russo">
-                                    <div className="flex flex-col items-center"><span className="text-lg text-[#4CFF5F] leading-none">{player.totalWins}</span><span className="text-[6px] text-white/20 uppercase font-black tracking-tighter">Wins</span></div>
-                                    <div className="flex flex-col items-center"><span className="text-lg text-white/40 leading-none">{player.totalDraws}</span><span className="text-[6px] text-white/20 uppercase font-black tracking-tighter">Draws</span></div>
-                                    <div className="flex flex-col items-center"><span className="text-lg text-[#FF4136] leading-none">{player.totalLosses}</span><span className="text-[6px] text-white/20 uppercase font-black tracking-tighter">Losses</span></div>
-                                </div>
-                            </div>
-                        </BentoBox>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <BentoBox className="h-full" contentClassName="h-full">
-                                <IntelHeader title={t.allTimeStats} icon={HistoryIcon} />
-                                <div className="grid grid-cols-2 gap-y-3">
-                                    <TerminalStat size="text-lg" label={t.thSessions} value={player.totalSessionsPlayed} />
-                                    <TerminalStat size="text-lg" label={t.winRate} value={winRate} color="#fff" />
-                                    <TerminalStat size="text-lg" label={t.thG} value={player.totalGoals} />
-                                    <TerminalStat size="text-lg" label={t.thA} value={player.totalAssists} />
-                                </div>
-                            </BentoBox>
-                            <BentoBox className="h-full" contentClassName="h-full flex flex-col">
-                                <IntelHeader title="Career Averages" icon={StarIcon} accent="#FFD700" />
-                                <div className="flex-grow flex flex-col justify-center">
-                                    <div className="grid grid-cols-2 gap-2 items-center justify-items-center h-full">
-                                        <TerminalStat size="text-lg" label={t.goalsPerSession} value={goalsPerSession} color="#fff" />
-                                        <TerminalStat size="text-lg" label={t.assistsPerSession} value={assistsPerSession} color="#fff" />
-                                    </div>
-                                </div>
-                            </BentoBox>
-                            <BentoBox className="h-full" contentClassName="h-full flex flex-col">
-                                <IntelHeader title={t.bestSessionTitle} icon={TrophyIcon} accent="#FFD700" />
-                                <div className="flex-grow flex flex-col justify-center">
-                                    <div className="grid grid-cols-3 gap-1 items-center justify-items-center h-full">
-                                        <TerminalStat size="text-lg" label="G" value={player.records?.bestGoalsInSession?.value || 0} />
-                                        <TerminalStat size="text-lg" label="A" value={player.records?.bestAssistsInSession?.value || 0} />
-                                        <TerminalStat size="text-lg" label="Win%" value={`${player.records?.bestWinRateInSession?.value || 0}%`} color="#fff" />
-                                    </div>
-                                </div>
-                            </BentoBox>
-                        </div>
-
-                        <BentoBox className="mb-12">
-                            <IntelHeader title="Awards Catalog" icon={AwardIcon} accent="#FF00D6" />
-                            <div className="grid grid-cols-8 sm:grid-cols-10 lg:grid-cols-12 gap-3">
-                                {ALL_BADGES.map(badge => {
-                                    const isEarned = !!(player.badges && player.badges[badge]);
-                                    return (
-                                        <div 
-                                            key={badge} 
-                                            className={`transition-all duration-500 transform hover:scale-125 cursor-help ${!isEarned ? 'opacity-[0.03] grayscale' : ''}`}
-                                        >
-                                            <BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-8 h-8" />
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </BentoBox>
                     </div>
                 </div>
             </div>

@@ -446,12 +446,16 @@ const CinematicStatCard: React.FC<{ value: string | number; label: string; }> = 
     </div>
 );
 
+// Define allowed view types to match ClubIntelligenceDashboard and avoid TS2322
+type DashboardViewType = 'info' | 'dashboard' | 'roster' | 'archive' | 'duel' | 'tournaments' | 'league';
+
 export const PublicHubScreen: React.FC = () => {
     const navigate = useNavigate();
     const { allPlayers, history } = useApp();
     const [isDashboardOpen, setIsDashboardOpen] = useState(false);
-    // FIX: Replaced setDashboardView('dashboard') with useState('dashboard') to fix "variable used before declaration" error
-    const [dashboardView, setDashboardView] = useState('dashboard');
+    
+    // TYPED STATE: dashboardView now strictly follows DashboardViewType
+    const [dashboardView, setDashboardView] = useState<DashboardViewType>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
 
     useEffect(() => {
@@ -501,6 +505,11 @@ export const PublicHubScreen: React.FC = () => {
         tiktok: "https://www.tiktok.com/@532playground",
     };
 
+    // Helper for safe tab changes
+    const handleTabChange = (tab: any) => {
+        setDashboardView(tab as DashboardViewType);
+    };
+
     return (
         <div className="min-h-screen text-white relative selection:bg-[#00F2FE] selection:text-black bg-[#0a0c10] pt-px overscroll-none">
             <style dangerouslySetInnerHTML={{__html: `html, body { background-color: #0a0c10; overscroll-behavior-y: none; }`}} />
@@ -511,7 +520,7 @@ export const PublicHubScreen: React.FC = () => {
                 isDashboardOpen={isDashboardOpen} 
                 sessionDate={latestSessionDate} 
                 activeTab={dashboardView}
-                onTabChange={setDashboardView}
+                onTabChange={handleTabChange}
                 archiveViewDate={archiveViewDate}
                 onHomeClick={() => {
                     setIsDashboardOpen(false);
