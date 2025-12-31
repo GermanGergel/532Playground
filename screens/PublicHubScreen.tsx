@@ -62,7 +62,6 @@ const NoLeadersPlaceholder: React.FC = () => {
 };
 
 const MotivationalTicker: React.FC = () => {
-    // Replaced localized phrases with specific hardcoded list as requested
     const phrases = [
         "DATA BUILDS LEGENDS •",
         "NUMBERS NEVER LIE •",
@@ -71,7 +70,8 @@ const MotivationalTicker: React.FC = () => {
         "PROVEN, NOT PROMISED •",
         "532 — WHERE ELITES PLAY"
     ];
-    const cyanColor = '#00F2FE'; 
+    // Changed from #00F2FE to white to match "DEFINE YOUR" title
+    const tickerColor = 'rgba(255, 255, 255, 0.9)'; 
     return (
         <div className="relative w-full h-full overflow-hidden flex items-center">
             <style dangerouslySetInnerHTML={{ __html: `
@@ -90,7 +90,7 @@ const MotivationalTicker: React.FC = () => {
                     <span 
                         key={i} 
                         className="text-[14px] md:text-[16px] font-bold tracking-[0.1em] uppercase flex items-center font-inter-tight italic" 
-                        style={{ color: cyanColor, textShadow: `0 0 10px rgba(0, 242, 254, 0.2)` }}
+                        style={{ color: tickerColor, textShadow: `0 0 10px rgba(255, 255, 255, 0.1)` }}
                     >
                         {phrase}
                     </span>
@@ -101,7 +101,6 @@ const MotivationalTicker: React.FC = () => {
 };
 
 const StaticSoccerBall: React.FC = () => (
-    // UPDATED: Position changed from top-1/2 to bottom-[4px] to sit on the edge
     <div className="absolute bottom-[4px] left-[120px] md:left-[160px] w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none transition-all duration-500">
         <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] overflow-visible">
             <defs>
@@ -196,8 +195,6 @@ const HubNav: React.FC<{
         'info': t.information 
     };
 
-    // UPDATED: Shadow is significantly softer. 
-    // No more heavy black падающая тень that causes the visual break.
     const navContainerClass = `
         fixed top-3 left-1/2 -translate-x-1/2 z-[100] 
         flex items-center justify-between 
@@ -217,7 +214,6 @@ const HubNav: React.FC<{
             `}} />
             <div className="flex items-center shrink-0 h-full relative pl-10">
                 <div className="flex items-center">
-                    {/* Adjusted height of hanging tags to fit slimmer bar */}
                     <HangingTag digit="5" label="PLAYERS" height={20} delay="0s" pulseDuration="2.8s" />
                     <HangingTag digit="3" label="SQUADS" height={50} delay="1.5s" pulseDuration="4.2s" />
                     <HangingTag digit="2" label="GOALS" height={80} delay="0.8s" pulseDuration="3.7s" />
@@ -231,7 +227,6 @@ const HubNav: React.FC<{
                 </div>
             </div>
             
-            {/* ADJUSTED TICKER CONTAINER: Increased padding to move ticker away from ball */}
             <div className={`flex-grow h-full overflow-hidden flex items-center ${isDashboardOpen ? 'justify-center px-4' : 'justify-start pl-12 pr-4'}`}>
                 {isDashboardOpen ? (
                     <div className="flex items-center gap-8 min-w-fit">
@@ -346,8 +341,8 @@ const DispersingWord: React.FC<{ words: string[] }> = ({ words }) => {
     };
     return (
         <span className="relative inline-block h-[1.1em] min-w-[280px] md:min-w-[500px] align-top text-center perspective-1000">
-            <span className={`block text-transparent bg-clip-text bg-gradient-to-b from-[#00F2FE] to-[#00F2FE]/50 transition-all duration-[1200ms] ease-[cubic-bezier(0.2,0,0.2,1)] ${getStyles()}`} style={{ textShadow: state === 'active' ? '0 0 30px rgba(0, 242, 254, 0.3)' : 'none' }}>{words[index]}</span>
-            {state === 'active' && (<span className="absolute inset-0 text-transparent bg-clip-text bg-gradient-to-b from-[#00F2FE] to-transparent pointer-events-none z-0 opacity-20" style={{ filter: 'blur(20px)', WebkitTextFillColor: 'transparent' }}>{words[index]}</span>)}
+            <span className={`block text-transparent bg-clip-text bg-gradient-to-b from-white to-white/20 transition-all duration-[1200ms] ease-[cubic-bezier(0.2,0,0.2,1)] ${getStyles()}`} style={{ textShadow: state === 'active' ? '0 0 30px rgba(255, 255, 255, 0.1)' : 'none' }}>{words[index]}</span>
+            {state === 'active' && (<span className="absolute inset-0 text-transparent bg-clip-text bg-gradient-to-b from-white to-transparent pointer-events-none z-0 opacity-20" style={{ filter: 'blur(20px)', WebkitTextFillColor: 'transparent' }}>{words[index]}</span>)}
         </span>
     );
 };
@@ -528,7 +523,6 @@ export const PublicHubScreen: React.FC = () => {
 
             <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
                 <div className="absolute inset-0 z-0 pointer-events-none">
-                    {/* UPDATED: Removed fixed bg-[05070a] to allow nested gradients to fill the whole space */}
                     <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
                 </div>
                 <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10">
