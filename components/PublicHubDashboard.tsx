@@ -217,29 +217,31 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
 
     const MiniCard = ({ p }: { p: TopPlayerStats }) => {
         const countryCodeAlpha2 = useMemo(() => p.player.countryCode ? convertCountryCodeAlpha3ToAlpha2(p.player.countryCode) : null, [p.player.countryCode]);
-        // UPDATED: Sizes increased for larger cards on stand
+        
+        // UPDATED: Sync card width with podium width to avoid "floating" look
         const sizeClasses = p.rank === 1 
-            ? 'w-[130px] h-[185px] md:w-[155px] md:h-[215px] z-20' 
-            : 'w-[115px] h-[160px] md:w-[135px] md:h-[185px] z-10';
+            ? 'w-[140px] h-[190px] md:w-[190px] md:h-[260px] z-20' 
+            : 'w-[125px] h-[175px] md:w-[160px] md:h-[220px] z-10';
         
         return (
-            <div className={`relative rounded-xl overflow-hidden border border-white/20 shadow-2xl flex flex-col shrink-0 ${sizeClasses} transition-all duration-500`}>
+            <div className={`relative rounded-xl md:rounded-2xl overflow-hidden border border-white/20 shadow-2xl flex flex-col shrink-0 ${sizeClasses} transition-all duration-500`}>
                 {p.player.playerCard ? <div className="absolute inset-0 bg-cover bg-no-repeat" style={{ backgroundImage: `url(${p.player.playerCard})`, backgroundPosition: 'center 5%' }} /> : <div className="absolute inset-0 bg-gradient-to-b from-slate-700 to-slate-900" />}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
-                <div className="relative z-10 h-full flex flex-col justify-between p-2">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent"></div>
+                <div className="relative z-10 h-full flex flex-col justify-between p-3 md:p-4">
                     <div className="flex justify-between items-start w-full">
-                        {countryCodeAlpha2 && <img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} className="w-5 h-auto rounded-sm opacity-90 shadow-sm" alt="" />}
+                        {countryCodeAlpha2 && <img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} className="w-5 h-auto md:w-7 rounded-sm opacity-90 shadow-sm" alt="" />}
                         <div className="flex flex-col items-end leading-none">
-                            {/* ADAPTED: Rating font size slightly increased for bigger cards */}
-                            <span className="font-russo text-2xl md:text-3xl text-[#00F2FE]" style={{ textShadow: '0 0 10px rgba(0, 242, 254, 0.4)' }}>{p.player.rating}</span>
-                            <span className="text-[6px] font-black text-white/80 uppercase tracking-widest mt-0.5">OVR</span>
+                            {/* UPDATED: Increased OVR font for larger cards */}
+                            <span className="font-russo text-3xl md:text-5xl text-[#00F2FE]" style={{ textShadow: '0 0 15px rgba(0, 242, 254, 0.5)' }}>{p.player.rating}</span>
+                            <span className="text-[7px] md:text-[8px] font-black text-white/80 uppercase tracking-widest mt-1">OVR</span>
                         </div>
                     </div>
-                    <div className="w-full text-center pb-1">
-                        {/* ADAPTED: Nickname size slightly increased for readability */}
-                        <span className="text-white font-russo text-[13px] md:text-[15px] uppercase tracking-tight truncate px-1 block drop-shadow-md">
+                    <div className="w-full text-center">
+                        {/* UPDATED: Increased Nickname size and added shadow */}
+                        <span className="text-white font-russo text-[16px] md:text-[22px] uppercase tracking-tight truncate px-1 block drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] leading-none mb-1">
                             {p.player.nickname}
                         </span>
+                        <div className="h-0.5 w-8 bg-[#00F2FE]/40 mx-auto rounded-full"></div>
                     </div>
                 </div>
             </div>
@@ -249,25 +251,26 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
     const PodiumSpot = ({ p, rank, height, color, delay }: { p?: TopPlayerStats, rank: number, height: string, color: string, delay: string }) => (
         <div className={`flex flex-col items-center justify-end h-full ${delay} animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both`}>
             {p ? <div className="mb-4 relative z-20 flex flex-col items-center w-full px-1"><MiniCard p={p} /></div> : <div className="mb-12 opacity-10"><div className="w-12 h-16 rounded border-2 border-dashed border-white/30"></div></div>}
-            <div className="w-full relative overflow-hidden backdrop-blur-md rounded-t-2xl flex flex-col items-center justify-center pt-3 pb-2" style={{ height: height, background: `linear-gradient(to bottom, ${color}35, ${color}08, transparent)`, borderTop: `3px solid ${color}` }}>
+            <div className="w-full relative overflow-hidden backdrop-blur-md rounded-t-3xl flex flex-col items-center justify-center pt-5 pb-4" style={{ height: height, background: `linear-gradient(to bottom, ${color}35, ${color}08, transparent)`, borderTop: `4px solid ${color}` }}>
                 {p && <div className="relative z-10 flex flex-col items-center">
-                    <span className="font-russo text-2xl md:text-3xl text-white leading-none drop-shadow-lg">{p.score.toFixed(1)}</span>
-                    <span className="text-[7px] md:text-[8px] font-black text-white/40 uppercase tracking-widest mt-1.5">{t.hubImpact}</span>
+                    <span className="font-russo text-3xl md:text-4xl text-white leading-none drop-shadow-lg">{p.score.toFixed(1)}</span>
+                    <span className="text-[8px] md:text-[10px] font-black text-white/40 uppercase tracking-[0.2em] mt-2">{t.hubImpact}</span>
                 </div>}
             </div>
         </div>
     );
 
     return (
-        // UPDATED: Gap increased to accommodate wider spots
-        <div className="flex items-end justify-center gap-6 md:gap-10 h-full px-4 relative max-w-full mx-auto">
-            {/* UPDATED: Container width increased (w-[140px] md:w-[170px]) */}
-            <div className="w-[120px] md:w-[180px] h-full flex flex-col justify-end z-10"><PodiumSpot p={p2} rank={2} height="100px" color="#94a3b8" delay="delay-100" /></div>
-            <div className="w-[140px] md:w-[210px] h-full flex flex-col justify-end z-20 pb-5"><PodiumSpot p={p1} rank={1} height="145px" color="#FFD700" delay="delay-0" /></div>
-            <div className="w-[120px] md:w-[180px] h-full flex flex-col justify-end z-10"><PodiumSpot p={p3} rank={3} height="70px" color="#CD7F32" delay="delay-200" /></div>
+        // UPDATED: Spacing adjusted for larger cards
+        <div className="flex items-end justify-center gap-6 md:gap-14 h-full px-4 relative max-w-full mx-auto">
+            {/* UPDATED: Base widths increased to match MiniCard scale */}
+            <div className="w-[130px] md:w-[200px] h-full flex flex-col justify-end z-10"><PodiumSpot p={p2} rank={2} height="110px" color="#94a3b8" delay="delay-100" /></div>
+            <div className="w-[150px] md:w-[240px] h-full flex flex-col justify-end z-20 pb-5"><PodiumSpot p={p1} rank={1} height="160px" color="#FFD700" delay="delay-0" /></div>
+            <div className="w-[130px] md:w-[200px] h-full flex flex-col justify-end z-10"><PodiumSpot p={p3} rank={3} height="80px" color="#CD7F32" delay="delay-200" /></div>
         </div>
     );
 };
+// ... (rest of the file remains exactly the same) ...
 
 const NewsVanguardCard: React.FC<{ item: NewsItem }> = ({ item }) => {
     const accentColor = '#818cf8'; 
