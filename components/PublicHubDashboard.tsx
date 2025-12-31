@@ -6,6 +6,7 @@ import { NewsItem, Player, PlayerTier, Team, WeatherCondition } from '../types';
 import { TrophyIcon, Zap, History as HistoryIcon, Users, AwardIcon, StarIcon, Target } from '../icons';
 import { useTranslation } from './ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
+// FIX: Import TeamAvatar component
 import { TeamAvatar } from './avatars';
 
 // --- LOCAL ICONS FOR WIDGET ---
@@ -33,156 +34,32 @@ const StandbyScreen: React.FC = () => {
     const t = useTranslation();
     return (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black overflow-hidden rounded-[2.5rem]">
+            {/* Animated Scanning Circle */}
             <div className="absolute w-[600px] h-[600px] border border-[#00F2FE]/20 rounded-full animate-ping-slow"></div>
             <div className="absolute w-[400px] h-[400px] border border-[#00F2FE]/10 rounded-full animate-ping-slower"></div>
+            
             <div className="relative z-10 flex flex-col items-center gap-6">
                 <div className="text-center space-y-4">
-                    <h2 className="font-orbitron text-3xl md:text-5xl font-black text-white tracking-[0.3em] uppercase opacity-90">STANDBY</h2>
+                    <h2 className="font-orbitron text-3xl md:text-5xl font-black text-white tracking-[0.3em] uppercase opacity-90">
+                        STANDBY
+                    </h2>
                     <div className="flex items-center justify-center gap-3">
                         <div className="h-px w-8 bg-[#00F2FE]/40"></div>
                         <span className="font-chakra text-sm font-bold text-[#00F2FE] tracking-[0.5em] animate-pulse">SEARCHING FOR BROADCAST</span>
                         <div className="h-px w-8 bg-[#00F2FE]/40"></div>
                     </div>
                 </div>
-                <p className="max-w-xs text-center text-[10px] font-mono text-white/30 uppercase tracking-[0.2em] leading-loose mt-8">{t.hubAwaitingStats}<br/>SYSTEM IDLE. AWAITING UPLINK SIGNAL...</p>
-            </div>
-            <style dangerouslySetInnerHTML={{ __html: `@keyframes ping-slow { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(1.5); opacity: 0; } }.animate-ping-slow { animation: ping-slow 4s cubic-bezier(0, 0, 0.2, 1) infinite; }.animate-ping-slower { animation: ping-slow 6s cubic-bezier(0, 0, 0.2, 1) infinite; }`}} />
-        </div>
-    );
-};
-
-// --- PODIUM COMPONENTS ---
-
-const PodiumCard: React.FC<{ player: Player; rank: number; score: number }> = ({ player, rank, score }) => {
-    const countryCodeAlpha2 = useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
-    const isFirst = rank === 1;
-    const accentColor = isFirst ? '#FFD700' : rank === 2 ? '#E2E8F0' : '#CD7F32';
-    
-    return (
-        <div className={`relative rounded-xl overflow-hidden border transition-all duration-700 shadow-2xl flex flex-col shrink-0 
-            ${isFirst ? 'w-[110px] h-[155px] md:w-[130px] md:h-[185px] z-20 border-[#FFD700]/50 shadow-[#FFD700]/20' : 'w-[90px] h-[125px] md:w-[110px] md:h-[150px] z-10 border-white/20'}`}
-        >
-            {/* Player Image */}
-            {player.playerCard ? (
-                <div className="absolute inset-0 bg-cover bg-no-repeat" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }} />
-            ) : (
-                <div className="absolute inset-0 bg-gradient-to-b from-slate-700 to-slate-900" />
-            )}
-            
-            {/* Overlays */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
-            
-            {/* MVP Glow for First Place */}
-            {isFirst && <div className="absolute inset-0 border-[3px] border-[#FFD700]/30 rounded-xl animate-pulse"></div>}
-
-            <div className="relative z-10 h-full flex flex-col justify-between p-2">
-                <div className="flex justify-between items-start w-full">
-                    {countryCodeAlpha2 ? (
-                        <img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} className="w-4 h-auto rounded-sm opacity-90 shadow-sm" alt="" />
-                    ) : <div className="w-4 h-3 bg-white/10 rounded-sm" />}
-                    
-                    <div className="flex flex-col items-end leading-none">
-                        <span className="font-russo text-xl md:text-2xl" style={{ color: accentColor, textShadow: `0 0 10px ${accentColor}44` }}>{player.rating}</span>
-                        <span className="text-[6px] font-black text-white/60">OVR</span>
-                    </div>
-                </div>
-
-                <div className="w-full text-center pb-1 flex flex-col items-center">
-                    {isFirst && <div className="flex items-center gap-1 mb-1 bg-black/60 px-1.5 py-0.5 rounded-full border border-[#FFD700]/30">
-                        <AwardIcon className="w-2 h-2 text-[#FFD700]" />
-                        <span className="text-[5px] font-black text-[#FFD700] uppercase tracking-tighter">MVP of Session</span>
-                    </div>}
-                    <span className="text-white font-russo text-[10px] md:text-[12px] uppercase truncate w-full tracking-wide">
-                        {player.nickname}
-                    </span>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const PodiumBlock = ({ p, rank, height, color, label, delay }: { p?: TopPlayerStats, rank: number, height: string, color: string, label: string, delay: string }) => {
-    const isFirst = rank === 1;
-    
-    return (
-        <div className={`flex flex-col items-center justify-end h-full w-full ${delay} animate-in fade-in slide-in-from-bottom-12 duration-1000 fill-mode-both`}>
-            {/* Card Positioned Above Block */}
-            {p ? (
-                <div className={`mb-4 relative z-20 flex flex-col items-center w-full transform ${isFirst ? 'scale-110' : 'scale-100'}`}>
-                    <PodiumCard player={p.player} rank={rank} score={p.score} />
-                </div>
-            ) : <div className="mb-12 opacity-5 h-20 w-16 border-2 border-dashed border-white/20 rounded-lg" />}
-
-            {/* 3D-Like Block */}
-            <div className="w-full relative group">
-                {/* Top Glowing Edge */}
-                <div className="absolute top-0 left-0 right-0 h-[2px] z-30" style={{ backgroundColor: color, boxShadow: `0 0 15px ${color}` }}></div>
                 
-                {/* Main Body */}
-                <div 
-                    className="w-full relative overflow-hidden backdrop-blur-md rounded-t-lg flex flex-col items-center justify-center pt-4 pb-2 border-x border-white/10" 
-                    style={{ 
-                        height: height, 
-                        background: `linear-gradient(to bottom, ${color}44, ${color}11, transparent)`,
-                        boxShadow: `inset 0 10px 30px -10px ${color}22`
-                    }}
-                >
-                    {/* Block Reflection Light */}
-                    <div className="absolute top-0 left-1/4 right-1/4 h-full bg-gradient-to-b from-white/[0.05] to-transparent pointer-events-none"></div>
-
-                    {p && (
-                        <div className="relative z-10 flex flex-col items-center">
-                            <span className="font-russo text-2xl md:text-3xl text-white leading-none tracking-tighter" style={{ textShadow: `0 0 20px ${color}66` }}>
-                                {p.score.toFixed(1)}
-                            </span>
-                            <div className="h-px w-6 bg-white/20 my-1.5"></div>
-                            <span className="text-[7px] md:text-[8px] font-black text-white/50 uppercase tracking-[0.2em] mt-0.5 text-center px-2">
-                                {label}
-                            </span>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
-};
-
-interface TopPlayerStats {
-    player: Player; 
-    score: number; 
-    rank: 1 | 2 | 3;
-}
-
-const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ players, t }) => {
-    const p1 = players.find(p => p.rank === 1);
-    const p2 = players.find(p => p.rank === 2);
-    const p3 = players.find(p => p.rank === 3);
-
-    return (
-        <div className="relative w-full h-full flex flex-col items-center justify-end px-4 overflow-hidden">
-            {/* Background Light Beams (Cinematic effect from image) */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-30">
-                <div className="absolute top-[-20%] left-[20%] w-[2px] h-[150%] bg-gradient-to-b from-transparent via-white/20 to-transparent rotate-[25deg] blur-sm"></div>
-                <div className="absolute top-[-20%] left-[50%] w-[1px] h-[150%] bg-gradient-to-b from-transparent via-white/10 to-transparent rotate-[25deg] blur-[1px]"></div>
-                <div className="absolute top-[-20%] left-[80%] w-[2px] h-[150%] bg-gradient-to-b from-transparent via-white/20 to-transparent rotate-[25deg] blur-sm"></div>
+                <p className="max-w-xs text-center text-[10px] font-mono text-white/30 uppercase tracking-[0.2em] leading-loose mt-8">
+                    {t.hubAwaitingStats}<br/>SYSTEM IDLE. AWAITING UPLINK SIGNAL...
+                </p>
             </div>
 
-            {/* Podium Stage Base (Glowing Ring at bottom) */}
-            <div className="absolute bottom-[-40px] w-[500px] h-[100px] bg-[#00F2FE]/5 border border-[#00F2FE]/20 rounded-[100%] blur-xl animate-pulse"></div>
-            <div className="absolute bottom-0 w-[400px] h-[2px] bg-gradient-to-r from-transparent via-[#00F2FE]/40 to-transparent"></div>
-
-            {/* Podium Grid */}
-            <div className="relative z-10 flex items-end justify-center gap-2 md:gap-4 h-full w-full max-w-2xl pb-4">
-                <div className="flex-1 flex flex-col justify-end h-full">
-                    <PodiumBlock p={p2} rank={2} height="110px" color="#94a3b8" label="GOALS + PRESSING" delay="delay-150" />
-                </div>
-                <div className="flex-1 flex flex-col justify-end h-full">
-                    <PodiumBlock p={p1} rank={1} height="150px" color="#FFD700" label="TOTAL IMPACT" delay="delay-0" />
-                </div>
-                <div className="flex-1 flex flex-col justify-end h-full">
-                    <PodiumBlock p={p3} rank={3} height="85px" color="#CD7F32" label="PLAYMAKING" delay="delay-300" />
-                </div>
-            </div>
+            <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes ping-slow { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(1.5); opacity: 0; } }
+                .animate-ping-slow { animation: ping-slow 4s cubic-bezier(0, 0, 0.2, 1) infinite; }
+                .animate-ping-slower { animation: ping-slow 6s cubic-bezier(0, 0, 0.2, 1) infinite; }
+            `}} />
         </div>
     );
 };
@@ -195,7 +72,10 @@ const SubtleDashboardAvatar: React.FC<{ team: any; size?: string; isLight?: bool
         <div className="group/avatar relative flex items-center justify-center shrink-0">
             <div 
                 className="w-6 h-6 rounded-full flex items-center justify-center transition-all duration-500 bg-black/40 opacity-90 group-hover/avatar:opacity-100 group-hover/avatar:scale-110"
-                style={{ border: `1px solid ${color}`, boxShadow: `0 0 5px ${color}66, 0 0 1.5px ${color}` }}
+                style={{ 
+                    border: `1px solid ${color}`,
+                    boxShadow: `0 0 5px ${color}66, 0 0 1.5px ${color}`, 
+                }}
             >
                 {team?.logo ? (
                     <img src={team.logo} className="w-full h-full rounded-full object-cover" alt="" />
@@ -247,12 +127,24 @@ const HubCard: React.FC<{
 
     return (
         <div className={`relative overflow-hidden rounded-[1.5rem] flex flex-col border ${bgStyleClass} ${className} group/card`}>
-            <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`, backgroundSize: '4px 4px' }}></div>
+            {/* --- TEXTURE LAYERS (Added from HubPlayerIntel) --- */}
+            {/* Dynamic Mesh Texture Overlay */}
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ 
+                backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`,
+                backgroundSize: '4px 4px'
+            }}></div>
+
+            {/* Pulsing Ambient Light */}
             <div className="absolute -top-10 -left-10 w-40 h-40 bg-[#00F2FE]/[0.03] rounded-full blur-[40px] pointer-events-none z-0 animate-pulse" style={{ animationDuration: '4s' }}></div>
+            
+            {/* Hover Shine Effect */}
             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.01] to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-700 z-0"></div>
+            {/* ------------------------------------------------ */}
+
             <div className={`relative z-10 py-1.5 px-4 flex items-center justify-between shrink-0 ${headerStyleClass} ${isRight ? 'flex-row-reverse' : ''}`}>
                  <div className={`flex items-center gap-2 relative z-10 ${isRight ? 'flex-row-reverse' : ''}`}>
                     <div className={`w-4 h-4 rounded-md flex items-center justify-center shadow-sm border ${iconBg}`} style={{ color: accent }}>
+                        {/* FIX: Added type parameter <any> to React.ReactElement cast to satisfy TypeScript for className property usage in cloneElement. */}
                         {React.cloneElement(icon as React.ReactElement<any>, { className: "w-2.5 h-2.5" })}
                     </div>
                     {typeof title === 'string' ? <h3 className={`font-russo text-[10px] uppercase tracking-widest ${titleColor}`}>{title}</h3> : title}
@@ -271,14 +163,19 @@ const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any
         {teams.map((team) => {
             const teamPlayers = team.playerIds.map(pid => players.find(p => p.id === pid)).filter(Boolean) as Player[];
             const avgOvr = teamPlayers.length > 0 ? Math.round(teamPlayers.reduce((sum, p) => sum + p.rating, 0) / teamPlayers.length) : 0;
-            let goals = 0, assistedGoals = 0;
+            
+            // Calculate Goals & Synergy
+            let goals = 0;
+            let assistedGoals = 0;
             session.games.filter((g: any) => g.status === 'finished').forEach((g: any) => {
                 const teamGoals = g.goals.filter((goal: any) => goal.teamId === team.id && !goal.isOwnGoal);
                 goals += teamGoals.length;
                 assistedGoals += teamGoals.filter((goal: any) => goal.assistantId).length;
             });
+
             const synergy = goals > 0 ? Math.round((assistedGoals / goals) * 100) : 0;
             const synergyColor = synergy >= 60 ? 'text-[#4CFF5F]' : synergy <= 30 ? 'text-orange-400' : 'text-[#00F2FE]';
+
             return (
                 <div key={team.id} className="flex-1 flex flex-col min-w-0">
                     <div className="h-10 border-b border-white/5 flex items-end justify-center pb-2 relative overflow-hidden" style={{ background: `linear-gradient(to bottom, ${team.color}25, transparent)` }}>
@@ -297,13 +194,17 @@ const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any
                             );
                         })}
                     </div>
+                    
+                    {/* FOOTER STATS: GOALS & SYNERGY */}
                     <div className="py-2 border-t border-white/5 bg-black/40 flex items-center divide-x divide-white/10">
                         <div className="flex-1 flex flex-col items-center justify-center">
                             <span className="text-[12px] font-black text-slate-200 leading-none">{goals}</span>
                             <span className="text-[5px] text-white/30 uppercase font-bold tracking-widest mt-0.5">{t.hubGoals}</span>
                         </div>
                         <div className="flex-1 flex flex-col items-center justify-center">
-                            <span className={`text-[12px] font-black leading-none ${synergyColor}`}>{synergy}%</span>
+                            <span className={`text-[12px] font-black leading-none ${synergyColor}`}>
+                                {synergy}%
+                            </span>
                             <span className="text-[5px] text-white/30 uppercase font-bold tracking-widest mt-0.5">SYNERGY</span>
                         </div>
                     </div>
@@ -313,15 +214,127 @@ const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any
     </div>
 );
 
+interface TopPlayerStats {
+    player: Player; 
+    score: number; 
+    rank: 1 | 2 | 3;
+}
+
+const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ players, t }) => {
+    const p1 = players.find(p => p.rank === 1);
+    const p2 = players.find(p => p.rank === 2);
+    const p3 = players.find(p => p.rank === 3);
+
+    const MiniCard = ({ p }: { p: TopPlayerStats }) => {
+        const countryCodeAlpha2 = useMemo(() => p.player.countryCode ? convertCountryCodeAlpha3ToAlpha2(p.player.countryCode) : null, [p.player.countryCode]);
+        const sizeClasses = p.rank === 1 ? 'w-[100px] h-[140px] md:w-[120px] md:h-[165px] z-20' : 'w-[85px] h-[115px] md:w-[100px] md:h-[135px] z-10';
+        return (
+            <div className={`relative rounded-lg overflow-hidden border border-white/20 shadow-lg flex flex-col shrink-0 ${sizeClasses}`}>
+                {p.player.playerCard ? <div className="absolute inset-0 bg-cover bg-no-repeat" style={{ backgroundImage: `url(${p.player.playerCard})`, backgroundPosition: 'center 5%' }} /> : <div className="absolute inset-0 bg-gradient-to-b from-slate-700 to-slate-900" />}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+                <div className="relative z-10 h-full flex flex-col justify-between p-1.5">
+                    <div className="flex justify-between items-start w-full">
+                        {countryCodeAlpha2 && <img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} className="w-3 h-auto rounded-sm opacity-90" alt="" />}
+                        <div className="flex flex-col items-end leading-none">
+                            <span className="font-russo text-lg text-[#00F2FE]">{p.player.rating}</span>
+                            <span className="text-[5px] font-black text-white">OVR</span>
+                        </div>
+                    </div>
+                    <div className="w-full text-center pb-1"><span className="text-white font-russo text-[10px] uppercase truncate px-1">{p.player.nickname}</span></div>
+                </div>
+            </div>
+        );
+    };
+
+    const PodiumSpot = ({ p, rank, height, color, delay }: { p?: TopPlayerStats, rank: number, height: string, color: string, delay: string }) => (
+        <div className={`flex flex-col items-center justify-end h-full ${delay} animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both`}>
+            {p ? <div className="mb-3 relative z-20 flex flex-col items-center w-full px-1"><MiniCard p={p} /></div> : <div className="mb-12 opacity-10"><div className="w-12 h-16 rounded border-2 border-dashed border-white/30"></div></div>}
+            <div className="w-full relative overflow-hidden backdrop-blur-md rounded-t-xl flex flex-col items-center justify-center pt-2 pb-1" style={{ height: height, background: `linear-gradient(to bottom, ${color}35, ${color}08, transparent)`, borderTop: `2px solid ${color}` }}>
+                {p && <div className="relative z-10 flex flex-col items-center"><span className="font-russo text-xl text-white leading-none">{p.score.toFixed(1)}</span><span className="text-[6px] font-black text-white/40 uppercase tracking-widest mt-0.5">{t.hubImpact}</span></div>}
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="flex items-end justify-center gap-3 h-full px-4 relative">
+            <div className="w-[100px] md:w-[125px] h-full flex flex-col justify-end z-10"><PodiumSpot p={p2} rank={2} height="90px" color="#94a3b8" delay="delay-100" /></div>
+            <div className="w-[100px] md:w-[125px] h-full flex flex-col justify-end z-20 pb-4"><PodiumSpot p={p1} rank={1} height="130px" color="#FFD700" delay="delay-0" /></div>
+            <div className="w-[100px] md:w-[125px] h-full flex flex-col justify-end z-10"><PodiumSpot p={p3} rank={3} height="60px" color="#CD7F32" delay="delay-200" /></div>
+        </div>
+    );
+};
+
+const NewsVanguardCard: React.FC<{ item: NewsItem }> = ({ item }) => {
+    const accentColor = '#818cf8'; // Indigo accent to match weather
+    
+    return (
+        <div className="mb-3 relative px-1 animate-in fade-in slide-in-from-right-4 duration-500">
+            {/* 
+                STYLED AS BROTHER TO WEATHER WIDGET:
+                - bg-gradient-to-br from-indigo-900/40 to-black
+                - border-indigo-500/20
+                - diagonal-striped texture
+            */}
+            <div className="relative rounded-2xl overflow-hidden p-3.5 border border-indigo-500/20 bg-gradient-to-br from-indigo-900/40 to-black">
+                {/* Diagonal Stripe Texture Overlay */}
+                <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-striped-brick.png')]"></div>
+                
+                <div className="absolute top-3.5 left-0 w-1.5 h-7 rounded-r-full bg-[#818cf8]" style={{ boxShadow: '0 0 10px #818cf8' }}></div>
+                
+                <div className="relative z-10 flex items-center justify-between gap-3 pl-3">
+                    <div className="flex-grow min-w-0">
+                        <div className="flex items-center gap-2 mb-1.5">
+                            <span className="text-[7px] font-black tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-sm bg-white/5 text-indigo-300">
+                                {item.type.replace('_', ' ')}
+                            </span>
+                            <span className="text-[7px] font-mono text-white/20">
+                                {new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+                            </span>
+                        </div>
+                        <h4 className="text-[12px] font-black text-slate-100 uppercase truncate tracking-wide">{item.playerName}</h4>
+                        <p className="text-[10px] text-indigo-100/40 leading-tight mt-1 truncate italic font-chakra border-l border-white/5 pl-2">
+                            {item.message.replace(item.playerName, '').trim() || item.subMessage}
+                        </p>
+                    </div>
+                    {item.isHot && <Zap className="w-3.5 h-3.5 text-indigo-400 animate-pulse drop-shadow-[0_0_5px_#818cf8]" />}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const getImpactScore = (stats: PlayerStats): number => {
+    let score = 0;
+    const nonCleanSheetWins = stats.wins - (stats.cleanSheetWins || 0);
+
+    score += nonCleanSheetWins * 2.0;
+    score += (stats.cleanSheetWins || 0) * 2.5;
+    score += stats.draws * 0.5;
+    score += stats.goals * 1.0;
+    score += stats.assists * 1.0;
+    score -= stats.ownGoals * 1.0;
+
+    return score;
+};
+
 const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t }) => {
+    
     const getWeatherIcon = (cond: WeatherCondition | string = 'clear') => {
         const c = cond.toLowerCase();
         if (c.includes('rain') || c.includes('storm')) return <CloudRainIcon className="w-16 h-16 text-white" />;
         if (c.includes('cloud') || c.includes('fog')) return <CloudIcon className="w-16 h-16 text-white" />;
+        
+        // Assume night for clear conditions to match history screen logic
         const startTimeHour = session.timeString ? parseInt(session.timeString.split(':')[0], 10) : 19;
         const isNight = startTimeHour >= 18 || startTimeHour < 6;
-        return isNight ? <MoonIcon className="w-16 h-16 text-white" /> : <MoonIcon className="w-16 h-16 text-white" />;
+        if (isNight) {
+            return <MoonIcon className="w-16 h-16 text-white" />;
+        }
+        // Fallback to sun icon if it's day, but the logic primarily uses Moon for 'clear' at night.
+        // As a default for clear, Moon is safer for evening sessions.
+        return <MoonIcon className="w-16 h-16 text-white" />;
     };
+
     return (
         <div className="flex flex-col h-full justify-between py-2">
             <div className="flex items-start gap-3 border-b border-white/5 pb-4">
@@ -334,86 +347,90 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
             </div>
             <div className="flex-grow flex flex-col justify-end pt-2">
                 <div className="relative rounded-2xl bg-gradient-to-br from-indigo-900/40 to-black border border-indigo-500/20 p-4 flex items-center justify-between overflow-hidden">
+                    {/* --- ADDED TEXTURE OVERLAY HERE (UPDATED to match Archive Cards) --- */}
                     <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-striped-brick.png')]"></div>
+                    
                     <div className="relative z-10 flex flex-col">
                         <span className="text-[9px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-1">{t.hubWeather}</span>
                         <div className="flex items-baseline gap-1"><span className="font-russo text-4xl text-white leading-none">{session.weather?.temperature || 26}°C</span><TermometerIcon className="w-4 h-4 text-white/40" /></div>
                         <span className="font-chakra text-xs text-indigo-200 font-bold uppercase tracking-wider mt-1">{session.weather?.condition || "CLEAR"}</span>
                     </div>
-                    <div className="relative z-10">{getWeatherIcon(session.weather?.condition)}</div>
+                    <div className="relative z-10">
+                        {getWeatherIcon(session.weather?.condition)}
+                    </div>
                 </div>
             </div>
         </div>
     );
 };
 
-const NewsVanguardCard: React.FC<{ item: NewsItem }> = ({ item }) => (
-    <div className="mb-3 relative px-1 animate-in fade-in slide-in-from-right-4 duration-500">
-        <div className="relative rounded-2xl overflow-hidden p-3.5 border border-indigo-500/20 bg-gradient-to-br from-indigo-900/40 to-black">
-            <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-striped-brick.png')]"></div>
-            <div className="absolute top-3.5 left-0 w-1.5 h-7 rounded-r-full bg-[#818cf8]" style={{ boxShadow: '0 0 10px #818cf8' }}></div>
-            <div className="relative z-10 flex items-center justify-between gap-3 pl-3">
-                <div className="flex-grow min-w-0">
-                    <div className="flex items-center gap-2 mb-1.5">
-                        <span className="text-[7px] font-black tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-sm bg-white/5 text-indigo-300">{item.type.replace('_', ' ')}</span>
-                        <span className="text-[7px] font-mono text-white/20">{new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
-                    </div>
-                    <h4 className="text-[12px] font-black text-slate-100 uppercase truncate tracking-wide">{item.playerName}</h4>
-                    <p className="text-[10px] text-indigo-100/40 leading-tight mt-1 truncate italic font-chakra border-l border-white/5 pl-2">{item.message.replace(item.playerName, '').trim() || item.subMessage}</p>
-                </div>
-                {item.isHot && <Zap className="w-3.5 h-3.5 text-indigo-400 animate-pulse drop-shadow-[0_0_5px_#818cf8]" />}
-            </div>
-        </div>
-    </div>
-);
+// --- MAIN DASHBOARD EXPORT ---
 
 export const PublicHubDashboard: React.FC = () => {
     const { history, newsFeed, allPlayers } = useApp();
     const t = useTranslation();
     const [activeRightTab, setActiveRightTab] = useState<'players' | 'games'>('players');
+
     const session = history[0];
+    
+    // --- STANDBY TRIGGER ---
     if (!session) return <StandbyScreen />;
+
+    // 1. CALCULATE BASE STATS
     const { teamStats, allPlayersStats: rawPlayersStats } = calculateAllStats(session);
+
+    // 2. SYNCHRONIZE WITH LIVE DATABASE
+    // This is the CRITICAL fix: replace player snapshot with current global data
     const allPlayersStats = useMemo(() => {
         return rawPlayersStats.map(stat => {
             const latestPlayer = allPlayers.find(p => p.id === stat.player.id);
-            return { ...stat, player: latestPlayer || stat.player };
+            return {
+                ...stat,
+                player: latestPlayer || stat.player
+            };
         });
     }, [rawPlayersStats, allPlayers]);
-    const getImpactScore = (stats: PlayerStats): number => {
-        let score = 0;
-        const nonCleanSheetWins = stats.wins - (stats.cleanSheetWins || 0);
-        score += nonCleanSheetWins * 2.0;
-        score += (stats.cleanSheetWins || 0) * 2.5;
-        score += stats.draws * 0.5;
-        score += stats.goals * 1.0;
-        score += stats.assists * 1.0;
-        score -= stats.ownGoals * 1.0;
-        return score;
-    };
+
+    // Sorting for Podium (Impact Score)
     const sortedForPodium = [...allPlayersStats].sort((a, b) => getImpactScore(b) - getImpactScore(a));
+
+    // Sorting for Table (Goals + Assists)
     const sortedForTable = [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists));
+
+    // FIX: Correctly format data for the Podium component to match TopPlayerStats[] type
     const top3PodiumPlayers: TopPlayerStats[] = sortedForPodium
         .filter(p => p.gamesPlayed > 0)
         .slice(0, 3)
-        .map((p, i) => ({ player: p.player, score: getImpactScore(p), rank: (i + 1) as 1 | 2 | 3 }));
-    const finishedGames = [...session.games].filter(g => g.status === 'finished').sort((a, b) => a.gameNumber - b.gameNumber);
+        .map((p, i) => ({
+            player: p.player,
+            score: getImpactScore(p),
+            rank: (i + 1) as 1 | 2 | 3
+        }));
+
+    const finishedGames = [...session.games]
+        .filter(g => g.status === 'finished')
+        .sort((a, b) => a.gameNumber - b.gameNumber);
+
     const thStandings = "py-2 text-white/40 uppercase tracking-tighter text-[8px] font-black text-center sticky top-0 bg-[#1e293b]/50 backdrop-blur-sm z-10 border-b border-white/5";
+    // FIX: Define tdBase class variable for use in table cells.
     const tdBase = "py-2.5 text-center text-[10px] font-bold transition-colors";
+
     return (
         <div className="h-full flex flex-col animate-in fade-in duration-700 w-full relative p-2 md:p-3">
             <div className="absolute inset-0 z-0 pointer-events-none rounded-[2rem] overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
             </div>
+
             <div className="flex-grow grid grid-cols-12 gap-4 min-h-0 items-start relative z-10">
                 <div className="col-span-12 md:col-span-9 flex flex-col gap-4 h-full min-h-[600px]">
                     <div className="flex-[4] min-h-0 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200 flex gap-3">
                          <HubCard title={t.hubSessionLeaders} align="right" icon={<AwardIcon />} accent="#FFD700" variant="elite" className="flex-[2] h-full min-h-[350px]" bodyClassName="flex flex-col bg-transparent">
-                            <SessionPodium players={top3PodiumPlayers} t={t} />
+                            <div className="flex-grow relative"><SessionPodium players={top3PodiumPlayers} t={t} /></div>
                         </HubCard>
                         <HubCard title={t.hubMatchReport} icon={<Target />} accent="#00F2FE" variant="standings" className="flex-1 h-full min-h-[350px]" bodyClassName="flex flex-col p-5"><MatchEnvironmentWidget session={session} t={t} /></HubCard>
                     </div>
+
                     <div className="flex-[3] min-h-0 shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <HubCard title={t.hubSessionNews} icon={<Zap />} accent="#00F2FE" variant="standings" className="h-full min-h-0" bodyClassName="p-0 flex flex-col">
                             <div className="flex-grow relative overflow-hidden">
@@ -428,6 +445,7 @@ export const PublicHubDashboard: React.FC = () => {
                         <HubCard title={t.hubSessionSquads} icon={<Target />} variant="standings" className="h-full min-h-0" bodyClassName="flex flex-col"><TacticalRosters teams={session.teams} players={session.playerPool} session={session} t={t} /></HubCard>
                     </div>
                 </div>
+
                 <div className="col-span-12 md:col-span-3 flex flex-col gap-4 h-full min-h-[600px]">
                     <HubCard title={t.hubTeamStandings} icon={<TrophyIcon />} variant="standings" className="shrink-0" bodyClassName="flex flex-col">
                         <div className="p-1"><table className="w-full table-fixed border-collapse">
