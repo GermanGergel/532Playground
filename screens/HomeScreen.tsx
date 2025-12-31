@@ -17,7 +17,6 @@ export const HomeScreen: React.FC = () => {
 
   useEffect(() => {
       const baseUrl = window.location.origin;
-      // Using a small query param can help bypass initial social media link cache if testing
       setHubUrl(`${baseUrl}/hub`);
   }, []);
 
@@ -35,24 +34,23 @@ export const HomeScreen: React.FC = () => {
     navigate('/setup');
   };
 
-  // UPDATED: Simple URL sharing triggers the rich meta preview in messengers
+  // ФИНАЛЬНОЕ РЕШЕНИЕ: Делимся ТОЛЬКО ссылкой.
+  // Это заставляет Telegram развернуть Rich Preview на основе мета-тегов из index.html
   const handleShareHub = async () => {
       if (isSharing) return;
       setIsSharing(true);
 
-      const shareData = {
-          title: '532 CLUB HUB',
-          text: 'Check out the official 532 Playground Club Hub for live statistics and rankings.',
-          url: hubUrl,
-      };
+      // Добавляем ПРАВИЛЬНЫЙ cache-buster через знак вопроса
+      const cacheBustUrl = `${hubUrl}?u=${Date.now()}`;
 
       try {
-          if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-              await navigator.share(shareData);
+          if (navigator.share) {
+              await navigator.share({
+                  url: cacheBustUrl
+              });
           } else {
-              // Fallback: Copy to clipboard
-              await navigator.clipboard.writeText(hubUrl);
-              alert("Club Hub link copied to clipboard!");
+              await navigator.clipboard.writeText(cacheBustUrl);
+              alert("Link copied!");
           }
       } catch (error) {
           console.error("Error sharing hub link:", error);
@@ -64,15 +62,11 @@ export const HomeScreen: React.FC = () => {
   const promoUrl = `${window.location.origin}/promo`;
 
   const handleSharePromoLink = async () => {
-      const shareData = {
-          title: '532 Playground',
-          text: 'Join the club:',
-          url: promoUrl,
-      };
-
       try {
-          if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-              await navigator.share(shareData);
+          if (navigator.share) {
+              await navigator.share({
+                  url: promoUrl,
+              });
           } else {
               await navigator.clipboard.writeText(promoUrl);
               alert("Link copied!");
