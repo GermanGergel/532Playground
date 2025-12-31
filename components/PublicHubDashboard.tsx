@@ -6,6 +6,7 @@ import { NewsItem, Player, PlayerTier, Team, WeatherCondition } from '../types';
 import { TrophyIcon, Zap, History as HistoryIcon, Users, AwardIcon, StarIcon, Target } from '../icons';
 import { useTranslation } from './ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
+// FIX: Import TeamAvatar component
 import { TeamAvatar } from './avatars';
 
 // --- LOCAL ICONS FOR WIDGET ---
@@ -33,6 +34,7 @@ const StandbyScreen: React.FC = () => {
     const t = useTranslation();
     return (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black overflow-hidden rounded-[2.5rem]">
+            {/* Animated Scanning Circle */}
             <div className="absolute w-[600px] h-[600px] border border-[#00F2FE]/20 rounded-full animate-ping-slow"></div>
             <div className="absolute w-[400px] h-[400px] border border-[#00F2FE]/10 rounded-full animate-ping-slower"></div>
             
@@ -125,18 +127,24 @@ const HubCard: React.FC<{
 
     return (
         <div className={`relative overflow-hidden rounded-[1.5rem] flex flex-col border ${bgStyleClass} ${className} group/card`}>
+            {/* --- TEXTURE LAYERS (Added from HubPlayerIntel) --- */}
+            {/* Dynamic Mesh Texture Overlay */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ 
                 backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`,
                 backgroundSize: '4px 4px'
             }}></div>
 
+            {/* Pulsing Ambient Light */}
             <div className="absolute -top-10 -left-10 w-40 h-40 bg-[#00F2FE]/[0.03] rounded-full blur-[40px] pointer-events-none z-0 animate-pulse" style={{ animationDuration: '4s' }}></div>
             
+            {/* Hover Shine Effect */}
             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.01] to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-700 z-0"></div>
+            {/* ------------------------------------------------ */}
 
             <div className={`relative z-10 py-1.5 px-4 flex items-center justify-between shrink-0 ${headerStyleClass} ${isRight ? 'flex-row-reverse' : ''}`}>
                  <div className={`flex items-center gap-2 relative z-10 ${isRight ? 'flex-row-reverse' : ''}`}>
                     <div className={`w-4 h-4 rounded-md flex items-center justify-center shadow-sm border ${iconBg}`} style={{ color: accent }}>
+                        {/* FIX: Added type parameter <any> to React.ReactElement cast to satisfy TypeScript for className property usage in cloneElement. */}
                         {React.cloneElement(icon as React.ReactElement<any>, { className: "w-2.5 h-2.5" })}
                     </div>
                     {typeof title === 'string' ? <h3 className={`font-russo text-[10px] uppercase tracking-widest ${titleColor}`}>{title}</h3> : title}
@@ -156,6 +164,7 @@ const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any
             const teamPlayers = team.playerIds.map(pid => players.find(p => p.id === pid)).filter(Boolean) as Player[];
             const avgOvr = teamPlayers.length > 0 ? Math.round(teamPlayers.reduce((sum, p) => sum + p.rating, 0) / teamPlayers.length) : 0;
             
+            // Calculate Goals & Synergy
             let goals = 0;
             let assistedGoals = 0;
             session.games.filter((g: any) => g.status === 'finished').forEach((g: any) => {
@@ -186,6 +195,7 @@ const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any
                         })}
                     </div>
                     
+                    {/* FOOTER STATS: GOALS & SYNERGY */}
                     <div className="py-2 border-t border-white/5 bg-black/40 flex items-center divide-x divide-white/10">
                         <div className="flex-1 flex flex-col items-center justify-center">
                             <span className="text-[12px] font-black text-slate-200 leading-none">{goals}</span>
@@ -217,32 +227,20 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
 
     const MiniCard = ({ p }: { p: TopPlayerStats }) => {
         const countryCodeAlpha2 = useMemo(() => p.player.countryCode ? convertCountryCodeAlpha3ToAlpha2(p.player.countryCode) : null, [p.player.countryCode]);
-        
-        // UPDATED: Sync card width with podium width to avoid "floating" look
-        const sizeClasses = p.rank === 1 
-            ? 'w-[140px] h-[190px] md:w-[190px] md:h-[260px] z-20' 
-            : 'w-[125px] h-[175px] md:w-[160px] md:h-[220px] z-10';
-        
+        const sizeClasses = p.rank === 1 ? 'w-[100px] h-[140px] md:w-[120px] md:h-[165px] z-20' : 'w-[85px] h-[115px] md:w-[100px] md:h-[135px] z-10';
         return (
-            <div className={`relative rounded-xl md:rounded-2xl overflow-hidden border border-white/20 shadow-2xl flex flex-col shrink-0 ${sizeClasses} transition-all duration-500`}>
+            <div className={`relative rounded-lg overflow-hidden border border-white/20 shadow-lg flex flex-col shrink-0 ${sizeClasses}`}>
                 {p.player.playerCard ? <div className="absolute inset-0 bg-cover bg-no-repeat" style={{ backgroundImage: `url(${p.player.playerCard})`, backgroundPosition: 'center 5%' }} /> : <div className="absolute inset-0 bg-gradient-to-b from-slate-700 to-slate-900" />}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/30 to-transparent"></div>
-                <div className="relative z-10 h-full flex flex-col justify-between p-3 md:p-4">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+                <div className="relative z-10 h-full flex flex-col justify-between p-1.5">
                     <div className="flex justify-between items-start w-full">
-                        {countryCodeAlpha2 && <img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} className="w-5 h-auto md:w-7 rounded-sm opacity-90 shadow-sm" alt="" />}
+                        {countryCodeAlpha2 && <img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} className="w-3 h-auto rounded-sm opacity-90" alt="" />}
                         <div className="flex flex-col items-end leading-none">
-                            {/* UPDATED: Increased OVR font for larger cards */}
-                            <span className="font-russo text-3xl md:text-5xl text-[#00F2FE]" style={{ textShadow: '0 0 15px rgba(0, 242, 254, 0.5)' }}>{p.player.rating}</span>
-                            <span className="text-[7px] md:text-[8px] font-black text-white/80 uppercase tracking-widest mt-1">OVR</span>
+                            <span className="font-russo text-lg text-[#00F2FE]">{p.player.rating}</span>
+                            <span className="text-[5px] font-black text-white">OVR</span>
                         </div>
                     </div>
-                    <div className="w-full text-center">
-                        {/* UPDATED: Increased Nickname size and added shadow */}
-                        <span className="text-white font-russo text-[16px] md:text-[22px] uppercase tracking-tight truncate px-1 block drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] leading-none mb-1">
-                            {p.player.nickname}
-                        </span>
-                        <div className="h-0.5 w-8 bg-[#00F2FE]/40 mx-auto rounded-full"></div>
-                    </div>
+                    <div className="w-full text-center pb-1"><span className="text-white font-russo text-[10px] uppercase truncate px-1">{p.player.nickname}</span></div>
                 </div>
             </div>
         );
@@ -250,34 +248,35 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
 
     const PodiumSpot = ({ p, rank, height, color, delay }: { p?: TopPlayerStats, rank: number, height: string, color: string, delay: string }) => (
         <div className={`flex flex-col items-center justify-end h-full ${delay} animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both`}>
-            {p ? <div className="mb-4 relative z-20 flex flex-col items-center w-full px-1"><MiniCard p={p} /></div> : <div className="mb-12 opacity-10"><div className="w-12 h-16 rounded border-2 border-dashed border-white/30"></div></div>}
-            <div className="w-full relative overflow-hidden backdrop-blur-md rounded-t-3xl flex flex-col items-center justify-center pt-5 pb-4" style={{ height: height, background: `linear-gradient(to bottom, ${color}35, ${color}08, transparent)`, borderTop: `4px solid ${color}` }}>
-                {p && <div className="relative z-10 flex flex-col items-center">
-                    <span className="font-russo text-3xl md:text-4xl text-white leading-none drop-shadow-lg">{p.score.toFixed(1)}</span>
-                    <span className="text-[8px] md:text-[10px] font-black text-white/40 uppercase tracking-[0.2em] mt-2">{t.hubImpact}</span>
-                </div>}
+            {p ? <div className="mb-3 relative z-20 flex flex-col items-center w-full px-1"><MiniCard p={p} /></div> : <div className="mb-12 opacity-10"><div className="w-12 h-16 rounded border-2 border-dashed border-white/30"></div></div>}
+            <div className="w-full relative overflow-hidden backdrop-blur-md rounded-t-xl flex flex-col items-center justify-center pt-2 pb-1" style={{ height: height, background: `linear-gradient(to bottom, ${color}35, ${color}08, transparent)`, borderTop: `2px solid ${color}` }}>
+                {p && <div className="relative z-10 flex flex-col items-center"><span className="font-russo text-xl text-white leading-none">{p.score.toFixed(1)}</span><span className="text-[6px] font-black text-white/40 uppercase tracking-widest mt-0.5">{t.hubImpact}</span></div>}
             </div>
         </div>
     );
 
     return (
-        // UPDATED: Spacing adjusted for larger cards
-        <div className="flex items-end justify-center gap-6 md:gap-14 h-full px-4 relative max-w-full mx-auto">
-            {/* UPDATED: Base widths increased to match MiniCard scale */}
-            <div className="w-[130px] md:w-[200px] h-full flex flex-col justify-end z-10"><PodiumSpot p={p2} rank={2} height="110px" color="#94a3b8" delay="delay-100" /></div>
-            <div className="w-[150px] md:w-[240px] h-full flex flex-col justify-end z-20 pb-5"><PodiumSpot p={p1} rank={1} height="160px" color="#FFD700" delay="delay-0" /></div>
-            <div className="w-[130px] md:w-[200px] h-full flex flex-col justify-end z-10"><PodiumSpot p={p3} rank={3} height="80px" color="#CD7F32" delay="delay-200" /></div>
+        <div className="flex items-end justify-center gap-3 h-full px-4 relative">
+            <div className="w-[100px] md:w-[125px] h-full flex flex-col justify-end z-10"><PodiumSpot p={p2} rank={2} height="90px" color="#94a3b8" delay="delay-100" /></div>
+            <div className="w-[100px] md:w-[125px] h-full flex flex-col justify-end z-20 pb-4"><PodiumSpot p={p1} rank={1} height="130px" color="#FFD700" delay="delay-0" /></div>
+            <div className="w-[100px] md:w-[125px] h-full flex flex-col justify-end z-10"><PodiumSpot p={p3} rank={3} height="60px" color="#CD7F32" delay="delay-200" /></div>
         </div>
     );
 };
-// ... (rest of the file remains exactly the same) ...
 
 const NewsVanguardCard: React.FC<{ item: NewsItem }> = ({ item }) => {
-    const accentColor = '#818cf8'; 
+    const accentColor = '#818cf8'; // Indigo accent to match weather
     
     return (
         <div className="mb-3 relative px-1 animate-in fade-in slide-in-from-right-4 duration-500">
+            {/* 
+                STYLED AS BROTHER TO WEATHER WIDGET:
+                - bg-gradient-to-br from-indigo-900/40 to-black
+                - border-indigo-500/20
+                - diagonal-striped texture
+            */}
             <div className="relative rounded-2xl overflow-hidden p-3.5 border border-indigo-500/20 bg-gradient-to-br from-indigo-900/40 to-black">
+                {/* Diagonal Stripe Texture Overlay */}
                 <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-striped-brick.png')]"></div>
                 
                 <div className="absolute top-3.5 left-0 w-1.5 h-7 rounded-r-full bg-[#818cf8]" style={{ boxShadow: '0 0 10px #818cf8' }}></div>
@@ -325,11 +324,14 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
         if (c.includes('rain') || c.includes('storm')) return <CloudRainIcon className="w-16 h-16 text-white" />;
         if (c.includes('cloud') || c.includes('fog')) return <CloudIcon className="w-16 h-16 text-white" />;
         
+        // Assume night for clear conditions to match history screen logic
         const startTimeHour = session.timeString ? parseInt(session.timeString.split(':')[0], 10) : 19;
         const isNight = startTimeHour >= 18 || startTimeHour < 6;
         if (isNight) {
             return <MoonIcon className="w-16 h-16 text-white" />;
         }
+        // Fallback to sun icon if it's day, but the logic primarily uses Moon for 'clear' at night.
+        // As a default for clear, Moon is safer for evening sessions.
         return <MoonIcon className="w-16 h-16 text-white" />;
     };
 
@@ -345,6 +347,7 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
             </div>
             <div className="flex-grow flex flex-col justify-end pt-2">
                 <div className="relative rounded-2xl bg-gradient-to-br from-indigo-900/40 to-black border border-indigo-500/20 p-4 flex items-center justify-between overflow-hidden">
+                    {/* --- ADDED TEXTURE OVERLAY HERE (UPDATED to match Archive Cards) --- */}
                     <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-striped-brick.png')]"></div>
                     
                     <div className="relative z-10 flex flex-col">
@@ -370,10 +373,14 @@ export const PublicHubDashboard: React.FC = () => {
 
     const session = history[0];
     
+    // --- STANDBY TRIGGER ---
     if (!session) return <StandbyScreen />;
 
+    // 1. CALCULATE BASE STATS
     const { teamStats, allPlayersStats: rawPlayersStats } = calculateAllStats(session);
 
+    // 2. SYNCHRONIZE WITH LIVE DATABASE
+    // This is the CRITICAL fix: replace player snapshot with current global data
     const allPlayersStats = useMemo(() => {
         return rawPlayersStats.map(stat => {
             const latestPlayer = allPlayers.find(p => p.id === stat.player.id);
@@ -384,10 +391,13 @@ export const PublicHubDashboard: React.FC = () => {
         });
     }, [rawPlayersStats, allPlayers]);
 
+    // Sorting for Podium (Impact Score)
     const sortedForPodium = [...allPlayersStats].sort((a, b) => getImpactScore(b) - getImpactScore(a));
 
+    // Sorting for Table (Goals + Assists)
     const sortedForTable = [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists));
 
+    // FIX: Correctly format data for the Podium component to match TopPlayerStats[] type
     const top3PodiumPlayers: TopPlayerStats[] = sortedForPodium
         .filter(p => p.gamesPlayed > 0)
         .slice(0, 3)
@@ -402,13 +412,17 @@ export const PublicHubDashboard: React.FC = () => {
         .sort((a, b) => a.gameNumber - b.gameNumber);
 
     const thStandings = "py-2 text-white/40 uppercase tracking-tighter text-[8px] font-black text-center sticky top-0 bg-[#1e293b]/50 backdrop-blur-sm z-10 border-b border-white/5";
+    // FIX: Define tdBase class variable for use in table cells.
     const tdBase = "py-2.5 text-center text-[10px] font-bold transition-colors";
 
     return (
         <div className="h-full flex flex-col animate-in fade-in duration-700 w-full relative p-2 md:p-3">
             <div className="absolute -top-24 bottom-0 -left-4 -right-4 z-0 pointer-events-none rounded-[2rem] overflow-hidden">
+                {/* UPDATED: Center of lighting moved to 20% down to smooth transition with nav bar */}
+                {/* The gradient now starts high up to fill space behind the nav */}
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center_20%,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+                {/* TOP SMOOTHING LAYER: Deep fade to hide the break under the nav bar */}
                 <div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-b from-black via-transparent to-transparent pointer-events-none"></div>
             </div>
 
