@@ -133,13 +133,6 @@ const HubCard: React.FC<{
                 backgroundSize: '4px 4px'
             }}></div>
 
-            {isElite && (
-                <div 
-                    className="absolute inset-0 opacity-[0.04] pointer-events-none z-0 mix-blend-screen"
-                    style={{ backgroundImage: `url('https://www.transparenttextures.com/patterns/stardust.png')` }}
-                ></div>
-            )}
-
             <div className={`absolute -top-10 -left-10 w-40 h-40 ${isElite ? 'bg-[#00F2FE]/[0.05]' : 'bg-[#00F2FE]/[0.03]'} rounded-full blur-[45px] pointer-events-none z-0 animate-pulse`} style={{ animationDuration: '6s' }}></div>
             
             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.01] to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-700 z-0"></div>
@@ -248,16 +241,6 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
 
     const PodiumSpot = ({ p, rank, height, color, delay }: { p?: TopPlayerStats, rank: number, height: string, color: string, delay: string }) => (
         <div className={`flex flex-col items-center justify-end h-full ${delay} animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both relative`}>
-            {/* Volumetric Spotlight Effect for Rank 1 */}
-            {rank === 1 && (
-                <div className="absolute top-[-100px] left-1/2 -translate-x-1/2 w-[300px] h-[500px] bg-gradient-to-b from-[#FFD700]/[0.08] to-transparent clip-path-spotlight pointer-events-none blur-3xl z-0"></div>
-            )}
-            
-            {/* Background Tactical Number */}
-            <span className="absolute bottom-10 left-1/2 -translate-x-1/2 font-blackops text-[120px] md:text-[180px] text-white/[0.03] select-none pointer-events-none z-0 leading-none">
-                {rank}
-            </span>
-
             {p ? <div className="mb-3 relative z-20 flex flex-col items-center w-full px-1"><MiniCard p={p} /></div> : <div className="mb-12 opacity-10"><div className="w-12 h-16 rounded border-2 border-dashed border-white/30"></div></div>}
             
             <div className="w-full relative overflow-hidden backdrop-blur-md rounded-t-xl flex flex-col items-center justify-center pt-2 pb-1.5 z-10" style={{ height: height, background: `linear-gradient(to bottom, ${color}35, ${color}08, transparent)`, borderTop: `2px solid ${color}` }}>
@@ -273,13 +256,8 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
 
     return (
         <div className="flex items-end justify-center gap-3 h-full px-4 relative">
-            <style dangerouslySetInnerHTML={{ __html: `
-                .clip-path-spotlight { clip-path: polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%); }
-                .font-blackops { font-family: 'Black Ops One', cursive; }
-            `}} />
             <div className="w-[110px] md:w-[155px] h-full flex flex-col justify-end z-10 shrink-0"><PodiumSpot p={p2} rank={2} height="90px" color="#94a3b8" delay="delay-100" /></div>
             <div className="w-[125px] md:w-[175px] h-full flex flex-col justify-end z-20 pb-4 shrink-0"><PodiumSpot p={p1} rank={1} height="130px" color="#FFD700" delay="delay-0" /></div>
-            {/* UPDATED: Height set to 75px for Rank 3 to ensure labels don't clip at the bottom */}
             <div className="w-[110px] md:w-[155px] h-full flex flex-col justify-end z-10 shrink-0"><PodiumSpot p={p3} rank={3} height="75px" color="#CD7F32" delay="delay-200" /></div>
         </div>
     );
@@ -383,7 +361,6 @@ export const PublicHubDashboard: React.FC = () => {
     
     if (!session) return <StandbyScreen />;
 
-    // FIX: Change rawPlayersStats to allPlayersStats and extract teamStats
     const { teamStats, allPlayersStats: rawPlayersStats } = calculateAllStats(session);
 
     const allPlayersStats = useMemo(() => {
