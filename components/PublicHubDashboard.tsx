@@ -6,49 +6,8 @@ import { NewsItem, Player, PlayerTier, Team, WeatherCondition } from '../types';
 import { TrophyIcon, Zap, History as HistoryIcon, Users, AwardIcon, StarIcon, Target } from '../icons';
 import { useTranslation } from './ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
+// FIX: Import TeamAvatar component
 import { TeamAvatar } from './avatars';
-
-// --- TACTICAL BACKGROUND OVERLAY ---
-const TacticalBackground: React.FC = () => (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-[0.07] z-0">
-        <svg width="100%" height="100%" viewBox="0 0 800 400" fill="none" xmlns="http://www.w3.org/2000/svg" className="animate-tactical-pulse">
-            {/* Defensive Zone Left */}
-            <circle cx="150" cy="300" r="40" stroke="#00F2FE" strokeWidth="1" strokeDasharray="4 4" />
-            <path d="M150 260 L150 220" stroke="#00F2FE" strokeWidth="1" markerEnd="url(#arrowhead)" />
-            
-            {/* Attack Movement Center */}
-            <path d="M400 350 Q 450 250 400 150" stroke="#00F2FE" strokeWidth="1.5" strokeDasharray="8 4" />
-            <path d="M400 150 L380 180 M400 150 L420 180" stroke="#00F2FE" strokeWidth="1.5" />
-            
-            {/* Tactical X and O */}
-            <text x="140" y="310" fill="#00F2FE" fontSize="24" fontFamily="monospace" fontWeight="bold">O</text>
-            <text x="650" y="150" fill="#00F2FE" fontSize="24" fontFamily="monospace" fontWeight="bold">X</text>
-            <text x="600" y="280" fill="#00F2FE" fontSize="24" fontFamily="monospace" fontWeight="bold">X</text>
-            
-            {/* Cross Arrows */}
-            <path d="M600 250 L650 180" stroke="#00F2FE" strokeWidth="1" strokeDasharray="2 2" />
-            
-            {/* Field Grid Hints */}
-            <line x1="0" y1="200" x2="800" y2="200" stroke="#00F2FE" strokeWidth="0.5" opacity="0.5" />
-            <circle cx="400" cy="200" r="80" stroke="#00F2FE" strokeWidth="0.5" opacity="0.5" />
-
-            <defs>
-                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-                    <polygon points="0 0, 10 3.5, 0 7" fill="#00F2FE" />
-                </marker>
-            </defs>
-        </svg>
-        <style dangerouslySetInnerHTML={{ __html: `
-            @keyframes tactical-pulse {
-                0%, 100% { opacity: 0.6; transform: scale(1); }
-                50% { opacity: 1; transform: scale(1.02); }
-            }
-            .animate-tactical-pulse {
-                animation: tactical-pulse 10s ease-in-out infinite;
-            }
-        `}} />
-    </div>
-);
 
 // --- LOCAL ICONS FOR WIDGET ---
 const MapPinIcon = ({ className }: { className?: string }) => (
@@ -75,6 +34,7 @@ const StandbyScreen: React.FC = () => {
     const t = useTranslation();
     return (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black overflow-hidden rounded-[2.5rem]">
+            {/* Animated Scanning Circle */}
             <div className="absolute w-[600px] h-[600px] border border-[#00F2FE]/20 rounded-full animate-ping-slow"></div>
             <div className="absolute w-[400px] h-[400px] border border-[#00F2FE]/10 rounded-full animate-ping-slower"></div>
             
@@ -167,18 +127,24 @@ const HubCard: React.FC<{
 
     return (
         <div className={`relative overflow-hidden rounded-[1.5rem] flex flex-col border ${bgStyleClass} ${className} group/card`}>
+            {/* --- TEXTURE LAYERS (Added from HubPlayerIntel) --- */}
+            {/* Dynamic Mesh Texture Overlay */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ 
                 backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`,
                 backgroundSize: '4px 4px'
             }}></div>
 
+            {/* Pulsing Ambient Light */}
             <div className="absolute -top-10 -left-10 w-40 h-40 bg-[#00F2FE]/[0.03] rounded-full blur-[40px] pointer-events-none z-0 animate-pulse" style={{ animationDuration: '4s' }}></div>
             
+            {/* Hover Shine Effect */}
             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.01] to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-700 z-0"></div>
+            {/* ------------------------------------------------ */}
 
             <div className={`relative z-10 py-1.5 px-4 flex items-center justify-between shrink-0 ${headerStyleClass} ${isRight ? 'flex-row-reverse' : ''}`}>
                  <div className={`flex items-center gap-2 relative z-10 ${isRight ? 'flex-row-reverse' : ''}`}>
                     <div className={`w-4 h-4 rounded-md flex items-center justify-center shadow-sm border ${iconBg}`} style={{ color: accent }}>
+                        {/* FIX: Added type parameter <any> to React.ReactElement cast to satisfy TypeScript for className property usage in cloneElement. */}
                         {React.cloneElement(icon as React.ReactElement<any>, { className: "w-2.5 h-2.5" })}
                     </div>
                     {typeof title === 'string' ? <h3 className={`font-russo text-[10px] uppercase tracking-widest ${titleColor}`}>{title}</h3> : title}
@@ -198,6 +164,7 @@ const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any
             const teamPlayers = team.playerIds.map(pid => players.find(p => p.id === pid)).filter(Boolean) as Player[];
             const avgOvr = teamPlayers.length > 0 ? Math.round(teamPlayers.reduce((sum, p) => sum + p.rating, 0) / teamPlayers.length) : 0;
             
+            // Calculate Goals & Synergy
             let goals = 0;
             let assistedGoals = 0;
             session.games.filter((g: any) => g.status === 'finished').forEach((g: any) => {
@@ -221,13 +188,14 @@ const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any
                             const p = players.find(player => player.id === pid);
                             return (
                                 <div key={pid} className="group/unit flex-1 flex items-center bg-white/[0.02] rounded-lg px-3 border border-transparent hover:border-white/10 transition-all min-h-[24px]">
-                                    <span className="font-mono text-[8px] text-white/5 w-4 shrink-0 font-black tracking-tighter group-hover:text-white/10 transition-colors">{(idx + 1)}</span>
+                                    <span className="font-mono text-[8px] text-white/20 w-4 shrink-0">{(idx + 1)}</span>
                                     <span className="text-[10px] font-black text-slate-400 uppercase truncate flex-grow">{p?.nickname || 'UNKNOWN'}</span>
                                 </div>
                             );
                         })}
                     </div>
                     
+                    {/* FOOTER STATS: GOALS & SYNERGY */}
                     <div className="py-2 border-t border-white/5 bg-black/40 flex items-center divide-x divide-white/10">
                         <div className="flex-1 flex flex-col items-center justify-center">
                             <span className="text-[12px] font-black text-slate-200 leading-none">{goals}</span>
@@ -289,7 +257,6 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
 
     return (
         <div className="flex items-end justify-center gap-3 h-full px-4 relative">
-            <TacticalBackground />
             <div className="w-[100px] md:w-[125px] h-full flex flex-col justify-end z-10"><PodiumSpot p={p2} rank={2} height="90px" color="#94a3b8" delay="delay-100" /></div>
             <div className="w-[100px] md:w-[125px] h-full flex flex-col justify-end z-20 pb-4"><PodiumSpot p={p1} rank={1} height="130px" color="#FFD700" delay="delay-0" /></div>
             <div className="w-[100px] md:w-[125px] h-full flex flex-col justify-end z-10"><PodiumSpot p={p3} rank={3} height="60px" color="#CD7F32" delay="delay-200" /></div>
@@ -298,11 +265,18 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
 };
 
 const NewsVanguardCard: React.FC<{ item: NewsItem }> = ({ item }) => {
-    const accentColor = '#818cf8'; 
+    const accentColor = '#818cf8'; // Indigo accent to match weather
     
     return (
         <div className="mb-3 relative px-1 animate-in fade-in slide-in-from-right-4 duration-500">
+            {/* 
+                STYLED AS BROTHER TO WEATHER WIDGET:
+                - bg-gradient-to-br from-indigo-900/40 to-black
+                - border-indigo-500/20
+                - diagonal-striped texture
+            */}
             <div className="relative rounded-2xl overflow-hidden p-3.5 border border-indigo-500/20 bg-gradient-to-br from-indigo-900/40 to-black">
+                {/* Diagonal Stripe Texture Overlay */}
                 <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-striped-brick.png')]"></div>
                 
                 <div className="absolute top-3.5 left-0 w-1.5 h-7 rounded-r-full bg-[#818cf8]" style={{ boxShadow: '0 0 10px #818cf8' }}></div>
@@ -350,11 +324,14 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
         if (c.includes('rain') || c.includes('storm')) return <CloudRainIcon className="w-16 h-16 text-white" />;
         if (c.includes('cloud') || c.includes('fog')) return <CloudIcon className="w-16 h-16 text-white" />;
         
+        // Assume night for clear conditions to match history screen logic
         const startTimeHour = session.timeString ? parseInt(session.timeString.split(':')[0], 10) : 19;
         const isNight = startTimeHour >= 18 || startTimeHour < 6;
         if (isNight) {
             return <MoonIcon className="w-16 h-16 text-white" />;
         }
+        // Fallback to sun icon if it's day, but the logic primarily uses Moon for 'clear' at night.
+        // As a default for clear, Moon is safer for evening sessions.
         return <MoonIcon className="w-16 h-16 text-white" />;
     };
 
@@ -370,6 +347,7 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
             </div>
             <div className="flex-grow flex flex-col justify-end pt-2">
                 <div className="relative rounded-2xl bg-gradient-to-br from-indigo-900/40 to-black border border-indigo-500/20 p-4 flex items-center justify-between overflow-hidden">
+                    {/* --- ADDED TEXTURE OVERLAY HERE (UPDATED to match Archive Cards) --- */}
                     <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-striped-brick.png')]"></div>
                     
                     <div className="relative z-10 flex flex-col">
@@ -395,10 +373,14 @@ export const PublicHubDashboard: React.FC = () => {
 
     const session = history[0];
     
+    // --- STANDBY TRIGGER ---
     if (!session) return <StandbyScreen />;
 
+    // 1. CALCULATE BASE STATS
     const { teamStats, allPlayersStats: rawPlayersStats } = calculateAllStats(session);
 
+    // 2. SYNCHRONIZE WITH LIVE DATABASE
+    // This is the CRITICAL fix: replace player snapshot with current global data
     const allPlayersStats = useMemo(() => {
         return rawPlayersStats.map(stat => {
             const latestPlayer = allPlayers.find(p => p.id === stat.player.id);
@@ -409,9 +391,13 @@ export const PublicHubDashboard: React.FC = () => {
         });
     }, [rawPlayersStats, allPlayers]);
 
+    // Sorting for Podium (Impact Score)
     const sortedForPodium = [...allPlayersStats].sort((a, b) => getImpactScore(b) - getImpactScore(a));
+
+    // Sorting for Table (Goals + Assists)
     const sortedForTable = [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists));
 
+    // FIX: Correctly format data for the Podium component to match TopPlayerStats[] type
     const top3PodiumPlayers: TopPlayerStats[] = sortedForPodium
         .filter(p => p.gamesPlayed > 0)
         .slice(0, 3)
@@ -426,6 +412,7 @@ export const PublicHubDashboard: React.FC = () => {
         .sort((a, b) => a.gameNumber - b.gameNumber);
 
     const thStandings = "py-2 text-white/40 uppercase tracking-tighter text-[8px] font-black text-center sticky top-0 bg-[#1e293b]/50 backdrop-blur-sm z-10 border-b border-white/5";
+    // FIX: Define tdBase class variable for use in table cells.
     const tdBase = "py-2.5 text-center text-[10px] font-bold transition-colors";
 
     return (
