@@ -1,5 +1,5 @@
 
-import { Session, Player, NewsItem, BadgeType, PlayerRecords, PlayerHistoryEntry } from '../types';
+import { Session, Player, NewsItem, BadgeType, PlayerRecords, PlayerHistoryEntry, RatingBreakdown } from '../types';
 import { Language } from '../translations/index';
 import {
     loadPlayersFromDB,
@@ -40,13 +40,30 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
         const migratedPlayer = { ...p };
 
         // 1. SAFE RATING FLOOR MIGRATION
-        // If player has no floor, set it to 68 or current rating if it's high
         if (migratedPlayer.initialRating === undefined || migratedPlayer.initialRating === null) {
             migratedPlayer.initialRating = 68;
             dataRepaired = true;
         }
         
-        // Safety: Ensure current rating is not below their floor
+        // 2. REPAIR EXISTING PENALTIES FOR UI
+        // If rating drop is exactly -1 and participations looks like a penalty, force the type
+        if (migratedPlayer.lastRatingChange && !migratedPlayer.lastRatingChange.type) {
+            const lrc = migratedPlayer.lastRatingChange;
+            if (lrc.finalChange === -1 && lrc.teamPerformance === 0 && lrc.individualPerformance === 0) {
+                migratedPlayer.lastRatingChange = {
+                    ...lrc,
+                    type: 'penalty'
+                };
+                dataRepaired = true;
+            } else {
+                migratedPlayer.lastRatingChange = {
+                    ...lrc,
+                    type: 'match'
+                };
+                dataRepaired = true;
+            }
+        }
+
         if (migratedPlayer.rating < migratedPlayer.initialRating) {
             migratedPlayer.rating = migratedPlayer.initialRating;
             dataRepaired = true;
@@ -57,7 +74,6 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
             dataRepaired = true;
         }
 
-        // 2. RECALCULATE TIER (Ensure everyone is on the correct tier for their rating)
         const correctTier = getTierForRating(migratedPlayer.rating);
         if (migratedPlayer.tier !== correctTier) {
             migratedPlayer.tier = correctTier;
@@ -135,8 +151,6 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
             playerPool: s.playerPool || [],
             eventLog: s.eventLog || []
         }));
-    } else {
-        initialHistory = [];
     }
 
     const loadedNews = await loadNewsFromDB(10);
