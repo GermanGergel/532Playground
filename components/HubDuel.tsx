@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context';
 import { Player, PlayerStatus, SkillType } from '../types';
@@ -148,9 +147,12 @@ export const HubDuel: React.FC<HubDuelProps> = ({ onBack, p1Id, p2Id }) => {
     }
 
     return (
-        <div className="absolute inset-0 flex flex-col animate-in fade-in duration-1000 overflow-hidden rounded-[2.5rem]">
+        <div className="absolute inset-0 flex flex-col animate-in fade-in duration-1000 overflow-hidden rounded-[2.5rem] bg-[#05070a]">
             
             <div className="absolute inset-0 pointer-events-none z-0">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
+                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+                
                 <div className={`absolute inset-0 transition-all duration-[2000ms] ease-in-out ${
                     winnerData?.side === 'p1' ? 'bg-[#00F2FE]/5' : winnerData?.side === 'p2' ? 'bg-white/5' : 'bg-transparent'
                 }`}></div>

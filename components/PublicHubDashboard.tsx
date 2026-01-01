@@ -114,12 +114,12 @@ const HubCard: React.FC<{
         titleColor = 'text-white';
         iconBg = 'bg-white/10 border-white/20';
     } else if (isElite) {
-        bgStyleClass = 'bg-[#020308]/60 border-white/10';
+        bgStyleClass = 'bg-[#020308] border-white/10';
         headerStyleClass = 'bg-transparent !border-0';
         titleColor = 'text-white'; 
         iconBg = 'bg-white/5 border-white/10 text-[#FFD700]';
     } else if (isStandings) {
-        bgStyleClass = 'bg-black/30 backdrop-blur-md border-white/10';
+        bgStyleClass = 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black border-white/10';
         headerStyleClass = 'bg-transparent !border-0';
         titleColor = 'text-white';
         iconBg = 'bg-white/10 border-white/20 text-white';
@@ -399,6 +399,12 @@ export const PublicHubDashboard: React.FC = () => {
 
     return (
         <div className="h-full flex flex-col animate-in fade-in duration-700 w-full relative p-2 md:p-3">
+            <div className="absolute -top-24 bottom-0 -left-4 -right-4 z-0 pointer-events-none rounded-[2rem] overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center_20%,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
+                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+                <div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-b from-black via-transparent to-transparent pointer-events-none"></div>
+            </div>
+
             <div className="flex-grow grid grid-cols-12 gap-4 min-h-0 items-start relative z-10">
                 <div className="col-span-12 md:col-span-9 flex flex-col gap-4 h-full min-h-[600px]">
                     <div className="flex-[4] min-h-0 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200 flex gap-3">

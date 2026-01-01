@@ -45,6 +45,12 @@ export const HubInfo: React.FC = () => {
 
     return (
         <div className="absolute inset-0 z-20 flex flex-col animate-in fade-in duration-500 rounded-[2.5rem] overflow-hidden">
+            {/* Background: Dashboard Style (Dark Radial + Carbon) - Extending behind nav */}
+            <div className="absolute -top-24 bottom-0 -left-4 -right-4 z-0 pointer-events-none">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
+                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+            </div>
+
             {/* Scrollable Content Container */}
             <div className="relative z-10 flex-grow overflow-y-auto custom-hub-scrollbar">
                 <div className="space-y-16 pb-32 pt-12 w-full max-w-3xl mx-auto px-6">

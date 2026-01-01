@@ -62,7 +62,7 @@ const IntelHeader = ({ title, icon: Icon, accent = "#00F2FE" }: any) => (
 const BentoBox = ({ children, className = "", noPadding = false, contentClassName = "" }: any) => (
     <div className={`
         relative overflow-hidden rounded-3xl 
-        bg-gradient-to-br from-[#161b22]/80 to-[#0a0d14]/80
+        bg-gradient-to-br from-[#161b22] to-[#0a0d14]
         border border-white/[0.06]
         shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.05)]
         group/bento
@@ -239,6 +239,11 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void }> 
 
     return (
         <div className="absolute inset-0 z-20 flex flex-col animate-in fade-in duration-700 overflow-hidden rounded-[2.5rem]">
+            <div className="absolute inset-0 z-0 pointer-events-none">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#01040a] to-black"></div>
+                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] pointer-events-none"></div>
+            </div>
+
             <div className="relative z-10 flex-grow overflow-y-auto custom-hub-scrollbar">
                 <div className="w-full max-w-5xl mx-auto px-4 md:px-12 lg:px-20 py-6 pb-48 flex flex-col h-full">
                     
