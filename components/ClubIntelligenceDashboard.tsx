@@ -12,10 +12,17 @@ interface ClubIntelligenceDashboardProps {
     currentView: 'dashboard' | 'roster' | 'archive' | 'tournaments' | 'league' | 'info' | 'duel';
     setView: (view: any) => void;
     onArchiveViewChange?: (date: string | null) => void;
+    selectedPlayerId: string | null;
+    setSelectedPlayerId: (id: string | null) => void;
 }
 
-export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps> = ({ currentView, setView, onArchiveViewChange }) => {
-    const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps> = ({ 
+    currentView, 
+    setView, 
+    onArchiveViewChange,
+    selectedPlayerId,
+    setSelectedPlayerId
+}) => {
     const [duelPlayerIds, setDuelPlayerIds] = useState<[string | null, string | null]>([null, null]);
     const [hubSortBy, setHubSortBy] = useState<'name' | 'rating' | 'date'>('rating');
     const [hubSearch, setHubSearch] = useState('');
@@ -36,7 +43,7 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
         if (currentView !== 'archive' && onArchiveViewChange) {
             onArchiveViewChange(null);
         }
-    }, [currentView, onArchiveViewChange]);
+    }, [currentView, onArchiveViewChange, setSelectedPlayerId]);
 
     const handleStartDuel = (p1Id: string, p2Id: string) => {
         setDuelPlayerIds([p1Id, p2Id]);
@@ -47,7 +54,6 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
     return (
         <div className="w-full h-full animate-in fade-in duration-700">
             {/* Content Container */}
-            {/* UPDATED: Changed h-screen calc to use dvh (Dynamic Viewport Height) for better mobile support */}
             <div className="w-full h-[calc(100vh-110px)] md:h-[calc(100dvh-110px)] min-h-[650px] relative">
                 {currentView === 'dashboard' && <PublicHubDashboard />}
                 {currentView === 'roster' && (
