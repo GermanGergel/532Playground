@@ -114,12 +114,12 @@ const HubCard: React.FC<{
         titleColor = 'text-white';
         iconBg = 'bg-white/10 border-white/20';
     } else if (isElite) {
-        bgStyleClass = 'bg-[#020308] border-white/10';
+        bgStyleClass = 'bg-[#020308]/60 border-white/10';
         headerStyleClass = 'bg-transparent !border-0';
         titleColor = 'text-white'; 
         iconBg = 'bg-white/5 border-white/10 text-[#FFD700]';
     } else if (isStandings) {
-        bgStyleClass = 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black border-white/10';
+        bgStyleClass = 'bg-black/30 backdrop-blur-md border-white/10';
         headerStyleClass = 'bg-transparent !border-0';
         titleColor = 'text-white';
         iconBg = 'bg-white/10 border-white/20 text-white';
@@ -269,24 +269,28 @@ const NewsVanguardCard: React.FC<{ item: NewsItem }> = ({ item }) => {
     return (
         <div className="mb-3 relative px-1 animate-in fade-in slide-in-from-right-4 duration-500">
             <div className="relative rounded-2xl overflow-hidden p-3.5 border border-indigo-500/20 bg-gradient-to-br from-indigo-900/40 to-black">
-                <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-striped-brick.png')]"></div>
+                <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
                 <div className="absolute top-3.5 left-0 w-1.5 h-7 rounded-r-full bg-[#818cf8]" style={{ boxShadow: '0 0 10px #818cf8' }}></div>
-                <div className="relative z-10 flex items-center justify-between gap-3 pl-3">
-                    <div className="flex-grow min-w-0">
-                        <div className="flex items-center gap-2 mb-1.5">
-                            <span className="text-[7px] font-black tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-sm bg-white/5 text-indigo-300">
-                                {item.type.replace('_', ' ')}
-                            </span>
-                            <span className="text-[7px] font-mono text-white/20">
-                                {new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
-                            </span>
-                        </div>
-                        <h4 className="text-[12px] font-black text-slate-100 uppercase truncate tracking-wide">{item.playerName}</h4>
-                        <p className="text-[10px] text-indigo-100/40 leading-tight mt-1 truncate italic font-chakra border-l border-white/5 pl-2">
+                <div className="relative z-10 flex flex-col gap-1 pl-3">
+                    <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-[7px] font-black tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-sm bg-white/5 text-indigo-300">
+                            {item.type.replace('_', ' ')}
+                        </span>
+                        <span className="text-[7px] font-mono text-white/20">
+                            {new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+                        </span>
+                        {item.isHot && <Zap className="w-3 h-3 text-indigo-400 animate-pulse" />}
+                    </div>
+                    
+                    {/* Aligned Name and Message */}
+                    <div className="flex items-baseline gap-2 overflow-hidden">
+                        <h4 className="text-[14px] font-black text-slate-100 uppercase shrink-0 tracking-wide">
+                            {item.playerName}
+                        </h4>
+                        <p className="text-[12px] text-indigo-100/60 leading-tight truncate italic font-chakra">
                             {item.message.replace(item.playerName, '').trim() || item.subMessage}
                         </p>
                     </div>
-                    {item.isHot && <Zap className="w-3.5 h-3.5 text-indigo-400 animate-pulse drop-shadow-[0_0_5px_#818cf8]" />}
                 </div>
             </div>
         </div>
@@ -395,12 +399,6 @@ export const PublicHubDashboard: React.FC = () => {
 
     return (
         <div className="h-full flex flex-col animate-in fade-in duration-700 w-full relative p-2 md:p-3">
-            <div className="absolute -top-24 bottom-0 -left-4 -right-4 z-0 pointer-events-none rounded-[2rem] overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center_20%,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
-                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-                <div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-b from-black via-transparent to-transparent pointer-events-none"></div>
-            </div>
-
             <div className="flex-grow grid grid-cols-12 gap-4 min-h-0 items-start relative z-10">
                 <div className="col-span-12 md:col-span-9 flex flex-col gap-4 h-full min-h-[600px]">
                     <div className="flex-[4] min-h-0 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200 flex gap-3">

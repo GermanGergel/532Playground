@@ -33,7 +33,7 @@ const NewsCard: React.FC<{ item: NewsItem }> = React.memo(({ item }) => {
 
                 <div className="relative z-10 pl-3">
                     {/* Meta Header: Icon + Type + Time */}
-                    <div className="flex items-center gap-3 mb-2">
+                    <div className="flex items-center gap-3 mb-4">
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center border ${isPenalty ? 'bg-red-900/20 border-red-500/30' : 'bg-[#111] border-white/5'}`}>
                             {isPenalty ? (
                                 <ExclamationIcon className="w-4 h-4" style={{ color: accentColor }} />
@@ -53,14 +53,15 @@ const NewsCard: React.FC<{ item: NewsItem }> = React.memo(({ item }) => {
                         </div>
                     </div>
 
-                    {/* Main Content */}
-                    <h3 className="text-xl font-medium text-white tracking-wide mb-1">
-                        {item.playerName}
-                    </h3>
-                    
-                    <p className="text-sm text-gray-400 font-light leading-relaxed border-l border-white/5 pl-3 my-3">
-                        {item.message.replace(item.playerName, '').trim()}
-                    </p>
+                    {/* Main Content Row: Aligned Name and Message */}
+                    <div className="flex flex-row items-baseline gap-3 overflow-hidden mb-4">
+                        <h3 className="text-xl font-bold text-white shrink-0 tracking-wide">
+                            {item.playerName}
+                        </h3>
+                        <p className="text-base text-gray-400 font-light truncate">
+                            {item.message.replace(item.playerName, '').trim() || item.subMessage}
+                        </p>
+                    </div>
 
                     {/* Footer Tags */}
                     <div className="flex items-center justify-end">
