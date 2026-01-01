@@ -91,13 +91,13 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
                 )}
             </div>
 
-            {/* ФИКСИРОВАННАЯ ГРАДИЕНТНАЯ МАСКА (Высота уменьшена в 2 раза) */}
+            {/* ФИКСИРОВАННАЯ ГРАДИЕНТНАЯ МАСКА (Высота еще немного уменьшена) */}
             <div 
-                className="fixed bottom-0 left-0 right-0 h-12 md:h-16 z-[150] pointer-events-none transition-all duration-700 ease-in-out"
+                className="fixed bottom-0 left-0 right-0 h-8 md:h-10 z-[150] pointer-events-none transition-all duration-700 ease-in-out"
                 style={{
                     background: `linear-gradient(to bottom, 
                         transparent 0%, 
-                        ${activeTheme.bottomStop} 30%, 
+                        ${activeTheme.bottomStop} 20%, 
                         #0a0c10 100%)`
                 }}
             ></div>
