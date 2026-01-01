@@ -60,14 +60,14 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
 
     return (
         <div className="w-full h-full animate-in fade-in duration-700 relative">
-            {/* ВЕРХНЯЯ ГРАДИЕНТНАЯ МАСКА (За навигацией) */}
+            {/* ВЕРХНЯЯ ГРАДИЕНТНАЯ МАСКА (Плотное перекрытие сверху вниз) */}
             <div 
-                className="fixed top-0 left-0 right-0 h-16 md:h-20 z-[90] pointer-events-none transition-all duration-700 ease-in-out"
+                className="fixed top-0 left-0 right-0 h-20 md:h-24 z-[95] pointer-events-none transition-all duration-700 ease-in-out"
                 style={{
-                    background: `linear-gradient(to top, 
-                        transparent 0%, 
+                    background: `linear-gradient(to bottom, 
+                        #0a0c10 0%, 
                         ${activeTheme.bottomStop} 40%, 
-                        #0a0c10 100%)`
+                        transparent 100%)`
                 }}
             ></div>
 
