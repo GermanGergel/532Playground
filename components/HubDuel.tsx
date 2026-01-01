@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context';
 import { Player, PlayerStatus, SkillType } from '../types';
@@ -42,7 +43,8 @@ const ComparisonBar: React.FC<{
     >
         <div className="flex justify-between items-end mb-0.5 px-1">
             <span className={`font-russo text-[13px] transition-all duration-1000 ${visible && p1Win ? 'text-[#00F2FE]' : 'text-white/20'}`}>{v1}</span>
-            <span className="font-chakra font-black text-[6px] text-white/40 uppercase tracking-[0.2em] italic">{label}</span>
+            {/* УВЕЛИЧЕННЫЙ ШРИФТ МЕТКИ (label) */}
+            <span className="font-chakra font-black text-[9px] text-white/50 uppercase tracking-[0.1em] italic">{label}</span>
             <span className={`font-russo text-[13px] transition-all duration-1000 ${visible && p2Win ? 'text-slate-200' : 'text-white/20'}`}>{v2}</span>
         </div>
         <div className="flex w-full h-[2px] gap-2 items-center">
@@ -164,7 +166,7 @@ export const HubDuel: React.FC<HubDuelProps> = ({ onBack, p1Id, p2Id }) => {
             <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-10 py-8">
                 <button onClick={onBack} className="flex items-center gap-3 group transition-all ml-32 p-2 -m-2">
                     <ChevronLeft className="w-8 h-8 text-white/40 group-hover:text-[#00F2FE] transition-colors" />
-                    <span className="text-[12px] font-black font-chakra uppercase tracking-[0.3em] text-white/40 group-hover:text-[#00F2FE] transition-colors">{t.summary_title ? 'Back' : 'Back'}</span>
+                    <span className="text-[12px] font-black font-chakra uppercase tracking-[0.3em] text-white/40 group-hover:text-[#00F2FE] transition-colors">BACK</span>
                 </button>
                 
                 <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center">
@@ -233,7 +235,7 @@ export const HubDuel: React.FC<HubDuelProps> = ({ onBack, p1Id, p2Id }) => {
                                                 {t.duel_score}: <span className="text-[#00F2FE]">{winnerData.p1Score}</span> — <span className="text-slate-300">{winnerData.p2Score}</span>
                                             </span>
                                         </div>
-                                        <span className="text-[6px] font-mono text-white/20 uppercase tracking-[0.2em] mt-1.5">{t.duel_verified}</span>
+                                        {/* Мелкая техническая надпись удалена по просьбе пользователя */}
                                     </div>
                                 )}
                             </div>
