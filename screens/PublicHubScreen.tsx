@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-import { Player, PlayerStatus, PlayerForm, SkillType, PlayerTier } from '../types';
+import { Player, PlayerStatus, PlayerForm, SkillType } from '../types';
 import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, FacebookIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon } from '../icons';
 import { PlayerAvatar, TeamAvatar } from '../components/avatars';
 import { Language } from '../translations/index';
@@ -449,16 +449,6 @@ const CinematicStatCard: React.FC<{ value: string | number; label: string; }> = 
 // Define allowed view types to match ClubIntelligenceDashboard and avoid TS2322
 type DashboardViewType = 'info' | 'dashboard' | 'roster' | 'archive' | 'duel' | 'tournaments' | 'league';
 
-// TIER-BASED COLOR MAPPING FOR THE BACKGROUND
-const TIER_THEME_COLORS = {
-    [PlayerTier.Legend]: { from: '#1e1b4b', via: '#310c3e', glow: '#d946ef' }, // Purple
-    [PlayerTier.Elite]: { from: '#1e1b4b', via: '#451a03', glow: '#fbbf24' },  // Amber/Gold
-    [PlayerTier.Pro]: { from: '#0f172a', via: '#1e293b', glow: '#cbd5e1' },    // Silver/Slate
-    [PlayerTier.Regular]: { from: '#0f172a', via: '#020617', glow: '#00F2FE' } // Cyan/Blue
-};
-
-const DEFAULT_THEME = { from: '#0f172a', via: '#020617', glow: '#00F2FE' };
-
 export const PublicHubScreen: React.FC = () => {
     const navigate = useNavigate();
     const { allPlayers, history } = useApp();
@@ -466,7 +456,6 @@ export const PublicHubScreen: React.FC = () => {
     
     // TYPED STATE: dashboardView now strictly follows DashboardViewType
     const [dashboardView, setDashboardView] = useState<DashboardViewType>('dashboard');
-    const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
 
     useEffect(() => {
@@ -477,19 +466,6 @@ export const PublicHubScreen: React.FC = () => {
         }
         return () => { document.body.style.overflow = ''; };
     }, [isDashboardOpen]);
-
-    // DYNAMIC BACKGROUND COLOR CALCULATION
-    const activeTheme = useMemo(() => {
-        // If inspecting a player in Roster tab, use their tier color
-        if (dashboardView === 'roster' && selectedPlayerId) {
-            const player = allPlayers.find(p => p.id === selectedPlayerId);
-            if (player) {
-                return TIER_THEME_COLORS[player.tier] || DEFAULT_THEME;
-            }
-        }
-        // Default Blue theme for all other tabs
-        return DEFAULT_THEME;
-    }, [dashboardView, selectedPlayerId, allPlayers]);
 
     const latestSessionDate = useMemo(() => {
         if (!history || history.length === 0) return '';
@@ -549,42 +525,16 @@ export const PublicHubScreen: React.FC = () => {
                 onHomeClick={() => {
                     setIsDashboardOpen(false);
                     setDashboardView('dashboard'); // Reset to default view
-                    setSelectedPlayerId(null);
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
             />
 
-            {/* ADAPTIVE TERMINAL CONTAINER */}
             <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
-                {/* --- THE DYNAMIC BACKGROUND PODKLADKA --- */}
-                <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden rounded-[2rem]">
-                    {/* Dynamic Radial Gradient Background */}
-                    <div 
-                        className="absolute inset-0 transition-all duration-[800ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
-                        style={{ 
-                            background: `radial-gradient(ellipse at center 20%, ${activeTheme.via} 0%, ${activeTheme.from} 65%, black 100%)`
-                        }}
-                    ></div>
-                    
-                    {/* Shared Overlay Layers */}
+                <div className="absolute inset-0 z-0 pointer-events-none">
                     <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-                    <div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-b from-black via-transparent to-transparent pointer-events-none"></div>
-                    
-                    {/* Pulsing Underglow Accent */}
-                    <div 
-                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] blur-[120px] opacity-10 transition-all duration-[1000ms]"
-                        style={{ backgroundColor: activeTheme.glow }}
-                    ></div>
                 </div>
-
                 <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10">
-                    <ClubIntelligenceDashboard 
-                        currentView={dashboardView} 
-                        setView={setDashboardView} 
-                        onArchiveViewChange={setArchiveViewDate} 
-                        selectedPlayerId={selectedPlayerId}
-                        setSelectedPlayerId={setSelectedPlayerId}
-                    />
+                    <ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} />
                 </div>
             </div>
 
