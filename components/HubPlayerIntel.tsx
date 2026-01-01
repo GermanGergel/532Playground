@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { useApp } from '../context';
 import { HubProgressChart } from './HubAnalytics';
-import { StarIcon, TrophyIcon, BarChartDynamic, History as HistoryIcon, Zap, Users, ChevronLeft, AwardIcon, Target, Calendar, ExclamationIcon } from '../icons';
+import { StarIcon, TrophyIcon, BarChartDynamic, History as HistoryIcon, Zap, Users, ChevronLeft, AwardIcon, Target, Calendar } from '../icons';
 import { PlayerForm, SkillType, Player, PlayerStatus, BadgeType, PlayerTier } from '../types';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { BadgeIcon } from '../features';
@@ -49,7 +49,7 @@ const TIER_COLORS = {
 const IntelHeader = ({ title, icon: Icon, accent = "#00F2FE" }: any) => (
     <div className={`flex items-center justify-between px-1 mb-3 relative z-20`}>
         <div className="flex items-center gap-3 flex-grow">
-            <div className="p-1.5 rounded-lg bg-white/5 border border-white/10 shadow-inner">
+            <div className="p-1.5 rounded-lg bg-white/5 border border-white/10 text-white/80 shadow-inner">
                 <Icon className="w-3 h-3" style={{ color: accent, filter: `drop-shadow(0 0 5px ${accent}44)` }} />
             </div>
             <h4 className="font-audiowide text-[9px] text-white/60 tracking-[0.2em] uppercase">{title}</h4>
@@ -99,45 +99,11 @@ const TerminalStat = ({ label, value, color = "#fff", subValue, size = "text-xl"
 
 // --- RE-DESIGNED STAT BLOCKS ---
 
-const TerminalLastSession = ({ player, t }: { player: Player, t: any }) => {
+const TerminalLastSession = ({ player }: { player: Player }) => {
     const b = player.lastRatingChange;
     if (!b) return <div className="text-center py-6 opacity-10 text-[9px] uppercase font-black">No Data</div>;
 
-    const isPenalty = !!b.isPenalty;
     const earnedBadges = b.badgesEarned || [];
-
-    if (isPenalty) {
-        return (
-            <div className="flex flex-col items-center justify-center py-2">
-                <div className="flex justify-center items-center gap-6 w-full px-4">
-                     <div className="text-center w-12">
-                        <span className="text-xl font-black text-white/30 block leading-none">{Math.round(b.previousRating)}</span>
-                        <span className="text-[5px] text-white/20 uppercase font-black tracking-widest mt-1 block">PREV</span>
-                    </div>
-
-                    <div className="flex flex-col items-center justify-center gap-2">
-                        <div className="relative">
-                            <div className="absolute inset-0 bg-yellow-500/20 blur-xl rounded-full animate-pulse"></div>
-                            <ExclamationIcon className="w-10 h-10 text-yellow-500 relative z-10" />
-                        </div>
-                        <div className="text-center">
-                            <p className="text-[10px] font-black text-white uppercase tracking-widest leading-none">
-                                {t.penalty_applied}
-                            </p>
-                            <p className="text-[7px] text-yellow-500/70 font-bold uppercase tracking-[0.2em] mt-1">
-                                {t.penalty_inactivity}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="text-center w-12">
-                        <span className="text-xl font-black text-yellow-500 block leading-none">{Math.round(b.newRating)}</span>
-                        <span className="text-[5px] text-yellow-500/40 uppercase font-black tracking-widest mt-1 block">NEW</span>
-                    </div>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <div className="space-y-2.5 pb-1">
@@ -322,7 +288,7 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void }> 
                                     <BentoBox className="h-full" contentClassName="h-full flex flex-col justify-center">
                                         <IntelHeader title={t.lastSessionAnalysis} icon={BarChartDynamic} />
                                         <div className="flex-grow flex flex-col justify-center">
-                                            <TerminalLastSession player={player} t={t} />
+                                            <TerminalLastSession player={player} />
                                         </div>
                                     </BentoBox>
 

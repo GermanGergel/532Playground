@@ -13,7 +13,7 @@ import {
     loadNewsFromDB,
     fetchRemotePlayers
 } from './db';
-import { initializeAppState, runInactivityAudit } from './services/appInitializer';
+import { initializeAppState } from './services/appInitializer';
 import { useMatchTimer } from './hooks/useMatchTimer';
 
 export type SortBy = 'rating' | 'name' | 'date';
@@ -82,26 +82,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setTimeout(() => setIsLoading(false), 500);
 
             // 2. BACKGROUND SYNC (Crucial for fixing the "65 vs 68" issue)
+            // We do NOT enable saving yet. We wait to see if Cloud has newer data.
             setTimeout(async () => {
                 try {
                     const remotePlayers = await fetchRemotePlayers();
                     if (remotePlayers && remotePlayers.length > 0) {
-                        console.log("Context: Remote players fetched. Running inactivity audit.");
-                        
-                        // RE-RUN AUDIT WITH FRESH CLOUD DATA
-                        // This fixes the issue where penalties didn't show in the Hub Terminal immediately
-                        const audit = runInactivityAudit(remotePlayers, initialState.history);
-                        
-                        setAllPlayers(audit.updatedPlayers);
-                        
-                        if (audit.modified) {
-                            savePlayersToDB(audit.updatedPlayers);
-                        }
+                        console.log("Context: Overwriting local players with fresh Cloud data.");
+                        setAllPlayers(remotePlayers);
                     }
                 } catch (e) {
                     console.error("Background sync failed", e);
                 } finally {
                     // 3. ENABLE SAVING
+                    // Only NOW do we allow the app to write back to the DB.
+                    // This prevents the 'stale local data' from overwriting the 'fresh cloud data' on boot.
                     console.log("Context: Save Guard Lifted. Auto-save enabled.");
                     setIsSaveEnabled(true);
                 }
@@ -110,7 +104,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         } catch (error) {
             console.error("Critical error loading data:", error);
             setIsLoading(false);
-            setIsSaveEnabled(true); 
+            setIsSaveEnabled(true); // Enable anyway so user can at least work offline
         }
     };
 
@@ -147,6 +141,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   // --- PERSISTENCE EFFECT HOOKS (Save to DB) ---
+  // Added !isLoading AND isSaveEnabled checks to all save hooks
+
   React.useEffect(() => {
     if(!isLoading && isSaveEnabled) {
         savePlayersToDB(allPlayers);

@@ -191,10 +191,6 @@ export const ru = {
   information: "Информация",
   statistics: "Статистика",
 
-  // Penalty Keys
-  penalty_applied: "ШТРАФ ПРИМЕНЕН",
-  penalty_inactivity: "ЗА НЕЯВКУ (-1 OVR)",
-
   // Info Content
   ratingCalculationTitle: "Система Рейтинга",
   ratingCalculationDesc: "Рейтинг меняется на основе результатов матча, командной игры и личного вклада.",
@@ -355,7 +351,7 @@ export const ru = {
   badge_club_legend_goals_desc: "Достигнут рубеж голов",
   badge_club_legend_assists: "Легенда Клуба (А)",
   badge_club_legend_assists_desc: "Достигнут рубеж ассистов",
-  badge_veteran: "Vетеран",
+  badge_veteran: "Ветеран",
   badge_veteran_desc: "Достигнут рубеж сессий",
   badge_session_top_scorer: "Золотая Бутса",
   badge_session_top_scorer_desc: "Больше всех голов",

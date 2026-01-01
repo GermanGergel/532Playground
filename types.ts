@@ -53,7 +53,6 @@ export interface RatingBreakdown {
     finalChange: number;
     newRating: number;
     badgesEarned: BadgeType[];
-    isPenalty?: boolean;
 }
 
 export interface Player {

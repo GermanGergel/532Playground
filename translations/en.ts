@@ -191,10 +191,6 @@ export const en = {
   information: "Information",
   statistics: "Statistics",
 
-  // Penalty Keys
-  penalty_applied: "PENALTY APPLIED",
-  penalty_inactivity: "INACTIVITY (-1 OVR)",
-
   // Info Content
   ratingCalculationTitle: "Rating System",
   ratingCalculationDesc: "Your rating evolves based on match performance, team results, and individual contributions.",
