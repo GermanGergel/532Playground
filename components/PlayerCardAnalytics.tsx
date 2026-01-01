@@ -132,7 +132,6 @@ export const LastSessionBreakdown: React.FC<{ player: Player; usePromoStyle?: bo
     );
 };
 
-// FIX: Restore missing exported member 'ClubRankings'
 export const ClubRankings: React.FC<{ player: Player; usePromoStyle?: boolean }> = ({ player, usePromoStyle = false }) => {
     const t = useTranslation();
     const { allPlayers } = useApp();
@@ -187,7 +186,6 @@ export const ClubRankings: React.FC<{ player: Player; usePromoStyle?: boolean }>
     return <Content />;
 };
 
-// FIX: Restore missing exported member 'BestSessionCard'
 export const BestSessionCard: React.FC<{ player: Player; usePromoStyle?: boolean }> = ({ player, usePromoStyle = false }) => {
     const t = useTranslation();
     const records = player.records;
@@ -234,7 +232,6 @@ export const BestSessionCard: React.FC<{ player: Player; usePromoStyle?: boolean
     );
 };
 
-// FIX: Restore missing exported member 'PlayerProgressChart'
 export const PlayerProgressChart: React.FC<{ history: PlayerHistoryEntry[]; usePromoStyle?: boolean }> = ({ history, usePromoStyle = false }) => {
     const chartData = useMemo(() => {
         if (!history || history.length === 0) return [];

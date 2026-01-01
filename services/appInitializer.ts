@@ -9,7 +9,8 @@ import {
     loadNewsFromDB,
     saveNewsToDB,
     loadActiveVoicePackFromDB,
-    savePlayersToDB
+    savePlayersToDB,
+    fetchRemotePlayers
 } from '../db';
 import { getTierForRating } from './rating';
 
@@ -45,10 +46,10 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
             dataRepaired = true;
         }
         
-        // 2. REPAIR EXISTING PENALTIES FOR UI
-        // If rating drop is exactly -1 and participations looks like a penalty, force the type
+        // 2. DATA REPAIR: Identify old penalties that weren't marked as 'penalty' type
         if (migratedPlayer.lastRatingChange && !migratedPlayer.lastRatingChange.type) {
             const lrc = migratedPlayer.lastRatingChange;
+            // Signature of a penalty: change is exactly -1 and no performance points
             if (lrc.finalChange === -1 && lrc.teamPerformance === 0 && lrc.individualPerformance === 0) {
                 migratedPlayer.lastRatingChange = {
                     ...lrc,
@@ -64,6 +65,7 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
             }
         }
 
+        // Safety: Ensure current rating is not below their floor
         if (migratedPlayer.rating < migratedPlayer.initialRating) {
             migratedPlayer.rating = migratedPlayer.initialRating;
             dataRepaired = true;
