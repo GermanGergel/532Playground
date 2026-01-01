@@ -1,5 +1,5 @@
 
-import { Session, Player, NewsItem, BadgeType, PlayerRecords, PlayerHistoryEntry, RatingBreakdown } from '../types';
+import { Session, Player, NewsItem, BadgeType, PlayerRecords, PlayerHistoryEntry } from '../types';
 import { Language } from '../translations/index';
 import {
     loadPlayersFromDB,
@@ -9,10 +9,9 @@ import {
     loadNewsFromDB,
     saveNewsToDB,
     loadActiveVoicePackFromDB,
-    savePlayersToDB,
-    fetchRemotePlayers
+    savePlayersToDB
 } from '../db';
-import { getTierForRating } from './rating';
+import { getTierForRating } from './rating'; // Import tier calculation
 
 interface InitialAppState {
     session: Session | null;
@@ -42,40 +41,26 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
 
         // 1. SAFE RATING FLOOR MIGRATION
         if (migratedPlayer.initialRating === undefined || migratedPlayer.initialRating === null) {
-            migratedPlayer.initialRating = 68;
+            migratedPlayer.initialRating = 68; // New club standard
             dataRepaired = true;
         }
         
-        // 2. DATA REPAIR: Identify old penalties that weren't marked as 'penalty' type
-        if (migratedPlayer.lastRatingChange && !migratedPlayer.lastRatingChange.type) {
-            const lrc = migratedPlayer.lastRatingChange;
-            // Signature of a penalty: change is exactly -1 and no performance points
-            if (lrc.finalChange === -1 && lrc.teamPerformance === 0 && lrc.individualPerformance === 0) {
-                migratedPlayer.lastRatingChange = {
-                    ...lrc,
-                    type: 'penalty'
-                };
-                dataRepaired = true;
-            } else {
-                migratedPlayer.lastRatingChange = {
-                    ...lrc,
-                    type: 'match'
-                };
-                dataRepaired = true;
-            }
-        }
-
-        // Safety: Ensure current rating is not below their floor
-        if (migratedPlayer.rating < migratedPlayer.initialRating) {
-            migratedPlayer.rating = migratedPlayer.initialRating;
+        // Ensure rating is not below floor
+        if (migratedPlayer.rating < 68) {
+            migratedPlayer.rating = 68;
             dataRepaired = true;
         }
+
+        // --- REMOVED AGGRESSIVE CHECK HERE ---
+        // Мы удалили блок, который сверял rating с lastRatingChange.newRating.
+        // Теперь ручные изменения рейтинга имеют приоритет над историей сессий.
 
         if (typeof migratedPlayer.rating === 'number' && !Number.isInteger(migratedPlayer.rating)) {
             migratedPlayer.rating = Math.round(migratedPlayer.rating);
             dataRepaired = true;
         }
 
+        // 2. RECALCULATE TIER (Ensure everyone is on the correct tier for their rating)
         const correctTier = getTierForRating(migratedPlayer.rating);
         if (migratedPlayer.tier !== correctTier) {
             migratedPlayer.tier = correctTier;
@@ -153,6 +138,8 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
             playerPool: s.playerPool || [],
             eventLog: s.eventLog || []
         }));
+    } else {
+        initialHistory = []; // Clean state for Standalone mode
     }
 
     const loadedNews = await loadNewsFromDB(10);

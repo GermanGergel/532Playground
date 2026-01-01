@@ -1,5 +1,5 @@
 
-import { Session, Player, NewsItem, BadgeType, SessionStatus, PlayerRecords, PlayerHistoryEntry, RatingBreakdown, PlayerForm } from '../types';
+import { Session, Player, NewsItem, BadgeType, SessionStatus, PlayerRecords, PlayerHistoryEntry } from '../types';
 import { calculateAllStats } from './statistics';
 import { calculateEarnedBadges, calculateRatingUpdate, getTierForRating } from './rating';
 import { generateNewsUpdates, manageNewsFeedSize } from './news';
@@ -25,19 +25,20 @@ export const processFinishedSession = ({
     const { allPlayersStats } = calculateAllStats(session);
     const playerStatsMap = new Map(allPlayersStats.map(stat => [stat.player.id, stat]));
     
+    // Собираем ID всех, кто реально был на поле в этой сессии
     const participatedIds = new Set(allPlayersStats.map(s => s.player.id));
+    
+    // Временный массив для новостей о штрафах
     const penaltyNews: NewsItem[] = [];
     const timestamp = new Date().toISOString();
 
     // --- 1. UPDATE PLAYERS (Participation & Inactivity Logic) ---
-    let playersWithUpdatedStats: Player[] = oldPlayers.map(player => {
+    let playersWithUpdatedStats = oldPlayers.map(player => {
         const sessionStats = playerStatsMap.get(player.id);
         
-        // Define the hard floor for this specific player
-        const floor = player.initialRating !== undefined ? player.initialRating : 68;
-
         if (sessionStats) {
-            return {
+            // PLAYER PLAYED: Update stats normally
+            const updatedPlayer: Player = {
                 ...player,
                 totalGames: player.totalGames + sessionStats.gamesPlayed,
                 totalGoals: player.totalGoals + sessionStats.goals,
@@ -52,38 +53,31 @@ export const processFinishedSession = ({
                 monthlyWins: player.monthlyWins + sessionStats.wins,
                 monthlySessionsPlayed: (player.monthlySessionsPlayed || 0) + 1,
                 lastPlayedAt: new Date().toISOString(),
-                consecutiveMissedSessions: 0,
-            } as Player;
+                consecutiveMissedSessions: 0, // Reset inactivity counter
+            };
+            return updatedPlayer;
         } else {
+            // PLAYER MISSED: Check for inactivity penalty
             const currentMissed = (player.consecutiveMissedSessions || 0) + 1;
-            let currentRating = player.rating;
+            let newRating = player.rating;
             let penaltyApplied = false;
-            let penaltyBreakdown: RatingBreakdown | undefined = undefined;
 
-            // Apply penalty only if rating is ABOVE the set floor
+            // Apply penalty every 3rd missed session (3, 6, 9...)
             if (currentMissed > 0 && currentMissed % 3 === 0) {
-                if (currentRating > floor) {
-                    const oldRating = currentRating;
-                    currentRating -= 1;
-                    // Final safety check after subtraction
-                    currentRating = Math.max(floor, currentRating);
-                    
-                    if (currentRating < oldRating) {
-                        penaltyApplied = true;
-                        penaltyBreakdown = {
-                            previousRating: oldRating,
-                            teamPerformance: 0,
-                            individualPerformance: 0,
-                            badgeBonus: 0,
-                            finalChange: -1.0,
-                            newRating: currentRating,
-                            badgesEarned: [],
-                            type: 'penalty' as const
-                        };
-                    }
+                // Определяем "пол" (нижнюю границу). 
+                // Это СТРОГО стартовый рейтинг игрока. Если его нет в базе (старый аккаунт), берем 68.
+                const floor = player.initialRating !== undefined ? player.initialRating : 68;
+
+                // Рейтинг падает, ТОЛЬКО если он сейчас выше стартового.
+                // Если рейтинг 73, а старт был 70 -> падает до 72.
+                // Если рейтинг 70, а старт был 70 -> НЕ падает.
+                if (newRating > floor) {
+                    newRating -= 1;
+                    penaltyApplied = true;
                 }
             }
 
+            // Generate Penalty News for transparency
             if (penaltyApplied) {
                 penaltyNews.push({
                     id: newId(),
@@ -94,7 +88,7 @@ export const processFinishedSession = ({
                     subMessage: `#Inactive #${currentMissed}Missed`,
                     timestamp: timestamp,
                     isHot: false,
-                    statsSnapshot: { rating: currentRating, tier: getTierForRating(currentRating) },
+                    statsSnapshot: { rating: newRating, tier: getTierForRating(newRating) },
                     priority: 5
                 });
             }
@@ -102,29 +96,30 @@ export const processFinishedSession = ({
             return {
                 ...player,
                 consecutiveMissedSessions: currentMissed,
-                rating: Math.round(currentRating),
-                tier: getTierForRating(Math.round(currentRating)),
-                lastRatingChange: penaltyApplied ? penaltyBreakdown : player.lastRatingChange
-            } as Player;
+                rating: Math.round(newRating),
+                tier: getTierForRating(Math.round(newRating)),
+            };
         }
     });
 
-    // --- 2. CALCULATE RATINGS FOR PLAYERS WHO ACTUALLY PLAYED ---
-    let playersWithCalculatedRatings: Player[] = playersWithUpdatedStats.map(player => {
+    // --- 2. CALCULATE RATINGS, BADGES, and FORM ---
+    let playersWithCalculatedRatings = playersWithUpdatedStats.map(player => {
         const sessionStats = playerStatsMap.get(player.id);
         if (sessionStats) {
             const badgesEarnedThisSession = calculateEarnedBadges(player, sessionStats, session, allPlayersStats);
+            
             const { delta, breakdown } = calculateRatingUpdate(player, sessionStats, session, badgesEarnedThisSession);
             
-            // Apply Rating Floor (Personal initial value or 68)
+            // Apply Rating Floor (cannot drop below starting rating even if performance was poor)
             const floor = player.initialRating || 68;
             const unifiedNewRating = Math.max(floor, Math.round(breakdown.newRating));
             
-            let newForm: PlayerForm = 'stable';
+            let newForm: 'hot_streak' | 'stable' | 'cold_streak' = 'stable';
             if (delta >= 0.5) newForm = 'hot_streak';
             else if (delta <= -0.5) newForm = 'cold_streak';
             
             const newTier = getTierForRating(unifiedNewRating);
+
             const updatedBadges: Partial<Record<BadgeType, number>> = { ...player.badges };
             badgesEarnedThisSession.forEach(badge => {
                 updatedBadges[badge] = (updatedBadges[badge] || 0) + 1;
@@ -138,6 +133,7 @@ export const processFinishedSession = ({
             if (sessionHistory.length > 5) sessionHistory.shift();
             
             const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
+            
             const newHistoryEntry: PlayerHistoryEntry = {
                 date: dateStr,
                 rating: unifiedNewRating,
@@ -150,6 +146,25 @@ export const processFinishedSession = ({
             historyData.push(newHistoryEntry);
             if (historyData.length > 12) historyData.shift();
 
+            const getSafeRecord = (rec: any) => (rec && typeof rec.value === 'number') ? rec : { value: 0, sessionId: '' };
+            const safePlayerRecords = (player.records || {}) as any;
+
+            const oldGoalsRec = getSafeRecord(safePlayerRecords.bestGoalsInSession);
+            const oldAssistsRec = getSafeRecord(safePlayerRecords.bestAssistsInSession);
+            const oldWinRateRec = getSafeRecord(safePlayerRecords.bestWinRateInSession);
+        
+            const newRecords: PlayerRecords = {
+                bestGoalsInSession: sessionStats.goals >= oldGoalsRec.value
+                    ? { value: sessionStats.goals, sessionId: session.id }
+                    : oldGoalsRec,
+                bestAssistsInSession: sessionStats.assists >= oldAssistsRec.value
+                    ? { value: sessionStats.assists, sessionId: session.id }
+                    : oldAssistsRec,
+                bestWinRateInSession: sessionWinRate >= oldWinRateRec.value
+                    ? { value: sessionWinRate, sessionId: session.id }
+                    : oldWinRateRec,
+            };
+
             return { 
                 ...player, 
                 rating: unifiedNewRating, 
@@ -158,19 +173,17 @@ export const processFinishedSession = ({
                 badges: updatedBadges,
                 sessionHistory: sessionHistory,
                 historyData: historyData,
-                lastRatingChange: { 
-                    ...breakdown, 
-                    newRating: unifiedNewRating, 
-                    badgesEarned: badgesEarnedThisSession, 
-                    type: 'match' as const 
-                },
-                records: player.records,
-            } as Player;
+                lastRatingChange: { ...breakdown, newRating: unifiedNewRating, badgesEarned: badgesEarnedThisSession },
+                records: newRecords,
+            };
         }
         return player;
     });
 
+    // Генерируем новости только для ПРИСУТСТВУЮЩИХ (participatedIds)
     const newGameplayNews = generateNewsUpdates(oldPlayers, playersWithCalculatedRatings, participatedIds);
+    
+    // Объединяем новости игры и новости штрафов
     const allNewNews = [...newGameplayNews, ...penaltyNews];
 
     const updatedNewsFeed = allNewNews.length > 0
