@@ -14,7 +14,7 @@ interface ClubIntelligenceDashboardProps {
     onArchiveViewChange?: (date: string | null) => void;
 }
 
-// Карта цветов для нижней маски каждой вкладки (подстраивается под основной фон меню)
+// Карта цветов для масок каждой вкладки (подстраивается под основной фон меню)
 const VIEW_THEMES: Record<string, { bottomStop: string }> = {
     dashboard: { bottomStop: '#020617' }, // Глубокий синий
     roster: { bottomStop: '#01040a' },    // Черный матовый
@@ -60,6 +60,17 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
 
     return (
         <div className="w-full h-full animate-in fade-in duration-700 relative">
+            {/* ВЕРХНЯЯ ГРАДИЕНТНАЯ МАСКА (За навигацией) */}
+            <div 
+                className="fixed top-0 left-0 right-0 h-16 md:h-20 z-[90] pointer-events-none transition-all duration-700 ease-in-out"
+                style={{
+                    background: `linear-gradient(to top, 
+                        transparent 0%, 
+                        ${activeTheme.bottomStop} 40%, 
+                        #0a0c10 100%)`
+                }}
+            ></div>
+
             {/* Основной контейнер контента */}
             <div className="w-full h-[calc(100vh-110px)] md:h-[calc(100dvh-110px)] min-h-[650px] relative overflow-hidden">
                 {currentView === 'dashboard' && <PublicHubDashboard />}
@@ -91,7 +102,7 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
                 )}
             </div>
 
-            {/* ФИКСИРОВАННАЯ ГРАДИЕНТНАЯ МАСКА (Высота еще немного уменьшена) */}
+            {/* НИЖНЯЯ ГРАДИЕНТНАЯ МАСКА */}
             <div 
                 className="fixed bottom-0 left-0 right-0 h-8 md:h-10 z-[150] pointer-events-none transition-all duration-700 ease-in-out"
                 style={{
