@@ -202,12 +202,12 @@ export const ru = {
   ratingExampleLossHeavy: "Крупное поражение (-2GD): -0.8 очков",
   ratingExampleGoal: "Гол: +1.0 очко (Нападающий +1.2)",
   ratingExampleAssist: "Ассист: +0.7 очков (Плеймейкер +1.0)",
-  ratingExampleCleanSheet: "Сухой матч: +1.0 очко (Защитник +2.0)",
+  ratingExampleCleanSheet: "Сухой матч: +1.0 очко (Захисник +2.0)",
   infoInactivityTitle: "Инактив",
   infoInactivityDesc: "-1 OVR за каждые 3 пропущенные сессии.",
   infoRatingProtection: "Рейтинг не может упасть ниже начального 68 OVR.",
   infoLegionnaireTitle: "Протокол Легионера",
-  infoLegionnaireDesc: "Игроки, перешедшие в другую команду для баланса, получают особые значки.",
+  infoLegionnaireDesc: "Гравці, які перейшли в іншу команду для балансу, отримують особливі значки.",
   disciplineTitle: "Дисциплина",
   ruleHandballTitle: "Игра рукой",
   ruleHandballDesc: "Умышленная игра рукой наказывается пенальти.",
@@ -229,6 +229,10 @@ export const ru = {
   keySkillsTitle: "Ключевые Навыки",
   badges: "Значки",
   noBadges: "Нет значков",
+  
+  // Penalty UI
+  penalty_title: "Дисциплинарный Штраф",
+  penalty_desc: "Инактив: -1 OVR балл",
 
   // Hub
   hubTicker1: "НЕТ СТАТИСТИКИ — НЕТ СЛАВЫ.",

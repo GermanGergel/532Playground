@@ -229,6 +229,10 @@ export const en = {
   keySkillsTitle: "Key Skills",
   badges: "Badges",
   noBadges: "No badges yet",
+  
+  // Penalty UI
+  penalty_title: "Disciplinary Penalty",
+  penalty_desc: "Inactivity: -1 OVR point",
 
   // Hub
   hubTicker1: "NO STATS. NO GLORY.",

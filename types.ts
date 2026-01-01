@@ -53,6 +53,7 @@ export interface RatingBreakdown {
     finalChange: number;
     newRating: number;
     badgesEarned: BadgeType[];
+    type?: 'match' | 'penalty'; // NEW: To identify if change was a penalty
 }
 
 export interface Player {

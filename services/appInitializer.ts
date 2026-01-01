@@ -11,7 +11,7 @@ import {
     loadActiveVoicePackFromDB,
     savePlayersToDB
 } from '../db';
-import { getTierForRating } from './rating'; // Import tier calculation
+import { getTierForRating } from './rating';
 
 interface InitialAppState {
     session: Session | null;
@@ -40,20 +40,17 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
         const migratedPlayer = { ...p };
 
         // 1. SAFE RATING FLOOR MIGRATION
+        // If player has no floor, set it to 68 or current rating if it's high
         if (migratedPlayer.initialRating === undefined || migratedPlayer.initialRating === null) {
-            migratedPlayer.initialRating = 68; // New club standard
+            migratedPlayer.initialRating = 68;
             dataRepaired = true;
         }
         
-        // Ensure rating is not below floor
-        if (migratedPlayer.rating < 68) {
-            migratedPlayer.rating = 68;
+        // Safety: Ensure current rating is not below their floor
+        if (migratedPlayer.rating < migratedPlayer.initialRating) {
+            migratedPlayer.rating = migratedPlayer.initialRating;
             dataRepaired = true;
         }
-
-        // --- REMOVED AGGRESSIVE CHECK HERE ---
-        // Мы удалили блок, который сверял rating с lastRatingChange.newRating.
-        // Теперь ручные изменения рейтинга имеют приоритет над историей сессий.
 
         if (typeof migratedPlayer.rating === 'number' && !Number.isInteger(migratedPlayer.rating)) {
             migratedPlayer.rating = Math.round(migratedPlayer.rating);
@@ -139,7 +136,7 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
             eventLog: s.eventLog || []
         }));
     } else {
-        initialHistory = []; // Clean state for Standalone mode
+        initialHistory = [];
     }
 
     const loadedNews = await loadNewsFromDB(10);

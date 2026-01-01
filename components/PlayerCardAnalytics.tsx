@@ -1,8 +1,10 @@
+
 import React, { useMemo, useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { Player, PlayerStatus, PlayerHistoryEntry } from '../types';
 import { Card, useTranslation } from '../ui';
 import { useApp } from '../context';
 import { BadgeIcon } from '../features';
+import { ExclamationIcon } from '../icons';
 
 const RatingChangePill: React.FC<{ value: number, label: string }> = ({ value, label }) => {
     if (value === 0) return null;
@@ -28,6 +30,7 @@ export const LastSessionBreakdown: React.FC<{ player: Player; usePromoStyle?: bo
 
     if (!breakdown) return null;
 
+    const isPenalty = breakdown.type === 'penalty';
     const badgesEarned = breakdown.badgesEarned || [];
     
     const RatingCircle: React.FC<{ rating: number, isNew?: boolean }> = ({ rating, isNew }) => (
@@ -35,15 +38,15 @@ export const LastSessionBreakdown: React.FC<{ player: Player; usePromoStyle?: bo
             <div className={`
                 w-16 h-16 rounded-full flex items-center justify-center shrink-0
                 ${isNew 
-                    ? 'bg-dark-accent-start/10 border-2 border-[#00F2FE]'
+                    ? `bg-dark-accent-start/10 border-2 ${isPenalty ? 'border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.3)]' : 'border-[#00F2FE]'}`
                     : 'bg-dark-surface border-2 border-dark-text-secondary/50'
                 }
             `}>
-                <span className={`font-black text-3xl leading-none ${isNew ? 'text-[#00F2FE]' : 'text-dark-text'}`} style={{ textShadow: 'none' }}>
+                <span className={`font-black text-3xl leading-none ${isNew ? (isPenalty ? 'text-red-400' : 'text-[#00F2FE]') : 'text-dark-text'}`} style={{ textShadow: 'none' }}>
                     {rating.toFixed(0)}
                 </span>
             </div>
-            <span className={`text-[9px] font-bold uppercase text-center leading-none tracking-tight ${isNew ? 'text-[#00F2FE]' : 'text-dark-text-secondary'}`}>
+            <span className={`text-[9px] font-bold uppercase text-center leading-none tracking-tight ${isNew ? (isPenalty ? 'text-red-400' : 'text-[#00F2FE]') : 'text-dark-text-secondary'}`}>
                 {isNew ? t.newRating : t.previousRating}
             </span>
         </div>
@@ -55,28 +58,42 @@ export const LastSessionBreakdown: React.FC<{ player: Player; usePromoStyle?: bo
                 <RatingCircle rating={breakdown.previousRating} />
                 
                 <div className="flex flex-col items-center justify-center gap-1.5 flex-grow px-2">
-                     <div className="flex items-start justify-center gap-2 text-center">
-                        <RatingChangePill value={breakdown.teamPerformance} label={t.lastSessionAnalysis_team} />
-                        <RatingChangePill value={breakdown.individualPerformance} label={t.lastSessionAnalysis_indiv} />
-                        <RatingChangePill value={breakdown.badgeBonus} label={t.lastSessionAnalysis_badge} />
-                    </div>
-                     <div className="w-full h-px bg-gradient-to-r from-transparent via-dark-accent-start to-transparent opacity-50 my-0.5"></div>
+                     {!isPenalty ? (
+                        <div className="flex items-start justify-center gap-2 text-center animate-in fade-in zoom-in duration-500">
+                            <RatingChangePill value={breakdown.teamPerformance} label={t.lastSessionAnalysis_team} />
+                            <RatingChangePill value={breakdown.individualPerformance} label={t.lastSessionAnalysis_indiv} />
+                            <RatingChangePill value={breakdown.badgeBonus} label={t.lastSessionAnalysis_badge} />
+                        </div>
+                     ) : (
+                        <div className="flex flex-col items-center justify-center animate-in slide-in-from-top-2 duration-700">
+                            <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/30 mb-1 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+                                <ExclamationIcon className="w-5 h-5 text-red-500" />
+                            </div>
+                            <span className="text-[10px] font-black text-red-400 uppercase tracking-widest leading-none">
+                                {(t as any).penalty_title || "DISCIPLINARY"}
+                            </span>
+                        </div>
+                     )}
+                     
+                     <div className={`w-full h-px bg-gradient-to-r from-transparent ${isPenalty ? 'via-red-500/40' : 'via-dark-accent-start'} to-transparent opacity-50 my-0.5`}></div>
+                     
                      <div className="flex flex-col items-center justify-center text-center">
                         <p className={`text-base font-bold leading-tight ${breakdown.finalChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                            {breakdown.finalChange >= 0 ? '+' : ''}{breakdown.finalChange.toFixed(1)}
                         </p>
-                        <p className="text-[9px] text-dark-text-secondary uppercase leading-none mt-0.5">{t.finalChange}</p>
+                        <p className="text-[9px] text-dark-text-secondary uppercase leading-none mt-0.5">
+                            {isPenalty ? ((t as any).penalty_desc || "Inactivity Penalty") : t.finalChange}
+                        </p>
                      </div>
                 </div>
 
                 <RatingCircle rating={breakdown.newRating} isNew />
             </div>
 
-            {badgesEarned.length > 0 && (
-                <div className="pt-3 mt-3 border-t border-white/10">
+            {!isPenalty && badgesEarned.length > 0 && (
+                <div className="pt-3 mt-3 border-t border-white/10 animate-in fade-in duration-1000">
                     <p className="text-center text-[9px] font-black tracking-widest text-dark-text-secondary mb-2 uppercase">{t.awards}</p>
                     <div className="flex justify-center items-center gap-3 flex-wrap">
-                        {/* FIX: Changed 'earnedBadges' to 'badgesEarned' to match the variable name defined on line 30 */}
                         {badgesEarned.map(badge => (
                             <div key={badge} title={t[`badge_${badge}` as keyof typeof t] || ''}>
                                 <BadgeIcon badge={badge} className="w-8 h-8" />
@@ -91,7 +108,6 @@ export const LastSessionBreakdown: React.FC<{ player: Player; usePromoStyle?: bo
     if (usePromoStyle) {
         return (
             <div className="w-full">
-                {/* Custom Title for Promo Style */}
                 <h2 className="text-[10px] tracking-tighter opacity-70 uppercase font-bold text-white mb-2 ml-1">
                     {t.lastSessionAnalysis}
                 </h2>
@@ -234,7 +250,6 @@ export const PlayerProgressChart: React.FC<{ history: PlayerHistoryEntry[], useP
         return history;
     }, [history]);
 
-    // Enhanced scroll logic: ensure we see the pulsing dot immediately
     useEffect(() => {
         const scrollToLatest = () => {
             if (scrollContainerRef.current) {
@@ -243,7 +258,6 @@ export const PlayerProgressChart: React.FC<{ history: PlayerHistoryEntry[], useP
             }
         };
 
-        // Execute immediately and after a short delay to account for view transitions
         scrollToLatest();
         const timer = setTimeout(scrollToLatest, 50);
         return () => clearTimeout(timer);
