@@ -65,8 +65,12 @@ export const LastSessionBreakdown: React.FC<{ player: Player; usePromoStyle?: bo
                                 <ExclamationIcon className="w-12 h-12 text-yellow-500 relative z-10" />
                             </div>
                             <div className="text-center">
-                                <p className="text-sm font-black text-white uppercase tracking-[0.15em] leading-tight">ШТРАФ ПРИМЕНЕН</p>
-                                <p className="text-[10px] text-yellow-500/70 font-bold uppercase tracking-widest mt-1.5">ЗА НЕЯВКУ (-1 OVR)</p>
+                                <p className="text-sm font-black text-white uppercase tracking-[0.15em] leading-tight">
+                                    {t.penalty_applied}
+                                </p>
+                                <p className="text-[10px] text-yellow-500/70 font-bold uppercase tracking-widest mt-1.5">
+                                    {t.penalty_inactivity}
+                                </p>
                             </div>
                         </div>
 

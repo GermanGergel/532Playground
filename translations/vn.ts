@@ -191,6 +191,10 @@ export const vn = {
   information: "Thông Tin",
   statistics: "Thống Kê",
 
+  // Penalty Keys
+  penalty_applied: "ÁP DỤNG HÌNH PHẠT",
+  penalty_inactivity: "VẮNG MẶT (-1 OVR)",
+
   // Info Content
   ratingCalculationTitle: "Hệ Thống Rating",
   ratingCalculationDesc: "Rating thay đổi dựa trên kết quả trận đấu, màn trình diễn cá nhân và đóng góp cho đội.",
@@ -230,7 +234,7 @@ export const vn = {
   badges: "Huy Hiệu",
   noBadges: "Chưa có huy hiệu",
 
-  // Hub - UPDATED SLOGANS
+  // Hub
   hubTicker1: "NO STATS. NO GLORY.",
   hubTicker2: "DATA DEFINES LEGENDS.",
   hubTicker3: "ELEVATE YOUR GAME.",

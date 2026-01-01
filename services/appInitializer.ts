@@ -22,54 +22,45 @@ interface InitialAppState {
     activeVoicePack: number;
 }
 
-export const initializeAppState = async (): Promise<InitialAppState> => {
-    const loadedSession = await loadActiveSessionFromDB() || null;
-    const loadedHistoryData = await loadHistoryFromDB(20) || [];
-    const loadedPlayersData = await loadPlayersFromDB();
-    let initialPlayers: Player[] = Array.isArray(loadedPlayersData) ? loadedPlayersData : [];
+// Global logic to run penalty analysis
+export const runInactivityAudit = (players: Player[], history: Session[]): { updatedPlayers: Player[], modified: boolean } => {
+    if (history.length === 0) return { updatedPlayers: players, modified: false };
     
-    let dataRepaired = false;
+    let modified = false;
+    const completedSessions = history
+        .filter(s => s.status === 'completed')
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-    // --- RETROACTIVE PENALTY CHECK ---
-    // This ensures players who haven't played in a while get penalized immediately on app load
-    initialPlayers = initialPlayers.map(p => {
-        const migratedPlayer = { ...p };
-
-        // 1. Basic Migration & Floor Setup
-        if (migratedPlayer.initialRating === undefined || migratedPlayer.initialRating === null) {
-            migratedPlayer.initialRating = 68;
-            dataRepaired = true;
-        }
+    const updatedPlayers = players.map(p => {
+        if (p.status !== 'confirmed') return p;
         
-        if (migratedPlayer.rating < 68) {
-            migratedPlayer.rating = 68;
-            dataRepaired = true;
-        }
+        const playerLastPlayedAt = p.lastPlayedAt || p.createdAt;
+        const lastPlayedTime = new Date(playerLastPlayedAt).getTime();
+        
+        // Count how many completed sessions happened AFTER the player's last appearance
+        const missedSessionsSinceLastPlay = completedSessions.filter(s => 
+            new Date(s.date).getTime() > lastPlayedTime
+        ).length;
 
-        // 2. Inactivity analysis based on history
-        if (loadedHistoryData.length > 0 && migratedPlayer.status === 'confirmed') {
-            const lastPlayedDate = new Date(migratedPlayer.lastPlayedAt || migratedPlayer.createdAt).getTime();
-            const missedSessionsCount = loadedHistoryData.filter(s => 
-                s.status === 'completed' && 
-                new Date(s.date).getTime() > lastPlayedDate
-            ).length;
+        // Penalty logic: -1 OVR for every 3 missed
+        const expectedTotalPenalty = Math.floor(missedSessionsSinceLastPlay / 3);
+        const floor = p.initialRating || 68;
 
-            migratedPlayer.consecutiveMissedSessions = missedSessionsCount;
-
-            // If they missed 3+ and their last rating change isn't already a penalty
-            // OR if the rating is currently higher than it should be based on skips
-            if (missedSessionsCount >= 3 && (!migratedPlayer.lastRatingChange?.isPenalty)) {
-                const penaltyAmount = Math.floor(missedSessionsCount / 3);
-                const floor = migratedPlayer.initialRating || 68;
+        // If missed sessions >= 3 and the last rating change isn't already reflecting THIS penalty level
+        // We trigger an update if the count has reached a new multiple of 3.
+        if (missedSessionsSinceLastPlay >= 3 && (!p.lastRatingChange?.isPenalty || p.consecutiveMissedSessions !== missedSessionsSinceLastPlay)) {
+             if (p.rating > floor) {
+                const prevRating = p.rating;
+                const newRating = Math.max(floor, prevRating - 1);
                 
-                // We only apply -1 per 3 sessions, but let's see if we should trigger the UI block
-                if (migratedPlayer.rating > floor) {
-                    const prevRating = migratedPlayer.rating;
-                    const newRating = Math.max(floor, prevRating - 1);
-                    
-                    if (newRating < prevRating) {
-                        migratedPlayer.rating = newRating;
-                        migratedPlayer.lastRatingChange = {
+                if (newRating < prevRating) {
+                    modified = true;
+                    return {
+                        ...p,
+                        rating: newRating,
+                        tier: getTierForRating(newRating),
+                        consecutiveMissedSessions: missedSessionsSinceLastPlay,
+                        lastRatingChange: {
                             previousRating: prevRating,
                             newRating: newRating,
                             finalChange: -1,
@@ -78,45 +69,35 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
                             badgeBonus: 0,
                             badgesEarned: [],
                             isPenalty: true
-                        };
-                        dataRepaired = true;
-                    }
+                        }
+                    };
                 }
-            }
+             }
+        }
+        
+        // Even if no rating penalty, update the counter for internal logic
+        if (p.consecutiveMissedSessions !== missedSessionsSinceLastPlay) {
+            return { ...p, consecutiveMissedSessions: missedSessionsSinceLastPlay };
         }
 
-        // 3. Recalculate Tier
-        const correctTier = getTierForRating(migratedPlayer.rating);
-        if (migratedPlayer.tier !== correctTier) {
-            migratedPlayer.tier = correctTier;
-            dataRepaired = true;
-        }
-
-        // 4. Badges & Records Cleanup
-        let badges: Partial<Record<BadgeType, number>> = {};
-        if (Array.isArray(migratedPlayer.badges)) {
-            (migratedPlayer.badges as unknown as BadgeType[]).forEach((badge: BadgeType) => {
-                badges[badge] = (badges[badge] || 0) + 1;
-            });
-            migratedPlayer.badges = badges;
-            dataRepaired = true;
-        }
-
-        const existingRecords = migratedPlayer.records as any;
-        if (!existingRecords || typeof existingRecords !== 'object') {
-            migratedPlayer.records = {
-                bestGoalsInSession: { value: 0, sessionId: '' },
-                bestAssistsInSession: { value: 0, sessionId: '' },
-                bestWinRateInSession: { value: 0, sessionId: '' },
-            };
-            dataRepaired = true;
-        }
-
-        return migratedPlayer as Player;
+        return p;
     });
 
-    if (dataRepaired) {
-        savePlayersToDB(initialPlayers).catch(e => console.warn("Sync failed", e));
+    return { updatedPlayers, modified };
+};
+
+export const initializeAppState = async (): Promise<InitialAppState> => {
+    const loadedSession = await loadActiveSessionFromDB() || null;
+    const loadedHistoryData = await loadHistoryFromDB(30) || []; // Load more history for auditing
+    const loadedPlayersData = await loadPlayersFromDB();
+    let initialPlayers: Player[] = Array.isArray(loadedPlayersData) ? loadedPlayersData : [];
+    
+    // Run retroactive audit
+    const audit = runInactivityAudit(initialPlayers, loadedHistoryData);
+    initialPlayers = audit.updatedPlayers;
+
+    if (audit.modified) {
+        savePlayersToDB(initialPlayers).catch(e => console.warn("Initial sync failed", e));
     }
 
     const loadedNews = await loadNewsFromDB(15);
