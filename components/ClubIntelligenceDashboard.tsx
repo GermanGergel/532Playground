@@ -14,10 +14,10 @@ interface ClubIntelligenceDashboardProps {
     onArchiveViewChange?: (date: string | null) => void;
 }
 
-// Карта цветов для нижней маски каждой вкладки
+// Карта цветов для нижней маски каждой вкладки (подстраивается под основной фон меню)
 const VIEW_THEMES: Record<string, { bottomStop: string }> = {
-    dashboard: { bottomStop: '#020617' }, // Глубокий синий (соотв. фону дашборда)
-    roster: { bottomStop: '#01040a' },    // Почти черный (соотв. фону ростера)
+    dashboard: { bottomStop: '#020617' }, // Глубокий синий
+    roster: { bottomStop: '#01040a' },    // Черный матовый
     archive: { bottomStop: '#01040a' },   // Темный
     info: { bottomStop: '#020617' },      // Темно-синий
     duel: { bottomStop: '#020617' },
@@ -31,14 +31,11 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
     const [hubSortBy, setHubSortBy] = useState<'name' | 'rating' | 'date'>('rating');
     const [hubSearch, setHubSearch] = useState('');
 
-    // Определяем текущую тему на основе активного вида
     const activeTheme = useMemo(() => {
-        // Если открыт профиль игрока внутри ростера, используем темную тему
         if (selectedPlayerId && currentView === 'roster') return { bottomStop: '#01040a' };
         return VIEW_THEMES[currentView] || { bottomStop: '#0a0c10' };
     }, [currentView, selectedPlayerId]);
 
-    // Analytics: Track Tab Changes
     useEffect(() => {
         logAnalyticsEvent('view_tab', currentView);
     }, [currentView]);
@@ -94,11 +91,14 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
                 )}
             </div>
 
-            {/* ДИНАМИЧЕСКАЯ ГРАДИЕНТНАЯ МАСКА (Решение проблемы полосы снизу) */}
+            {/* ФИКСИРОВАННАЯ ГРАДИЕНТНАЯ МАСКА (Приклеена к самому низу экрана) */}
             <div 
-                className="absolute bottom-0 left-0 right-0 h-32 z-[80] pointer-events-none transition-all duration-700 ease-in-out"
+                className="fixed bottom-0 left-0 right-0 h-24 md:h-32 z-[150] pointer-events-none transition-all duration-700 ease-in-out"
                 style={{
-                    background: `linear-gradient(to bottom, transparent 0%, ${activeTheme.bottomStop} 60%, #0a0c10 100%)`
+                    background: `linear-gradient(to bottom, 
+                        transparent 0%, 
+                        ${activeTheme.bottomStop} 45%, 
+                        #0a0c10 100%)`
                 }}
             ></div>
             
