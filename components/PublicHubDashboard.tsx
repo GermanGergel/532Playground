@@ -6,7 +6,6 @@ import { NewsItem, Player, PlayerTier, Team, WeatherCondition } from '../types';
 import { TrophyIcon, Zap, History as HistoryIcon, Users, AwardIcon, StarIcon, Target } from '../icons';
 import { useTranslation } from './ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
-// FIX: Import TeamAvatar component
 import { TeamAvatar } from './avatars';
 
 // --- LOCAL ICONS FOR WIDGET ---

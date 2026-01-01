@@ -115,7 +115,7 @@ const DuelSetupModal: React.FC<{
             <div
                 className="p-5 rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden relative"
                 style={{
-                    background: 'radial-gradient(ellipse at top, #0f172a 0%, #020617 65%, black 100%)',
+                    background: 'radial-gradient(ellipse at top, #0f172a 0%, #020617 65%, #01040a 100%)',
                     boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.08), 0 30px 60px -12px rgba(0, 0, 0, 0.7)'
                 }}
             >
@@ -182,8 +182,8 @@ export const HubRoster: React.FC<HubRosterProps> = ({ onSelectPlayer, sortBy, se
     return (
         <div className="absolute inset-0 flex flex-col animate-in fade-in duration-700 overflow-hidden rounded-[2.5rem]">
             <div className="absolute -top-24 bottom-0 -left-4 -right-4 z-0 pointer-events-none">
-                {/* Радиальный градиент в более темной гамме (темнее, чем на дашборде) */}
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#01040a] to-black"></div>
+                {/* Радиальный градиент заканчивается в #01040a для маски */}
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#01040a] to-[#01040a]"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] pointer-events-none"></div>
             </div>
             
@@ -215,7 +215,7 @@ export const HubRoster: React.FC<HubRosterProps> = ({ onSelectPlayer, sortBy, se
             
             {/* PLAYER PLAQUES CONTAINER */}
             <div className="flex-grow overflow-y-auto px-6 md:px-12 lg:px-20 pt-12 custom-hub-scrollbar relative z-10">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 pb-24 max-w-7xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 pb-32 max-w-7xl mx-auto">
                     {confirmedPersonnel.map((person, idx) => {
                         const tierColor = TIER_COLORS[person.tier] || '#94a3b8';
                         return (
@@ -228,7 +228,6 @@ export const HubRoster: React.FC<HubRosterProps> = ({ onSelectPlayer, sortBy, se
                                 <div className="relative z-10 h-full w-full flex items-center px-4 gap-4">
                                     <span className="font-mono text-[10px] text-white/5 w-5 shrink-0 font-black tracking-tighter group-hover:text-white/10 transition-colors">{(idx + 1).toString().padStart(2, '0')}</span>
                                     
-                                    {/* ОБНОВЛЕННЫЙ АВАТАР - КАПСУЛА */}
                                     <div className="shrink-0 transition-transform duration-500">
                                         <HubPortraitAvatar photo={person.playerCard} tierColor={tierColor} />
                                     </div>
