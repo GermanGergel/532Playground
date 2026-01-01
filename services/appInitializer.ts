@@ -1,5 +1,5 @@
 
-import { Session, Player, NewsItem, BadgeType, PlayerRecords, PlayerHistoryEntry } from '../types';
+import { Session, Player, NewsItem, BadgeType, PlayerRecords, PlayerHistoryEntry, RatingBreakdown } from '../types';
 import { Language } from '../translations/index';
 import {
     loadPlayersFromDB,
@@ -11,7 +11,7 @@ import {
     loadActiveVoicePackFromDB,
     savePlayersToDB
 } from '../db';
-import { getTierForRating } from './rating'; // Import tier calculation
+import { getTierForRating } from './rating';
 
 interface InitialAppState {
     session: Session | null;
@@ -24,49 +24,75 @@ interface InitialAppState {
 
 export const initializeAppState = async (): Promise<InitialAppState> => {
     const loadedSession = await loadActiveSessionFromDB() || null;
-    if (loadedSession) {
-        loadedSession.playerPool = loadedSession.playerPool || [];
-        loadedSession.teams = loadedSession.teams || [];
-        loadedSession.games = loadedSession.games || [];
-        loadedSession.eventLog = loadedSession.eventLog || [];
-    }
-
+    const loadedHistoryData = await loadHistoryFromDB(20) || [];
     const loadedPlayersData = await loadPlayersFromDB();
     let initialPlayers: Player[] = Array.isArray(loadedPlayersData) ? loadedPlayersData : [];
     
     let dataRepaired = false;
 
+    // --- RETROACTIVE PENALTY CHECK ---
+    // This ensures players who haven't played in a while get penalized immediately on app load
     initialPlayers = initialPlayers.map(p => {
         const migratedPlayer = { ...p };
 
-        // 1. SAFE RATING FLOOR MIGRATION
+        // 1. Basic Migration & Floor Setup
         if (migratedPlayer.initialRating === undefined || migratedPlayer.initialRating === null) {
-            migratedPlayer.initialRating = 68; // New club standard
+            migratedPlayer.initialRating = 68;
             dataRepaired = true;
         }
         
-        // Ensure rating is not below floor
         if (migratedPlayer.rating < 68) {
             migratedPlayer.rating = 68;
             dataRepaired = true;
         }
 
-        // --- REMOVED AGGRESSIVE CHECK HERE ---
-        // Мы удалили блок, который сверял rating с lastRatingChange.newRating.
-        // Теперь ручные изменения рейтинга имеют приоритет над историей сессий.
+        // 2. Inactivity analysis based on history
+        if (loadedHistoryData.length > 0 && migratedPlayer.status === 'confirmed') {
+            const lastPlayedDate = new Date(migratedPlayer.lastPlayedAt || migratedPlayer.createdAt).getTime();
+            const missedSessionsCount = loadedHistoryData.filter(s => 
+                s.status === 'completed' && 
+                new Date(s.date).getTime() > lastPlayedDate
+            ).length;
 
-        if (typeof migratedPlayer.rating === 'number' && !Number.isInteger(migratedPlayer.rating)) {
-            migratedPlayer.rating = Math.round(migratedPlayer.rating);
-            dataRepaired = true;
+            migratedPlayer.consecutiveMissedSessions = missedSessionsCount;
+
+            // If they missed 3+ and their last rating change isn't already a penalty
+            // OR if the rating is currently higher than it should be based on skips
+            if (missedSessionsCount >= 3 && (!migratedPlayer.lastRatingChange?.isPenalty)) {
+                const penaltyAmount = Math.floor(missedSessionsCount / 3);
+                const floor = migratedPlayer.initialRating || 68;
+                
+                // We only apply -1 per 3 sessions, but let's see if we should trigger the UI block
+                if (migratedPlayer.rating > floor) {
+                    const prevRating = migratedPlayer.rating;
+                    const newRating = Math.max(floor, prevRating - 1);
+                    
+                    if (newRating < prevRating) {
+                        migratedPlayer.rating = newRating;
+                        migratedPlayer.lastRatingChange = {
+                            previousRating: prevRating,
+                            newRating: newRating,
+                            finalChange: -1,
+                            teamPerformance: 0,
+                            individualPerformance: 0,
+                            badgeBonus: 0,
+                            badgesEarned: [],
+                            isPenalty: true
+                        };
+                        dataRepaired = true;
+                    }
+                }
+            }
         }
 
-        // 2. RECALCULATE TIER (Ensure everyone is on the correct tier for their rating)
+        // 3. Recalculate Tier
         const correctTier = getTierForRating(migratedPlayer.rating);
         if (migratedPlayer.tier !== correctTier) {
             migratedPlayer.tier = correctTier;
             dataRepaired = true;
         }
 
+        // 4. Badges & Records Cleanup
         let badges: Partial<Record<BadgeType, number>> = {};
         if (Array.isArray(migratedPlayer.badges)) {
             (migratedPlayer.badges as unknown as BadgeType[]).forEach((badge: BadgeType) => {
@@ -77,47 +103,12 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
         }
 
         const existingRecords = migratedPlayer.records as any;
-        let newRecords: PlayerRecords | null = null;
-        if (existingRecords && typeof existingRecords === 'object' && !Array.isArray(existingRecords)) {
-            newRecords = {
-                bestGoalsInSession: (existingRecords.bestGoalsInSession && typeof existingRecords.bestGoalsInSession.value === 'number') 
-                    ? existingRecords.bestGoalsInSession 
-                    : { value: 0, sessionId: '' },
-                bestAssistsInSession: (existingRecords.bestAssistsInSession && typeof existingRecords.bestAssistsInSession.value === 'number') 
-                    ? existingRecords.bestAssistsInSession 
-                    : { value: 0, sessionId: '' },
-                bestWinRateInSession: (existingRecords.bestWinRateInSession && typeof existingRecords.bestWinRateInSession.value === 'number') 
-                    ? existingRecords.bestWinRateInSession 
-                    : { value: 0, sessionId: '' },
-            };
-        }
-        if (!newRecords) {
-            newRecords = {
+        if (!existingRecords || typeof existingRecords !== 'object') {
+            migratedPlayer.records = {
                 bestGoalsInSession: { value: 0, sessionId: '' },
                 bestAssistsInSession: { value: 0, sessionId: '' },
                 bestWinRateInSession: { value: 0, sessionId: '' },
             };
-            dataRepaired = true;
-        }
-        migratedPlayer.records = newRecords;
-
-        migratedPlayer.totalSessionsPlayed = (migratedPlayer.totalSessionsPlayed ?? Math.round(migratedPlayer.totalGames / 15)) || 0;
-        migratedPlayer.monthlySessionsPlayed = (migratedPlayer.monthlySessionsPlayed ?? Math.round(migratedPlayer.monthlyGames / 15)) || 0;
-        migratedPlayer.sessionHistory = migratedPlayer.sessionHistory || []; 
-        migratedPlayer.consecutiveMissedSessions = migratedPlayer.consecutiveMissedSessions || 0;
-
-        if (!migratedPlayer.historyData || migratedPlayer.historyData.length === 0) {
-            const currentWinRate = migratedPlayer.totalGames > 0 
-                ? Math.round((migratedPlayer.totalWins / migratedPlayer.totalGames) * 100) 
-                : 0;
-            const initialHistoryEntry: PlayerHistoryEntry = {
-                date: 'Start',
-                rating: migratedPlayer.rating,
-                winRate: currentWinRate,
-                goals: migratedPlayer.totalGoals,
-                assists: migratedPlayer.totalAssists
-            };
-            migratedPlayer.historyData = [initialHistoryEntry];
             dataRepaired = true;
         }
 
@@ -125,46 +116,18 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
     });
 
     if (dataRepaired) {
-        savePlayersToDB(initialPlayers).catch(e => console.warn("Background migration sync failed", e));
+        savePlayersToDB(initialPlayers).catch(e => console.warn("Sync failed", e));
     }
 
-    const loadedHistoryData = await loadHistoryFromDB(10);
-    let initialHistory: Session[] = [];
-    if (Array.isArray(loadedHistoryData) && loadedHistoryData.length > 0) {
-        initialHistory = loadedHistoryData.map((s: any) => ({
-            ...s,
-            teams: s.teams || [],
-            games: s.games || [],
-            playerPool: s.playerPool || [],
-            eventLog: s.eventLog || []
-        }));
-    } else {
-        initialHistory = []; // Clean state for Standalone mode
-    }
-
-    const loadedNews = await loadNewsFromDB(10);
-    let initialNewsFeed = Array.isArray(loadedNews) ? loadedNews : [];
-    
-    let hasBadNewsData = false;
-    initialNewsFeed = initialNewsFeed.map(item => {
-        if (item.playerPhoto && item.playerPhoto.startsWith('data:')) {
-            hasBadNewsData = true;
-            return { ...item, playerPhoto: undefined };
-        }
-        return item;
-    });
-
-    if (hasBadNewsData) {
-        saveNewsToDB(initialNewsFeed);
-    }
-
+    const loadedNews = await loadNewsFromDB(15);
+    const initialNewsFeed = Array.isArray(loadedNews) ? loadedNews : [];
     const loadedLang = await loadLanguageFromDB() || 'en';
     const loadedPack = await loadActiveVoicePackFromDB() || 1;
 
     return {
         session: loadedSession,
         players: initialPlayers,
-        history: initialHistory,
+        history: loadedHistoryData,
         newsFeed: initialNewsFeed,
         language: loadedLang,
         activeVoicePack: loadedPack,

@@ -38,15 +38,15 @@ export const LastSessionBreakdown: React.FC<{ player: Player; usePromoStyle?: bo
             <div className={`
                 w-16 h-16 rounded-full flex items-center justify-center shrink-0
                 ${isNew 
-                    ? `bg-dark-accent-start/10 border-2 ${isPenalty ? 'border-red-500' : 'border-[#00F2FE]'}`
+                    ? `bg-dark-accent-start/10 border-2 ${isPenalty ? 'border-yellow-500/50' : 'border-[#00F2FE]'}`
                     : 'bg-dark-surface border-2 border-dark-text-secondary/50'
                 }
             `}>
-                <span className={`font-black text-3xl leading-none ${isNew ? (isPenalty ? 'text-red-500' : 'text-[#00F2FE]') : 'text-dark-text'}`} style={{ textShadow: 'none' }}>
+                <span className={`font-black text-3xl leading-none ${isNew ? (isPenalty ? 'text-yellow-500' : 'text-[#00F2FE]') : 'text-dark-text'}`} style={{ textShadow: 'none' }}>
                     {rating.toFixed(0)}
                 </span>
             </div>
-            <span className={`text-[9px] font-bold uppercase text-center leading-none tracking-tight ${isNew ? (isPenalty ? 'text-red-500' : 'text-[#00F2FE]') : 'text-dark-text-secondary'}`}>
+            <span className={`text-[9px] font-bold uppercase text-center leading-none tracking-tight ${isNew ? (isPenalty ? 'text-yellow-500' : 'text-[#00F2FE]') : 'text-dark-text-secondary'}`}>
                 {isNew ? t.newRating : t.previousRating}
             </span>
         </div>
@@ -55,15 +55,18 @@ export const LastSessionBreakdown: React.FC<{ player: Player; usePromoStyle?: bo
     const Content = () => {
         if (isPenalty) {
             return (
-                <div className="flex flex-col gap-4 pt-5 pb-2">
+                <div className="flex flex-col gap-4 pt-5 pb-4">
                     <div className="flex items-center justify-between px-1">
                         <RatingCircle rating={breakdown.previousRating} />
                         
-                        <div className="flex flex-col items-center justify-center gap-2 flex-grow px-2">
-                            <ExclamationIcon className="w-10 h-10 text-yellow-500 animate-pulse" />
+                        <div className="flex flex-col items-center justify-center gap-3 flex-grow px-2">
+                            <div className="relative">
+                                <div className="absolute inset-0 bg-yellow-500/20 blur-xl rounded-full animate-pulse"></div>
+                                <ExclamationIcon className="w-12 h-12 text-yellow-500 relative z-10" />
+                            </div>
                             <div className="text-center">
-                                <p className="text-sm font-black text-white uppercase tracking-widest">ШТРАФ ПРИМЕНЕН</p>
-                                <p className="text-[10px] text-dark-text-secondary font-bold uppercase tracking-widest mt-1">ЗА НЕЯВКУ (-1 OVR)</p>
+                                <p className="text-sm font-black text-white uppercase tracking-[0.15em] leading-tight">ШТРАФ ПРИМЕНЕН</p>
+                                <p className="text-[10px] text-yellow-500/70 font-bold uppercase tracking-widest mt-1.5">ЗА НЕЯВКУ (-1 OVR)</p>
                             </div>
                         </div>
 
@@ -112,7 +115,6 @@ export const LastSessionBreakdown: React.FC<{ player: Player; usePromoStyle?: bo
         );
     };
 
-    // Promotion style check: don't show penalty UI on demo/promo screens unless requested
     if (usePromoStyle) return null;
 
     const cardClass = "border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)]";
