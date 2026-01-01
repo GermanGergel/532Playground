@@ -1,8 +1,10 @@
+
 import React, { useMemo, useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { Player, PlayerStatus, PlayerHistoryEntry } from '../types';
 import { Card, useTranslation } from '../ui';
 import { useApp } from '../context';
 import { BadgeIcon } from '../features';
+import { ExclamationIcon } from '../icons';
 
 const RatingChangePill: React.FC<{ value: number, label: string }> = ({ value, label }) => {
     if (value === 0) return null;
@@ -29,76 +31,89 @@ export const LastSessionBreakdown: React.FC<{ player: Player; usePromoStyle?: bo
     if (!breakdown) return null;
 
     const badgesEarned = breakdown.badgesEarned || [];
+    const isPenalty = !!breakdown.isPenalty;
     
     const RatingCircle: React.FC<{ rating: number, isNew?: boolean }> = ({ rating, isNew }) => (
         <div className="flex flex-col items-center gap-1 w-20">
             <div className={`
                 w-16 h-16 rounded-full flex items-center justify-center shrink-0
                 ${isNew 
-                    ? 'bg-dark-accent-start/10 border-2 border-[#00F2FE]'
+                    ? `bg-dark-accent-start/10 border-2 ${isPenalty ? 'border-red-500' : 'border-[#00F2FE]'}`
                     : 'bg-dark-surface border-2 border-dark-text-secondary/50'
                 }
             `}>
-                <span className={`font-black text-3xl leading-none ${isNew ? 'text-[#00F2FE]' : 'text-dark-text'}`} style={{ textShadow: 'none' }}>
+                <span className={`font-black text-3xl leading-none ${isNew ? (isPenalty ? 'text-red-500' : 'text-[#00F2FE]') : 'text-dark-text'}`} style={{ textShadow: 'none' }}>
                     {rating.toFixed(0)}
                 </span>
             </div>
-            <span className={`text-[9px] font-bold uppercase text-center leading-none tracking-tight ${isNew ? 'text-[#00F2FE]' : 'text-dark-text-secondary'}`}>
+            <span className={`text-[9px] font-bold uppercase text-center leading-none tracking-tight ${isNew ? (isPenalty ? 'text-red-500' : 'text-[#00F2FE]') : 'text-dark-text-secondary'}`}>
                 {isNew ? t.newRating : t.previousRating}
             </span>
         </div>
     );
 
-    const Content = () => (
-        <div className="flex flex-col gap-3 pt-5">
-            <div className="flex items-center justify-between px-1">
-                <RatingCircle rating={breakdown.previousRating} />
-                
-                <div className="flex flex-col items-center justify-center gap-1.5 flex-grow px-2">
-                     <div className="flex items-start justify-center gap-2 text-center">
-                        <RatingChangePill value={breakdown.teamPerformance} label={t.lastSessionAnalysis_team} />
-                        <RatingChangePill value={breakdown.individualPerformance} label={t.lastSessionAnalysis_indiv} />
-                        <RatingChangePill value={breakdown.badgeBonus} label={t.lastSessionAnalysis_badge} />
-                    </div>
-                     <div className="w-full h-px bg-gradient-to-r from-transparent via-dark-accent-start to-transparent opacity-50 my-0.5"></div>
-                     <div className="flex flex-col items-center justify-center text-center">
-                        <p className={`text-base font-bold leading-tight ${breakdown.finalChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                           {breakdown.finalChange >= 0 ? '+' : ''}{breakdown.finalChange.toFixed(1)}
-                        </p>
-                        <p className="text-[9px] text-dark-text-secondary uppercase leading-none mt-0.5">{t.finalChange}</p>
-                     </div>
-                </div>
-
-                <RatingCircle rating={breakdown.newRating} isNew />
-            </div>
-
-            {badgesEarned.length > 0 && (
-                <div className="pt-3 mt-3 border-t border-white/10">
-                    <p className="text-center text-[9px] font-black tracking-widest text-dark-text-secondary mb-2 uppercase">{t.awards}</p>
-                    <div className="flex justify-center items-center gap-3 flex-wrap">
-                        {/* FIX: Changed 'earnedBadges' to 'badgesEarned' to match the variable name defined on line 30 */}
-                        {badgesEarned.map(badge => (
-                            <div key={badge} title={t[`badge_${badge}` as keyof typeof t] || ''}>
-                                <BadgeIcon badge={badge} className="w-8 h-8" />
+    const Content = () => {
+        if (isPenalty) {
+            return (
+                <div className="flex flex-col gap-4 pt-5 pb-2">
+                    <div className="flex items-center justify-between px-1">
+                        <RatingCircle rating={breakdown.previousRating} />
+                        
+                        <div className="flex flex-col items-center justify-center gap-2 flex-grow px-2">
+                            <ExclamationIcon className="w-10 h-10 text-yellow-500 animate-pulse" />
+                            <div className="text-center">
+                                <p className="text-sm font-black text-white uppercase tracking-widest">ШТРАФ ПРИМЕНЕН</p>
+                                <p className="text-[10px] text-dark-text-secondary font-bold uppercase tracking-widest mt-1">ЗА НЕЯВКУ (-1 OVR)</p>
                             </div>
-                        ))}
+                        </div>
+
+                        <RatingCircle rating={breakdown.newRating} isNew />
                     </div>
                 </div>
-            )}
-        </div>
-    );
+            );
+        }
 
-    if (usePromoStyle) {
         return (
-            <div className="w-full">
-                {/* Custom Title for Promo Style */}
-                <h2 className="text-[10px] tracking-tighter opacity-70 uppercase font-bold text-white mb-2 ml-1">
-                    {t.lastSessionAnalysis}
-                </h2>
-                <Content />
+            <div className="flex flex-col gap-3 pt-5">
+                <div className="flex items-center justify-between px-1">
+                    <RatingCircle rating={breakdown.previousRating} />
+                    
+                    <div className="flex flex-col items-center justify-center gap-1.5 flex-grow px-2">
+                         <div className="flex items-start justify-center gap-2 text-center">
+                            <RatingChangePill value={breakdown.teamPerformance} label={t.lastSessionAnalysis_team} />
+                            <RatingChangePill value={breakdown.individualPerformance} label={t.lastSessionAnalysis_indiv} />
+                            <RatingChangePill value={breakdown.badgeBonus} label={t.lastSessionAnalysis_badge} />
+                        </div>
+                         <div className="w-full h-px bg-gradient-to-r from-transparent via-dark-accent-start to-transparent opacity-50 my-0.5"></div>
+                         <div className="flex flex-col items-center justify-center text-center">
+                            <p className={`text-base font-bold leading-tight ${breakdown.finalChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                               {breakdown.finalChange >= 0 ? '+' : ''}{breakdown.finalChange.toFixed(1)}
+                            </p>
+                            <p className="text-[9px] text-dark-text-secondary uppercase leading-none mt-0.5">{t.finalChange}</p>
+                         </div>
+                    </div>
+
+                    <RatingCircle rating={breakdown.newRating} isNew />
+                </div>
+
+                {badgesEarned.length > 0 && (
+                    <div className="pt-3 mt-3 border-t border-white/10">
+                        <p className="text-center text-[9px] font-black tracking-widest text-dark-text-secondary mb-2 uppercase">{t.awards}</p>
+                        <div className="flex justify-center items-center gap-3 flex-wrap">
+                            {badgesEarned.map(badge => (
+                                <div key={badge} title={t[`badge_${badge}` as keyof typeof t] || ''}>
+                                    <BadgeIcon badge={badge} className="w-8 h-8" />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         );
-    }
+    };
+
+    // Promotion style check: don't show penalty UI on demo/promo screens unless requested
+    if (usePromoStyle) return null;
 
     const cardClass = "border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)]";
 
@@ -234,7 +249,6 @@ export const PlayerProgressChart: React.FC<{ history: PlayerHistoryEntry[], useP
         return history;
     }, [history]);
 
-    // Enhanced scroll logic: ensure we see the pulsing dot immediately
     useEffect(() => {
         const scrollToLatest = () => {
             if (scrollContainerRef.current) {
@@ -243,7 +257,6 @@ export const PlayerProgressChart: React.FC<{ history: PlayerHistoryEntry[], useP
             }
         };
 
-        // Execute immediately and after a short delay to account for view transitions
         scrollToLatest();
         const timer = setTimeout(scrollToLatest, 50);
         return () => clearTimeout(timer);
