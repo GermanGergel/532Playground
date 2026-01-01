@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -506,23 +507,22 @@ export const PublicHubScreen: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen text-white relative selection:bg-[#00F2FE] selection:text-black bg-[#05070a] pt-px overscroll-none overflow-hidden">
-            {/* ГЛОБАЛЬНЫЙ ОВЕРРАЙД ФОНА ДЛЯ ХАБА */}
+        <div className="min-h-screen text-white relative selection:bg-[#00F2FE] selection:text-black bg-[#050505] pt-px overscroll-none overflow-hidden">
+            {/* ГЛОБАЛЬНЫЙ ОВЕРРАЙД ФОНА ДЛЯ ХАБА - ОБСИДИАН */}
             <style dangerouslySetInnerHTML={{__html: `
                 html, body { 
-                    background-color: #05070a !important; 
+                    background-color: #050505 !important; 
                     overscroll-behavior-y: none; 
                 }
             `}} />
             
-            {/* Глубокая фоновая подложка, закрывающая серый цвет App.tsx */}
+            {/* Подложка с текстурой карбона на чисто черном фоне */}
             <div className="fixed inset-0 z-0 pointer-events-none">
-                <div className="absolute inset-0 bg-[#05070a]"></div>
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black opacity-80"></div>
+                <div className="absolute inset-0 bg-[#050505]"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
             </div>
 
-            <div className={`fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50 z-[110]`}></div>
+            <div className={`fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-30 z-[110]`}></div>
             
             <HubNav 
                 isDashboardOpen={isDashboardOpen} 

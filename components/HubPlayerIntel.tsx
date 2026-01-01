@@ -232,7 +232,7 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void }> 
     const tierColor = TIER_COLORS[player.tier] || '#00F2FE';
     const perimeterStyle: React.CSSProperties = {
         border: 'none',
-        boxShadow: `0 0 100px -20px ${tierColor}44`, // Soft massive glow from under the blocks
+        boxShadow: `0 0 120px -20px ${tierColor}33`, // Даже более мягкое свечение
         borderRadius: '2.5rem',
         background: 'transparent',
     };
@@ -240,7 +240,8 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void }> 
     return (
         <div className="absolute inset-0 z-20 flex flex-col animate-in fade-in duration-700 overflow-hidden rounded-[2.5rem]">
             <div className="absolute inset-0 z-0 pointer-events-none">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#01040a] to-black"></div>
+                {/* Глубокий черный фон как в меню */}
+                <div className="absolute inset-0 bg-[#050505]"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] pointer-events-none"></div>
             </div>
 
