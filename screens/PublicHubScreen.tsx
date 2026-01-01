@@ -446,12 +446,15 @@ const CinematicStatCard: React.FC<{ value: string | number; label: string; }> = 
     </div>
 );
 
+// Define allowed view types to match ClubIntelligenceDashboard and avoid TS2322
 type DashboardViewType = 'info' | 'dashboard' | 'roster' | 'archive' | 'duel' | 'tournaments' | 'league';
 
 export const PublicHubScreen: React.FC = () => {
     const navigate = useNavigate();
     const { allPlayers, history } = useApp();
     const [isDashboardOpen, setIsDashboardOpen] = useState(false);
+    
+    // TYPED STATE: dashboardView now strictly follows DashboardViewType
     const [dashboardView, setDashboardView] = useState<DashboardViewType>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
 
@@ -502,27 +505,16 @@ export const PublicHubScreen: React.FC = () => {
         tiktok: "https://www.tiktok.com/@532playground",
     };
 
+    // Helper for safe tab changes
     const handleTabChange = (tab: any) => {
         setDashboardView(tab as DashboardViewType);
     };
 
     return (
-        <div className="min-h-screen text-white relative selection:bg-[#00F2FE] selection:text-black bg-[#050505] pt-px overscroll-none overflow-hidden">
-            {/* ГЛОБАЛЬНЫЙ ОВЕРРАЙД ФОНА ДЛЯ ХАБА - ОБСИДИАН */}
-            <style dangerouslySetInnerHTML={{__html: `
-                html, body { 
-                    background-color: #050505 !important; 
-                    overscroll-behavior-y: none; 
-                }
-            `}} />
+        <div className="min-h-screen text-white relative selection:bg-[#00F2FE] selection:text-black bg-[#0a0c10] pt-px overscroll-none">
+            <style dangerouslySetInnerHTML={{__html: `html, body { background-color: #0a0c10; overscroll-behavior-y: none; }`}} />
             
-            {/* Подложка с текстурой карбона на чисто черном фоне */}
-            <div className="fixed inset-0 z-0 pointer-events-none">
-                <div className="absolute inset-0 bg-[#050505]"></div>
-                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-            </div>
-
-            <div className={`fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-30 z-[110]`}></div>
+            <div className={`fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50 z-[110]`}></div>
             
             <HubNav 
                 isDashboardOpen={isDashboardOpen} 
@@ -532,19 +524,20 @@ export const PublicHubScreen: React.FC = () => {
                 archiveViewDate={archiveViewDate}
                 onHomeClick={() => {
                     setIsDashboardOpen(false);
-                    setDashboardView('dashboard');
+                    setDashboardView('dashboard'); // Reset to default view
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
             />
 
-            {/* DASHBOARD CONTENT LAYER */}
             <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
-                <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10 h-full">
+                <div className="absolute inset-0 z-0 pointer-events-none">
+                    <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+                </div>
+                <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10">
                     <ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} />
                 </div>
             </div>
 
-            {/* PEDESTAL / HERO LAYER */}
             <div className={`relative z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}>
                 <HeroTitle />
                 
