@@ -229,13 +229,13 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
         <div className="absolute inset-0 flex flex-row animate-in fade-in duration-700 overflow-hidden rounded-[2.5rem]">
             {/* SIDEBAR - LEFT COLUMN */}
             <div className="w-[350px] flex flex-col border-r border-white/5 bg-black/40 relative z-20 shrink-0">
-                {/* SIDEBAR HEADER - centered DUEL */}
-                <div className="p-6 pb-2 space-y-4 pt-10">
-                    <div className="flex items-center justify-center mb-2 pr-2 transition-all duration-300">
-                        <button onClick={() => setIsDuelSetupOpen(true)} className="group flex flex-col items-center transition-all opacity-40 hover:opacity-100 hover:scale-105 active:scale-95">
+                {/* SIDEBAR HEADER - centered and enlarged DUEL */}
+                <div className="p-6 pb-2 space-y-5 pt-10">
+                    <div className="flex items-center justify-start mb-2 pr-2 pl-32 transition-all duration-300">
+                        <button onClick={() => setIsDuelSetupOpen(true)} className="group flex flex-col items-center transition-all opacity-40 hover:opacity-100 hover:scale-110 active:scale-95">
                              <div className="max-w-fit flex flex-col items-center">
-                                <span className="font-russo text-[14px] text-white uppercase tracking-[0.2em] group-hover:text-[#00F2FE] group-hover:drop-shadow-[0_0_8px_rgba(0,242,254,0.6)] transition-all">DUEL</span>
-                                <div className="h-[1px] w-full bg-[#00F2FE] mt-1.5 opacity-50 shadow-[0_0_5px_#00F2FE]"></div>
+                                <span className="font-blackops text-[24px] text-white uppercase tracking-[0.1em] group-hover:text-[#00F2FE] group-hover:drop-shadow-[0_0_15px_rgba(0,242,254,0.8)] transition-all italic">DUEL</span>
+                                <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent mt-1 shadow-[0_0_8px_#00F2FE]"></div>
                              </div>
                         </button>
                     </div>
