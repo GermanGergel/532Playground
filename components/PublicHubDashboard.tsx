@@ -351,12 +351,11 @@ export const PublicHubDashboard: React.FC = () => {
     const [isInteracting, setIsInteracting] = useState(false);
     const newsOuterRef = useRef<HTMLDivElement>(null);
     const newsInnerRef = useRef<HTMLDivElement>(null);
-    const scrollDirectionRef = useRef<number>(1); // 1 = down, -1 = up
     const animationFrameRef = useRef<number | null>(null);
     const lastTimeRef = useRef<number>(0);
     const pauseUntilRef = useRef<number>(0);
     const currentYRef = useRef<number>(0);
-    const autoScrollPhaseRef = useRef<number>(0); // 0 = initial, 1 = down, 2 = pause at bottom, 3 = up, 4 = finished
+    const autoScrollPhaseRef = useRef<number>(0); // 0 = initial wait, 1 = down, 2 = pause at bottom, 3 = up, 4 = finished
 
     // Presentation Mode (Tabs)
     const [isAutoSwitching, setIsAutoSwitching] = useState(true);
@@ -364,9 +363,18 @@ export const PublicHubDashboard: React.FC = () => {
 
     const session = history[0];
 
-    // --- GPU ACCELERATED SMOOTH AUTO SCROLL (ONE TRIP) ---
+    // --- GPU ACCELERATED SMOOTH AUTO SCROLL (ONE TRIP WITH 5S INITIAL DELAY) ---
     useEffect(() => {
         if (!session || newsFeed.length === 0) return;
+
+        // Reset positions on mount to ensure user doesn't see "empty" space
+        if (newsInnerRef.current) {
+            newsInnerRef.current.style.transform = 'translate3d(0, 0, 0)';
+        }
+        currentYRef.current = 0;
+        autoScrollPhaseRef.current = 0;
+        pauseUntilRef.current = 0;
+        lastTimeRef.current = 0;
 
         const animate = (time: number) => {
             if (!lastTimeRef.current) lastTimeRef.current = time;
@@ -374,18 +382,17 @@ export const PublicHubDashboard: React.FC = () => {
             const outer = newsOuterRef.current;
             const inner = newsInnerRef.current;
 
-            // Stop if finished or user is interacting
+            // Stop logic if finished or user interaction
             if (!outer || !inner || isInteracting || autoScrollPhaseRef.current === 4) {
                 lastTimeRef.current = time;
-                // If user interacted, consider auto-scroll finished to not fight them
                 if (isInteracting) autoScrollPhaseRef.current = 4;
                 animationFrameRef.current = requestAnimationFrame(animate);
                 return;
             }
 
-            // Initial delay (Phase 0)
+            // Phase 0: Initial 5-second wait
             if (autoScrollPhaseRef.current === 0) {
-                if (pauseUntilRef.current === 0) pauseUntilRef.current = time + 3500;
+                if (pauseUntilRef.current === 0) pauseUntilRef.current = time + 5000;
                 if (time >= pauseUntilRef.current) {
                     autoScrollPhaseRef.current = 1;
                     lastTimeRef.current = time;
@@ -395,14 +402,16 @@ export const PublicHubDashboard: React.FC = () => {
             }
 
             const maxTravel = Math.max(0, inner.scrollHeight - outer.clientHeight);
+            
+            // If content fits container, no need to scroll
             if (maxTravel <= 10) {
                 autoScrollPhaseRef.current = 4;
                 animationFrameRef.current = requestAnimationFrame(animate);
                 return;
             }
 
-            // Calculate movement (Speed: 35px/s for extra smoothness)
-            const speed = 35; 
+            // Delta time calculation for consistent speed
+            const speed = 32; // px per second
             const delta = (time - lastTimeRef.current) / 1000;
             lastTimeRef.current = time;
 
@@ -412,7 +421,7 @@ export const PublicHubDashboard: React.FC = () => {
                 if (currentYRef.current >= maxTravel) {
                     currentYRef.current = maxTravel;
                     autoScrollPhaseRef.current = 2; // Pause at bottom
-                    pauseUntilRef.current = time + 3000;
+                    pauseUntilRef.current = time + 2000;
                 }
             } else if (autoScrollPhaseRef.current === 2) {
                 // Waiting at BOTTOM
@@ -424,11 +433,11 @@ export const PublicHubDashboard: React.FC = () => {
                 currentYRef.current -= speed * delta;
                 if (currentYRef.current <= 0) {
                     currentYRef.current = 0;
-                    autoScrollPhaseRef.current = 4; // Finished
+                    autoScrollPhaseRef.current = 4; // Done
                 }
             }
 
-            // APPLY GPU TRANSLATION
+            // Apply transformation with sub-pixel precision
             inner.style.transform = `translate3d(0, ${-currentYRef.current}px, 0)`;
 
             animationFrameRef.current = requestAnimationFrame(animate);
