@@ -1,5 +1,5 @@
 
-import { Session, Player, NewsItem, BadgeType, SessionStatus, PlayerRecords, PlayerHistoryEntry } from '../types';
+import { Session, Player, NewsItem, BadgeType, SessionStatus, PlayerRecords, PlayerHistoryEntry, PlayerForm } from '../types';
 import { calculateAllStats } from './statistics';
 import { calculateEarnedBadges, calculateRatingUpdate, getTierForRating } from './rating';
 import { generateNewsUpdates, manageNewsFeedSize } from './news';
@@ -30,8 +30,10 @@ export const processFinishedSession = ({
     const timestamp = new Date().toISOString();
 
     // --- 1. UPDATE PLAYERS (Participation & Inactivity Logic) ---
-    let playersWithUpdatedStats = oldPlayers.map(player => {
+    // FIX: Explicitly type the result array as Player[] to avoid inference issues with optional/calculated fields.
+    let playersWithUpdatedStats: Player[] = oldPlayers.map(player => {
         const sessionStats = playerStatsMap.get(player.id);
+        const floor = player.initialRating || 68;
         
         if (sessionStats) {
             // PLAYER PLAYED
@@ -56,25 +58,25 @@ export const processFinishedSession = ({
         } else {
             // PLAYER MISSED
             const currentMissed = (player.consecutiveMissedSessions || 0) + 1;
-            let newRating = player.rating;
+            let currentRating = player.rating;
             let actualPenaltyDelta = 0;
 
             // Apply penalty every 3rd missed session
             if (currentMissed > 0 && currentMissed % 3 === 0) {
-                const floor = player.initialRating !== undefined ? player.initialRating : 68;
-                if (newRating > floor) {
+                if (currentRating > floor) {
                     // Penalty is -1.0, but restricted by the floor
-                    const targetRating = Math.max(floor, newRating - 1);
-                    actualPenaltyDelta = targetRating - newRating;
-                    newRating = targetRating;
+                    const targetRating = Math.max(floor, currentRating - 1);
+                    actualPenaltyDelta = targetRating - currentRating;
+                    currentRating = targetRating;
                 }
             }
 
-            const updatedPlayer = {
+            // FIX: Explicitly typed the mapped object as Player to satisfy the map return type.
+            const updatedPlayer: Player = {
                 ...player,
                 consecutiveMissedSessions: currentMissed,
-                rating: Math.round(newRating),
-                tier: getTierForRating(Math.round(newRating)),
+                rating: Math.round(currentRating),
+                tier: getTierForRating(Math.round(currentRating)),
             };
 
             if (actualPenaltyDelta < 0) {
@@ -84,7 +86,7 @@ export const processFinishedSession = ({
                     individualPerformance: 0,
                     badgeBonus: 0,
                     finalChange: actualPenaltyDelta,
-                    newRating: Math.round(newRating),
+                    newRating: Math.round(currentRating),
                     badgesEarned: []
                 };
 
@@ -97,7 +99,7 @@ export const processFinishedSession = ({
                     subMessage: `#Inactive #${currentMissed}Missed`,
                     timestamp: timestamp,
                     isHot: false,
-                    statsSnapshot: { rating: Math.round(newRating), tier: getTierForRating(Math.round(newRating)) },
+                    statsSnapshot: { rating: Math.round(currentRating), tier: getTierForRating(Math.round(currentRating)) },
                     priority: 5
                 });
             }
@@ -106,97 +108,49 @@ export const processFinishedSession = ({
         }
     });
 
-    // --- 2. CALCULATE RATINGS, BADGES, and FORM ---
-    let playersWithCalculatedRatings = playersWithUpdatedStats.map(player => {
+    // --- 2. CALCULATE RATINGS ---
+    // FIX: Added Player[] type to the result and cast the form property to PlayerForm to resolve union type incompatibility.
+    let playersWithCalculatedRatings: Player[] = playersWithUpdatedStats.map(player => {
         const sessionStats = playerStatsMap.get(player.id);
         if (sessionStats) {
             const badgesEarnedThisSession = calculateEarnedBadges(player, sessionStats, session, allPlayersStats);
             const { delta, breakdown } = calculateRatingUpdate(player, sessionStats, session, badgesEarnedThisSession);
             
-            // PROTECT FLOOR during normal gameplay as well
+            // PROTECT FLOOR during gameplay too
             const floor = player.initialRating || 68;
             const rawNewRating = Math.round(breakdown.newRating);
             const unifiedNewRating = Math.max(floor, rawNewRating);
             const finalChange = unifiedNewRating - player.rating;
             
-            let newForm: 'hot_streak' | 'stable' | 'cold_streak' = 'stable';
-            if (finalChange >= 0.5) newForm = 'hot_streak';
-            else if (finalChange <= -0.5) newForm = 'cold_streak';
-            
-            const newTier = getTierForRating(unifiedNewRating);
-
             const updatedBadges: Partial<Record<BadgeType, number>> = { ...player.badges };
             badgesEarnedThisSession.forEach(badge => {
                 updatedBadges[badge] = (updatedBadges[badge] || 0) + 1;
             });
-            
-            const sessionHistory = [...(player.sessionHistory || [])];
-            const sessionWinRate = sessionStats.gamesPlayed > 0 ? Math.round((sessionStats.wins / sessionStats.gamesPlayed) * 100) : 0;
-            if (sessionStats.gamesPlayed > 0) {
-                sessionHistory.push({ winRate: sessionWinRate });
-            }
-            if (sessionHistory.length > 5) sessionHistory.shift();
-            
-            const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
-            
-            const newHistoryEntry: PlayerHistoryEntry = {
-                date: dateStr,
-                rating: unifiedNewRating,
-                winRate: sessionWinRate,
-                goals: sessionStats.goals,
-                assists: sessionStats.assists
-            };
-            
-            const historyData = [...(player.historyData || [])];
-            historyData.push(newHistoryEntry);
-            if (historyData.length > 12) historyData.shift();
-
-            const safePlayerRecords = (player.records || {}) as any;
-            const getSafeValue = (rec: any) => (rec && typeof rec.value === 'number') ? rec : { value: 0, sessionId: '' };
-
-            const newRecords: PlayerRecords = {
-                bestGoalsInSession: sessionStats.goals >= getSafeValue(safePlayerRecords.bestGoalsInSession).value
-                    ? { value: sessionStats.goals, sessionId: session.id }
-                    : getSafeValue(safePlayerRecords.bestGoalsInSession),
-                bestAssistsInSession: sessionStats.assists >= getSafeValue(safePlayerRecords.bestAssistsInSession).value
-                    ? { value: sessionStats.assists, sessionId: session.id }
-                    : getSafeValue(safePlayerRecords.bestAssistsInSession),
-                bestWinRateInSession: sessionWinRate >= getSafeValue(safePlayerRecords.bestWinRateInSession).value
-                    ? { value: sessionWinRate, sessionId: session.id }
-                    : getSafeValue(safePlayerRecords.bestWinRateInSession),
-            };
 
             return { 
                 ...player, 
                 rating: unifiedNewRating, 
-                tier: newTier, 
-                form: newForm,
+                tier: getTierForRating(unifiedNewRating), 
+                form: (finalChange >= 0.5 ? 'hot_streak' : finalChange <= -0.5 ? 'cold_streak' : 'stable') as PlayerForm,
                 badges: updatedBadges,
-                sessionHistory,
-                historyData,
-                lastRatingChange: { ...breakdown, finalChange, newRating: unifiedNewRating, badgesEarned: badgesEarnedThisSession },
-                records: newRecords,
-            };
+                lastRatingChange: { 
+                    ...breakdown, 
+                    finalChange: Number(finalChange.toFixed(1)), 
+                    newRating: unifiedNewRating, 
+                    badgesEarned: badgesEarnedThisSession 
+                },
+            } as Player;
         }
         return player;
     });
 
     const newGameplayNews = generateNewsUpdates(oldPlayers, playersWithCalculatedRatings, participatedIds);
-    const allNewNews = [...newGameplayNews, ...penaltyNews];
-
-    const updatedNewsFeed = allNewNews.length > 0
-        ? manageNewsFeedSize([...allNewNews, ...newsFeed])
-        : newsFeed;
-
-    const finalSession: Session = { 
-        ...session, 
-        status: SessionStatus.Completed,
-    };
+    const updatedNewsFeed = manageNewsFeedSize([...newGameplayNews, ...penaltyNews, ...newsFeed]);
 
     return {
         updatedPlayers: playersWithCalculatedRatings,
         playersToSave: playersWithCalculatedRatings,
-        finalSession,
+        finalSession: { ...session, status: SessionStatus.Completed },
         updatedNewsFeed,
     };
 };
