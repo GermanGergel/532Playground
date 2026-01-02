@@ -66,9 +66,10 @@ const ComparisonBar: React.FC<{
 interface HubDuelProps {
     p1Id: string | null;
     p2Id: string | null;
+    onBack?: () => void;
 }
 
-export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
+export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id, onBack }) => {
     const { allPlayers } = useApp();
     const t = useTranslation();
     const [isBattleStarted, setIsBattleStarted] = useState(false);
