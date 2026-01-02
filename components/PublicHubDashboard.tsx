@@ -132,11 +132,11 @@ const HubCard: React.FC<{
             <div className={`absolute -top-10 -left-10 w-40 h-40 ${isElite ? 'bg-[#00F2FE]/[0.05]' : 'bg-[#00F2FE]/[0.03]'} rounded-full blur-[45px] pointer-events-none z-0 animate-pulse`} style={{ animationDuration: '6s' }}></div>
             
             <div className={`relative z-10 py-1.5 px-4 flex items-center justify-between shrink-0 ${headerStyleClass} ${isRight ? 'flex-row-reverse' : ''}`}>
-                 <div className={`flex items-center gap-2 relative z-10 ${isRight ? 'flex-row-reverse' : ''}`}>
+                 <div className={`flex items-center gap-2 relative z-10 flex-grow ${isRight ? 'flex-row-reverse' : ''}`}>
                     <div className={`w-4 h-4 rounded-md flex items-center justify-center shadow-sm border ${iconBg}`} style={{ color: accent }}>
                         {React.cloneElement(icon as React.ReactElement<any>, { className: "w-2.5 h-2.5" })}
                     </div>
-                    <div>
+                    <div className="flex-grow">
                         {typeof title === 'string' ? <h3 className={`font-russo text-[10px] uppercase tracking-widest ${titleColor}`}>{title}</h3> : title}
                     </div>
                  </div>
@@ -309,9 +309,9 @@ const getImpactScore = (stats: PlayerStats): number => {
 const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t }) => {
     const getWeatherIcon = (cond: WeatherCondition | string = 'clear') => {
         const c = cond.toLowerCase();
-        if (c.includes('rain') || c.includes('storm')) return <CloudRainIcon className="w-16 h-16 text-white" />;
-        if (c.includes('cloud') || c.includes('fog')) return <CloudIcon className="w-16 h-16 text-white" />;
-        return <MoonIcon className="w-16 h-16 text-white" />;
+        if (c.includes('rain') || c.includes('storm')) return <CloudRainIcon className="w-16 h-16 text-white/80" />;
+        if (c.includes('cloud') || c.includes('fog')) return <CloudIcon className="w-16 h-16 text-white/80" />;
+        return <MoonIcon className="w-16 h-16 text-white/80" />;
     };
 
     // Construct Maps Search Link
@@ -349,7 +349,7 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
                     <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-striped-brick.png')]"></div>
                     <div className="relative z-10 flex flex-col">
                         <span className="text-[9px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-1">{t.hubWeather}</span>
-                        <div className="flex items-baseline gap-1"><span className="font-russo text-4xl text-white leading-none">{session.weather?.temperature || 26}°C</span><TermometerIcon className="w-4 h-4 text-white/40" /></div>
+                        <div className="flex items-baseline gap-1"><span className="font-russo text-4xl text-slate-100 leading-none">{session.weather?.temperature || 26}°C</span><TermometerIcon className="w-4 h-4 text-white/40" /></div>
                         <span className="font-chakra text-xs text-indigo-200 font-bold uppercase tracking-wider mt-1">{session.weather?.condition || "CLEAR"}</span>
                     </div>
                     <div className="relative z-10">{getWeatherIcon(session.weather?.condition)}</div>
