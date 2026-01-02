@@ -180,8 +180,8 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
             <div className="w-[350px] flex flex-col border-r border-white/5 bg-black/40 relative z-20 shrink-0">
                 {/* SIDEBAR HEADER - REFINED ALIGNMENT */}
                 <div className="p-6 pb-2 space-y-4 pt-10">
-                    {/* Only shift this row to avoid corner rays */}
-                    <div className="flex items-center justify-between mb-2 pr-2 pl-10">
+                    {/* Only shift this row to avoid corner rays - increased pl-24 as requested */}
+                    <div className="flex items-center justify-between mb-2 pr-2 pl-24 transition-all duration-300">
                         <div className="max-w-fit">
                             <h3 className="font-russo text-[14px] uppercase tracking-[0.15em] text-white italic leading-tight">{t.hubPlayers}</h3>
                             <div className="h-[1px] w-full bg-[#00F2FE] mt-1.5 opacity-50 shadow-[0_0_5px_#00F2FE]"></div>
