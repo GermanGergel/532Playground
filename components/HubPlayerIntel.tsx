@@ -65,228 +65,380 @@ const BentoBox = ({ children, className = "", noPadding = false, contentClassNam
         bg-gradient-to-br from-[#161b22] to-[#0a0d14]
         border border-white/[0.06]
         shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.05)]
-        group
-        ${className}
+        group/bento
+        ${noPadding ? '' : 'p-4'} ${className}
     `}>
-        {/* Texture */}
+        {/* Dynamic Mesh Texture Overlay */}
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ 
             backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`,
             backgroundSize: '4px 4px'
         }}></div>
 
-        {/* Ambient Glow */}
-        <div className="absolute -top-10 -left-10 w-32 h-32 rounded-full blur-[50px] opacity-10 pointer-events-none z-0 bg-[#00F2FE]/[0.05]"></div>
+        {/* Pulsing Ambient Light */}
+        <div className="absolute -top-10 -left-10 w-40 h-40 bg-[#00F2FE]/[0.03] rounded-full blur-[40px] pointer-events-none z-0 animate-pulse" style={{ animationDuration: '4s' }}></div>
+        
+        {/* Hover Shine Effect */}
+        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.01] to-transparent opacity-0 group-hover/bento:opacity-100 transition-opacity duration-700 z-0"></div>
 
-        <div className={`relative z-10 ${noPadding ? '' : 'p-5'} ${contentClassName}`}>
+        <div className={`relative z-10 flex flex-col ${contentClassName}`}>
             {children}
         </div>
     </div>
 );
 
-const skillAbbreviations: Record<SkillType, string> = {
-    goalkeeper: 'GK',
-    power_shot: 'PS',
-    technique: 'TQ',
-    defender: 'DF',
-    playmaker: 'PM',
-    finisher: 'FN',
-    versatile: 'VS',
-    tireless_motor: 'TM',
-    leader: 'LD',
-};
+// Stat Component
+const TerminalStat = ({ label, value, color = "#fff", subValue, size = "text-xl" }: any) => (
+    <div className="flex flex-col items-center justify-center text-center w-full">
+        <div className="flex items-center gap-1.5 justify-center">
+            <span className={`${size} font-black font-russo tracking-tight leading-none !drop-shadow-none !shadow-none`} style={{ color, textShadow: 'none' }}>{value}</span>
+            {subValue && <span className="text-[10px] font-bold text-white/40 self-end mb-0.5 !drop-shadow-none !shadow-none" style={{ textShadow: 'none' }}>{subValue}</span>}
+        </div>
+        <span className="text-[7px] text-white/30 uppercase tracking-[0.15em] mt-1.5 font-black leading-none !drop-shadow-none !shadow-none" style={{ textShadow: 'none' }}>{label}</span>
+    </div>
+);
 
-interface HubPlayerIntelProps {
-    playerId: string;
-    onBack: () => void;
-}
+// --- RE-DESIGNED STAT BLOCKS ---
 
-// FIX: Exported HubPlayerIntel to resolve the import error in ClubIntelligenceDashboard
-export const HubPlayerIntel: React.FC<HubPlayerIntelProps> = ({ playerId, onBack }) => {
-    const { allPlayers, language } = useApp();
-    const t = translations[language];
+const TerminalLastSession = ({ player }: { player: Player }) => {
+    const b = player.lastRatingChange;
+    const { language } = useApp();
+    const t = translations[language] as any;
 
-    const player = useMemo(() => allPlayers.find(p => p.id === playerId), [allPlayers, playerId]);
+    if (!b) return <div className="text-center py-6 opacity-10 text-[9px] uppercase font-black">No Data</div>;
 
-    if (!player) return null;
-
-    const countryCodeAlpha2 = useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
-    const tierColor = TIER_COLORS[player.tier] || '#94a3b8';
-
-    const winRate = player.totalGames > 0 ? `${Math.round((player.totalWins / player.totalGames) * 100)}%` : 'N/A';
+    const isPenalty = player.consecutiveMissedSessions && player.consecutiveMissedSessions >= 3;
+    const earnedBadges = b.badgesEarned || [];
 
     return (
-        <div className="absolute inset-0 z-30 flex flex-col animate-in slide-in-from-right duration-500 overflow-hidden rounded-[2.5rem]">
-            {/* Background */}
-            <div className="absolute inset-0 z-0 pointer-events-none">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#01040a] to-[#01040a]"></div>
-                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-            </div>
+        <div className="space-y-2.5 pb-1">
+            <div className="flex justify-center items-center gap-8 bg-black/30 p-2 rounded-2xl border border-white/5 shadow-inner">
+                <div className="text-center w-16">
+                    <span className="text-2xl font-black text-white/30 block leading-none" style={{ textShadow: 'none' }}>{Math.round(b.previousRating)}</span>
+                    <span className="text-[5px] text-white/20 uppercase font-black tracking-widest mt-1 block">PREV</span>
+                </div>
+                
+                <div className="flex flex-col items-center w-12">
+                    <span className={`text-lg font-black leading-none ${b.finalChange >= 0 ? 'text-green-400' : 'text-red-500'}`} style={{ textShadow: 'none' }}>
+                        {b.finalChange > 0 ? '+' : ''}{b.finalChange.toFixed(1)}
+                    </span>
+                    <span className={`text-[6px] uppercase font-black tracking-widest mt-1 block ${isPenalty ? 'text-red-400' : 'text-white/40'}`}>
+                        {isPenalty ? 'PENALTY' : 'DELTA'}
+                    </span>
+                </div>
 
-            {/* Header / Nav */}
-            <div className="pt-6 pb-3 px-8 flex items-center justify-between shrink-0 z-10">
-                <button onClick={onBack} className="flex items-center gap-3 group transition-all ml-4 md:ml-40 hover:scale-110 active:scale-95">
-                    <div className="p-2.5 rounded-full bg-white/5 border border-white/10 shadow-lg group-hover:border-[#00F2FE] group-hover:text-[#00F2FE] group-hover:bg-[#00F2FE]/10 transition-all">
-                        <ChevronLeft className="w-4 h-4 text-white group-hover:text-[#00F2FE]" />
+                <div className="text-center w-16">
+                    <span className="text-2xl font-black text-[#00F2FE] block leading-none" style={{ textShadow: 'none' }}>{Math.round(b.newRating)}</span>
+                    <span className="text-[5px] text-[#00F2FE]/60 uppercase font-black tracking-widest mt-1 block">NEW</span>
+                </div>
+            </div>
+            
+            {isPenalty ? (
+                <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 flex flex-col items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-500">
+                    <div className="flex items-center gap-2 text-red-500">
+                        <ExclamationIcon className="w-4 h-4 shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
+                        <span className="font-russo text-[10px] tracking-widest uppercase">{t.penalty_title}</span>
                     </div>
-                    <span className="text-[10px] font-black font-chakra uppercase tracking-[0.4em] text-white/40 group-hover:text-white transition-colors">Return</span>
-                </button>
-            </div>
+                    <p className="text-[10px] font-chakra font-bold text-red-200/60 uppercase leading-relaxed text-center">
+                        {t.penalty_message?.replace('{n}', Math.abs(b.finalChange).toFixed(0)).replace('{m}', (player.consecutiveMissedSessions || 0).toString())}
+                    </p>
+                </div>
+            ) : (
+                <>
+                    <div className="grid grid-cols-3 gap-1">
+                        {[
+                            { l: 'Team', v: b.teamPerformance },
+                            { l: 'Indiv', v: b.individualPerformance },
+                            { l: 'Badge', v: b.badgeBonus }
+                        ].map(stat => (
+                            <div key={stat.l} className="bg-black/30 p-1.5 rounded-xl border border-white/5 text-center shadow-inner">
+                                <span className={`text-[9px] font-bold block leading-none ${stat.v > 0 ? 'text-white' : stat.v < 0 ? 'text-red-400' : 'text-white/40'}`} style={{ textShadow: 'none' }}>
+                                    {stat.v > 0 ? '+' : ''}{stat.v.toFixed(1)}
+                                </span>
+                                <span className="text-[5px] text-white/20 uppercase font-black tracking-tighter block mt-0.5">{stat.l}</span>
+                            </div>
+                        ))}
+                    </div>
 
-            {/* Scroll Content */}
-            <div className="flex-grow overflow-y-auto px-4 md:px-8 pb-32 custom-hub-scrollbar relative z-10">
-                <div className="max-w-7xl mx-auto grid grid-cols-12 gap-6 items-start">
-                    
-                    {/* LEFT COLUMN: HERO CARD & PRIMARY BIO */}
-                    <div className="col-span-12 md:col-span-4 flex flex-col gap-6">
-                        {/* PORTRAIT BLOCK */}
-                        <BentoBox className="relative aspect-[3/4.2] overflow-hidden !p-0 border-white/20 shadow-2xl">
-                             {player.playerCard && (
-                                <div 
-                                    className="absolute inset-0 bg-cover bg-no-repeat transition-transform duration-[2000ms] hover:scale-110" 
-                                    style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }} 
-                                />
-                            )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
-                            
-                            {/* Skills Sidebar */}
-                            <div className="absolute top-24 left-5 z-20 space-y-4">
-                                {(player.skills || []).map(skill => (
-                                    <div key={skill} className="flex items-center gap-2 group/skill">
-                                        <StarIcon className="w-4 h-4 text-[#00F2FE] drop-shadow-[0_0_8px_#00F2FE]" />
-                                        <span className="font-bold text-[10px] text-white tracking-widest uppercase opacity-80 group-hover/skill:opacity-100">{skillAbbreviations[skill]}</span>
+                    {earnedBadges.length > 0 && (
+                        <div className="pt-2 border-t border-white/5">
+                            <span className="text-[5px] text-white/20 uppercase font-black tracking-[0.2em] mb-1.5 block text-center">Awards Earned</span>
+                            <div className="flex wrap justify-center gap-1.5">
+                                {earnedBadges.slice(0, 4).map((badge, idx) => (
+                                    <div key={idx} className="transition-transform hover:scale-110">
+                                        <BadgeIcon badge={badge} className="w-5 h-5" />
                                     </div>
                                 ))}
                             </div>
+                        </div>
+                    )}
+                </>
+            )}
+        </div>
+    );
+};
 
-                            <div className="absolute bottom-6 left-6 right-6 flex flex-col gap-1">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex flex-col">
-                                        <span className="font-russo text-4xl text-white uppercase tracking-tight leading-none">{player.nickname}</span>
-                                        <span className="font-chakra font-black text-lg text-white/60 uppercase tracking-widest leading-none mt-1">{player.surname}</span>
-                                    </div>
-                                    <div className="flex flex-col items-end leading-none">
-                                        <span className="font-russo text-5xl text-[#00F2FE]" style={{ textShadow: '0 0 20px rgba(0, 242, 254, 0.4)' }}>{player.rating}</span>
-                                        <span className="text-[10px] font-black text-white/40 tracking-[0.2em] mt-1">OVR</span>
-                                    </div>
-                                </div>
-                                <div className="h-px w-full bg-gradient-to-r from-white/20 via-white/5 to-transparent mt-4 mb-2"></div>
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        {countryCodeAlpha2 && <img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} className="w-6 h-auto rounded shadow-lg" alt="" />}
-                                        <span className="text-[9px] font-black text-white/40 tracking-[0.2em] uppercase">{player.tier} • UNIT IDENTIFIED</span>
-                                    </div>
-                                    <FormArrowIndicator form={player.form} />
-                                </div>
-                            </div>
-                        </BentoBox>
+const TerminalSessionTrend = ({ history }: { history?: Player['sessionHistory'] }) => {
+    const safeHistory = history || [];
+    const displayData = Array.from({ length: 5 }).map((_, i) => {
+        const realItem = safeHistory[safeHistory.length - (5 - i)];
+        return realItem ? { winRate: realItem.winRate, isDemo: false } : { winRate: 0, iDemo: true };
+    });
 
-                        {/* BIO DATA */}
-                        <BentoBox className="border-indigo-500/20 bg-indigo-900/5">
-                            <IntelHeader title="Vital Statistics" icon={Users} accent="#818cf8" />
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="p-3 rounded-2xl bg-black/40 border border-white/5 flex flex-col gap-1">
-                                    <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em]">Joined Club</span>
-                                    <span className="text-sm font-chakra font-black text-white">{new Date(player.createdAt).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }).toUpperCase()}</span>
-                                </div>
-                                <div className="p-3 rounded-2xl bg-black/40 border border-white/5 flex flex-col gap-1">
-                                    <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em]">Win Ratio</span>
-                                    <span className="text-sm font-chakra font-black text-white">{winRate}</span>
-                                </div>
-                                <div className="p-3 rounded-2xl bg-black/40 border border-white/5 flex flex-col gap-1">
-                                    <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em]">Sessions</span>
-                                    <span className="text-sm font-chakra font-black text-white">{player.totalSessionsPlayed}</span>
-                                </div>
-                                <div className="p-3 rounded-2xl bg-black/40 border border-white/5 flex flex-col gap-1">
-                                    <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em]">Total Wins</span>
-                                    <span className="text-sm font-chakra font-black text-white">{player.totalWins}</span>
-                                </div>
-                            </div>
-                        </BentoBox>
+    return (
+        <div className="flex justify-between items-end h-14 px-6 relative">
+            <div className="absolute left-6 right-6 bottom-0 h-px bg-white/5"></div>
+            {displayData.map((s, i) => {
+                const color = s.winRate > 60 ? '#4CFF5F' : s.winRate < 40 ? '#FF4136' : '#A9B1BD';
+                const barHeight = Math.max(s.winRate, 15); 
+                return (
+                    <div key={i} className="flex flex-col items-center gap-1.5 h-full justify-end group/bar relative">
+                        <div 
+                            className={`w-6 rounded-t-sm transition-all duration-1000 ease-out relative ${s.iDemo ? 'opacity-0' : 'opacity-100'}`}
+                            style={{ 
+                                height: `${barHeight}%`, 
+                                background: `linear-gradient(to top, ${color}22, ${color})`,
+                                borderTop: `1px solid ${color}88`,
+                            }}
+                        >
+                             {!s.iDemo && (
+                                 <div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20">
+                                    <span className="text-[8px] font-black text-white bg-black/90 px-1.5 py-0.5 rounded border border-white/10">{s.winRate}%</span>
+                                 </div>
+                             )}
+                        </div>
+                        <span className={`text-[6px] font-black tracking-tighter transition-colors ${s.iDemo ? 'text-white/0' : 'text-white/30'}`}>
+                            {s.iDemo ? '' : `S${safeHistory.length - (4 - i)}`}
+                        </span>
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
+
+export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void }> = ({ playerId, onBack }) => {
+    const { allPlayers, language } = useApp();
+    const t = translations[language];
+
+    const player = useMemo(() => 
+        (allPlayers.find(p => p.id === playerId)) as Player,
+    [allPlayers, playerId]);
+
+    const rankings = useMemo(() => {
+        const confirmedPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
+        
+        if (confirmedPlayers.length === 0) return { goals: '-', assists: '-', rating: '-', total: 0 };
+
+        const sortedByGoals = [...confirmedPlayers].sort((a, b) => b.totalGoals - a.totalGoals);
+        const sortedByAssists = [...confirmedPlayers].sort((a, b) => b.totalAssists - a.totalAssists);
+        const sortedByRating = [...confirmedPlayers].sort((a, b) => b.rating - a.rating);
+
+        return {
+            goals: sortedByGoals.findIndex(p => p.id === player.id) + 1 || '-',
+            assists: sortedByAssists.findIndex(p => p.id === player.id) + 1 || '-',
+            rating: sortedByRating.findIndex(p => p.id === player.id) + 1 || '-',
+            total: confirmedPlayers.length
+        };
+    }, [allPlayers, player.id]);
+
+    if (!player) return null;
+    
+    const countryCodeAlpha2 = player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : 'VN';
+    const winRate = player.totalGames > 0 ? `${Math.round((player.totalWins / player.totalGames) * 100)}%` : '0%';
+    const goalsPerSession = player.totalSessionsPlayed > 0 ? (player.totalGoals / player.totalSessionsPlayed).toFixed(2) : '0.00';
+    const assistsPerSession = player.totalSessionsPlayed > 0 ? (player.totalAssists / player.totalSessionsPlayed).toFixed(2) : '0.00';
+
+    // ATMOSPHERIC UNDERGLOW STYLE (NO BORDER, SOFT RADIUS)
+    const tierColor = TIER_COLORS[player.tier] || '#00F2FE';
+    const perimeterStyle: React.CSSProperties = {
+        border: 'none',
+        boxShadow: `0 0 100px -20px ${tierColor}44`, // Soft massive glow from under the blocks
+        borderRadius: '2.5rem',
+        background: 'transparent',
+    };
+
+    return (
+        <div className="absolute inset-0 z-20 flex flex-col animate-in fade-in duration-700 overflow-hidden rounded-[2.5rem]">
+            <div className="absolute inset-0 z-0 pointer-events-none">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#01040a] to-black"></div>
+                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] pointer-events-none"></div>
+            </div>
+
+            <div className="relative z-10 flex-grow overflow-y-auto custom-hub-scrollbar">
+                <div className="w-full max-w-5xl mx-auto px-4 md:px-12 lg:px-20 py-6 pb-48 flex flex-col h-full">
+                    
+                    {/* BACK BUTTON ROW */}
+                    <div className="flex items-center justify-between mb-6 shrink-0 px-2">
+                        <button onClick={onBack} className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:border-[#00F2FE] hover:bg-[#00F2FE]/10 transition-all shadow-lg">
+                            <ChevronLeft className="w-5 h-5 text-white" />
+                        </button>
+                        <div className="h-px flex-grow mx-6 bg-gradient-to-r from-transparent via-white/5 to-transparent"></div>
+                        <div className="w-10"></div> 
                     </div>
 
-                    {/* RIGHT COLUMN: ANALYTICS & AWARDS */}
-                    <div className="col-span-12 md:col-span-8 flex flex-col gap-6">
-                        {/* PERFORMANCE CHART */}
-                        <BentoBox className="h-[380px] !p-0">
-                            <HubProgressChart history={player.historyData || []} headerTitle="Progression Analytics" />
-                        </BentoBox>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            {/* RECORDS */}
-                            <BentoBox>
-                                <IntelHeader title="Hall of Records" icon={TrophyIcon} accent="#FFD700" />
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between p-4 rounded-2xl bg-black/40 border border-white/5 group/rec transition-all hover:bg-white/[0.02]">
-                                        <div className="flex flex-col gap-1">
-                                            <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em]">Max Goals (Sess)</span>
-                                            <span className="text-2xl font-russo text-white/90 group-hover/rec:text-[#FFD700] transition-colors">{player.records?.bestGoalsInSession?.value || 0}</span>
+                    {/* UNDERGLOW WRAPPER */}
+                    <div className="flex-grow p-4 md:p-8" style={perimeterStyle}>
+                        <div className="space-y-6">
+                            <div className="flex flex-col md:flex-row gap-6 items-stretch">
+                                <div className="w-full max-w-[240px] mx-auto md:mx-0 md:max-w-none md:w-[220px] shrink-0 flex flex-col">
+                                    <div className="relative aspect-[2.8/4] md:aspect-auto w-full rounded-3xl overflow-hidden border border-white/15 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.08)] bg-gradient-to-br from-[#161b22] to-[#0a0d14] h-full">
+                                        {player.playerCard && <div className="absolute inset-0 bg-cover bg-no-repeat grayscale-[0.2] opacity-80" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }}/>}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+                                        <div className="absolute inset-0 p-4 flex flex-col justify-between pointer-events-none">
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex flex-col items-start">
+                                                    <span className="font-black text-xl text-[#00F2FE] leading-none">532</span>
+                                                    <span className="text-white text-[6px] font-bold tracking-[0.15em] leading-none mt-1">PLAYGROUND</span>
+                                                    {countryCodeAlpha2 && <img src={`https://flagcdn.com/w80/${countryCodeAlpha2.toLowerCase()}.png`} className="w-4 h-auto mt-2 rounded-sm opacity-60" alt="flag" />}
+                                                </div>
+                                                <div className="flex flex-col items-end">
+                                                    <div className="text-3xl font-black text-[#00F2FE] leading-none" style={{ textShadow: 'none' }}>{player.rating}</div>
+                                                    <p className="font-black text-[8px] tracking-[0.2em] text-white mt-1">OVR</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-center">
+                                                <h1 className="font-russo text-2xl uppercase tracking-tighter text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] truncate w-full px-1">{player.nickname}</h1>
+                                                <p className="text-[7px] font-black text-white/40 uppercase tracking-[0.4em] mt-1">{player.tier}</p>
+                                            </div>
                                         </div>
-                                        <Target className="w-8 h-8 text-white/5 group-hover/rec:text-[#FFD700]/20 transition-colors" />
                                     </div>
-                                    <div className="flex items-center justify-between p-4 rounded-2xl bg-black/40 border border-white/5 group/rec transition-all hover:bg-white/[0.02]">
-                                        <div className="flex flex-col gap-1">
-                                            <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em]">Max Assists (Sess)</span>
-                                            <span className="text-2xl font-russo text-white/90 group-hover/rec:text-[#FFD700] transition-colors">{player.records?.bestAssistsInSession?.value || 0}</span>
+                                </div>
+
+                                <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <BentoBox className="h-full" contentClassName="h-full flex flex-col justify-center">
+                                        <IntelHeader title={t.lastSessionAnalysis} icon={BarChartDynamic} />
+                                        <div className="flex-grow flex flex-col justify-center">
+                                            <TerminalLastSession player={player} />
                                         </div>
-                                        <Zap className="w-8 h-8 text-white/5 group-hover/rec:text-[#FFD700]/20 transition-colors" />
+                                    </BentoBox>
+
+                                    <BentoBox className="h-full" contentClassName="h-full flex flex-col">
+                                        <IntelHeader title={t.sessionTrend} icon={Zap} accent="#4CFF5F" />
+                                        <div className="flex-grow flex flex-col justify-start space-y-1">
+                                            <div className="grid grid-cols-3 gap-2 items-center bg-black/30 p-1.5 rounded-2xl border border-white/5 shadow-inner">
+                                                <TerminalStat label="Current Form" value={player.form.split('_')[0].toUpperCase()} color={player.form === 'hot_streak' ? '#4CFF5F' : player.form === 'cold_streak' ? '#FF4136' : '#fff'} />
+                                                <TerminalStat label="Win Ratio" value={winRate} color="#00F2FE" />
+                                                <div className="flex justify-center"><FormArrowIndicator form={player.form} /></div>
+                                            </div>
+                                            <div className="py-1 bg-black/30 rounded-2xl border border-white/5 mt-auto shadow-inner">
+                                                <TerminalSessionTrend history={player.sessionHistory} />
+                                            </div>
+                                            {player.skills && player.skills.length > 0 && (
+                                                <div className="pt-2">
+                                                    <div className="flex flex-wrap justify-center gap-3 mt-1 pb-1">
+                                                        {player.skills.slice(0,3).map(skill => (
+                                                            <div key={skill} className="flex items-center gap-1 transition-all">
+                                                                <StarIcon className="w-2.5 h-2.5 text-[#00F2FE]" />
+                                                                <span className="text-[8px] font-black text-white/80 uppercase tracking-tight">
+                                                                    {t[`skill_${skill}` as keyof typeof t]}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </BentoBox>
+
+                                    <BentoBox className="!p-2 h-full" contentClassName="h-full flex flex-col">
+                                        <IntelHeader title={t.clubRankings} icon={Users} accent="#FF00D6" />
+                                        <div className="flex-grow flex flex-col justify-center pt-1 pb-1 px-1">
+                                            <div className="grid grid-cols-3 gap-0.5 text-center w-full">
+                                                <TerminalStat label="SCORER" value={rankings.goals} subValue={`/${rankings.total}`} color="#fff" />
+                                                <TerminalStat label="ASSISTANT" value={rankings.assists} subValue={`/${rankings.total}`} color="#fff" />
+                                                <TerminalStat label="RATING" value={rankings.rating} subValue={`/${rankings.total}`} color="#fff" />
+                                            </div>
+                                        </div>
+                                    </BentoBox>
+
+                                    <BentoBox className="!p-2 h-full" contentClassName="h-full flex flex-col justify-center">
+                                        <IntelHeader title={t.monthlyStatsTitle} icon={Calendar} />
+                                        <div className="flex-grow flex flex-col justify-center">
+                                            <div className="grid grid-cols-2 gap-y-1.5 gap-x-1 pt-1 pb-1 h-full items-center">
+                                                <TerminalStat size="text-lg" label={t.monthlyWins} value={player.monthlyWins} color="#fff" />
+                                                <TerminalStat size="text-lg" label={t.monthlyGoals} value={player.monthlyGoals} />
+                                                <TerminalStat size="text-lg" label={t.monthlyAssists} value={player.monthlyAssists} />
+                                                <TerminalStat size="text-lg" label={t.session} value={player.monthlySessionsPlayed} />
+                                            </div>
+                                        </div>
+                                    </BentoBox>
+                                </div>
+                            </div>
+
+                            <div className="w-full">
+                                <BentoBox noPadding className="h-[280px] w-full" contentClassName="h-full">
+                                    <div className="h-full w-full">
+                                        <HubProgressChart headerTitle={t.statistics} history={player.historyData || []} />
+                                    </div>
+                                </BentoBox>
+                            </div>
+
+                            <BentoBox className="!py-3 px-6">
+                                <div className="flex flex-col md:flex-row items-center gap-6">
+                                    <div className="shrink-0"><IntelHeader title={t.winLossDraw} icon={TrophyIcon} accent="#FFD700" /></div>
+                                    <div className="flex-grow w-full space-y-1.5 pt-0.5">
+                                        <div className="flex w-full h-2 rounded-full overflow-hidden bg-black/50 border border-white/5 shadow-inner">
+                                            <div style={{ width: `${(player.totalWins / (player.totalGames || 1)) * 100}%` }} className="bg-[#4CFF5F] shadow-[0_0_8px_#4CFF5F44]" />
+                                            <div style={{ width: `${(player.totalDraws / (player.totalGames || 1)) * 100}%` }} className="bg-white/20" />
+                                            <div style={{ width: `${(player.totalLosses / (player.totalGames || 1)) * 100}%` }} className="bg-[#FF4136] shadow-[0_0_8px_#FF413644]" />
+                                        </div>
+                                    </div>
+                                    <div className="shrink-0 flex items-center gap-6 font-russo">
+                                        <div className="flex flex-col items-center"><span className="text-lg text-[#4CFF5F] leading-none">{player.totalWins}</span><span className="text-[6px] text-white/20 uppercase font-black tracking-tighter">Wins</span></div>
+                                        <div className="flex flex-col items-center"><span className="text-lg text-white/40 leading-none">{player.totalDraws}</span><span className="text-[6px] text-white/20 uppercase font-black tracking-tighter">Draws</span></div>
+                                        <div className="flex flex-col items-center"><span className="text-lg text-[#FF4136] leading-none">{player.totalLosses}</span><span className="text-[6px] text-white/20 uppercase font-black tracking-tighter">Losses</span></div>
                                     </div>
                                 </div>
                             </BentoBox>
 
-                            {/* CURRENT FORM TREND */}
-                            <BentoBox>
-                                <IntelHeader title="Current Trajectory" icon={Zap} accent="#4CFF5F" />
-                                <div className="flex flex-col h-full">
-                                     <div className="flex-grow flex items-end justify-around gap-2 px-2 pb-2 h-32">
-                                        {(player.sessionHistory || []).map((sess, i) => {
-                                            const h = Math.max(sess.winRate, 5);
-                                            const color = sess.winRate >= 60 ? '#4CFF5F' : sess.winRate <= 30 ? '#FF4136' : '#A9B1BD';
-                                            return (
-                                                <div key={i} className="flex-1 flex flex-col items-center gap-2 group/bar">
-                                                    <div className="w-full relative rounded-t-lg transition-all duration-700" style={{ height: `${h}%`, backgroundColor: color, opacity: 0.15 + (i * 0.15) }}>
-                                                        <div className="absolute top-0 left-0 right-0 h-0.5 bg-white/20 group-hover/bar:bg-white transition-colors"></div>
-                                                    </div>
-                                                    <span className="text-[8px] font-mono text-white/20">{sess.winRate}%</span>
-                                                </div>
-                                            );
-                                        })}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <BentoBox className="h-full" contentClassName="h-full">
+                                    <IntelHeader title={t.allTimeStats} icon={HistoryIcon} />
+                                    <div className="grid grid-cols-2 gap-y-3">
+                                        <TerminalStat size="text-lg" label={t.thSessions} value={player.totalSessionsPlayed} />
+                                        <TerminalStat size="text-lg" label={t.winRate} value={winRate} color="#fff" />
+                                        <TerminalStat size="text-lg" label={t.thG} value={player.totalGoals} />
+                                        <TerminalStat size="text-lg" label={t.thA} value={player.totalAssists} />
                                     </div>
-                                    <div className="h-px w-full bg-white/5 mt-2 mb-4"></div>
-                                    <p className="text-[10px] text-white/40 italic font-chakra text-center">Trend based on last 5 operational sessions.</p>
+                                </BentoBox>
+                                <BentoBox className="h-full" contentClassName="h-full flex flex-col">
+                                    <IntelHeader title="Career Averages" icon={StarIcon} accent="#FFD700" />
+                                    <div className="flex-grow flex flex-col justify-center">
+                                        <div className="grid grid-cols-2 gap-2 items-center justify-items-center h-full">
+                                            <TerminalStat size="text-lg" label={t.goalsPerSession} value={goalsPerSession} color="#fff" />
+                                            <TerminalStat size="text-lg" label={t.assistsPerSession} value={assistsPerSession} color="#fff" />
+                                        </div>
+                                    </div>
+                                </BentoBox>
+                                <BentoBox className="h-full" contentClassName="h-full flex flex-col">
+                                    <IntelHeader title={t.bestSessionTitle} icon={TrophyIcon} accent="#FFD700" />
+                                    <div className="flex-grow flex flex-col justify-center">
+                                        <div className="grid grid-cols-3 gap-1 items-center justify-items-center h-full">
+                                            <TerminalStat size="text-lg" label="G" value={player.records?.bestGoalsInSession?.value || 0} />
+                                            <TerminalStat size="text-lg" label="A" value={player.records?.bestAssistsInSession?.value || 0} />
+                                            <TerminalStat size="text-lg" label="Win%" value={`${player.records?.bestWinRateInSession?.value || 0}%`} color="#fff" />
+                                        </div>
+                                    </div>
+                                </BentoBox>
+                            </div>
+
+                            <BentoBox className="mb-12">
+                                <IntelHeader title="Awards Catalog" icon={AwardIcon} accent="#FF00D6" />
+                                <div className="grid grid-cols-8 sm:grid-cols-10 lg:grid-cols-12 gap-3">
+                                    {ALL_BADGES.map(badge => {
+                                        const isEarned = !!(player.badges && player.badges[badge]);
+                                        return (
+                                            <div 
+                                                key={badge} 
+                                                className={`transition-all duration-500 transform hover:scale-125 cursor-help ${!isEarned ? 'opacity-[0.03] grayscale' : ''}`}
+                                            >
+                                                <BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-8 h-8" />
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </BentoBox>
                         </div>
-
-                        {/* AWARDS GRID */}
-                        <BentoBox>
-                            <IntelHeader title="Decorations & Accomplishments" icon={AwardIcon} accent="#FFD700" />
-                            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
-                                {ALL_BADGES.map(badge => {
-                                    const isEarned = player.badges && player.badges[badge];
-                                    const count = player.badges?.[badge];
-                                    if (!isEarned) return null;
-                                    return (
-                                        <div key={badge} className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-black/40 border border-white/5 group/badge transition-all hover:bg-white/5">
-                                            <div className="relative transition-transform duration-500 group-hover/badge:scale-110">
-                                                <BadgeIcon badge={badge} className="w-10 h-10 drop-shadow-[0_0_10px_rgba(255,215,0,0.15)]" />
-                                                {count && count > 1 && (
-                                                    <div className="absolute -top-1 -right-2 bg-black/80 border border-white/10 rounded-full px-1 py-0.5 z-10">
-                                                        <span className="text-[8px] font-black text-[#FFD700]">x{count}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <span className="text-[7px] font-black text-white/40 uppercase tracking-tighter text-center group-hover/badge:text-white transition-colors">{t[`badge_${badge}` as keyof typeof t]}</span>
-                                        </div>
-                                    );
-                                })}
-                                {Object.keys(player.badges || {}).length === 0 && (
-                                    <div className="col-span-full py-10 flex flex-col items-center opacity-10">
-                                        <AwardIcon className="w-12 h-12 mb-3" />
-                                        <span className="text-xs uppercase font-black tracking-widest">No Decorations</span>
-                                    </div>
-                                )}
-                            </div>
-                        </BentoBox>
                     </div>
                 </div>
             </div>
