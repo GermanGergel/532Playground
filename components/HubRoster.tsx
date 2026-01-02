@@ -116,16 +116,21 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                     <div className="flex items-center justify-start mb-1 pr-2 pl-44">
                         <button 
                             onClick={toggleDuelMode} 
-                            className="group relative flex flex-col items-center px-6 py-2 transition-all active:scale-95 overflow-hidden"
+                            className="group relative flex flex-col items-center px-6 py-2 transition-all active:scale-95 overflow-hidden min-w-[120px]"
                         >
                              <div className={`absolute inset-0 border rounded-xl transition-all ${viewMode === 'duel' ? 'bg-[#00F2FE]/20 border-[#00F2FE] shadow-[0_0_15px_rgba(0,242,254,0.4)]' : 'bg-[#00F2FE]/5 border-[#00F2FE]/40 group-hover:bg-[#00F2FE]/10 group-hover:border-[#00F2FE]'}`}></div>
                              <div className="relative z-10 flex flex-col items-center">
                                 <span className={`font-blackops text-[24px] uppercase tracking-[0.1em] transition-colors italic leading-none ${viewMode === 'duel' ? 'text-white' : 'text-[#00F2FE]'}`}>
                                     DUEL
                                 </span>
-                                <span className="text-[6px] font-black text-white/40 uppercase tracking-[0.2em] mt-1 group-hover:text-[#00F2FE] transition-colors">
-                                    {viewMode === 'duel' ? 'EXIT INTERFACE' : 'INITIATE SIMULATION'}
-                                </span>
+                                <div className="flex flex-col items-center mt-1 h-[14px] justify-center">
+                                    <span className="text-[6px] font-black text-white/40 uppercase tracking-[0.2em] leading-none group-hover:text-[#00F2FE] transition-colors">
+                                        {viewMode === 'duel' ? 'EXIT' : 'INITIATE'}
+                                    </span>
+                                    <span className="text-[6px] font-black text-white/40 uppercase tracking-[0.2em] leading-none mt-[2px] group-hover:text-[#00F2FE] transition-colors">
+                                        {viewMode === 'duel' ? 'INTERFACE' : 'SIMULATION'}
+                                    </span>
+                                </div>
                              </div>
                         </button>
                     </div>
@@ -183,11 +188,6 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                                         <span className="text-[7px] font-mono font-black text-white/20 uppercase tracking-[0.2em]">{person.tier}</span>
                                     </div>
                                     <div className="flex flex-col items-end shrink-0">
-                                        {viewMode === 'duel' && isSelected && (
-                                            <div className="absolute top-0 right-2">
-                                                <div className="w-2 h-2 rounded-full bg-[#00F2FE] shadow-[0_0_8px_#00F2FE]"></div>
-                                            </div>
-                                        )}
                                         <div className="flex items-baseline gap-1">
                                             <span 
                                                 className={`font-russo text-2xl transition-all duration-300 ${isSelected ? 'text-white scale-110' : 'text-white/40'}`}
