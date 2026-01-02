@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { useApp } from '../context';
 import { HubProgressChart } from './HubAnalytics';
@@ -173,7 +174,6 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
 
     const tierColor = TIER_COLORS[player.tier] || '#00F2FE';
     const perimeterStyle: React.CSSProperties = {
-        // FURTHER ENHANCED GLOW: Added more layers and wider spread to fully wrap the rounded-[2.5rem] corners evenly.
         boxShadow: `
             0 0 15px -2px ${tierColor}aa,
             0 0 45px -8px ${tierColor}77,
@@ -209,13 +209,17 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
 
                     <div className={`${isEmbedded ? 'p-4' : 'p-6 md:p-10'} flex-grow transition-all duration-500`} style={perimeterStyle}>
                         <div className="space-y-6">
-                            {/* MAIN ROW: Adjusted gap to match bento (gap-4) and card width for symmetry */}
+                            {/* MAIN ROW */}
                             <div className="flex flex-col xl:flex-row gap-4 items-stretch">
                                 <div className="w-full max-w-[260px] mx-auto xl:mx-0 xl:max-w-none xl:w-[250px] shrink-0 flex flex-col">
                                     <div className="relative aspect-[2.8/4] xl:aspect-auto w-full rounded-3xl overflow-hidden border border-white/15 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.08)] bg-gradient-to-br from-[#161b22] to-[#0a0d14] h-full">
-                                        {player.playerCard && <div className="absolute inset-0 bg-cover bg-no-repeat grayscale-[0.2] opacity-80" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }}/>}
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
-                                        <div className="absolute inset-0 p-4 flex flex-col justify-between pointer-events-none">
+                                        {/* Bento Texture Overlay */}
+                                        <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`, backgroundSize: '4px 4px' }}></div>
+                                        
+                                        {player.playerCard && <div className="absolute inset-0 bg-cover bg-no-repeat grayscale-[0.2] opacity-80 z-[1]" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }}/>}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent z-[2]"></div>
+                                        
+                                        <div className="absolute inset-0 p-4 flex flex-col justify-between pointer-events-none z-[3]">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex flex-col items-start"><span className="font-black text-xl text-[#00F2FE] leading-none">532</span><span className="text-white text-[6px] font-bold tracking-[0.15em] leading-none mt-1">PLAYGROUND</span>{countryCodeAlpha2 && <img src={`https://flagcdn.com/w80/${countryCodeAlpha2.toLowerCase()}.png`} className="w-4 h-auto mt-2 rounded-sm opacity-60" alt="flag" />}</div>
                                                 <div className="flex flex-col items-end"><div className="text-3xl font-black text-[#00F2FE] leading-none">{player.rating}</div><p className="font-black text-[8px] tracking-[0.2em] text-white mt-1">OVR</p></div>
