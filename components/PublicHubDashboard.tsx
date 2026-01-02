@@ -1,13 +1,14 @@
+
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { useApp } from '../context';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
-import { NewsItem, Player, Team, WeatherCondition, Game } from '../types';
-import { TrophyIcon, Zap, History as HistoryIcon, Users, AwardIcon, Target, StarIcon } from '../icons';
+import { NewsItem, Player, Team, WeatherCondition } from '../types';
+import { TrophyIcon, Zap, History as HistoryIcon, Users, AwardIcon, Target } from '../icons';
 import { useTranslation } from '../ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { TeamAvatar } from './avatars';
 
-// --- LOCAL ICONS ---
+// --- LOCAL ICONS FOR WIDGET ---
 const MapPinIcon = ({ className }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
 );
@@ -27,39 +28,6 @@ const TermometerIcon = ({ className }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
 );
 
-// --- GOAL DETAILS COMPONENT ---
-const GameGoalDetails: React.FC<{ game: Game; players: Player[]; teams: Team[] }> = ({ game, players, teams }) => {
-    if (!game.goals || game.goals.length === 0) {
-        return <div className="py-2 text-[8px] font-black text-white/20 uppercase tracking-widest text-center italic">No goals recorded</div>;
-    }
-
-    return (
-        <div className="flex flex-col gap-1.5 py-2 px-3 bg-black/40 border-y border-white/5 animate-in slide-in-from-top-1 duration-300">
-            {game.goals.map((goal, idx) => {
-                const team = teams.find(t => t.id === goal.teamId);
-                const scorer = players.find(p => p.id === goal.scorerId);
-                const assistant = players.find(p => p.id === goal.assistantId);
-                
-                return (
-                    <div key={goal.id} className="flex items-center gap-3 group/goal">
-                        <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: team?.color, boxShadow: `0 0 5px ${team?.color}` }}></div>
-                        <div className="flex flex-wrap items-baseline gap-x-2 overflow-hidden">
-                            <span className="text-[11px] font-black text-white uppercase tracking-tight truncate">
-                                {goal.isOwnGoal ? 'OWN GOAL' : (scorer?.nickname || 'Unknown')}
-                            </span>
-                            {assistant && (
-                                <span className="text-[9px] font-chakra font-bold text-white/40 uppercase italic flex items-center gap-1">
-                                    <span className="text-[7px]">A:</span> {assistant.nickname}
-                                </span>
-                            )}
-                        </div>
-                    </div>
-                );
-            })}
-        </div>
-    );
-};
-
 // --- STANDBY SCREEN ---
 const StandbyScreen: React.FC = () => {
     const t = useTranslation();
@@ -67,19 +35,28 @@ const StandbyScreen: React.FC = () => {
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black overflow-hidden rounded-[2.5rem]">
             <div className="absolute w-[600px] h-[600px] border border-[#00F2FE]/20 rounded-full animate-ping-slow"></div>
             <div className="absolute w-[400px] h-[400px] border border-[#00F2FE]/10 rounded-full animate-ping-slower"></div>
+            
             <div className="relative z-10 flex flex-col items-center gap-6">
                 <div className="text-center space-y-4">
-                    <h2 className="font-orbitron text-3xl md:text-5xl font-black text-white tracking-[0.3em] uppercase opacity-90">STANDBY</h2>
+                    <h2 className="font-orbitron text-3xl md:text-5xl font-black text-white tracking-[0.3em] uppercase opacity-90">
+                        STANDBY
+                    </h2>
                     <div className="flex items-center justify-center gap-3">
                         <div className="h-px w-8 bg-[#00F2FE]/40"></div>
                         <span className="font-chakra text-sm font-bold text-[#00F2FE] tracking-[0.5em] animate-pulse">SEARCHING FOR BROADCAST</span>
                         <div className="h-px w-8 bg-[#00F2FE]/40"></div>
                     </div>
                 </div>
+                
                 <p className="max-w-xs text-center text-[10px] font-mono text-white/30 uppercase tracking-[0.2em] mt-8">
                     {t.hubAwaitingStats}<br/>SYSTEM IDLE. AWAITING UPLINK SIGNAL...
                 </p>
             </div>
+            <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes ping-slow { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(1.5); opacity: 0; } }
+                .animate-ping-slow { animation: ping-slow 4s cubic-bezier(0, 0, 0.2, 1) infinite; }
+                .animate-ping-slower { animation: ping-slow 6s cubic-bezier(0, 0, 0.2, 1) infinite; }
+            `}} />
         </div>
     );
 };
@@ -90,9 +67,16 @@ const SubtleDashboardAvatar: React.FC<{ team: any; size?: string; isLight?: bool
     const color = team?.color || '#A9B1BD';
     return (
         <div className="group/avatar relative flex items-center justify-center shrink-0">
-            <div className="w-6 h-6 rounded-full flex items-center justify-center transition-all duration-500 bg-black/40 opacity-90 group-hover/avatar:opacity-100 group-hover/avatar:scale-110"
-                style={{ border: `1px solid ${color}`, boxShadow: `0 0 5px ${color}66, 0 0 1.5px ${color}`, }}>
-                {team?.logo ? <img src={team.logo} className="w-full h-full rounded-full object-cover" alt="" /> : (
+            <div 
+                className="w-6 h-6 rounded-full flex items-center justify-center transition-all duration-500 bg-black/40 opacity-90 group-hover/avatar:opacity-100 group-hover/avatar:scale-110"
+                style={{ 
+                    border: `1px solid ${color}`,
+                    boxShadow: `0 0 5px ${color}66, 0 0 1.5px ${color}`, 
+                }}
+            >
+                {team?.logo ? (
+                    <img src={team.logo} className="w-full h-full rounded-full object-cover" alt="" />
+                ) : (
                     <svg className="w-[55%] h-[55%]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M20.38 3.46L16 2a4 4 0 0 0-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99 .84H6v10c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" fill={color} fillOpacity="0.35" stroke={color} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
@@ -102,30 +86,65 @@ const SubtleDashboardAvatar: React.FC<{ team: any; size?: string; isLight?: bool
     );
 };
 
-const HubCard: React.FC<{ title: React.ReactNode; icon: React.ReactNode; children: React.ReactNode; className?: string; accent?: string; variant?: string; bodyClassName?: string; headerExtra?: React.ReactNode; align?: string; }> = ({ title, icon, children, className = "", accent = "#00F2FE", variant = 'default', bodyClassName = "", headerExtra, align = 'left' }) => {
+const HubCard: React.FC<{ 
+    title: React.ReactNode; 
+    icon: React.ReactNode; 
+    children: React.ReactNode; 
+    className?: string; 
+    accent?: string; 
+    variant?: 'default' | 'dark' | 'midnight' | 'glass' | 'ocean' | 'elite' | 'standings' | 'obsidian';
+    bodyClassName?: string; 
+    headerExtra?: React.ReactNode; 
+    align?: 'left' | 'right';
+}> = ({ title, icon, children, className = "", accent = "#00F2FE", variant = 'default', bodyClassName = "", headerExtra, align = 'left' }) => {
     const isElite = variant === 'elite';
     const isStandings = variant === 'standings';
     const isRight = align === 'right';
+
     let bgStyleClass = 'bg-white/80 backdrop-blur-2xl border-slate-200'; 
     let headerStyleClass = 'bg-gradient-to-b from-white to-slate-50/50 border-b border-slate-100'; 
     let titleColor = 'text-slate-800';
     let iconBg = 'bg-white border-slate-100';
-    if (variant === 'dark') { headerStyleClass = 'border-b border-white/10'; titleColor = 'text-white'; iconBg = 'bg-white/10 border-white/20'; } 
-    else if (isElite) { bgStyleClass = 'bg-[#020308] border-white/10'; headerStyleClass = 'bg-transparent !border-0'; titleColor = 'text-white'; iconBg = 'bg-white/5 border-white/10 text-[#FFD700]'; } 
-    else if (isStandings) { bgStyleClass = 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black border-white/10'; headerStyleClass = 'bg-transparent !border-0'; titleColor = 'text-white'; iconBg = 'bg-white/10 border-white/20 text-white'; }
+
+    if (variant === 'dark') {
+        headerStyleClass = 'border-b border-white/10';
+        titleColor = 'text-white';
+        iconBg = 'bg-white/10 border-white/20';
+    } else if (isElite) {
+        bgStyleClass = 'bg-[#020308] border-white/10';
+        headerStyleClass = 'bg-transparent !border-0';
+        titleColor = 'text-white'; 
+        iconBg = 'bg-white/5 border-white/10 text-[#FFD700]';
+    } else if (isStandings) {
+        bgStyleClass = 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black border-white/10';
+        headerStyleClass = 'bg-transparent !border-0';
+        titleColor = 'text-white';
+        iconBg = 'bg-white/10 border-white/20 text-white';
+    }
+
     return (
         <div className={`relative overflow-hidden rounded-[1.5rem] flex flex-col border ${bgStyleClass} ${className} group/card`}>
-            <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`, backgroundSize: '4px 4px' }}></div>
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ 
+                backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`,
+                backgroundSize: '4px 4px'
+            }}></div>
+
             <div className={`absolute -top-10 -left-10 w-40 h-40 ${isElite ? 'bg-[#00F2FE]/[0.05]' : 'bg-[#00F2FE]/[0.03]'} rounded-full blur-[45px] pointer-events-none z-0 animate-pulse`} style={{ animationDuration: '6s' }}></div>
+            
             <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.01] to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-700 z-0"></div>
+
             <div className={`relative z-10 py-1.5 px-4 flex items-center justify-between shrink-0 ${headerStyleClass} ${isRight ? 'flex-row-reverse' : ''}`}>
                  <div className={`flex items-center gap-2 relative z-10 ${isRight ? 'flex-row-reverse' : ''}`}>
-                    <div className={`w-4 h-4 rounded-md flex items-center justify-center shadow-sm border ${iconBg}`} style={{ color: accent }}>{React.cloneElement(icon as React.ReactElement<any>, { className: "w-2.5 h-2.5" })}</div>
+                    <div className={`w-4 h-4 rounded-md flex items-center justify-center shadow-sm border ${iconBg}`} style={{ color: accent }}>
+                        {React.cloneElement(icon as React.ReactElement<any>, { className: "w-2.5 h-2.5" })}
+                    </div>
                     {typeof title === 'string' ? <h3 className={`font-russo text-[10px] uppercase tracking-widest ${titleColor}`}>{title}</h3> : title}
                  </div>
                  {headerExtra && <div className="relative z-10">{headerExtra}</div>}
             </div>
-            <div className={`flex-grow relative overflow-hidden flex flex-col z-10 ${bodyClassName || 'p-0'}`}>{children}</div>
+            <div className={`flex-grow relative overflow-hidden flex flex-col z-10 ${bodyClassName || 'p-0'}`}>
+                {children}
+            </div>
         </div>
     );
 };
@@ -135,28 +154,48 @@ const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any
         {teams.map((team) => {
             const teamPlayers = team.playerIds.map(pid => players.find(p => p.id === pid)).filter(Boolean) as Player[];
             const avgOvr = teamPlayers.length > 0 ? Math.round(teamPlayers.reduce((sum, p) => sum + p.rating, 0) / teamPlayers.length) : 0;
-            let goals = 0, assistedGoals = 0;
+            
+            let goals = 0;
+            let assistedGoals = 0;
             session.games.filter((g: any) => g.status === 'finished').forEach((g: any) => {
                 const teamGoals = g.goals.filter((goal: any) => goal.teamId === team.id && !goal.isOwnGoal);
                 goals += teamGoals.length;
                 assistedGoals += teamGoals.filter((goal: any) => goal.assistantId).length;
             });
+
             const synergy = goals > 0 ? Math.round((assistedGoals / goals) * 100) : 0;
             const synergyColor = synergy >= 60 ? 'text-[#4CFF5F]' : synergy <= 30 ? 'text-orange-400' : 'text-[#00F2FE]';
+
             return (
                 <div key={team.id} className="flex-1 flex flex-col min-w-0">
                     <div className="h-10 border-b border-white/5 flex items-end justify-center pb-2 relative overflow-hidden" style={{ background: `linear-gradient(to bottom, ${team.color}25, transparent)` }}>
-                         <div className="flex items-center gap-1 bg-black/40 px-2 py-0.5 rounded text-[8px] font-black tracking-widest border border-white/10 text-white/60"><span>OVR</span> <span className="text-white">{avgOvr}</span></div>
+                         <div className="flex items-center gap-1 bg-black/40 px-2 py-0.5 rounded text-[8px] font-black tracking-widest border border-white/10 text-white/60">
+                            <span>OVR</span> <span className="text-white">{avgOvr}</span>
+                         </div>
                     </div>
                     <div className="flex-grow flex flex-col p-1 gap-1 overflow-hidden">
                         {team.playerIds.map((pid, idx) => {
                             const p = players.find(player => player.id === pid);
-                            return <div key={pid} className="group/unit flex-1 flex items-center bg-white/[0.02] rounded-lg px-3 border border-transparent hover:border-white/10 transition-all min-h-[24px]"><span className="font-mono text-[8px] text-white/20 w-4 shrink-0">{(idx + 1)}</span><span className="text-[10px] font-black text-slate-400 uppercase truncate flex-grow">{p?.nickname || 'UNKNOWN'}</span></div>;
+                            return (
+                                <div key={pid} className="group/unit flex-1 flex items-center bg-white/[0.02] rounded-lg px-3 border border-transparent hover:border-white/10 transition-all min-h-[24px]">
+                                    <span className="font-mono text-[8px] text-white/20 w-4 shrink-0">{(idx + 1)}</span>
+                                    <span className="text-[10px] font-black text-slate-400 uppercase truncate flex-grow">{p?.nickname || 'UNKNOWN'}</span>
+                                </div>
+                            );
                         })}
                     </div>
+                    
                     <div className="py-2 border-t border-white/5 bg-black/40 flex items-center divide-x divide-white/10">
-                        <div className="flex-1 flex flex-col items-center justify-center"><span className="text-[12px] font-black text-slate-200 leading-none">{goals}</span><span className="text-[5px] text-white/30 uppercase font-bold tracking-widest mt-0.5">{t.hubGoals}</span></div>
-                        <div className="flex-1 flex flex-col items-center justify-center"><span className={`text-[12px] font-black leading-none ${synergyColor}`}>{synergy}%</span><span className="text-[5px] text-white/30 uppercase font-bold tracking-widest mt-0.5">SYNERGY</span></div>
+                        <div className="flex-1 flex flex-col items-center justify-center">
+                            <span className="text-[12px] font-black text-slate-200 leading-none">{goals}</span>
+                            <span className="text-[5px] text-white/30 uppercase font-bold tracking-widest mt-0.5">{t.hubGoals}</span>
+                        </div>
+                        <div className="flex-1 flex flex-col items-center justify-center">
+                            <span className={`text-[12px] font-black leading-none ${synergyColor}`}>
+                                {synergy}%
+                            </span>
+                            <span className="text-[5px] text-white/30 uppercase font-bold tracking-widest mt-0.5">SYNERGY</span>
+                        </div>
                     </div>
                 </div>
             );
@@ -164,119 +203,237 @@ const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any
     </div>
 );
 
-const SessionPodium: React.FC<{ players: any[], t: any }> = ({ players, t }) => (
-    <div className="flex items-end justify-center gap-3 h-full px-4 relative">
-        {[players.find(p => p.rank === 2), players.find(p => p.rank === 1), players.find(p => p.rank === 3)].map((p, i) => {
-            if (!p) return null;
-            const rank = p.rank;
-            const color = rank === 1 ? "#FFD700" : rank === 2 ? "#94a3b8" : "#CD7F32";
-            const height = rank === 1 ? "130px" : rank === 2 ? "90px" : "75px";
-            const countryCodeAlpha2 = p.player.countryCode ? convertCountryCodeAlpha3ToAlpha2(p.player.countryCode) : null;
-            return (
-                <div key={rank} className={`flex flex-col items-center justify-end h-full animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both relative ${rank === 1 ? 'z-20 pb-4' : 'z-10'}`}>
-                    <div className={`relative rounded-lg overflow-hidden border border-white/20 shadow-lg flex flex-col shrink-0 mb-3 ${rank === 1 ? 'w-[110px] h-[155px] md:w-[135px] md:h-[185px]' : 'w-[95px] h-[130px] md:w-[115px] md:h-[155px]'}`}>
-                        {p.player.playerCard ? <div className="absolute inset-0 bg-cover bg-no-repeat" style={{ backgroundImage: `url(${p.player.playerCard})`, backgroundPosition: 'center 5%' }} /> : <div className="absolute inset-0 bg-gradient-to-b from-slate-700 to-slate-900" />}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
-                        <div className="relative z-10 h-full flex flex-col justify-between p-1.5">
-                            <div className="flex justify-between items-start w-full">
-                                {countryCodeAlpha2 && <img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} className="w-3 h-auto rounded-sm opacity-90" alt="" />}
-                                <div className="flex flex-col items-end leading-none"><span className="font-russo text-lg text-[#00F2FE]">{p.player.rating}</span><span className="text-[5px] font-black text-white">OVR</span></div>
-                            </div>
-                            <div className="w-full text-center pb-1"><span className="text-white font-russo text-[10px] uppercase truncate px-1">{p.player.nickname}</span></div>
+interface TopPlayerStats {
+    player: Player; 
+    score: number; 
+    rank: 1 | 2 | 3;
+}
+
+const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ players, t }) => {
+    const p1 = players.find(p => p.rank === 1);
+    const p2 = players.find(p => p.rank === 2);
+    const p3 = players.find(p => p.rank === 3);
+
+    const MiniCard = ({ p }: { p: TopPlayerStats }) => {
+        const countryCodeAlpha2 = useMemo(() => p.player.countryCode ? convertCountryCodeAlpha3ToAlpha2(p.player.countryCode) : null, [p.player.countryCode]);
+        const sizeClasses = p.rank === 1 ? 'w-[110px] h-[155px] md:w-[135px] md:h-[185px] z-20' : 'w-[95px] h-[130px] md:w-[115px] md:h-[155px] z-10';
+        return (
+            <div className={`relative rounded-lg overflow-hidden border border-white/20 shadow-lg flex flex-col shrink-0 ${sizeClasses}`}>
+                {p.player.playerCard ? <div className="absolute inset-0 bg-cover bg-no-repeat" style={{ backgroundImage: `url(${p.player.playerCard})`, backgroundPosition: 'center 5%' }} /> : <div className="absolute inset-0 bg-gradient-to-b from-slate-700 to-slate-900" />}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+                <div className="relative z-10 h-full flex flex-col justify-between p-1.5">
+                    <div className="flex justify-between items-start w-full">
+                        {countryCodeAlpha2 && <img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} className="w-3 h-auto rounded-sm opacity-90" alt="" />}
+                        <div className="flex flex-col items-end leading-none">
+                            <span className="font-russo text-lg text-[#00F2FE]">{p.player.rating}</span>
+                            <span className="text-[5px] font-black text-white">OVR</span>
                         </div>
                     </div>
-                    <div className="w-full relative overflow-hidden backdrop-blur-md rounded-t-xl flex flex-col items-center justify-center pt-2 pb-1.5 z-10" style={{ height: height, background: `linear-gradient(to bottom, ${color}35, ${color}08, transparent)`, borderTop: `2px solid ${color}` }}>
+                    <div className="w-full text-center pb-1"><span className="text-white font-russo text-[10px] uppercase truncate px-1">{p.player.nickname}</span></div>
+                </div>
+            </div>
+        );
+    };
+
+    const PodiumSpot = ({ p, rank, height, color, delay }: { p?: TopPlayerStats, rank: number, height: string, color: string, delay: string }) => (
+        <div className={`flex flex-col items-center justify-end h-full ${delay} animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both relative`}>
+            {p ? <div className="mb-3 relative z-20 flex flex-col items-center w-full px-1"><MiniCard p={p} /></div> : <div className="mb-12 opacity-10"><div className="w-12 h-16 rounded border-2 border-dashed border-white/30"></div></div>}
+            
+            <div className="w-full relative overflow-hidden backdrop-blur-md rounded-t-xl flex flex-col items-center justify-center pt-2 pb-1.5 z-10" style={{ height: height, background: `linear-gradient(to bottom, ${color}35, ${color}08, transparent)`, borderTop: `2px solid ${color}` }}>
+                {p && (
+                    <div className="relative z-10 flex flex-col items-center">
                         <span className="font-russo text-xl text-white leading-none tracking-tighter">{p.score.toFixed(1)}</span>
                         <span className="text-[5.5px] font-black text-white/50 uppercase tracking-[0.2em] mt-1">{t.hubImpact}</span>
                     </div>
-                </div>
-            );
-        })}
-    </div>
-);
+                )}
+            </div>
+        </div>
+    );
 
-const NewsVanguardCard: React.FC<{ item: NewsItem }> = ({ item }) => (
-    <div className="mb-3 relative px-1 animate-in fade-in slide-in-from-right-4 duration-500">
-        <div className="relative rounded-2xl overflow-hidden p-3.5 border border-indigo-500/20 bg-gradient-to-br from-indigo-900/40 to-black">
-            <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-            <div className="absolute top-3.5 left-0 w-1.5 h-7 rounded-r-full bg-[#818cf8]" style={{ boxShadow: '0 0 10px #818cf8' }}></div>
-            <div className="relative z-10 flex flex-col gap-1 pl-3">
-                <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-[7px] font-black tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-sm bg-white/5 text-indigo-300">{item.type.replace('_', ' ')}</span>
-                    <div className="flex items-center gap-1.5 ml-2"><span className="text-[7px] font-mono text-white/20">{new Date(item.timestamp).toLocaleDateString([], {day:'2-digit', month:'2-digit'})}</span><span className="text-[7px] font-mono text-white/40">{new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span></div>
-                    {item.isHot && <Zap className="w-3 h-3 text-indigo-400 animate-pulse" />}
-                </div>
-                <div className="flex items-baseline gap-2 overflow-hidden"><h4 className="text-[14px] font-black text-slate-100 uppercase shrink-0 tracking-wide">{item.playerName}</h4><p className="text-[12px] text-indigo-100/60 leading-tight truncate italic font-chakra">{item.message.replace(item.playerName, '').trim() || item.subMessage}</p></div>
-            </div>
+    return (
+        <div className="flex items-end justify-center gap-3 h-full px-4 relative">
+            <div className="w-[110px] md:w-[155px] h-full flex flex-col justify-end z-10 shrink-0"><PodiumSpot p={p2} rank={2} height="90px" color="#94a3b8" delay="delay-100" /></div>
+            <div className="w-[125px] md:w-[175px] h-full flex flex-col justify-end z-20 pb-4 shrink-0"><PodiumSpot p={p1} rank={1} height="130px" color="#FFD700" delay="delay-0" /></div>
+            <div className="w-[110px] md:w-[155px] h-full flex flex-col justify-end z-10 shrink-0"><PodiumSpot p={p3} rank={3} height="75px" color="#CD7F32" delay="delay-200" /></div>
         </div>
-    </div>
-);
+    );
+};
 
-const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t }) => (
-    <div className="flex flex-col h-full justify-between py-2">
-        <div className="flex items-start gap-3 border-b border-white/5 pb-4">
-            <div className="w-10 h-10 rounded-xl bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shrink-0"><MapPinIcon className="w-5 h-5" /></div>
-            <div className="flex flex-col pt-0.5 min-w-0">
-                <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">{t.hubLocation}</span>
-                {session.location ? (
-                    <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(session.location)}`} target="_blank" rel="noopener noreferrer" className="group/loc flex items-center gap-1.5 font-chakra font-bold text-base text-white uppercase tracking-wide truncate hover:text-[#00F2FE] transition-colors"><span className="truncate border-b border-white/10 group-hover/loc:border-[#00F2FE]/50">{session.location}</span><svg className="w-3 h-3 opacity-30 group-hover/loc:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg></a>
-                ) : <span className="font-chakra font-bold text-base text-white uppercase tracking-wide truncate">PITCH DATA UNAVAILABLE</span>}
-            </div>
-        </div>
-        <div className="flex items-center gap-3 border-b border-white/5 py-4">
-            <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0"><ClockIcon className="w-5 h-5" /></div>
-            <div className="flex flex-col"><span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">{t.hubTimeFrame}</span><span className="font-mono font-bold text-xl text-white tracking-widest">{session.timeString || "19:30 - 21:00"}</span></div>
-        </div>
-        <div className="flex-grow flex flex-col justify-end pt-2">
-            <div className="relative rounded-2xl bg-gradient-to-br from-indigo-900/40 to-black border border-indigo-500/20 p-4 flex items-center justify-between overflow-hidden">
-                <div className="relative z-10 flex flex-col">
-                    <span className="text-[9px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-1">{t.hubWeather}</span>
-                    <div className="flex items-baseline gap-1"><span className="font-russo text-4xl text-white leading-none">{session.weather?.temperature || 26}°C</span><TermometerIcon className="w-4 h-4 text-white/40" /></div>
-                    <span className="font-chakra text-xs text-indigo-200 font-bold uppercase tracking-wider mt-1">{session.weather?.condition || "CLEAR"}</span>
+const NewsVanguardCard: React.FC<{ item: NewsItem }> = ({ item }) => {
+    return (
+        <div className="mb-3 relative px-1 animate-in fade-in slide-in-from-right-4 duration-500">
+            <div className="relative rounded-2xl overflow-hidden p-3.5 border border-indigo-500/20 bg-gradient-to-br from-indigo-900/40 to-black">
+                <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+                <div className="absolute top-3.5 left-0 w-1.5 h-7 rounded-r-full bg-[#818cf8]" style={{ boxShadow: '0 0 10px #818cf8' }}></div>
+                <div className="relative z-10 flex flex-col gap-1 pl-3">
+                    <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-[7px] font-black tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-sm bg-white/5 text-indigo-300">
+                            {item.type.replace('_', ' ')}
+                        </span>
+                        <div className="flex items-center gap-1.5 ml-2">
+                             <span className="text-[7px] font-mono text-white/20">
+                                {new Date(item.timestamp).toLocaleDateString([], {day:'2-digit', month:'2-digit'})}
+                            </span>
+                            <span className="text-[7px] font-mono text-white/40">
+                                {new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+                            </span>
+                        </div>
+                        {item.isHot && <Zap className="w-3 h-3 text-indigo-400 animate-pulse" />}
+                    </div>
+                    <div className="flex items-baseline gap-2 overflow-hidden">
+                        <h4 className="text-[14px] font-black text-slate-100 uppercase shrink-0 tracking-wide">
+                            {item.playerName}
+                        </h4>
+                        <p className="text-[12px] text-indigo-100/60 leading-tight truncate italic font-chakra">
+                            {item.message.replace(item.playerName, '').trim() || item.subMessage}
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-);
+    );
+};
+
+const getImpactScore = (stats: PlayerStats): number => {
+    let score = 0;
+    const nonCleanSheetWins = stats.wins - (stats.cleanSheetWins || 0);
+    score += nonCleanSheetWins * 2.0;
+    score += (stats.cleanSheetWins || 0) * 2.5;
+    score += stats.draws * 0.5;
+    score += stats.goals * 1.0;
+    score += stats.assists * 1.0;
+    score -= stats.ownGoals * 1.0;
+    return score;
+};
+
+const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t }) => {
+    const getWeatherIcon = (cond: WeatherCondition | string = 'clear') => {
+        const c = cond.toLowerCase();
+        if (c.includes('rain') || c.includes('storm')) return <CloudRainIcon className="w-16 h-16 text-white" />;
+        if (c.includes('cloud') || c.includes('fog')) return <CloudIcon className="w-16 h-16 text-white" />;
+        return <MoonIcon className="w-16 h-16 text-white" />;
+    };
+
+    // Construct Maps Search Link
+    const mapsLink = session.location 
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(session.location)}` 
+        : null;
+
+    return (
+        <div className="flex flex-col h-full justify-between py-2">
+            <div className="flex items-start gap-3 border-b border-white/5 pb-4">
+                <div className="w-10 h-10 rounded-xl bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shrink-0"><MapPinIcon className="w-5 h-5" /></div>
+                <div className="flex flex-col pt-0.5 min-w-0">
+                    <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">{t.hubLocation}</span>
+                    {mapsLink ? (
+                        <a 
+                            href={mapsLink} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="group/loc flex items-center gap-1.5 font-chakra font-bold text-base text-white uppercase tracking-wide truncate max-w-[200px] md:max-w-[250px] hover:text-[#00F2FE] transition-colors"
+                        >
+                            <span className="truncate border-b border-white/10 group-hover/loc:border-[#00F2FE]/50">{session.location}</span>
+                            <svg className="w-3 h-3 opacity-30 group-hover/loc:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+                        </a>
+                    ) : (
+                        <span className="font-chakra font-bold text-base text-white uppercase tracking-wide truncate max-w-[200px] md:max-w-[250px]">PITCH DATA UNAVAILABLE</span>
+                    )}
+                </div>
+            </div>
+            <div className="flex items-center gap-3 border-b border-white/5 py-4">
+                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0"><ClockIcon className="w-5 h-5" /></div>
+                <div className="flex flex-col"><span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">{t.hubTimeFrame}</span><span className="font-mono font-bold text-xl text-white tracking-widest">{session.timeString || "19:30 - 21:00"}</span></div>
+            </div>
+            <div className="flex-grow flex flex-col justify-end pt-2">
+                <div className="relative rounded-2xl bg-gradient-to-br from-indigo-900/40 to-black border border-indigo-500/20 p-4 flex items-center justify-between overflow-hidden">
+                    <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-striped-brick.png')]"></div>
+                    <div className="relative z-10 flex flex-col">
+                        <span className="text-[9px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-1">{t.hubWeather}</span>
+                        <div className="flex items-baseline gap-1"><span className="font-russo text-4xl text-white leading-none">{session.weather?.temperature || 26}°C</span><TermometerIcon className="w-4 h-4 text-white/40" /></div>
+                        <span className="font-chakra text-xs text-indigo-200 font-bold uppercase tracking-wider mt-1">{session.weather?.condition || "CLEAR"}</span>
+                    </div>
+                    <div className="relative z-10">{getWeatherIcon(session.weather?.condition)}</div>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 // --- MAIN DASHBOARD EXPORT ---
 
 export const PublicHubDashboard: React.FC = () => {
     const { history, newsFeed, allPlayers } = useApp();
     const t = useTranslation();
+    
+    // ПРИНУДИТЕЛЬНО ПЕРВАЯ ВКЛАДКА - ПЛЕЕРЫ
     const [activeRightTab, setActiveRightTab] = useState<'players' | 'games'>('players');
+    
+    // Presentation Mode (Tabs)
     const [isAutoSwitching, setIsAutoSwitching] = useState(true);
     const [autoSwitchProgress, setAutoSwitchProgress] = useState(0);
-    const [expandedGameId, setExpandedGameId] = useState<string | null>(null);
 
     const session = history[0];
 
+    // --- INFINITE AUTO SWITCH LOGIC (TABS) ---
     useEffect(() => {
         if (!isAutoSwitching || !session) return;
+
         let phaseStartTime = Date.now() + 3000; 
         const DURATION = 10000; 
+        
         const timer = setInterval(() => {
             const now = Date.now();
             if (now < phaseStartTime) return;
+
             let elapsed = now - phaseStartTime;
             let progress = (elapsed / DURATION) * 100;
+            
             if (progress >= 100) {
-                setActiveRightTab(prev => (prev === 'players' ? 'games' : 'players'));
+                setActiveRightTab(prev => {
+                    const next = prev === 'players' ? 'games' : 'players';
+                    phaseStartTime = Date.now();
+                    return next;
+                });
                 setAutoSwitchProgress(0);
-                phaseStartTime = Date.now();
-            } else { setAutoSwitchProgress(progress); }
+            } else {
+                setAutoSwitchProgress(progress);
+            }
         }, 50);
+
         return () => clearInterval(timer);
     }, [isAutoSwitching, session]);
+
+    const handleManualTabChange = (tab: 'players' | 'games') => {
+        setIsAutoSwitching(false); 
+        setActiveRightTab(tab);
+    };
 
     if (!session) return <StandbyScreen />;
 
     const { teamStats, allPlayersStats: rawPlayersStats } = calculateAllStats(session);
-    const allPlayersStats = useMemo(() => rawPlayersStats.map(stat => ({ ...stat, player: allPlayers.find(p => p.id === stat.player.id) || stat.player })), [rawPlayersStats, allPlayers]);
+
+    const allPlayersStats = useMemo(() => {
+        return rawPlayersStats.map(stat => {
+            const latestPlayer = allPlayers.find(p => p.id === stat.player.id);
+            return { ...stat, player: latestPlayer || stat.player };
+        });
+    }, [rawPlayersStats, allPlayers]);
+
     const sortedForPodium = [...allPlayersStats].sort((a, b) => getImpactScore(b) - getImpactScore(a));
     const sortedForTable = [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists));
-    const top3PodiumPlayers = sortedForPodium.filter(p => p.gamesPlayed > 0).slice(0, 3).map((p, i) => ({ player: p.player, score: getImpactScore(p), rank: (i + 1) }));
-    const finishedGames = [...session.games].filter(g => g.status === 'finished').sort((a, b) => a.gameNumber - b.gameNumber);
+
+    const top3PodiumPlayers: TopPlayerStats[] = sortedForPodium
+        .filter(p => p.gamesPlayed > 0)
+        .slice(0, 3)
+        .map((p, i) => ({
+            player: p.player,
+            score: getImpactScore(p),
+            rank: (i + 1) as 1 | 2 | 3
+        }));
+
+    const finishedGames = [...session.games]
+        .filter(g => g.status === 'finished')
+        .sort((a, b) => a.gameNumber - b.gameNumber);
 
     const thStandings = "py-2 text-white/40 uppercase tracking-tighter text-[8px] font-black text-center sticky top-0 bg-[#1e293b]/50 backdrop-blur-sm z-10 border-b border-white/5";
     const tdBase = "py-1.5 text-center text-[10px] font-bold transition-colors";
@@ -286,42 +443,89 @@ export const PublicHubDashboard: React.FC = () => {
             <div className="absolute -top-24 bottom-0 -left-4 -right-4 z-0 pointer-events-none rounded-[2rem] overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center_20%,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+                <div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-b from-black via-transparent to-transparent pointer-events-none"></div>
             </div>
 
             <div className="flex-grow grid grid-cols-12 gap-4 min-h-0 items-start relative z-10">
-                <div className="col-span-12 md:col-span-9 flex flex-col gap-4 h-full">
-                    <div className="flex-[4] min-h-0 flex gap-3"><HubCard title={t.hubSessionLeaders} align="right" icon={<AwardIcon />} accent="#FFD700" variant="elite" className="flex-[2] min-h-[350px]" bodyClassName="flex flex-col bg-transparent"><div className="flex-grow relative"><SessionPodium players={top3PodiumPlayers} t={t} /></div></HubCard><HubCard title={t.hubMatchReport} icon={<Target />} accent="#00F2FE" variant="standings" className="flex-1 min-h-[350px]" bodyClassName="flex flex-col p-5"><MatchEnvironmentWidget session={session} t={t} /></HubCard></div>
-                    <div className="flex-[3] min-h-0 grid grid-cols-1 sm:grid-cols-2 gap-4"><HubCard title={t.hubSessionNews} icon={<Zap />} accent="#00F2FE" variant="standings" bodyClassName="p-0 flex flex-col"><div className="flex-grow relative overflow-y-auto custom-hub-scrollbar p-3 bg-black/10">{newsFeed.slice(0, 15).map(item => <NewsVanguardCard key={item.id} item={item} />)}</div></HubCard><HubCard title={t.hubSessionSquads} icon={<Target />} variant="standings" bodyClassName="flex flex-col"><TacticalRosters teams={session.teams} players={session.playerPool} session={session} t={t} /></HubCard></div>
+                <div className="col-span-12 md:col-span-9 flex flex-col gap-4 h-full min-h-[600px]">
+                    <div className="flex-[4] min-h-0 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200 flex gap-3">
+                         <HubCard title={t.hubSessionLeaders} align="right" icon={<AwardIcon />} accent="#FFD700" variant="elite" className="flex-[2] h-full min-h-[350px]" bodyClassName="flex flex-col bg-transparent">
+                            <div className="flex-grow relative"><SessionPodium players={top3PodiumPlayers} t={t} /></div>
+                        </HubCard>
+                        <HubCard title={t.hubMatchReport} icon={<Target />} accent="#00F2FE" variant="standings" className="flex-1 h-full min-h-[350px]" bodyClassName="flex flex-col p-5"><MatchEnvironmentWidget session={session} t={t} /></HubCard>
+                    </div>
+
+                    <div className="flex-[3] min-h-0 shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <HubCard title={t.hubSessionNews} icon={<Zap />} accent="#00F2FE" variant="standings" className="h-full min-h-0" bodyClassName="p-0 flex flex-col">
+                            <div className="flex-grow relative overflow-y-auto custom-hub-scrollbar p-3 bg-black/10">
+                                {newsFeed.slice(0, 15).map(item => <NewsVanguardCard key={item.id} item={item} />)}
+                                {newsFeed.length === 0 && <p className="text-center py-10 opacity-20 text-[10px] tracking-widest uppercase">No Intel Updates</p>}
+                                <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-[#0f172a] to-transparent z-20 pointer-events-none" />
+                                <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-[#020617] to-transparent z-20 pointer-events-none" />
+                            </div>
+                        </HubCard>
+                        <HubCard title={t.hubSessionSquads} icon={<Target />} variant="standings" className="h-full min-h-0" bodyClassName="flex flex-col"><TacticalRosters teams={session.teams} players={session.playerPool} session={session} t={t} /></HubCard>
+                    </div>
                 </div>
 
-                <div className="col-span-12 md:col-span-3 flex flex-col gap-4 h-full">
+                <div className="col-span-12 md:col-span-3 flex flex-col gap-4 h-full min-h-[600px]">
                     <HubCard title={t.hubTeamStandings} icon={<TrophyIcon />} variant="standings" className="shrink-0" bodyClassName="flex flex-col">
-                        <div className="p-1"><table className="w-full table-fixed border-collapse"><thead><tr className="bg-white/5 border-b border-white/10"><th className={`${thStandings} w-[12%]`}>#</th><th className={`${thStandings} w-[28%]`}>{t.team}</th><th className={`${thStandings} w-[10%]`}>P</th><th className={`${thStandings} w-[10%]`}>W</th><th className={`${thStandings} w-[10%]`}>D</th><th className={`${thStandings} w-[10%]`}>L</th><th className={`${thStandings} w-[10%]`}>GD</th><th className={`${thStandings} w-[10%]`}>PTS</th></tr></thead><tbody>{teamStats.map((stat, idx) => (<tr key={stat.team.id} className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors"><td className="py-1.5 text-center text-[9px] font-bold text-white/30 bg-white/5">{idx + 1}</td><td className="py-1.5 flex justify-center"><SubtleDashboardAvatar team={stat.team} size="xxs" isLight /></td><td className={`${tdBase} text-slate-300`}>{stat.gamesPlayed}</td><td className={`${tdBase} text-slate-300`}>{stat.wins}</td><td className={`${tdBase} text-slate-300`}>{stat.draws}</td><td className={`${tdBase} text-slate-300`}>{stat.losses}</td><td className={`${tdBase} text-white/40`}>{stat.goalDifference > 0 ? `+${stat.goalDifference}` : stat.goalDifference}</td><td className="py-1.5 text-center text-[12px] font-bold text-white bg-white/5">{stat.points}</td></tr>))}</tbody></table></div>
+                        <div className="p-1">
+                            <table className="w-full table-fixed border-collapse">
+                                <thead><tr className="bg-white/5 border-b border-white/10"><th className={`${thStandings} w-[12%]`}>#</th><th className={`${thStandings} w-[28%]`}>{t.team}</th><th className={`${thStandings} w-[10%]`}>{t.thP}</th><th className={`${thStandings} w-[10%]`}>{t.thW}</th><th className={`${thStandings} w-[10%]`}>{t.thD}</th><th className={`${thStandings} w-[10%]`}>{t.thL}</th><th className={`${thStandings} w-[10%]`}>{t.thGD}</th><th className={`${thStandings} w-[10%]`}>{t.hubPoints}</th></tr></thead>
+                                <tbody>{teamStats.map((stat, idx) => (<tr key={stat.team.id} className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors"><td className="py-1.5 text-center text-[9px] font-bold text-white/30 bg-white/5">{idx + 1}</td><td className="py-1.5 flex justify-center"><SubtleDashboardAvatar team={stat.team} size="xxs" isLight /></td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.gamesPlayed}</td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.wins}</td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.draws}</td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.losses}</td><td className="py-1.5 text-center text-[10px] font-bold text-white/40">{stat.goalDifference > 0 ? `+${stat.goalDifference}` : stat.goalDifference}</td><td className="py-1.5 text-center text-[12px] font-bold text-white bg-white/5">{stat.points}</td></tr>))}</tbody>
+                            </table>
+                        </div>
                     </HubCard>
-                    <HubCard title={<div className="flex gap-14"><button onClick={() => { setIsAutoSwitching(false); setActiveRightTab('players'); }} className={`font-russo text-[10px] uppercase tracking-widest transition-all ${activeRightTab === 'players' ? 'text-[#00F2FE]' : 'opacity-20 hover:opacity-50'}`}>{t.hubPlayers}</button><button onClick={() => { setIsAutoSwitching(false); setActiveRightTab('games'); }} className={`font-russo text-[10px] uppercase tracking-widest transition-all ${activeRightTab === 'games' ? 'text-[#00F2FE]' : 'opacity-20 hover:opacity-50'}`}>{t.hubGames}</button></div>} icon={activeRightTab === 'players' ? <Users /> : <HistoryIcon />} variant="standings" accent="#00F2FE" className="flex-grow" bodyClassName="flex flex-col h-full min-h-0">
+                    
+                    <HubCard 
+                        title={
+                            <div className="flex gap-14">
+                                <div className="relative group/tab">
+                                    <button 
+                                        onClick={() => handleManualTabChange('players')} 
+                                        className={`font-russo text-[10px] uppercase tracking-widest transition-all duration-300 ${activeRightTab === 'players' ? 'text-[#00F2FE]' : 'opacity-20 hover:opacity-50'}`}
+                                    >
+                                        {t.hubPlayers}
+                                    </button>
+                                    {isAutoSwitching && activeRightTab === 'players' && (
+                                        <div className="absolute -bottom-1 left-0 h-[1.5px] bg-[#00F2FE] transition-all duration-75 shadow-[0_0_5px_#00F2FE]" style={{ width: `${autoSwitchProgress}%` }} />
+                                    )}
+                                </div>
+                                <div className="relative group/tab">
+                                    <button 
+                                        onClick={() => handleManualTabChange('games')} 
+                                        className={`font-russo text-[10px] uppercase tracking-widest transition-all duration-300 ${activeRightTab === 'games' ? 'text-[#00F2FE]' : 'opacity-20 hover:opacity-50'}`}
+                                    >
+                                        {t.hubGames}
+                                    </button>
+                                    {isAutoSwitching && activeRightTab === 'games' && (
+                                        <div className="absolute -bottom-1 left-0 h-[1.5px] bg-[#00F2FE] transition-all duration-75 shadow-[0_0_5px_#00F2FE]" style={{ width: `${autoSwitchProgress}%` }} />
+                                    )}
+                                </div>
+                            </div>
+                        } 
+                        icon={activeRightTab === 'players' ? <Users /> : <HistoryIcon />} 
+                        variant="standings" 
+                        accent="#00F2FE" 
+                        className="flex-grow min-h-0 h-[450px]" 
+                        bodyClassName="flex flex-col h-full min-h-0"
+                    >
                         <div className="flex-grow overflow-y-auto custom-hub-scrollbar h-full">
                             {activeRightTab === 'players' ? (
-                                <div className="animate-in fade-in duration-500"><table className="w-full table-fixed border-collapse"><thead><tr><th className={`${thStandings} w-[10%]`}>#</th><th className={`${thStandings} text-left pl-3 w-[45%]`}>{t.players}</th><th className={`${thStandings} w-[15%]`}>G</th><th className={`${thStandings} w-[15%]`}>A</th><th className={`${thStandings} w-[16%] text-white`}>TOT</th></tr></thead><tbody>{sortedForTable.map((ps, idx) => (<tr key={ps.player.id} className="group hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"><td className="py-2 text-center text-[9px] font-bold text-white/30 bg-white/[0.02]">{idx + 1}</td><td className="py-2 text-left pl-3 relative overflow-hidden group-hover:bg-white/5"><div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-3 rounded-r-full" style={{ backgroundColor: ps.team.color }} /><span className="text-slate-300 font-bold uppercase truncate text-[11px] block w-full pl-2 group-hover:text-white transition-colors">{ps.player.nickname || 'Unknown'}</span></td><td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.goals}</td><td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.assists}</td><td className="py-2 text-center text-[12px] font-bold text-white bg-white/[0.03]">{ps.goals + ps.assists}</td></tr>))}</tbody></table></div>
+                                <div className="animate-in fade-in duration-500">
+                                    <table className="w-full table-fixed border-collapse">
+                                        <thead><tr><th className={`${thStandings} w-[10%]`}>#</th><th className={`${thStandings} text-left pl-3 w-[45%]`}>{t.players}</th><th className={`${thStandings} w-[15%]`}>{t.thG}</th><th className={`${thStandings} w-[15%]`}>{t.thA}</th><th className={`${thStandings} w-[16%] text-white`}>TOT</th></tr></thead>
+                                        <tbody>{sortedForTable.map((ps, idx) => (<tr key={ps.player.id} className="group hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"><td className="py-2 text-center text-[9px] font-bold text-white/30 bg-white/[0.02]">{idx + 1}</td><td className="py-2 text-left pl-3 relative overflow-hidden group-hover:bg-white/5"><div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-3 rounded-r-full" style={{ backgroundColor: ps.team.color }} /><span className="text-slate-300 font-bold uppercase truncate text-[11px] block w-full pl-2 group-hover:text-white transition-colors">{ps.player.nickname || 'Unknown'}</span></td><td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.goals}</td><td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.assists}</td><td className="py-2 text-center text-[12px] font-bold text-white bg-white/[0.03]">{ps.goals + ps.assists}</td></tr>))}</tbody>
+                                    </table>
+                                </div>
                             ) : (
-                                <div className="animate-in fade-in duration-500"><table className="w-full table-fixed border-collapse"><thead><tr><th className={`${thStandings} w-[15%]`}>#</th><th className={`${thStandings} w-[25%] text-center`}>HOME</th><th className={`${thStandings} w-[35%] text-center`}>RESULT</th><th className={`${thStandings} w-[25%] text-center`}>AWAY</th></tr></thead><tbody>
-                                {finishedGames.map((game) => (
-                                    <React.Fragment key={game.id}>
-                                        <tr onClick={() => setExpandedGameId(expandedGameId === game.id ? null : game.id)} className={`group hover:bg-white/5 transition-all cursor-pointer border-b border-white/5 last:border-0 ${expandedGameId === game.id ? 'bg-white/5' : ''}`}>
-                                            <td className={`${tdBase} text-white/30 font-mono`}>{game.gameNumber}</td>
-                                            <td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team1Id) || {}} size="xxs" isLight={true} /></div></td>
-                                            <td className="py-2.5 text-center"><span className="font-bold text-[11px] md:text-[12px] text-slate-200 tabular-nums tracking-tighter bg-white/5 px-2 py-1 rounded group-hover:bg-white/10 group-hover:text-[#00F2FE] transition-colors">{game.team1Score} : {game.team2Score}</span></td>
-                                            <td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team2Id) || {}} size="xxs" isLight={true} /></div></td>
-                                        </tr>
-                                        {expandedGameId === game.id && (
-                                            <tr>
-                                                <td colSpan={4} className="p-0">
-                                                    <GameGoalDetails game={game} players={session.playerPool} teams={session.teams} />
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </React.Fragment>
-                                ))}
-                                </tbody></table></div>
+                                <div className="animate-in fade-in duration-500">
+                                    <table className="w-full table-fixed border-collapse">
+                                        <thead><tr><th className={`${thStandings} w-[15%]`}>#</th><th className={`${thStandings} w-[25%] text-center`}>{t.hubHome}</th><th className={`${thStandings} w-[35%] text-center`}>{t.hubResult}</th><th className={`${thStandings} w-[25%] text-center`}>{t.hubAway}</th></tr></thead>
+                                        <tbody>{finishedGames.map((game) => (<tr key={game.id} className="group hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"><td className={`${tdBase} text-white/30 font-mono`}>{game.gameNumber}</td><td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team1Id) || {}} size="xxs" isLight={true} /></div></td><td className="py-2.5 text-center"><span className="font-bold text-[11px] md:text-[12px] text-slate-200 tabular-nums tracking-tighter bg-white/5 px-2 py-1 rounded">{game.team1Score} : {game.team2Score}</span></td><td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team2Id) || {}} size="xxs" isLight={true} /></div></td></tr>))}</tbody>
+                                    </table>
+                                </div>
                             )}
                         </div>
                     </HubCard>
@@ -329,15 +533,4 @@ export const PublicHubDashboard: React.FC = () => {
             </div>
         </div>
     );
-};
-
-const getImpactScore = (stats: PlayerStats): number => {
-    let score = 0;
-    score += (stats.wins - (stats.cleanSheetWins || 0)) * 2.0;
-    score += (stats.cleanSheetWins || 0) * 2.5;
-    score += stats.draws * 0.5;
-    score += stats.goals * 1.0;
-    score += stats.assists * 1.0;
-    score -= stats.ownGoals * 1.0;
-    return score;
 };
