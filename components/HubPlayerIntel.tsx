@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { useApp } from '../context';
 import { HubProgressChart } from './HubAnalytics';
@@ -174,9 +173,16 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
 
     const tierColor = TIER_COLORS[player.tier] || '#00F2FE';
     const perimeterStyle: React.CSSProperties = {
-        boxShadow: `0 0 100px -20px ${tierColor}44`, 
+        // FURTHER ENHANCED GLOW: Added more layers and wider spread to fully wrap the rounded-[2.5rem] corners evenly.
+        boxShadow: `
+            0 0 15px -2px ${tierColor}aa,
+            0 0 45px -8px ${tierColor}77,
+            0 0 90px -15px ${tierColor}44,
+            inset 0 0 20px -10px ${tierColor}88
+        `,
         borderRadius: '2.5rem',
         background: 'transparent',
+        border: `1px solid ${tierColor}33`
     };
 
     return (
@@ -189,7 +195,7 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
             )}
 
             <div className="relative z-10 flex-grow overflow-y-auto custom-hub-scrollbar">
-                <div className={`w-full max-w-5xl mx-auto px-4 ${isEmbedded ? 'md:px-8' : 'md:px-12 lg:px-20'} py-6 pb-48 flex flex-col h-full`}>
+                <div className={`w-full max-w-[1200px] mx-auto px-4 ${isEmbedded ? 'md:px-8' : 'md:px-12 lg:px-20'} py-6 pb-48 flex flex-col h-full`}>
                     
                     {!isEmbedded && (
                         <div className="flex items-center justify-between mb-6 shrink-0 px-2">
@@ -201,10 +207,11 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                         </div>
                     )}
 
-                    <div className={`${isEmbedded ? 'p-2' : 'p-4 md:p-8'} flex-grow`} style={perimeterStyle}>
+                    <div className={`${isEmbedded ? 'p-4' : 'p-6 md:p-10'} flex-grow transition-all duration-500`} style={perimeterStyle}>
                         <div className="space-y-6">
-                            <div className="flex flex-col xl:flex-row gap-6 items-stretch">
-                                <div className="w-full max-w-[240px] mx-auto xl:mx-0 xl:max-w-none xl:w-[220px] shrink-0 flex flex-col">
+                            {/* MAIN ROW: Adjusted gap to match bento (gap-4) and card width for symmetry */}
+                            <div className="flex flex-col xl:flex-row gap-4 items-stretch">
+                                <div className="w-full max-w-[260px] mx-auto xl:mx-0 xl:max-w-none xl:w-[250px] shrink-0 flex flex-col">
                                     <div className="relative aspect-[2.8/4] xl:aspect-auto w-full rounded-3xl overflow-hidden border border-white/15 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.08)] bg-gradient-to-br from-[#161b22] to-[#0a0d14] h-full">
                                         {player.playerCard && <div className="absolute inset-0 bg-cover bg-no-repeat grayscale-[0.2] opacity-80" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }}/>}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
