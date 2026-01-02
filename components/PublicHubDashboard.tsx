@@ -132,11 +132,11 @@ const HubCard: React.FC<{
             <div className={`absolute -top-10 -left-10 w-40 h-40 ${isElite ? 'bg-[#00F2FE]/[0.05]' : 'bg-[#00F2FE]/[0.03]'} rounded-full blur-[45px] pointer-events-none z-0 animate-pulse`} style={{ animationDuration: '6s' }}></div>
             
             <div className={`relative z-10 py-1.5 px-4 flex items-center justify-between shrink-0 ${headerStyleClass} ${isRight ? 'flex-row-reverse' : ''}`}>
-                 <div className={`flex items-center gap-2 relative z-10 flex-grow ${isRight ? 'flex-row-reverse' : ''}`}>
+                 <div className={`flex items-center gap-2 relative z-10 ${isRight ? 'flex-row-reverse' : ''}`}>
                     <div className={`w-4 h-4 rounded-md flex items-center justify-center shadow-sm border ${iconBg}`} style={{ color: accent }}>
                         {React.cloneElement(icon as React.ReactElement<any>, { className: "w-2.5 h-2.5" })}
                     </div>
-                    <div className="flex-grow">
+                    <div>
                         {typeof title === 'string' ? <h3 className={`font-russo text-[10px] uppercase tracking-widest ${titleColor}`}>{title}</h3> : title}
                     </div>
                  </div>
@@ -530,7 +530,7 @@ export const PublicHubDashboard: React.FC = () => {
                                             return (
                                             <React.Fragment key={game.id}>
                                                 <tr 
-                                                    className={`group border-b border-white/5 last:border-0 transition-all ${totalScore > 0 ? 'hover:bg-white/10 cursor-pointer' : 'cursor-default'} ${expandedMatchId === game.id ? 'bg-white/5' : ''}`}
+                                                    className={`group border-b border-white/5 last:border-0 transition-transform duration-200 will-change-transform ${totalScore > 0 ? 'hover:scale-[1.01] hover:relative hover:z-20 cursor-pointer' : 'cursor-default'} ${expandedMatchId === game.id ? 'bg-white/5' : ''}`}
                                                     onClick={() => totalScore > 0 && setExpandedMatchId(expandedMatchId === game.id ? null : game.id)}
                                                 >
                                                     <td className={`${tdBase} text-white/30 font-mono`}>{game.gameNumber}</td>
