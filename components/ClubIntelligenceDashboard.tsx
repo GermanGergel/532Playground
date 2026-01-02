@@ -14,12 +14,11 @@ interface ClubIntelligenceDashboardProps {
     onArchiveViewChange?: (date: string | null) => void;
 }
 
-// Карта цветов для масок каждой вкладки (подстраивается под основной фон меню)
 const VIEW_THEMES: Record<string, { bottomStop: string }> = {
-    dashboard: { bottomStop: '#020617' }, // Глубокий синий
-    roster: { bottomStop: '#01040a' },    // Черный матовый
-    archive: { bottomStop: '#01040a' },   // Темный
-    info: { bottomStop: '#020617' },      // Темно-синий
+    dashboard: { bottomStop: '#020617' }, 
+    roster: { bottomStop: '#01040a' },    
+    archive: { bottomStop: '#01040a' },   
+    info: { bottomStop: '#020617' },      
     duel: { bottomStop: '#020617' },
     tournaments: { bottomStop: '#0a0c10' },
     league: { bottomStop: '#0a0c10' },
@@ -45,7 +44,7 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
             setDuelPlayerIds([null, null]);
         }
         if (currentView !== 'roster' && currentView !== 'duel') {
-             setSelectedPlayerId(null);
+             // We keep selectedPlayerId for roster persistence, but could clear it if needed
         }
         if (currentView !== 'archive' && onArchiveViewChange) {
             onArchiveViewChange(null);
@@ -60,7 +59,6 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
 
     return (
         <div className="w-full h-full animate-in fade-in duration-700 relative">
-            {/* ВЕРХНЯЯ ГРАДИЕНТНАЯ МАСКА (Плотное перекрытие сверху вниз) */}
             <div 
                 className="fixed top-0 left-0 right-0 h-20 md:h-24 z-[95] pointer-events-none transition-all duration-700 ease-in-out"
                 style={{
@@ -71,25 +69,21 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
                 }}
             ></div>
 
-            {/* Основной контейнер контента */}
             <div className="w-full h-[calc(100vh-110px)] md:h-[calc(100dvh-110px)] min-h-[650px] relative overflow-hidden">
                 {currentView === 'dashboard' && <PublicHubDashboard />}
                 {currentView === 'roster' && (
-                    selectedPlayerId ? (
-                        <HubPlayerIntel playerId={selectedPlayerId} onBack={() => setSelectedPlayerId(null)} />
-                    ) : (
-                        <HubRoster 
-                            onSelectPlayer={(id) => {
-                                setSelectedPlayerId(id);
-                                logAnalyticsEvent('view_player', id);
-                            }} 
-                            sortBy={hubSortBy}
-                            setSortBy={setHubSortBy}
-                            search={hubSearch}
-                            setSearch={setHubSearch}
-                            onStartDuel={handleStartDuel}
-                        />
-                    )
+                    <HubRoster 
+                        selectedPlayerId={selectedPlayerId}
+                        onSelectPlayer={(id) => {
+                            setSelectedPlayerId(id);
+                            if (id) logAnalyticsEvent('view_player', id);
+                        }} 
+                        sortBy={hubSortBy}
+                        setSortBy={setHubSortBy}
+                        search={hubSearch}
+                        setSearch={setHubSearch}
+                        onStartDuel={handleStartDuel}
+                    />
                 )}
                 {currentView === 'duel' && <HubDuel p1Id={duelPlayerIds[0]} p2Id={duelPlayerIds[1]} onBack={() => setView('roster')} />}
                 {currentView === 'archive' && <HubArchive onViewSession={onArchiveViewChange} />}
@@ -102,7 +96,6 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
                 )}
             </div>
 
-            {/* НИЖНЯЯ ГРАДИЕНТНАЯ МАСКА */}
             <div 
                 className="fixed bottom-0 left-0 right-0 h-8 md:h-10 z-[150] pointer-events-none transition-all duration-700 ease-in-out"
                 style={{

@@ -2,37 +2,33 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApp } from '../context';
 import { PlayerTier, PlayerStatus, Player } from '../types';
-import { Search, XCircle, Zap } from '../icons';
+import { Search, XCircle, Zap, Users } from '../icons';
 import { Modal, useTranslation } from '../ui';
 import { PlayerAvatar } from './avatars';
+import { HubPlayerIntel } from './HubPlayerIntel';
 
 const HubPortraitAvatar: React.FC<{ photo?: string; tierColor: string }> = ({ photo, tierColor }) => (
     <div 
-        className="relative w-[62px] h-[78px] rounded-[1.2rem] overflow-hidden bg-[#0C0E12] transition-all duration-500 ease-out z-10 
-        border border-white/20 
-        group-hover:scale-110 group-hover:-translate-y-1
-        group-hover:border-[color:var(--tier-color)]
-        group-hover:shadow-[0_10px_20px_-5px_rgba(0,0,0,0.5),0_0_15px_var(--tier-color)]"
-        style={{ 
-            boxShadow: `0 4px 6px -1px rgba(0, 0, 0, 0.5)` 
-        }}
+        className="relative w-[45px] h-[58px] rounded-[0.8rem] overflow-hidden bg-[#0C0E12] transition-all duration-500 ease-out z-10 
+        border border-white/10 
+        group-hover/unit:border-[color:var(--tier-color)]
+        group-hover/unit:shadow-[0_0_10px_var(--tier-color)]"
+        style={{ '--tier-color': tierColor } as React.CSSProperties}
     >
         <div 
-            className="absolute inset-0 bg-cover transition-transform duration-700" 
+            className="absolute inset-0 bg-cover" 
             style={{ 
                 backgroundImage: photo ? `url(${photo})` : 'none',
-                backgroundPosition: 'center 12%' // Поднимаем фокус на лицо
+                backgroundPosition: 'center 12%' 
             }}
         >
             {!photo && (
                 <div className="absolute inset-0 flex items-center justify-center bg-white/5">
-                     <Search className="w-6 h-6 text-white/10" />
+                     <Search className="w-4 h-4 text-white/10" />
                 </div>
             )}
         </div>
-        {/* Градиентная маска для объема */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-white/10 opacity-60"></div>
-        <div className="absolute inset-0 border border-white/5 pointer-events-none rounded-[1.1rem]"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-white/5 opacity-60"></div>
     </div>
 );
 
@@ -105,24 +101,11 @@ const DuelSetupModal: React.FC<{
     );
     
     return (
-        <Modal
-            isOpen={isOpen}
-            onClose={onClose}
-            size="sm"
-            hideCloseButton
-            containerClassName="!bg-transparent !p-0 !border-0 !shadow-none"
-        >
-            <div
-                className="p-5 rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden relative"
-                style={{
-                    background: 'radial-gradient(ellipse at top, #0f172a 0%, #020617 65%, #01040a 100%)',
-                    boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.08), 0 30px 60px -12px rgba(0, 0, 0, 0.7)'
-                }}
-            >
+        <Modal isOpen={isOpen} onClose={onClose} size="sm" hideCloseButton containerClassName="!bg-transparent !p-0 !border-0 !shadow-none">
+            <div className="p-5 rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden relative" style={{ background: 'radial-gradient(ellipse at top, #0f172a 0%, #020617 65%, #01040a 100%)', boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.08), 0 30px 60px -12px rgba(0, 0, 0, 0.7)' }}>
                 <button onClick={onClose} className="absolute top-4 right-4 z-50 text-white/30 hover:text-white transition-all hover:scale-110 active:scale-95"><XCircle className="w-6 h-6" /></button>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] pointer-events-none"></div>
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-40 bg-[#00F2FE]/10 blur-[80px] pointer-events-none"></div>
-                <h3 className="font-russo text-lg text-white uppercase tracking-[0.25em] mb-8 text-center relative z-10" style={{ textShadow: '0 0 30px rgba(0,242,254,0.4)' }}>{t.duel_title}</h3>
+                <h3 className="font-russo text-lg text-white uppercase tracking-[0.25em] mb-8 text-center relative z-10">{t.duel_title}</h3>
                 <div className="flex items-center justify-center gap-6 mb-8 relative z-10 px-4">
                     <PlayerSlot player={player1} onClear={() => setP1(null)} side="p1" />
                     <div className="flex flex-col items-center"><span className="font-blackops text-3xl text-white/10 select-none tracking-tighter">VS</span></div>
@@ -149,7 +132,8 @@ const DuelSetupModal: React.FC<{
 };
 
 interface HubRosterProps {
-    onSelectPlayer: (id: string) => void;
+    selectedPlayerId: string | null;
+    onSelectPlayer: (id: string | null) => void;
     sortBy: SortOption;
     setSortBy: (opt: SortOption) => void;
     search: string;
@@ -157,7 +141,7 @@ interface HubRosterProps {
     onStartDuel: (p1Id: string, p2Id: string) => void;
 }
 
-export const HubRoster: React.FC<HubRosterProps> = ({ onSelectPlayer, sortBy, setSortBy, search, setSearch, onStartDuel }) => {
+export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelectPlayer, sortBy, setSortBy, search, setSearch, onStartDuel }) => {
     const { allPlayers } = useApp();
     const t = useTranslation();
     const [isDuelSetupOpen, setIsDuelSetupOpen] = useState(false);
@@ -169,20 +153,13 @@ export const HubRoster: React.FC<HubRosterProps> = ({ onSelectPlayer, sortBy, se
             .sort((a, b) => {
                 if (sortBy === 'name') return (a.nickname || '').localeCompare(b.nickname || '');
                 if (sortBy === 'rating') {
-                    // --- SYNCED WITH SEASON LEADERS LOGIC ---
                     if (b.rating !== a.rating) return b.rating - a.rating;
-                    
-                    // Tie-breaker 1: Total G+A
                     const scoreA = (a.totalGoals || 0) + (a.totalAssists || 0);
                     const scoreB = (b.totalGoals || 0) + (b.totalAssists || 0);
                     if (scoreB !== scoreA) return scoreB - scoreA;
-                    
-                    // Tie-breaker 2: Win Rate
                     const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0;
                     const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0;
                     if (wrB !== wrA) return wrB - wrA;
-                    
-                    // Tie-breaker 3: Games Played
                     return (b.totalGames || 0) - (a.totalGames || 0);
                 }
                 if (sortBy === 'date') return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
@@ -190,83 +167,82 @@ export const HubRoster: React.FC<HubRosterProps> = ({ onSelectPlayer, sortBy, se
             });
     }, [allPlayers, search, sortBy]);
 
-    const sortBtnClass = (opt: SortOption) => `
-        relative px-4 py-1 text-[9px] font-black uppercase tracking-[0.15em] rounded-full border transition-all duration-500 h-8 flex items-center justify-center min-w-[80px] z-10
-        ${sortBy === opt ? 'bg-slate-900/60 border-[#00F2FE] text-[#00F2FE] shadow-[0_0_8px_rgba(0,242,254,0.25)]' : 'bg-slate-900/40 border-white/5 text-white/30 hover:text-white/60 hover:border-white/10'}
-    `;
+    useEffect(() => {
+        // Auto-select first player on mount if none selected
+        if (!selectedPlayerId && confirmedPersonnel.length > 0) {
+            onSelectPlayer(confirmedPersonnel[0].id);
+        }
+    }, [confirmedPersonnel, selectedPlayerId, onSelectPlayer]);
 
     return (
-        <div className="absolute inset-0 flex flex-col animate-in fade-in duration-700 overflow-hidden rounded-[2.5rem]">
-            <style dangerouslySetInnerHTML={{ __html: `
-                @keyframes soft-pulse-white {
-                    0%, 100% { color: rgba(255, 255, 255, 0.25); text-shadow: 0 0 0px transparent; }
-                    50% { color: rgba(255, 255, 255, 0.65); text-shadow: 0 0 10px rgba(255, 255, 255, 0.2); }
-                }
-                .animate-soft-pulse-white {
-                    animation: soft-pulse-white 3s ease-in-out infinite;
-                }
-            `}} />
-            <div className="absolute -top-24 bottom-0 -left-4 -right-4 z-0 pointer-events-none">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#01040a] to-[#01040a]"></div>
-                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] pointer-events-none"></div>
-            </div>
-            
-            {/* TOP NAVIGATION BLOCK */}
-            <div className="pt-2 mb-2 shrink-0 flex flex-col md:flex-row md:items-center justify-between gap-4 px-10 md:px-24 lg:px-32 relative z-10">
-                <div className="flex items-center gap-10 ml-4 transition-all duration-500">
-                    <div className="max-w-fit">
-                        <h3 className="font-russo text-[18px] uppercase tracking-[0.1em] text-white italic leading-tight whitespace-nowrap" style={{ textShadow: '0 0 20px rgba(255,255,255,0.2)' }}>{t.hubPlayers}</h3>
-                        <div className="h-[1px] w-full bg-[#00F2FE] mt-2 rounded-full shadow-[0_0_10px_rgba(0,242,254,0.5)]"></div>
+        <div className="absolute inset-0 flex flex-row animate-in fade-in duration-700 overflow-hidden rounded-[2.5rem]">
+            {/* SIDEBAR - LEFT COLUMN (350px, 1 column list) */}
+            <div className="w-[350px] flex flex-col border-r border-white/5 bg-black/40 relative z-20 shrink-0">
+                {/* SIDEBAR HEADER */}
+                <div className="p-6 pb-2 space-y-4 pt-10">
+                    <div className="flex items-center justify-between mb-2 px-1">
+                        <div className="max-w-fit">
+                            <h3 className="font-russo text-[14px] uppercase tracking-[0.15em] text-white italic leading-tight">{t.hubPlayers}</h3>
+                            <div className="h-[1px] w-full bg-[#00F2FE] mt-1.5 opacity-50 shadow-[0_0_5px_#00F2FE]"></div>
+                        </div>
+                        <button onClick={() => setIsDuelSetupOpen(true)} className="group flex items-center gap-2 hover:opacity-100 transition-opacity opacity-40">
+                             <Zap className="w-3.5 h-3.5 text-[#00F2FE] animate-pulse" />
+                             <span className="font-russo text-[11px] text-white uppercase tracking-widest">DUEL</span>
+                        </button>
                     </div>
-                    <button onClick={() => setIsDuelSetupOpen(true)} className="max-w-fit group relative text-left">
-                        <h3 className="font-russo text-[18px] uppercase tracking-[0.1em] transition-all duration-500 italic leading-tight whitespace-nowrap group-hover:text-slate-200 group-hover:animate-none animate-soft-pulse-white">DUEL</h3>
-                        <div className="h-[1px] w-full bg-white/10 group-hover:bg-slate-400/50 mt-2 rounded-full transition-all duration-500"></div>
-                    </button>
-                </div>
 
-                <div className="flex flex-col sm:flex-row items-center gap-4">
-                    <div className="relative group w-full sm:w-64 h-8">
-                        <input type="text" placeholder="FIND UNIT..." value={search} onChange={(e) => setSearch(e.target.value)} className="relative w-full h-full bg-slate-900/60 border border-white/10 rounded-full pl-5 pr-10 text-[10px] font-chakra font-black text-white uppercase tracking-[0.15em] focus:outline-none focus:border-[#00F2FE]/40 transition-all placeholder:text-white/20 z-10" />
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#00F2FE] transition-colors z-20"><Search className="w-3.5 h-3.5" /></div>
+                    <div className="relative group w-full h-10 px-1">
+                        <input type="text" placeholder="FIND UNIT..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full h-full bg-white/5 border border-white/10 rounded-xl pl-4 pr-10 text-[10px] font-chakra font-black text-white uppercase tracking-[0.15em] focus:outline-none focus:border-[#00F2FE]/40 transition-all placeholder:text-white/20" />
+                        <div className="absolute right-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#00F2FE] transition-colors"><Search className="w-4 h-4" /></div>
                     </div>
-                    <div className="flex gap-2 items-center h-8">
-                        {(['name', 'rating', 'date'] as SortOption[]).map((opt) => (
-                            <button key={opt} onClick={() => setSortBy(opt)} className={sortBtnClass(opt)} style={sortBy === opt ? { textShadow: '0 0 8px rgba(0, 242, 254, 0.6)' } : {}}>{opt.toUpperCase()}</button>
+
+                    <div className="flex gap-1.5 px-1">
+                        {(['rating', 'name', 'date'] as SortOption[]).map((opt) => (
+                            <button 
+                                key={opt} 
+                                onClick={() => setSortBy(opt)} 
+                                className={`flex-1 py-2 text-[8px] font-black uppercase tracking-widest rounded-lg border transition-all ${sortBy === opt ? 'bg-[#00F2FE]/10 border-[#00F2FE]/40 text-[#00F2FE] shadow-[0_0_10px_rgba(0,242,254,0.1)]' : 'bg-transparent border-white/5 text-white/20 hover:text-white/40'}`}
+                            >
+                                {opt}
+                            </button>
                         ))}
                     </div>
                 </div>
-            </div>
-            
-            {/* PLAYER PLAQUES CONTAINER */}
-            <div className="flex-grow overflow-y-auto px-6 md:px-12 lg:px-20 pt-12 custom-hub-scrollbar relative z-10">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 pb-32 max-w-7xl mx-auto">
+
+                {/* SCROLLABLE PLAYER LIST (1 COLUMN) */}
+                <div className="flex-grow overflow-y-auto custom-hub-scrollbar p-4 pt-4 space-y-2.5">
                     {confirmedPersonnel.map((person, idx) => {
+                        const isSelected = selectedPlayerId === person.id;
                         const tierColor = TIER_COLORS[person.tier] || '#94a3b8';
                         return (
-                            <div key={person.id} onClick={() => person.id && onSelectPlayer(person.id)} className="group relative flex items-center justify-between h-[84px] w-full rounded-2xl transition-all duration-500 cursor-pointer" style={{ '--tier-color': tierColor } as React.CSSProperties}>
-                                <div className="absolute inset-0 rounded-2xl overflow-hidden z-1 bg-gradient-to-br from-[#161b22] to-[#0a0d14] border border-white/[0.06] group-hover:border-[var(--tier-color)] transition-all duration-500 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.05)] group-hover:shadow-[0_0_20px_var(--tier-color)]">
-                                    <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`, backgroundSize: '4px 4px' }}></div>
-                                    <div className="absolute -top-10 -left-10 w-20 h-20 bg-[var(--tier-color)] rounded-full blur-[40px] pointer-events-none opacity-5 group-hover:opacity-20 transition-opacity"></div>
-                                    <div className="absolute top-0 left-0 w-1.5 h-full bg-[var(--tier-color)] opacity-30 group-hover:opacity-100 transition-opacity duration-500"></div>
-                                </div>
-                                <div className="relative z-10 h-full w-full flex items-center px-4 gap-4">
-                                    <span className="font-mono text-[10px] text-white/5 w-5 shrink-0 font-black tracking-tighter group-hover:text-white/10 transition-colors">{(idx + 1).toString().padStart(2, '0')}</span>
-                                    
-                                    <div className="shrink-0 transition-transform duration-500">
+                            <div 
+                                key={person.id} 
+                                onClick={() => onSelectPlayer(person.id)} 
+                                className={`group/unit relative flex items-center justify-between h-[68px] w-full rounded-2xl transition-all duration-300 cursor-pointer 
+                                    ${isSelected ? 'bg-white/10 border-white/15 shadow-xl' : 'bg-white/[0.02] border-transparent hover:bg-white/[0.05]'} border`}
+                            >
+                                {/* Left Selection Indicator */}
+                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-10 rounded-r-full transition-all duration-500" 
+                                     style={{ 
+                                         backgroundColor: isSelected ? tierColor : 'transparent', 
+                                         boxShadow: isSelected ? `0 0 15px ${tierColor}` : 'none',
+                                         opacity: isSelected ? 1 : 0
+                                     }}></div>
+                                
+                                <div className="flex items-center px-4 gap-4 w-full">
+                                    <div className="shrink-0 transition-transform duration-300 group-hover/unit:scale-105">
                                         <HubPortraitAvatar photo={person.playerCard} tierColor={tierColor} />
                                     </div>
-
-                                    <div className="flex flex-col gap-0.5 flex-grow min-w-0">
-                                        <span className="font-chakra font-black text-base text-white/80 uppercase tracking-wide group-hover:text-white transition-colors truncate leading-tight">{person.nickname}</span>
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-mono text-[7px] text-white/40 group-hover:text-[var(--tier-color)] uppercase tracking-[0.2em] font-black transition-colors" style={{ textShadow: '0 0 5px rgba(0,0,0,0.5)' }}>{person.tier}</span>
-                                            <div className="h-[1px] w-4 bg-white/5 rounded-full"></div>
-                                        </div>
+                                    <div className="flex flex-col min-w-0 flex-grow">
+                                        <span className={`font-chakra font-black text-sm uppercase tracking-wide truncate transition-colors ${isSelected ? 'text-white' : 'text-white/60'}`}>
+                                            {person.nickname}
+                                        </span>
+                                        <span className="text-[7px] font-mono font-black text-white/20 uppercase tracking-[0.2em]">{person.tier}</span>
                                     </div>
-                                    <div className="flex flex-col items-end shrink-0 w-20">
-                                        <div className="flex items-baseline gap-1.5">
-                                            <span className="font-russo text-3xl text-white/90 group-hover:text-[var(--tier-color)] group-hover:scale-110 transition-all duration-500 leading-none" style={{ textShadow: '0 0 10px rgba(0,0,0,0.5)' }}>{person.rating}</span>
-                                            <div className="flex flex-col items-start leading-none mb-0.5"><span className="font-mono font-black text-[7px] text-white/20 group-hover:text-[var(--tier-color)] uppercase tracking-[0.1em] transition-colors">OVR</span></div>
+                                    <div className="flex flex-col items-end shrink-0">
+                                        <div className="flex items-baseline gap-1">
+                                            <span className={`font-russo text-2xl transition-all duration-300 ${isSelected ? 'text-[#00F2FE] scale-110' : 'text-white/30'}`}>{person.rating}</span>
+                                            <span className="text-[6px] font-mono font-black text-white/10 uppercase">OVR</span>
                                         </div>
                                     </div>
                                 </div>
@@ -275,6 +251,29 @@ export const HubRoster: React.FC<HubRosterProps> = ({ onSelectPlayer, sortBy, se
                     })}
                 </div>
             </div>
+
+            {/* CONTENT AREA - RIGHT COLUMN (70%) */}
+            <div className="flex-grow relative bg-[#01040a] overflow-hidden">
+                {/* Background effects for content area */}
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-black to-black opacity-60"></div>
+                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+
+                {selectedPlayerId ? (
+                    <div className="h-full w-full relative animate-in fade-in slide-in-from-right-4 duration-500 overflow-hidden">
+                        <HubPlayerIntel 
+                            playerId={selectedPlayerId} 
+                            isEmbedded={true} 
+                            onBack={() => {}} // No back in master-detail
+                        />
+                    </div>
+                ) : (
+                    <div className="h-full w-full flex flex-col items-center justify-center opacity-10">
+                        <Users className="w-32 h-32 mb-6" />
+                        <span className="font-orbitron text-xl uppercase tracking-[0.6em] font-black">Select Intel Unit</span>
+                    </div>
+                )}
+            </div>
+
             <DuelSetupModal isOpen={isDuelSetupOpen} onClose={() => setIsDuelSetupOpen(false)} players={confirmedPersonnel} onStart={onStartDuel} />
         </div>
     );
