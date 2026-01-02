@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { PublicPlayerCard } from '../components/PublicPlayerCard';
 import { LastSessionBreakdown } from '../components/PlayerCardAnalytics';
@@ -29,8 +28,7 @@ const DEFAULT_PROMO_PLAYER: Player = {
     rating: 94,
     initialRating: 94,
     tier: PlayerTier.Legend,
-    // CHANGED: Neutral dark athletic background instead of a literal football on grass
-    playerCard: "https://images.unsplash.com/photo-1517466787929-bc90951d0974?q=80&w=800&auto=format&fit=crop", 
+    playerCard: "https://images.unsplash.com/photo-1560272564-c83b66b1ad12?q=80&w=800&auto=format&fit=crop", 
     totalGoals: 142,
     totalAssists: 88,
     totalGames: 200,
@@ -152,7 +150,7 @@ const TEXT = {
         // Hub Section
         hub_section_title: "ЭКОСИСТЕМА КЛУБА",
         hub_section_desc: "Центральный интеллект. Доступ только для действующих игроков.",
-        hub_badge: "ТОЛЬКО ДЛЯ УЧАСНИКОВ",
+        hub_badge: "ТОЛЬКО ДЛЯ УЧАСТНИКОВ",
         hub_f1: "Рейтинги Клуба",
         hub_f2: "Архив Матчей",
         hub_f3: "Live Данные",

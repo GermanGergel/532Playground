@@ -144,7 +144,7 @@ export const HomeScreen: React.FC = () => {
                 {/* ПРЕВЬЮ КАРТОЧКИ (КОПИРУЕМ СТИЛЬ SHARE_PROFILE_MODAL) */}
                 <div 
                     ref={promoCardRef} 
-                    className="w-full bg-[#1A1D24] rounded-[2.5rem] p-6 flex flex-col items-center gap-6 border border-[#00F2FE]/30 shadow-[0_0_30px_rgba(0,242,254,0.15)]"
+                    className="w-full bg-[#1A1D24] rounded-[2rem] p-6 flex flex-col items-center gap-6 border border-[#00F2FE]/30 shadow-[0_0_30px_rgba(0,242,254,0.15)]"
                 >
                     <div className="text-center">
                         <h1 className="font-russo text-3xl flex items-baseline justify-center">
