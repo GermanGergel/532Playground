@@ -124,7 +124,7 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                                     DUEL
                                 </span>
                                 <span className="text-[6px] font-black text-white/40 uppercase tracking-[0.2em] mt-1 group-hover:text-[#00F2FE] transition-colors">
-                                    INITIATE SIMULATION
+                                    {viewMode === 'duel' ? 'EXIT INTERFACE' : 'INITIATE SIMULATION'}
                                 </span>
                              </div>
                         </button>
@@ -163,7 +163,6 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                                         : 'bg-gradient-to-br from-[#161a1f] to-[#0d1013] border-white/5 shadow-[0_4px_10px_rgba(0,0,0,0.4),inset_0_1px_0.5px_rgba(255,255,255,0.05)] hover:border-white/10 hover:from-[#1a1f25]'
                                     }`}
                             >
-                                {/* Tier Marker on left */}
                                 <div 
                                     className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-8 rounded-r-full transition-all duration-500" 
                                     style={{ 
@@ -204,7 +203,6 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                                     </div>
                                 </div>
                                 
-                                {/* Inner highlight for 3D effect */}
                                 <div className="absolute inset-0 rounded-2xl pointer-events-none border border-white/[0.03] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]"></div>
                             </div>
                         );
