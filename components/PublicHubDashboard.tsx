@@ -4,7 +4,7 @@ import { useApp } from '../context';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
 import { NewsItem, Player, PlayerTier, Team, WeatherCondition } from '../types';
 import { TrophyIcon, Zap, History as HistoryIcon, Users, AwardIcon, StarIcon, Target } from '../icons';
-import { useTranslation } from './ui';
+import { useTranslation } from '../ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { TeamAvatar } from './avatars';
 
@@ -33,7 +33,6 @@ const StandbyScreen: React.FC = () => {
     const t = useTranslation();
     return (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black overflow-hidden rounded-[2.5rem]">
-            {/* Animated Scanning Circle */}
             <div className="absolute w-[600px] h-[600px] border border-[#00F2FE]/20 rounded-full animate-ping-slow"></div>
             <div className="absolute w-[400px] h-[400px] border border-[#00F2FE]/10 rounded-full animate-ping-slower"></div>
             
@@ -53,7 +52,6 @@ const StandbyScreen: React.FC = () => {
                     {t.hubAwaitingStats}<br/>SYSTEM IDLE. AWAITING UPLINK SIGNAL...
                 </p>
             </div>
-
             <style dangerouslySetInnerHTML={{ __html: `
                 @keyframes ping-slow { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(1.5); opacity: 0; } }
                 .animate-ping-slow { animation: ping-slow 4s cubic-bezier(0, 0, 0.2, 1) infinite; }
@@ -126,7 +124,6 @@ const HubCard: React.FC<{
 
     return (
         <div className={`relative overflow-hidden rounded-[1.5rem] flex flex-col border ${bgStyleClass} ${className} group/card`}>
-            {/* --- TEXTURE LAYERS --- */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ 
                 backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`,
                 backgroundSize: '4px 4px'
@@ -280,8 +277,6 @@ const NewsVanguardCard: React.FC<{ item: NewsItem }> = ({ item }) => {
                         </span>
                         {item.isHot && <Zap className="w-3 h-3 text-indigo-400 animate-pulse" />}
                     </div>
-                    
-                    {/* Aligned Name and Message */}
                     <div className="flex items-baseline gap-2 overflow-hidden">
                         <h4 className="text-[14px] font-black text-slate-100 uppercase shrink-0 tracking-wide">
                             {item.playerName}
@@ -299,32 +294,22 @@ const NewsVanguardCard: React.FC<{ item: NewsItem }> = ({ item }) => {
 const getImpactScore = (stats: PlayerStats): number => {
     let score = 0;
     const nonCleanSheetWins = stats.wins - (stats.cleanSheetWins || 0);
-
     score += nonCleanSheetWins * 2.0;
     score += (stats.cleanSheetWins || 0) * 2.5;
     score += stats.draws * 0.5;
     score += stats.goals * 1.0;
     score += stats.assists * 1.0;
     score -= stats.ownGoals * 1.0;
-
     return score;
 };
 
 const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t }) => {
-    
     const getWeatherIcon = (cond: WeatherCondition | string = 'clear') => {
         const c = cond.toLowerCase();
         if (c.includes('rain') || c.includes('storm')) return <CloudRainIcon className="w-16 h-16 text-white" />;
         if (c.includes('cloud') || c.includes('fog')) return <CloudIcon className="w-16 h-16 text-white" />;
-        
-        const startTimeHour = session.timeString ? parseInt(session.timeString.split(':')[0], 10) : 19;
-        const isNight = startTimeHour >= 18 || startTimeHour < 6;
-        if (isNight) {
-            return <MoonIcon className="w-16 h-16 text-white" />;
-        }
         return <MoonIcon className="w-16 h-16 text-white" />;
     };
-
     return (
         <div className="flex flex-col h-full justify-between py-2">
             <div className="flex items-start gap-3 border-b border-white/5 pb-4">
@@ -338,15 +323,12 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
             <div className="flex-grow flex flex-col justify-end pt-2">
                 <div className="relative rounded-2xl bg-gradient-to-br from-indigo-900/40 to-black border border-indigo-500/20 p-4 flex items-center justify-between overflow-hidden">
                     <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-striped-brick.png')]"></div>
-                    
                     <div className="relative z-10 flex flex-col">
                         <span className="text-[9px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-1">{t.hubWeather}</span>
                         <div className="flex items-baseline gap-1"><span className="font-russo text-4xl text-white leading-none">{session.weather?.temperature || 26}°C</span><TermometerIcon className="w-4 h-4 text-white/40" /></div>
                         <span className="font-chakra text-xs text-indigo-200 font-bold uppercase tracking-wider mt-1">{session.weather?.condition || "CLEAR"}</span>
                     </div>
-                    <div className="relative z-10">
-                        {getWeatherIcon(session.weather?.condition)}
-                    </div>
+                    <div className="relative z-10">{getWeatherIcon(session.weather?.condition)}</div>
                 </div>
             </div>
         </div>
@@ -359,9 +341,49 @@ export const PublicHubDashboard: React.FC = () => {
     const { history, newsFeed, allPlayers } = useApp();
     const t = useTranslation();
     const [activeRightTab, setActiveRightTab] = useState<'players' | 'games'>('players');
+    
+    // Presentation Mode States
+    const [isAutoSwitching, setIsAutoSwitching] = useState(true);
+    const [autoSwitchProgress, setAutoSwitchProgress] = useState(0);
 
     const session = history[0];
     
+    // --- AUTO SWITCH LOGIC ---
+    useEffect(() => {
+        if (!isAutoSwitching || !session) return;
+
+        let startTime = Date.now();
+        const DURATION = 10000; // 10 seconds per phase
+        
+        const timer = setInterval(() => {
+            let elapsed = Date.now() - startTime;
+            let progress = (elapsed / DURATION) * 100;
+            
+            if (progress >= 100) {
+                // Switch Logic
+                setActiveRightTab(prev => {
+                    if (prev === 'players') {
+                        startTime = Date.now(); // Reset for matches
+                        return 'games';
+                    } else {
+                        setIsAutoSwitching(false); // End cycle
+                        return 'players';
+                    }
+                });
+                setAutoSwitchProgress(0);
+            } else {
+                setAutoSwitchProgress(progress);
+            }
+        }, 50); // Refresh progress bar every 50ms
+
+        return () => clearInterval(timer);
+    }, [isAutoSwitching, session]);
+
+    const handleManualTabChange = (tab: 'players' | 'games') => {
+        setIsAutoSwitching(false); // Kill auto mode forever on interaction
+        setActiveRightTab(tab);
+    };
+
     if (!session) return <StandbyScreen />;
 
     const { teamStats, allPlayersStats: rawPlayersStats } = calculateAllStats(session);
@@ -369,15 +391,11 @@ export const PublicHubDashboard: React.FC = () => {
     const allPlayersStats = useMemo(() => {
         return rawPlayersStats.map(stat => {
             const latestPlayer = allPlayers.find(p => p.id === stat.player.id);
-            return {
-                ...stat,
-                player: latestPlayer || stat.player
-            };
+            return { ...stat, player: latestPlayer || stat.player };
         });
     }, [rawPlayersStats, allPlayers]);
 
     const sortedForPodium = [...allPlayersStats].sort((a, b) => getImpactScore(b) - getImpactScore(a));
-
     const sortedForTable = [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists));
 
     const top3PodiumPlayers: TopPlayerStats[] = sortedForPodium
@@ -394,7 +412,7 @@ export const PublicHubDashboard: React.FC = () => {
         .sort((a, b) => a.gameNumber - b.gameNumber);
 
     const thStandings = "py-2 text-white/40 uppercase tracking-tighter text-[8px] font-black text-center sticky top-0 bg-[#1e293b]/50 backdrop-blur-sm z-10 border-b border-white/5";
-    const tdBase = "py-2.5 text-center text-[10px] font-bold transition-colors";
+    const tdBase = "py-1.5 text-center text-[10px] font-bold transition-colors";
 
     return (
         <div className="h-full flex flex-col animate-in fade-in duration-700 w-full relative p-2 md:p-3">
@@ -430,23 +448,62 @@ export const PublicHubDashboard: React.FC = () => {
 
                 <div className="col-span-12 md:col-span-3 flex flex-col gap-4 h-full min-h-[600px]">
                     <HubCard title={t.hubTeamStandings} icon={<TrophyIcon />} variant="standings" className="shrink-0" bodyClassName="flex flex-col">
-                        <div className="p-1"><table className="w-full table-fixed border-collapse">
+                        <div className="p-1">
+                            <table className="w-full table-fixed border-collapse">
                                 <thead><tr className="bg-white/5 border-b border-white/10"><th className={`${thStandings} w-[12%]`}>#</th><th className={`${thStandings} w-[28%]`}>{t.team}</th><th className={`${thStandings} w-[10%]`}>{t.thP}</th><th className={`${thStandings} w-[10%]`}>{t.thW}</th><th className={`${thStandings} w-[10%]`}>{t.thD}</th><th className={`${thStandings} w-[10%]`}>{t.thL}</th><th className={`${thStandings} w-[10%]`}>{t.thGD}</th><th className={`${thStandings} w-[10%]`}>{t.hubPoints}</th></tr></thead>
                                 <tbody>{teamStats.map((stat, idx) => (<tr key={stat.team.id} className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors"><td className="py-1.5 text-center text-[9px] font-bold text-white/30 bg-white/5">{idx + 1}</td><td className="py-1.5 flex justify-center"><SubtleDashboardAvatar team={stat.team} size="xxs" isLight /></td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.gamesPlayed}</td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.wins}</td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.draws}</td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.losses}</td><td className="py-1.5 text-center text-[10px] font-bold text-white/40">{stat.goalDifference > 0 ? `+${stat.goalDifference}` : stat.goalDifference}</td><td className="py-1.5 text-center text-[12px] font-bold text-white bg-white/5">{stat.points}</td></tr>))}</tbody>
-                            </table></div>
+                            </table>
+                        </div>
                     </HubCard>
-                    <HubCard title={<div className="flex gap-14"><button onClick={() => setActiveRightTab('players')} className={`font-russo text-[10px] uppercase tracking-widest ${activeRightTab === 'players' ? 'text-[#00F2FE]' : 'text-white/20'}`}>{t.hubPlayers}</button><button onClick={() => setActiveRightTab('games')} className={`font-russo text-[10px] uppercase tracking-widest ${activeRightTab === 'games' ? 'text-[#00F2FE]' : 'text-white/20'}`}>{t.hubGames}</button></div>} icon={activeRightTab === 'players' ? <Users /> : <HistoryIcon />} variant="standings" accent="#00F2FE" className="flex-grow min-h-0 h-[450px]" bodyClassName="flex flex-col h-full min-h-0">
+                    
+                    <HubCard 
+                        title={
+                            <div className="flex gap-14">
+                                <div className="relative group/tab">
+                                    <button 
+                                        onClick={() => handleManualTabChange('players')} 
+                                        className={`font-russo text-[10px] uppercase tracking-widest transition-all duration-300 ${activeRightTab === 'players' ? 'text-[#00F2FE]' : 'opacity-20 hover:opacity-50'}`}
+                                    >
+                                        {t.hubPlayers}
+                                    </button>
+                                    {isAutoSwitching && activeRightTab === 'players' && (
+                                        <div className="absolute -bottom-1 left-0 h-[1.5px] bg-[#00F2FE] transition-all duration-75 shadow-[0_0_5px_#00F2FE]" style={{ width: `${autoSwitchProgress}%` }} />
+                                    )}
+                                </div>
+                                <div className="relative group/tab">
+                                    <button 
+                                        onClick={() => handleManualTabChange('games')} 
+                                        className={`font-russo text-[10px] uppercase tracking-widest transition-all duration-300 ${activeRightTab === 'games' ? 'text-[#00F2FE]' : 'opacity-20 hover:opacity-50'}`}
+                                    >
+                                        {t.hubGames}
+                                    </button>
+                                    {isAutoSwitching && activeRightTab === 'games' && (
+                                        <div className="absolute -bottom-1 left-0 h-[1.5px] bg-[#00F2FE] transition-all duration-75 shadow-[0_0_5px_#00F2FE]" style={{ width: `${autoSwitchProgress}%` }} />
+                                    )}
+                                </div>
+                            </div>
+                        } 
+                        icon={activeRightTab === 'players' ? <Users /> : <HistoryIcon />} 
+                        variant="standings" 
+                        accent="#00F2FE" 
+                        className="flex-grow min-h-0 h-[450px]" 
+                        bodyClassName="flex flex-col h-full min-h-0"
+                    >
                         <div className="flex-grow overflow-y-auto custom-hub-scrollbar h-full">
                             {activeRightTab === 'players' ? (
-                                <table className="w-full table-fixed border-collapse">
-                                    <thead><tr><th className={`${thStandings} w-[10%]`}>#</th><th className={`${thStandings} text-left pl-3 w-[45%]`}>{t.players}</th><th className={`${thStandings} w-[15%]`}>{t.thG}</th><th className={`${thStandings} w-[15%]`}>{t.thA}</th><th className={`${thStandings} w-[15%]`}>{t.thTotal}</th></tr></thead>
-                                    <tbody>{sortedForTable.map((ps, idx) => (<tr key={ps.player.id} className="group hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"><td className="py-2 text-center text-[9px] font-bold text-white/30 bg-white/[0.02]">{idx + 1}</td><td className="py-2 text-left pl-3 relative overflow-hidden group-hover:bg-white/5"><div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-3 rounded-r-full" style={{ backgroundColor: ps.team.color }} /><span className="text-slate-300 font-bold uppercase truncate text-[11px] block w-full pl-2 group-hover:text-white transition-colors">{ps.player.nickname || 'Unknown'}</span></td><td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.goals}</td><td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.assists}</td><td className="py-2 text-center text-[12px] font-bold text-white bg-white/[0.03]">{ps.goals + ps.assists}</td></tr>))}</tbody>
-                                </table>
+                                <div className="animate-in fade-in duration-500">
+                                    <table className="w-full table-fixed border-collapse">
+                                        <thead><tr><th className={`${thStandings} w-[10%]`}>#</th><th className={`${thStandings} text-left pl-3 w-[45%]`}>{t.players}</th><th className={`${thStandings} w-[15%]`}>{t.thG}</th><th className={`${thStandings} w-[15%]`}>{t.thA}</th><th className={`${thStandings} w-[15%]`}>{t.thTotal}</th></tr></thead>
+                                        <tbody>{sortedForTable.map((ps, idx) => (<tr key={ps.player.id} className="group hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"><td className="py-2 text-center text-[9px] font-bold text-white/30 bg-white/[0.02]">{idx + 1}</td><td className="py-2 text-left pl-3 relative overflow-hidden group-hover:bg-white/5"><div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-3 rounded-r-full" style={{ backgroundColor: ps.team.color }} /><span className="text-slate-300 font-bold uppercase truncate text-[11px] block w-full pl-2 group-hover:text-white transition-colors">{ps.player.nickname || 'Unknown'}</span></td><td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.goals}</td><td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.assists}</td><td className="py-2 text-center text-[12px] font-bold text-white bg-white/[0.03]">{ps.goals + ps.assists}</td></tr>))}</tbody>
+                                    </table>
+                                </div>
                             ) : (
-                                <table className="w-full table-fixed border-collapse">
-                                    <thead><tr><th className={`${thStandings} w-[15%]`}>#</th><th className={`${thStandings} w-[25%] text-center`}>{t.hubHome}</th><th className={`${thStandings} w-[35%] text-center`}>{t.hubResult}</th><th className={`${thStandings} w-[25%] text-center`}>{t.hubAway}</th></tr></thead>
-                                    <tbody>{finishedGames.map((game) => (<tr key={game.id} className="group hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"><td className={`${tdBase} text-white/30 font-mono`}>{game.gameNumber}</td><td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team1Id) || {}} size="xxs" isLight={true} /></div></td><td className="py-2.5 text-center"><span className="font-bold text-[11px] md:text-[12px] text-slate-200 tabular-nums tracking-tighter bg-white/5 px-2 py-1 rounded">{game.team1Score} : {game.team2Score}</span></td><td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team2Id) || {}} size="xxs" isLight={true} /></div></td></tr>))}</tbody>
-                                </table>
+                                <div className="animate-in fade-in duration-500">
+                                    <table className="w-full table-fixed border-collapse">
+                                        <thead><tr><th className={`${thStandings} w-[15%]`}>#</th><th className={`${thStandings} w-[25%] text-center`}>{t.hubHome}</th><th className={`${thStandings} w-[35%] text-center`}>{t.hubResult}</th><th className={`${thStandings} w-[25%] text-center`}>{t.hubAway}</th></tr></thead>
+                                        <tbody>{finishedGames.map((game) => (<tr key={game.id} className="group hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"><td className={`${tdBase} text-white/30 font-mono`}>{game.gameNumber}</td><td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team1Id) || {}} size="xxs" isLight={true} /></div></td><td className="py-2.5 text-center"><span className="font-bold text-[11px] md:text-[12px] text-slate-200 tabular-nums tracking-tighter bg-white/5 px-2 py-1 rounded">{game.team1Score} : {game.team2Score}</span></td><td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team2Id) || {}} size="xxs" isLight={true} /></div></td></tr>))}</tbody>
+                                    </table>
+                                </div>
                             )}
                         </div>
                     </HubCard>
