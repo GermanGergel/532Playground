@@ -55,7 +55,6 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
     const { allPlayers } = useApp();
     const t = useTranslation();
     
-    // Режим отображения: 'intel' (профиль) или 'duel' (сравнение)
     const [viewMode, setViewMode] = useState<'intel' | 'duel'>('intel');
     const [duelSlots, setDuelSlots] = useState<[string | null, string | null]>([null, null]);
 
@@ -81,7 +80,6 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
     }, [allPlayers, search, sortBy]);
 
     useEffect(() => {
-        // Авто-выбор первого игрока при загрузке, если мы в режиме Intel
         if (viewMode === 'intel' && !selectedPlayerId && confirmedPersonnel.length > 0) {
             onSelectPlayer(confirmedPersonnel[0].id);
         }
@@ -89,13 +87,11 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
 
     const handlePlayerClick = (id: string) => {
         if (viewMode === 'duel') {
-            // Логика заполнения слотов дуэли
             setDuelSlots(prev => {
                 if (!prev[0]) return [id, null];
                 if (prev[0] === id) return [null, prev[1]];
                 if (!prev[1]) return [prev[0], id];
                 if (prev[1] === id) return [prev[0], null];
-                // Если оба заняты, меняем второго
                 return [prev[0], id];
             });
         } else {
@@ -109,8 +105,8 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
             setDuelSlots([null, null]);
         } else {
             setViewMode('duel');
-            // При входе в дуэль можно предустановить текущего выбранного игрока в первый слот
-            setDuelSlots([selectedPlayerId, null]);
+            // Очищаем выбор, чтобы пользователь выбирал обоих с нуля
+            setDuelSlots([null, null]);
         }
     };
 
@@ -127,7 +123,7 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                              <div className={`absolute inset-0 border rounded-xl transition-all ${viewMode === 'duel' ? 'bg-[#00F2FE]/20 border-[#00F2FE] shadow-[0_0_15px_rgba(0,242,254,0.4)]' : 'bg-[#00F2FE]/5 border-[#00F2FE]/40 group-hover:bg-[#00F2FE]/10 group-hover:border-[#00F2FE]'}`}></div>
                              <div className="relative z-10 flex flex-col items-center">
                                 <span className={`font-blackops text-[24px] uppercase tracking-[0.1em] transition-colors italic leading-none ${viewMode === 'duel' ? 'text-white' : 'text-[#00F2FE]'}`}>
-                                    {viewMode === 'duel' ? 'BACK' : 'DUEL'}
+                                    DUEL
                                 </span>
                                 <span className="text-[6px] font-black text-white/40 uppercase tracking-[0.2em] mt-1 group-hover:text-[#00F2FE] transition-colors">
                                     {viewMode === 'duel' ? 'EXIT SIMULATION' : 'INITIATE SIMULATION'}
@@ -158,13 +154,17 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                     {confirmedPersonnel.map((person) => {
                         const isSelected = viewMode === 'intel' ? selectedPlayerId === person.id : duelSlots.includes(person.id);
                         const tierColor = TIER_COLORS[person.tier] || '#94a3b8';
+                        const duelHighlight = viewMode === 'duel' && isSelected;
                         
                         return (
                             <div 
                                 key={person.id} 
                                 onClick={() => handlePlayerClick(person.id)} 
-                                className={`group/unit relative flex items-center justify-between h-[68px] w-full rounded-2xl transition-all duration-300 cursor-pointer 
-                                    ${isSelected ? 'bg-white/10 border-white/15 shadow-xl' : 'bg-white/[0.02] border-transparent hover:bg-white/[0.05]'} border`}
+                                className={`group/unit relative flex items-center justify-between h-[68px] w-full rounded-2xl transition-all duration-300 cursor-pointer border
+                                    ${isSelected 
+                                        ? `bg-white/10 ${duelHighlight ? 'border-[#00F2FE] shadow-[0_0_15px_rgba(0,242,254,0.2)]' : 'border-white/20 shadow-xl'}` 
+                                        : 'bg-white/[0.02] border-transparent hover:bg-white/[0.05]'
+                                    }`}
                             >
                                 <div 
                                     className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]" 
@@ -187,11 +187,6 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                                         <span className="text-[7px] font-mono font-black text-white/20 uppercase tracking-[0.2em]">{person.tier}</span>
                                     </div>
                                     <div className="flex flex-col items-end shrink-0">
-                                        {viewMode === 'duel' && isSelected && (
-                                            <div className="absolute top-2 right-2">
-                                                <div className="w-2 h-2 rounded-full bg-[#00F2FE] shadow-[0_0_8px_#00F2FE]"></div>
-                                            </div>
-                                        )}
                                         <div className="flex items-baseline gap-1">
                                             <span 
                                                 className={`font-russo text-2xl transition-all duration-300 ${isSelected ? 'scale-110' : 'text-white/30'}`}

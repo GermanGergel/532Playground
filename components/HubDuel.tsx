@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context';
 import { Player } from '../types';
-import { TrophyIcon, Zap } from '../icons';
+import { Zap } from '../icons';
 import { useTranslation } from '../ui';
 import { PlayerAvatar } from './avatars';
 
@@ -37,11 +37,11 @@ const ComparisonBar: React.FC<{
     isVisible: boolean
 }> = ({ label, v1, v2, p1Win, p2Win, ratio1, ratio2, isVisible }) => (
     <div 
-        className={`w-full mb-3 transition-all duration-700 ease-out ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
+        className={`w-full mb-2 transition-all duration-700 ease-out ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
     >
-        <div className="flex justify-between items-end mb-1 px-1">
+        <div className="flex justify-between items-end mb-0.5 px-1">
             <span className={`font-russo text-[14px] transition-all duration-1000 ${isVisible && p1Win ? 'text-[#00F2FE] scale-110' : 'text-white/20'}`} style={{ textShadow: isVisible && p1Win ? '0 0 10px rgba(0,242,254,0.5)' : 'none' }}>{v1}</span>
-            <span className="font-chakra font-black text-[9px] text-white/40 uppercase tracking-[0.2em] italic">{label}</span>
+            <span className="font-chakra font-black text-[8px] text-white/40 uppercase tracking-[0.15em] italic">{label}</span>
             <span className={`font-russo text-[14px] transition-all duration-1000 ${isVisible && p2Win ? 'text-white scale-110' : 'text-white/20'}`}>{v2}</span>
         </div>
         <div className="flex w-full h-[3px] gap-2 items-center bg-white/[0.02] rounded-full overflow-hidden p-[1px]">
@@ -78,7 +78,6 @@ export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
     const player1 = useMemo(() => allPlayers.find(p => p.id === p1Id), [allPlayers, p1Id]);
     const player2 = useMemo(() => allPlayers.find(p => p.id === p2Id), [allPlayers, p2Id]);
 
-    // Сброс при смене состава
     useEffect(() => {
         setIsCalculating(false);
         setShowSequence(false);
@@ -91,6 +90,7 @@ export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
         const getWR = (p: Player) => p.totalGames > 0 ? Math.round((p.totalWins / p.totalGames) * 100) : 0;
         const getAwards = (p: Player) => Object.values(p.badges || {}).reduce((a, b) => a + (b || 0), 0);
         const getEfficiency = (p: Player) => p.totalSessionsPlayed > 0 ? (p.totalGoals / p.totalSessionsPlayed) : 0;
+        const getBestGoals = (p: Player) => p.records?.bestGoalsInSession?.value || 0;
 
         const rawData = [
             { id: 'ovr', label: 'Overall rating', v1: player1.rating, v2: player2.rating },
@@ -99,6 +99,7 @@ export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
             { id: 'wr', label: 'Win probability', v1: `${getWR(player1)}%`, v2: `${getWR(player2)}%`, raw1: getWR(player1), raw2: getWR(player2) },
             { id: 'eff', label: 'Efficiency Index', v1: getEfficiency(player1).toFixed(1), v2: getEfficiency(player2).toFixed(1), raw1: getEfficiency(player1), raw2: getEfficiency(player2) },
             { id: 'awards', label: 'Awards count', v1: getAwards(player1), v2: getAwards(player2) },
+            { id: 'best', label: 'Best session G', v1: getBestGoals(player1), v2: getBestGoals(player2) },
         ];
 
         return rawData.map(m => {
@@ -112,25 +113,18 @@ export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
     const handleStartSequence = () => {
         if (!player1 || !player2) return;
         setIsCalculating(true);
-
-        // 1. Имитация "взлома" или "расчета"
         setTimeout(() => {
             setIsCalculating(false);
             setShowSequence(true);
-            
-            // 2. Постепенное открытие строк (Staggered reveal)
             comparisonMetrics.forEach((_, idx) => {
                 setTimeout(() => {
                     setVisibleRows(prev => prev + 1);
-                }, (idx + 1) * 300); // Интервал между строками
+                }, (idx + 1) * 300); 
             });
-
-            // 3. Показ победителя после всех анимаций
             setTimeout(() => {
                 setShowWinner(true);
-            }, (comparisonMetrics.length * 300) + 1000);
-
-        }, 1200);
+            }, (comparisonMetrics.length * 300) + 800);
+        }, 1000);
     };
 
     const winnerInfo = useMemo(() => {
@@ -151,28 +145,20 @@ export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
         const isLoser = showWinner && winnerInfo?.side !== side && winnerInfo?.side !== 'none';
         
         return (
-            <div className={`relative flex flex-col items-center gap-5 transition-all duration-1000 ${isLoser ? 'opacity-20 scale-90 grayscale blur-[2px]' : ''}`}>
+            <div className={`relative flex flex-col items-center gap-2 transition-all duration-1000 ${isLoser ? 'opacity-20 scale-90 grayscale blur-[1px]' : ''}`}>
                 {player ? (
                     <>
                         <div className={`relative p-1 rounded-full border-2 transition-all duration-700 ${side === 'p1' ? 'border-[#00F2FE]' : 'border-white'} ${isWinner ? 'shadow-[0_0_50px_rgba(0,242,254,0.4)] scale-110' : 'shadow-2xl'}`}>
-                            {isWinner && (
-                                <div className="absolute -top-4 -left-4 z-30 animate-bounce">
-                                    <TrophyIcon className="w-8 h-8 text-[#FFD700] drop-shadow-[0_0_10px_#FFD700]" />
-                                </div>
-                            )}
-                            <PlayerAvatar player={player} size="xl" className="w-24 h-24 md:w-36 md:h-36 lg:w-44 lg:h-44" />
+                            <PlayerAvatar player={player} size="xl" className="w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40" />
                         </div>
                         <div className="text-center">
-                            <span className="font-russo text-lg md:text-xl uppercase tracking-widest text-white block">
+                            <span className="font-russo text-lg md:text-2xl uppercase tracking-wider text-white block truncate max-w-[140px]">
                                 {player.nickname}
-                            </span>
-                            <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.3em] mt-1 block font-mono">
-                                UNIT_ID: {player.id.substring(0, 8)}
                             </span>
                         </div>
                     </>
                 ) : (
-                    <div className="w-24 h-24 md:w-36 md:h-36 lg:w-44 lg:h-44 rounded-full border-2 border-dashed border-white/10 bg-white/[0.01] flex flex-col items-center justify-center gap-3">
+                    <div className="w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 rounded-full border-2 border-dashed border-white/10 bg-white/[0.01] flex flex-col items-center justify-center gap-3">
                         <Zap className="w-8 h-8 text-white/5 animate-pulse" />
                         <span className="text-[7px] font-black text-white/20 uppercase tracking-[0.4em] text-center">AWAITING<br/>DATA UPLINK</span>
                     </div>
@@ -182,51 +168,50 @@ export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
     };
 
     return (
-        <div className="h-full w-full flex flex-col items-center justify-start pt-24 px-8 relative overflow-hidden">
+        <div className="h-full w-full flex flex-col items-center justify-start pt-2 px-6 relative overflow-hidden">
             <ParticleBackground />
 
-            {/* BROADCAST HEADER */}
-            <div className="text-center mb-16 relative z-10">
+            {/* ULTRA COMPACT BROADCAST HEADER */}
+            <div className="text-center mb-6 relative z-10">
                 <div className="flex flex-col items-center">
-                    <div className="flex items-center gap-4 mb-4">
-                        <div className="h-[1px] w-12 bg-gradient-to-r from-transparent to-[#00F2FE]"></div>
-                        <h2 className="font-blackops italic text-lg md:text-2xl text-[#00F2FE] tracking-[0.5em] uppercase">
+                    <div className="flex items-center gap-2">
+                        <div className="h-px w-6 bg-gradient-to-r from-transparent to-[#00F2FE]"></div>
+                        <h2 className="font-blackops italic text-sm md:text-lg text-[#00F2FE] tracking-[0.1em] uppercase">
                             BATTLE SIMULATION
                         </h2>
-                        <div className="h-[1px] w-12 bg-gradient-to-l from-transparent to-[#00F2FE]"></div>
+                        <div className="h-px w-6 bg-gradient-to-l from-transparent to-[#00F2FE]"></div>
                     </div>
-                    <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.8em] font-mono">NEURAL_NETWORK_V5.3.2</span>
                 </div>
             </div>
 
             {/* MAIN BATTLE GROUND */}
-            <div className="flex items-start justify-center w-full max-w-6xl gap-4 md:gap-16 relative z-10">
+            <div className="flex items-start justify-center w-full max-w-5xl gap-4 md:gap-12 relative z-10">
                 <PlayerUnit player={player1} side="p1" />
 
                 {/* CENTRAL ANALYTICS COLUMN */}
-                <div className="flex flex-col flex-grow max-w-[320px] md:max-w-[420px] pt-6">
+                <div className="flex flex-col flex-grow max-w-[300px] md:max-w-[400px] pt-2">
                     {!showSequence ? (
-                        <div className="flex flex-col items-center justify-center min-h-[320px] animate-in fade-in duration-700">
-                            <div className="w-full border-y border-white/5 py-12 flex flex-col items-center gap-8 relative">
+                        <div className="flex flex-col items-center justify-center min-h-[280px] animate-in fade-in duration-700">
+                            <div className="w-full border-y border-white/5 py-6 flex flex-col items-center gap-4 relative">
                                 <div className="absolute inset-0 bg-[#00F2FE]/[0.02] animate-pulse"></div>
-                                <div className="font-blackops italic text-6xl text-white/[0.03] tracking-[0.5em] select-none uppercase absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">VS</div>
+                                <div className="font-blackops italic text-5xl text-white/[0.03] tracking-[0.4em] select-none uppercase absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">VS</div>
                                 
                                 {player1 && player2 ? (
                                     <button 
                                         onClick={handleStartSequence}
                                         disabled={isCalculating}
-                                        className="relative group overflow-hidden bg-black border-2 border-[#00F2FE]/40 px-10 py-5 rounded-2xl transition-all hover:border-[#00F2FE] hover:shadow-[0_0_30px_rgba(0,242,254,0.4)] active:scale-95 disabled:opacity-50"
+                                        className="relative group overflow-hidden bg-black border border-[#00F2FE]/40 px-10 py-4 rounded-2xl transition-all hover:border-[#00F2FE] hover:shadow-[0_0_30px_rgba(0,242,254,0.4)] active:scale-95 disabled:opacity-50"
                                     >
                                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00F2FE]/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                                        <span className="relative z-10 font-russo text-sm text-[#00F2FE] uppercase tracking-[0.4em] group-hover:text-white transition-colors">
+                                        <span className="relative z-10 font-russo text-[11px] text-[#00F2FE] uppercase tracking-[0.4em] group-hover:text-white transition-colors">
                                             {isCalculating ? 'ANALYZING...' : 'START SEQUENCE'}
                                         </span>
                                     </button>
                                 ) : (
-                                    <div className="text-center px-6 relative z-10">
-                                        <p className="font-chakra font-bold text-[10px] text-white/30 uppercase tracking-[0.3em] leading-loose">
-                                            Tactical analysis offline<br/>
-                                            <span className="text-[#00F2FE]/40">Select two units for parity check</span>
+                                    <div className="text-center px-6 relative z-10 py-8">
+                                        <p className="font-chakra font-bold text-[9px] text-white/30 uppercase tracking-[0.3em] leading-loose">
+                                            Simulation standby<br/>
+                                            <span className="text-[#00F2FE]/40 italic">Select two units for parity check</span>
                                         </p>
                                     </div>
                                 )}
@@ -234,7 +219,7 @@ export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
                         </div>
                     ) : (
                         <div className="flex flex-col w-full h-full min-h-[320px]">
-                             <div className="flex flex-col w-full mb-8">
+                             <div className="flex flex-col w-full mb-4">
                                 {comparisonMetrics.map((m, idx) => (
                                     <ComparisonBar 
                                         key={m.id} 
@@ -251,19 +236,30 @@ export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
                             </div>
 
                             {showWinner && winnerInfo && (
-                                <div className="flex flex-col items-center gap-4 animate-in slide-in-from-bottom-6 fade-in duration-1000">
-                                    <div className="h-px w-24 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-                                    <div className="flex flex-col items-center gap-1">
-                                        <span className="text-[8px] font-black text-white/40 tracking-[0.5em] uppercase mb-1">PREDICTION RESULT</span>
+                                <div className="flex flex-col items-center gap-3 animate-in slide-in-from-bottom-6 fade-in duration-1000">
+                                    <div className="flex flex-col items-center gap-0.5">
+                                        <span className="text-[7px] font-black text-white/30 tracking-[0.4em] uppercase mb-1">SIMULATION RESULT</span>
                                         <span className={`font-russo text-3xl uppercase tracking-tighter text-center leading-none ${winnerInfo.side === 'p1' ? 'text-[#00F2FE]' : winnerInfo.side === 'p2' ? 'text-white' : 'text-slate-400'}`} style={{ textShadow: winnerInfo.side !== 'none' ? `0 0 20px ${winnerInfo.side === 'p1' ? '#00F2FE66' : '#ffffff44'}` : 'none' }}>
                                             {winnerInfo.name}
                                         </span>
                                     </div>
-                                    <div className="px-6 py-2 rounded-xl bg-white/[0.03] border border-white/10 shadow-xl backdrop-blur-md">
-                                        <span className="font-chakra font-black text-xs uppercase tracking-[0.4em] text-white/80">
-                                            INDEX: <span className="text-[#00F2FE]">{winnerInfo.p1Score}</span> — <span className="text-white">{winnerInfo.p2Score}</span>
-                                        </span>
+
+                                    {/* TERMINAL STYLE SCORE UI */}
+                                    <div className="relative flex items-center bg-black border border-white/10 rounded-2xl p-1 px-4 overflow-hidden shadow-2xl">
+                                         <div className="absolute inset-0 bg-gradient-to-r from-[#00F2FE]/5 via-transparent to-white/5"></div>
+                                         <div className="flex flex-col items-center px-4">
+                                            <span className="text-3xl font-russo font-black text-[#00F2FE]">{winnerInfo.p1Score}</span>
+                                         </div>
+                                         <div className="h-10 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent"></div>
+                                         <div className="px-3 flex flex-col items-center">
+                                             <span className="text-[7px] font-black text-white/20 uppercase tracking-[0.2em] leading-none italic">RATIO</span>
+                                         </div>
+                                         <div className="h-10 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent"></div>
+                                         <div className="flex flex-col items-center px-4">
+                                            <span className="text-3xl font-russo font-black text-white">{winnerInfo.p2Score}</span>
+                                         </div>
                                     </div>
+                                    <span className="text-[6px] font-black text-white/10 uppercase tracking-[0.8em] animate-pulse">Efficiency index verified</span>
                                 </div>
                             )}
                         </div>
