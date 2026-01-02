@@ -132,11 +132,11 @@ const HubCard: React.FC<{
             <div className={`absolute -top-10 -left-10 w-40 h-40 ${isElite ? 'bg-[#00F2FE]/[0.05]' : 'bg-[#00F2FE]/[0.03]'} rounded-full blur-[45px] pointer-events-none z-0 animate-pulse`} style={{ animationDuration: '6s' }}></div>
             
             <div className={`relative z-10 py-1.5 px-4 flex items-center shrink-0 ${headerStyleClass} ${isRight ? 'flex-row-reverse justify-start' : 'justify-between'}`}>
-                 <div className={`flex items-center gap-2 relative z-10 ${isRight ? 'flex-row-reverse' : ''}`}>
+                 <div className={`flex items-center gap-2 relative z-10 flex-grow ${isRight ? 'flex-row-reverse' : ''}`}>
                     <div className={`w-4 h-4 rounded-md flex items-center justify-center shadow-sm border ${iconBg} shrink-0`} style={{ color: accent }}>
                         {React.cloneElement(icon as React.ReactElement<any>, { className: "w-2.5 h-2.5" })}
                     </div>
-                    <div>
+                    <div className="flex-grow">
                         {typeof title === 'string' ? <h3 className={`font-russo text-[10px] uppercase tracking-widest ${titleColor}`}>{title}</h3> : title}
                     </div>
                  </div>
@@ -482,7 +482,7 @@ export const PublicHubDashboard: React.FC = () => {
                     
                     <HubCard 
                         title={
-                            <div className="flex justify-between w-full items-center px-4 md:px-6">
+                            <div className="flex justify-between w-full items-center pr-3">
                                 <div className="relative group/tab">
                                     <button 
                                         onClick={() => handleManualTabChange('players')} 
