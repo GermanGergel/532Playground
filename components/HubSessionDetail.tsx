@@ -161,6 +161,7 @@ const HubCard: React.FC<{ title: React.ReactNode; icon: React.ReactNode; childre
 export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onBack }) => {
     const t = useTranslation();
     const [activeTab, setActiveTab] = useState<'players' | 'matches'>('players');
+    const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
     const { teamStats, allPlayersStats } = useMemo(() => calculateAllStats(session), [session]);
     
     const sortedByImpact = useMemo(() => {
@@ -237,9 +238,9 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                         <div className="w-full h-full min-h-0">
                             <HubCard title={
                                 <div className="flex items-center gap-4 md:gap-6">
-                                    <button onClick={() => setActiveTab('players')} className={`font-russo text-[8px] md:text-[9px] uppercase tracking-widest transition-all ${activeTab === 'players' ? 'text-[#00F2FE]' : 'text-white/20'}`}>PLAYER STATISTICS</button>
+                                    <button onClick={() => { setActiveTab('players'); setExpandedMatchId(null); }} className={`font-russo text-[8px] md:text-[9px] uppercase tracking-widest transition-all ${activeTab === 'players' ? 'text-[#00F2FE]' : 'text-white/20'}`}>PLAYER STATISTICS</button>
                                     <div className="w-px h-3 bg-white/10"></div>
-                                    <button onClick={() => setActiveTab('matches')} className={`font-russo text-[8px] md:text-[9px] uppercase tracking-widest transition-all ${activeTab === 'matches' ? 'text-[#00F2FE]' : 'text-white/20'}`}>MATCH HISTORY</button>
+                                    <button onClick={() => { setActiveTab('matches'); setExpandedMatchId(null); }} className={`font-russo text-[8px] md:text-[9px] uppercase tracking-widest transition-all ${activeTab === 'matches' ? 'text-[#00F2FE]' : 'text-white/20'}`}>MATCH HISTORY</button>
                                 </div>
                             } icon={activeTab === 'players' ? <Users /> : <HistoryIcon />} accent="#00F2FE" className="h-full flex flex-col" bodyClassName="flex flex-col h-full min-h-0">
                                 <div className="flex-grow overflow-y-auto custom-hub-scrollbar p-1">
@@ -281,18 +282,68 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                             </thead>
                                             <tbody>
                                                 {finishedGames.map((game) => (
-                                                    <tr key={game.id} className="group hover:bg-white/5 transition-colors border-b border-white/5 last:border-0">
-                                                        <td className={`${tdBase} text-white/30 font-mono`}>{game.gameNumber}</td>
-                                                        <td className="py-2.5 text-center">
-                                                            <div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team1Id) || {}} size="xxs" isLight={true} /></div>
-                                                        </td>
-                                                        <td className="py-2.5 text-center">
-                                                            <span className="font-bold text-[11px] md:text-[12px] text-slate-200 tabular-nums tracking-tighter bg-white/5 px-2 py-1 rounded">{game.team1Score} : {game.team2Score}</span>
-                                                        </td>
-                                                        <td className="py-2.5 text-center">
-                                                            <div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team2Id) || {}} size="xxs" isLight={true} /></div>
-                                                        </td>
-                                                    </tr>
+                                                    <React.Fragment key={game.id}>
+                                                        <tr 
+                                                            className={`group hover:bg-white/10 cursor-pointer transition-all border-b border-white/5 last:border-0 ${expandedMatchId === game.id ? 'bg-white/5' : ''}`}
+                                                            onClick={() => setExpandedMatchId(expandedMatchId === game.id ? null : game.id)}
+                                                        >
+                                                            <td className={`${tdBase} text-white/30 font-mono`}>{game.gameNumber}</td>
+                                                            <td className="py-2.5 text-center">
+                                                                <div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team1Id) || {}} size="xxs" isLight={true} /></div>
+                                                            </td>
+                                                            <td className="py-2.5 text-center">
+                                                                <span className="font-bold text-[11px] md:text-[12px] text-slate-200 tabular-nums tracking-tighter bg-white/5 px-2 py-1 rounded">{game.team1Score} : {game.team2Score}</span>
+                                                            </td>
+                                                            <td className="py-2.5 text-center">
+                                                                <div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team2Id) || {}} size="xxs" isLight={true} /></div>
+                                                            </td>
+                                                        </tr>
+                                                        {expandedMatchId === game.id && (
+                                                            <tr className="bg-black/40 animate-in slide-in-from-top-2 fade-in duration-300">
+                                                                <td colSpan={4} className="p-3">
+                                                                    <div className="flex flex-col gap-2">
+                                                                        {game.goals.length > 0 ? (
+                                                                            game.goals.map((goal, gIdx) => {
+                                                                                const scorer = session.playerPool.find(p => p.id === goal.scorerId);
+                                                                                const assistant = session.playerPool.find(p => p.id === goal.assistantId);
+                                                                                const team = session.teams.find(t => t.id === goal.teamId);
+                                                                                return (
+                                                                                    <div key={goal.id} className="flex items-center gap-3 px-2">
+                                                                                        <div className="shrink-0">
+                                                                                            {goal.isOwnGoal ? (
+                                                                                                <span className="text-[10px] filter drop-shadow-[0_0_5px_rgba(239,68,68,0.5)]">🧤</span>
+                                                                                            ) : (
+                                                                                                <span className="text-[10px] filter drop-shadow-[0_0_5px_rgba(0,242,254,0.5)]">⚽</span>
+                                                                                            )}
+                                                                                        </div>
+                                                                                        <div className="flex flex-col min-w-0">
+                                                                                            <div className="flex items-baseline gap-2">
+                                                                                                <span className="text-[11px] font-black uppercase text-white tracking-wide truncate">
+                                                                                                    {scorer?.nickname || (goal.isOwnGoal ? 'Own Goal' : 'Unknown')}
+                                                                                                </span>
+                                                                                                {assistant && (
+                                                                                                    <span className="text-[9px] font-bold text-white/40 uppercase italic shrink-0">
+                                                                                                        (A) {assistant.nickname}
+                                                                                                    </span>
+                                                                                                )}
+                                                                                            </div>
+                                                                                            <span className="text-[7px] font-black uppercase tracking-widest" style={{ color: team?.color || '#fff' }}>
+                                                                                                {team?.name || 'SQUAD'}
+                                                                                            </span>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                );
+                                                                            })
+                                                                        ) : (
+                                                                            <div className="text-center py-2">
+                                                                                <span className="text-[8px] font-black text-white/20 uppercase tracking-[0.3em]">No goal events recorded</span>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        )}
+                                                    </React.Fragment>
                                                 ))}
                                             </tbody>
                                         </table>

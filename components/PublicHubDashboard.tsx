@@ -365,8 +365,8 @@ export const PublicHubDashboard: React.FC = () => {
     const { history, newsFeed, allPlayers } = useApp();
     const t = useTranslation();
     
-    // ПРИНУДИТЕЛЬНО ПЕРВАЯ ВКЛАДКА - ПЛЕЕРЫ
     const [activeRightTab, setActiveRightTab] = useState<'players' | 'games'>('players');
+    const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
     
     // Presentation Mode (Tabs)
     const [isAutoSwitching, setIsAutoSwitching] = useState(true);
@@ -395,6 +395,7 @@ export const PublicHubDashboard: React.FC = () => {
                     return next;
                 });
                 setAutoSwitchProgress(0);
+                setExpandedMatchId(null); // Close expanded match on auto-switch
             } else {
                 setAutoSwitchProgress(progress);
             }
@@ -406,6 +407,7 @@ export const PublicHubDashboard: React.FC = () => {
     const handleManualTabChange = (tab: 'players' | 'games') => {
         setIsAutoSwitching(false); 
         setActiveRightTab(tab);
+        setExpandedMatchId(null);
     };
 
     if (!session) return <StandbyScreen />;
@@ -439,15 +441,15 @@ export const PublicHubDashboard: React.FC = () => {
     const tdBase = "py-1.5 text-center text-[10px] font-bold transition-colors";
 
     return (
-        <div className="h-full flex flex-col animate-in fade-in duration-700 w-full relative p-2 md:p-3">
-            <div className="absolute -top-24 bottom-0 -left-4 -right-4 z-0 pointer-events-none rounded-[2rem] overflow-hidden">
+        <div className="h-full flex flex-col animate-in fade-in duration-700 w-full relative p-2 md:p-3 overflow-hidden">
+            <div className="absolute -top-24 bottom-0 -left-4 -right-4 z-0 pointer-events-none rounded-[2.5rem] overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center_20%,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
                 <div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-b from-black via-transparent to-transparent pointer-events-none"></div>
             </div>
 
-            <div className="flex-grow grid grid-cols-12 gap-4 min-h-0 items-start relative z-10">
-                <div className="col-span-12 md:col-span-9 flex flex-col gap-4 h-full min-h-[600px]">
+            <div className="flex-grow grid grid-cols-12 gap-4 min-h-0 items-stretch relative z-10 overflow-hidden">
+                <div className="col-span-12 md:col-span-9 flex flex-col gap-4 h-full min-h-[600px] overflow-hidden">
                     <div className="flex-[4] min-h-0 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200 flex gap-3">
                          <HubCard title={t.hubSessionLeaders} align="right" icon={<AwardIcon />} accent="#FFD700" variant="elite" className="flex-[2] h-full min-h-[350px]" bodyClassName="flex flex-col bg-transparent">
                             <div className="flex-grow relative"><SessionPodium players={top3PodiumPlayers} t={t} /></div>
@@ -468,7 +470,7 @@ export const PublicHubDashboard: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="col-span-12 md:col-span-3 flex flex-col gap-4 h-full min-h-[600px]">
+                <div className="col-span-12 md:col-span-3 flex flex-col gap-4 h-full min-h-[600px] overflow-hidden">
                     <HubCard title={t.hubTeamStandings} icon={<TrophyIcon />} variant="standings" className="shrink-0" bodyClassName="flex flex-col">
                         <div className="p-1">
                             <table className="w-full table-fixed border-collapse">
@@ -508,7 +510,7 @@ export const PublicHubDashboard: React.FC = () => {
                         icon={activeRightTab === 'players' ? <Users /> : <HistoryIcon />} 
                         variant="standings" 
                         accent="#00F2FE" 
-                        className="flex-grow min-h-0 h-[450px]" 
+                        className="flex-grow min-h-0" 
                         bodyClassName="flex flex-col h-full min-h-0"
                     >
                         <div className="flex-grow overflow-y-auto custom-hub-scrollbar h-full">
@@ -523,7 +525,64 @@ export const PublicHubDashboard: React.FC = () => {
                                 <div className="animate-in fade-in duration-500">
                                     <table className="w-full table-fixed border-collapse">
                                         <thead><tr><th className={`${thStandings} w-[15%]`}>#</th><th className={`${thStandings} w-[25%] text-center`}>{t.hubHome}</th><th className={`${thStandings} w-[35%] text-center`}>{t.hubResult}</th><th className={`${thStandings} w-[25%] text-center`}>{t.hubAway}</th></tr></thead>
-                                        <tbody>{finishedGames.map((game) => (<tr key={game.id} className="group hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"><td className={`${tdBase} text-white/30 font-mono`}>{game.gameNumber}</td><td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team1Id) || {}} size="xxs" isLight={true} /></div></td><td className="py-2.5 text-center"><span className="font-bold text-[11px] md:text-[12px] text-slate-200 tabular-nums tracking-tighter bg-white/5 px-2 py-1 rounded">{game.team1Score} : {game.team2Score}</span></td><td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team2Id) || {}} size="xxs" isLight={true} /></div></td></tr>))}</tbody>
+                                        <tbody>{finishedGames.map((game) => (
+                                            <React.Fragment key={game.id}>
+                                                <tr 
+                                                    className={`group hover:bg-white/10 cursor-pointer transition-all border-b border-white/5 last:border-0 ${expandedMatchId === game.id ? 'bg-white/5' : ''}`}
+                                                    onClick={() => setExpandedMatchId(expandedMatchId === game.id ? null : game.id)}
+                                                >
+                                                    <td className={`${tdBase} text-white/30 font-mono`}>{game.gameNumber}</td>
+                                                    <td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team1Id) || {}} size="xxs" isLight={true} /></div></td>
+                                                    <td className="py-2.5 text-center"><span className="font-bold text-[11px] md:text-[12px] text-slate-200 tabular-nums tracking-tighter bg-white/5 px-2 py-1 rounded">{game.team1Score} : {game.team2Score}</span></td>
+                                                    <td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team2Id) || {}} size="xxs" isLight={true} /></div></td>
+                                                </tr>
+                                                {expandedMatchId === game.id && (
+                                                    <tr className="bg-black/40 animate-in slide-in-from-top-2 fade-in duration-300">
+                                                        <td colSpan={4} className="p-3">
+                                                            <div className="flex flex-col gap-2">
+                                                                {game.goals.length > 0 ? (
+                                                                    game.goals.map((goal, gIdx) => {
+                                                                        const scorer = session.playerPool.find(p => p.id === goal.scorerId);
+                                                                        const assistant = session.playerPool.find(p => p.id === goal.assistantId);
+                                                                        const team = session.teams.find(t => t.id === goal.teamId);
+                                                                        return (
+                                                                            <div key={goal.id} className="flex items-center gap-3 px-2">
+                                                                                <div className="shrink-0">
+                                                                                    {goal.isOwnGoal ? (
+                                                                                        <span className="text-[10px] filter drop-shadow-[0_0_5px_rgba(239,68,68,0.5)]">🧤</span>
+                                                                                    ) : (
+                                                                                        <span className="text-[10px] filter drop-shadow-[0_0_5px_rgba(0,242,254,0.5)]">⚽</span>
+                                                                                    )}
+                                                                                </div>
+                                                                                <div className="flex flex-col min-w-0">
+                                                                                    <div className="flex items-baseline gap-2">
+                                                                                        <span className="text-[11px] font-black uppercase text-white tracking-wide truncate">
+                                                                                            {scorer?.nickname || (goal.isOwnGoal ? t.ownGoal : 'Unknown')}
+                                                                                        </span>
+                                                                                        {assistant && (
+                                                                                            <span className="text-[9px] font-bold text-white/40 uppercase italic shrink-0">
+                                                                                                (A) {assistant.nickname}
+                                                                                            </span>
+                                                                                        )}
+                                                                                    </div>
+                                                                                    <span className="text-[7px] font-black uppercase tracking-widest" style={{ color: team?.color || '#fff' }}>
+                                                                                        {team?.name || 'SQUAD'}
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                        );
+                                                                    })
+                                                                ) : (
+                                                                    <div className="text-center py-2">
+                                                                        <span className="text-[8px] font-black text-white/20 uppercase tracking-[0.3em]">No goal events recorded</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </React.Fragment>
+                                        ))}</tbody>
                                     </table>
                                 </div>
                             )}
