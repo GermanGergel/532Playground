@@ -41,18 +41,20 @@ export const PlayerDatabaseScreen: React.FC = () => {
                 if (b.id === 'test-player-showcase') return 1;
                 switch (playerDbSort) {
                     case 'rating':
-                        // --- СИНХРОНИЗИРОВАННАЯ С ПЬЕДЕСТАЛОМ СОРТИРОВКА (TIE-BREAKING) ---
+                        // --- SYNCED WITH SEASON LEADERS LOGIC ---
                         if (b.rating !== a.rating) return b.rating - a.rating;
                         
-                        // Доп. фильтры (Тай-брейкинг)
+                        // Tie-breaker 1: Total G+A
                         const scoreA = (a.totalGoals || 0) + (a.totalAssists || 0);
                         const scoreB = (b.totalGoals || 0) + (b.totalAssists || 0);
                         if (scoreB !== scoreA) return scoreB - scoreA;
                         
+                        // Tie-breaker 2: Win Rate
                         const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0;
                         const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0;
                         if (wrB !== wrA) return wrB - wrA;
                         
+                        // Tie-breaker 3: Games Played
                         return (b.totalGames || 0) - (a.totalGames || 0);
 
                     case 'name':
@@ -76,7 +78,7 @@ export const PlayerDatabaseScreen: React.FC = () => {
             totalGoals: 0, totalAssists: 0, totalGames: 0, totalWins: 0, totalDraws: 0, totalLosses: 0,
             totalSessionsPlayed: 0,
             rating: startRating, 
-            initialRating: startRating, // Set floor to 68
+            initialRating: startRating, 
             tier: getTierForRating(startRating),
             monthlyGoals: 0, monthlyAssists: 0, monthlyGames: 0, monthlyWins: 0,
             monthlySessionsPlayed: 0,
@@ -137,7 +139,6 @@ export const PlayerDatabaseScreen: React.FC = () => {
                         <span className="text-xs font-semibold text-dark-text-secondary">{t.sortBy}</span>
                         <button onClick={() => setPlayerDbSort('rating')} className={sortButtonClass('rating')}>{t.sortByRating}</button>
                         <button onClick={() => setPlayerDbSort('name')} className={sortButtonClass('name')}>{t.sortByName}</button>
-                        {/* Fixed undefined setSortBy variable by changing it to setPlayerDbSort */}
                         <button onClick={() => setPlayerDbSort('date')} className={sortButtonClass('date')}>{t.sortByDate}</button>
                     </div>
                 </div>

@@ -168,7 +168,23 @@ export const HubRoster: React.FC<HubRosterProps> = ({ onSelectPlayer, sortBy, se
             .filter(p => p.nickname?.toLowerCase().includes(search.toLowerCase()))
             .sort((a, b) => {
                 if (sortBy === 'name') return (a.nickname || '').localeCompare(b.nickname || '');
-                if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
+                if (sortBy === 'rating') {
+                    // --- SYNCED WITH SEASON LEADERS LOGIC ---
+                    if (b.rating !== a.rating) return b.rating - a.rating;
+                    
+                    // Tie-breaker 1: Total G+A
+                    const scoreA = (a.totalGoals || 0) + (a.totalAssists || 0);
+                    const scoreB = (b.totalGoals || 0) + (b.totalAssists || 0);
+                    if (scoreB !== scoreA) return scoreB - scoreA;
+                    
+                    // Tie-breaker 2: Win Rate
+                    const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0;
+                    const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0;
+                    if (wrB !== wrA) return wrB - wrA;
+                    
+                    // Tie-breaker 3: Games Played
+                    return (b.totalGames || 0) - (a.totalGames || 0);
+                }
                 if (sortBy === 'date') return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
                 return 0;
             });
@@ -191,7 +207,6 @@ export const HubRoster: React.FC<HubRosterProps> = ({ onSelectPlayer, sortBy, se
                 }
             `}} />
             <div className="absolute -top-24 bottom-0 -left-4 -right-4 z-0 pointer-events-none">
-                {/* Радиальный градиент заканчивается в #01040a для маски */}
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#01040a] to-[#01040a]"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] pointer-events-none"></div>
             </div>
