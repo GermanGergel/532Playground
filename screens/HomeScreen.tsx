@@ -90,7 +90,7 @@ export const HomeScreen: React.FC = () => {
       setIsGenerating(true);
       try {
           const canvas = await html2canvas(promoCardRef.current, { 
-              backgroundColor: null, // Используем прозрачность для правильных углов
+              backgroundColor: '#1A1D24',
               scale: 3, 
               useCORS: true 
           });
@@ -141,7 +141,7 @@ export const HomeScreen: React.FC = () => {
             containerClassName="!p-4 !bg-dark-bg border border-[#00F2FE]/20"
         >
             <div className="flex flex-col items-center gap-6">
-                {/* ПРЕВЬЮ КАРТОЧКИ (УВЕЛИЧЕННЫЕ УГЛЫ ДО 2.5rem) */}
+                {/* ПРЕВЬЮ КАРТОЧКИ (КОПИРУЕМ СТИЛЬ SHARE_PROFILE_MODAL) */}
                 <div 
                     ref={promoCardRef} 
                     className="w-full bg-[#1A1D24] rounded-[2.5rem] p-6 flex flex-col items-center gap-6 border border-[#00F2FE]/30 shadow-[0_0_30px_rgba(0,242,254,0.15)]"
@@ -156,7 +156,7 @@ export const HomeScreen: React.FC = () => {
                         </p>
                     </div>
                     
-                    {/* Текст RECRUIT CARD */}
+                    {/* Текст изменен на RECRUIT CARD */}
                     <div className="text-center space-y-1">
                         <h2 className="font-russo text-2xl text-white uppercase tracking-tight leading-none">
                             RECRUIT CARD
