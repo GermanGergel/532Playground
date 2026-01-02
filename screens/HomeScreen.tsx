@@ -156,10 +156,10 @@ export const HomeScreen: React.FC = () => {
                         </p>
                     </div>
                     
-                    {/* Вместо имени игрока - общее приветствие клуба */}
+                    {/* Текст изменен на RECRUIT CARD */}
                     <div className="text-center space-y-1">
                         <h2 className="font-russo text-2xl text-white uppercase tracking-tight leading-none">
-                            RECRUITMENT
+                            RECRUIT CARD
                         </h2>
                         <p className="text-[10px] font-bold text-[#00F2FE] tracking-[0.1em] uppercase opacity-70">
                             Authorized Entry Only
