@@ -397,7 +397,7 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                         <span className="font-bold text-xs text-white tracking-wider">{skillAbbreviations[skill]}</span>
                     </div>
                 ))}</div></div>)}
-                <div className="relative z-10 h-full flex flex-col justify-between">
+                <div className="relative z-10 h-full flex flex-col justify-between p-1">
                      <div className="flex justify-between items-start">
                         <div>
                             <p style={{ color: '#00F2FE' }} className="text-base font-black leading-none">532</p>
@@ -571,12 +571,14 @@ export const PublicHubScreen: React.FC = () => {
                 <div className="relative z-10 bg-transparent pb-8">
                     <footer className="relative py-8 bg-transparent">
                         <div className="text-center px-4">
-                            <button 
-                                onClick={() => setIsDashboardOpen(true)} 
-                                className="mx-auto mb-14 block bg-transparent text-[#00F2FE] font-bold text-lg py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(0,242,254,0.4)] hover:shadow-[0_0_25px_rgba(0,242,254,0.6)] hover:bg-[#00F2FE]/10 transition-all transform hover:scale-[1.02] active:scale-95 mb-4 group animate-pulse"
-                            >
-                                <span className="font-chakra font-black text-lg uppercase tracking-[0.2em] group-hover:text-white transition-colors">{t.hubDashboardBtn}</span>
-                            </button>
+                            <div className="mt-10 mb-24">
+                                <button 
+                                    onClick={() => setIsDashboardOpen(true)} 
+                                    className="mx-auto block bg-transparent text-[#00F2FE] font-bold text-lg py-3.5 px-10 rounded-xl shadow-[0_0_20px_rgba(0,242,254,0.4)] hover:shadow-[0_0_30px_rgba(0,242,254,0.6)] hover:bg-[#00F2FE]/10 transition-all transform hover:scale-[1.05] active:scale-95 group border border-[#00F2FE]/20"
+                                >
+                                    <span className="font-chakra font-black text-xl uppercase tracking-[0.25em] group-hover:text-white transition-colors">{t.hubDashboardBtn}</span>
+                                </button>
+                            </div>
 
                             <h2 className="font-orbitron text-2xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/90" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubJoinSquad}</h2>
                             <p className="font-chakra text-xs text-white/50 mt-2 mb-6">Connect with us on WhatsApp to book your slot.</p>

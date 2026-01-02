@@ -178,19 +178,21 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
         <div className="absolute inset-0 flex flex-row animate-in fade-in duration-700 overflow-hidden rounded-[2.5rem]">
             {/* SIDEBAR - LEFT COLUMN */}
             <div className="w-[350px] flex flex-col border-r border-white/5 bg-black/40 relative z-20 shrink-0">
-                {/* SIDEBAR HEADER - REFINED */}
-                <div className="p-6 pb-2 space-y-4 pt-10 pl-14"> {/* Moved right to clear neon bars */}
-                    <div className="flex items-center justify-between mb-2 pr-2">
+                {/* SIDEBAR HEADER - REFINED ALIGNMENT */}
+                <div className="p-6 pb-2 space-y-4 pt-10">
+                    {/* Only shift this row to avoid corner rays */}
+                    <div className="flex items-center justify-between mb-2 pr-2 pl-10">
                         <div className="max-w-fit">
                             <h3 className="font-russo text-[14px] uppercase tracking-[0.15em] text-white italic leading-tight">{t.hubPlayers}</h3>
                             <div className="h-[1px] w-full bg-[#00F2FE] mt-1.5 opacity-50 shadow-[0_0_5px_#00F2FE]"></div>
                         </div>
                         <button onClick={() => setIsDuelSetupOpen(true)} className="group flex items-center transition-all opacity-40 hover:opacity-100 hover:scale-105 active:scale-95">
-                             <span className="font-russo text-[14px] text-white uppercase tracking-[0.2em] group-hover:text-[#00F2FE] group-hover:drop-shadow-[0_0_8px_rgba(242,254,0,0.6)] transition-all">DUEL</span>
+                             <span className="font-russo text-[14px] text-white uppercase tracking-[0.2em] group-hover:text-[#00F2FE] group-hover:drop-shadow-[0_0_8px_rgba(0,242,254,0.6)] transition-all">DUEL</span>
                         </button>
                     </div>
 
-                    <div className="relative group w-full h-[34px] pr-2"> {/* More compact search bar */}
+                    {/* Search bar and filters are now aligned with the list below */}
+                    <div className="relative group w-full h-[34px] pr-2">
                         <input type="text" placeholder="FIND UNIT..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full h-full bg-white/5 border border-white/10 rounded-xl pl-4 pr-10 text-[10px] font-chakra font-black text-white uppercase tracking-[0.15em] focus:outline-none focus:border-[#00F2FE]/40 transition-all placeholder:text-white/20" />
                         <div className="absolute right-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#00F2FE] transition-colors"><Search className="w-4 h-4" /></div>
                     </div>
