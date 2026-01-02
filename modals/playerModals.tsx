@@ -2,9 +2,7 @@
 import React, { useRef, useState } from 'react';
 import { Button, Modal, useTranslation, ToggleSwitch } from '../ui';
 import { Player, SkillType, PlayerStatus, PlayerTier } from '../types';
-import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import html2canvas from 'html2canvas';
-import { PlayerAvatar } from '../components/avatars';
 
 // --- PLAYER ADD MODAL ---
 export interface PlayerAddModalProps {
@@ -123,59 +121,16 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
 
     const handleSave = () => {
         if (!playerToEdit) return;
-        
         const newRatingValue = typeof rating === 'number' ? rating : playerToEdit.rating;
-        const newTier = getTierForRating(newRatingValue);
-
-        let newStatus = playerToEdit.status;
-        const currentFloor = playerToEdit.initialRating || 68;
-        const finalRating = Math.max(currentFloor, newRatingValue);
-
-        if (finalRating > 0) {
-            newStatus = PlayerStatus.Confirmed;
-        }
-
-        let updatedLastRatingChange = playerToEdit.lastRatingChange;
-        if (finalRating !== playerToEdit.rating) {
-            updatedLastRatingChange = {
-                previousRating: playerToEdit.rating,
-                teamPerformance: 0,
-                individualPerformance: 0,
-                badgeBonus: 0,
-                finalChange: finalRating - playerToEdit.rating,
-                newRating: finalRating,
-                badgesEarned: playerToEdit.lastRatingChange?.badgesEarned || []
-            };
-        }
-
-        let updatedHistory = [...(playerToEdit.historyData || [])];
-        if (updatedHistory.length > 0) {
-            updatedHistory[updatedHistory.length - 1].rating = finalRating;
-        }
-
-        const player: Player = { 
-            ...playerToEdit, 
-            nickname, 
-            surname, 
-            countryCode: countryCode.toUpperCase(),
-            rating: finalRating,
-            initialRating: currentFloor,
-            tier: newTier,
-            skills: currentSkills,
-            status: newStatus,
-            lastRatingChange: updatedLastRatingChange,
-            historyData: updatedHistory
-        };
+        const player: Player = { ...playerToEdit, nickname, surname, countryCode: countryCode.toUpperCase(), rating: newRatingValue, tier: getTierForRating(newRatingValue), skills: currentSkills, status: PlayerStatus.Confirmed };
         onSave(player);
         onClose();
     };
 
-    const neonCardClasses = "border border-dark-accent-start/40 shadow-[0_0_20px_rgba(0,242,254,0.3)]";
-    const inputClasses = "w-full p-2 bg-dark-bg rounded-lg border border-dark-accent-start/40 focus:ring-2 focus:ring-dark-accent-start focus:outline-none";
     const tabButtonClass = (isActive: boolean) => `flex-1 py-2 text-sm font-bold rounded-t-lg ${isActive ? 'bg-dark-surface' : 'bg-dark-bg/50 text-dark-text-secondary'}`;
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="sm" hideCloseButton={true} containerClassName={`${neonCardClasses} !p-0`}>
+        <Modal isOpen={isOpen} onClose={onClose} size="sm" hideCloseButton={true} containerClassName="border border-dark-accent-start/40 shadow-[0_0_20px_rgba(0,242,254,0.3)] !p-0">
             <div className="flex">
                 <button onClick={() => setActiveTab('info')} className={tabButtonClass(activeTab === 'info')}>Info</button>
                 <button onClick={() => setActiveTab('skills')} className={tabButtonClass(activeTab === 'skills')}>Skills</button>
@@ -183,21 +138,18 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
             <div className="p-4 bg-dark-surface rounded-b-2xl">
                 {activeTab === 'info' && (
                      <div className="space-y-3">
-                        <input type="text" value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder={t.nickname} className={inputClasses} />
-                        <input type="text" value={surname} onChange={(e) => setSurname(e.target.value)} placeholder={t.surname} className={inputClasses} />
-                        <input type="text" value={countryCode} onChange={(e) => setCountryCode(e.target.value)} placeholder="Country (e.g., UA, BR, US)" className={inputClasses} />
-                        <input type="number" value={rating} onChange={handleRatingChange} placeholder="Overall Rating (0-100)" className={inputClasses} />
+                        <input type="text" value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder={t.nickname} className="w-full p-2 bg-dark-bg rounded-lg border border-dark-accent-start/40" />
+                        <input type="text" value={surname} onChange={(e) => setSurname(e.target.value)} placeholder={t.surname} className="w-full p-2 bg-dark-bg rounded-lg border border-dark-accent-start/40" />
+                        <input type="text" value={countryCode} onChange={(e) => setCountryCode(e.target.value)} placeholder="Country (UA, BR)" className="w-full p-2 bg-dark-bg rounded-lg border border-dark-accent-start/40" />
+                        <input type="number" value={rating} onChange={handleRatingChange} placeholder="OVR" className="w-full p-2 bg-dark-bg rounded-lg border border-dark-accent-start/40" />
                     </div>
                 )}
                 {activeTab === 'skills' && (
                      <div className="grid grid-cols-2 gap-2">
                         {ALL_SKILLS.map(skill => (
                              <div key={skill} className="flex items-center gap-2 p-2 rounded-lg bg-dark-bg/50">
-                                <ToggleSwitch 
-                                    isOn={currentSkills.includes(skill)}
-                                    onToggle={() => handleSkillToggle(skill)}
-                                />
-                                <span className="text-sm font-semibold">{t[`skill_${skill}` as keyof typeof t]}</span>
+                                <ToggleSwitch isOn={currentSkills.includes(skill)} onToggle={() => handleSkillToggle(skill)} />
+                                <span className="text-xs font-semibold">{t[`skill_${skill}` as keyof typeof t]}</span>
                             </div>
                         ))}
                     </div>
@@ -211,7 +163,7 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
     );
 };
 
-// --- SHARE PROFILE MODAL ---
+// --- SHARE PROFILE MODAL (RE-DESIGNED FOR "ONE BLOCK" SHARING) ---
 export interface ShareProfileModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -220,77 +172,49 @@ export interface ShareProfileModalProps {
 
 export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, onClose, player }) => {
     const t = useTranslation();
-    const cardRef = useRef<HTMLDivElement>(null);
+    const bannerRef = useRef<HTMLDivElement>(null);
     const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
     const [isGenerating, setIsGenerating] = useState(false);
 
-    const getProfileUrl = () => {
-        return `${window.location.origin}/public-profile/${player.id}`;
-    }
-    
-    const profileUrl = getProfileUrl();
+    const profileUrl = `${window.location.origin}/public-profile/${player.id}`;
 
     React.useEffect(() => {
         if (isOpen) {
             const generateQrCode = async () => {
-                try {
-                    const response = await fetch(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(profileUrl)}&bgcolor=1A1D24&color=00F2FE&qzone=1&ecc=H`);
-                    if (!response.ok) throw new Error('Failed to fetch QR code');
-                    const blob = await response.blob();
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        setQrCodeDataUrl(reader.result as string);
-                    };
-                    reader.readAsDataURL(blob);
-                } catch (error) {
-                    console.error("QR code generation failed:", error);
-                }
+                const url = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(profileUrl)}&bgcolor=1A1D24&color=00F2FE&qzone=1&ecc=H`;
+                setQrCodeDataUrl(url);
             };
             generateQrCode();
         }
     }, [isOpen, profileUrl]);
     
-    // ЕДИНАЯ КНОПКА: Отправка картинки со ссылкой в подписи
-    const handleShareOfficialCard = async () => {
-        if (!cardRef.current || isGenerating) return;
+    const handleShare = async () => {
+        if (!bannerRef.current || isGenerating) return;
         setIsGenerating(true);
         try {
-            // Генерируем картинку высокого качества
-            const canvas = await html2canvas(cardRef.current, { 
+            const canvas = await html2canvas(bannerRef.current, { 
                 backgroundColor: '#1A1D24',
-                scale: 3, 
+                scale: 2, // Standard web preview quality
                 useCORS: true 
             });
             
             const blob = await new Promise<Blob|null>(resolve => canvas.toBlob(resolve, 'image/png'));
-            if (!blob) throw new Error("Blob creation failed");
+            if (!blob) throw new Error("Export failed");
     
-            const filename = `Access_Card_${player.nickname}.png`;
-            const file = new File([blob], filename, { type: 'image/png' });
+            const file = new File([blob], `532_Access_${player.nickname}.png`, { type: 'image/png' });
 
-            // Формируем пакет данных для шеринга (Файл + Текст)
-            // Это заставляет мессенджеры отправлять это как "Фото с подписью"
-            const shareData = {
-                files: [file],
-                title: `Official Access: ${player.nickname}`,
-                text: `Official Club Member Profile: ${profileUrl}`
-            };
-
-            if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-                await navigator.share(shareData);
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                // ОТПРАВКА ОДНИМ БЛОКОМ: Файл + Ссылка в подписи
+                await navigator.share({
+                    files: [file],
+                    text: `${t.clickToEnter}: ${profileUrl}`
+                });
             } else {
-                // Fallback для десктопа: скачиваем файл и копируем ссылку
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                a.click();
-                URL.revokeObjectURL(url);
                 await navigator.clipboard.writeText(profileUrl);
-                alert("Card downloaded and link copied to clipboard!");
+                alert(t.profileLinkCopied || "Link copied!");
             }
-        } catch (error: any) {
-            console.error("Sharing error:", error);
+        } catch (error) {
+            console.error(error);
         } finally {
             setIsGenerating(false);
             onClose();
@@ -298,61 +222,73 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
     };
     
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="xs" hideCloseButton containerClassName="!p-4 !bg-dark-bg border border-[#00F2FE]/20">
+        <Modal isOpen={isOpen} onClose={onClose} size="sm" hideCloseButton containerClassName="!p-4 !bg-dark-bg border border-[#00F2FE]/20">
              <div className="flex flex-col items-center gap-6">
-                 {/* ПРЕВЬЮ КАРТОЧКИ */}
-                 <div 
-                    ref={cardRef} 
-                    className="w-full bg-[#1A1D24] rounded-[2rem] p-6 flex flex-col items-center gap-6 border border-[#00F2FE]/30 shadow-[0_0_30px_rgba(0,242,254,0.15)]"
-                >
-                    <div className="text-center">
-                        <h1 className="font-russo text-3xl flex items-baseline justify-center">
-                            <span className="text-[#00F2FE]">532</span>
-                            <span className="text-white ml-2 text-lg tracking-widest">PLAYGROUND</span>
-                        </h1>
-                        <p className="text-[9px] font-black tracking-[0.4em] text-white/40 mt-2 uppercase">
-                            OFFICIAL ACCESS CARD
-                        </p>
-                    </div>
-                    
-                    <h2 className="font-russo text-2xl text-white uppercase tracking-tight text-center leading-none">
-                        {player.nickname}<br/>
-                        <span className="text-sm text-white/60">{player.surname}</span>
-                    </h2>
+                 
+                 {/* СКРЫТЫЙ ШАБЛОН ДЛЯ ГЕНЕРАЦИИ БАННЕРА (ГОРИЗОНТАЛЬНЫЙ 1200x630) */}
+                 <div className="w-full overflow-hidden rounded-xl border border-white/10 shadow-lg">
+                    <div 
+                        ref={bannerRef} 
+                        style={{ width: '600px', height: '315px' }} // 1.91:1 Aspect Ratio (OG standard)
+                        className="bg-[#1A1D24] p-8 flex items-center justify-between relative overflow-hidden"
+                    >
+                        {/* Background Branding */}
+                        <div className="absolute top-0 right-0 p-4 opacity-10">
+                             <h1 className="font-russo text-6xl text-white">532</h1>
+                        </div>
 
-                    <div className="p-3 rounded-2xl bg-gradient-to-br from-[#00F2FE] to-[#4CFF5F] shadow-[0_0_20px_rgba(0,242,254,0.3)]">
-                        <div className="bg-[#1A1D24] p-2 rounded-xl">
-                            {qrCodeDataUrl ? (
-                                <img src={qrCodeDataUrl} alt="QR Code" className="w-32 h-32" />
-                            ) : (
-                                <div className="w-32 h-32 flex items-center justify-center">
-                                    <div className="w-8 h-8 border-2 border-dashed border-[#00F2FE] rounded-full animate-spin"></div>
+                        {/* Left Side: Info */}
+                        <div className="flex flex-col gap-4 relative z-10">
+                            <div>
+                                <h1 className="font-russo text-4xl flex items-baseline gap-2">
+                                    <span className="text-[#00F2FE]">532</span>
+                                    <span className="text-white text-xl tracking-[0.3em]">PLAYGROUND</span>
+                                </h1>
+                                <p className="text-[10px] font-black tracking-[0.5em] text-white/40 uppercase mt-1">OFFICIAL ACCESS CARD</p>
+                            </div>
+
+                            <div className="mt-4">
+                                <h2 className="font-russo text-5xl text-white uppercase leading-none">{player.nickname}</h2>
+                                <h3 className="font-chakra text-2xl text-[#00F2FE] font-bold uppercase tracking-widest mt-2">{player.surname || 'PRO PLAYER'}</h3>
+                            </div>
+                            
+                            <div className="flex items-center gap-4 mt-4">
+                                <div className="flex flex-col">
+                                    <span className="text-4xl font-black font-russo text-white">{player.rating}</span>
+                                    <span className="text-[8px] font-bold text-white/40 tracking-widest uppercase">OVR RATING</span>
                                 </div>
-                            )}
+                                <div className="h-10 w-px bg-white/10"></div>
+                                <div className="flex flex-col">
+                                    <span className="text-xl font-bold font-chakra text-white/80 uppercase">{player.tier}</span>
+                                    <span className="text-[8px] font-bold text-white/40 tracking-widest uppercase">PLAYER CLASS</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right Side: QR */}
+                        <div className="relative z-10 flex flex-col items-center gap-3">
+                            <div className="p-2 rounded-2xl bg-gradient-to-br from-[#00F2FE] to-[#4CFF5F] shadow-2xl">
+                                <div className="bg-[#1A1D24] p-1.5 rounded-xl">
+                                    {qrCodeDataUrl && <img src={qrCodeDataUrl} alt="QR" className="w-32 h-32" />}
+                                </div>
+                            </div>
+                            <span className="text-[8px] font-black text-[#00F2FE] tracking-[0.2em] uppercase animate-pulse">SCAN TO VIEW PROFILE</span>
                         </div>
                     </div>
+                 </div>
 
-                    <p className="text-[10px] font-bold tracking-[0.2em] text-[#00F2FE] animate-pulse uppercase">
-                        SCAN TO VIEW PROFILE
-                    </p>
-                </div>
-
-                <div className="w-full flex flex-col gap-3">
-                     <Button 
+                 {/* UI BUTTONS */}
+                 <div className="w-full flex flex-col gap-3">
+                    <p className="text-[10px] text-center text-white/40 uppercase tracking-widest px-4">Баннер и ссылка будут отправлены одним сообщением</p>
+                    <Button 
                         variant="primary" 
-                        onClick={handleShareOfficialCard} 
+                        onClick={handleShare} 
                         disabled={isGenerating}
                         className="w-full !py-4 !text-lg font-chakra font-black tracking-widest uppercase shadow-[0_0_20px_rgba(0,242,254,0.4)]"
                     >
-                        {isGenerating ? "GENERATING..." : "SEND ACCESS CARD"}
+                        {isGenerating ? "..." : "ОТПРАВИТЬ КАРТУ"}
                     </Button>
-                    <Button 
-                        variant="ghost" 
-                        onClick={onClose} 
-                        className="w-full !py-2 !text-xs font-chakra font-bold text-white/30 uppercase tracking-widest"
-                    >
-                        {t.cancel}
-                    </Button>
+                    <Button variant="ghost" onClick={onClose} className="w-full !py-2 !text-xs font-chakra font-bold text-white/30 uppercase">{t.cancel}</Button>
                 </div>
             </div>
         </Modal>
