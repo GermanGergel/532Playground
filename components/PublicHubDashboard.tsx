@@ -261,6 +261,10 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
 
 const NewsVanguardCard: React.FC<{ item: NewsItem }> = ({ item }) => {
     const accentColor = '#818cf8'; 
+    const dateStr = useMemo(() => {
+        const d = new Date(item.timestamp);
+        return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase();
+    }, [item.timestamp]);
     
     return (
         <div className="mb-3 relative px-1 animate-in fade-in slide-in-from-right-4 duration-500">
@@ -268,14 +272,17 @@ const NewsVanguardCard: React.FC<{ item: NewsItem }> = ({ item }) => {
                 <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
                 <div className="absolute top-3.5 left-0 w-1.5 h-7 rounded-r-full bg-[#818cf8]" style={{ boxShadow: '0 0 10px #818cf8' }}></div>
                 <div className="relative z-10 flex flex-col gap-1 pl-3">
-                    <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-[7px] font-black tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-sm bg-white/5 text-indigo-300">
-                            {item.type.replace('_', ' ')}
-                        </span>
-                        <span className="text-[7px] font-mono text-white/20">
-                            {new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
-                        </span>
-                        {item.isHot && <Zap className="w-3 h-3 text-indigo-400 animate-pulse" />}
+                    <div className="flex items-center justify-between mb-0.5">
+                        <div className="flex items-center gap-2">
+                            <span className="text-[7px] font-black tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-sm bg-white/5 text-indigo-300">
+                                {item.type.replace('_', ' ')}
+                            </span>
+                            <span className="text-[7px] font-mono text-white/20">
+                                {new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+                            </span>
+                            {item.isHot && <Zap className="w-3 h-3 text-indigo-400 animate-pulse" />}
+                        </div>
+                        <span className="text-[7px] font-black text-white/20 tracking-widest uppercase">{dateStr}</span>
                     </div>
                     <div className="flex items-baseline gap-2 overflow-hidden">
                         <h4 className="text-[14px] font-black text-slate-100 uppercase shrink-0 tracking-wide">
@@ -346,9 +353,13 @@ export const PublicHubDashboard: React.FC = () => {
     const [isAutoSwitching, setIsAutoSwitching] = useState(true);
     const [autoSwitchProgress, setAutoSwitchProgress] = useState(0);
 
+    // News Auto-Scroll States
+    const newsScrollRef = useRef<HTMLDivElement>(null);
+    const [isNewsAutoScrolling, setIsNewsAutoScrolling] = useState(false);
+
     const session = history[0];
     
-    // --- AUTO SWITCH LOGIC ---
+    // --- TAB AUTO SWITCH LOGIC ---
     useEffect(() => {
         if (!isAutoSwitching || !session) return;
 
@@ -360,13 +371,12 @@ export const PublicHubDashboard: React.FC = () => {
             let progress = (elapsed / DURATION) * 100;
             
             if (progress >= 100) {
-                // Switch Logic
                 setActiveRightTab(prev => {
                     if (prev === 'players') {
-                        startTime = Date.now(); // Reset for matches
+                        startTime = Date.now(); 
                         return 'games';
                     } else {
-                        setIsAutoSwitching(false); // End cycle
+                        setIsAutoSwitching(false); 
                         return 'players';
                     }
                 });
@@ -374,14 +384,54 @@ export const PublicHubDashboard: React.FC = () => {
             } else {
                 setAutoSwitchProgress(progress);
             }
-        }, 50); // Refresh progress bar every 50ms
+        }, 50);
 
         return () => clearInterval(timer);
     }, [isAutoSwitching, session]);
 
+    // --- NEWS AUTO SCROLL LOGIC ---
+    useEffect(() => {
+        if (!session || newsFeed.length < 3) return;
+
+        const timer = setTimeout(() => {
+            if (!newsScrollRef.current) return;
+            setIsNewsAutoScrolling(true);
+            
+            const container = newsScrollRef.current;
+            const scrollHeight = container.scrollHeight;
+            const clientHeight = container.clientHeight;
+            const maxScroll = scrollHeight - clientHeight;
+
+            if (maxScroll <= 0) {
+                setIsNewsAutoScrolling(false);
+                return;
+            }
+
+            // Phase 1: Scroll Down
+            container.scrollTo({ top: maxScroll, behavior: 'smooth' });
+
+            // Phase 2: Wait and Scroll Up
+            setTimeout(() => {
+                if (isNewsAutoScrolling) {
+                    container.scrollTo({ top: 0, behavior: 'smooth' });
+                    setTimeout(() => setIsNewsAutoScrolling(false), 2000);
+                }
+            }, 4000);
+
+        }, 5000); // Start after 5 seconds
+
+        return () => {
+            clearTimeout(timer);
+        };
+    }, [session, newsFeed.length]);
+
     const handleManualTabChange = (tab: 'players' | 'games') => {
-        setIsAutoSwitching(false); // Kill auto mode forever on interaction
+        setIsAutoSwitching(false); 
         setActiveRightTab(tab);
+    };
+
+    const handleNewsInteraction = () => {
+        setIsNewsAutoScrolling(false);
     };
 
     if (!session) return <StandbyScreen />;
@@ -432,9 +482,23 @@ export const PublicHubDashboard: React.FC = () => {
                     </div>
 
                     <div className="flex-[3] min-h-0 shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <HubCard title={t.hubSessionNews} icon={<Zap />} accent="#00F2FE" variant="standings" className="h-full min-h-0" bodyClassName="p-0 flex flex-col">
-                            <div className="flex-grow relative overflow-hidden">
-                                <div className="absolute inset-0 overflow-y-auto custom-hub-scrollbar p-3 bg-black/10">
+                        <HubCard 
+                            title={
+                                <div className="flex items-center gap-3">
+                                    <span>{t.hubSessionNews}</span>
+                                    {isNewsAutoScrolling && (
+                                        <span className="text-[7px] font-black text-[#00F2FE] tracking-[0.2em] animate-pulse bg-[#00F2FE]/10 px-2 py-0.5 rounded border border-[#00F2FE]/20">[ AUTO-SCANNING ]</span>
+                                    )}
+                                </div>
+                            } 
+                            icon={<Zap />} 
+                            accent="#00F2FE" 
+                            variant="standings" 
+                            className="h-full min-h-0" 
+                            bodyClassName="p-0 flex flex-col"
+                        >
+                            <div className="flex-grow relative overflow-hidden" onTouchStart={handleNewsInteraction} onMouseDown={handleNewsInteraction} onWheel={handleNewsInteraction}>
+                                <div ref={newsScrollRef} className="absolute inset-0 overflow-y-auto custom-hub-scrollbar p-3 bg-black/10">
                                     {newsFeed.slice(0, 15).map(item => <NewsVanguardCard key={item.id} item={item} />)}
                                     {newsFeed.length === 0 && <p className="text-center py-10 opacity-20 text-[10px] tracking-widest uppercase">No Intel Updates</p>}
                                 </div>
