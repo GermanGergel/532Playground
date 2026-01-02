@@ -309,9 +309,9 @@ const DispersingWord: React.FC<{ words: string[] }> = ({ words }) => {
         }
     };
     return (
-        <span className="relative inline-block h-[1.1em] min-w-[320px] md:min-w-[600px] align-top text-center perspective-1000 px-20 overflow-visible">
-            <span className={`block text-transparent bg-clip-text bg-gradient-to-b from-[#00F2FE] to-[#00F2FE]/30 transition-all duration-[1200ms] ease-[cubic-bezier(0.2,0,0.2,1)] ${getStyles()}`} style={{ textShadow: state === 'active' ? '0 0 40px rgba(0, 242, 254, 0.6)' : 'none' }}>{words[index]}</span>
-            {state === 'active' && (<span className="absolute inset-0 text-transparent bg-clip-text bg-gradient-to-b from-[#00F2FE] to-transparent pointer-events-none z-0 opacity-20 px-20" style={{ filter: 'blur(25px)', WebkitTextFillColor: 'transparent' }}>{words[index]}</span>)}
+        <span className="relative inline-block h-[1.1em] min-w-[280px] md:min-w-[500px] align-top text-center perspective-1000 px-10">
+            <span className={`block text-transparent bg-clip-text bg-gradient-to-b from-[#00F2FE] to-[#00F2FE]/30 transition-all duration-[1200ms] ease-[cubic-bezier(0.2,0,0.2,1)] ${getStyles()}`} style={{ textShadow: state === 'active' ? '0 0 30px rgba(0, 242, 254, 0.5)' : 'none' }}>{words[index]}</span>
+            {state === 'active' && (<span className="absolute inset-0 text-transparent bg-clip-text bg-gradient-to-b from-[#00F2FE] to-transparent pointer-events-none z-0 opacity-20 px-10" style={{ filter: 'blur(20px)', WebkitTextFillColor: 'transparent' }}>{words[index]}</span>)}
         </span>
     );
 };
