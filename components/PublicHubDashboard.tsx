@@ -131,12 +131,12 @@ const HubCard: React.FC<{
 
             <div className={`absolute -top-10 -left-10 w-40 h-40 ${isElite ? 'bg-[#00F2FE]/[0.05]' : 'bg-[#00F2FE]/[0.03]'} rounded-full blur-[45px] pointer-events-none z-0 animate-pulse`} style={{ animationDuration: '6s' }}></div>
             
-            <div className={`relative z-10 py-1.5 px-4 flex items-center justify-between shrink-0 ${headerStyleClass} ${isRight ? 'flex-row-reverse' : ''}`}>
-                 <div className={`flex items-center gap-2 relative z-10 flex-grow ${isRight ? 'flex-row-reverse' : ''}`}>
+            <div className={`relative z-10 py-1.5 px-4 flex items-center shrink-0 ${headerStyleClass} ${isRight ? 'flex-row-reverse justify-start' : 'justify-between'}`}>
+                 <div className={`flex items-center gap-2 relative z-10 ${isRight ? 'flex-row-reverse' : ''}`}>
                     <div className={`w-4 h-4 rounded-md flex items-center justify-center shadow-sm border ${iconBg} shrink-0`} style={{ color: accent }}>
                         {React.cloneElement(icon as React.ReactElement<any>, { className: "w-2.5 h-2.5" })}
                     </div>
-                    <div className={`flex-grow ${isRight ? 'text-right' : 'text-left'}`}>
+                    <div>
                         {typeof title === 'string' ? <h3 className={`font-russo text-[10px] uppercase tracking-widest ${titleColor}`}>{title}</h3> : title}
                     </div>
                  </div>
@@ -309,9 +309,9 @@ const getImpactScore = (stats: PlayerStats): number => {
 const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t }) => {
     const getWeatherIcon = (cond: WeatherCondition | string = 'clear') => {
         const c = cond.toLowerCase();
-        if (c.includes('rain') || c.includes('storm')) return <CloudRainIcon className="w-16 h-16 text-slate-300" />;
-        if (c.includes('cloud') || c.includes('fog')) return <CloudIcon className="w-16 h-16 text-slate-300" />;
-        return <MoonIcon className="w-16 h-16 text-slate-300" />;
+        if (c.includes('rain') || c.includes('storm')) return <CloudRainIcon className="w-16 h-16 text-slate-200/90" />;
+        if (c.includes('cloud') || c.includes('fog')) return <CloudIcon className="w-16 h-16 text-slate-200/90" />;
+        return <MoonIcon className="w-16 h-16 text-slate-200/90" />;
     };
 
     // Construct Maps Search Link
@@ -336,7 +336,7 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
                             <svg className="w-3 h-3 opacity-30 group-hover/loc:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
                         </a>
                     ) : (
-                        <span className="font-chakra font-bold text-base text-slate-400 uppercase tracking-wide truncate max-w-[200px] md:max-w-[250px]">PITCH DATA UNAVAILABLE</span>
+                        <span className="font-chakra font-bold text-base text-slate-200 uppercase tracking-wide truncate max-w-[200px] md:max-w-[250px]">PITCH DATA UNAVAILABLE</span>
                     )}
                 </div>
             </div>
@@ -482,7 +482,7 @@ export const PublicHubDashboard: React.FC = () => {
                     
                     <HubCard 
                         title={
-                            <div className="flex justify-between w-full items-center pr-3">
+                            <div className="flex justify-between w-full items-center px-4 md:px-6">
                                 <div className="relative group/tab">
                                     <button 
                                         onClick={() => handleManualTabChange('players')} 
@@ -530,7 +530,7 @@ export const PublicHubDashboard: React.FC = () => {
                                             return (
                                             <React.Fragment key={game.id}>
                                                 <tr 
-                                                    className={`group border-b border-white/5 last:border-0 transition-transform duration-200 will-change-transform ${totalScore > 0 ? 'hover:scale-[1.01] hover:relative hover:z-20 cursor-pointer' : 'cursor-default'} ${expandedMatchId === game.id ? 'bg-white/5' : ''}`}
+                                                    className={`group border-b border-white/5 last:border-0 transition-transform duration-300 will-change-transform ${totalScore > 0 ? 'hover:scale-[1.03] hover:relative hover:z-20 cursor-pointer' : 'cursor-default'} ${expandedMatchId === game.id ? 'bg-white/5' : ''}`}
                                                     onClick={() => totalScore > 0 && setExpandedMatchId(expandedMatchId === game.id ? null : game.id)}
                                                 >
                                                     <td className={`${tdBase} text-white/30 font-mono`}>{game.gameNumber}</td>
@@ -539,7 +539,7 @@ export const PublicHubDashboard: React.FC = () => {
                                                     <td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team2Id) || {}} size="xxs" isLight={true} /></div></td>
                                                 </tr>
                                                 {expandedMatchId === game.id && (
-                                                    <tr className="bg-black/40 animate-in slide-in-from-top-2 fade-in duration-300">
+                                                    <tr className="bg-white/[0.03] animate-in slide-in-from-top-2 fade-in duration-300">
                                                         <td colSpan={4} className="p-3">
                                                             <div className="flex flex-col gap-2">
                                                                 {game.goals.length > 0 ? (
@@ -566,7 +566,7 @@ export const PublicHubDashboard: React.FC = () => {
                                                                                 </div>
                                                                                 <div className="flex flex-col min-w-0">
                                                                                     <div className="flex flex-wrap items-baseline gap-x-2">
-                                                                                        <span className="text-[11px] font-black uppercase text-white/90 tracking-wide truncate">
+                                                                                        <span className="text-[11px] font-black uppercase text-slate-200 tracking-wide truncate">
                                                                                             {scorer?.nickname || (goal.isOwnGoal ? t.ownGoal : 'Unknown')}
                                                                                         </span>
                                                                                         {assistant && (
