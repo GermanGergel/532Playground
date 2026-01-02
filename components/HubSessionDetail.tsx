@@ -57,6 +57,11 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
         return <MoonIcon className="w-5 h-5 text-white/80" />;
     };
 
+    // Construct Maps Search Link
+    const mapsLink = session.location 
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(session.location)}` 
+        : null;
+
     return (
         <div className="flex flex-col h-full overflow-hidden">
             {/* COMPACT TOP INFO SECTION */}
@@ -65,7 +70,19 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
                     <div className="w-8 h-8 rounded-lg bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shrink-0"><MapPinIcon className="w-4 h-4" /></div>
                     <div className="flex flex-col min-w-0">
                         <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.2em]">LOCATION</span>
-                        <span className="font-chakra font-bold text-xs text-white uppercase tracking-wide truncate">{data.location}</span>
+                        {mapsLink ? (
+                            <a 
+                                href={mapsLink} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="group/loc flex items-center gap-1 font-chakra font-bold text-xs text-white uppercase tracking-wide truncate hover:text-[#00F2FE] transition-colors"
+                            >
+                                <span className="truncate border-b border-white/5 group-hover/loc:border-[#00F2FE]/40">{data.location}</span>
+                                <svg className="w-2.5 h-2.5 opacity-30 group-hover/loc:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+                            </a>
+                        ) : (
+                            <span className="font-chakra font-bold text-xs text-white uppercase tracking-wide truncate">{data.location}</span>
+                        )}
                     </div>
                 </div>
                 
