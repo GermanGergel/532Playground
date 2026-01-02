@@ -429,6 +429,25 @@ export const PublicHubScreen: React.FC = () => {
     const [dashboardView, setDashboardView] = useState<DashboardViewType>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
 
+    // DYNAMIC META TAGS FOR PREVIEW
+    useEffect(() => {
+        // Update Title & Meta for better link sharing
+        document.title = "532 CLUB HUB ACCESS";
+        const metaTitle = document.getElementById('og-title');
+        const metaDesc = document.getElementById('og-desc');
+        const metaImg = document.getElementById('og-image');
+        
+        if (metaTitle) metaTitle.setAttribute('content', '532 CLUB HUB ACCESS');
+        if (metaDesc) metaDesc.setAttribute('content', 'Official Club Hub. Statistics, Rankings, and Match Intelligence.');
+        // Image points to a dark thematic background
+        if (metaImg) metaImg.setAttribute('content', 'https://raw.githubusercontent.com/dmtr-frolv/532-assets/main/og-hub-dark-v3.png');
+
+        return () => {
+            // Restore defaults on unmount
+            document.title = "532 Playground";
+        };
+    }, []);
+
     useEffect(() => {
         if (isDashboardOpen) {
             document.body.style.overflow = 'hidden';
