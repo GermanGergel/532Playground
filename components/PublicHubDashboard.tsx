@@ -28,7 +28,7 @@ const TermometerIcon = ({ className }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
 );
 
-// --- STANDBY COMPONENT ---
+// --- STANDBY SCREEN ---
 const StandbyScreen: React.FC = () => {
     const t = useTranslation();
     return (
@@ -347,109 +347,12 @@ export const PublicHubDashboard: React.FC = () => {
     // ПРИНУДИТЕЛЬНО ПЕРВАЯ ВКЛАДКА - ПЛЕЕРЫ
     const [activeRightTab, setActiveRightTab] = useState<'players' | 'games'>('players');
     
-    // Ultra-smooth GPU scroll logic (One round trip version)
-    const [isInteracting, setIsInteracting] = useState(false);
-    const newsOuterRef = useRef<HTMLDivElement>(null);
-    const newsInnerRef = useRef<HTMLDivElement>(null);
-    const animationFrameRef = useRef<number | null>(null);
-    const lastTimeRef = useRef<number>(0);
-    const pauseUntilRef = useRef<number>(0);
-    const currentYRef = useRef<number>(0);
-    const autoScrollPhaseRef = useRef<number>(0); // 0 = initial wait, 1 = down, 2 = pause at bottom, 3 = up, 4 = finished
-
     // Presentation Mode (Tabs)
     const [isAutoSwitching, setIsAutoSwitching] = useState(true);
     const [autoSwitchProgress, setAutoSwitchProgress] = useState(0);
 
     const session = history[0];
 
-    // --- GPU ACCELERATED SMOOTH AUTO SCROLL (ONE TRIP WITH 5S INITIAL DELAY) ---
-    useEffect(() => {
-        if (!session || newsFeed.length === 0) return;
-
-        // Reset positions on mount to ensure user doesn't see "empty" space
-        if (newsInnerRef.current) {
-            newsInnerRef.current.style.transform = 'translate3d(0, 0, 0)';
-        }
-        currentYRef.current = 0;
-        autoScrollPhaseRef.current = 0;
-        pauseUntilRef.current = 0;
-        lastTimeRef.current = 0;
-
-        const animate = (time: number) => {
-            if (!lastTimeRef.current) lastTimeRef.current = time;
-            
-            const outer = newsOuterRef.current;
-            const inner = newsInnerRef.current;
-
-            // Stop logic if finished or user interaction
-            if (!outer || !inner || isInteracting || autoScrollPhaseRef.current === 4) {
-                lastTimeRef.current = time;
-                if (isInteracting) autoScrollPhaseRef.current = 4;
-                animationFrameRef.current = requestAnimationFrame(animate);
-                return;
-            }
-
-            // Phase 0: Initial 5-second wait
-            if (autoScrollPhaseRef.current === 0) {
-                if (pauseUntilRef.current === 0) pauseUntilRef.current = time + 5000;
-                if (time >= pauseUntilRef.current) {
-                    autoScrollPhaseRef.current = 1;
-                    lastTimeRef.current = time;
-                }
-                animationFrameRef.current = requestAnimationFrame(animate);
-                return;
-            }
-
-            const maxTravel = Math.max(0, inner.scrollHeight - outer.clientHeight);
-            
-            // If content fits container, no need to scroll
-            if (maxTravel <= 10) {
-                autoScrollPhaseRef.current = 4;
-                animationFrameRef.current = requestAnimationFrame(animate);
-                return;
-            }
-
-            // Delta time calculation for consistent speed
-            const speed = 32; // px per second
-            const delta = (time - lastTimeRef.current) / 1000;
-            lastTimeRef.current = time;
-
-            if (autoScrollPhaseRef.current === 1) {
-                // Scrolling DOWN
-                currentYRef.current += speed * delta;
-                if (currentYRef.current >= maxTravel) {
-                    currentYRef.current = maxTravel;
-                    autoScrollPhaseRef.current = 2; // Pause at bottom
-                    pauseUntilRef.current = time + 2000;
-                }
-            } else if (autoScrollPhaseRef.current === 2) {
-                // Waiting at BOTTOM
-                if (time >= pauseUntilRef.current) {
-                    autoScrollPhaseRef.current = 3;
-                }
-            } else if (autoScrollPhaseRef.current === 3) {
-                // Scrolling UP
-                currentYRef.current -= speed * delta;
-                if (currentYRef.current <= 0) {
-                    currentYRef.current = 0;
-                    autoScrollPhaseRef.current = 4; // Done
-                }
-            }
-
-            // Apply transformation with sub-pixel precision
-            inner.style.transform = `translate3d(0, ${-currentYRef.current}px, 0)`;
-
-            animationFrameRef.current = requestAnimationFrame(animate);
-        };
-
-        animationFrameRef.current = requestAnimationFrame(animate);
-
-        return () => {
-            if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
-        };
-    }, [session, newsFeed.length, isInteracting]);
-    
     // --- INFINITE AUTO SWITCH LOGIC (TABS) ---
     useEffect(() => {
         if (!isAutoSwitching || !session) return;
@@ -533,22 +436,9 @@ export const PublicHubDashboard: React.FC = () => {
 
                     <div className="flex-[3] min-h-0 shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <HubCard title={t.hubSessionNews} icon={<Zap />} accent="#00F2FE" variant="standings" className="h-full min-h-0" bodyClassName="p-0 flex flex-col">
-                            <div className="flex-grow relative overflow-hidden" ref={newsOuterRef}>
-                                <div 
-                                    ref={newsInnerRef}
-                                    onMouseEnter={() => setIsInteracting(true)}
-                                    onMouseLeave={() => { setIsInteracting(false); lastTimeRef.current = 0; }}
-                                    onTouchStart={() => setIsInteracting(true)}
-                                    onTouchEnd={() => { setIsInteracting(false); lastTimeRef.current = 0; }}
-                                    className="p-3 bg-black/10 transition-none will-change-transform h-full overflow-y-auto custom-hub-scrollbar"
-                                    style={{ 
-                                        backfaceVisibility: 'hidden',
-                                        scrollBehavior: 'auto' 
-                                    }}
-                                >
-                                    {newsFeed.slice(0, 15).map(item => <NewsVanguardCard key={item.id} item={item} />)}
-                                    {newsFeed.length === 0 && <p className="text-center py-10 opacity-20 text-[10px] tracking-widest uppercase">No Intel Updates</p>}
-                                </div>
+                            <div className="flex-grow relative overflow-y-auto custom-hub-scrollbar p-3 bg-black/10">
+                                {newsFeed.slice(0, 15).map(item => <NewsVanguardCard key={item.id} item={item} />)}
+                                {newsFeed.length === 0 && <p className="text-center py-10 opacity-20 text-[10px] tracking-widest uppercase">No Intel Updates</p>}
                                 <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-[#0f172a] to-transparent z-20 pointer-events-none" />
                                 <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-[#020617] to-transparent z-20 pointer-events-none" />
                             </div>
