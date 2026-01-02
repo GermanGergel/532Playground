@@ -48,7 +48,7 @@ const StandbyScreen: React.FC = () => {
                     </div>
                 </div>
                 
-                <p className="max-w-xs text-center text-[10px] font-mono text-white/30 uppercase tracking-[0.2em] mt-8">
+                <p className="max-w-xs text-center text-[10px] font-mono text-white/30 uppercase tracking-[0.2em] leading-loose mt-8">
                     {t.hubAwaitingStats}<br/>SYSTEM IDLE. AWAITING UPLINK SIGNAL...
                 </p>
             </div>
@@ -350,7 +350,7 @@ export const PublicHubDashboard: React.FC = () => {
     // Auto-scroll news logic states
     const [isInteracting, setIsInteracting] = useState(false);
     const newsScrollRef = useRef<HTMLDivElement>(null);
-    const scrollDirectionRef = useRef<number>(1); 
+    const scrollDirectionRef = useRef<number>(1); // 1 = down, -1 = up
     const animationFrameRef = useRef<number | null>(null);
     const lastScrollTimeRef = useRef<number>(0);
     const pauseUntilRef = useRef<number>(0);
@@ -368,17 +368,20 @@ export const PublicHubDashboard: React.FC = () => {
         const animate = (time: number) => {
             const el = newsScrollRef.current;
             if (!el || isInteracting) {
+                // Keep the frame loop alive even when paused so we can resume
                 animationFrameRef.current = requestAnimationFrame(animate);
                 return;
             }
 
-            // Initial setup for the loop
+            // Initialization or Reset
             if (lastScrollTimeRef.current === 0) {
                 lastScrollTimeRef.current = time;
-                pauseUntilRef.current = time + 4000; // Start scrolling after 4s
+                pauseUntilRef.current = time + 4000; // Start scrolling after initial 4s
             }
 
+            // Check if we are in a pause period
             if (time < pauseUntilRef.current) {
+                lastScrollTimeRef.current = time; // reset delta base to current during pause
                 animationFrameRef.current = requestAnimationFrame(animate);
                 return;
             }
@@ -389,7 +392,8 @@ export const PublicHubDashboard: React.FC = () => {
                 return;
             }
 
-            const speed = 28; // Pixels per second
+            // Scroll speed (pixels per second) - Increased for smoothness and speed
+            const speed = 45; 
             const delta = (time - lastScrollTimeRef.current) / 1000;
             lastScrollTimeRef.current = time;
 
@@ -398,14 +402,14 @@ export const PublicHubDashboard: React.FC = () => {
                 if (el.scrollTop >= maxScroll - 1) {
                     el.scrollTop = maxScroll;
                     scrollDirectionRef.current = -1;
-                    pauseUntilRef.current = time + 2500; // Pause at bottom
+                    pauseUntilRef.current = time + 3000; // Pause at bottom
                 }
             } else {
                 el.scrollTop -= speed * delta;
                 if (el.scrollTop <= 1) {
                     el.scrollTop = 0;
                     scrollDirectionRef.current = 1;
-                    pauseUntilRef.current = time + 2500; // Pause at top
+                    pauseUntilRef.current = time + 3000; // Pause at top
                 }
             }
 
