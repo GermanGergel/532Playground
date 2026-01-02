@@ -13,10 +13,10 @@ interface ClubIntelligenceDashboardProps {
 }
 
 const VIEW_THEMES: Record<string, { bottomStop: string }> = {
-    dashboard: { bottomStop: '#020617' }, 
-    roster: { bottomStop: '#01040a' },    
-    archive: { bottomStop: '#01040a' },   
-    info: { bottomStop: '#020617' },      
+    dashboard: { bottomStop: '#0a0c10' }, 
+    roster: { bottomStop: '#0a0c10' },    
+    archive: { bottomStop: '#0a0c10' },   
+    info: { bottomStop: '#0a0c10' },      
     tournaments: { bottomStop: '#0a0c10' },
     league: { bottomStop: '#0a0c10' },
 };
@@ -27,10 +27,8 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
     const [hubSearch, setHubSearch] = useState('');
 
     const activeTheme = useMemo(() => {
-        // Если выбран игрок в режиме ростера, используем чуть более глубокий темный цвет
-        if (selectedPlayerId && currentView === 'roster') return { bottomStop: '#01040a' };
         return VIEW_THEMES[currentView] || { bottomStop: '#0a0c10' };
-    }, [currentView, selectedPlayerId]);
+    }, [currentView]);
 
     useEffect(() => {
         logAnalyticsEvent('view_tab', currentView);
@@ -43,7 +41,8 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
     }, [currentView, onArchiveViewChange]);
 
     return (
-        <div className="w-full h-full animate-in fade-in duration-700 relative">
+        <div className="w-full h-full animate-in fade-in duration-700 relative bg-[#0a0c10]">
+            {/* Dynamic Top Fade */}
             <div 
                 className="fixed top-0 left-0 right-0 h-20 md:h-24 z-[95] pointer-events-none transition-all duration-700 ease-in-out"
                 style={{
@@ -54,7 +53,7 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
                 }}
             ></div>
 
-            <div className="w-full h-[calc(100vh-110px)] md:h-[calc(100dvh-110px)] min-h-[650px] relative overflow-hidden">
+            <div className="w-full h-[calc(100vh-110px)] md:h-[calc(100dvh-110px)] min-h-[650px] relative overflow-hidden bg-[#0a0c10]">
                 {currentView === 'dashboard' && <PublicHubDashboard />}
                 
                 {(currentView === 'roster' || currentView === 'duel') && (
@@ -68,7 +67,7 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
                         setSortBy={setHubSortBy}
                         search={hubSearch}
                         setSearch={setHubSearch}
-                        onStartDuel={() => {}} // Обработка теперь внутри HubRoster
+                        onStartDuel={() => {}} 
                     />
                 )}
                 
@@ -76,12 +75,13 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
                 {currentView === 'info' && <HubInfo />}
                 
                 {(currentView === 'tournaments' || currentView === 'league') && (
-                    <div className="h-full flex flex-col items-center justify-center opacity-20">
+                    <div className="h-full flex flex-col items-center justify-center opacity-20 bg-[#0a0c10]">
                         <span className="font-orbitron text-xl uppercase tracking-[0.5em] text-white font-black animate-pulse">Coming Soon</span>
                     </div>
                 )}
             </div>
 
+            {/* Dynamic Bottom Fade */}
             <div 
                 className="fixed bottom-0 left-0 right-0 h-8 md:h-10 z-[150] pointer-events-none transition-all duration-700 ease-in-out"
                 style={{

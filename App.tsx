@@ -50,8 +50,8 @@ const App: React.FC = () => {
   const isHub = !!matchPath('/hub', location.pathname);
 
   return (
-    <div className="min-h-screen bg-dark-bg text-dark-text font-sans selection:bg-dark-accent-start selection:text-dark-bg">
-      <div className={`${isHub ? 'w-full' : 'max-w-md mx-auto'} min-h-screen relative shadow-2xl shadow-black/50 bg-dark-bg ${showNav ? 'pb-24' : ''}`}>
+    <div className={`min-h-screen ${isHub ? 'bg-[#0a0c10]' : 'bg-dark-bg'} text-dark-text font-sans selection:bg-dark-accent-start selection:text-dark-bg`}>
+      <div className={`${isHub ? 'w-full bg-[#0a0c10]' : 'max-w-md mx-auto bg-dark-bg'} min-h-screen relative shadow-2xl shadow-black/50 ${showNav ? 'pb-24' : ''}`}>
         <Routes>
           <Route path="/" element={<HomeScreen />} />
           <Route path="/setup" element={<NewGameSetupScreen />} />
