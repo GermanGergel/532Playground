@@ -546,21 +546,29 @@ export const PublicHubDashboard: React.FC = () => {
                                                                         const assistant = session.playerPool.find(p => p.id === goal.assistantId);
                                                                         const team = session.teams.find(t => t.id === goal.teamId);
                                                                         return (
-                                                                            <div key={goal.id} className="flex items-center gap-3 px-2 py-1 border-l-2" style={{ borderColor: team?.color || '#fff' }}>
-                                                                                <div className="shrink-0">
+                                                                            <div key={goal.id} className="flex items-center gap-2 px-3 py-1 relative">
+                                                                                {/* Тонкий неоновый индикатор */}
+                                                                                <div 
+                                                                                    className="w-[1.5px] h-3 rounded-full shrink-0" 
+                                                                                    style={{ 
+                                                                                        backgroundColor: team?.color || '#fff',
+                                                                                        boxShadow: `0 0 6px ${team?.color || '#fff'}`
+                                                                                    }}
+                                                                                ></div>
+                                                                                <div className="shrink-0 ml-1">
                                                                                     {goal.isOwnGoal ? (
-                                                                                        <span className="text-[10px] filter drop-shadow-[0_0_5px_rgba(239,68,68,0.5)]">🧤</span>
+                                                                                        <span className="text-[10px]">🧤</span>
                                                                                     ) : (
-                                                                                        <span className="text-[10px] filter drop-shadow-[0_0_5px_rgba(0,242,254,0.5)]">⚽</span>
+                                                                                        <span className="text-[10px]">⚽</span>
                                                                                     )}
                                                                                 </div>
                                                                                 <div className="flex flex-col min-w-0">
                                                                                     <div className="flex flex-wrap items-baseline gap-x-2">
-                                                                                        <span className="text-[11px] font-black uppercase text-white tracking-wide truncate">
+                                                                                        <span className="text-[11px] font-black uppercase text-white/90 tracking-wide truncate">
                                                                                             {scorer?.nickname || (goal.isOwnGoal ? t.ownGoal : 'Unknown')}
                                                                                         </span>
                                                                                         {assistant && (
-                                                                                            <span className="text-[8px] font-bold text-white/30 uppercase italic shrink-0">
+                                                                                            <span className="text-[8px] font-bold text-white/20 uppercase italic shrink-0">
                                                                                                 {t.assistant}: {assistant.nickname}
                                                                                             </span>
                                                                                         )}
