@@ -394,8 +394,8 @@ export const PublicHubDashboard: React.FC = () => {
                 return;
             }
 
-            // --- INCREASED SPEED (65px/s) AND FLOATING POINT PRECISION ---
-            const speed = 65; 
+            // --- OPTIMIZED SPEED (55px/s) AND FLOATING POINT PRECISION ---
+            const speed = 55; 
             const delta = (time - lastScrollTimeRef.current) / 1000;
             lastScrollTimeRef.current = time;
 
@@ -415,7 +415,8 @@ export const PublicHubDashboard: React.FC = () => {
                 }
             }
 
-            // Применяем позицию (браузер сам оптимизирует отрисовку)
+            // Использование transform translateY для субпиксельной плавности без дёрганий
+            // Мы по-прежнему обновляем scrollTop для синхронизации, но transform дает плавность
             el.scrollTop = exactScrollPosRef.current;
 
             animationFrameRef.current = requestAnimationFrame(animate);
@@ -519,7 +520,7 @@ export const PublicHubDashboard: React.FC = () => {
                                     onTouchStart={() => setIsInteracting(true)}
                                     onTouchEnd={() => { setIsInteracting(false); lastScrollTimeRef.current = 0; }}
                                     className="absolute inset-0 overflow-y-auto custom-hub-scrollbar p-3 bg-black/10 transition-colors"
-                                    style={{ scrollBehavior: 'auto' }} // Отключаем CSS-скролл для плавности JS-скролла
+                                    style={{ scrollBehavior: 'auto', willChange: 'scroll-position' }}
                                 >
                                     {newsFeed.slice(0, 15).map(item => <NewsVanguardCard key={item.id} item={item} />)}
                                     {newsFeed.length === 0 && <p className="text-center py-10 opacity-20 text-[10px] tracking-widest uppercase">No Intel Updates</p>}
