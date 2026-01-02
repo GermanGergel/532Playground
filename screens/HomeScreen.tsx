@@ -1,11 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Page, Button, useTranslation, Modal } from '../ui';
 import { homeScreenBackground } from '../assets';
 import { BrandedHeader } from './utils';
 import { Globe, Upload, XCircle, QrCode } from '../icons'; 
+import html2canvas from 'html2canvas';
 
 export const HomeScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -13,12 +14,39 @@ export const HomeScreen: React.FC = () => {
   const { activeSession } = useApp();
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [hubUrl, setHubUrl] = useState('');
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
+  
+  const promoCardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
       const baseUrl = window.location.origin;
       setHubUrl(`${baseUrl}/hub`);
   }, []);
+
+  const promoUrl = `${window.location.origin}/promo`;
+
+  // Генерация QR-кода при открытии модалки
+  useEffect(() => {
+      if (isQrModalOpen) {
+          const generateQrCode = async () => {
+              try {
+                  const response = await fetch(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(promoUrl)}&bgcolor=1A1D24&color=00F2FE&qzone=1&ecc=H`);
+                  if (!response.ok) throw new Error('Failed to fetch QR code');
+                  const blob = await response.blob();
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                      setQrCodeDataUrl(reader.result as string);
+                  };
+                  reader.readAsDataURL(blob);
+              } catch (error) {
+                  console.error("QR code generation failed:", error);
+              }
+          };
+          generateQrCode();
+      }
+  }, [isQrModalOpen, promoUrl]);
 
   const handleContinue = () => {
     if (activeSession) {
@@ -34,22 +62,18 @@ export const HomeScreen: React.FC = () => {
     navigate('/setup');
   };
 
-  // NEW: Optimized Sharing Logic for "One Block" Link Preview
   const handleShareHub = async () => {
       if (isSharing) return;
       setIsSharing(true);
-
       const shareData = {
           title: '532 CLUB HUB',
           text: 'Check live stats, rankings, and match intelligence on 532 Playground.',
           url: hubUrl,
       };
-
       try {
           if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
               await navigator.share(shareData);
           } else {
-              // Fallback: Copy to clipboard
               await navigator.clipboard.writeText(hubUrl);
               alert("Club Hub link copied to clipboard!");
           }
@@ -60,60 +84,120 @@ export const HomeScreen: React.FC = () => {
       }
   };
 
-  const promoUrl = `${window.location.origin}/promo`;
-
-  const handleSharePromoLink = async () => {
-      const shareData = {
-          title: '532 Playground',
-          text: 'Join the club:',
-          url: promoUrl,
-      };
-
+  // ЛОГИКА ОТПРАВКИ КАРТОЧКИ (КОПИЯ С ПРОФИЛЯ ИГРОКА)
+  const handleSharePromoCard = async () => {
+      if (!promoCardRef.current || isGenerating) return;
+      setIsGenerating(true);
       try {
+          const canvas = await html2canvas(promoCardRef.current, { 
+              backgroundColor: '#1A1D24',
+              scale: 3, 
+              useCORS: true 
+          });
+          
+          const blob = await new Promise<Blob|null>(resolve => canvas.toBlob(resolve, 'image/png'));
+          if (!blob) throw new Error("Blob creation failed");
+  
+          const filename = `532_Access_Card.png`;
+          const file = new File([blob], filename, { type: 'image/png' });
+
+          const shareData = {
+              files: [file],
+              title: `532 PLAYGROUND // ACCESS`,
+              text: `Join the club: ${promoUrl}`
+          };
+
           if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
               await navigator.share(shareData);
           } else {
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = filename;
+              a.click();
+              URL.revokeObjectURL(url);
               await navigator.clipboard.writeText(promoUrl);
-              alert("Link copied!");
+              alert("Card downloaded and link copied to clipboard!");
           }
-      } catch (error) {
-          console.error("Error sharing promo link:", error);
+      } catch (error: any) {
+          console.error("Sharing error:", error);
+      } finally {
+          setIsGenerating(false);
+          setIsQrModalOpen(false);
       }
   };
-
-  const promoQrImageSrc = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(promoUrl)}&bgcolor=1A1D24&color=00F2FE&qzone=1&ecc=L`;
 
   const controlButtonClass = "w-12 h-12 flex items-center justify-center bg-dark-surface/80 rounded-full border shadow-[0_0_15px_rgba(0,242,254,0.2)] active:scale-95 transition-all hover:bg-dark-surface hover:scale-110";
 
   return (
     <Page style={{ backgroundImage: `url("${homeScreenBackground}")`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
         
-        {/* Recruit Modal */}
+        {/* Recruit Modal - Updated to Match Player Share Design */}
         <Modal
             isOpen={isQrModalOpen}
             onClose={() => setIsQrModalOpen(false)}
-            size="sm"
+            size="xs"
             hideCloseButton
-            containerClassName="border-2 border-dark-accent-start/50 shadow-[0_0_30px_rgba(0,242,254,0.3)] bg-dark-surface/95 backdrop-blur-xl"
+            containerClassName="!p-4 !bg-dark-bg border border-[#00F2FE]/20"
         >
-            <div className="flex flex-col items-center gap-4 p-2 relative">
-                <button onClick={() => setIsQrModalOpen(false)} className="absolute top-0 right-0 p-2 text-white/50 hover:text-white"><XCircle className="w-6 h-6"/></button>
-                <div className="text-center mt-2">
-                    <h2 className="font-russo text-3xl text-white uppercase tracking-wider mb-1">RECRUIT PLAYER</h2>
-                    <p className="text-[10px] font-mono text-dark-accent-start tracking-[0.2em]">SCAN TO JOIN THE CLUB</p>
+            <div className="flex flex-col items-center gap-6">
+                {/* ПРЕВЬЮ КАРТОЧКИ (КОПИРУЕМ СТИЛЬ SHARE_PROFILE_MODAL) */}
+                <div 
+                    ref={promoCardRef} 
+                    className="w-full bg-[#1A1D24] rounded-[2rem] p-6 flex flex-col items-center gap-6 border border-[#00F2FE]/30 shadow-[0_0_30px_rgba(0,242,254,0.15)]"
+                >
+                    <div className="text-center">
+                        <h1 className="font-russo text-3xl flex items-baseline justify-center">
+                            <span className="text-[#00F2FE]">532</span>
+                            <span className="text-white ml-2 text-lg tracking-widest">PLAYGROUND</span>
+                        </h1>
+                        <p className="text-[9px] font-black tracking-[0.4em] text-white/40 mt-2 uppercase">
+                            OFFICIAL ACCESS CARD
+                        </p>
+                    </div>
+                    
+                    {/* Вместо имени игрока - общее приветствие клуба */}
+                    <div className="text-center space-y-1">
+                        <h2 className="font-russo text-2xl text-white uppercase tracking-tight leading-none">
+                            RECRUITMENT
+                        </h2>
+                        <p className="text-[10px] font-bold text-[#00F2FE] tracking-[0.1em] uppercase opacity-70">
+                            Authorized Entry Only
+                        </p>
+                    </div>
+
+                    <div className="p-3 rounded-2xl bg-gradient-to-br from-[#00F2FE] to-[#4CFF5F] shadow-[0_0_20px_rgba(0,242,254,0.3)]">
+                        <div className="bg-[#1A1D24] p-2 rounded-xl">
+                            {qrCodeDataUrl ? (
+                                <img src={qrCodeDataUrl} alt="QR Code" className="w-32 h-32" />
+                            ) : (
+                                <div className="w-32 h-32 flex items-center justify-center">
+                                    <div className="w-8 h-8 border-2 border-dashed border-[#00F2FE] rounded-full animate-spin"></div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <p className="text-[10px] font-bold tracking-[0.2em] text-[#00F2FE] animate-pulse uppercase">
+                        SCAN TO JOIN THE CLUB
+                    </p>
                 </div>
-                <div className="p-4 bg-white/5 rounded-2xl border border-white/10 relative group">
-                    <div className="absolute inset-0 bg-dark-accent-start/20 blur-xl rounded-full opacity-50 group-hover:opacity-80 transition-opacity"></div>
-                    <img src={promoQrImageSrc} alt="Promo QR" className="w-48 h-48 rounded-lg relative z-10" />
-                </div>
-                
-                <div className="w-full flex flex-col gap-2 mt-2">
+
+                <div className="w-full flex flex-col gap-3">
                     <Button 
                         variant="primary" 
-                        onClick={handleSharePromoLink} 
-                        className="w-full flex items-center justify-center gap-2 !py-3 font-chakra"
+                        onClick={handleSharePromoCard} 
+                        disabled={isGenerating}
+                        className="w-full !py-4 !text-lg font-chakra font-black tracking-widest uppercase shadow-[0_0_20px_rgba(0,242,254,0.4)]"
                     >
-                        <Upload className="w-5 h-5" /> SHARE LINK
+                        {isGenerating ? "GENERATING..." : "SEND PROMO CARD"}
+                    </Button>
+                    <Button 
+                        variant="ghost" 
+                        onClick={() => setIsQrModalOpen(false)} 
+                        className="w-full !py-2 !text-xs font-chakra font-bold text-white/30 uppercase tracking-widest"
+                    >
+                        {t.cancel}
                     </Button>
                 </div>
             </div>
