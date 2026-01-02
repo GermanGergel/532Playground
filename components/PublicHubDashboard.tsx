@@ -272,9 +272,14 @@ const NewsVanguardCard: React.FC<{ item: NewsItem }> = ({ item }) => {
                         <span className="text-[7px] font-black tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-sm bg-white/5 text-indigo-300">
                             {item.type.replace('_', ' ')}
                         </span>
-                        <span className="text-[7px] font-mono text-white/20">
-                            {new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
-                        </span>
+                        <div className="flex items-center gap-1.5 ml-2">
+                             <span className="text-[7px] font-mono text-white/20">
+                                {new Date(item.timestamp).toLocaleDateString([], {day:'2-digit', month:'2-digit'})}
+                            </span>
+                            <span className="text-[7px] font-mono text-white/40">
+                                {new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+                            </span>
+                        </div>
                         {item.isHot && <Zap className="w-3 h-3 text-indigo-400 animate-pulse" />}
                     </div>
                     <div className="flex items-baseline gap-2 overflow-hidden">
@@ -341,14 +346,66 @@ export const PublicHubDashboard: React.FC = () => {
     const { history, newsFeed, allPlayers } = useApp();
     const t = useTranslation();
     const [activeRightTab, setActiveRightTab] = useState<'players' | 'games'>('players');
+    const [isHoveringNews, setIsHoveringNews] = useState(false);
     
+    // Refs for scrolling
+    const newsScrollRef = useRef<HTMLDivElement>(null);
+    const scrollIntervalRef = useRef<number | null>(null);
+    const scrollDirectionRef = useRef<number>(1); // 1 for down, -1 for up
+
     // Presentation Mode States
     const [isAutoSwitching, setIsAutoSwitching] = useState(true);
     const [autoSwitchProgress, setAutoSwitchProgress] = useState(0);
 
     const session = history[0];
+
+    // --- AUTO SCROLL NEWS LOGIC ---
+    useEffect(() => {
+        if (!session || newsFeed.length === 0) return;
+
+        const startAutoScroll = () => {
+            if (scrollIntervalRef.current) clearInterval(scrollIntervalRef.current);
+            
+            scrollIntervalRef.current = window.setInterval(() => {
+                const el = newsScrollRef.current;
+                if (!el || isHoveringNews) return;
+
+                const scrollSpeed = 0.5; // Very slow pixels per step
+                const currentScroll = el.scrollTop;
+                const maxScroll = el.scrollHeight - el.clientHeight;
+
+                if (scrollDirectionRef.current === 1) {
+                    el.scrollTop += scrollSpeed;
+                    if (el.scrollTop >= maxScroll) {
+                        scrollDirectionRef.current = -1;
+                        // Brief pause at bottom
+                        clearInterval(scrollIntervalRef.current!);
+                        setTimeout(startAutoScroll, 1500);
+                    }
+                } else {
+                    el.scrollTop -= scrollSpeed;
+                    if (el.scrollTop <= 0) {
+                        scrollDirectionRef.current = 1;
+                        // Brief pause at top
+                        clearInterval(scrollIntervalRef.current!);
+                        setTimeout(startAutoScroll, 1500);
+                    }
+                }
+            }, 30); // ~33fps
+        };
+
+        // Initial delay of 5 seconds
+        const initialTimer = setTimeout(() => {
+            startAutoScroll();
+        }, 5000);
+
+        return () => {
+            clearTimeout(initialTimer);
+            if (scrollIntervalRef.current) clearInterval(scrollIntervalRef.current);
+        };
+    }, [session, newsFeed.length, isHoveringNews]);
     
-    // --- AUTO SWITCH LOGIC ---
+    // --- AUTO SWITCH LOGIC (TABS) ---
     useEffect(() => {
         if (!isAutoSwitching || !session) return;
 
@@ -360,13 +417,12 @@ export const PublicHubDashboard: React.FC = () => {
             let progress = (elapsed / DURATION) * 100;
             
             if (progress >= 100) {
-                // Switch Logic
                 setActiveRightTab(prev => {
                     if (prev === 'players') {
-                        startTime = Date.now(); // Reset for matches
+                        startTime = Date.now(); 
                         return 'games';
                     } else {
-                        setIsAutoSwitching(false); // End cycle
+                        setIsAutoSwitching(false);
                         return 'players';
                     }
                 });
@@ -374,13 +430,13 @@ export const PublicHubDashboard: React.FC = () => {
             } else {
                 setAutoSwitchProgress(progress);
             }
-        }, 50); // Refresh progress bar every 50ms
+        }, 50);
 
         return () => clearInterval(timer);
     }, [isAutoSwitching, session]);
 
     const handleManualTabChange = (tab: 'players' | 'games') => {
-        setIsAutoSwitching(false); // Kill auto mode forever on interaction
+        setIsAutoSwitching(false); 
         setActiveRightTab(tab);
     };
 
@@ -434,12 +490,19 @@ export const PublicHubDashboard: React.FC = () => {
                     <div className="flex-[3] min-h-0 shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <HubCard title={t.hubSessionNews} icon={<Zap />} accent="#00F2FE" variant="standings" className="h-full min-h-0" bodyClassName="p-0 flex flex-col">
                             <div className="flex-grow relative overflow-hidden">
-                                <div className="absolute inset-0 overflow-y-auto custom-hub-scrollbar p-3 bg-black/10">
+                                <div 
+                                    ref={newsScrollRef}
+                                    onMouseEnter={() => setIsHoveringNews(true)}
+                                    onMouseLeave={() => setIsHoveringNews(false)}
+                                    onTouchStart={() => setIsHoveringNews(true)}
+                                    onTouchEnd={() => setIsHoveringNews(false)}
+                                    className="absolute inset-0 overflow-y-auto custom-hub-scrollbar p-3 bg-black/10 transition-colors"
+                                >
                                     {newsFeed.slice(0, 15).map(item => <NewsVanguardCard key={item.id} item={item} />)}
                                     {newsFeed.length === 0 && <p className="text-center py-10 opacity-20 text-[10px] tracking-widest uppercase">No Intel Updates</p>}
                                 </div>
-                                <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-[#0f172a] to-transparent z-20" />
-                                <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-[#020617] to-transparent z-20" />
+                                <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-[#0f172a] to-transparent z-20 pointer-events-none" />
+                                <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-[#020617] to-transparent z-20 pointer-events-none" />
                             </div>
                         </HubCard>
                         <HubCard title={t.hubSessionSquads} icon={<Target />} variant="standings" className="h-full min-h-0" bodyClassName="flex flex-col"><TacticalRosters teams={session.teams} players={session.playerPool} session={session} t={t} /></HubCard>
@@ -493,7 +556,7 @@ export const PublicHubDashboard: React.FC = () => {
                             {activeRightTab === 'players' ? (
                                 <div className="animate-in fade-in duration-500">
                                     <table className="w-full table-fixed border-collapse">
-                                        <thead><tr><th className={`${thStandings} w-[10%]`}>#</th><th className={`${thStandings} text-left pl-3 w-[45%]`}>{t.players}</th><th className={`${thStandings} w-[15%]`}>{t.thG}</th><th className={`${thStandings} w-[15%]`}>{t.thA}</th><th className={`${thStandings} w-[15%]`}>{t.thTotal}</th></tr></thead>
+                                        <thead><tr><th className={`${thStandings} w-[10%]`}>#</th><th className={`${thStandings} text-left pl-3 w-[45%]`}>{t.players}</th><th className={`${thStandings} w-[15%]`}>{t.thG}</th><th className={`${thStandings} w-[15%]`}>{t.thA}</th><th className={`${thStandings} w-[16%] text-white`}>TOT</th></tr></thead>
                                         <tbody>{sortedForTable.map((ps, idx) => (<tr key={ps.player.id} className="group hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"><td className="py-2 text-center text-[9px] font-bold text-white/30 bg-white/[0.02]">{idx + 1}</td><td className="py-2 text-left pl-3 relative overflow-hidden group-hover:bg-white/5"><div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-3 rounded-r-full" style={{ backgroundColor: ps.team.color }} /><span className="text-slate-300 font-bold uppercase truncate text-[11px] block w-full pl-2 group-hover:text-white transition-colors">{ps.player.nickname || 'Unknown'}</span></td><td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.goals}</td><td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.assists}</td><td className="py-2 text-center text-[12px] font-bold text-white bg-white/[0.03]">{ps.goals + ps.assists}</td></tr>))}</tbody>
                                     </table>
                                 </div>
