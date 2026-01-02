@@ -176,32 +176,31 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
 
     return (
         <div className="absolute inset-0 flex flex-row animate-in fade-in duration-700 overflow-hidden rounded-[2.5rem]">
-            {/* SIDEBAR - LEFT COLUMN (350px, 1 column list) */}
+            {/* SIDEBAR - LEFT COLUMN */}
             <div className="w-[350px] flex flex-col border-r border-white/5 bg-black/40 relative z-20 shrink-0">
-                {/* SIDEBAR HEADER */}
-                <div className="p-6 pb-2 space-y-4 pt-10">
-                    <div className="flex items-center justify-between mb-2 px-1">
+                {/* SIDEBAR HEADER - REFINED */}
+                <div className="p-6 pb-2 space-y-4 pt-10 pl-14"> {/* Moved right to clear neon bars */}
+                    <div className="flex items-center justify-between mb-2 pr-2">
                         <div className="max-w-fit">
                             <h3 className="font-russo text-[14px] uppercase tracking-[0.15em] text-white italic leading-tight">{t.hubPlayers}</h3>
                             <div className="h-[1px] w-full bg-[#00F2FE] mt-1.5 opacity-50 shadow-[0_0_5px_#00F2FE]"></div>
                         </div>
-                        <button onClick={() => setIsDuelSetupOpen(true)} className="group flex items-center gap-2 hover:opacity-100 transition-opacity opacity-40">
-                             <Zap className="w-3.5 h-3.5 text-[#00F2FE] animate-pulse" />
-                             <span className="font-russo text-[11px] text-white uppercase tracking-widest">DUEL</span>
+                        <button onClick={() => setIsDuelSetupOpen(true)} className="group flex items-center transition-all opacity-40 hover:opacity-100 hover:scale-105 active:scale-95">
+                             <span className="font-russo text-[14px] text-white uppercase tracking-[0.2em] group-hover:text-[#00F2FE] group-hover:drop-shadow-[0_0_8px_rgba(242,254,0,0.6)] transition-all">DUEL</span>
                         </button>
                     </div>
 
-                    <div className="relative group w-full h-10 px-1">
+                    <div className="relative group w-full h-[34px] pr-2"> {/* More compact search bar */}
                         <input type="text" placeholder="FIND UNIT..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full h-full bg-white/5 border border-white/10 rounded-xl pl-4 pr-10 text-[10px] font-chakra font-black text-white uppercase tracking-[0.15em] focus:outline-none focus:border-[#00F2FE]/40 transition-all placeholder:text-white/20" />
                         <div className="absolute right-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#00F2FE] transition-colors"><Search className="w-4 h-4" /></div>
                     </div>
 
-                    <div className="flex gap-1.5 px-1">
+                    <div className="flex gap-1.5 pr-2">
                         {(['rating', 'name', 'date'] as SortOption[]).map((opt) => (
                             <button 
                                 key={opt} 
                                 onClick={() => setSortBy(opt)} 
-                                className={`flex-1 py-2 text-[8px] font-black uppercase tracking-widest rounded-lg border transition-all ${sortBy === opt ? 'bg-[#00F2FE]/10 border-[#00F2FE]/40 text-[#00F2FE] shadow-[0_0_10px_rgba(0,242,254,0.1)]' : 'bg-transparent border-white/5 text-white/20 hover:text-white/40'}`}
+                                className={`flex-1 py-1.5 text-[8px] font-black uppercase tracking-widest rounded-lg border transition-all ${sortBy === opt ? 'bg-[#00F2FE]/10 border-[#00F2FE]/40 text-[#00F2FE] shadow-[0_0_10px_rgba(0,242,254,0.1)]' : 'bg-transparent border-white/5 text-white/20 hover:text-white/40'}`}
                             >
                                 {opt}
                             </button>
@@ -221,13 +220,16 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                                 className={`group/unit relative flex items-center justify-between h-[68px] w-full rounded-2xl transition-all duration-300 cursor-pointer 
                                     ${isSelected ? 'bg-white/10 border-white/15 shadow-xl' : 'bg-white/[0.02] border-transparent hover:bg-white/[0.05]'} border`}
                             >
-                                {/* Left Selection Indicator */}
-                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-10 rounded-r-full transition-all duration-500" 
-                                     style={{ 
-                                         backgroundColor: isSelected ? tierColor : 'transparent', 
-                                         boxShadow: isSelected ? `0 0 15px ${tierColor}` : 'none',
-                                         opacity: isSelected ? 1 : 0
-                                     }}></div>
+                                {/* Refined Selection Indicator - More compact & aesthetic */}
+                                <div 
+                                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]" 
+                                    style={{ 
+                                        backgroundColor: isSelected ? tierColor : 'transparent', 
+                                        boxShadow: isSelected ? `0 0 12px ${tierColor}, 0 0 4px ${tierColor}` : 'none',
+                                        opacity: isSelected ? 1 : 0,
+                                        transform: isSelected ? 'translateY(-50%) scaleX(1)' : 'translateY(-50%) scaleX(0)'
+                                    }}
+                                ></div>
                                 
                                 <div className="flex items-center px-4 gap-4 w-full">
                                     <div className="shrink-0 transition-transform duration-300 group-hover/unit:scale-105">
@@ -254,7 +256,6 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
 
             {/* CONTENT AREA - RIGHT COLUMN (70%) */}
             <div className="flex-grow relative bg-[#01040a] overflow-hidden">
-                {/* Background effects for content area */}
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-black to-black opacity-60"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
 
@@ -263,7 +264,7 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                         <HubPlayerIntel 
                             playerId={selectedPlayerId} 
                             isEmbedded={true} 
-                            onBack={() => {}} // No back in master-detail
+                            onBack={() => {}} 
                         />
                     </div>
                 ) : (
