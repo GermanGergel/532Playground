@@ -181,6 +181,15 @@ export const HubRoster: React.FC<HubRosterProps> = ({ onSelectPlayer, sortBy, se
 
     return (
         <div className="absolute inset-0 flex flex-col animate-in fade-in duration-700 overflow-hidden rounded-[2.5rem]">
+            <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes soft-pulse-white {
+                    0%, 100% { color: rgba(255, 255, 255, 0.25); text-shadow: 0 0 0px transparent; }
+                    50% { color: rgba(255, 255, 255, 0.65); text-shadow: 0 0 10px rgba(255, 255, 255, 0.2); }
+                }
+                .animate-soft-pulse-white {
+                    animation: soft-pulse-white 3s ease-in-out infinite;
+                }
+            `}} />
             <div className="absolute -top-24 bottom-0 -left-4 -right-4 z-0 pointer-events-none">
                 {/* Радиальный градиент заканчивается в #01040a для маски */}
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#01040a] to-[#01040a]"></div>
@@ -195,7 +204,7 @@ export const HubRoster: React.FC<HubRosterProps> = ({ onSelectPlayer, sortBy, se
                         <div className="h-[2px] w-full bg-[#00F2FE] mt-2 rounded-full shadow-[0_0_10px_rgba(0,242,254,0.5)]"></div>
                     </div>
                     <button onClick={() => setIsDuelSetupOpen(true)} className="max-w-fit group relative text-left">
-                        <h3 className="font-russo text-[18px] uppercase tracking-[0.1em] text-white/30 group-hover:text-slate-200 transition-all duration-500 italic leading-tight whitespace-nowrap">DUEL</h3>
+                        <h3 className="font-russo text-[18px] uppercase tracking-[0.1em] transition-all duration-500 italic leading-tight whitespace-nowrap group-hover:text-slate-200 group-hover:animate-none animate-soft-pulse-white">DUEL</h3>
                         <div className="h-[2px] w-full bg-white/10 group-hover:bg-slate-400/50 mt-2 rounded-full transition-all duration-500"></div>
                     </button>
                 </div>

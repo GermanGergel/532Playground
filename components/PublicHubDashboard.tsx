@@ -347,7 +347,7 @@ export const PublicHubDashboard: React.FC = () => {
     // ПРИНУДИТЕЛЬНО ПЕРВАЯ ВКЛАДКА - ПЛЕЕРЫ
     const [activeRightTab, setActiveRightTab] = useState<'players' | 'games'>('players');
     
-    // Ultra-smooth GPU scroll logic
+    // Ultra-smooth GPU scroll logic (One round trip version)
     const [isInteracting, setIsInteracting] = useState(false);
     const newsOuterRef = useRef<HTMLDivElement>(null);
     const newsInnerRef = useRef<HTMLDivElement>(null);
@@ -356,6 +356,7 @@ export const PublicHubDashboard: React.FC = () => {
     const lastTimeRef = useRef<number>(0);
     const pauseUntilRef = useRef<number>(0);
     const currentYRef = useRef<number>(0);
+    const autoScrollPhaseRef = useRef<number>(0); // 0 = initial, 1 = down, 2 = pause at bottom, 3 = up, 4 = finished
 
     // Presentation Mode (Tabs)
     const [isAutoSwitching, setIsAutoSwitching] = useState(true);
@@ -363,7 +364,7 @@ export const PublicHubDashboard: React.FC = () => {
 
     const session = history[0];
 
-    // --- GPU ACCELERATED SMOOTH AUTO SCROLL ---
+    // --- GPU ACCELERATED SMOOTH AUTO SCROLL (ONE TRIP) ---
     useEffect(() => {
         if (!session || newsFeed.length === 0) return;
 
@@ -373,50 +374,57 @@ export const PublicHubDashboard: React.FC = () => {
             const outer = newsOuterRef.current;
             const inner = newsInnerRef.current;
 
-            if (!outer || !inner || isInteracting) {
+            // Stop if finished or user is interacting
+            if (!outer || !inner || isInteracting || autoScrollPhaseRef.current === 4) {
                 lastTimeRef.current = time;
+                // If user interacted, consider auto-scroll finished to not fight them
+                if (isInteracting) autoScrollPhaseRef.current = 4;
                 animationFrameRef.current = requestAnimationFrame(animate);
                 return;
             }
 
-            // Initial delay
-            if (pauseUntilRef.current === 0) {
-                pauseUntilRef.current = time + 4000;
+            // Initial delay (Phase 0)
+            if (autoScrollPhaseRef.current === 0) {
+                if (pauseUntilRef.current === 0) pauseUntilRef.current = time + 3500;
+                if (time >= pauseUntilRef.current) {
+                    autoScrollPhaseRef.current = 1;
+                    lastTimeRef.current = time;
+                }
+                animationFrameRef.current = requestAnimationFrame(animate);
+                return;
             }
 
-            // Boundary checks
             const maxTravel = Math.max(0, inner.scrollHeight - outer.clientHeight);
             if (maxTravel <= 10) {
-                inner.style.transform = `translate3d(0, 0, 0)`;
+                autoScrollPhaseRef.current = 4;
                 animationFrameRef.current = requestAnimationFrame(animate);
                 return;
             }
 
-            // Wait during pauses
-            if (time < pauseUntilRef.current) {
-                lastTimeRef.current = time;
-                animationFrameRef.current = requestAnimationFrame(animate);
-                return;
-            }
-
-            // Calculate movement (Speed: 38px/s)
-            const speed = 38; 
+            // Calculate movement (Speed: 35px/s for extra smoothness)
+            const speed = 35; 
             const delta = (time - lastTimeRef.current) / 1000;
             lastTimeRef.current = time;
 
-            if (scrollDirectionRef.current === 1) {
+            if (autoScrollPhaseRef.current === 1) {
+                // Scrolling DOWN
                 currentYRef.current += speed * delta;
                 if (currentYRef.current >= maxTravel) {
                     currentYRef.current = maxTravel;
-                    scrollDirectionRef.current = -1;
+                    autoScrollPhaseRef.current = 2; // Pause at bottom
                     pauseUntilRef.current = time + 3000;
                 }
-            } else {
+            } else if (autoScrollPhaseRef.current === 2) {
+                // Waiting at BOTTOM
+                if (time >= pauseUntilRef.current) {
+                    autoScrollPhaseRef.current = 3;
+                }
+            } else if (autoScrollPhaseRef.current === 3) {
+                // Scrolling UP
                 currentYRef.current -= speed * delta;
                 if (currentYRef.current <= 0) {
                     currentYRef.current = 0;
-                    scrollDirectionRef.current = 1;
-                    pauseUntilRef.current = time + 3000;
+                    autoScrollPhaseRef.current = 4; // Finished
                 }
             }
 
@@ -523,8 +531,11 @@ export const PublicHubDashboard: React.FC = () => {
                                     onMouseLeave={() => { setIsInteracting(false); lastTimeRef.current = 0; }}
                                     onTouchStart={() => setIsInteracting(true)}
                                     onTouchEnd={() => { setIsInteracting(false); lastTimeRef.current = 0; }}
-                                    className="p-3 bg-black/10 transition-none will-change-transform"
-                                    style={{ backfaceVisibility: 'hidden' }}
+                                    className="p-3 bg-black/10 transition-none will-change-transform h-full overflow-y-auto custom-hub-scrollbar"
+                                    style={{ 
+                                        backfaceVisibility: 'hidden',
+                                        scrollBehavior: 'auto' 
+                                    }}
                                 >
                                     {newsFeed.slice(0, 15).map(item => <NewsVanguardCard key={item.id} item={item} />)}
                                     {newsFeed.length === 0 && <p className="text-center py-10 opacity-20 text-[10px] tracking-widest uppercase">No Intel Updates</p>}
