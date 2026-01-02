@@ -110,7 +110,7 @@ export const en = {
   hubAnalytics: "Hub Analytics",
   settingsGenDemoSession: "GENERATE DEMO SESSION",
   settingsGenDemoPlayers: "GENERATE 10 PLAYERS",
-  ledgerTitle: "Ledger",
+  ledgerTitle: "Session Ledger",
   ledgerEmpty: "No Data",
   ledgerCollected: "Collected",
   ledgerClear: "Clear Ledger",

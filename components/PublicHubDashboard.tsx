@@ -525,11 +525,13 @@ export const PublicHubDashboard: React.FC = () => {
                                 <div className="animate-in fade-in duration-500">
                                     <table className="w-full table-fixed border-collapse">
                                         <thead><tr><th className={`${thStandings} w-[15%]`}>#</th><th className={`${thStandings} w-[25%] text-center`}>{t.hubHome}</th><th className={`${thStandings} w-[35%] text-center`}>{t.hubResult}</th><th className={`${thStandings} w-[25%] text-center`}>{t.hubAway}</th></tr></thead>
-                                        <tbody>{finishedGames.map((game) => (
+                                        <tbody>{finishedGames.map((game) => {
+                                            const totalScore = game.team1Score + game.team2Score;
+                                            return (
                                             <React.Fragment key={game.id}>
                                                 <tr 
-                                                    className={`group hover:bg-white/10 cursor-pointer transition-all border-b border-white/5 last:border-0 ${expandedMatchId === game.id ? 'bg-white/5' : ''}`}
-                                                    onClick={() => setExpandedMatchId(expandedMatchId === game.id ? null : game.id)}
+                                                    className={`group border-b border-white/5 last:border-0 transition-all ${totalScore > 0 ? 'hover:bg-white/10 cursor-pointer' : 'cursor-default'} ${expandedMatchId === game.id ? 'bg-white/5' : ''}`}
+                                                    onClick={() => totalScore > 0 && setExpandedMatchId(expandedMatchId === game.id ? null : game.id)}
                                                 >
                                                     <td className={`${tdBase} text-white/30 font-mono`}>{game.gameNumber}</td>
                                                     <td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team1Id) || {}} size="xxs" isLight={true} /></div></td>
@@ -546,7 +548,7 @@ export const PublicHubDashboard: React.FC = () => {
                                                                         const assistant = session.playerPool.find(p => p.id === goal.assistantId);
                                                                         const team = session.teams.find(t => t.id === goal.teamId);
                                                                         return (
-                                                                            <div key={goal.id} className="flex items-center gap-3 px-2">
+                                                                            <div key={goal.id} className="flex items-center gap-3 px-2 py-1 border-l-2" style={{ borderColor: team?.color || '#fff' }}>
                                                                                 <div className="shrink-0">
                                                                                     {goal.isOwnGoal ? (
                                                                                         <span className="text-[10px] filter drop-shadow-[0_0_5px_rgba(239,68,68,0.5)]">🧤</span>
@@ -555,19 +557,16 @@ export const PublicHubDashboard: React.FC = () => {
                                                                                     )}
                                                                                 </div>
                                                                                 <div className="flex flex-col min-w-0">
-                                                                                    <div className="flex items-baseline gap-2">
+                                                                                    <div className="flex flex-wrap items-baseline gap-x-2">
                                                                                         <span className="text-[11px] font-black uppercase text-white tracking-wide truncate">
                                                                                             {scorer?.nickname || (goal.isOwnGoal ? t.ownGoal : 'Unknown')}
                                                                                         </span>
                                                                                         {assistant && (
-                                                                                            <span className="text-[9px] font-bold text-white/40 uppercase italic shrink-0">
-                                                                                                (A) {assistant.nickname}
+                                                                                            <span className="text-[8px] font-bold text-white/30 uppercase italic shrink-0">
+                                                                                                {t.assistant}: {assistant.nickname}
                                                                                             </span>
                                                                                         )}
                                                                                     </div>
-                                                                                    <span className="text-[7px] font-black uppercase tracking-widest" style={{ color: team?.color || '#fff' }}>
-                                                                                        {team?.name || 'SQUAD'}
-                                                                                    </span>
                                                                                 </div>
                                                                             </div>
                                                                         );
@@ -582,7 +581,7 @@ export const PublicHubDashboard: React.FC = () => {
                                                     </tr>
                                                 )}
                                             </React.Fragment>
-                                        ))}</tbody>
+                                        )})}</tbody>
                                     </table>
                                 </div>
                             )}
