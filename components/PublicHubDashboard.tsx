@@ -133,10 +133,10 @@ const HubCard: React.FC<{
             
             <div className={`relative z-10 py-1.5 px-4 flex items-center justify-between shrink-0 ${headerStyleClass} ${isRight ? 'flex-row-reverse' : ''}`}>
                  <div className={`flex items-center gap-2 relative z-10 flex-grow ${isRight ? 'flex-row-reverse' : ''}`}>
-                    <div className={`w-4 h-4 rounded-md flex items-center justify-center shadow-sm border ${iconBg}`} style={{ color: accent }}>
+                    <div className={`w-4 h-4 rounded-md flex items-center justify-center shadow-sm border ${iconBg} shrink-0`} style={{ color: accent }}>
                         {React.cloneElement(icon as React.ReactElement<any>, { className: "w-2.5 h-2.5" })}
                     </div>
-                    <div className="flex-grow">
+                    <div className={`flex-grow ${isRight ? 'text-right' : 'text-left'}`}>
                         {typeof title === 'string' ? <h3 className={`font-russo text-[10px] uppercase tracking-widest ${titleColor}`}>{title}</h3> : title}
                     </div>
                  </div>
@@ -309,9 +309,9 @@ const getImpactScore = (stats: PlayerStats): number => {
 const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t }) => {
     const getWeatherIcon = (cond: WeatherCondition | string = 'clear') => {
         const c = cond.toLowerCase();
-        if (c.includes('rain') || c.includes('storm')) return <CloudRainIcon className="w-16 h-16 text-white/80" />;
-        if (c.includes('cloud') || c.includes('fog')) return <CloudIcon className="w-16 h-16 text-white/80" />;
-        return <MoonIcon className="w-16 h-16 text-white/80" />;
+        if (c.includes('rain') || c.includes('storm')) return <CloudRainIcon className="w-16 h-16 text-slate-300" />;
+        if (c.includes('cloud') || c.includes('fog')) return <CloudIcon className="w-16 h-16 text-slate-300" />;
+        return <MoonIcon className="w-16 h-16 text-slate-300" />;
     };
 
     // Construct Maps Search Link
@@ -330,26 +330,26 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
                             href={mapsLink} 
                             target="_blank" 
                             rel="noopener noreferrer" 
-                            className="group/loc flex items-center gap-1.5 font-chakra font-bold text-base text-white uppercase tracking-wide truncate max-w-[200px] md:max-w-[250px] hover:text-[#00F2FE] transition-colors"
+                            className="group/loc flex items-center gap-1.5 font-chakra font-bold text-base text-slate-200 uppercase tracking-wide truncate max-w-[200px] md:max-w-[250px] hover:text-[#00F2FE] transition-colors"
                         >
                             <span className="truncate border-b border-white/10 group-hover/loc:border-[#00F2FE]/50">{session.location}</span>
                             <svg className="w-3 h-3 opacity-30 group-hover/loc:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
                         </a>
                     ) : (
-                        <span className="font-chakra font-bold text-base text-white uppercase tracking-wide truncate max-w-[200px] md:max-w-[250px]">PITCH DATA UNAVAILABLE</span>
+                        <span className="font-chakra font-bold text-base text-slate-400 uppercase tracking-wide truncate max-w-[200px] md:max-w-[250px]">PITCH DATA UNAVAILABLE</span>
                     )}
                 </div>
             </div>
             <div className="flex items-center gap-3 border-b border-white/5 py-4">
                 <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0"><ClockIcon className="w-5 h-5" /></div>
-                <div className="flex flex-col"><span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">{t.hubTimeFrame}</span><span className="font-mono font-bold text-xl text-white tracking-widest">{session.timeString || "19:30 - 21:00"}</span></div>
+                <div className="flex flex-col"><span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">{t.hubTimeFrame}</span><span className="font-mono font-bold text-xl text-slate-200 tracking-widest">{session.timeString || "19:30 - 21:00"}</span></div>
             </div>
             <div className="flex-grow flex flex-col justify-end pt-2">
                 <div className="relative rounded-2xl bg-gradient-to-br from-indigo-900/40 to-black border border-indigo-500/20 p-4 flex items-center justify-between overflow-hidden">
                     <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-striped-brick.png')]"></div>
                     <div className="relative z-10 flex flex-col">
                         <span className="text-[9px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-1">{t.hubWeather}</span>
-                        <div className="flex items-baseline gap-1"><span className="font-russo text-4xl text-slate-100 leading-none">{session.weather?.temperature || 26}°C</span><TermometerIcon className="w-4 h-4 text-white/40" /></div>
+                        <div className="flex items-baseline gap-1"><span className="font-russo text-4xl text-slate-200 leading-none">{session.weather?.temperature || 26}°C</span><TermometerIcon className="w-4 h-4 text-white/40" /></div>
                         <span className="font-chakra text-xs text-indigo-200 font-bold uppercase tracking-wider mt-1">{session.weather?.condition || "CLEAR"}</span>
                     </div>
                     <div className="relative z-10">{getWeatherIcon(session.weather?.condition)}</div>
