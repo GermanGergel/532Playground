@@ -201,11 +201,11 @@ export const HubRoster: React.FC<HubRosterProps> = ({ onSelectPlayer, sortBy, se
                 <div className="flex items-center gap-10 ml-4 transition-all duration-500">
                     <div className="max-w-fit">
                         <h3 className="font-russo text-[18px] uppercase tracking-[0.1em] text-white italic leading-tight whitespace-nowrap" style={{ textShadow: '0 0 20px rgba(255,255,255,0.2)' }}>{t.hubPlayers}</h3>
-                        <div className="h-[2px] w-full bg-[#00F2FE] mt-2 rounded-full shadow-[0_0_10px_rgba(0,242,254,0.5)]"></div>
+                        <div className="h-[1px] w-full bg-[#00F2FE] mt-2 rounded-full shadow-[0_0_10px_rgba(0,242,254,0.5)]"></div>
                     </div>
                     <button onClick={() => setIsDuelSetupOpen(true)} className="max-w-fit group relative text-left">
                         <h3 className="font-russo text-[18px] uppercase tracking-[0.1em] transition-all duration-500 italic leading-tight whitespace-nowrap group-hover:text-slate-200 group-hover:animate-none animate-soft-pulse-white">DUEL</h3>
-                        <div className="h-[2px] w-full bg-white/10 group-hover:bg-slate-400/50 mt-2 rounded-full transition-all duration-500"></div>
+                        <div className="h-[1px] w-full bg-white/10 group-hover:bg-slate-400/50 mt-2 rounded-full transition-all duration-500"></div>
                     </button>
                 </div>
 
