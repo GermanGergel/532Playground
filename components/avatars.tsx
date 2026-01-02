@@ -99,10 +99,9 @@ interface PlayerAvatarProps {
   className?: string; // This className applies to the outermost div of the PlayerAvatar component
   size?: 'sm' | 'md' | 'lg' | 'xl';
   draggable?: boolean;
-  style?: React.CSSProperties;
 }
 
-export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, className = '', size = 'md', draggable, style }) => {
+export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, className = '', size = 'md', draggable }) => {
     const sizeClasses = {
         sm: 'w-10 h-10',
         md: 'w-10 h-10',
@@ -153,7 +152,7 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, className = 
         // The outermost div defines the overall size and gets the custom styling (border/shadow) from the parent.
         // It also ensures the circular shape and hides overflow.
         // ADDED: key={imageUrl} to force React to re-mount the component if the URL (timestamp) changes.
-        <div key={imageUrl} className={`relative group ${sizeClasses[size]} ${baseShapeClasses} ${className}`} draggable={draggable} style={style}>
+        <div key={imageUrl} className={`relative group ${sizeClasses[size]} ${baseShapeClasses} ${className}`} draggable={draggable}>
              {imageUrl ? (
                 // This inner div is just for the background image, no additional styling that would create a visible square.
                 <div
