@@ -229,13 +229,20 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
         <div className="absolute inset-0 flex flex-row animate-in fade-in duration-700 overflow-hidden rounded-[2.5rem]">
             {/* SIDEBAR - LEFT COLUMN */}
             <div className="w-[350px] flex flex-col border-r border-white/5 bg-black/40 relative z-20 shrink-0">
-                {/* SIDEBAR HEADER - Positioned upward with a bit more breathing room (pt-4) */}
+                {/* SIDEBAR HEADER - Redesigned DUEL Button */}
                 <div className="p-6 pb-2 space-y-3 pt-4">
-                    <div className="flex items-center justify-start mb-1 pr-2 pl-40 transition-all duration-300">
-                        <button onClick={() => setIsDuelSetupOpen(true)} className="group flex flex-col items-center transition-all opacity-40 hover:opacity-100 active:scale-95">
-                             <div className="max-w-fit flex flex-col items-center">
-                                <span className="font-blackops text-[24px] text-white uppercase tracking-[0.1em] group-hover:text-[#00F2FE] transition-colors italic">DUEL</span>
-                                <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent mt-1 shadow-[0_0_8px_#00F2FE]"></div>
+                    <div className="flex items-center justify-start mb-1 pr-2 pl-44 transition-all duration-300">
+                        <button 
+                            onClick={() => setIsDuelSetupOpen(true)} 
+                            className="group relative flex flex-col items-center px-6 py-2 transition-all active:scale-95 overflow-hidden"
+                        >
+                             {/* Tactical Border Box */}
+                             <div className="absolute inset-0 border border-[#00F2FE]/40 rounded-xl bg-[#00F2FE]/5 group-hover:bg-[#00F2FE]/10 group-hover:border-[#00F2FE] transition-all"></div>
+                             
+                             {/* Content */}
+                             <div className="relative z-10 flex flex-col items-center">
+                                <span className="font-blackops text-[24px] text-[#00F2FE] uppercase tracking-[0.1em] group-hover:text-white transition-colors italic leading-none">DUEL</span>
+                                <span className="text-[6px] font-black text-white/40 uppercase tracking-[0.2em] mt-1 group-hover:text-[#00F2FE] transition-colors">INITIATE SIMULATION</span>
                              </div>
                         </button>
                     </div>
