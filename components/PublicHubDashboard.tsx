@@ -131,13 +131,13 @@ const HubCard: React.FC<{
 
             <div className={`absolute -top-10 -left-10 w-40 h-40 ${isElite ? 'bg-[#00F2FE]/[0.05]' : 'bg-[#00F2FE]/[0.03]'} rounded-full blur-[45px] pointer-events-none z-0 animate-pulse`} style={{ animationDuration: '6s' }}></div>
             
-            <div className={`relative z-10 py-1.5 px-4 flex items-center shrink-0 ${headerStyleClass} ${isRight ? 'justify-end' : 'justify-between'}`}>
-                 <div className={`flex items-center gap-2 relative z-10 ${isRight ? 'flex-row' : ''}`}>
+            <div className={`relative z-10 py-1.5 px-4 flex items-center shrink-0 ${headerStyleClass} ${isRight ? 'flex-row-reverse justify-start' : 'justify-between'}`}>
+                 <div className={`flex items-center gap-2 relative z-10 flex-grow ${isRight ? 'flex-row-reverse' : ''}`}>
                     <div className={`w-4 h-4 rounded-md flex items-center justify-center shadow-sm border ${iconBg} shrink-0`} style={{ color: accent }}>
                         {React.cloneElement(icon as React.ReactElement<any>, { className: "w-2.5 h-2.5" })}
                     </div>
-                    <div>
-                        {typeof title === 'string' ? <h3 className={`font-russo text-[10px] uppercase tracking-widest ${titleColor}`}>{title}</h3> : title}
+                    <div className="flex-grow">
+                        {typeof title === 'string' ? <h3 className={`font-russo text-[10px] uppercase tracking-widest ${titleColor} ${isRight ? 'text-right' : ''}`}>{title}</h3> : title}
                     </div>
                  </div>
                  {headerExtra && <div className="relative z-10">{headerExtra}</div>}
@@ -482,16 +482,29 @@ export const PublicHubDashboard: React.FC = () => {
                     
                     <HubCard 
                         title={
-                            <div className="relative group/tab">
-                                <button 
-                                    onClick={() => handleManualTabChange('players')} 
-                                    className={`font-russo text-[10px] uppercase tracking-widest transition-all duration-300 ${activeRightTab === 'players' ? 'text-[#00F2FE]' : 'opacity-20 hover:opacity-50'}`}
-                                >
-                                    {t.hubPlayers}
-                                </button>
-                                {isAutoSwitching && activeRightTab === 'players' && (
-                                    <div className="absolute -bottom-1 left-0 h-[1.5px] bg-[#00F2FE] transition-all duration-75 shadow-[0_0_5px_#00F2FE]" style={{ width: `${autoSwitchProgress}%` }} />
-                                )}
+                            <div className="flex justify-between w-full items-center pr-3">
+                                <div className="relative group/tab">
+                                    <button 
+                                        onClick={() => handleManualTabChange('players')} 
+                                        className={`font-russo text-[10px] uppercase tracking-widest transition-all duration-300 ${activeRightTab === 'players' ? 'text-[#00F2FE]' : 'opacity-20 hover:opacity-50'}`}
+                                    >
+                                        {t.hubPlayers}
+                                    </button>
+                                    {isAutoSwitching && activeRightTab === 'players' && (
+                                        <div className="absolute -bottom-1 left-0 h-[1.5px] bg-[#00F2FE] transition-all duration-75 shadow-[0_0_5px_#00F2FE]" style={{ width: `${autoSwitchProgress}%` }} />
+                                    )}
+                                </div>
+                                <div className="relative group/tab">
+                                    <button 
+                                        onClick={() => handleManualTabChange('games')} 
+                                        className={`font-russo text-[10px] uppercase tracking-widest transition-all duration-300 ${activeRightTab === 'games' ? 'text-[#00F2FE]' : 'opacity-20 hover:opacity-50'}`}
+                                    >
+                                        {t.hubGames}
+                                    </button>
+                                    {isAutoSwitching && activeRightTab === 'games' && (
+                                        <div className="absolute -bottom-1 left-0 h-[1.5px] bg-[#00F2FE] transition-all duration-75 shadow-[0_0_5px_#00F2FE]" style={{ width: `${autoSwitchProgress}%` }} />
+                                    )}
+                                </div>
                             </div>
                         } 
                         icon={activeRightTab === 'players' ? <Users /> : <HistoryIcon />} 
@@ -499,19 +512,6 @@ export const PublicHubDashboard: React.FC = () => {
                         accent="#00F2FE" 
                         className="flex-grow min-h-0" 
                         bodyClassName="flex flex-col h-full min-h-0"
-                        headerExtra={
-                            <div className="relative group/tab">
-                                <button 
-                                    onClick={() => handleManualTabChange('games')} 
-                                    className={`font-russo text-[10px] uppercase tracking-widest transition-all duration-300 ${activeRightTab === 'games' ? 'text-[#00F2FE]' : 'opacity-20 hover:opacity-50'}`}
-                                >
-                                    {t.hubGames}
-                                </button>
-                                {isAutoSwitching && activeRightTab === 'games' && (
-                                    <div className="absolute -bottom-1 left-0 h-[1.5px] bg-[#00F2FE] transition-all duration-75 shadow-[0_0_5px_#00F2FE]" style={{ width: `${autoSwitchProgress}%` }} />
-                                )}
-                            </div>
-                        }
                     >
                         <div className="flex-grow overflow-y-auto custom-hub-scrollbar h-full">
                             {activeRightTab === 'players' ? (
@@ -530,7 +530,7 @@ export const PublicHubDashboard: React.FC = () => {
                                             return (
                                             <React.Fragment key={game.id}>
                                                 <tr 
-                                                    className={`group border-b border-white/5 last:border-0 transition-all duration-300 will-change-transform ${totalScore > 0 ? 'hover:scale-[1.05] hover:relative hover:z-20 cursor-pointer' : 'cursor-default'} ${expandedMatchId === game.id ? 'bg-white/5' : ''}`}
+                                                    className={`group border-b border-white/5 last:border-0 transition-transform duration-300 will-change-transform ${totalScore > 0 ? 'hover:scale-[1.03] hover:relative hover:z-20 cursor-pointer' : 'cursor-default'} ${expandedMatchId === game.id ? 'bg-white/5' : ''}`}
                                                     onClick={() => totalScore > 0 && setExpandedMatchId(expandedMatchId === game.id ? null : game.id)}
                                                 >
                                                     <td className={`${tdBase} text-white/30 font-mono`}>{game.gameNumber}</td>
@@ -549,6 +549,7 @@ export const PublicHubDashboard: React.FC = () => {
                                                                         const team = session.teams.find(t => t.id === goal.teamId);
                                                                         return (
                                                                             <div key={goal.id} className="flex items-center gap-2 px-3 py-1 relative">
+                                                                                {/* Ультра-тонкий неоновый индикатор */}
                                                                                 <div 
                                                                                     className="w-[1px] h-2.5 rounded-full shrink-0" 
                                                                                     style={{ 

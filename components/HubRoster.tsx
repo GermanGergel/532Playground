@@ -189,7 +189,7 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                                         <span className="text-[7px] font-mono font-black text-white/20 uppercase tracking-[0.2em]">{person.tier}</span>
                                     </div>
                                     <div className="flex flex-col items-end shrink-0">
-                                        <div className="flex items-baseline gap-4">
+                                        <div className="flex items-baseline gap-2.5">
                                             <span 
                                                 className={`font-russo text-2xl transition-all duration-300 ${isSelected ? 'text-white scale-110' : 'text-white/40'}`}
                                                 style={{ 
