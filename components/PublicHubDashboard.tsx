@@ -481,33 +481,32 @@ export const PublicHubDashboard: React.FC = () => {
                     </HubCard>
                     
                     <HubCard 
-                        align="right"
                         title={
-                            <div className="flex justify-end items-center gap-4 md:gap-6 px-2">
-                                <div className="relative group/tab">
-                                    <button 
-                                        onClick={() => handleManualTabChange('players')} 
-                                        className={`font-russo text-[10px] uppercase tracking-widest transition-all duration-300 ${activeRightTab === 'players' ? 'text-[#00F2FE]' : 'opacity-20 hover:opacity-50'}`}
-                                    >
-                                        {t.hubPlayers}
-                                    </button>
-                                    {isAutoSwitching && activeRightTab === 'players' && (
-                                        <div className="absolute -bottom-1 left-0 h-[1.5px] bg-[#00F2FE] transition-all duration-75 shadow-[0_0_5px_#00F2FE]" style={{ width: `${autoSwitchProgress}%` }} />
-                                    )}
-                                </div>
-                                <div className="relative group/tab">
-                                    <button 
-                                        onClick={() => handleManualTabChange('games')} 
-                                        className={`font-russo text-[10px] uppercase tracking-widest transition-all duration-300 ${activeRightTab === 'games' ? 'text-[#00F2FE]' : 'opacity-20 hover:opacity-50'}`}
-                                    >
-                                        {t.hubGames}
-                                    </button>
-                                    {isAutoSwitching && activeRightTab === 'games' && (
-                                        <div className="absolute -bottom-1 left-0 h-[1.5px] bg-[#00F2FE] transition-all duration-75 shadow-[0_0_5px_#00F2FE]" style={{ width: `${autoSwitchProgress}%` }} />
-                                    )}
-                                </div>
+                            <div className="relative group/tab">
+                                <button 
+                                    onClick={() => handleManualTabChange('players')} 
+                                    className={`font-russo text-[10px] uppercase tracking-widest transition-all duration-300 ${activeRightTab === 'players' ? 'text-[#00F2FE]' : 'opacity-20 hover:opacity-50'}`}
+                                >
+                                    {t.hubPlayers}
+                                </button>
+                                {isAutoSwitching && activeRightTab === 'players' && (
+                                    <div className="absolute -bottom-1 left-0 h-[1.5px] bg-[#00F2FE] transition-all duration-75 shadow-[0_0_5px_#00F2FE]" style={{ width: `${autoSwitchProgress}%` }} />
+                                )}
                             </div>
                         } 
+                        headerExtra={
+                            <div className="relative group/tab">
+                                <button 
+                                    onClick={() => handleManualTabChange('games')} 
+                                    className={`font-russo text-[10px] uppercase tracking-widest transition-all duration-300 ${activeRightTab === 'games' ? 'text-[#00F2FE]' : 'opacity-20 hover:opacity-50'}`}
+                                >
+                                    {t.hubGames}
+                                </button>
+                                {isAutoSwitching && activeRightTab === 'games' && (
+                                    <div className="absolute -bottom-1 left-0 h-[1.5px] bg-[#00F2FE] transition-all duration-75 shadow-[0_0_5px_#00F2FE]" style={{ width: `${autoSwitchProgress}%` }} />
+                                )}
+                            </div>
+                        }
                         icon={activeRightTab === 'players' ? <Users /> : <HistoryIcon />} 
                         variant="standings" 
                         accent="#00F2FE" 
