@@ -66,9 +66,9 @@ const StandbyScreen: React.FC = () => {
 const SubtleDashboardAvatar: React.FC<{ team: any; size?: string; isLight?: boolean }> = ({ team }) => {
     const color = team?.color || '#A9B1BD';
     return (
-        <div className="group/avatar relative flex items-center justify-center shrink-0">
+        <div className="relative flex items-center justify-center shrink-0">
             <div 
-                className="w-6 h-6 rounded-full flex items-center justify-center transition-all duration-500 bg-black/40 opacity-90 group-hover/avatar:opacity-100 group-hover/avatar:scale-110"
+                className="w-6 h-6 rounded-full flex items-center justify-center transition-all duration-500 bg-black/40 opacity-90"
                 style={{ 
                     border: `1px solid ${color}`,
                     boxShadow: `0 0 5px ${color}66, 0 0 1.5px ${color}`, 
@@ -123,7 +123,7 @@ const HubCard: React.FC<{
     }
 
     return (
-        <div className={`relative overflow-hidden rounded-[1.5rem] flex flex-col border ${bgStyleClass} ${className} group/card`}>
+        <div className={`relative overflow-hidden rounded-[1.5rem] flex flex-col border ${bgStyleClass} ${className}`}>
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ 
                 backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`,
                 backgroundSize: '4px 4px'
@@ -131,8 +131,6 @@ const HubCard: React.FC<{
 
             <div className={`absolute -top-10 -left-10 w-40 h-40 ${isElite ? 'bg-[#00F2FE]/[0.05]' : 'bg-[#00F2FE]/[0.03]'} rounded-full blur-[45px] pointer-events-none z-0 animate-pulse`} style={{ animationDuration: '6s' }}></div>
             
-            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.01] to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-700 z-0"></div>
-
             <div className={`relative z-10 py-1.5 px-4 flex items-center justify-between shrink-0 ${headerStyleClass} ${isRight ? 'flex-row-reverse' : ''}`}>
                  <div className={`flex items-center gap-2 relative z-10 ${isRight ? 'flex-row-reverse' : ''}`}>
                     <div className={`w-4 h-4 rounded-md flex items-center justify-center shadow-sm border ${iconBg}`} style={{ color: accent }}>
@@ -177,7 +175,7 @@ const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any
                         {team.playerIds.map((pid, idx) => {
                             const p = players.find(player => player.id === pid);
                             return (
-                                <div key={pid} className="group/unit flex-1 flex items-center bg-white/[0.02] rounded-lg px-3 border border-transparent hover:border-white/10 transition-all min-h-[24px]">
+                                <div key={pid} className="flex-1 flex items-center bg-white/[0.02] rounded-lg px-3 border border-transparent transition-all min-h-[24px]">
                                     <span className="font-mono text-[8px] text-white/20 w-4 shrink-0">{(idx + 1)}</span>
                                     <span className="text-[10px] font-black text-slate-400 uppercase truncate flex-grow">{p?.nickname || 'UNKNOWN'}</span>
                                 </div>
@@ -475,7 +473,7 @@ export const PublicHubDashboard: React.FC = () => {
                         <div className="p-1">
                             <table className="w-full table-fixed border-collapse">
                                 <thead><tr className="bg-white/5 border-b border-white/10"><th className={`${thStandings} w-[12%]`}>#</th><th className={`${thStandings} w-[28%]`}>{t.team}</th><th className={`${thStandings} w-[10%]`}>{t.thP}</th><th className={`${thStandings} w-[10%]`}>{t.thW}</th><th className={`${thStandings} w-[10%]`}>{t.thD}</th><th className={`${thStandings} w-[10%]`}>{t.thL}</th><th className={`${thStandings} w-[10%]`}>{t.thGD}</th><th className={`${thStandings} w-[10%]`}>{t.hubPoints}</th></tr></thead>
-                                <tbody>{teamStats.map((stat, idx) => (<tr key={stat.team.id} className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors"><td className="py-1.5 text-center text-[9px] font-bold text-white/30 bg-white/5">{idx + 1}</td><td className="py-1.5 flex justify-center"><SubtleDashboardAvatar team={stat.team} size="xxs" isLight /></td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.gamesPlayed}</td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.wins}</td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.draws}</td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.losses}</td><td className="py-1.5 text-center text-[10px] font-bold text-white/40">{stat.goalDifference > 0 ? `+${stat.goalDifference}` : stat.goalDifference}</td><td className="py-1.5 text-center text-[12px] font-bold text-white bg-white/5">{stat.points}</td></tr>))}</tbody>
+                                <tbody>{teamStats.map((stat, idx) => (<tr key={stat.team.id} className="border-b border-white/5 last:border-0 transition-colors"><td className="py-1.5 text-center text-[9px] font-bold text-white/30 bg-white/5">{idx + 1}</td><td className="py-1.5 flex justify-center"><SubtleDashboardAvatar team={stat.team} size="xxs" isLight /></td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.gamesPlayed}</td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.wins}</td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.draws}</td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.losses}</td><td className="py-1.5 text-center text-[10px] font-bold text-white/40">{stat.goalDifference > 0 ? `+${stat.goalDifference}` : stat.goalDifference}</td><td className="py-1.5 text-center text-[12px] font-bold text-white bg-white/5">{stat.points}</td></tr>))}</tbody>
                             </table>
                         </div>
                     </HubCard>
@@ -518,7 +516,7 @@ export const PublicHubDashboard: React.FC = () => {
                                 <div className="animate-in fade-in duration-500">
                                     <table className="w-full table-fixed border-collapse">
                                         <thead><tr><th className={`${thStandings} w-[10%]`}>#</th><th className={`${thStandings} text-left pl-3 w-[45%]`}>{t.players}</th><th className={`${thStandings} w-[15%]`}>{t.thG}</th><th className={`${thStandings} w-[15%]`}>{t.thA}</th><th className={`${thStandings} w-[16%] text-white`}>TOT</th></tr></thead>
-                                        <tbody>{sortedForTable.map((ps, idx) => (<tr key={ps.player.id} className="group hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"><td className="py-2 text-center text-[9px] font-bold text-white/30 bg-white/[0.02]">{idx + 1}</td><td className="py-2 text-left pl-3 relative overflow-hidden group-hover:bg-white/5"><div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-3 rounded-r-full" style={{ backgroundColor: ps.team.color }} /><span className="text-slate-300 font-bold uppercase truncate text-[11px] block w-full pl-2 group-hover:text-white transition-colors">{ps.player.nickname || 'Unknown'}</span></td><td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.goals}</td><td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.assists}</td><td className="py-2 text-center text-[12px] font-bold text-white bg-white/[0.03]">{ps.goals + ps.assists}</td></tr>))}</tbody>
+                                        <tbody>{sortedForTable.map((ps, idx) => (<tr key={ps.player.id} className="border-b border-white/5 last:border-0"><td className="py-2 text-center text-[9px] font-bold text-white/30 bg-white/[0.02]">{idx + 1}</td><td className="py-2 text-left pl-3 relative overflow-hidden"><div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-3 rounded-r-full" style={{ backgroundColor: ps.team.color }} /><span className="text-slate-300 font-bold uppercase truncate text-[11px] block w-full pl-2 transition-colors">{ps.player.nickname || 'Unknown'}</span></td><td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.goals}</td><td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.assists}</td><td className="py-2 text-center text-[12px] font-bold text-white bg-white/[0.03]">{ps.goals + ps.assists}</td></tr>))}</tbody>
                                     </table>
                                 </div>
                             ) : (

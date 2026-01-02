@@ -436,7 +436,7 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
 
 const CinematicStatCard: React.FC<{ value: string | number; label: string; }> = ({ value, label }) => (
     <div className="w-full md:flex-1 max-w-xs md:max-w-none h-40">
-        <div className="relative rounded-3xl overflow-hidden bg-white/[0.03] border border-white/10 shadow-2xl group transition-all duration-300 hover:border-[#00F2FE]/50 hover:shadow-[0_0_30px_rgba(0,242,254,0.2)] h-full backdrop-blur-md">
+        <div className="relative rounded-3xl overflow-hidden bg-white/[0.03] border border-white/10 shadow-2xl h-full backdrop-blur-md">
             <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-40"></div>
             <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-white/5 to-transparent blur-xl"></div>
             <div className="relative h-full z-10 flex flex-col items-center justify-center gap-2">
