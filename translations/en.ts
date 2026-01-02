@@ -84,6 +84,8 @@ export const en = {
   thW: "W",
   thD: "D",
   thL: "L",
+  thGF: "GF",
+  thGA: "GA",
   thGD: "GD",
   thPts: "Pts",
   players: "Player",

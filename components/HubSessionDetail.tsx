@@ -29,7 +29,6 @@ const MoonIcon = ({ className }: { className?: string }) => (
 
 // --- DASHBOARD UI HELPERS ---
 
-// FIX: Added missing SubtleDashboardAvatar component definition to resolve missing name error.
 const SubtleDashboardAvatar: React.FC<{ team: any; size?: string; isLight?: boolean }> = ({ team }) => {
     const color = team?.color || '#A9B1BD';
     return (
@@ -187,7 +186,6 @@ const HubCard: React.FC<{ title: React.ReactNode; icon: React.ReactNode; childre
 export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onBack }) => {
     const t = useTranslation();
     const [activeTab, setActiveTab] = useState<'players' | 'matches'>('players');
-    // FIX: Replaced setExpandedMatchId with useState to fix syntax error and block-scoped usage issue.
     const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
     const { teamStats, allPlayersStats } = useMemo(() => calculateAllStats(session), [session]);
     
@@ -346,7 +344,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                                                                             {goal.isOwnGoal ? (
                                                                                                 <span className="text-[10px] filter drop-shadow-[0_0_5px_rgba(239,68,68,0.5)]">🧤</span>
                                                                                             ) : (
-                                                                                                <span className="text-[10px] filter drop-shadow-[0_0_5px_rgba(242,254,0,0.5)]">⚽</span>
+                                                                                                <span className="text-[10px] filter drop-shadow-[0_0_5px_rgba(0,242,254,0.5)]">⚽</span>
                                                                                             )}
                                                                                         </div>
                                                                                         <div className="flex flex-col min-w-0">
