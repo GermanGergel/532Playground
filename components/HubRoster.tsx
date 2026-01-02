@@ -77,24 +77,27 @@ const DuelSetupModal: React.FC<{
     }, [isOpen]);
 
     const PlayerSlot: React.FC<{ player: Player | undefined, onClear: () => void, side: 'p1' | 'p2' }> = ({ player, onClear, side }) => (
-        <div className="relative flex flex-col items-center">
+        <div className="relative flex flex-col items-center group/slot">
             {player ? (
-                <>
-                    <button onClick={onClear} className="absolute -top-1 -right-1 z-10 text-white/30 hover:text-white transition-colors"><XCircle className="w-5 h-5" /></button>
-                    <PlayerAvatar player={player} size="xl" className={`
-                        transition-all duration-500 border-2
-                        ${side === 'p1' ? 'border-[#00F2FE]/80 shadow-[0_0_20px_rgba(0,242,254,0.2)]' : 'border-white/20 shadow-xl'}
-                    `} />
-                    <p className="font-chakra font-black text-[11px] text-white uppercase mt-2 drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]">{player.nickname}</p>
-                </>
+                <div className="animate-in zoom-in duration-300 flex flex-col items-center">
+                    <button onClick={onClear} className="absolute -top-2 -right-2 z-20 text-white/30 hover:text-red-500 transition-all hover:scale-110"><XCircle className="w-6 h-6" /></button>
+                    <div className="relative p-1 rounded-full border border-[#00F2FE]/30 shadow-[0_0_15px_rgba(0,242,254,0.2)] bg-black/40">
+                         <PlayerAvatar player={player} size="lg" className="border-2 border-white/10" />
+                    </div>
+                    <p className="font-russo text-[11px] text-[#00F2FE] uppercase mt-3 tracking-widest drop-shadow-[0_0_8px_rgba(0,242,254,0.4)]">{player.nickname}</p>
+                    <div className="flex items-baseline gap-1 mt-0.5">
+                        <span className="text-[14px] font-black font-russo text-white/80">{player.rating}</span>
+                        <span className="text-[6px] font-black text-white/30 uppercase">OVR</span>
+                    </div>
+                </div>
             ) : (
                 <div className={`
-                    w-24 h-24 rounded-full flex flex-col items-center justify-center 
-                    text-white/10
-                    bg-white/[0.03] border-2 border-dashed border-white/10
+                    w-20 h-20 md:w-24 md:h-24 rounded-full flex flex-col items-center justify-center 
+                    bg-white/[0.02] border-2 border-dashed border-white/5 relative group-hover/slot:border-[#00F2FE]/20 transition-all duration-500
                 `}>
-                    <Zap className="w-8 h-8" />
-                    <p className="font-chakra font-black text-[8px] mt-1 uppercase text-white/40 tracking-widest">{t.legionnaire_select}</p>
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#00F2FE]/5 via-transparent to-transparent opacity-0 group-hover/slot:opacity-100 transition-opacity"></div>
+                    <Zap className="w-8 h-8 text-white/5 animate-pulse" />
+                    <p className="font-chakra font-black text-[7px] mt-1.5 uppercase text-white/20 tracking-[0.2em]">{t.legionnaire_select}</p>
                 </div>
             )}
         </div>
@@ -102,29 +105,77 @@ const DuelSetupModal: React.FC<{
     
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="sm" hideCloseButton containerClassName="!bg-transparent !p-0 !border-0 !shadow-none">
-            <div className="p-5 rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden relative" style={{ background: 'radial-gradient(ellipse at top, #0f172a 0%, #020617 65%, #01040a 100%)', boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.08), 0 30px 60px -12px rgba(0, 0, 0, 0.7)' }}>
-                <button onClick={onClose} className="absolute top-4 right-4 z-50 text-white/30 hover:text-white transition-all hover:scale-110 active:scale-95"><XCircle className="w-6 h-6" /></button>
-                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] pointer-events-none"></div>
-                <h3 className="font-russo text-lg text-white uppercase tracking-[0.25em] mb-8 text-center relative z-10">{t.duel_title}</h3>
-                <div className="flex items-center justify-center gap-6 mb-8 relative z-10 px-4">
-                    <PlayerSlot player={player1} onClear={() => setP1(null)} side="p1" />
-                    <div className="flex flex-col items-center"><span className="font-blackops text-3xl text-white/10 select-none tracking-tighter">VS</span></div>
-                    <PlayerSlot player={player2} onClear={() => setP2(null)} side="p2" />
-                </div>
-                <div className="relative mb-3 z-10 px-2">
-                    <input type="text" placeholder={t.duel_id_unit} value={search} onChange={(e) => setSearch(e.target.value)} className="w-full bg-slate-900/60 border border-white/10 rounded-2xl p-3 pl-10 text-[10px] font-chakra font-black uppercase tracking-widest text-white focus:outline-none focus:border-[#00F2FE]/50 transition-all placeholder:text-white/20" />
-                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
-                </div>
-                <div className="max-h-48 overflow-y-auto custom-hub-scrollbar space-y-2 px-2 pr-1 mb-6 z-10 relative">
-                    {availablePlayers.map(p => (
-                        <button key={p.id} onClick={() => handleSelect(p.id)} className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-white/[0.03] border border-white/5 hover:bg-[#00F2FE]/10 hover:border-[#00F2FE]/40 transition-all group">
-                            <span className="font-chakra font-black text-xs text-white/70 group-hover:text-white uppercase tracking-wider">{p.nickname}</span>
-                            <span className="font-russo text-base text-white group-hover:text-white transition-colors">{p.rating}</span>
-                        </button>
-                    ))}
-                </div>
-                <div className="px-2">
-                    <button onClick={handleStartClick} disabled={!p1 || !p2} className="w-full bg-slate-300 text-black font-russo py-4 rounded-2xl text-xs uppercase tracking-[0.2em] transition-all disabled:opacity-20 disabled:grayscale hover:bg-[#00F2FE]/90 hover:shadow-[0_0_20px_rgba(0,242,254,0.3)] active:scale-95 relative z-10">{t.duel_initiate}</button>
+            <div className="rounded-[2.5rem] border border-white/10 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.9)] overflow-hidden relative bg-[#0a0c10]">
+                {/* Neon Header Accent */}
+                <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent shadow-[0_0_10px_#00F2FE]"></div>
+                
+                {/* Background Texture */}
+                <div className="absolute inset-0 opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] pointer-events-none"></div>
+                
+                <div className="p-6 relative z-10">
+                    <div className="flex justify-between items-center mb-8 px-2">
+                        <div className="flex flex-col">
+                            <h3 className="font-russo text-xl text-white uppercase tracking-[0.1em] italic">{t.duel_title}</h3>
+                            <span className="text-[7px] font-black text-[#00F2FE] tracking-[0.4em] uppercase opacity-70">Simulation Protocol v5.3.2</span>
+                        </div>
+                        <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/30 hover:text-white transition-all hover:scale-110 active:scale-95"><XCircle className="w-5 h-5" /></button>
+                    </div>
+
+                    <div className="flex items-center justify-around gap-2 mb-10 px-2 relative">
+                        <PlayerSlot player={player1} onClear={() => setP1(null)} side="p1" />
+                        
+                        <div className="flex flex-col items-center shrink-0">
+                            <div className="w-10 h-10 rounded-full border border-white/5 flex items-center justify-center bg-black/40 mb-2">
+                                <span className="font-blackops text-xl text-white/10 italic">VS</span>
+                            </div>
+                            <div className="h-4 w-px bg-gradient-to-b from-white/10 to-transparent"></div>
+                        </div>
+
+                        <PlayerSlot player={player2} onClear={() => setP2(null)} side="p2" />
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="relative group px-1">
+                            <input 
+                                type="text" 
+                                placeholder={t.duel_id_unit} 
+                                value={search} 
+                                onChange={(e) => setSearch(e.target.value)} 
+                                className="w-full bg-black/40 border border-white/5 rounded-2xl p-3.5 pl-11 text-[10px] font-chakra font-black uppercase tracking-widest text-white focus:outline-none focus:border-[#00F2FE]/30 transition-all placeholder:text-white/10 shadow-inner" 
+                            />
+                            <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/10 group-focus-within:text-[#00F2FE]/50 transition-colors" />
+                        </div>
+
+                        <div className="max-h-44 overflow-y-auto custom-hub-scrollbar space-y-1.5 px-1 pr-1.5">
+                            {availablePlayers.map(p => (
+                                <button 
+                                    key={p.id} 
+                                    onClick={() => handleSelect(p.id)} 
+                                    className="w-full flex items-center justify-between p-3 rounded-2xl bg-white/[0.02] border border-white/[0.03] hover:bg-[#00F2FE]/5 hover:border-[#00F2FE]/20 transition-all group/item"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-white/5 group-hover/item:bg-[#00F2FE] group-hover/item:shadow-[0_0_8px_#00F2FE] transition-all"></div>
+                                        <span className="font-chakra font-black text-[11px] text-white/60 group-hover/item:text-white uppercase tracking-wider transition-colors">{p.nickname}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-mono text-white/10 group-hover/item:text-white/30 uppercase tracking-tighter transition-colors">{p.tier}</span>
+                                        <span className="font-russo text-sm text-white group-hover/item:text-[#00F2FE] transition-colors">{p.rating}</span>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="pt-4 px-1">
+                            <button 
+                                onClick={handleStartClick} 
+                                disabled={!p1 || !p2} 
+                                className="w-full relative overflow-hidden group/btn bg-[#0a0c10] border border-[#00F2FE]/30 py-4 rounded-2xl transition-all hover:border-[#00F2FE] hover:shadow-[0_0_25px_rgba(0,242,254,0.3)] active:scale-95 disabled:opacity-10 disabled:grayscale"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00F2FE]/5 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity"></div>
+                                <span className="relative z-10 font-russo text-[11px] text-[#00F2FE] uppercase tracking-[0.3em] group-hover/btn:text-white transition-colors">{t.duel_initiate}</span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </Modal>
@@ -180,14 +231,17 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
             <div className="w-[350px] flex flex-col border-r border-white/5 bg-black/40 relative z-20 shrink-0">
                 {/* SIDEBAR HEADER - REFINED ALIGNMENT */}
                 <div className="p-6 pb-2 space-y-4 pt-10">
-                    {/* Only shift this row to avoid corner rays - increased pl-24 as requested */}
-                    <div className="flex items-center justify-between mb-2 pr-2 pl-24 transition-all duration-300">
+                    {/* Only shift this row to avoid corner rays - increased pl-40 to shift further right */}
+                    <div className="flex items-center justify-between mb-2 pr-2 pl-40 transition-all duration-300">
                         <div className="max-w-fit">
                             <h3 className="font-russo text-[14px] uppercase tracking-[0.15em] text-white italic leading-tight">{t.hubPlayers}</h3>
                             <div className="h-[1px] w-full bg-[#00F2FE] mt-1.5 opacity-50 shadow-[0_0_5px_#00F2FE]"></div>
                         </div>
-                        <button onClick={() => setIsDuelSetupOpen(true)} className="group flex items-center transition-all opacity-40 hover:opacity-100 hover:scale-105 active:scale-95">
-                             <span className="font-russo text-[14px] text-white uppercase tracking-[0.2em] group-hover:text-[#00F2FE] group-hover:drop-shadow-[0_0_8px_rgba(0,242,254,0.6)] transition-all">DUEL</span>
+                        <button onClick={() => setIsDuelSetupOpen(true)} className="group flex flex-col items-center transition-all opacity-40 hover:opacity-100 hover:scale-105 active:scale-95">
+                             <div className="max-w-fit">
+                                <span className="font-russo text-[14px] text-white uppercase tracking-[0.2em] group-hover:text-[#00F2FE] group-hover:drop-shadow-[0_0_8px_rgba(0,242,254,0.6)] transition-all">DUEL</span>
+                                <div className="h-[1px] w-full bg-[#00F2FE] mt-1.5 opacity-50 shadow-[0_0_5px_#00F2FE]"></div>
+                             </div>
                         </button>
                     </div>
 
