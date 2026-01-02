@@ -234,7 +234,7 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
         if (isOpen) {
             const generateQrCode = async () => {
                 try {
-                    const response = await fetch(`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(profileUrl)}&bgcolor=1A1D24&color=00F2FE&qzone=1&ecc=H`);
+                    const response = await fetch(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(profileUrl)}&bgcolor=1A1D24&color=00F2FE&qzone=1&ecc=H`);
                     if (!response.ok) throw new Error('Failed to fetch QR code');
                     const blob = await response.blob();
                     const reader = new FileReader();
@@ -250,61 +250,47 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
         }
     }, [isOpen, profileUrl]);
     
-    // ВАРИАНТ 1: Отправка только ссылки (превью подтянется из мета-тегов index.html)
-    // Это гарантирует, что сообщение придет ОДНИМ блоком.
-    const handleShareLinkOnly = async () => {
-        const shareData = {
-            title: `Official Access Card: ${player.nickname}`,
-            text: `View profile for ${player.nickname} ${player.surname}:`,
-            url: profileUrl,
-        };
-
-        try {
-            if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-                await navigator.share(shareData);
-            } else {
-                await navigator.clipboard.writeText(profileUrl);
-                alert(t.profileLinkCopied || "Link copied to clipboard!");
-            }
-        } catch (err) {
-            console.error(err);
-        } finally {
-            onClose();
-        }
-    };
-
-    // ВАРИАНТ 2: Отправка полной картинки (как файла)
-    const handleShareFullCard = async () => {
-        if (!cardRef.current) return;
+    // ЕДИНАЯ КНОПКА: Отправка картинки со ссылкой в подписи
+    const handleShareOfficialCard = async () => {
+        if (!cardRef.current || isGenerating) return;
         setIsGenerating(true);
         try {
+            // Генерируем картинку высокого качества
             const canvas = await html2canvas(cardRef.current, { 
                 backgroundColor: '#1A1D24',
                 scale: 3, 
                 useCORS: true 
             });
-            const blob = await new Promise<Blob|null>(resolve => canvas.toBlob(resolve, 'image/png'));
             
-            if (blob) {
-                const filename = `Access_Card_${player.nickname}.png`;
-                const file = new File([blob], filename, { type: 'image/png' });
+            const blob = await new Promise<Blob|null>(resolve => canvas.toBlob(resolve, 'image/png'));
+            if (!blob) throw new Error("Blob creation failed");
+    
+            const filename = `Access_Card_${player.nickname}.png`;
+            const file = new File([blob], filename, { type: 'image/png' });
 
-                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        files: [file],
-                        title: `Card: ${player.nickname}`
-                    });
-                } else {
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = filename;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                }
+            // Формируем пакет данных для шеринга (Файл + Текст)
+            // Это заставляет мессенджеры отправлять это как "Фото с подписью"
+            const shareData = {
+                files: [file],
+                title: `Official Access: ${player.nickname}`,
+                text: `Official Club Member Profile: ${profileUrl}`
+            };
+
+            if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+                await navigator.share(shareData);
+            } else {
+                // Fallback для десктопа: скачиваем файл и копируем ссылку
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(url);
+                await navigator.clipboard.writeText(profileUrl);
+                alert("Card downloaded and link copied to clipboard!");
             }
         } catch (error: any) {
-            console.error(error);
+            console.error("Sharing error:", error);
         } finally {
             setIsGenerating(false);
             onClose();
@@ -312,64 +298,60 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
     };
     
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="xs" hideCloseButton containerClassName="!p-4">
-             <div className="flex flex-col items-center gap-4">
+        <Modal isOpen={isOpen} onClose={onClose} size="xs" hideCloseButton containerClassName="!p-4 !bg-dark-bg border border-[#00F2FE]/20">
+             <div className="flex flex-col items-center gap-6">
+                 {/* ПРЕВЬЮ КАРТОЧКИ */}
                  <div 
                     ref={cardRef} 
-                    className="w-full bg-[#1A1D24] rounded-2xl p-4 flex flex-col items-center gap-4 border border-dark-accent-start/30 shadow-[0_0_15px_rgba(0,242,254,0.15)]"
+                    className="w-full bg-[#1A1D24] rounded-[2rem] p-6 flex flex-col items-center gap-6 border border-[#00F2FE]/30 shadow-[0_0_30px_rgba(0,242,254,0.15)]"
                 >
                     <div className="text-center">
-                        <h1 className="font-russo text-2xl flex items-baseline justify-center">
-                            <span className="text-dark-accent-start">532</span>
-                            <span className="text-white ml-1.5 text-base">PLAYGROUND</span>
+                        <h1 className="font-russo text-3xl flex items-baseline justify-center">
+                            <span className="text-[#00F2FE]">532</span>
+                            <span className="text-white ml-2 text-lg tracking-widest">PLAYGROUND</span>
                         </h1>
-                        <p className="text-[8px] font-black tracking-[0.2em] text-dark-text-secondary mt-1 uppercase">
+                        <p className="text-[9px] font-black tracking-[0.4em] text-white/40 mt-2 uppercase">
                             OFFICIAL ACCESS CARD
                         </p>
                     </div>
                     
-                    <h2 className="font-russo text-xl text-white uppercase tracking-wide text-center leading-tight">
-                        {player.nickname} {player.surname}
+                    <h2 className="font-russo text-2xl text-white uppercase tracking-tight text-center leading-none">
+                        {player.nickname}<br/>
+                        <span className="text-sm text-white/60">{player.surname}</span>
                     </h2>
 
-                    <div className="p-2 rounded-xl bg-gradient-to-br from-dark-accent-start to-green-400">
-                        <div className="bg-[#1A1D24] p-1 rounded-lg">
+                    <div className="p-3 rounded-2xl bg-gradient-to-br from-[#00F2FE] to-[#4CFF5F] shadow-[0_0_20px_rgba(0,242,254,0.3)]">
+                        <div className="bg-[#1A1D24] p-2 rounded-xl">
                             {qrCodeDataUrl ? (
-                                <img src={qrCodeDataUrl} alt="QR Code" className="w-24 h-24 rounded-md" />
+                                <img src={qrCodeDataUrl} alt="QR Code" className="w-32 h-32" />
                             ) : (
-                                <div className="w-24 h-24 flex items-center justify-center">
-                                    <div className="w-6 h-6 border-2 border-dashed border-dark-accent-start rounded-full animate-spin"></div>
+                                <div className="w-32 h-32 flex items-center justify-center">
+                                    <div className="w-8 h-8 border-2 border-dashed border-[#00F2FE] rounded-full animate-spin"></div>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    <p className="text-[9px] font-bold tracking-[0.2em] text-dark-text-secondary/60 uppercase">
-                        {t.scanToOpen}
+                    <p className="text-[10px] font-bold tracking-[0.2em] text-[#00F2FE] animate-pulse uppercase">
+                        SCAN TO VIEW PROFILE
                     </p>
                 </div>
 
-                <div className="w-full flex flex-col gap-2">
+                <div className="w-full flex flex-col gap-3">
                      <Button 
                         variant="primary" 
-                        onClick={handleShareLinkOnly} 
-                        className="w-full !py-3 !text-sm font-chakra font-bold tracking-widest"
+                        onClick={handleShareOfficialCard} 
+                        disabled={isGenerating}
+                        className="w-full !py-4 !text-lg font-chakra font-black tracking-widest uppercase shadow-[0_0_20px_rgba(0,242,254,0.4)]"
                     >
-                        {t.shareViaApp.toUpperCase()} (LINK)
-                    </Button>
-                    <Button 
-                        variant="secondary" 
-                        onClick={handleShareFullCard} 
-                        className="w-full !py-3 !text-sm font-chakra font-bold tracking-widest border-white/10"
-                    >
-                        {isGenerating ? "..." : "SHARE CARD (FILE)"}
+                        {isGenerating ? "GENERATING..." : "SEND ACCESS CARD"}
                     </Button>
                     <Button 
                         variant="ghost" 
                         onClick={onClose} 
-                        className="w-full !py-2 !text-xs font-chakra font-bold text-dark-text-secondary"
+                        className="w-full !py-2 !text-xs font-chakra font-bold text-white/30 uppercase tracking-widest"
                     >
-                        {t.cancel.toUpperCase()}
+                        {t.cancel}
                     </Button>
                 </div>
             </div>
