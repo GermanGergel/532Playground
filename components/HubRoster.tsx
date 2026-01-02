@@ -2,7 +2,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApp } from '../context';
 import { PlayerTier, PlayerStatus, Player } from '../types';
-import { Search, XCircle, Zap, Users, Target } from '../icons';
+import { Search, Zap, Users } from '../icons';
 import { useTranslation } from '../ui';
 import { HubPlayerIntel } from './HubPlayerIntel';
 import { HubDuel } from './HubDuel';
@@ -54,7 +54,6 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
     const { allPlayers } = useApp();
     const t = useTranslation();
     
-    // DUEL MODE STATES
     const [isDuelMode, setIsDuelMode] = useState(false);
     const [duelSlots, setDuelSlots] = useState<[string | null, string | null]>([null, null]);
 
@@ -99,7 +98,6 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                 if (prev[1] === playerId) return [prev[0], null];
                 if (!prev[0]) return [playerId, prev[1]];
                 if (!prev[1]) return [prev[0], playerId];
-                // If both full, replace the second one
                 return [prev[0], playerId];
             });
         } else {
@@ -213,8 +211,6 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                          <HubDuel 
                             p1Id={duelSlots[0]} 
                             p2Id={duelSlots[1]} 
-                            onBack={() => setIsDuelMode(false)}
-                            isSelectionState={!duelSlots[0] || !duelSlots[1]}
                         />
                     </div>
                 ) : selectedPlayerId ? (
