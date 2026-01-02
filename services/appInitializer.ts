@@ -32,46 +32,37 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
     initialPlayers = initialPlayers.map(p => {
         const migratedPlayer = { ...p };
 
-        // 1. SAFE RATING FLOOR MIGRATION
+        // 1. УСТАНОВКА ПОЛА (FLOOR)
         if (migratedPlayer.initialRating === undefined || migratedPlayer.initialRating === null) {
-            migratedPlayer.initialRating = 68; // Default Club Floor
+            migratedPlayer.initialRating = 68; // Стандартный пол клуба
             dataRepaired = true;
         }
         
         const floor = migratedPlayer.initialRating;
 
-        // 2. ENFORCE FLOOR (Repair legacy data where rating < floor)
+        // 2. ПРИНУДИТЕЛЬНОЕ СОБЛЮДЕНИЕ ПОЛА
         if (migratedPlayer.rating < floor) {
             migratedPlayer.rating = floor;
-            // Clean up last session breakdown if it was showing a sub-floor rating
-            if (migratedPlayer.lastRatingChange) {
-                migratedPlayer.lastRatingChange.newRating = floor;
-                migratedPlayer.lastRatingChange.finalChange = floor - migratedPlayer.lastRatingChange.previousRating;
-            }
             dataRepaired = true;
         }
 
-        // 3. RETROSPECTIVE PENALTY FIX
-        // Ensure UI displays correctly for those who should be in penalty state
-        if (migratedPlayer.consecutiveMissedSessions && migratedPlayer.consecutiveMissedSessions >= 3) {
-            // Only trigger penalty UI if they don't already have one or have gameplay-based positive change
-            if (!migratedPlayer.lastRatingChange || (migratedPlayer.lastRatingChange.finalChange >= 0 && migratedPlayer.rating > floor)) {
-                 // We don't necessarily re-deduct here to avoid double-taxing,
-                 // but we ensure the object exists for the UI logic in Club Hub
-                 migratedPlayer.lastRatingChange = migratedPlayer.lastRatingChange || {
-                    previousRating: Math.min(99, migratedPlayer.rating + 1),
-                    teamPerformance: 0,
-                    individualPerformance: 0,
-                    badgeBonus: 0,
-                    finalChange: -1.0,
-                    newRating: migratedPlayer.rating,
-                    badgesEarned: []
-                };
+        // 3. СИНХРОНИЗАЦИЯ ГРАФИКА И АНАЛИЗА
+        // Если рейтинг изменился (штрафом или вручную), но анализ или график отстают — лечим
+        if (migratedPlayer.lastRatingChange && migratedPlayer.lastRatingChange.newRating !== migratedPlayer.rating) {
+            migratedPlayer.lastRatingChange.newRating = migratedPlayer.rating;
+            migratedPlayer.lastRatingChange.finalChange = migratedPlayer.rating - migratedPlayer.lastRatingChange.previousRating;
+            dataRepaired = true;
+        }
+
+        if (migratedPlayer.historyData && migratedPlayer.historyData.length > 0) {
+            const lastEntry = migratedPlayer.historyData[migratedPlayer.historyData.length - 1];
+            if (lastEntry.rating !== migratedPlayer.rating) {
+                lastEntry.rating = migratedPlayer.rating;
                 dataRepaired = true;
             }
         }
 
-        // Standard migrations
+        // Стандартные миграции
         if (typeof migratedPlayer.rating === 'number' && !Number.isInteger(migratedPlayer.rating)) {
             migratedPlayer.rating = Math.round(migratedPlayer.rating);
             dataRepaired = true;
@@ -83,24 +74,11 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
             dataRepaired = true;
         }
 
-        let badges: Partial<Record<BadgeType, number>> = {};
-        if (Array.isArray(migratedPlayer.badges)) {
-            (migratedPlayer.badges as unknown as BadgeType[]).forEach((badge: BadgeType) => {
-                badges[badge] = (badges[badge] || 0) + 1;
-            });
-            migratedPlayer.badges = badges;
-            dataRepaired = true;
-        }
-
-        migratedPlayer.totalSessionsPlayed = (migratedPlayer.totalSessionsPlayed ?? Math.round(migratedPlayer.totalGames / 15)) || 0;
-        migratedPlayer.sessionHistory = migratedPlayer.sessionHistory || []; 
-        migratedPlayer.consecutiveMissedSessions = migratedPlayer.consecutiveMissedSessions || 0;
-
         return migratedPlayer as Player;
     });
 
     if (dataRepaired) {
-        savePlayersToDB(initialPlayers).catch(e => console.warn("Background migration sync failed", e));
+        savePlayersToDB(initialPlayers).catch(e => console.warn("Background repair sync failed", e));
     }
 
     const loadedHistoryData = await loadHistoryFromDB(10);

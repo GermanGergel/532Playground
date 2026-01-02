@@ -32,6 +32,7 @@ export const processFinishedSession = ({
     // --- 1. UPDATE PLAYERS (Participation & Inactivity Logic) ---
     let playersWithUpdatedStats = oldPlayers.map(player => {
         const sessionStats = playerStatsMap.get(player.id);
+        const floor = player.initialRating || 68;
         
         if (sessionStats) {
             // PLAYER PLAYED
@@ -61,9 +62,7 @@ export const processFinishedSession = ({
 
             // Apply penalty every 3rd missed session
             if (currentMissed > 0 && currentMissed % 3 === 0) {
-                const floor = player.initialRating !== undefined ? player.initialRating : 68;
                 if (newRating > floor) {
-                    // Penalty is -1.0, but restricted by the floor
                     const targetRating = Math.max(floor, newRating - 1);
                     actualPenaltyDelta = targetRating - newRating;
                     newRating = targetRating;
@@ -113,7 +112,7 @@ export const processFinishedSession = ({
             const badgesEarnedThisSession = calculateEarnedBadges(player, sessionStats, session, allPlayersStats);
             const { delta, breakdown } = calculateRatingUpdate(player, sessionStats, session, badgesEarnedThisSession);
             
-            // PROTECT FLOOR during normal gameplay as well
+            // PROTECT FLOOR
             const floor = player.initialRating || 68;
             const rawNewRating = Math.round(breakdown.newRating);
             const unifiedNewRating = Math.max(floor, rawNewRating);

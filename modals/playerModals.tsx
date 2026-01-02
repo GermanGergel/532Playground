@@ -128,23 +128,32 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
         const newTier = getTierForRating(newRatingValue);
 
         let newStatus = playerToEdit.status;
-        const newInitialRating = newRatingValue;
+        // Floor should be strictly maintained
+        const currentFloor = playerToEdit.initialRating || 68;
+        const finalRating = Math.max(currentFloor, newRatingValue);
 
-        if (newRatingValue > 0) {
+        if (finalRating > 0) {
             newStatus = PlayerStatus.Confirmed;
         }
 
-        // Если рейтинг изменился вручную, обновляем и запись о "последней сессии",
-        // чтобы в UI не было путаницы (например, рейтинг 68, а в анализе написано "Новый рейтинг: 65")
+        // СИНХРОНИЗАЦИЯ ПРИ РУЧНОМ ИЗМЕНЕНИИ
         let updatedLastRatingChange = playerToEdit.lastRatingChange;
-        if (playerToEdit.lastRatingChange && newRatingValue !== playerToEdit.rating) {
+        if (finalRating !== playerToEdit.rating) {
             updatedLastRatingChange = {
-                ...playerToEdit.lastRatingChange,
-                newRating: newRatingValue,
-                // Обнуляем дельту, чтобы показать, что это ручная правка, или оставляем как есть,
-                // но главное - newRating должен совпадать.
-                finalChange: 0 
+                previousRating: playerToEdit.rating,
+                teamPerformance: 0,
+                individualPerformance: 0,
+                badgeBonus: 0,
+                finalChange: finalRating - playerToEdit.rating,
+                newRating: finalRating,
+                badgesEarned: playerToEdit.lastRatingChange?.badgesEarned || []
             };
+        }
+
+        // Обновляем график (последнюю точку), чтобы визуально всё сошлось
+        let updatedHistory = [...(playerToEdit.historyData || [])];
+        if (updatedHistory.length > 0) {
+            updatedHistory[updatedHistory.length - 1].rating = finalRating;
         }
 
         const player: Player = { 
@@ -152,12 +161,13 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
             nickname, 
             surname, 
             countryCode: countryCode.toUpperCase(),
-            rating: newRatingValue,
-            initialRating: newInitialRating,
+            rating: finalRating,
+            initialRating: currentFloor,
             tier: newTier,
             skills: currentSkills,
             status: newStatus,
-            lastRatingChange: updatedLastRatingChange
+            lastRatingChange: updatedLastRatingChange,
+            historyData: updatedHistory
         };
         onSave(player);
         onClose();
@@ -219,7 +229,6 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
 
     const getProfileUrl = () => {
         try {
-            // Using clean path for BrowserRouter compatibility
             return `${window.location.origin}/public-profile/${player.id}`;
         } catch (e) {
             return `${window.location.origin}/public-profile/${player.id}`;
