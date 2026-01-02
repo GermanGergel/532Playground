@@ -481,8 +481,9 @@ export const PublicHubDashboard: React.FC = () => {
                     </HubCard>
                     
                     <HubCard 
+                        align="right"
                         title={
-                            <div className="flex justify-between w-full items-center px-4 md:px-6">
+                            <div className="flex justify-end items-center gap-4 md:gap-6 px-2">
                                 <div className="relative group/tab">
                                     <button 
                                         onClick={() => handleManualTabChange('players')} 
