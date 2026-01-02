@@ -347,14 +347,15 @@ export const PublicHubDashboard: React.FC = () => {
     // ПРИНУДИТЕЛЬНО ПЕРВАЯ ВКЛАДКА - ПЛЕЕРЫ
     const [activeRightTab, setActiveRightTab] = useState<'players' | 'games'>('players');
     
-    // Auto-scroll news logic states
+    // Ultra-smooth GPU scroll logic
     const [isInteracting, setIsInteracting] = useState(false);
-    const newsScrollRef = useRef<HTMLDivElement>(null);
+    const newsOuterRef = useRef<HTMLDivElement>(null);
+    const newsInnerRef = useRef<HTMLDivElement>(null);
     const scrollDirectionRef = useRef<number>(1); // 1 = down, -1 = up
     const animationFrameRef = useRef<number | null>(null);
-    const lastScrollTimeRef = useRef<number>(0);
+    const lastTimeRef = useRef<number>(0);
     const pauseUntilRef = useRef<number>(0);
-    const exactScrollPosRef = useRef<number>(0); // Субпиксельная координата для плавности
+    const currentYRef = useRef<number>(0);
 
     // Presentation Mode (Tabs)
     const [isAutoSwitching, setIsAutoSwitching] = useState(true);
@@ -362,62 +363,65 @@ export const PublicHubDashboard: React.FC = () => {
 
     const session = history[0];
 
-    // --- ULTRA-SMOOTH AUTO SCROLL NEWS (YO-YO) ---
+    // --- GPU ACCELERATED SMOOTH AUTO SCROLL ---
     useEffect(() => {
         if (!session || newsFeed.length === 0) return;
 
         const animate = (time: number) => {
-            const el = newsScrollRef.current;
-            if (!el || isInteracting) {
-                lastScrollTimeRef.current = time; // Reset base time while interacting
+            if (!lastTimeRef.current) lastTimeRef.current = time;
+            
+            const outer = newsOuterRef.current;
+            const inner = newsInnerRef.current;
+
+            if (!outer || !inner || isInteracting) {
+                lastTimeRef.current = time;
                 animationFrameRef.current = requestAnimationFrame(animate);
                 return;
             }
 
-            // Initialization or Reset
-            if (lastScrollTimeRef.current === 0) {
-                lastScrollTimeRef.current = time;
+            // Initial delay
+            if (pauseUntilRef.current === 0) {
                 pauseUntilRef.current = time + 4000;
-                exactScrollPosRef.current = el.scrollTop;
             }
 
-            // Check if we are in a pause period
+            // Boundary checks
+            const maxTravel = Math.max(0, inner.scrollHeight - outer.clientHeight);
+            if (maxTravel <= 10) {
+                inner.style.transform = `translate3d(0, 0, 0)`;
+                animationFrameRef.current = requestAnimationFrame(animate);
+                return;
+            }
+
+            // Wait during pauses
             if (time < pauseUntilRef.current) {
-                lastScrollTimeRef.current = time; 
+                lastTimeRef.current = time;
                 animationFrameRef.current = requestAnimationFrame(animate);
                 return;
             }
 
-            const maxScroll = el.scrollHeight - el.clientHeight;
-            if (maxScroll <= 10) { 
-                animationFrameRef.current = requestAnimationFrame(animate);
-                return;
-            }
-
-            // --- OPTIMIZED SPEED (55px/s) AND FLOATING POINT PRECISION ---
-            const speed = 55; 
-            const delta = (time - lastScrollTimeRef.current) / 1000;
-            lastScrollTimeRef.current = time;
+            // Calculate movement (Speed: 38px/s)
+            const speed = 38; 
+            const delta = (time - lastTimeRef.current) / 1000;
+            lastTimeRef.current = time;
 
             if (scrollDirectionRef.current === 1) {
-                exactScrollPosRef.current += speed * delta;
-                if (exactScrollPosRef.current >= maxScroll) {
-                    exactScrollPosRef.current = maxScroll;
+                currentYRef.current += speed * delta;
+                if (currentYRef.current >= maxTravel) {
+                    currentYRef.current = maxTravel;
                     scrollDirectionRef.current = -1;
-                    pauseUntilRef.current = time + 3000; // Пауза внизу
+                    pauseUntilRef.current = time + 3000;
                 }
             } else {
-                exactScrollPosRef.current -= speed * delta;
-                if (exactScrollPosRef.current <= 0) {
-                    exactScrollPosRef.current = 0;
+                currentYRef.current -= speed * delta;
+                if (currentYRef.current <= 0) {
+                    currentYRef.current = 0;
                     scrollDirectionRef.current = 1;
-                    pauseUntilRef.current = time + 3000; // Пауза наверху
+                    pauseUntilRef.current = time + 3000;
                 }
             }
 
-            // Использование transform translateY для субпиксельной плавности без дёрганий
-            // Мы по-прежнему обновляем scrollTop для синхронизации, но transform дает плавность
-            el.scrollTop = exactScrollPosRef.current;
+            // APPLY GPU TRANSLATION
+            inner.style.transform = `translate3d(0, ${-currentYRef.current}px, 0)`;
 
             animationFrameRef.current = requestAnimationFrame(animate);
         };
@@ -512,15 +516,15 @@ export const PublicHubDashboard: React.FC = () => {
 
                     <div className="flex-[3] min-h-0 shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <HubCard title={t.hubSessionNews} icon={<Zap />} accent="#00F2FE" variant="standings" className="h-full min-h-0" bodyClassName="p-0 flex flex-col">
-                            <div className="flex-grow relative overflow-hidden">
+                            <div className="flex-grow relative overflow-hidden" ref={newsOuterRef}>
                                 <div 
-                                    ref={newsScrollRef}
+                                    ref={newsInnerRef}
                                     onMouseEnter={() => setIsInteracting(true)}
-                                    onMouseLeave={() => { setIsInteracting(false); lastScrollTimeRef.current = 0; }}
+                                    onMouseLeave={() => { setIsInteracting(false); lastTimeRef.current = 0; }}
                                     onTouchStart={() => setIsInteracting(true)}
-                                    onTouchEnd={() => { setIsInteracting(false); lastScrollTimeRef.current = 0; }}
-                                    className="absolute inset-0 overflow-y-auto custom-hub-scrollbar p-3 bg-black/10 transition-colors"
-                                    style={{ scrollBehavior: 'auto', willChange: 'scroll-position' }}
+                                    onTouchEnd={() => { setIsInteracting(false); lastTimeRef.current = 0; }}
+                                    className="p-3 bg-black/10 transition-none will-change-transform"
+                                    style={{ backfaceVisibility: 'hidden' }}
                                 >
                                     {newsFeed.slice(0, 15).map(item => <NewsVanguardCard key={item.id} item={item} />)}
                                     {newsFeed.length === 0 && <p className="text-center py-10 opacity-20 text-[10px] tracking-widest uppercase">No Intel Updates</p>}
