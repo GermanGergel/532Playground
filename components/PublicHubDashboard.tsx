@@ -2,8 +2,8 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import { useApp } from '../context';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
-import { NewsItem, Player, PlayerTier, Team, WeatherCondition } from '../types';
-import { TrophyIcon, Zap, History as HistoryIcon, Users, AwardIcon, StarIcon, Target } from '../icons';
+import { NewsItem, Player, Team, WeatherCondition } from '../types';
+import { TrophyIcon, Zap, History as HistoryIcon, Users, AwardIcon, Target } from '../icons';
 import { useTranslation } from '../ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { TeamAvatar } from './avatars';
@@ -48,7 +48,7 @@ const StandbyScreen: React.FC = () => {
                     </div>
                 </div>
                 
-                <p className="max-w-xs text-center text-[10px] font-mono text-white/30 uppercase tracking-[0.2em] leading-loose mt-8">
+                <p className="max-w-xs text-center text-[10px] font-mono text-white/30 uppercase tracking-[0.2em] mt-8">
                     {t.hubAwaitingStats}<br/>SYSTEM IDLE. AWAITING UPLINK SIGNAL...
                 </p>
             </div>
@@ -260,8 +260,6 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
 };
 
 const NewsVanguardCard: React.FC<{ item: NewsItem }> = ({ item }) => {
-    const accentColor = '#818cf8'; 
-    
     return (
         <div className="mb-3 relative px-1 animate-in fade-in slide-in-from-right-4 duration-500">
             <div className="relative rounded-2xl overflow-hidden p-3.5 border border-indigo-500/20 bg-gradient-to-br from-indigo-900/40 to-black">
@@ -345,86 +343,102 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
 export const PublicHubDashboard: React.FC = () => {
     const { history, newsFeed, allPlayers } = useApp();
     const t = useTranslation();
-    const [activeRightTab, setActiveRightTab] = useState<'players' | 'games'>('players');
-    const [isHoveringNews, setIsHoveringNews] = useState(false);
     
-    // Refs for scrolling
+    // ПРИНУДИТЕЛЬНО ПЕРВАЯ ВКЛАДКА - ПЛЕЕРЫ
+    const [activeRightTab, setActiveRightTab] = useState<'players' | 'games'>('players');
+    
+    // Auto-scroll news logic states
+    const [isInteracting, setIsInteracting] = useState(false);
     const newsScrollRef = useRef<HTMLDivElement>(null);
-    const scrollIntervalRef = useRef<number | null>(null);
-    const scrollDirectionRef = useRef<number>(1); // 1 for down, -1 for up
+    const scrollDirectionRef = useRef<number>(1); 
+    const animationFrameRef = useRef<number | null>(null);
+    const lastScrollTimeRef = useRef<number>(0);
+    const pauseUntilRef = useRef<number>(0);
 
-    // Presentation Mode States
+    // Presentation Mode (Tabs)
     const [isAutoSwitching, setIsAutoSwitching] = useState(true);
     const [autoSwitchProgress, setAutoSwitchProgress] = useState(0);
 
     const session = history[0];
 
-    // --- AUTO SCROLL NEWS LOGIC ---
+    // --- REFINED AUTO SCROLL NEWS (YO-YO) ---
     useEffect(() => {
         if (!session || newsFeed.length === 0) return;
 
-        const startAutoScroll = () => {
-            if (scrollIntervalRef.current) clearInterval(scrollIntervalRef.current);
-            
-            scrollIntervalRef.current = window.setInterval(() => {
-                const el = newsScrollRef.current;
-                if (!el || isHoveringNews) return;
+        const animate = (time: number) => {
+            const el = newsScrollRef.current;
+            if (!el || isInteracting) {
+                animationFrameRef.current = requestAnimationFrame(animate);
+                return;
+            }
 
-                const scrollSpeed = 0.5; // Very slow pixels per step
-                const currentScroll = el.scrollTop;
-                const maxScroll = el.scrollHeight - el.clientHeight;
+            // Initial setup for the loop
+            if (lastScrollTimeRef.current === 0) {
+                lastScrollTimeRef.current = time;
+                pauseUntilRef.current = time + 4000; // Start scrolling after 4s
+            }
 
-                if (scrollDirectionRef.current === 1) {
-                    el.scrollTop += scrollSpeed;
-                    if (el.scrollTop >= maxScroll) {
-                        scrollDirectionRef.current = -1;
-                        // Brief pause at bottom
-                        clearInterval(scrollIntervalRef.current!);
-                        setTimeout(startAutoScroll, 1500);
-                    }
-                } else {
-                    el.scrollTop -= scrollSpeed;
-                    if (el.scrollTop <= 0) {
-                        scrollDirectionRef.current = 1;
-                        // Brief pause at top
-                        clearInterval(scrollIntervalRef.current!);
-                        setTimeout(startAutoScroll, 1500);
-                    }
+            if (time < pauseUntilRef.current) {
+                animationFrameRef.current = requestAnimationFrame(animate);
+                return;
+            }
+
+            const maxScroll = el.scrollHeight - el.clientHeight;
+            if (maxScroll <= 5) { // If content fits, don't scroll
+                animationFrameRef.current = requestAnimationFrame(animate);
+                return;
+            }
+
+            const speed = 28; // Pixels per second
+            const delta = (time - lastScrollTimeRef.current) / 1000;
+            lastScrollTimeRef.current = time;
+
+            if (scrollDirectionRef.current === 1) {
+                el.scrollTop += speed * delta;
+                if (el.scrollTop >= maxScroll - 1) {
+                    el.scrollTop = maxScroll;
+                    scrollDirectionRef.current = -1;
+                    pauseUntilRef.current = time + 2500; // Pause at bottom
                 }
-            }, 30); // ~33fps
+            } else {
+                el.scrollTop -= speed * delta;
+                if (el.scrollTop <= 1) {
+                    el.scrollTop = 0;
+                    scrollDirectionRef.current = 1;
+                    pauseUntilRef.current = time + 2500; // Pause at top
+                }
+            }
+
+            animationFrameRef.current = requestAnimationFrame(animate);
         };
 
-        // Initial delay of 5 seconds
-        const initialTimer = setTimeout(() => {
-            startAutoScroll();
-        }, 5000);
+        animationFrameRef.current = requestAnimationFrame(animate);
 
         return () => {
-            clearTimeout(initialTimer);
-            if (scrollIntervalRef.current) clearInterval(scrollIntervalRef.current);
+            if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
         };
-    }, [session, newsFeed.length, isHoveringNews]);
+    }, [session, newsFeed.length, isInteracting]);
     
-    // --- AUTO SWITCH LOGIC (TABS) ---
+    // --- INFINITE AUTO SWITCH LOGIC (TABS) ---
     useEffect(() => {
         if (!isAutoSwitching || !session) return;
 
-        let startTime = Date.now();
-        const DURATION = 10000; // 10 seconds per phase
+        // Пауза перед началом первого цикла, чтобы пользователь увидел "Players"
+        let phaseStartTime = Date.now() + 3000; 
+        const DURATION = 10000; 
         
         const timer = setInterval(() => {
-            let elapsed = Date.now() - startTime;
+            const now = Date.now();
+            if (now < phaseStartTime) return; // Начальное ожидание
+
+            let elapsed = now - phaseStartTime;
             let progress = (elapsed / DURATION) * 100;
             
             if (progress >= 100) {
                 setActiveRightTab(prev => {
-                    if (prev === 'players') {
-                        startTime = Date.now(); 
-                        return 'games';
-                    } else {
-                        setIsAutoSwitching(false);
-                        return 'players';
-                    }
+                    const next = prev === 'players' ? 'games' : 'players';
+                    phaseStartTime = Date.now(); // Сброс времени для следующей фазы
+                    return next;
                 });
                 setAutoSwitchProgress(0);
             } else {
@@ -492,10 +506,10 @@ export const PublicHubDashboard: React.FC = () => {
                             <div className="flex-grow relative overflow-hidden">
                                 <div 
                                     ref={newsScrollRef}
-                                    onMouseEnter={() => setIsHoveringNews(true)}
-                                    onMouseLeave={() => setIsHoveringNews(false)}
-                                    onTouchStart={() => setIsHoveringNews(true)}
-                                    onTouchEnd={() => setIsHoveringNews(false)}
+                                    onMouseEnter={() => setIsInteracting(true)}
+                                    onMouseLeave={() => { setIsInteracting(false); lastScrollTimeRef.current = 0; }}
+                                    onTouchStart={() => setIsInteracting(true)}
+                                    onTouchEnd={() => { setIsInteracting(false); lastScrollTimeRef.current = 0; }}
                                     className="absolute inset-0 overflow-y-auto custom-hub-scrollbar p-3 bg-black/10 transition-colors"
                                 >
                                     {newsFeed.slice(0, 15).map(item => <NewsVanguardCard key={item.id} item={item} />)}
