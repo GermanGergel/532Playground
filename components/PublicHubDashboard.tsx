@@ -132,11 +132,13 @@ const HubCard: React.FC<{
             <div className={`absolute -top-10 -left-10 w-40 h-40 ${isElite ? 'bg-[#00F2FE]/[0.05]' : 'bg-[#00F2FE]/[0.03]'} rounded-full blur-[45px] pointer-events-none z-0 animate-pulse`} style={{ animationDuration: '6s' }}></div>
             
             <div className={`relative z-10 py-1.5 px-4 flex items-center justify-between shrink-0 ${headerStyleClass} ${isRight ? 'flex-row-reverse' : ''}`}>
-                 <div className={`flex items-center gap-2 relative z-10 ${isRight ? 'flex-row-reverse' : ''}`}>
+                 <div className={`flex items-center gap-2 relative z-10 flex-grow ${isRight ? 'flex-row-reverse' : ''}`}>
                     <div className={`w-4 h-4 rounded-md flex items-center justify-center shadow-sm border ${iconBg}`} style={{ color: accent }}>
                         {React.cloneElement(icon as React.ReactElement<any>, { className: "w-2.5 h-2.5" })}
                     </div>
-                    {typeof title === 'string' ? <h3 className={`font-russo text-[10px] uppercase tracking-widest ${titleColor}`}>{title}</h3> : title}
+                    <div className="flex-grow">
+                        {typeof title === 'string' ? <h3 className={`font-russo text-[10px] uppercase tracking-widest ${titleColor}`}>{title}</h3> : title}
+                    </div>
                  </div>
                  {headerExtra && <div className="relative z-10">{headerExtra}</div>}
             </div>
@@ -473,14 +475,14 @@ export const PublicHubDashboard: React.FC = () => {
                         <div className="p-1">
                             <table className="w-full table-fixed border-collapse">
                                 <thead><tr className="bg-white/5 border-b border-white/10"><th className={`${thStandings} w-[12%]`}>#</th><th className={`${thStandings} w-[28%]`}>{t.team}</th><th className={`${thStandings} w-[10%]`}>{t.thP}</th><th className={`${thStandings} w-[10%]`}>{t.thW}</th><th className={`${thStandings} w-[10%]`}>{t.thD}</th><th className={`${thStandings} w-[10%]`}>{t.thL}</th><th className={`${thStandings} w-[10%]`}>{t.thGD}</th><th className={`${thStandings} w-[10%]`}>{t.hubPoints}</th></tr></thead>
-                                <tbody>{teamStats.map((stat, idx) => (<tr key={stat.team.id} className="border-b border-white/5 last:border-0 transition-colors"><td className="py-1.5 text-center text-[9px] font-bold text-white/30 bg-white/5">{idx + 1}</td><td className="py-1.5 flex justify-center"><SubtleDashboardAvatar team={stat.team} size="xxs" isLight /></td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.gamesPlayed}</td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.wins}</td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.draws}</td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.losses}</td><td className="py-1.5 text-center text-[10px] font-bold text-white/40">{stat.goalDifference > 0 ? `+${stat.goalDifference}` : stat.goalDifference}</td><td className="py-1.5 text-center text-[12px] font-bold text-white bg-white/5">{stat.points}</td></tr>))}</tbody>
+                                <tbody>{teamStats.map((stat, idx) => (<tr key={stat.team.id} className="border-b border-white/5 last:border-0 transition-colors"><td className="py-1.5 text-center text-[9px] font-bold text-white/30">{idx + 1}</td><td className="py-1.5 flex justify-center"><SubtleDashboardAvatar team={stat.team} size="xxs" isLight /></td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.gamesPlayed}</td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.wins}</td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.draws}</td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.losses}</td><td className="py-1.5 text-center text-[10px] font-bold text-white/40">{stat.goalDifference > 0 ? `+${stat.goalDifference}` : stat.goalDifference}</td><td className="py-1.5 text-center text-[12px] font-bold text-white bg-white/5">{stat.points}</td></tr>))}</tbody>
                             </table>
                         </div>
                     </HubCard>
                     
                     <HubCard 
                         title={
-                            <div className="flex gap-14">
+                            <div className="flex justify-between w-full items-center pr-3">
                                 <div className="relative group/tab">
                                     <button 
                                         onClick={() => handleManualTabChange('players')} 
@@ -547,9 +549,9 @@ export const PublicHubDashboard: React.FC = () => {
                                                                         const team = session.teams.find(t => t.id === goal.teamId);
                                                                         return (
                                                                             <div key={goal.id} className="flex items-center gap-2 px-3 py-1 relative">
-                                                                                {/* Тонкий неоновый индикатор */}
+                                                                                {/* Ультра-тонкий неоновый индикатор */}
                                                                                 <div 
-                                                                                    className="w-[1.5px] h-3 rounded-full shrink-0" 
+                                                                                    className="w-[1px] h-2.5 rounded-full shrink-0" 
                                                                                     style={{ 
                                                                                         backgroundColor: team?.color || '#fff',
                                                                                         boxShadow: `0 0 6px ${team?.color || '#fff'}`
