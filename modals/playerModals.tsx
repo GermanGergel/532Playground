@@ -128,7 +128,6 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
         const newTier = getTierForRating(newRatingValue);
 
         let newStatus = playerToEdit.status;
-        // Floor should be strictly maintained
         const currentFloor = playerToEdit.initialRating || 68;
         const finalRating = Math.max(currentFloor, newRatingValue);
 
@@ -136,7 +135,6 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
             newStatus = PlayerStatus.Confirmed;
         }
 
-        // СИНХРОНИЗАЦИЯ ПРИ РУЧНОМ ИЗМЕНЕНИИ
         let updatedLastRatingChange = playerToEdit.lastRatingChange;
         if (finalRating !== playerToEdit.rating) {
             updatedLastRatingChange = {
@@ -150,7 +148,6 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
             };
         }
 
-        // Обновляем график (последнюю точку), чтобы визуально всё сошлось
         let updatedHistory = [...(playerToEdit.historyData || [])];
         if (updatedHistory.length > 0) {
             updatedHistory[updatedHistory.length - 1].rating = finalRating;
@@ -228,11 +225,7 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
     const [isGenerating, setIsGenerating] = useState(false);
 
     const getProfileUrl = () => {
-        try {
-            return `${window.location.origin}/public-profile/${player.id}`;
-        } catch (e) {
-            return `${window.location.origin}/public-profile/${player.id}`;
-        }
+        return `${window.location.origin}/public-profile/${player.id}`;
     }
     
     const profileUrl = getProfileUrl();
@@ -272,12 +265,15 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
                 throw new Error("Failed to generate image blob.");
             }
     
-            const file = new File([blob], `${player.nickname}_access_card.png`, { type: 'image/png' });
+            const filename = `Official_Access_Card_${player.nickname.replace(/\s/g, '_')}.png`;
+            const file = new File([blob], filename, { type: 'image/png' });
     
             if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                // Пакетная отправка: Картинка + Текст в одном сообщении
                 await navigator.share({
+                    title: `Official Access Card: ${player.nickname}`,
+                    text: `Official Club Member Profile: ${profileUrl}`,
                     files: [file],
-                    text: profileUrl,
                 });
             } else {
                 const dataUrl = URL.createObjectURL(file);
@@ -288,6 +284,7 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
                 link.click();
                 document.body.removeChild(link);
                 URL.revokeObjectURL(dataUrl);
+                alert(t.profileLinkCopied || "Link copied to clipboard!");
             }
         } catch (error: any) {
             console.error("Sharing failed:", error);
