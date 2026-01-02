@@ -32,7 +32,7 @@ const TermometerIcon = ({ className }: { className?: string }) => (
 const StandbyScreen: React.FC = () => {
     const t = useTranslation();
     return (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0a0c10] overflow-hidden rounded-[2.5rem]">
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black overflow-hidden rounded-[2.5rem]">
             <div className="absolute w-[600px] h-[600px] border border-[#00F2FE]/20 rounded-full animate-ping-slow"></div>
             <div className="absolute w-[400px] h-[400px] border border-[#00F2FE]/10 rounded-full animate-ping-slower"></div>
             
@@ -116,7 +116,7 @@ const HubCard: React.FC<{
         titleColor = 'text-white'; 
         iconBg = 'bg-white/5 border-white/10 text-[#FFD700]';
     } else if (isStandings) {
-        bgStyleClass = 'bg-gradient-to-br from-[#161b22] to-[#0a0d14] border-white/10 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9)]';
+        bgStyleClass = 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black border-white/10';
         headerStyleClass = 'bg-transparent !border-0';
         titleColor = 'text-white';
         iconBg = 'bg-white/10 border-white/20 text-white';
@@ -441,10 +441,11 @@ export const PublicHubDashboard: React.FC = () => {
     const tdBase = "py-1.5 text-center text-[10px] font-bold transition-colors";
 
     return (
-        <div className="h-full flex flex-col animate-in fade-in duration-700 w-full relative p-2 md:p-3 overflow-hidden rounded-t-[2.5rem] bg-[#0a0c10]">
-            <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-[#0a0c10]"></div>
+        <div className="h-full flex flex-col animate-in fade-in duration-700 w-full relative p-2 md:p-3 overflow-hidden">
+            <div className="absolute -top-24 bottom-0 -left-4 -right-4 z-0 pointer-events-none rounded-[2.5rem] overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center_20%,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+                <div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-b from-black via-transparent to-transparent pointer-events-none"></div>
             </div>
 
             <div className="flex-grow grid grid-cols-12 gap-4 min-h-0 items-stretch relative z-10 overflow-hidden">
