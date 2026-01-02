@@ -2,9 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { HubRoster } from './HubRoster';
 import { HubArchive } from './HubArchive';
-import { HubPlayerIntel } from './HubPlayerIntel';
 import { HubInfo } from './HubInfo';
-import { HubDuel } from './HubDuel';
 import { PublicHubDashboard } from './PublicHubDashboard';
 import { logAnalyticsEvent } from '../db';
 
@@ -19,18 +17,17 @@ const VIEW_THEMES: Record<string, { bottomStop: string }> = {
     roster: { bottomStop: '#01040a' },    
     archive: { bottomStop: '#01040a' },   
     info: { bottomStop: '#020617' },      
-    duel: { bottomStop: '#020617' },
     tournaments: { bottomStop: '#0a0c10' },
     league: { bottomStop: '#0a0c10' },
 };
 
 export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps> = ({ currentView, setView, onArchiveViewChange }) => {
     const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
-    const [duelPlayerIds, setDuelPlayerIds] = useState<[string | null, string | null]>([null, null]);
     const [hubSortBy, setHubSortBy] = useState<'name' | 'rating' | 'date'>('rating');
     const [hubSearch, setHubSearch] = useState('');
 
     const activeTheme = useMemo(() => {
+        // Если выбран игрок в режиме ростера, используем чуть более глубокий темный цвет
         if (selectedPlayerId && currentView === 'roster') return { bottomStop: '#01040a' };
         return VIEW_THEMES[currentView] || { bottomStop: '#0a0c10' };
     }, [currentView, selectedPlayerId]);
@@ -40,22 +37,10 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
     }, [currentView]);
 
     useEffect(() => {
-        if (currentView !== 'duel') {
-            setDuelPlayerIds([null, null]);
-        }
-        if (currentView !== 'roster' && currentView !== 'duel') {
-             // We keep selectedPlayerId for roster persistence, but could clear it if needed
-        }
         if (currentView !== 'archive' && onArchiveViewChange) {
             onArchiveViewChange(null);
         }
     }, [currentView, onArchiveViewChange]);
-
-    const handleStartDuel = (p1Id: string, p2Id: string) => {
-        setDuelPlayerIds([p1Id, p2Id]);
-        setView('duel');
-        logAnalyticsEvent('start_duel', `${p1Id}_vs_${p2Id}`);
-    };
 
     return (
         <div className="w-full h-full animate-in fade-in duration-700 relative">
@@ -71,7 +56,8 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
 
             <div className="w-full h-[calc(100vh-110px)] md:h-[calc(100dvh-110px)] min-h-[650px] relative overflow-hidden">
                 {currentView === 'dashboard' && <PublicHubDashboard />}
-                {currentView === 'roster' && (
+                
+                {(currentView === 'roster' || currentView === 'duel') && (
                     <HubRoster 
                         selectedPlayerId={selectedPlayerId}
                         onSelectPlayer={(id) => {
@@ -82,10 +68,10 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
                         setSortBy={setHubSortBy}
                         search={hubSearch}
                         setSearch={setHubSearch}
-                        onStartDuel={handleStartDuel}
+                        onStartDuel={() => {}} // Обработка теперь внутри HubRoster
                     />
                 )}
-                {currentView === 'duel' && <HubDuel p1Id={duelPlayerIds[0]} p2Id={duelPlayerIds[1]} onBack={() => setView('roster')} />}
+                
                 {currentView === 'archive' && <HubArchive onViewSession={onArchiveViewChange} />}
                 {currentView === 'info' && <HubInfo />}
                 

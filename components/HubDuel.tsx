@@ -1,9 +1,9 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context';
-import { Player, PlayerStatus, SkillType } from '../types';
-import { Search, ChevronLeft, Zap, TrophyIcon } from '../icons';
-import { Modal, useTranslation } from '../ui';
+import { Player, PlayerStatus } from '../types';
+import { TrophyIcon, Zap, XCircle } from '../icons';
+import { useTranslation } from '../ui';
 import { PlayerAvatar } from './avatars';
 
 // --- STYLED COMPONENTS ---
@@ -43,7 +43,6 @@ const ComparisonBar: React.FC<{
     >
         <div className="flex justify-between items-end mb-0.5 px-1">
             <span className={`font-russo text-[13px] transition-all duration-1000 ${visible && p1Win ? 'text-[#00F2FE]' : 'text-white/20'}`}>{v1}</span>
-            {/* УВЕЛИЧЕННЫЙ ШРИФТ МЕТКИ (label) */}
             <span className="font-chakra font-black text-[9px] text-white/50 uppercase tracking-[0.1em] italic">{label}</span>
             <span className={`font-russo text-[13px] transition-all duration-1000 ${visible && p2Win ? 'text-slate-200' : 'text-white/20'}`}>{v2}</span>
         </div>
@@ -59,38 +58,37 @@ const ComparisonBar: React.FC<{
 );
 
 interface HubDuelProps {
-    onBack?: () => void;
     p1Id: string | null;
     p2Id: string | null;
 }
 
-export const HubDuel: React.FC<HubDuelProps> = ({ onBack, p1Id, p2Id }) => {
+export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
     const { allPlayers } = useApp();
     const t = useTranslation();
-    const [showStats, setShowStats] = useState(false);
+    const [isCalculating, setIsCalculating] = useState(false);
+    const [showResults, setShowResults] = useState(false);
     const [battleComplete, setBattleComplete] = useState(false);
 
-    const players = useMemo(() => {
-        return allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
-    }, [allPlayers]);
+    const player1 = useMemo(() => allPlayers.find(p => p.id === p1Id), [allPlayers, p1Id]);
+    const player2 = useMemo(() => allPlayers.find(p => p.id === p2Id), [allPlayers, p2Id]);
 
-    const player1 = players.find(p => p.id === p1Id);
-    const player2 = players.find(p => p.id === p2Id);
-    const isReady = !!(player1 && player2);
-
+    // Сброс результатов при смене игроков
     useEffect(() => {
-        if (isReady) {
-            const timer = setTimeout(() => setShowStats(true), 600);
-            const completeTimer = setTimeout(() => setBattleComplete(true), 1800);
-            return () => {
-                clearTimeout(timer);
-                clearTimeout(completeTimer);
-            };
-        } else {
-            setShowStats(false);
-            setBattleComplete(false);
-        }
-    }, [isReady]);
+        setIsCalculating(false);
+        setShowResults(false);
+        setBattleComplete(false);
+    }, [p1Id, p2Id]);
+
+    const handleInitiate = () => {
+        if (!player1 || !player2) return;
+        setIsCalculating(true);
+        // Эффект «загрузки» данных
+        setTimeout(() => {
+            setIsCalculating(false);
+            setShowResults(true);
+            setTimeout(() => setBattleComplete(true), 1200);
+        }, 1500);
+    };
 
     const comparisonMetrics = useMemo(() => {
         if (!player1 || !player2) return [];
@@ -98,20 +96,15 @@ export const HubDuel: React.FC<HubDuelProps> = ({ onBack, p1Id, p2Id }) => {
         const getAwards = (p: Player) => Object.values(p.badges || {}).reduce((a, b) => a + (b || 0), 0);
         const getEfficiency = (p: Player) => p.totalSessionsPlayed > 0 ? (p.totalGoals / p.totalSessionsPlayed) : 0;
         const getBestGoals = (p: Player) => p.records?.bestGoalsInSession?.value || 0;
-        const getBestAssists = (p: Player) => p.records?.bestAssistsInSession?.value || 0;
 
         const rawData = [
             { id: 'ovr', label: 'Overall rating', v1: player1.rating, v2: player2.rating },
             { id: 'goals', label: 'Total goals', v1: player1.totalGoals, v2: player2.totalGoals },
             { id: 'assists', label: 'Total assists', v1: player1.totalAssists, v2: player2.totalAssists },
             { id: 'wr', label: 'Win probability', v1: `${getWR(player1)}%`, v2: `${getWR(player2)}%`, raw1: getWR(player1), raw2: getWR(player2) },
-            { id: 'games', label: 'Matches', v1: player1.totalGames, v2: player2.totalGames },
             { id: 'eff', label: 'Avg goals', v1: getEfficiency(player1).toFixed(1), v2: getEfficiency(player2).toFixed(1), raw1: getEfficiency(player1), raw2: getEfficiency(player2) },
             { id: 'awards', label: 'Awards total', v1: getAwards(player1), v2: getAwards(player2) },
-            { id: 'sessions', label: 'Total sessions', v1: player1.totalSessionsPlayed, v2: player2.totalSessionsPlayed },
-            { id: 'totalWins', label: 'Total wins', v1: player1.totalWins, v2: player2.totalWins },
             { id: 'bestGoals', label: 'Best goals in sess', v1: getBestGoals(player1), v2: getBestGoals(player2) },
-            { id: 'bestAssists', label: 'Best assists in sess', v1: getBestAssists(player1), v2: getBestAssists(player2) },
         ];
 
         return rawData.map(m => {
@@ -123,156 +116,127 @@ export const HubDuel: React.FC<HubDuelProps> = ({ onBack, p1Id, p2Id }) => {
     }, [player1, player2]);
 
     const winnerData = useMemo(() => {
-        if (!isReady || !battleComplete) return null;
+        if (!battleComplete) return null;
         let p1Pts = 0, p2Pts = 0;
         comparisonMetrics.forEach(m => { if (m.p1W) p1Pts++; else if (m.p2W) p2Pts++; });
-        
-        const winningText = p1Pts === p2Pts ? 'STALEMATE' : p1Pts > p2Pts ? player1?.nickname : player2?.nickname;
-        const winningColor = p1Pts === p2Pts ? 'text-white' : p1Pts > p2Pts ? 'text-[#00F2FE]' : 'text-slate-200';
-
+        const text = p1Pts === p2Pts ? 'STALEMATE' : p1Pts > p2Pts ? player1?.nickname : player2?.nickname;
         return { 
             side: p1Pts === p2Pts ? 'none' : p1Pts > p2Pts ? 'p1' : 'p2', 
-            text: winningText, 
-            color: winningColor,
-            p1Score: p1Pts,
-            p2Score: p2Pts
+            text, 
+            p1Score: p1Pts, 
+            p2Score: p2Pts 
         };
-    }, [isReady, battleComplete, comparisonMetrics, player1, player2]);
+    }, [battleComplete, comparisonMetrics, player1, player2]);
 
-    if (!player1 || !player2) {
-        return (
-            <div className="absolute inset-0 flex flex-col items-center justify-center animate-in fade-in duration-1000 overflow-hidden rounded-[2.5rem] bg-[#05070a]">
-                <p className="text-white/20">Awaiting player data...</p>
-                <button onClick={onBack} className="mt-4 text-sm text-[#00F2FE]">Go Back</button>
-            </div>
-        );
-    }
+    const PlayerSlot = ({ player, side }: { player?: Player, side: 'p1' | 'p2' }) => (
+        <div className={`relative flex flex-col items-center gap-4 transition-all duration-1000 ${showResults && winnerData?.side !== side && winnerData?.side !== 'none' ? 'opacity-30 scale-90 grayscale' : ''}`}>
+            {player ? (
+                <>
+                    <div className={`p-1 rounded-full border-2 transition-all duration-700 ${side === 'p1' ? 'border-[#00F2FE]' : 'border-slate-300'} ${showResults && winnerData?.side === side ? 'shadow-[0_0_40px_rgba(0,242,254,0.3)] scale-105' : 'shadow-xl'}`}>
+                        <PlayerAvatar player={player} size="xl" className="w-24 h-24 md:w-36 md:h-36 lg:w-40 lg:h-40" />
+                    </div>
+                    <span className="font-chakra font-black text-xs md:text-sm uppercase tracking-[0.2em] text-center text-white mt-2">
+                        {player.nickname}
+                    </span>
+                </>
+            ) : (
+                <div className="w-24 h-24 md:w-36 md:h-36 lg:w-40 lg:h-40 rounded-full border-2 border-dashed border-white/5 bg-white/[0.02] flex flex-col items-center justify-center gap-2">
+                    <Zap className="w-8 h-8 text-white/5 animate-pulse" />
+                    <span className="text-[8px] font-black text-white/20 uppercase tracking-widest">{t.legionnaire_select}</span>
+                </div>
+            )}
+        </div>
+    );
 
     return (
-        <div className="absolute inset-0 flex flex-col animate-in fade-in duration-1000 overflow-hidden rounded-[2.5rem] bg-[#05070a]">
-            
-            <div className="absolute inset-0 pointer-events-none z-0">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
-                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-                
-                <div className={`absolute inset-0 transition-all duration-[2000ms] ease-in-out ${
-                    winnerData?.side === 'p1' ? 'bg-[#00F2FE]/5' : winnerData?.side === 'p2' ? 'bg-white/5' : 'bg-transparent'
-                }`}></div>
-            </div>
-
+        <div className="h-full w-full flex flex-col items-center justify-start pt-20 px-6 relative">
             <ParticleBackground />
 
-            {/* NAVIGATION - BRANDING CENTERED STRICTLY ABOVE DUEL */}
-            <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-10 py-8">
-                <button onClick={onBack} className="flex items-center gap-3 group transition-all ml-32 p-2 -m-2">
-                    <ChevronLeft className="w-8 h-8 text-white/40 group-hover:text-[#00F2FE] transition-colors" />
-                    <span className="text-[12px] font-black font-chakra uppercase tracking-[0.3em] text-white/40 group-hover:text-[#00F2FE] transition-colors">BACK</span>
-                </button>
-                
-                <div className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center">
-                    <div className="w-10 h-[1.5px] bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent"></div>
-                    <span className="font-audiowide text-[10px] md:text-[11px] text-[#00F2FE] tracking-[0.3em] uppercase mt-2 text-center" style={{ textShadow: '0 0 15px rgba(0, 242, 254, 0.5)' }}>532 PLAYGROUND</span>
+            {/* HEADER */}
+            <div className="text-center mb-12 relative z-10">
+                <div className="flex flex-col items-center">
+                    <div className="w-16 h-[1px] bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent mb-4"></div>
+                    <h2 className="font-audiowide text-sm md:text-lg text-[#00F2FE] tracking-[0.4em] uppercase" style={{ textShadow: '0 0 15px rgba(0, 242, 254, 0.4)' }}>
+                        BATTLE SIMULATION
+                    </h2>
+                    <span className="text-[7px] font-black text-white/20 uppercase tracking-[0.6em] mt-2 font-mono">PROTOCOL VER 5.3.2</span>
                 </div>
             </div>
 
-            <div className="relative z-10 flex flex-col h-full w-full items-center justify-start px-4 pt-24"> 
-                
-                <div className={`flex items-start justify-center w-full max-w-6xl transition-all duration-1000 ease-[cubic-bezier(0.34,1.56,0.64,1)] gap-4`}>
-                    
-                    {/* LEFT UNIT */}
-                    <div className={`relative flex flex-col items-center gap-4 transition-all duration-1000 ${winnerData?.side === 'p2' ? 'opacity-30 scale-90 grayscale' : ''}`}>
-                        <PlayerAvatar 
-                            player={player1} 
-                            className={`
-                                w-24 h-24 md:w-36 md:h-36 lg:w-40 lg:h-40
-                                transition-all duration-700 border-2 
-                                ${winnerData?.side === 'p1' ? 'shadow-[0_0_40px_rgba(0,242,254,0.3)] scale-105' : 'shadow-xl'}
-                                border-[#00F2FE]
-                            `}
-                        />
-                        <span className="font-chakra font-black text-[10px] md:text-sm uppercase tracking-[0.2em] text-center transition-all duration-700 text-white mt-4">
-                            {player1.nickname}
-                        </span>
-                    </div>
+            {/* DUEL AREA */}
+            <div className="flex items-start justify-center w-full max-w-5xl gap-6 md:gap-12 relative z-10">
+                <PlayerSlot player={player1} side="p1" />
 
-                    {/* CENTRAL TACTICAL COLUMN - MORE COMPACT WIDTH */}
-                    <div className={`flex flex-col flex-grow max-w-[220px] md:max-w-[320px] transition-all duration-1000 opacity-100 translate-y-0`}>
-                        
-                        <div className="flex flex-col items-center mb-4">
-                            <span className="font-blackops italic text-xl text-white/5 tracking-[0.5em] select-none uppercase">Duel</span>
-                            <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-white/10 to-transparent mt-1"></div>
-                        </div>
-
-                        {/* STATS LIST */}
-                        <div className="flex flex-col w-full px-2">
-                            {comparisonMetrics.map((m, idx) => (
-                                <ComparisonBar 
-                                    key={m.id} label={m.label} v1={m.v1} v2={m.v2} p1Win={m.p1W} p2Win={m.p2W} 
-                                    ratio1={m.r1} ratio2={m.r2} index={idx} visible={showStats}
-                                />
-                            ))}
-                        </div>
-                        
-                        {/* FINAL SUMMARY WITH SCORE */}
-                        <div className={`mt-6 flex flex-col items-center gap-1 transition-all duration-1000 delay-[1200ms] ${showStats ? 'opacity-100' : 'opacity-0'}`}>
-                            <div className="h-[1px] w-12 bg-white/10 mb-4"></div>
-                            <span className="text-[7px] font-black tracking-[0.6em] text-white/30 uppercase mb-2">{t.duel_complete}</span>
-                            
-                            <div className="flex flex-col items-center">
-                                <div className="flex items-center gap-4">
-                                    <TrophyIcon className={`w-5 h-5 ${winnerData?.side === 'p1' ? 'text-[#00F2FE]' : 'text-white/20'}`} />
-                                    <span className={`font-russo text-xl md:text-2xl uppercase tracking-[0.1em] ${winnerData?.color || 'text-white/5'}`}>
-                                        {winnerData?.text || 'CALCULATING'}
-                                    </span>
-                                    <TrophyIcon className={`w-5 h-5 ${winnerData?.side === 'p2' ? 'text-slate-300' : 'text-white/20'}`} />
-                                </div>
+                {/* CENTRAL COLUMN */}
+                <div className="flex flex-col flex-grow max-w-[280px] md:max-w-[350px] pt-4">
+                    {!showResults ? (
+                        <div className="flex flex-col items-center justify-center min-h-[300px]">
+                            <div className="w-full border-y border-white/5 py-8 flex flex-col items-center gap-6">
+                                <div className="font-blackops italic text-4xl text-white/5 tracking-[0.4em] select-none uppercase">VS</div>
                                 
-                                {/* DUEL SCORE DISPLAY */}
-                                {battleComplete && winnerData && (
-                                    <div className="mt-2 flex flex-col items-center animate-in fade-in zoom-in duration-700">
-                                        <div className="px-4 py-1 rounded-lg bg-white/[0.03] border border-white/5">
-                                            <span className="font-chakra font-black text-[12px] uppercase tracking-[0.3em] text-white/80">
-                                                {t.duel_score}: <span className="text-[#00F2FE]">{winnerData.p1Score}</span> — <span className="text-slate-300">{winnerData.p2Score}</span>
-                                            </span>
-                                        </div>
-                                        {/* Мелкая техническая надпись удалена по просьбе пользователя */}
+                                {player1 && player2 ? (
+                                    <button 
+                                        onClick={handleInitiate}
+                                        disabled={isCalculating}
+                                        className="relative group overflow-hidden bg-black border border-[#00F2FE]/30 px-8 py-4 rounded-2xl transition-all hover:border-[#00F2FE] hover:shadow-[0_0_25px_rgba(0,242,254,0.3)] active:scale-95 disabled:opacity-50"
+                                    >
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#00F2FE]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                        <span className="relative z-10 font-russo text-[12px] text-[#00F2FE] uppercase tracking-[0.3em] group-hover:text-white transition-colors">
+                                            {isCalculating ? 'CALCULATING...' : 'START SEQUENCE'}
+                                        </span>
+                                    </button>
+                                ) : (
+                                    <div className="text-center px-4">
+                                        <p className="font-chakra font-bold text-[9px] text-white/30 uppercase tracking-[0.2em] leading-relaxed">
+                                            Awaiting tactical units<br/>Select two players from the list
+                                        </p>
                                     </div>
                                 )}
                             </div>
                         </div>
-                    </div>
+                    ) : (
+                        <div className="animate-in fade-in zoom-in duration-700">
+                             <div className="flex flex-col w-full mb-6">
+                                {comparisonMetrics.map((m, idx) => (
+                                    <ComparisonBar 
+                                        key={m.id} label={m.label} v1={m.v1} v2={m.v2} p1Win={m.p1W} p2Win={m.p2W} 
+                                        ratio1={m.r1} ratio2={m.r2} index={idx} visible={showResults}
+                                    />
+                                ))}
+                            </div>
 
-                    {/* RIGHT UNIT */}
-                    <div className={`relative flex flex-col items-center gap-4 transition-all duration-1000 ${winnerData?.side === 'p1' ? 'opacity-30 scale-90 grayscale' : ''}`}>
-                        <PlayerAvatar 
-                            player={player2} 
-                            className={`
-                                w-24 h-24 md:w-36 md:h-36 lg:w-40 lg:h-40
-                                rounded-full border-2 transition-all duration-700 overflow-hidden 
-                                ${winnerData?.side === 'p2' ? 'shadow-[0_0_40px_rgba(255,255,255,0.25)] scale-105' : 'shadow-xl'}
-                                border-slate-300
-                            `}
-                        />
-                        <span className="font-chakra font-black text-[10px] md:text-sm uppercase tracking-[0.2em] text-center transition-all duration-700 text-white mt-4">
-                            {player2.nickname}
-                        </span>
-                    </div>
+                            {battleComplete && winnerData && (
+                                <div className="flex flex-col items-center gap-3 animate-in slide-in-from-bottom-4 duration-700">
+                                    <div className="h-px w-16 bg-white/10"></div>
+                                    <div className="flex items-center gap-4">
+                                        <TrophyIcon className={`w-5 h-5 ${winnerData.side === 'p1' ? 'text-[#00F2FE]' : 'text-white/10'}`} />
+                                        <span className={`font-russo text-2xl uppercase tracking-widest ${winnerData.side === 'p1' ? 'text-[#00F2FE]' : winnerData.side === 'p2' ? 'text-slate-200' : 'text-white'}`}>
+                                            {winnerData.text}
+                                        </span>
+                                        <TrophyIcon className={`w-5 h-5 ${winnerData.side === 'p2' ? 'text-slate-200' : 'text-white/10'}`} />
+                                    </div>
+                                    <div className="px-4 py-1 rounded-lg bg-white/[0.03] border border-white/5">
+                                        <span className="font-chakra font-black text-sm uppercase tracking-[0.3em] text-white/80">
+                                            {t.duel_score}: <span className="text-[#00F2FE]">{winnerData.p1Score}</span> — <span className="text-slate-300">{winnerData.p2Score}</span>
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
+                <PlayerSlot player={player2} side="p2" />
             </div>
 
             <style dangerouslySetInnerHTML={{ __html: `
                 .font-blackops { font-family: 'Black Ops One', cursive; }
-                
                 @keyframes float-particle {
                     0%, 100% { transform: translateY(0) translateX(0); }
                     33% { transform: translateY(-20px) translateX(15px); }
                     66% { transform: translateY(10px) translateX(-10px); }
                 }
                 .animate-float-particle { animation: float-particle linear infinite; }
-                
-                .custom-hub-scrollbar::-webkit-scrollbar { width: 4px; }
-                .custom-hub-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
             `}} />
         </div>
     );
