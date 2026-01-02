@@ -145,7 +145,7 @@ export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
         const isLoser = showWinner && winnerInfo?.side !== side && winnerInfo?.side !== 'none';
         
         return (
-            <div className={`relative flex flex-col items-center gap-2 transition-all duration-1000 ${isLoser ? 'opacity-20 scale-90 grayscale blur-[1px]' : ''}`}>
+            <div className={`relative flex flex-col items-center gap-3 transition-all duration-1000 ${isLoser ? 'opacity-20 scale-90 grayscale blur-[1px]' : ''}`}>
                 {player ? (
                     <>
                         <div className={`relative p-1 rounded-full border-2 transition-all duration-700 ${side === 'p1' ? 'border-[#00F2FE]' : 'border-white'} ${isWinner ? 'shadow-[0_0_50px_rgba(0,242,254,0.4)] scale-110' : 'shadow-2xl'}`}>
@@ -168,18 +168,18 @@ export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
     };
 
     return (
-        <div className="h-full w-full flex flex-col items-center justify-start pt-2 px-6 relative overflow-hidden">
+        <div className="h-full w-full flex flex-col items-center justify-start pt-6 px-6 relative overflow-hidden">
             <ParticleBackground />
 
-            {/* ULTRA COMPACT BROADCAST HEADER */}
-            <div className="text-center mb-6 relative z-10">
+            {/* COMPACT BROADCAST HEADER */}
+            <div className="text-center mb-8 relative z-10">
                 <div className="flex flex-col items-center">
-                    <div className="flex items-center gap-2">
-                        <div className="h-px w-6 bg-gradient-to-r from-transparent to-[#00F2FE]"></div>
-                        <h2 className="font-blackops italic text-sm md:text-lg text-[#00F2FE] tracking-[0.1em] uppercase">
+                    <div className="flex items-center gap-3">
+                        <div className="h-px w-8 bg-gradient-to-r from-transparent to-[#00F2FE]"></div>
+                        <h2 className="font-blackops italic text-lg md:text-xl text-[#00F2FE] tracking-[0.15em] uppercase">
                             BATTLE SIMULATION
                         </h2>
-                        <div className="h-px w-6 bg-gradient-to-l from-transparent to-[#00F2FE]"></div>
+                        <div className="h-px w-8 bg-gradient-to-l from-transparent to-[#00F2FE]"></div>
                     </div>
                 </div>
             </div>
@@ -189,10 +189,10 @@ export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
                 <PlayerUnit player={player1} side="p1" />
 
                 {/* CENTRAL ANALYTICS COLUMN */}
-                <div className="flex flex-col flex-grow max-w-[300px] md:max-w-[400px] pt-2">
+                <div className="flex flex-col flex-grow max-w-[300px] md:max-w-[400px] pt-4">
                     {!showSequence ? (
-                        <div className="flex flex-col items-center justify-center min-h-[280px] animate-in fade-in duration-700">
-                            <div className="w-full border-y border-white/5 py-6 flex flex-col items-center gap-4 relative">
+                        <div className="flex flex-col items-center justify-center min-h-[320px] animate-in fade-in duration-700">
+                            <div className="w-full border-y border-white/5 py-8 flex flex-col items-center gap-6 relative">
                                 <div className="absolute inset-0 bg-[#00F2FE]/[0.02] animate-pulse"></div>
                                 <div className="font-blackops italic text-5xl text-white/[0.03] tracking-[0.4em] select-none uppercase absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">VS</div>
                                 
@@ -208,10 +208,10 @@ export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
                                         </span>
                                     </button>
                                 ) : (
-                                    <div className="text-center px-6 relative z-10 py-8">
+                                    <div className="text-center px-6 relative z-10">
                                         <p className="font-chakra font-bold text-[9px] text-white/30 uppercase tracking-[0.3em] leading-loose">
-                                            Simulation standby<br/>
-                                            <span className="text-[#00F2FE]/40 italic">Select two units for parity check</span>
+                                            Tactical analysis offline<br/>
+                                            <span className="text-[#00F2FE]/40 italic">Select units for simulation</span>
                                         </p>
                                     </div>
                                 )}
@@ -219,7 +219,7 @@ export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
                         </div>
                     ) : (
                         <div className="flex flex-col w-full h-full min-h-[320px]">
-                             <div className="flex flex-col w-full mb-4">
+                             <div className="flex flex-col w-full mb-6">
                                 {comparisonMetrics.map((m, idx) => (
                                     <ComparisonBar 
                                         key={m.id} 
@@ -236,7 +236,7 @@ export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
                             </div>
 
                             {showWinner && winnerInfo && (
-                                <div className="flex flex-col items-center gap-3 animate-in slide-in-from-bottom-6 fade-in duration-1000">
+                                <div className="flex flex-col items-center gap-4 animate-in slide-in-from-bottom-6 fade-in duration-1000">
                                     <div className="flex flex-col items-center gap-0.5">
                                         <span className="text-[7px] font-black text-white/30 tracking-[0.4em] uppercase mb-1">SIMULATION RESULT</span>
                                         <span className={`font-russo text-3xl uppercase tracking-tighter text-center leading-none ${winnerInfo.side === 'p1' ? 'text-[#00F2FE]' : winnerInfo.side === 'p2' ? 'text-white' : 'text-slate-400'}`} style={{ textShadow: winnerInfo.side !== 'none' ? `0 0 20px ${winnerInfo.side === 'p1' ? '#00F2FE66' : '#ffffff44'}` : 'none' }}>
@@ -244,21 +244,25 @@ export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
                                         </span>
                                     </div>
 
-                                    {/* TERMINAL STYLE SCORE UI */}
-                                    <div className="relative flex items-center bg-black border border-white/10 rounded-2xl p-1 px-4 overflow-hidden shadow-2xl">
+                                    {/* REDESIGNED SCORE UI */}
+                                    <div className="relative group/score flex items-center bg-black/60 border border-white/10 rounded-2xl p-1 px-4 overflow-hidden shadow-2xl">
                                          <div className="absolute inset-0 bg-gradient-to-r from-[#00F2FE]/5 via-transparent to-white/5"></div>
+                                         
                                          <div className="flex flex-col items-center px-4">
-                                            <span className="text-3xl font-russo font-black text-[#00F2FE]">{winnerInfo.p1Score}</span>
+                                            <span className="text-3xl font-russo font-black text-[#00F2FE]" style={{ textShadow: '0 0 15px rgba(0,242,254,0.4)' }}>{winnerInfo.p1Score}</span>
                                          </div>
-                                         <div className="h-10 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent"></div>
+                                         
+                                         <div className="h-10 w-px bg-gradient-to-b from-transparent via-[#00F2FE]/40 to-transparent"></div>
                                          <div className="px-3 flex flex-col items-center">
-                                             <span className="text-[7px] font-black text-white/20 uppercase tracking-[0.2em] leading-none italic">RATIO</span>
+                                             <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.2em] leading-none">RATIO</span>
                                          </div>
                                          <div className="h-10 w-px bg-gradient-to-b from-transparent via-white/20 to-transparent"></div>
+
                                          <div className="flex flex-col items-center px-4">
-                                            <span className="text-3xl font-russo font-black text-white">{winnerInfo.p2Score}</span>
+                                            <span className="text-3xl font-russo font-black text-white" style={{ textShadow: '0 0 15px rgba(255,255,255,0.2)' }}>{winnerInfo.p2Score}</span>
                                          </div>
                                     </div>
+                                    
                                     <span className="text-[6px] font-black text-white/10 uppercase tracking-[0.8em] animate-pulse">Efficiency index verified</span>
                                 </div>
                             )}
