@@ -229,23 +229,17 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
         <div className="absolute inset-0 flex flex-row animate-in fade-in duration-700 overflow-hidden rounded-[2.5rem]">
             {/* SIDEBAR - LEFT COLUMN */}
             <div className="w-[350px] flex flex-col border-r border-white/5 bg-black/40 relative z-20 shrink-0">
-                {/* SIDEBAR HEADER - REFINED ALIGNMENT */}
+                {/* SIDEBAR HEADER - centered DUEL */}
                 <div className="p-6 pb-2 space-y-4 pt-10">
-                    {/* Adjusted pl-14 to sit correctly after hanging neon tags without overlapping buttons */}
-                    <div className="flex items-center justify-between mb-2 pr-2 pl-14 transition-all duration-300">
-                        <div className="max-w-fit">
-                            <h3 className="font-russo text-[14px] uppercase tracking-[0.15em] text-white italic leading-tight">{t.hubPlayers}</h3>
-                            <div className="h-[1px] w-full bg-[#00F2FE] mt-1.5 opacity-50 shadow-[0_0_5px_#00F2FE]"></div>
-                        </div>
+                    <div className="flex items-center justify-center mb-2 pr-2 transition-all duration-300">
                         <button onClick={() => setIsDuelSetupOpen(true)} className="group flex flex-col items-center transition-all opacity-40 hover:opacity-100 hover:scale-105 active:scale-95">
-                             <div className="max-w-fit">
+                             <div className="max-w-fit flex flex-col items-center">
                                 <span className="font-russo text-[14px] text-white uppercase tracking-[0.2em] group-hover:text-[#00F2FE] group-hover:drop-shadow-[0_0_8px_rgba(0,242,254,0.6)] transition-all">DUEL</span>
                                 <div className="h-[1px] w-full bg-[#00F2FE] mt-1.5 opacity-50 shadow-[0_0_5px_#00F2FE]"></div>
                              </div>
                         </button>
                     </div>
 
-                    {/* Search bar and filters are now aligned with the list below */}
                     <div className="relative group w-full h-[34px] pr-2">
                         <input type="text" placeholder="FIND UNIT..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full h-full bg-white/5 border border-white/10 rounded-xl pl-4 pr-10 text-[10px] font-chakra font-black text-white uppercase tracking-[0.15em] focus:outline-none focus:border-[#00F2FE]/40 transition-all placeholder:text-white/20" />
                         <div className="absolute right-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#00F2FE] transition-colors"><Search className="w-4 h-4" /></div>
@@ -276,7 +270,6 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                                 className={`group/unit relative flex items-center justify-between h-[68px] w-full rounded-2xl transition-all duration-300 cursor-pointer 
                                     ${isSelected ? 'bg-white/10 border-white/15 shadow-xl' : 'bg-white/[0.02] border-transparent hover:bg-white/[0.05]'} border`}
                             >
-                                {/* Refined Selection Indicator - More compact & aesthetic */}
                                 <div 
                                     className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-r-full transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]" 
                                     style={{ 
@@ -299,7 +292,16 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                                     </div>
                                     <div className="flex flex-col items-end shrink-0">
                                         <div className="flex items-baseline gap-1">
-                                            <span className={`font-russo text-2xl transition-all duration-300 ${isSelected ? 'text-[#00F2FE] scale-110' : 'text-white/30'}`}>{person.rating}</span>
+                                            {/* RATING COLOR matches tier color when selected */}
+                                            <span 
+                                                className={`font-russo text-2xl transition-all duration-300 ${isSelected ? 'scale-110' : 'text-white/30'}`}
+                                                style={{ 
+                                                    color: isSelected ? tierColor : undefined,
+                                                    textShadow: isSelected ? `0 0 12px ${tierColor}66` : 'none'
+                                                }}
+                                            >
+                                                {person.rating}
+                                            </span>
                                             <span className="text-[6px] font-mono font-black text-white/10 uppercase">OVR</span>
                                         </div>
                                     </div>
