@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context';
 import { Player } from '../types';
@@ -151,10 +150,15 @@ export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
                         <div className={`relative p-1 rounded-full border-2 transition-all duration-700 ${side === 'p1' ? 'border-[#00F2FE]' : 'border-white'} ${isWinner ? 'shadow-[0_0_50px_rgba(0,242,254,0.4)] scale-110' : 'shadow-2xl'}`}>
                             <PlayerAvatar player={player} size="xl" className="w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40" />
                         </div>
-                        <div className="text-center">
-                            <span className="font-russo text-lg md:text-2xl uppercase tracking-wider text-white block truncate max-w-[140px]">
+                        <div className="text-center w-full max-w-[140px] px-1 flex flex-col items-center gap-0.5">
+                            <span className="font-russo text-lg md:text-xl uppercase tracking-tight text-white block leading-[1.1] break-words w-full">
                                 {player.nickname}
                             </span>
+                            {player.surname && (
+                                <span className="font-chakra text-[10px] md:text-xs font-black uppercase tracking-widest text-white/30 block leading-tight break-words w-full">
+                                    {player.surname}
+                                </span>
+                            )}
                         </div>
                     </>
                 ) : (

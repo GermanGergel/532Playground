@@ -104,7 +104,9 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
             setDuelSlots([null, null]);
         } else {
             setViewMode('duel');
-            setDuelSlots([selectedPlayerId, null]);
+            // CRITICAL FIX: When entering duel mode, we reset slots to [null, null] 
+            // instead of taking the currently selected player from intel mode.
+            setDuelSlots([null, null]);
         }
     };
 
