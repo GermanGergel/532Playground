@@ -250,7 +250,31 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
         }
     }, [isOpen, profileUrl]);
     
-    const handleShareViaApp = async () => {
+    // ВАРИАНТ 1: Отправка только ссылки (превью подтянется из мета-тегов index.html)
+    // Это гарантирует, что сообщение придет ОДНИМ блоком.
+    const handleShareLinkOnly = async () => {
+        const shareData = {
+            title: `Official Access Card: ${player.nickname}`,
+            text: `View profile for ${player.nickname} ${player.surname}:`,
+            url: profileUrl,
+        };
+
+        try {
+            if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+                await navigator.share(shareData);
+            } else {
+                await navigator.clipboard.writeText(profileUrl);
+                alert(t.profileLinkCopied || "Link copied to clipboard!");
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            onClose();
+        }
+    };
+
+    // ВАРИАНТ 2: Отправка полной картинки (как файла)
+    const handleShareFullCard = async () => {
         if (!cardRef.current) return;
         setIsGenerating(true);
         try {
@@ -261,36 +285,26 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
             });
             const blob = await new Promise<Blob|null>(resolve => canvas.toBlob(resolve, 'image/png'));
             
-            if (!blob) {
-                throw new Error("Failed to generate image blob.");
-            }
-    
-            const filename = `Official_Access_Card_${player.nickname.replace(/\s/g, '_')}.png`;
-            const file = new File([blob], filename, { type: 'image/png' });
-    
-            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                // Пакетная отправка: Картинка + Текст в одном сообщении
-                await navigator.share({
-                    title: `Official Access Card: ${player.nickname}`,
-                    text: `Official Club Member Profile: ${profileUrl}`,
-                    files: [file],
-                });
-            } else {
-                const dataUrl = URL.createObjectURL(file);
-                const link = document.createElement('a');
-                link.download = file.name;
-                link.href = dataUrl;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(dataUrl);
-                alert(t.profileLinkCopied || "Link copied to clipboard!");
+            if (blob) {
+                const filename = `Access_Card_${player.nickname}.png`;
+                const file = new File([blob], filename, { type: 'image/png' });
+
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        files: [file],
+                        title: `Card: ${player.nickname}`
+                    });
+                } else {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
             }
         } catch (error: any) {
-            console.error("Sharing failed:", error);
-            if (error.name !== 'AbortError') {
-                alert("Could not share image. It has been downloaded instead.");
-            }
+            console.error(error);
         } finally {
             setIsGenerating(false);
             onClose();
@@ -314,16 +328,16 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
                         </p>
                     </div>
                     
-                    <h2 className="font-russo text-2xl text-white uppercase tracking-wide text-center leading-tight">
+                    <h2 className="font-russo text-xl text-white uppercase tracking-wide text-center leading-tight">
                         {player.nickname} {player.surname}
                     </h2>
 
                     <div className="p-2 rounded-xl bg-gradient-to-br from-dark-accent-start to-green-400">
                         <div className="bg-[#1A1D24] p-1 rounded-lg">
                             {qrCodeDataUrl ? (
-                                <img src={qrCodeDataUrl} alt="QR Code" className="w-32 h-32 rounded-md" />
+                                <img src={qrCodeDataUrl} alt="QR Code" className="w-24 h-24 rounded-md" />
                             ) : (
-                                <div className="w-32 h-32 flex items-center justify-center">
+                                <div className="w-24 h-24 flex items-center justify-center">
                                     <div className="w-6 h-6 border-2 border-dashed border-dark-accent-start rounded-full animate-spin"></div>
                                 </div>
                             )}
@@ -337,16 +351,23 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
 
                 <div className="w-full flex flex-col gap-2">
                      <Button 
-                        variant="secondary" 
-                        onClick={handleShareViaApp} 
-                        className="w-full !py-3 !text-sm font-chakra font-bold tracking-widest shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 border border-dark-accent-start/30"
+                        variant="primary" 
+                        onClick={handleShareLinkOnly} 
+                        className="w-full !py-3 !text-sm font-chakra font-bold tracking-widest"
                     >
-                        {isGenerating ? "..." : t.shareViaApp.toUpperCase()}
+                        {t.shareViaApp.toUpperCase()} (LINK)
                     </Button>
                     <Button 
                         variant="secondary" 
+                        onClick={handleShareFullCard} 
+                        className="w-full !py-3 !text-sm font-chakra font-bold tracking-widest border-white/10"
+                    >
+                        {isGenerating ? "..." : "SHARE CARD (FILE)"}
+                    </Button>
+                    <Button 
+                        variant="ghost" 
                         onClick={onClose} 
-                        className="w-full !py-3 !text-sm font-chakra font-bold tracking-widest bg-dark-surface/40 hover:bg-white/5 border border-white/10"
+                        className="w-full !py-2 !text-xs font-chakra font-bold text-dark-text-secondary"
                     >
                         {t.cancel.toUpperCase()}
                     </Button>
