@@ -191,6 +191,10 @@ export const en = {
   information: "Information",
   statistics: "Statistics",
 
+  // Penalty
+  penalty_title: "STATUS: INACTIVITY PENALTY",
+  penalty_message: "Rating reduced by -{n} OVR due to missing {m} sessions in a row.",
+
   // Info Content
   ratingCalculationTitle: "Rating System",
   ratingCalculationDesc: "Your rating evolves based on match performance, team results, and individual contributions.",

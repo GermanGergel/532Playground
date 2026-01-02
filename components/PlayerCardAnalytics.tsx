@@ -1,8 +1,11 @@
+
 import React, { useMemo, useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { Player, PlayerStatus, PlayerHistoryEntry } from '../types';
 import { Card, useTranslation } from '../ui';
 import { useApp } from '../context';
 import { BadgeIcon } from '../features';
+import { useLocation } from 'react-router-dom';
+import { ExclamationIcon } from '../icons';
 
 const RatingChangePill: React.FC<{ value: number, label: string }> = ({ value, label }) => {
     if (value === 0) return null;
@@ -23,10 +26,16 @@ const RatingChangePill: React.FC<{ value: number, label: string }> = ({ value, l
 };
 
 export const LastSessionBreakdown: React.FC<{ player: Player; usePromoStyle?: boolean }> = ({ player, usePromoStyle = false }) => {
-    const t = useTranslation();
+    // FIX: Cast translation object to any to bypass strict type checking for potentially out-of-sync translation keys
+    const t = useTranslation() as any;
+    const location = useLocation();
     const breakdown = player.lastRatingChange;
 
     if (!breakdown) return null;
+
+    // Detect if we are in the Club Hub
+    const isHub = location.pathname.includes('/hub');
+    const isPenalty = player.consecutiveMissedSessions && player.consecutiveMissedSessions >= 3;
 
     const badgesEarned = breakdown.badgesEarned || [];
     
@@ -55,35 +64,61 @@ export const LastSessionBreakdown: React.FC<{ player: Player; usePromoStyle?: bo
                 <RatingCircle rating={breakdown.previousRating} />
                 
                 <div className="flex flex-col items-center justify-center gap-1.5 flex-grow px-2">
-                     <div className="flex items-start justify-center gap-2 text-center">
-                        <RatingChangePill value={breakdown.teamPerformance} label={t.lastSessionAnalysis_team} />
-                        <RatingChangePill value={breakdown.individualPerformance} label={t.lastSessionAnalysis_indiv} />
-                        <RatingChangePill value={breakdown.badgeBonus} label={t.lastSessionAnalysis_badge} />
-                    </div>
-                     <div className="w-full h-px bg-gradient-to-r from-transparent via-dark-accent-start to-transparent opacity-50 my-0.5"></div>
-                     <div className="flex flex-col items-center justify-center text-center">
-                        <p className={`text-base font-bold leading-tight ${breakdown.finalChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                           {breakdown.finalChange >= 0 ? '+' : ''}{breakdown.finalChange.toFixed(1)}
-                        </p>
-                        <p className="text-[9px] text-dark-text-secondary uppercase leading-none mt-0.5">{t.finalChange}</p>
-                     </div>
+                     {/* Check for penalty mode in Hub */}
+                     {isHub && isPenalty ? (
+                        <div className="flex flex-col items-center justify-center text-center">
+                            <span className="text-xl font-black text-red-500 leading-none">-{Math.abs(breakdown.finalChange).toFixed(1)}</span>
+                            <span className="text-[9px] text-red-400 font-bold uppercase mt-1">PENALTY</span>
+                        </div>
+                     ) : (
+                        <>
+                             <div className="flex items-start justify-center gap-2 text-center">
+                                <RatingChangePill value={breakdown.teamPerformance} label={t.lastSessionAnalysis_team} />
+                                <RatingChangePill value={breakdown.individualPerformance} label={t.lastSessionAnalysis_indiv} />
+                                <RatingChangePill value={breakdown.badgeBonus} label={t.lastSessionAnalysis_badge} />
+                            </div>
+                            <div className="w-full h-px bg-gradient-to-r from-transparent via-dark-accent-start to-transparent opacity-50 my-0.5"></div>
+                            <div className="flex flex-col items-center justify-center text-center">
+                                <p className={`text-base font-bold leading-tight ${breakdown.finalChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                {breakdown.finalChange >= 0 ? '+' : ''}{breakdown.finalChange.toFixed(1)}
+                                </p>
+                                <p className="text-[9px] text-dark-text-secondary uppercase leading-none mt-0.5">{t.finalChange}</p>
+                            </div>
+                        </>
+                     )}
                 </div>
 
                 <RatingCircle rating={breakdown.newRating} isNew />
             </div>
 
-            {badgesEarned.length > 0 && (
-                <div className="pt-3 mt-3 border-t border-white/10">
-                    <p className="text-center text-[9px] font-black tracking-widest text-dark-text-secondary mb-2 uppercase">{t.awards}</p>
-                    <div className="flex justify-center items-center gap-3 flex-wrap">
-                        {/* FIX: Changed 'earnedBadges' to 'badgesEarned' to match the variable name defined on line 30 */}
-                        {badgesEarned.map(badge => (
-                            <div key={badge} title={t[`badge_${badge}` as keyof typeof t] || ''}>
-                                <BadgeIcon badge={badge} className="w-8 h-8" />
-                            </div>
-                        ))}
+            {/* Penalty Alert Box for Hub */}
+            {isHub && isPenalty ? (
+                <div className="pt-3 mt-3 border-t border-red-500/20">
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 flex flex-col items-center gap-2">
+                        <div className="flex items-center gap-2 text-red-500">
+                            <ExclamationIcon className="w-5 h-5 shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
+                            {/* FIX: Access penalty_title via any-casted translation object */}
+                            <span className="font-russo text-xs tracking-widest uppercase">{t.penalty_title}</span>
+                        </div>
+                        {/* FIX: Access penalty_message via any-casted translation object */}
+                        <p className="text-[10px] font-chakra font-bold text-red-200/60 uppercase leading-relaxed text-center">
+                            {t.penalty_message?.replace('{n}', '1').replace('{m}', (player.consecutiveMissedSessions || 0).toString())}
+                        </p>
                     </div>
                 </div>
+            ) : (
+                badgesEarned.length > 0 && (
+                    <div className="pt-3 mt-3 border-t border-white/10">
+                        <p className="text-center text-[9px] font-black tracking-widest text-dark-text-secondary mb-2 uppercase">{t.awards}</p>
+                        <div className="flex justify-center items-center gap-3 flex-wrap">
+                            {badgesEarned.map(badge => (
+                                <div key={badge} title={t[`badge_${badge}` as keyof typeof t] || ''}>
+                                    <BadgeIcon badge={badge} className="w-8 h-8" />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )
             )}
         </div>
     );
@@ -91,7 +126,6 @@ export const LastSessionBreakdown: React.FC<{ player: Player; usePromoStyle?: bo
     if (usePromoStyle) {
         return (
             <div className="w-full">
-                {/* Custom Title for Promo Style */}
                 <h2 className="text-[10px] tracking-tighter opacity-70 uppercase font-bold text-white mb-2 ml-1">
                     {t.lastSessionAnalysis}
                 </h2>
@@ -514,6 +548,8 @@ export const PlayerProgressChart: React.FC<{ history: PlayerHistoryEntry[], useP
             </div>
         );
     }
+
+    const cardClass = "border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)]";
 
     return (
         <Card className="border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)] overflow-hidden transition-all duration-500 !p-4">

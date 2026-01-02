@@ -64,21 +64,33 @@ export const processFinishedSession = ({
 
             // Apply penalty every 3rd missed session (3, 6, 9...)
             if (currentMissed > 0 && currentMissed % 3 === 0) {
-                // Определяем "пол" (нижнюю границу). 
-                // Это СТРОГО стартовый рейтинг игрока. Если его нет в базе (старый аккаунт), берем 68.
                 const floor = player.initialRating !== undefined ? player.initialRating : 68;
-
-                // Рейтинг падает, ТОЛЬКО если он сейчас выше стартового.
-                // Если рейтинг 73, а старт был 70 -> падает до 72.
-                // Если рейтинг 70, а старт был 70 -> НЕ падает.
                 if (newRating > floor) {
                     newRating -= 1;
                     penaltyApplied = true;
                 }
             }
 
+            const updatedPlayer = {
+                ...player,
+                consecutiveMissedSessions: currentMissed,
+                rating: Math.round(newRating),
+                tier: getTierForRating(Math.round(newRating)),
+            };
+
             // Generate Penalty News for transparency
             if (penaltyApplied) {
+                // Also update lastRatingChange to show the penalty UI
+                updatedPlayer.lastRatingChange = {
+                    previousRating: player.rating,
+                    teamPerformance: 0,
+                    individualPerformance: 0,
+                    badgeBonus: 0,
+                    finalChange: -1.0,
+                    newRating: Math.round(newRating),
+                    badgesEarned: []
+                };
+
                 penaltyNews.push({
                     id: newId(),
                     playerId: player.id,
@@ -88,17 +100,12 @@ export const processFinishedSession = ({
                     subMessage: `#Inactive #${currentMissed}Missed`,
                     timestamp: timestamp,
                     isHot: false,
-                    statsSnapshot: { rating: newRating, tier: getTierForRating(newRating) },
+                    statsSnapshot: { rating: Math.round(newRating), tier: getTierForRating(Math.round(newRating)) },
                     priority: 5
                 });
             }
 
-            return {
-                ...player,
-                consecutiveMissedSessions: currentMissed,
-                rating: Math.round(newRating),
-                tier: getTierForRating(Math.round(newRating)),
-            };
+            return updatedPlayer;
         }
     });
 

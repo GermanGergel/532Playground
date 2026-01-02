@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { useApp } from '../context';
 import { HubProgressChart } from './HubAnalytics';
-import { StarIcon, TrophyIcon, BarChartDynamic, History as HistoryIcon, Zap, Users, ChevronLeft, AwardIcon, Target, Calendar } from '../icons';
+import { StarIcon, TrophyIcon, BarChartDynamic, History as HistoryIcon, Zap, Users, ChevronLeft, AwardIcon, Target, Calendar, ExclamationIcon } from '../icons';
 import { PlayerForm, SkillType, Player, PlayerStatus, BadgeType, PlayerTier } from '../types';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { BadgeIcon } from '../features';
@@ -101,8 +101,12 @@ const TerminalStat = ({ label, value, color = "#fff", subValue, size = "text-xl"
 
 const TerminalLastSession = ({ player }: { player: Player }) => {
     const b = player.lastRatingChange;
+    const { language } = useApp();
+    const t = translations[language] as any;
+
     if (!b) return <div className="text-center py-6 opacity-10 text-[9px] uppercase font-black">No Data</div>;
 
+    const isPenalty = player.consecutiveMissedSessions && player.consecutiveMissedSessions >= 3;
     const earnedBadges = b.badgesEarned || [];
 
     return (
@@ -114,10 +118,12 @@ const TerminalLastSession = ({ player }: { player: Player }) => {
                 </div>
                 
                 <div className="flex flex-col items-center w-12">
-                    <span className={`text-lg font-black leading-none ${b.finalChange >= 0 ? 'text-green-400' : 'text-red-400'}`} style={{ textShadow: 'none' }}>
+                    <span className={`text-lg font-black leading-none ${b.finalChange >= 0 ? 'text-green-400' : 'text-red-500'}`} style={{ textShadow: 'none' }}>
                         {b.finalChange > 0 ? '+' : ''}{b.finalChange.toFixed(1)}
                     </span>
-                    <span className="text-[6px] text-white/40 uppercase font-black tracking-widest mt-1 block">DELTA</span>
+                    <span className={`text-[6px] uppercase font-black tracking-widest mt-1 block ${isPenalty ? 'text-red-400' : 'text-white/40'}`}>
+                        {isPenalty ? 'PENALTY' : 'DELTA'}
+                    </span>
                 </div>
 
                 <div className="text-center w-16">
@@ -126,32 +132,46 @@ const TerminalLastSession = ({ player }: { player: Player }) => {
                 </div>
             </div>
             
-            <div className="grid grid-cols-3 gap-1">
-                {[
-                    { l: 'Team', v: b.teamPerformance },
-                    { l: 'Indiv', v: b.individualPerformance },
-                    { l: 'Badge', v: b.badgeBonus }
-                ].map(stat => (
-                    <div key={stat.l} className="bg-black/30 p-1.5 rounded-xl border border-white/5 text-center shadow-inner">
-                        <span className={`text-[9px] font-bold block leading-none ${stat.v > 0 ? 'text-white' : stat.v < 0 ? 'text-red-400' : 'text-white/40'}`} style={{ textShadow: 'none' }}>
-                            {stat.v > 0 ? '+' : ''}{stat.v.toFixed(1)}
-                        </span>
-                        <span className="text-[5px] text-white/20 uppercase font-black tracking-tighter block mt-0.5">{stat.l}</span>
+            {isPenalty ? (
+                <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 flex flex-col items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-500">
+                    <div className="flex items-center gap-2 text-red-500">
+                        <ExclamationIcon className="w-4 h-4 shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
+                        <span className="font-russo text-[10px] tracking-widest uppercase">{t.penalty_title}</span>
                     </div>
-                ))}
-            </div>
-
-            {earnedBadges.length > 0 && (
-                <div className="pt-2 border-t border-white/5">
-                    <span className="text-[5px] text-white/20 uppercase font-black tracking-[0.2em] mb-1.5 block text-center">Awards Earned</span>
-                    <div className="flex wrap justify-center gap-1.5">
-                        {earnedBadges.slice(0, 4).map((badge, idx) => (
-                            <div key={idx} className="transition-transform hover:scale-110">
-                                <BadgeIcon badge={badge} className="w-5 h-5" />
+                    <p className="text-[10px] font-chakra font-bold text-red-200/60 uppercase leading-relaxed text-center">
+                        {t.penalty_message?.replace('{n}', Math.abs(b.finalChange).toFixed(0)).replace('{m}', (player.consecutiveMissedSessions || 0).toString())}
+                    </p>
+                </div>
+            ) : (
+                <>
+                    <div className="grid grid-cols-3 gap-1">
+                        {[
+                            { l: 'Team', v: b.teamPerformance },
+                            { l: 'Indiv', v: b.individualPerformance },
+                            { l: 'Badge', v: b.badgeBonus }
+                        ].map(stat => (
+                            <div key={stat.l} className="bg-black/30 p-1.5 rounded-xl border border-white/5 text-center shadow-inner">
+                                <span className={`text-[9px] font-bold block leading-none ${stat.v > 0 ? 'text-white' : stat.v < 0 ? 'text-red-400' : 'text-white/40'}`} style={{ textShadow: 'none' }}>
+                                    {stat.v > 0 ? '+' : ''}{stat.v.toFixed(1)}
+                                </span>
+                                <span className="text-[5px] text-white/20 uppercase font-black tracking-tighter block mt-0.5">{stat.l}</span>
                             </div>
                         ))}
                     </div>
-                </div>
+
+                    {earnedBadges.length > 0 && (
+                        <div className="pt-2 border-t border-white/5">
+                            <span className="text-[5px] text-white/20 uppercase font-black tracking-[0.2em] mb-1.5 block text-center">Awards Earned</span>
+                            <div className="flex wrap justify-center gap-1.5">
+                                {earnedBadges.slice(0, 4).map((badge, idx) => (
+                                    <div key={idx} className="transition-transform hover:scale-110">
+                                        <BadgeIcon badge={badge} className="w-5 h-5" />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );

@@ -11,7 +11,7 @@ import {
     loadActiveVoicePackFromDB,
     savePlayersToDB
 } from '../db';
-import { getTierForRating } from './rating'; // Import tier calculation
+import { getTierForRating } from './rating';
 
 interface InitialAppState {
     session: Session | null;
@@ -51,16 +51,35 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
             dataRepaired = true;
         }
 
-        // --- REMOVED AGGRESSIVE CHECK HERE ---
-        // Мы удалили блок, который сверял rating с lastRatingChange.newRating.
-        // Теперь ручные изменения рейтинга имеют приоритет над историей сессий.
+        // --- RETROSPECTIVE PENALTY CHECK ---
+        // If a player already has 3+ missed sessions in the DB but the rating hasn't been lowered yet
+        // We look at consecutiveMissedSessions and apply -1 for every 3.
+        const floor = migratedPlayer.initialRating || 68;
+        if (migratedPlayer.consecutiveMissedSessions && migratedPlayer.consecutiveMissedSessions >= 3) {
+            const expectedDeduction = Math.floor(migratedPlayer.consecutiveMissedSessions / 3);
+            
+            // Trigger penalty UI if they are in penalty state and have no analysis or rating is still too high
+            if (migratedPlayer.rating > floor && (!migratedPlayer.lastRatingChange || migratedPlayer.lastRatingChange.finalChange >= 0)) {
+                 const penaltyVal = -1.0;
+                 migratedPlayer.rating = Math.max(floor, migratedPlayer.rating + penaltyVal);
+                 migratedPlayer.lastRatingChange = {
+                    previousRating: migratedPlayer.rating - penaltyVal,
+                    teamPerformance: 0,
+                    individualPerformance: 0,
+                    badgeBonus: 0,
+                    finalChange: penaltyVal,
+                    newRating: migratedPlayer.rating,
+                    badgesEarned: []
+                };
+                dataRepaired = true;
+            }
+        }
 
         if (typeof migratedPlayer.rating === 'number' && !Number.isInteger(migratedPlayer.rating)) {
             migratedPlayer.rating = Math.round(migratedPlayer.rating);
             dataRepaired = true;
         }
 
-        // 2. RECALCULATE TIER (Ensure everyone is on the correct tier for their rating)
         const correctTier = getTierForRating(migratedPlayer.rating);
         if (migratedPlayer.tier !== correctTier) {
             migratedPlayer.tier = correctTier;
@@ -139,7 +158,7 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
             eventLog: s.eventLog || []
         }));
     } else {
-        initialHistory = []; // Clean state for Standalone mode
+        initialHistory = [];
     }
 
     const loadedNews = await loadNewsFromDB(10);
