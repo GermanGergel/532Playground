@@ -86,26 +86,44 @@ export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
 
     const comparisonMetrics = useMemo(() => {
         if (!player1 || !player2) return [];
+        
         const getWR = (p: Player) => p.totalGames > 0 ? Math.round((p.totalWins / p.totalGames) * 100) : 0;
         const getAwards = (p: Player) => Object.values(p.badges || {}).reduce((a, b) => a + (b || 0), 0);
-        const getEfficiency = (p: Player) => p.totalSessionsPlayed > 0 ? (p.totalGoals / p.totalSessionsPlayed) : 0;
-        const getBestGoals = (p: Player) => p.records?.bestGoalsInSession?.value || 0;
+        const getAvgGoals = (p: Player) => p.totalSessionsPlayed > 0 ? (p.totalGoals / p.totalSessionsPlayed) : 0;
+        const getAvgAssists = (p: Player) => p.totalSessionsPlayed > 0 ? (p.totalAssists / p.totalSessionsPlayed) : 0;
+        const getFormVal = (p: Player) => p.form === 'hot_streak' ? 3 : p.form === 'stable' ? 2 : 1;
+        const getEfficiency = (p: Player) => {
+            const wr = getWR(p);
+            const goals = getAvgGoals(p);
+            return (wr * 0.5) + (goals * 10);
+        };
 
         const rawData = [
-            { id: 'ovr', label: 'Overall rating', v1: player1.rating, v2: player2.rating },
-            { id: 'goals', label: 'Total goals', v1: player1.totalGoals, v2: player2.totalGoals },
-            { id: 'assists', label: 'Total assists', v1: player1.totalAssists, v2: player2.totalAssists },
-            { id: 'wr', label: 'Win probability', v1: `${getWR(player1)}%`, v2: `${getWR(player2)}%`, raw1: getWR(player1), raw2: getWR(player2) },
-            { id: 'eff', label: 'Efficiency Index', v1: getEfficiency(player1).toFixed(1), v2: getEfficiency(player2).toFixed(1), raw1: getEfficiency(player1), raw2: getEfficiency(player2) },
-            { id: 'awards', label: 'Awards count', v1: getAwards(player1), v2: getAwards(player2) },
-            { id: 'best', label: 'Best session G', v1: getBestGoals(player1), v2: getBestGoals(player2) },
+            { id: 'ovr', label: 'Overall Rating', v1: player1.rating, v2: player2.rating },
+            { id: 'wr', label: 'Win Probability', v1: `${getWR(player1)}%`, v2: `${getWR(player2)}%`, r1: getWR(player1), r2: getWR(player2) },
+            { id: 'exp', label: 'Battle Experience', v1: player1.totalSessionsPlayed, v2: player2.totalSessionsPlayed },
+            { id: 'goals', label: 'Scoring Power', v1: player1.totalGoals, v2: player2.totalGoals },
+            { id: 'avgG', label: 'Avg Goals / Sess', v1: getAvgGoals(player1).toFixed(1), v2: getAvgGoals(player2).toFixed(1), r1: getAvgGoals(player1), r2: getAvgGoals(player2) },
+            { id: 'assists', label: 'Playmaking', v1: player1.totalAssists, v2: player2.totalAssists },
+            { id: 'avgA', label: 'Avg Assists / Sess', v1: getAvgAssists(player1).toFixed(1), v2: getAvgAssists(player2).toFixed(1), r1: getAvgAssists(player1), r2: getAvgAssists(player2) },
+            { id: 'peak', label: 'Peak Performance', v1: player1.records?.bestGoalsInSession?.value || 0, v2: player2.records?.bestGoalsInSession?.value || 0 },
+            { id: 'awards', label: 'Trophy Cabinet', v1: getAwards(player1), v2: getAwards(player2) },
+            { id: 'wins', label: 'Victory Count', v1: player1.totalWins, v2: player2.totalWins },
+            { id: 'draws', label: 'Stability Index', v1: player1.totalDraws, v2: player2.totalDraws },
+            { id: 'form', label: 'Current Momentum', v1: player1.form.split('_')[0].toUpperCase(), v2: player2.form.split('_')[0].toUpperCase(), r1: getFormVal(player1), r2: getFormVal(player2) },
         ];
 
         return rawData.map(m => {
-            const val1 = m.raw1 !== undefined ? m.raw1 : Number(m.v1);
-            const val2 = m.raw2 !== undefined ? m.raw2 : Number(m.v2);
+            const val1 = m.hasOwnProperty('r1') ? m.r1! : Number(m.v1);
+            const val2 = m.hasOwnProperty('r2') ? m.r2! : Number(m.v2);
             const max = Math.max(val1, val2, 1);
-            return { ...m, p1W: val1 > val2, p2W: val2 > val1, r1: (val1 / max) * 100, r2: (val2 / max) * 100 };
+            return { 
+                ...m, 
+                p1W: val1 > val2, 
+                p2W: val2 > val1, 
+                r1_final: (val1 / max) * 100, 
+                r2_final: (val2 / max) * 100 
+            };
         });
     }, [player1, player2]);
 
@@ -118,12 +136,12 @@ export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
             comparisonMetrics.forEach((_, idx) => {
                 setTimeout(() => {
                     setVisibleRows(prev => prev + 1);
-                }, (idx + 1) * 300); 
+                }, (idx + 1) * 200); 
             });
             setTimeout(() => {
                 setShowWinner(true);
-            }, (comparisonMetrics.length * 300) + 800);
-        }, 1000);
+            }, (comparisonMetrics.length * 200) + 600);
+        }, 800);
     };
 
     const winnerInfo = useMemo(() => {
@@ -196,10 +214,7 @@ export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
                 <div className="flex flex-col flex-grow max-w-[300px] md:max-w-[400px] pt-4">
                     {!showSequence ? (
                         <div className="flex flex-col items-center justify-center min-h-[320px] animate-in fade-in duration-700">
-                            <div className="w-full border-y border-white/5 py-8 flex flex-col items-center gap-6 relative">
-                                <div className="absolute inset-0 bg-[#00F2FE]/[0.02] animate-pulse"></div>
-                                <div className="font-blackops italic text-5xl text-white/[0.03] tracking-[0.4em] select-none uppercase absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">VS</div>
-                                
+                            <div className="w-full py-8 flex flex-col items-center gap-6 relative">
                                 {player1 && player2 ? (
                                     <button 
                                         onClick={handleStartSequence}
@@ -232,8 +247,8 @@ export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
                                         v2={m.v2} 
                                         p1Win={m.p1W} 
                                         p2Win={m.p2W} 
-                                        ratio1={m.r1} 
-                                        ratio2={m.r2} 
+                                        ratio1={m.r1_final} 
+                                        ratio2={m.r2_final} 
                                         isVisible={visibleRows > idx}
                                     />
                                 ))}
@@ -266,8 +281,6 @@ export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
                                             <span className="text-3xl font-russo font-black text-white" style={{ textShadow: '0 0 15px rgba(255,255,255,0.2)' }}>{winnerInfo.p2Score}</span>
                                          </div>
                                     </div>
-                                    
-                                    <span className="text-[6px] font-black text-white/10 uppercase tracking-[0.8em] animate-pulse">Efficiency index verified</span>
                                 </div>
                             )}
                         </div>
