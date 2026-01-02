@@ -474,8 +474,36 @@ export const PublicHubDashboard: React.FC = () => {
                     <HubCard title={t.hubTeamStandings} icon={<TrophyIcon />} variant="standings" className="shrink-0" bodyClassName="flex flex-col">
                         <div className="p-1">
                             <table className="w-full table-fixed border-collapse">
-                                <thead><tr className="bg-white/5 border-b border-white/10"><th className={`${thStandings} w-[12%]`}>#</th><th className={`${thStandings} w-[28%]`}>{t.team}</th><th className={`${thStandings} w-[10%]`}>{t.thP}</th><th className={`${thStandings} w-[10%]`}>{t.thW}</th><th className={`${thStandings} w-[10%]`}>{t.thD}</th><th className={`${thStandings} w-[10%]`}>{t.thL}</th><th className={`${thStandings} w-[10%]`}>{t.thGD}</th><th className={`${thStandings} w-[10%]`}>{t.hubPoints}</th></tr></thead>
-                                <tbody>{teamStats.map((stat, idx) => (<tr key={stat.team.id} className="border-b border-white/5 last:border-0 transition-colors"><td className="py-1.5 text-center text-[9px] font-bold text-white/30">{idx + 1}</td><td className="py-1.5 flex justify-center"><SubtleDashboardAvatar team={stat.team} size="xxs" isLight /></td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.gamesPlayed}</td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.wins}</td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.draws}</td><td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.losses}</td><td className="py-1.5 text-center text-[10px] font-bold text-white/40">{stat.goalDifference > 0 ? `+${stat.goalDifference}` : stat.goalDifference}</td><td className="py-1.5 text-center text-[12px] font-bold text-white bg-white/5">{stat.points}</td></tr>))}</tbody>
+                                <thead>
+                                    <tr className="bg-white/5 border-b border-white/10">
+                                        <th className={`${thStandings} w-[6%]`}>#</th>
+                                        <th className={`${thStandings} w-[18%]`}>{t.team}</th>
+                                        <th className={`${thStandings} w-[7%]`}>{t.thP}</th>
+                                        <th className={`${thStandings} w-[7%]`}>{t.thW}</th>
+                                        <th className={`${thStandings} w-[7%]`}>{t.thD}</th>
+                                        <th className={`${thStandings} w-[7%]`}>{t.thL}</th>
+                                        <th className={`${thStandings} w-[9%]`}>{t.thGF}</th>
+                                        <th className={`${thStandings} w-[9%]`}>{t.thGA}</th>
+                                        <th className={`${thStandings} w-[12%]`}>{t.thGD}</th>
+                                        <th className={`${thStandings} w-[18%]`}>{t.hubPoints}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {teamStats.map((stat, idx) => (
+                                        <tr key={stat.team.id} className="border-b border-white/5 last:border-0 transition-colors">
+                                            <td className="py-1.5 text-center text-[9px] font-bold text-white/30">{idx + 1}</td>
+                                            <td className="py-1.5 flex justify-center"><SubtleDashboardAvatar team={stat.team} size="xxs" isLight /></td>
+                                            <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.gamesPlayed}</td>
+                                            <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.wins}</td>
+                                            <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.draws}</td>
+                                            <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.losses}</td>
+                                            <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.goalsFor}</td>
+                                            <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.goalsAgainst}</td>
+                                            <td className="py-1.5 text-center text-[10px] font-bold text-white/40">{stat.goalDifference > 0 ? `+${stat.goalDifference}` : stat.goalDifference}</td>
+                                            <td className="py-1.5 text-center text-[12px] font-bold text-white bg-white/5">{stat.points}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
                             </table>
                         </div>
                     </HubCard>

@@ -1,9 +1,10 @@
+
 import React, { useMemo, useState } from 'react';
 import { Session, WeatherCondition } from '../types';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
 import { TeamAvatar } from './avatars'; 
 import { ChevronLeft, TrophyIcon, Users, History as HistoryIcon, Target, AwardIcon } from '../icons';
-import { useTranslation } from './ui';
+import { useTranslation } from '../ui';
 
 interface HubSessionDetailProps {
     session: Session;
@@ -62,7 +63,7 @@ const getImpactScore = (stats: PlayerStats): number => {
     score += stats.draws * 0.5;
     score += stats.goals * 1.0;
     score += stats.assists * 1.0;
-    score -= stats.ownGoals * 1.0;
+    score += stats.ownGoals * -1.0;
 
     return score;
 };
@@ -186,6 +187,7 @@ const HubCard: React.FC<{ title: React.ReactNode; icon: React.ReactNode; childre
 export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onBack }) => {
     const t = useTranslation();
     const [activeTab, setActiveTab] = useState<'players' | 'matches'>('players');
+    // FIX: Replaced setExpandedMatchId with useState to fix syntax error and block-scoped usage issue.
     const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
     const { teamStats, allPlayersStats } = useMemo(() => calculateAllStats(session), [session]);
     
@@ -222,14 +224,16 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                     <table className="w-full table-fixed border-collapse">
                                         <thead>
                                             <tr>
-                                                <th className={`${thClass} w-[12%]`}>#</th>
-                                                <th className={`${thClass} w-[28%] text-left pl-3`}>TEAM</th>
-                                                <th className={`${thClass} w-[10%]`}>P</th>
-                                                <th className={`${thClass} w-[10%]`}>W</th>
-                                                <th className={`${thClass} w-[10%]`}>D</th>
-                                                <th className={`${thClass} w-[10%]`}>L</th>
-                                                <th className={`${thClass} w-[10%]`}>GD</th>
-                                                <th className={`${thClass} w-[10%] text-white`}>PTS</th>
+                                                <th className={`${thClass} w-[6%]`}>#</th>
+                                                <th className={`${thClass} w-[18%] text-left pl-3`}>TEAM</th>
+                                                <th className={`${thClass} w-[7%]`}>P</th>
+                                                <th className={`${thClass} w-[7%]`}>W</th>
+                                                <th className={`${thClass} w-[7%]`}>D</th>
+                                                <th className={`${thClass} w-[7%]`}>L</th>
+                                                <th className={`${thClass} w-[9%]`}>{t.thGF}</th>
+                                                <th className={`${thClass} w-[9%]`}>{t.thGA}</th>
+                                                <th className={`${thClass} w-[12%]`}>GD</th>
+                                                <th className={`${thClass} w-[18%] text-white`}>PTS</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -248,6 +252,8 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                                     <td className={`${tdBase} text-slate-300`}>{stat.wins}</td>
                                                     <td className={`${tdBase} text-slate-300`}>{stat.draws}</td>
                                                     <td className={`${tdBase} text-slate-300`}>{stat.losses}</td>
+                                                    <td className={`${tdBase} text-slate-300`}>{stat.goalsFor}</td>
+                                                    <td className={`${tdBase} text-slate-300`}>{stat.goalsAgainst}</td>
                                                     <td className={`${tdBase} text-white/40`}>{stat.goalDifference > 0 ? `+${stat.goalDifference}` : stat.goalDifference}</td>
                                                     <td className={`${tdBase} text-white bg-white/5 font-black text-[11px]`}>{stat.points}</td>
                                                 </tr>
@@ -340,7 +346,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                                                                             {goal.isOwnGoal ? (
                                                                                                 <span className="text-[10px] filter drop-shadow-[0_0_5px_rgba(239,68,68,0.5)]">🧤</span>
                                                                                             ) : (
-                                                                                                <span className="text-[10px] filter drop-shadow-[0_0_5px_rgba(0,242,254,0.5)]">⚽</span>
+                                                                                                <span className="text-[10px] filter drop-shadow-[0_0_5px_rgba(242,254,0,0.5)]">⚽</span>
                                                                                             )}
                                                                                         </div>
                                                                                         <div className="flex flex-col min-w-0">
