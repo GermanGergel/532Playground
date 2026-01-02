@@ -48,7 +48,7 @@ const StandbyScreen: React.FC = () => {
                     </div>
                 </div>
                 
-                <p className="max-w-xs text-center text-[10px] font-mono text-white/30 uppercase tracking-[0.2em] leading-loose mt-8">
+                <p className="max-w-xs text-center text-[10px] font-mono text-white/30 uppercase tracking-[0.2em] mt-8">
                     {t.hubAwaitingStats}<br/>SYSTEM IDLE. AWAITING UPLINK SIGNAL...
                 </p>
             </div>
@@ -354,6 +354,7 @@ export const PublicHubDashboard: React.FC = () => {
     const animationFrameRef = useRef<number | null>(null);
     const lastScrollTimeRef = useRef<number>(0);
     const pauseUntilRef = useRef<number>(0);
+    const exactScrollPosRef = useRef<number>(0); // Субпиксельная координата для плавности
 
     // Presentation Mode (Tabs)
     const [isAutoSwitching, setIsAutoSwitching] = useState(true);
@@ -361,14 +362,14 @@ export const PublicHubDashboard: React.FC = () => {
 
     const session = history[0];
 
-    // --- REFINED AUTO SCROLL NEWS (YO-YO) ---
+    // --- ULTRA-SMOOTH AUTO SCROLL NEWS (YO-YO) ---
     useEffect(() => {
         if (!session || newsFeed.length === 0) return;
 
         const animate = (time: number) => {
             const el = newsScrollRef.current;
             if (!el || isInteracting) {
-                // Keep the frame loop alive even when paused so we can resume
+                lastScrollTimeRef.current = time; // Reset base time while interacting
                 animationFrameRef.current = requestAnimationFrame(animate);
                 return;
             }
@@ -376,42 +377,46 @@ export const PublicHubDashboard: React.FC = () => {
             // Initialization or Reset
             if (lastScrollTimeRef.current === 0) {
                 lastScrollTimeRef.current = time;
-                pauseUntilRef.current = time + 4000; // Start scrolling after initial 4s
+                pauseUntilRef.current = time + 4000;
+                exactScrollPosRef.current = el.scrollTop;
             }
 
             // Check if we are in a pause period
             if (time < pauseUntilRef.current) {
-                lastScrollTimeRef.current = time; // reset delta base to current during pause
+                lastScrollTimeRef.current = time; 
                 animationFrameRef.current = requestAnimationFrame(animate);
                 return;
             }
 
             const maxScroll = el.scrollHeight - el.clientHeight;
-            if (maxScroll <= 5) { // If content fits, don't scroll
+            if (maxScroll <= 10) { 
                 animationFrameRef.current = requestAnimationFrame(animate);
                 return;
             }
 
-            // Scroll speed (pixels per second) - Increased for smoothness and speed
-            const speed = 45; 
+            // --- INCREASED SPEED (65px/s) AND FLOATING POINT PRECISION ---
+            const speed = 65; 
             const delta = (time - lastScrollTimeRef.current) / 1000;
             lastScrollTimeRef.current = time;
 
             if (scrollDirectionRef.current === 1) {
-                el.scrollTop += speed * delta;
-                if (el.scrollTop >= maxScroll - 1) {
-                    el.scrollTop = maxScroll;
+                exactScrollPosRef.current += speed * delta;
+                if (exactScrollPosRef.current >= maxScroll) {
+                    exactScrollPosRef.current = maxScroll;
                     scrollDirectionRef.current = -1;
-                    pauseUntilRef.current = time + 3000; // Pause at bottom
+                    pauseUntilRef.current = time + 3000; // Пауза внизу
                 }
             } else {
-                el.scrollTop -= speed * delta;
-                if (el.scrollTop <= 1) {
-                    el.scrollTop = 0;
+                exactScrollPosRef.current -= speed * delta;
+                if (exactScrollPosRef.current <= 0) {
+                    exactScrollPosRef.current = 0;
                     scrollDirectionRef.current = 1;
-                    pauseUntilRef.current = time + 3000; // Pause at top
+                    pauseUntilRef.current = time + 3000; // Пауза наверху
                 }
             }
+
+            // Применяем позицию (браузер сам оптимизирует отрисовку)
+            el.scrollTop = exactScrollPosRef.current;
 
             animationFrameRef.current = requestAnimationFrame(animate);
         };
@@ -427,13 +432,12 @@ export const PublicHubDashboard: React.FC = () => {
     useEffect(() => {
         if (!isAutoSwitching || !session) return;
 
-        // Пауза перед началом первого цикла, чтобы пользователь увидел "Players"
         let phaseStartTime = Date.now() + 3000; 
         const DURATION = 10000; 
         
         const timer = setInterval(() => {
             const now = Date.now();
-            if (now < phaseStartTime) return; // Начальное ожидание
+            if (now < phaseStartTime) return;
 
             let elapsed = now - phaseStartTime;
             let progress = (elapsed / DURATION) * 100;
@@ -441,7 +445,7 @@ export const PublicHubDashboard: React.FC = () => {
             if (progress >= 100) {
                 setActiveRightTab(prev => {
                     const next = prev === 'players' ? 'games' : 'players';
-                    phaseStartTime = Date.now(); // Сброс времени для следующей фазы
+                    phaseStartTime = Date.now();
                     return next;
                 });
                 setAutoSwitchProgress(0);
@@ -515,6 +519,7 @@ export const PublicHubDashboard: React.FC = () => {
                                     onTouchStart={() => setIsInteracting(true)}
                                     onTouchEnd={() => { setIsInteracting(false); lastScrollTimeRef.current = 0; }}
                                     className="absolute inset-0 overflow-y-auto custom-hub-scrollbar p-3 bg-black/10 transition-colors"
+                                    style={{ scrollBehavior: 'auto' }} // Отключаем CSS-скролл для плавности JS-скролла
                                 >
                                     {newsFeed.slice(0, 15).map(item => <NewsVanguardCard key={item.id} item={item} />)}
                                     {newsFeed.length === 0 && <p className="text-center py-10 opacity-20 text-[10px] tracking-widest uppercase">No Intel Updates</p>}
