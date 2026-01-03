@@ -303,20 +303,20 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                             <tbody>
                                                 {sortedByStats.map((ps, idx) => (
                                                     <tr key={ps.player.id} className="group border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors">
-                                                        <td className={`${tdBase} py-3 text-white/30 font-mono`}>{idx + 1}</td>
-                                                        <td className="py-3 text-left pl-4 relative overflow-hidden">
+                                                        <td className={`${tdBase} py-1.5 text-white/30 font-mono`}>{idx + 1}</td>
+                                                        <td className="py-1.5 text-left pl-4 relative overflow-hidden">
                                                             <div 
-                                                                className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-4 rounded-full"
+                                                                className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-3 rounded-full"
                                                                 style={{ 
                                                                     backgroundColor: ps.team.color,
                                                                     boxShadow: `0 0 8px ${ps.team.color}`
                                                                 }}
                                                             />
-                                                            <span className="text-slate-300 font-bold uppercase truncate text-[11px] block w-full pl-3 transition-colors group-hover:text-white">{ps.player.nickname || 'Unknown'}</span>
+                                                            <span className="text-slate-300 font-bold uppercase truncate text-[10px] block w-full pl-3 transition-colors group-hover:text-white">{ps.player.nickname || 'Unknown'}</span>
                                                         </td>
-                                                        <td className={`${tdBase} py-3 text-white/70 font-mono`}>{ps.goals}</td>
-                                                        <td className={`${tdBase} py-3 text-white/70 font-mono`}>{ps.assists}</td>
-                                                        <td className={`${tdBase} py-3 text-white font-black text-[12px]`}>{ps.goals + ps.assists}</td>
+                                                        <td className={`${tdBase} py-1.5 text-white/70 font-mono`}>{ps.goals}</td>
+                                                        <td className={`${tdBase} py-1.5 text-white/70 font-mono`}>{ps.assists}</td>
+                                                        <td className={`${tdBase} py-1.5 text-white font-black text-[11px]`}>{ps.goals + ps.assists}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
