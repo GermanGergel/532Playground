@@ -49,30 +49,35 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
         <div className="absolute inset-0 flex flex-row animate-in fade-in duration-700 overflow-hidden rounded-[2.5rem]">
             {/* --- SIDEBAR: SESSION LIST --- */}
             <div className="w-[350px] flex flex-col border-r border-white/5 bg-black/40 relative z-20 shrink-0">
-                {/* Header shifted significantly right (pl-44 is approx 176px ~ 4.5cm) */}
-                <div className="p-6 pb-4 space-y-4 pt-6 pl-44"> 
-                    <div className="flex flex-col gap-1 pr-2">
+                {/* Header Section: Shifted 1cm left from previous (pl-32), subtitle centered */}
+                <div className="pt-8 pl-32 flex flex-col items-start shrink-0"> 
+                    <div className="flex flex-col items-center">
                         <span className="font-blackops text-[24px] text-[#00F2FE] uppercase tracking-[0.1em] italic leading-none" style={{ textShadow: '0 0 10px rgba(0,242,254,0.4)' }}>
                             ARCHIVE
                         </span>
-                        <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.3em] whitespace-nowrap">Historical Data Access</span>
+                        <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.3em] whitespace-nowrap mt-1">
+                            Historical Data Access
+                        </span>
                     </div>
+                </div>
 
-                    {/* Search bar pulled back left to avoid overflowing right column, but keeping header right */}
-                    <div className="relative group w-full h-[34px] -ml-36"> 
+                {/* Search Bar: Aligned with cards (px-4), lowered by ~1cm (mt-12) */}
+                <div className="mt-12 px-4 mb-4 shrink-0">
+                    <div className="relative group w-full h-[34px]"> 
                         <input 
                             type="text" 
                             placeholder="SEARCH SESSIONS..." 
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-[310px] h-full bg-white/5 border border-white/10 rounded-xl pl-4 pr-10 text-[10px] font-chakra font-black text-white uppercase tracking-[0.15em] focus:outline-none focus:border-[#00F2FE]/40 transition-all placeholder:text-white/20" 
+                            className="w-full h-full bg-white/5 border border-white/10 rounded-xl pl-4 pr-10 text-[10px] font-chakra font-black text-white uppercase tracking-[0.15em] focus:outline-none focus:border-[#00F2FE]/40 transition-all placeholder:text-white/20" 
                         />
-                        <div className="absolute right-10 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#00F2FE] transition-colors">
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#00F2FE] transition-colors">
                             <Search className="w-4 h-4" />
                         </div>
                     </div>
                 </div>
 
+                {/* Session List */}
                 <div className="flex-grow overflow-y-auto custom-hub-scrollbar p-4 pt-0 space-y-2.5">
                     {filteredHistory.map((session) => {
                         const isSelected = selectedSessionId === session.id;
@@ -110,7 +115,7 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                                         </span>
                                     </div>
                                     
-                                    {/* Stats block: Restored Teams and Units */}
+                                    {/* Stats block */}
                                     <div className="flex gap-3 items-center shrink-0">
                                         <div className="flex flex-col items-end">
                                             <span className={`font-russo text-base leading-none transition-colors ${isSelected ? 'text-[#00F2FE]' : 'text-white/20'}`}>{session.numTeams || session.teams.length}</span>
