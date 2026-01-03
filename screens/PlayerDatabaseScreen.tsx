@@ -10,7 +10,6 @@ import { PlayerAddModal } from '../modals';
 import { newId } from './utils';
 import { getTierForRating } from '../services/rating';
 import { saveSinglePlayerToDB } from '../db';
-import { comparePlayers } from '../services/statistics';
 
 export const PlayerDatabaseScreen: React.FC = () => {
     const t = useTranslation();
@@ -42,8 +41,22 @@ export const PlayerDatabaseScreen: React.FC = () => {
                 if (b.id === 'test-player-showcase') return 1;
                 switch (playerDbSort) {
                     case 'rating':
-                        // SYNC FIX: Using the unified comparePlayers utility
-                        return comparePlayers(a, b);
+                        // --- SYNCED WITH SEASON LEADERS LOGIC ---
+                        if (b.rating !== a.rating) return b.rating - a.rating;
+                        
+                        // Tie-breaker 1: Total G+A
+                        const scoreA = (a.totalGoals || 0) + (a.totalAssists || 0);
+                        const scoreB = (b.totalGoals || 0) + (b.totalAssists || 0);
+                        if (scoreB !== scoreA) return scoreB - scoreA;
+                        
+                        // Tie-breaker 2: Win Rate
+                        const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0;
+                        const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0;
+                        if (wrB !== wrA) return wrB - wrA;
+                        
+                        // Tie-breaker 3: Games Played
+                        return (b.totalGames || 0) - (a.totalGames || 0);
+
                     case 'name':
                         return a.nickname.localeCompare(b.nickname);
                     case 'date':

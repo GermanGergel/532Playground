@@ -5,7 +5,6 @@ import { useTranslation } from '../ui';
 import { BadgeIcon, getBadgePriority } from '../features';
 import { StarIcon } from '../icons';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
-import { comparePlayers } from '../services/statistics';
 
 const skillAbbreviations: Record<SkillType, string> = {
     goalkeeper: 'GK',
@@ -54,13 +53,11 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
 
         const sortedByGoals = [...confirmedPlayers].sort((a, b) => b.totalGoals - a.totalGoals);
         const sortedByAssists = [...confirmedPlayers].sort((a, b) => b.totalAssists - a.totalAssists);
-        
-        // SYNC FIX: Using unified comparePlayers utility
-        const sortedByRank = [...confirmedPlayers].sort(comparePlayers);
+        const sortedByRating = [...confirmedPlayers].sort((a, b) => b.rating - a.rating);
 
         const goalRank = sortedByGoals.findIndex(p => p.id === player.id) + 1;
         const assistRank = sortedByAssists.findIndex(p => p.id === player.id) + 1;
-        const ratingRank = sortedByRank.findIndex(p => p.id === player.id) + 1;
+        const ratingRank = sortedByRating.findIndex(p => p.id === player.id) + 1;
 
         return {
             goalRank,

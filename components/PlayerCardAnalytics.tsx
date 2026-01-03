@@ -6,7 +6,6 @@ import { useApp } from '../context';
 import { BadgeIcon } from '../features';
 import { useLocation } from 'react-router-dom';
 import { ExclamationIcon } from '../icons';
-import { comparePlayers } from '../services/statistics';
 
 const RatingChangePill: React.FC<{ value: number, label: string }> = ({ value, label }) => {
     if (value === 0) return null;
@@ -155,17 +154,15 @@ export const ClubRankings: React.FC<{ player: Player; usePromoStyle?: boolean }>
     const rankings = React.useMemo(() => {
         const confirmedPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
         
-        if (confirmedPlayers.length < 1) return null;
+        if (confirmedPlayers.length < 2) return null;
 
         const sortedByGoals = [...confirmedPlayers].sort((a, b) => b.totalGoals - a.totalGoals);
         const sortedByAssists = [...confirmedPlayers].sort((a, b) => b.totalAssists - a.totalAssists);
-        
-        // SYNC FIX: Use comparePlayers for unified sorting rules (OVR + Tie-breakers)
-        const sortedByRank = [...confirmedPlayers].sort(comparePlayers);
+        const sortedByRating = [...confirmedPlayers].sort((a, b) => b.rating - a.rating);
 
         const goalRank = sortedByGoals.findIndex(p => p.id === player.id) + 1;
         const assistRank = sortedByAssists.findIndex(p => p.id === player.id) + 1;
-        const ratingRank = sortedByRank.findIndex(p => p.id === player.id) + 1;
+        const ratingRank = sortedByRating.findIndex(p => p.id === player.id) + 1;
 
         return { goalRank, assistRank, ratingRank, total: confirmedPlayers.length };
     }, [allPlayers, player.id]);
