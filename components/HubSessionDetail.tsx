@@ -9,6 +9,7 @@ import { useTranslation } from '../ui';
 interface HubSessionDetailProps {
     session: Session;
     onBack: () => void;
+    isEmbedded?: boolean;
 }
 
 const MapPinIcon = ({ className }: { className?: string }) => (
@@ -26,8 +27,6 @@ const CloudIcon = ({ className }: { className?: string }) => (
 const MoonIcon = ({ className }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
 );
-
-// --- DASHBOARD UI HELPERS ---
 
 const SubtleDashboardAvatar: React.FC<{ team: any; size?: string; isLight?: boolean }> = ({ team }) => {
     const color = team?.color || '#A9B1BD';
@@ -52,7 +51,6 @@ const SubtleDashboardAvatar: React.FC<{ team: any; size?: string; isLight?: bool
     );
 };
 
-// --- IMPACT SCORE LOGIC ---
 const getImpactScore = (stats: PlayerStats): number => {
     let score = 0;
     const nonCleanSheetWins = stats.wins - (stats.cleanSheetWins || 0);
@@ -178,7 +176,7 @@ const HubCard: React.FC<{ title: React.ReactNode; icon: React.ReactNode; childre
     );
 };
 
-export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onBack }) => {
+export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onBack, isEmbedded = false }) => {
     const t = useTranslation();
     const [activeTab, setActiveTab] = useState<'players' | 'matches'>('players');
     const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
@@ -194,19 +192,25 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
     const tdBase = "py-1.5 text-center text-[10px] font-bold transition-colors";
 
     return (
-        <div className="absolute inset-0 z-30 flex flex-col animate-in slide-in-from-right duration-500 overflow-hidden rounded-[2.5rem]">
-            <div className="absolute inset-0 z-0 pointer-events-none">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#01040a] to-black"></div>
-                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-            </div>
-            <div className="pt-5 pb-3 px-8 flex items-center justify-between shrink-0 z-10">
-                <button onClick={onBack} className="flex items-center gap-3 group transition-all ml-4 md:ml-40 hover:scale-110 active:scale-95">
-                    <div className="p-2.5 rounded-full bg-white/5 border border-white/10 shadow-lg group-hover:border-[#00F2FE] group-hover:text-[#00F2FE] group-hover:bg-[#00F2FE]/10 transition-all">
-                        <ChevronLeft className="w-4 h-4 text-white group-hover:text-[#00F2FE]" />
-                    </div>
-                </button>
-            </div>
-            <div className="flex-grow px-2 md:px-6 pb-4 overflow-hidden relative z-10 flex flex-col">
+        <div className={`${isEmbedded ? 'relative h-full w-full' : 'absolute inset-0 z-30'} flex flex-col animate-in slide-in-from-right duration-500 overflow-hidden ${!isEmbedded ? 'rounded-[2.5rem]' : ''}`}>
+            {!isEmbedded && (
+                <div className="absolute inset-0 z-0 pointer-events-none">
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#01040a] to-black"></div>
+                    <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+                </div>
+            )}
+            
+            {!isEmbedded && (
+                <div className="pt-5 pb-3 px-8 flex items-center justify-between shrink-0 z-10">
+                    <button onClick={onBack} className="flex items-center gap-3 group transition-all ml-4 md:ml-40 hover:scale-110 active:scale-95">
+                        <div className="p-2.5 rounded-full bg-white/5 border border-white/10 shadow-lg group-hover:border-[#00F2FE] group-hover:text-[#00F2FE] group-hover:bg-[#00F2FE]/10 transition-all">
+                            <ChevronLeft className="w-4 h-4 text-white group-hover:text-[#00F2FE]" />
+                        </div>
+                    </button>
+                </div>
+            )}
+
+            <div className={`flex-grow ${isEmbedded ? 'p-4' : 'px-2 md:px-6 pb-4'} overflow-hidden relative z-10 flex flex-col`}>
                 <div className="max-w-6xl mx-auto w-full h-full flex flex-col gap-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch w-full h-full min-h-0">
                         <div className="flex flex-col gap-4 w-full h-full min-h-0">

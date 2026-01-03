@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context';
-import { Calendar, History as HistoryIcon } from '../icons';
+import { Calendar, History as HistoryIcon, Search } from '../icons';
 import { HubSessionDetail } from './HubSessionDetail';
+import { useTranslation } from '../ui';
 
 interface HubArchiveProps {
     onViewSession?: (date: string | null) => void;
@@ -10,19 +11,31 @@ interface HubArchiveProps {
 
 export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
     const { history } = useApp();
+    const t = useTranslation();
     const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState('');
 
-    const selectedSession = history.find(s => s.id === selectedSessionId);
+    // Выбираем самую свежую сессию по умолчанию
+    useEffect(() => {
+        if (!selectedSessionId && history.length > 0) {
+            setSelectedSessionId(history[0].id);
+            if (onViewSession) {
+                const dateStr = new Date(history[0].date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+                onViewSession(dateStr);
+            }
+        }
+    }, [history, selectedSessionId, onViewSession]);
 
-    if (selectedSession) {
-        return <HubSessionDetail 
-            session={selectedSession} 
-            onBack={() => {
-                setSelectedSessionId(null);
-                if (onViewSession) onViewSession(null);
-            }} 
-        />;
-    }
+    const filteredHistory = useMemo(() => {
+        return history.filter(s => 
+            s.sessionName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            new Date(s.date).toLocaleDateString().includes(searchTerm)
+        );
+    }, [history, searchTerm]);
+
+    const selectedSession = useMemo(() => 
+        history.find(s => s.id === selectedSessionId), 
+    [history, selectedSessionId]);
 
     const handleSessionClick = (session: any) => {
         setSelectedSessionId(session.id);
@@ -33,81 +46,100 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
     };
 
     return (
-        <div className="absolute inset-0 z-20 flex flex-col animate-in fade-in duration-500 rounded-[2.5rem] overflow-hidden">
-            <div className="absolute -top-24 bottom-0 -left-4 -right-4 z-0 pointer-events-none">
-                {/* ОБНОВЛЕННЫЙ ФОН: Более темная гамма для соответствия Player Hub */}
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#01040a] to-black"></div>
-                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-            </div>
-            
-            <div className="flex-grow overflow-y-auto px-4 md:px-16 lg:px-40 xl:px-60 space-y-3 custom-hub-scrollbar pb-32 pt-28 relative z-10">
-                {history.map((session) => (
-                    <div 
-                        key={session.id} 
-                        onClick={() => handleSessionClick(session)}
-                        className="group relative flex items-center justify-between h-[84px] w-full rounded-2xl transition-all duration-500 cursor-pointer active:scale-[0.98]"
-                    >
-                        {/* BENTO STYLE BACKGROUND */}
-                        <div className="absolute inset-0 rounded-2xl overflow-hidden z-1 bg-gradient-to-br from-[#161b22] to-[#0a0d14] border border-white/[0.06] group-hover:border-[#00F2FE]/30 transition-all duration-500 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.05)]">
-                            {/* Mesh Texture */}
-                            <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ 
-                                backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`,
-                                backgroundSize: '4px 4px'
-                            }}></div>
-                            
-                            {/* Ambient Glow */}
-                            <div className="absolute -top-10 -left-10 w-20 h-20 bg-[#00F2FE]/[0.05] rounded-full blur-[30px] pointer-events-none group-hover:bg-[#00F2FE]/10 transition-colors"></div>
+        <div className="absolute inset-0 flex flex-row animate-in fade-in duration-700 overflow-hidden rounded-[2.5rem]">
+            {/* --- SIDEBAR: SESSION LIST --- */}
+            <div className="w-[350px] flex flex-col border-r border-white/5 bg-black/40 relative z-20 shrink-0">
+                <div className="p-6 pb-4 space-y-4 pt-4">
+                    <div className="flex flex-col gap-1 pr-2">
+                        <span className="font-blackops text-[24px] text-[#00F2FE] uppercase tracking-[0.1em] italic leading-none" style={{ textShadow: '0 0 10px rgba(0,242,254,0.4)' }}>
+                            ARCHIVE
+                        </span>
+                        <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.3em]">Historical Data Access</span>
+                    </div>
 
-                            {/* Blue accent line on left */}
-                            <div className="absolute top-0 left-0 w-1.5 h-full bg-[#00F2FE]/20 group-hover:bg-[#00F2FE] transition-colors duration-500 shadow-[0_0_10px_rgba(0,242,254,0.2)]"></div>
-                        </div>
-
-                        <div className="relative z-10 h-full w-full flex items-center px-6 gap-5">
-                            <div className="w-11 h-11 rounded-xl bg-[#00F2FE]/5 border border-white/5 flex items-center justify-center text-[#00F2FE]/60 group-hover:text-[#00F2FE] group-hover:border-[#00F2FE]/20 transition-all duration-500">
-                                <Calendar className="w-6 h-6" />
-                            </div>
-                            
-                            <div className="flex flex-col flex-grow min-w-0">
-                                <span className="font-chakra font-black text-xl text-white/90 uppercase tracking-wide leading-tight group-hover:text-white transition-colors truncate">
-                                    {new Date(session.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long' })}
-                                </span>
-                                <div className="flex items-center gap-2 mt-1">
-                                    <span className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] group-hover:text-white/40 transition-colors">
-                                        {new Date(session.date).getFullYear()} • {session.sessionName || '532 SQUAD'}
-                                    </span>
-                                    <div className="h-[1px] w-4 bg-white/5 rounded-full"></div>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-5 shrink-0">
-                                <div className="flex flex-col items-end">
-                                    <span className="font-russo text-xl text-white/80 group-hover:text-[#00F2FE] transition-colors leading-none">{session.playerPool.length}</span>
-                                    <span className="text-[7px] font-black text-white/20 uppercase tracking-[0.3em] mt-1">UNITS</span>
-                                </div>
-                                <div className="w-px h-8 bg-white/5"></div>
-                                <div className="flex flex-col items-end">
-                                    <span className="font-russo text-xl text-white/80 group-hover:text-[#00F2FE] transition-colors leading-none">{session.numTeams}</span>
-                                    <span className="text-[7px] font-black text-white/20 uppercase tracking-[0.3em] mt-1">TEAMS</span>
-                                </div>
-                            </div>
+                    <div className="relative group w-full h-[34px] pr-2">
+                        <input 
+                            type="text" 
+                            placeholder="SEARCH SESSIONS..." 
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full h-full bg-white/5 border border-white/10 rounded-xl pl-4 pr-10 text-[10px] font-chakra font-black text-white uppercase tracking-[0.15em] focus:outline-none focus:border-[#00F2FE]/40 transition-all placeholder:text-white/20" 
+                        />
+                        <div className="absolute right-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#00F2FE] transition-colors">
+                            <Search className="w-4 h-4" />
                         </div>
                     </div>
-                ))}
+                </div>
 
-                {history.length === 0 && (
-                    <div className="h-full flex flex-col items-center justify-center py-24 opacity-20 gap-6">
-                        <div className="w-20 h-20 rounded-full border-2 border-dashed border-white/20 animate-spin-slow flex items-center justify-center">
-                            <HistoryIcon className="w-10 h-10 text-white/40" />
+                <div className="flex-grow overflow-y-auto custom-hub-scrollbar p-4 pt-0 space-y-3">
+                    {filteredHistory.map((session) => {
+                        const isSelected = selectedSessionId === session.id;
+                        return (
+                            <div 
+                                key={session.id} 
+                                onClick={() => handleSessionClick(session)}
+                                className={`group relative flex items-center h-[72px] w-full rounded-2xl transition-all duration-300 cursor-pointer border
+                                    ${isSelected 
+                                        ? 'bg-gradient-to-br from-[#1e2329] to-[#12161b] border-white/20 shadow-[0_10px_20px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.1)]' 
+                                        : 'bg-gradient-to-br from-[#161a1f] to-[#0d1013] border-white/5 shadow-[0_4px_10px_rgba(0,0,0,0.4),inset_0_1px_0.5px_rgba(255,255,255,0.05)] hover:border-white/10'
+                                    }`}
+                            >
+                                <div 
+                                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-10 rounded-r-full transition-all duration-500" 
+                                    style={{ 
+                                        backgroundColor: isSelected ? '#00F2FE' : 'transparent', 
+                                        boxShadow: isSelected ? '0 0 12px #00F2FE' : 'none',
+                                        opacity: isSelected ? 1 : 0
+                                    }}
+                                ></div>
+                                
+                                <div className="flex items-center px-4 gap-4 w-full relative z-10">
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all duration-500 shrink-0
+                                        ${isSelected ? 'bg-[#00F2FE]/10 border-[#00F2FE]/30 text-[#00F2FE]' : 'bg-white/5 border-white/5 text-white/20'}`}>
+                                        <Calendar className="w-5 h-5" />
+                                    </div>
+                                    <div className="flex flex-col min-w-0 flex-grow">
+                                        <span className={`font-chakra font-black text-sm uppercase tracking-tight truncate transition-colors ${isSelected ? 'text-white' : 'text-white/60'}`}>
+                                            {new Date(session.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                                        </span>
+                                        <span className="text-[7px] font-mono font-black text-white/20 uppercase tracking-[0.2em] truncate">
+                                            {session.sessionName || '532 SESSION'}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col items-end shrink-0">
+                                        <span className={`font-russo text-lg transition-colors ${isSelected ? 'text-[#00F2FE]' : 'text-white/20'}`}>{session.playerPool.length}</span>
+                                        <span className="text-[5px] font-mono font-black text-white/10 uppercase">UNITS</span>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+
+                    {filteredHistory.length === 0 && (
+                        <div className="py-10 text-center opacity-20">
+                            <span className="text-[9px] font-black uppercase tracking-widest">No Matches Found</span>
                         </div>
-                        <span className="font-orbitron text-[12px] uppercase tracking-[0.8em] text-white text-center ml-8 font-black">Archive Empty</span>
+                    )}
+                </div>
+            </div>
+
+            {/* --- CONTENT AREA: SESSION DETAIL --- */}
+            <div className="flex-grow relative bg-[#01040a] overflow-hidden">
+                {selectedSession ? (
+                    <div key={selectedSession.id} className="h-full w-full animate-in fade-in slide-in-from-right-4 duration-500">
+                        <HubSessionDetail 
+                            session={selectedSession} 
+                            isEmbedded={true}
+                            onBack={() => {}} 
+                        />
+                    </div>
+                ) : (
+                    <div className="h-full w-full flex flex-col items-center justify-center opacity-10">
+                        <HistoryIcon className="w-32 h-32 mb-6" />
+                        <span className="font-orbitron text-xl uppercase tracking-[0.6em] font-black">Select Session Intel</span>
                     </div>
                 )}
             </div>
-
-            <style dangerouslySetInnerHTML={{ __html: `
-                @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-                .animate-spin-slow { animation: spin-slow 12s linear infinite; }
-            `}} />
         </div>
     );
 };
