@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState, useRef, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
@@ -494,9 +494,8 @@ export const PublicHubDashboard: React.FC = () => {
                                 </thead>
                                 <tbody>
                                     {teamStats.map((stat, idx) => (
-                                        <tr key={stat.team.id} className="group border-b border-white/5 last:border-0 transition-all duration-300 hover:bg-white/[0.04]">
+                                        <tr key={stat.team.id} className="group border-b border-white/5 last:border-0 transition-all duration-300">
                                             <td className="py-1.5 text-center text-[9px] font-bold text-white/30 bg-white/[0.02] relative overflow-hidden">
-                                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-[40%] bg-[#00F2FE] opacity-0 group-hover:opacity-100 transition-opacity rounded-r shadow-[0_0_8px_rgba(0,242,254,0.4)]" />
                                                 {idx + 1}
                                             </td>
                                             <td className="py-1.5 flex justify-center"><SubtleDashboardAvatar team={stat.team} size="xxs" isLight /></td>
@@ -554,14 +553,12 @@ export const PublicHubDashboard: React.FC = () => {
                                     <table className="w-full table-fixed border-collapse">
                                         <thead><tr><th className={`${thStandings} w-[10%]`}>#</th><th className={`${thStandings} text-left pl-3 w-[50%]`}>{t.players}</th><th className={`${thStandings} w-[15%]`}>{t.thG}</th><th className={`${thStandings} w-[15%]`}>{t.thA}</th><th className={`${thStandings} w-[10%] text-white bg-white/[0.03]`}>TOT</th></tr></thead>
                                         <tbody>{sortedForTable.map((ps, idx) => (
-                                            <tr key={ps.player.id} className="group border-b border-white/5 last:border-0 transition-all duration-300 hover:bg-white/[0.04]">
+                                            <tr key={ps.player.id} className="group border-b border-white/5 last:border-0 transition-all duration-300">
                                                 <td className="py-2 text-center text-[9px] font-bold text-white/30 bg-white/[0.02] relative overflow-hidden">
-                                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-[40%] bg-[#00F2FE] opacity-0 group-hover:opacity-100 transition-opacity rounded-r shadow-[0_0_8px_rgba(0,242,254,0.4)]" />
                                                     {idx + 1}
                                                 </td>
                                                 <td className="py-2 text-left pl-3 relative overflow-hidden">
-                                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-3 rounded-r-full" style={{ backgroundColor: ps.team.color }} />
-                                                    <span className="text-slate-300 font-bold uppercase truncate text-[11px] block w-full pl-2 transition-colors group-hover:text-white">{ps.player.nickname || 'Unknown'}</span>
+                                                    <span className="text-slate-300 font-bold uppercase truncate text-[11px] block w-full pl-2 transition-colors">{ps.player.nickname || 'Unknown'}</span>
                                                 </td>
                                                 <td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.goals}</td>
                                                 <td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.assists}</td>

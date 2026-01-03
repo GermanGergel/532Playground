@@ -174,15 +174,15 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
 
     const tierColor = TIER_COLORS[player.tier] || '#00F2FE';
     const perimeterStyle: React.CSSProperties = {
-        // REDUCED GLOW INTENSITY: Lowered the spread and blur values for a subtler, cleaner appearance as requested.
+        // RE-ADJUSTED GLOW: Slightly increased intensity for better visual "pop" compared to last version.
         boxShadow: `
-            0 0 10px -2px ${tierColor}88,
-            0 0 30px -10px ${tierColor}55,
-            inset 0 0 15px -10px ${tierColor}66
+            0 0 15px -1px ${tierColor}aa,
+            0 0 45px -8px ${tierColor}66,
+            inset 0 0 20px -10px ${tierColor}88
         `,
         borderRadius: '2.5rem',
         background: 'transparent',
-        border: `1px solid ${tierColor}33`
+        border: `1px solid ${tierColor}44`
     };
 
     return (
@@ -209,7 +209,7 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
 
                     <div className={`${isEmbedded ? 'p-4' : 'p-6 md:p-10'} flex-grow transition-all duration-500`} style={perimeterStyle}>
                         <div className="space-y-6">
-                            {/* MAIN ROW: Adjusted gap to match bento (gap-4) and card width for symmetry */}
+                            {/* MAIN ROW */}
                             <div className="flex flex-col xl:flex-row gap-4 items-stretch">
                                 <div className="w-full max-w-[260px] mx-auto xl:mx-0 xl:max-w-none xl:w-[250px] shrink-0 flex flex-col">
                                     <div className="relative aspect-[2.8/4] xl:aspect-auto w-full rounded-3xl overflow-hidden border border-white/15 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.08)] bg-gradient-to-br from-[#161b22] to-[#0a0d14] h-full">

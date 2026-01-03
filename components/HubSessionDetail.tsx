@@ -52,18 +52,16 @@ const SubtleDashboardAvatar: React.FC<{ team: any; size?: string; isLight?: bool
     );
 };
 
-// --- IMPACT SCORE LOGIC (Synced with Dashboard) ---
+// --- IMPACT SCORE LOGIC ---
 const getImpactScore = (stats: PlayerStats): number => {
     let score = 0;
     const nonCleanSheetWins = stats.wins - (stats.cleanSheetWins || 0);
-
     score += nonCleanSheetWins * 2.0;
     score += (stats.cleanSheetWins || 0) * 2.5;
     score += stats.draws * 0.5;
     score += stats.goals * 1.0;
     score += stats.assists * 1.0;
     score += stats.ownGoals * -1.0;
-
     return score;
 };
 
@@ -82,14 +80,12 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
         return <MoonIcon className="w-5 h-5 text-slate-200/80" />;
     };
 
-    // Construct Maps Search Link
     const mapsLink = session.location 
         ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(session.location)}` 
         : null;
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
-            {/* COMPACT TOP INFO SECTION */}
             <div className="grid grid-cols-1 gap-2 shrink-0">
                 <div className="flex items-center gap-2 bg-white/[0.02] border border-white/5 rounded-xl p-2">
                     <div className="w-8 h-8 rounded-lg bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shrink-0"><MapPinIcon className="w-4 h-4" /></div>
@@ -130,7 +126,6 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
                 </div>
             </div>
 
-            {/* SYNCED LEADERS SECTION (Using Impact Score) */}
             <div className="mt-3 flex-grow flex flex-col min-h-0">
                 <div className="flex items-center gap-2 mb-1.5 opacity-80 shrink-0">
                     <TrophyIcon className="w-2.5 h-2.5 text-[#FFD700]" />
@@ -142,7 +137,7 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
                         {topPlayers.slice(0, 3).map((stat, idx) => {
                             const impact = getImpactScore(stat);
                             return (
-                                <div key={stat.player.id} className="flex items-center justify-between p-2 rounded-xl bg-white/[0.03] border border-white/5 hover:bg-white/[0.05] transition-colors">
+                                <div key={stat.player.id} className="flex items-center justify-between p-2 rounded-xl bg-white/[0.03] border border-white/5">
                                     <div className="flex items-center gap-2.5">
                                         <div className="w-5 h-5 rounded-lg bg-black/40 flex items-center justify-center border border-white/5 text-[10px]">
                                             {idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'}
@@ -194,9 +189,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
     }, [allPlayersStats]);
 
     const sortedByStats = useMemo(() => [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists)), [allPlayersStats]);
-    
     const finishedGames = session.games.filter(g => g.status === 'finished');
-    
     const thClass = "py-2 text-white/40 uppercase tracking-tighter text-[8px] font-black text-center sticky top-0 bg-transparent backdrop-blur-sm z-10 border-b border-white/5";
     const tdBase = "py-1.5 text-center text-[10px] font-bold transition-colors";
 
@@ -236,12 +229,12 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                         </thead>
                                         <tbody>
                                             {teamStats.map((stat, idx) => (
-                                                <tr key={stat.team.id} className="group border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
+                                                <tr key={stat.team.id} className="group border-b border-white/5 last:border-0 transition-colors">
                                                     <td className={`${tdBase} text-white/30 bg-white/5`}>{idx + 1}</td>
                                                     <td className={`${tdBase} text-left pl-3`}>
                                                         <div className="flex items-center justify-start gap-2">
                                                             <SubtleDashboardAvatar team={stat.team} size="xxs" isLight={true} />
-                                                            <span className="text-[9px] font-black tracking-tight text-slate-300 uppercase group-hover:text-white transition-colors">
+                                                            <span className="text-[9px] font-black tracking-tight text-slate-300 uppercase">
                                                                 SQUAD
                                                             </span>
                                                         </div>
@@ -286,11 +279,10 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                             </thead>
                                             <tbody>
                                                 {sortedByStats.map((ps, idx) => (
-                                                    <tr key={ps.player.id} className="group hover:bg-white/5 transition-colors border-b border-white/5 last:border-0">
+                                                    <tr key={ps.player.id} className="group border-b border-white/5 last:border-0">
                                                         <td className={`${tdBase} text-white/30 font-mono`}>{idx + 1}</td>
-                                                        <td className="py-2 text-left pl-4 relative overflow-hidden group-hover:bg-white/5">
-                                                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-3 rounded-r-full" style={{ backgroundColor: ps.team.color }} />
-                                                            <span className="text-slate-300 font-bold uppercase truncate text-[10px] block w-full pl-2 group-hover:text-white transition-colors">{ps.player.nickname || 'Unknown'}</span>
+                                                        <td className="py-2 text-left pl-4 relative overflow-hidden">
+                                                            <span className="text-slate-300 font-bold uppercase truncate text-[10px] block w-full pl-2 transition-colors">{ps.player.nickname || 'Unknown'}</span>
                                                         </td>
                                                         <td className={`${tdBase} text-white/70 font-mono`}>{ps.goals}</td>
                                                         <td className={`${tdBase} text-white/70 font-mono`}>{ps.assists}</td>
@@ -315,7 +307,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                                     return (
                                                     <React.Fragment key={game.id}>
                                                         <tr 
-                                                            className={`group border-b border-white/5 last:border-0 transition-transform duration-300 will-change-transform ${totalScore > 0 ? 'hover:scale-[1.03] hover:relative hover:z-20 cursor-pointer' : 'cursor-default'} ${expandedMatchId === game.id ? 'bg-white/5' : ''}`}
+                                                            className={`group border-b border-white/5 last:border-0 transition-transform duration-300 will-change-transform ${totalScore > 0 ? 'hover:scale-[1.03] hover:relative hover:z-20 cursor-pointer hover:bg-white/5' : 'cursor-default'} ${expandedMatchId === game.id ? 'bg-white/5' : ''}`}
                                                             onClick={() => totalScore > 0 && setExpandedMatchId(expandedMatchId === game.id ? null : game.id)}
                                                         >
                                                             <td className={`${tdBase} text-white/30 font-mono`}>{game.gameNumber}</td>
@@ -323,7 +315,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                                                 <div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team1Id) || {}} size="xxs" isLight={true} /></div>
                                                             </td>
                                                             <td className="py-2.5 text-center">
-                                                                <span className="font-bold text-[11px] md:text-[12px] text-slate-200 tabular-nums tracking-tighter bg-white/5 px-2 py-1 rounded">{game.team1Score} : {game.team2Score}</span>
+                                                                <span className="font-bold text-[11px] md:text-[12px] text-slate-200 tabular-nums tracking-tighter bg-white/5 px-2 py-1 rounded transition-colors group-hover:text-white group-hover:bg-[#00F2FE]/10">{game.team1Score} : {game.team2Score}</span>
                                                             </td>
                                                             <td className="py-2.5 text-center">
                                                                 <div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team2Id) || {}} size="xxs" isLight={true} /></div>
