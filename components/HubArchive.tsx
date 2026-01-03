@@ -49,8 +49,8 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
         <div className="absolute inset-0 flex flex-row animate-in fade-in duration-700 overflow-hidden rounded-[2.5rem]">
             {/* --- SIDEBAR: SESSION LIST --- */}
             <div className="w-[350px] flex flex-col border-r border-white/5 bg-black/40 relative z-20 shrink-0">
-                {/* Header Section: Shifted ~1cm left from previous pl-32 to pl-24, subtitle centered under ARCHIVE */}
-                <div className="pt-8 pl-24 flex flex-col items-start shrink-0"> 
+                {/* Header Section: Shifted further right (pl-40) */}
+                <div className="pt-8 pl-40 flex flex-col items-start shrink-0"> 
                     <div className="flex flex-col items-center">
                         <span className="font-blackops text-[24px] text-[#00F2FE] uppercase tracking-[0.1em] italic leading-none" style={{ textShadow: '0 0 10px rgba(0,242,254,0.4)' }}>
                             ARCHIVE
@@ -61,7 +61,7 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                     </div>
                 </div>
 
-                {/* Search Bar: Aligned with cards (px-4), lifted back up to previous height (mt-6) */}
+                {/* Search Bar: Stays aligned with cards (px-4) */}
                 <div className="mt-6 px-4 mb-4 shrink-0">
                     <div className="relative group w-full h-[34px]"> 
                         <input 
@@ -77,15 +77,15 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                     </div>
                 </div>
 
-                {/* Session List */}
-                <div className="flex-grow overflow-y-auto custom-hub-scrollbar p-4 pt-0 space-y-2.5">
+                {/* Session List: Optimized spacing and height (h-[68px]) for perfect fit */}
+                <div className="flex-grow overflow-y-auto custom-hub-scrollbar p-4 pt-1 space-y-2">
                     {filteredHistory.map((session) => {
                         const isSelected = selectedSessionId === session.id;
                         return (
                             <div 
                                 key={session.id} 
                                 onClick={() => handleSessionClick(session)}
-                                className={`group relative flex items-center h-[72px] w-full rounded-2xl transition-all duration-300 cursor-pointer border
+                                className={`group relative flex items-center h-[68px] w-full rounded-2xl transition-all duration-300 cursor-pointer border
                                     ${isSelected 
                                         ? 'bg-gradient-to-br from-[#1e2329] to-[#12161b] border-white/20 shadow-[0_10px_20px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.1)]' 
                                         : 'bg-gradient-to-br from-[#161a1f] to-[#0d1013] border-white/5 shadow-[0_4px_10px_rgba(0,0,0,0.4),inset_0_1px_0.5px_rgba(255,255,255,0.05)] hover:border-white/10'
@@ -102,28 +102,28 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                                 ></div>
                                 
                                 <div className="flex items-center px-4 gap-3 w-full relative z-10">
-                                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all duration-500 shrink-0
+                                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center border transition-all duration-500 shrink-0
                                         ${isSelected ? 'bg-[#00F2FE]/10 border-[#00F2FE]/30 text-[#00F2FE]' : 'bg-white/5 border-white/5 text-white/20'}`}>
-                                        <Calendar className="w-4 h-4" />
+                                        <Calendar className="w-3.5 h-3.5" />
                                     </div>
                                     <div className="flex flex-col min-w-0 flex-grow">
-                                        <span className={`font-chakra font-black text-sm uppercase tracking-tight truncate transition-colors ${isSelected ? 'text-white' : 'text-white/60'}`}>
+                                        <span className={`font-chakra font-black text-[13px] uppercase tracking-tight truncate transition-colors ${isSelected ? 'text-white' : 'text-white/60'}`}>
                                             {new Date(session.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
                                         </span>
-                                        <span className="text-[7px] font-mono font-black text-white/20 uppercase tracking-[0.2em] truncate">
+                                        <span className="text-[6.5px] font-mono font-black text-white/20 uppercase tracking-[0.2em] truncate">
                                             {session.sessionName || '532 SESSION'}
                                         </span>
                                     </div>
                                     
                                     {/* Stats block */}
-                                    <div className="flex gap-3 items-center shrink-0">
+                                    <div className="flex gap-2.5 items-center shrink-0">
                                         <div className="flex flex-col items-end">
-                                            <span className={`font-russo text-base leading-none transition-colors ${isSelected ? 'text-[#00F2FE]' : 'text-white/20'}`}>{session.numTeams || session.teams.length}</span>
+                                            <span className={`font-russo text-[15px] leading-none transition-colors ${isSelected ? 'text-[#00F2FE]' : 'text-white/20'}`}>{session.numTeams || session.teams.length}</span>
                                             <span className="text-[5px] font-mono font-black text-white/10 uppercase">TEAMS</span>
                                         </div>
-                                        <div className="w-px h-6 bg-white/5"></div>
+                                        <div className="w-px h-5 bg-white/5"></div>
                                         <div className="flex flex-col items-end">
-                                            <span className={`font-russo text-base leading-none transition-colors ${isSelected ? 'text-[#00F2FE]' : 'text-white/20'}`}>{session.playerPool.length}</span>
+                                            <span className={`font-russo text-[15px] leading-none transition-colors ${isSelected ? 'text-[#00F2FE]' : 'text-white/20'}`}>{session.playerPool.length}</span>
                                             <span className="text-[5px] font-mono font-black text-white/10 uppercase">UNITS</span>
                                         </div>
                                     </div>

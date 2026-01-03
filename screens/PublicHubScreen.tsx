@@ -127,10 +127,8 @@ const MotivationalTicker: React.FC = () => {
     );
 };
 
-// --- REDESIGNED HANGING TAG WITH GRUNGE STYLE ---
 const HangingTag: React.FC<{ digit: string; label: string; height: number; delay: string; pulseDuration: string }> = ({ digit, label, height, delay, pulseDuration }) => (
     <div className="relative flex flex-col items-center group/fiber">
-        {/* GRUNGE DISTRESSED DIGIT: font-blackops + grungeFilter */}
         <span 
             className="font-blackops text-2xl md:text-3xl text-[#00F2FE] tracking-tighter z-10 leading-none" 
             style={{ 
@@ -215,7 +213,6 @@ const HubNav: React.FC<{
 
     return (
         <nav className={navContainerClass}>
-            {/* SVG GRUNGE FILTER DEFINITION */}
             <svg className="absolute w-0 h-0 invisible">
                 <defs>
                     <filter id="grungeFilter">
@@ -235,7 +232,6 @@ const HubNav: React.FC<{
                 .animate-fiber-pulse { animation: fiber-pulse 3.5s linear infinite; }
             `}} />
             
-            {/* LEFT SECTION - Fixed Content (Logo + Ball) */}
             <div className="flex items-center gap-4 shrink-0 h-full">
                 <div className="flex items-center">
                     <HangingTag digit="5" label="PLAYERS" height={20} delay="0s" pulseDuration="2.8s" />
@@ -252,7 +248,6 @@ const HubNav: React.FC<{
                 </div>
             </div>
             
-            {/* CENTER SECTION - Dynamic Content (Title/Ticker) */}
             <div className="flex-grow h-full flex items-center justify-center pl-[20px] pr-[20px] overflow-hidden min-w-0">
                 {isDashboardOpen ? (
                     <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center pointer-events-none text-center w-full min-w-0">
@@ -264,17 +259,17 @@ const HubNav: React.FC<{
                         ) : (
                             <div className="flex flex-col items-center justify-center w-full">
                                 {activeTab === 'archive' && archiveViewDate ? (
-                                    <>
-                                        <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none truncate w-full" style={{ textShadow: '0 0 25px rgba(255, 255, 255, 0.2)' }}>{archiveViewDate}</span>
-                                        <span className="text-[7px] md:text-[8px] font-chakra font-black text-[#00F2FE] uppercase tracking-[0.4em] mt-0.5 ml-1 opacity-90 shadow-[0_0_10px_rgba(0,242,254,0.4)]">ARCHIVE</span>
-                                    </>
+                                    <div className="flex flex-col items-center">
+                                        <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none truncate w-full" style={{ textShadow: '0 0 25px rgba(255, 255, 255, 0.2)' }}>
+                                            {archiveViewDate}
+                                        </span>
+                                    </div>
                                 ) : (
-                                    <>
-                                        <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none truncate w-full" style={{ textShadow: '0 0 25px rgba(255, 255, 255, 0.2)' }}>{tabTitles[activeTab] || 'DASHBOARD'}</span>
-                                        {activeTab === 'archive' && !archiveViewDate && (
-                                            <span className="text-[7px] md:text-[8px] font-chakra font-black text-[#00F2FE] uppercase tracking-[0.4em] mt-0.5 ml-1 opacity-90 shadow-[0_0_10px_rgba(0,242,254,0.4)]">HISTORY</span>
-                                        )}
-                                    </>
+                                    <div className="flex flex-col items-center">
+                                        <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none truncate w-full" style={{ textShadow: '0 0 25px rgba(255, 255, 255, 0.2)' }}>
+                                            {tabTitles[activeTab] || 'DASHBOARD'}
+                                        </span>
+                                    </div>
                                 )}
                             </div>
                         )}
@@ -286,7 +281,6 @@ const HubNav: React.FC<{
                 )}
             </div>
             
-            {/* RIGHT SECTION - Controls (Buttons + Language) */}
             <div className="flex items-center gap-1 md:gap-3 shrink-0 h-full py-1">
                 {isDashboardOpen && (
                     <div className="flex items-center gap-2 md:gap-4 mr-2 h-full animate-in fade-in slide-in-from-right-3 duration-500">
