@@ -550,7 +550,21 @@ export const PublicHubDashboard: React.FC = () => {
                                 <div className="animate-in fade-in duration-500">
                                     <table className="w-full table-fixed border-collapse">
                                         <thead><tr><th className={`${thStandings} w-[10%]`}>#</th><th className={`${thStandings} text-left pl-3 w-[45%]`}>{t.players}</th><th className={`${thStandings} w-[15%]`}>{t.thG}</th><th className={`${thStandings} w-[15%]`}>{t.thA}</th><th className={`${thStandings} w-[16%] text-white`}>TOT</th></tr></thead>
-                                        <tbody>{sortedForTable.map((ps, idx) => (<tr key={ps.player.id} className="border-b border-white/5 last:border-0"><td className="py-2 text-center text-[9px] font-bold text-white/30 bg-white/[0.02]">{idx + 1}</td><td className="py-2 text-left pl-3 relative overflow-hidden"><div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-3 rounded-r-full" style={{ backgroundColor: ps.team.color }} /><span className="text-slate-300 font-bold uppercase truncate text-[11px] block w-full pl-2 transition-colors">{ps.player.nickname || 'Unknown'}</span></td><td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.goals}</td><td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.assists}</td><td className="py-2 text-center text-[12px] font-bold text-white bg-white/[0.03]">{ps.goals + ps.assists}</td></tr>))}</tbody>
+                                        <tbody>{sortedForTable.map((ps, idx) => (
+                                            <tr key={ps.player.id} className="group border-b border-white/5 last:border-0 transition-all duration-300 hover:bg-white/[0.04]">
+                                                <td className="py-2 text-center text-[9px] font-bold text-white/30 bg-white/[0.02] relative overflow-hidden">
+                                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-[40%] bg-[#00F2FE] opacity-0 group-hover:opacity-100 transition-opacity rounded-r shadow-[0_0_8px_rgba(0,242,254,0.4)]" />
+                                                    {idx + 1}
+                                                </td>
+                                                <td className="py-2 text-left pl-3 relative overflow-hidden">
+                                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-3 rounded-r-full" style={{ backgroundColor: ps.team.color }} />
+                                                    <span className="text-slate-300 font-bold uppercase truncate text-[11px] block w-full pl-2 transition-colors group-hover:text-white">{ps.player.nickname || 'Unknown'}</span>
+                                                </td>
+                                                <td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.goals}</td>
+                                                <td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.assists}</td>
+                                                <td className="py-2 text-center text-[12px] font-bold text-white bg-white/[0.03]">{ps.goals + ps.assists}</td>
+                                            </tr>))}
+                                        </tbody>
                                     </table>
                                 </div>
                             ) : (
@@ -562,12 +576,15 @@ export const PublicHubDashboard: React.FC = () => {
                                             return (
                                             <React.Fragment key={game.id}>
                                                 <tr 
-                                                    className={`group border-b border-white/5 last:border-0 transition-transform duration-300 will-change-transform ${totalScore > 0 ? 'hover:scale-[1.03] hover:relative hover:z-20 cursor-pointer' : 'cursor-default'} ${expandedMatchId === game.id ? 'bg-white/5' : ''}`}
+                                                    className={`group border-b border-white/5 last:border-0 transition-all duration-300 ${totalScore > 0 ? 'hover:bg-white/[0.04] cursor-pointer' : 'cursor-default'} ${expandedMatchId === game.id ? 'bg-[#00F2FE]/5' : ''}`}
                                                     onClick={() => totalScore > 0 && setExpandedMatchId(expandedMatchId === game.id ? null : game.id)}
                                                 >
-                                                    <td className={`${tdBase} text-white/30 font-mono`}>{game.gameNumber}</td>
+                                                    <td className={`${tdBase} text-white/30 font-mono relative overflow-hidden`}>
+                                                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-[40%] bg-[#00F2FE] opacity-0 group-hover:opacity-100 transition-opacity rounded-r shadow-[0_0_8px_rgba(0,242,254,0.4)]" />
+                                                        {game.gameNumber}
+                                                    </td>
                                                     <td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team1Id) || {}} size="xxs" isLight={true} /></div></td>
-                                                    <td className="py-2.5 text-center"><span className="font-bold text-[11px] md:text-[12px] text-slate-200 tabular-nums tracking-tighter bg-white/5 px-2 py-1 rounded">{game.team1Score} : {game.team2Score}</span></td>
+                                                    <td className="py-2.5 text-center"><span className="font-bold text-[11px] md:text-[12px] text-slate-200 tabular-nums tracking-tighter bg-white/5 px-2 py-1 rounded transition-colors group-hover:text-white group-hover:bg-[#00F2FE]/10">{game.team1Score} : {game.team2Score}</span></td>
                                                     <td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team2Id) || {}} size="xxs" isLight={true} /></div></td>
                                                 </tr>
                                                 {expandedMatchId === game.id && (
@@ -581,7 +598,6 @@ export const PublicHubDashboard: React.FC = () => {
                                                                         const team = session.teams.find(t => t.id === goal.teamId);
                                                                         return (
                                                                             <div key={goal.id} className="flex items-center gap-2 px-3 py-1 relative">
-                                                                                {/* Ультра-тонкий неоновый индикатор */}
                                                                                 <div 
                                                                                     className="w-[1px] h-2.5 rounded-full shrink-0" 
                                                                                     style={{ 
