@@ -49,8 +49,8 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
         <div className="absolute inset-0 flex flex-row animate-in fade-in duration-700 overflow-hidden rounded-[2.5rem]">
             {/* --- SIDEBAR: SESSION LIST --- */}
             <div className="w-[350px] flex flex-col border-r border-white/5 bg-black/40 relative z-20 shrink-0">
-                {/* Header Section: Shifted 1cm left from previous (pl-32), subtitle centered */}
-                <div className="pt-8 pl-32 flex flex-col items-start shrink-0"> 
+                {/* Header Section: Shifted ~1cm left from previous pl-32 to pl-24, subtitle centered under ARCHIVE */}
+                <div className="pt-8 pl-24 flex flex-col items-start shrink-0"> 
                     <div className="flex flex-col items-center">
                         <span className="font-blackops text-[24px] text-[#00F2FE] uppercase tracking-[0.1em] italic leading-none" style={{ textShadow: '0 0 10px rgba(0,242,254,0.4)' }}>
                             ARCHIVE
@@ -61,8 +61,8 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                     </div>
                 </div>
 
-                {/* Search Bar: Aligned with cards (px-4), lowered by ~1cm (mt-12) */}
-                <div className="mt-12 px-4 mb-4 shrink-0">
+                {/* Search Bar: Aligned with cards (px-4), lifted back up to previous height (mt-6) */}
+                <div className="mt-6 px-4 mb-4 shrink-0">
                     <div className="relative group w-full h-[34px]"> 
                         <input 
                             type="text" 
