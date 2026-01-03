@@ -77,23 +77,26 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                     </div>
                 </div>
 
-                {/* Session List: Optimized spacing (space-y-4) to prevent clipping */}
-                <div className="flex-grow overflow-y-auto custom-hub-scrollbar px-4 pb-4 pt-2 space-y-4">
+                {/* Session List: Increased spacing to space-y-5 (approx +4px/1mm) */}
+                <div className="flex-grow overflow-y-auto custom-hub-scrollbar px-4 pb-4 pt-2 space-y-5">
                     {filteredHistory.map((session) => {
                         const isSelected = selectedSessionId === session.id;
                         return (
                             <div 
                                 key={session.id} 
                                 onClick={() => handleSessionClick(session)}
-                                className={`group relative flex items-center h-[68px] w-full rounded-2xl transition-all duration-300 cursor-pointer border
+                                className={`group relative flex items-center h-[68px] w-full rounded-2xl transition-all duration-300 cursor-pointer border overflow-hidden
                                     ${isSelected 
                                         ? 'bg-gradient-to-br from-[#1e2329] to-[#12161b] border-white/20 shadow-[0_10px_20px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.1)]' 
                                         : 'bg-gradient-to-br from-[#161a1f] to-[#0d1013] border-white/5 shadow-[0_4px_10px_rgba(0,0,0,0.4),inset_0_1px_0.5px_rgba(255,255,255,0.05)] hover:border-white/10'
                                     }`}
                             >
+                                {/* TEXTURE OVERLAY */}
+                                <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`, backgroundSize: '4px 4px' }}></div>
+
                                 {/* Selection indicator: Extreme thin (1.5px) and compact (h-6) */}
                                 <div 
-                                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[1.5px] h-6 rounded-r-full transition-all duration-500" 
+                                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[1.5px] h-6 rounded-r-full transition-all duration-500 z-10" 
                                     style={{ 
                                         backgroundColor: isSelected ? '#00F2FE' : 'transparent', 
                                         boxShadow: isSelected ? '0 0 10px #00F2FE' : 'none',
@@ -160,4 +163,3 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
         </div>
     );
 };
-    
