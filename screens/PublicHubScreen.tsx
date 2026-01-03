@@ -212,7 +212,7 @@ const HubNav: React.FC<{
                 .animate-fiber-pulse { animation: fiber-pulse 3.5s linear infinite; }
             `}} />
             
-            {/* LEFT SECTION */}
+            {/* LEFT SECTION - Fixed Content (Logo + Ball) */}
             <div className="flex items-center gap-4 shrink-0 h-full">
                 <div className="flex items-center">
                     <HangingTag digit="5" label="PLAYERS" height={20} delay="0s" pulseDuration="2.8s" />
@@ -229,14 +229,14 @@ const HubNav: React.FC<{
                 </div>
             </div>
             
-            {/* CENTER SECTION - ABSOLUTELY CENTERED FOR PERFECT ALIGNMENT */}
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none w-full max-w-[400px]">
+            {/* CENTER SECTION - Dynamic Content (Title/Ticker) */}
+            <div className="flex-grow h-full flex items-center justify-center px-10 overflow-hidden">
                 {isDashboardOpen ? (
-                    <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center">
+                    <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center pointer-events-none">
                         {activeTab === 'dashboard' ? (
                             <>
                                 <span className="font-russo text-[7px] text-[#00F2FE] tracking-[0.3em] uppercase leading-none opacity-80 mb-0.5">SESSION BROADCAST</span>
-                                <span className="font-chakra text-sm md:text-lg font-bold text-white tracking-widest leading-none text-center truncate w-full">{sessionDate || 'LIVE'}</span>
+                                <span className="font-chakra text-sm md:text-lg font-bold text-white tracking-widest leading-none text-center truncate">{sessionDate || 'LIVE'}</span>
                             </>
                         ) : (
                             <div className="flex flex-col items-center justify-center">
@@ -257,13 +257,13 @@ const HubNav: React.FC<{
                         )}
                     </div>
                 ) : (
-                    <div className="w-full flex items-center justify-center pointer-events-auto">
+                    <div className="w-full h-full">
                         <MotivationalTicker />
                     </div>
                 )}
             </div>
             
-            {/* RIGHT SECTION */}
+            {/* RIGHT SECTION - Controls (Buttons + Language) */}
             <div className="flex items-center gap-1 md:gap-3 shrink-0 h-full py-1">
                 {isDashboardOpen && (
                     <div className="flex items-center gap-2 md:gap-4 mr-2 h-full animate-in fade-in slide-in-from-right-3 duration-500">
@@ -412,7 +412,7 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                         </div>
                         <div className="flex flex-col items-center max-w-[50%]">
                             <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
-                            <p className="font-bold text-white tracking-widest text-sm">OVR</p>
+                            <p className="font-bold text-white tracking-widest text-sm mt-2">OVR</p>
                             <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
                             
                             {topBadges.length > 0 && (
