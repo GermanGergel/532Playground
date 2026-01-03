@@ -229,42 +229,40 @@ const HubNav: React.FC<{
                 </div>
             </div>
             
-            {/* CENTER SECTION - Dynamic Content (Ticker) or Empty for Title */}
-            <div className="flex-grow h-full flex items-center justify-center px-5 overflow-hidden">
-                {!isDashboardOpen && (
+            {/* CENTER SECTION - Dynamic Content (Title/Ticker) */}
+            {/* pl-[40px] = 1cm, pr-[20px] = 0.5cm relative to neighboring blocks */}
+            <div className="flex-grow h-full flex items-center justify-center pl-[40px] pr-[20px] overflow-hidden min-w-0">
+                {isDashboardOpen ? (
+                    <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center pointer-events-none text-center w-full min-w-0">
+                        {activeTab === 'dashboard' ? (
+                            <>
+                                <span className="font-russo text-[7px] text-[#00F2FE] tracking-[0.3em] uppercase leading-none opacity-80 mb-0.5">SESSION BROADCAST</span>
+                                <span className="font-chakra text-sm md:text-lg font-bold text-white tracking-widest leading-none truncate w-full">{sessionDate || 'LIVE'}</span>
+                            </>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center w-full">
+                                {activeTab === 'archive' && archiveViewDate ? (
+                                    <>
+                                        <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none truncate w-full" style={{ textShadow: '0 0 25px rgba(255, 255, 255, 0.2)' }}>{archiveViewDate}</span>
+                                        <span className="text-[7px] md:text-[8px] font-chakra font-black text-[#00F2FE] uppercase tracking-[0.4em] mt-0.5 ml-1 opacity-90 shadow-[0_0_10px_rgba(0,242,254,0.4)]">ARCHIVE</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none truncate w-full" style={{ textShadow: '0 0 25px rgba(255, 255, 255, 0.2)' }}>{tabTitles[activeTab] || 'DASHBOARD'}</span>
+                                        {activeTab === 'archive' && !archiveViewDate && (
+                                            <span className="text-[7px] md:text-[8px] font-chakra font-black text-[#00F2FE] uppercase tracking-[0.4em] mt-0.5 ml-1 opacity-90 shadow-[0_0_10px_rgba(0,242,254,0.4)]">HISTORY</span>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                ) : (
                     <div className="w-full h-full">
                         <MotivationalTicker />
                     </div>
                 )}
             </div>
-            
-            {/* ABSOLUTE CENTER TITLE - Perfect alignment when Dashboard is Open */}
-            {isDashboardOpen && (
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none flex flex-col items-center justify-center animate-in slide-in-from-bottom-2 fade-in duration-500">
-                    {activeTab === 'dashboard' ? (
-                        <>
-                            <span className="font-russo text-[7px] text-[#00F2FE] tracking-[0.3em] uppercase leading-none opacity-80 mb-0.5">SESSION BROADCAST</span>
-                            <span className="font-chakra text-sm md:text-lg font-bold text-white tracking-widest leading-none text-center truncate">{sessionDate || 'LIVE'}</span>
-                        </>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center">
-                            {activeTab === 'archive' && archiveViewDate ? (
-                                <>
-                                    <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none" style={{ textShadow: '0 0 25px rgba(255, 255, 255, 0.2)' }}>{archiveViewDate}</span>
-                                    <span className="text-[7px] md:text-[8px] font-chakra font-black text-[#00F2FE] uppercase tracking-[0.4em] mt-0.5 ml-1 opacity-90 shadow-[0_0_10px_rgba(0,242,254,0.4)]">ARCHIVE</span>
-                                </>
-                            ) : (
-                                <>
-                                    <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none" style={{ textShadow: '0 0 25px rgba(255, 255, 255, 0.2)' }}>{tabTitles[activeTab] || 'DASHBOARD'}</span>
-                                    {activeTab === 'archive' && !archiveViewDate && (
-                                        <span className="text-[7px] md:text-[8px] font-chakra font-black text-[#00F2FE] uppercase tracking-[0.4em] mt-0.5 ml-1 opacity-90 shadow-[0_0_10px_rgba(0,242,254,0.4)]">HISTORY</span>
-                                    )}
-                                </>
-                            )}
-                        </div>
-                    )}
-                </div>
-            )}
             
             {/* RIGHT SECTION - Controls (Buttons + Language) */}
             <div className="flex items-center gap-1 md:gap-3 shrink-0 h-full py-1">
@@ -415,7 +413,7 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                         </div>
                         <div className="flex flex-col items-center max-w-[50%]">
                             <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
-                            <p className="font-bold text-white tracking-widest text-sm mt-2">OVR</p>
+                            <p className="font-bold text-white tracking-widest text-sm">OVR</p>
                             <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
                             
                             {topBadges.length > 0 && (
@@ -543,7 +541,7 @@ export const PublicHubScreen: React.FC = () => {
             <div 
                 className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none 
                 ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}
-                bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#13161c] via-[#050608] to-[#000000]
+                bg-[#0a0c10]
                 `}
             >
                 {/* No Texture Overlay - Pure Clean Background */}
