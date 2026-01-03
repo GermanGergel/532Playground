@@ -229,39 +229,42 @@ const HubNav: React.FC<{
                 </div>
             </div>
             
-            {/* CENTER SECTION - Dynamic Content (Title/Ticker) */}
-            <div className="flex-grow h-full flex items-center justify-center px-10 overflow-hidden">
-                {isDashboardOpen ? (
-                    <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center pointer-events-none">
-                        {activeTab === 'dashboard' ? (
-                            <>
-                                <span className="font-russo text-[7px] text-[#00F2FE] tracking-[0.3em] uppercase leading-none opacity-80 mb-0.5">SESSION BROADCAST</span>
-                                <span className="font-chakra text-sm md:text-lg font-bold text-white tracking-widest leading-none text-center truncate">{sessionDate || 'LIVE'}</span>
-                            </>
-                        ) : (
-                            <div className="flex flex-col items-center justify-center">
-                                {activeTab === 'archive' && archiveViewDate ? (
-                                    <>
-                                        <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none" style={{ textShadow: '0 0 25px rgba(255, 255, 255, 0.2)' }}>{archiveViewDate}</span>
-                                        <span className="text-[7px] md:text-[8px] font-chakra font-black text-[#00F2FE] uppercase tracking-[0.4em] mt-0.5 ml-1 opacity-90 shadow-[0_0_10px_rgba(0,242,254,0.4)]">ARCHIVE</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none" style={{ textShadow: '0 0 25px rgba(255, 255, 255, 0.2)' }}>{tabTitles[activeTab] || 'DASHBOARD'}</span>
-                                        {activeTab === 'archive' && !archiveViewDate && (
-                                            <span className="text-[7px] md:text-[8px] font-chakra font-black text-[#00F2FE] uppercase tracking-[0.4em] mt-0.5 ml-1 opacity-90 shadow-[0_0_10px_rgba(0,242,254,0.4)]">HISTORY</span>
-                                        )}
-                                    </>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                ) : (
+            {/* CENTER SECTION - Dynamic Content (Ticker) or Empty for Title */}
+            <div className="flex-grow h-full flex items-center justify-center px-5 overflow-hidden">
+                {!isDashboardOpen && (
                     <div className="w-full h-full">
                         <MotivationalTicker />
                     </div>
                 )}
             </div>
+            
+            {/* ABSOLUTE CENTER TITLE - Perfect alignment when Dashboard is Open */}
+            {isDashboardOpen && (
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none flex flex-col items-center justify-center animate-in slide-in-from-bottom-2 fade-in duration-500">
+                    {activeTab === 'dashboard' ? (
+                        <>
+                            <span className="font-russo text-[7px] text-[#00F2FE] tracking-[0.3em] uppercase leading-none opacity-80 mb-0.5">SESSION BROADCAST</span>
+                            <span className="font-chakra text-sm md:text-lg font-bold text-white tracking-widest leading-none text-center truncate">{sessionDate || 'LIVE'}</span>
+                        </>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center">
+                            {activeTab === 'archive' && archiveViewDate ? (
+                                <>
+                                    <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none" style={{ textShadow: '0 0 25px rgba(255, 255, 255, 0.2)' }}>{archiveViewDate}</span>
+                                    <span className="text-[7px] md:text-[8px] font-chakra font-black text-[#00F2FE] uppercase tracking-[0.4em] mt-0.5 ml-1 opacity-90 shadow-[0_0_10px_rgba(0,242,254,0.4)]">ARCHIVE</span>
+                                </>
+                            ) : (
+                                <>
+                                    <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none" style={{ textShadow: '0 0 25px rgba(255, 255, 255, 0.2)' }}>{tabTitles[activeTab] || 'DASHBOARD'}</span>
+                                    {activeTab === 'archive' && !archiveViewDate && (
+                                        <span className="text-[7px] md:text-[8px] font-chakra font-black text-[#00F2FE] uppercase tracking-[0.4em] mt-0.5 ml-1 opacity-90 shadow-[0_0_10px_rgba(0,242,254,0.4)]">HISTORY</span>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
             
             {/* RIGHT SECTION - Controls (Buttons + Language) */}
             <div className="flex items-center gap-1 md:gap-3 shrink-0 h-full py-1">
