@@ -150,21 +150,21 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
                                 <div className={`absolute left-0 top-0 bottom-0 w-1 ${idx === 0 ? 'bg-[#FFD700]' : idx === 1 ? 'bg-slate-300' : 'bg-amber-700'}`}></div>
 
                                 <div className="flex items-center gap-4 pl-2">
-                                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center border text-xs font-black shadow-lg
-                                        ${idx === 0 ? 'bg-[#FFD700]/10 border-[#FFD700]/30 text-[#FFD700]' : 
-                                          idx === 1 ? 'bg-slate-300/10 border-slate-300/30 text-slate-300' : 
-                                          'bg-amber-700/10 border-amber-700/30 text-amber-700'}`}>
-                                        {idx === 0 ? '1' : idx === 1 ? '2' : '3'}
+                                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center border text-sm shadow-lg
+                                        ${idx === 0 ? 'bg-[#FFD700]/10 border-[#FFD700]/30' : 
+                                          idx === 1 ? 'bg-slate-300/10 border-slate-300/30' : 
+                                          'bg-amber-700/10 border-amber-700/30'}`}>
+                                        {idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'}
                                     </div>
                                     <div className="flex flex-col justify-center">
-                                        <span className={`font-russo text-sm md:text-base uppercase tracking-wide truncate max-w-[140px] leading-none ${idx === 0 ? 'text-white' : 'text-slate-300'}`}>
+                                        <span className={`font-russo text-xs md:text-sm uppercase tracking-wide truncate max-w-[140px] leading-none ${idx === 0 ? 'text-white' : 'text-slate-300'}`}>
                                             {stat.player.nickname || 'Unknown'}
                                         </span>
                                         {idx === 0 && <span className="text-[8px] font-bold text-[#FFD700] tracking-widest uppercase mt-1">MVP OF THE MATCH</span>}
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-end justify-center bg-black/20 px-3 py-1.5 rounded-xl border border-white/5 min-w-[75px]">
-                                    <span className="font-mono font-black text-xl text-white leading-none tracking-tight">{impact.toFixed(1)}</span>
+                                    <span className="font-mono font-black text-lg text-white leading-none tracking-tight">{impact.toFixed(1)}</span>
                                     <span className="text-[8px] text-[#00F2FE] font-black tracking-widest uppercase mt-0.5">PTS</span>
                                 </div>
                             </div>
