@@ -127,9 +127,19 @@ const MotivationalTicker: React.FC = () => {
     );
 };
 
+// --- REDESIGNED HANGING TAG WITH GRUNGE STYLE ---
 const HangingTag: React.FC<{ digit: string; label: string; height: number; delay: string; pulseDuration: string }> = ({ digit, label, height, delay, pulseDuration }) => (
     <div className="relative flex flex-col items-center group/fiber">
-        <span className="font-black text-2xl md:text-3xl text-[#00F2FE] tracking-tighter z-10 leading-none" style={{ textShadow: '0 0 10px rgba(0,242,254,0.6)' }}>{digit}</span>
+        {/* GRUNGE DISTRESSED DIGIT: font-blackops + grungeFilter */}
+        <span 
+            className="font-blackops text-2xl md:text-3xl text-[#00F2FE] tracking-tighter z-10 leading-none" 
+            style={{ 
+                textShadow: '0 0 10px rgba(0,242,254,0.6)',
+                filter: 'url(#grungeFilter)' 
+            }}
+        >
+            {digit}
+        </span>
         <div className="absolute top-[26px] w-[0.5px] bg-[#00F2FE]/10 origin-top animate-pendant-swing" style={{ height: `${height}px`, animationDelay: delay, boxShadow: '0 0 3px rgba(0,242,254,0.1)' }}>
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1.2px] h-[3px] bg-[#00F2FE] rounded-full opacity-0 animate-fiber-pulse" style={{ animationDuration: pulseDuration, animationDelay: delay, boxShadow: '0 0 5px #00F2FE' }}></div>
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full pt-1">
@@ -205,6 +215,19 @@ const HubNav: React.FC<{
 
     return (
         <nav className={navContainerClass}>
+            {/* SVG GRUNGE FILTER DEFINITION */}
+            <svg className="absolute w-0 h-0 invisible">
+                <defs>
+                    <filter id="grungeFilter">
+                        <feTurbulence type="fractalNoise" baseFrequency="0.25" numOctaves="3" result="noise" />
+                        <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" />
+                        <feComponentTransfer>
+                            <feFuncA type="linear" slope="0.9" />
+                        </feComponentTransfer>
+                    </filter>
+                </defs>
+            </svg>
+
             <style dangerouslySetInnerHTML={{ __html: `
                 @keyframes pendant-swing { 0% { transform: rotate(-0.5deg); } 50% { transform: rotate(0.5deg); } 100% { transform: rotate(-0.5deg); } }
                 @keyframes fiber-pulse { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
@@ -230,7 +253,6 @@ const HubNav: React.FC<{
             </div>
             
             {/* CENTER SECTION - Dynamic Content (Title/Ticker) */}
-            {/* pl-[20px] = 0.5cm from ball, pr-[20px] = 0.5cm from block language */}
             <div className="flex-grow h-full flex items-center justify-center pl-[20px] pr-[20px] overflow-hidden min-w-0">
                 {isDashboardOpen ? (
                     <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center pointer-events-none text-center w-full min-w-0">
