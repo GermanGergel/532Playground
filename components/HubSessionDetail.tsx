@@ -282,6 +282,13 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                                     <tr key={ps.player.id} className="group border-b border-white/5 last:border-0">
                                                         <td className={`${tdBase} text-white/30 font-mono`}>{idx + 1}</td>
                                                         <td className="py-2 text-left pl-4 relative overflow-hidden">
+                                                            <div 
+                                                                className="absolute left-0 top-1/2 -translate-y-1/2 w-[1.5px] h-3 rounded-full"
+                                                                style={{ 
+                                                                    backgroundColor: ps.team.color,
+                                                                    boxShadow: `0 0 8px ${ps.team.color}`
+                                                                }}
+                                                            />
                                                             <span className="text-slate-300 font-bold uppercase truncate text-[10px] block w-full pl-2 transition-colors">{ps.player.nickname || 'Unknown'}</span>
                                                         </td>
                                                         <td className={`${tdBase} text-white/70 font-mono`}>{ps.goals}</td>
