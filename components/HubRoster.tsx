@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApp } from '../context';
 import { PlayerTier, PlayerStatus, Player } from '../types';
@@ -5,6 +6,7 @@ import { Search, XCircle, Zap, Users, ChevronLeft } from '../icons';
 import { useTranslation } from '../ui';
 import { HubPlayerIntel } from './HubPlayerIntel';
 import { HubDuel } from './HubDuel';
+import { comparePlayers } from '../services/statistics';
 
 const HubPortraitAvatar: React.FC<{ photo?: string; tierColor: string }> = ({ photo, tierColor }) => (
     <div 
@@ -64,14 +66,8 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
             .sort((a, b) => {
                 if (sortBy === 'name') return (a.nickname || '').localeCompare(b.nickname || '');
                 if (sortBy === 'rating') {
-                    if (b.rating !== a.rating) return b.rating - a.rating;
-                    const scoreA = (a.totalGoals || 0) + (a.totalAssists || 0);
-                    const scoreB = (b.totalGoals || 0) + (b.totalAssists || 0);
-                    if (scoreB !== scoreA) return scoreB - scoreA;
-                    const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0;
-                    const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0;
-                    if (wrB !== wrA) return wrB - wrA;
-                    return (b.totalGames || 0) - (a.totalGames || 0);
+                    // SYNC FIX: Using unified comparePlayers utility
+                    return comparePlayers(a, b);
                 }
                 if (sortBy === 'date') return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
                 return 0;

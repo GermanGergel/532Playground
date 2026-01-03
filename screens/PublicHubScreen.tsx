@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -11,12 +10,50 @@ import { useTranslation } from '../ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { ClubIntelligenceDashboard } from '../components/ClubIntelligenceDashboard';
 import { RadioPlayer } from '../components/RadioPlayer';
+import { comparePlayers } from '../services/statistics';
 
 // --- SUB-COMPONENTS ---
 
 const skillAbbreviations: Record<SkillType, string> = {
     goalkeeper: 'GK', power_shot: 'PS', technique: 'TQ', defender: 'DF', 
     playmaker: 'PM', finisher: 'FN', versatile: 'VS', tireless_motor: 'TM', leader: 'LD',
+};
+
+// FIX: Defined FormArrowIndicator locally to resolve reference error
+const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
+    const config = {
+        hot_streak: { color: '#4CFF5F' },
+        stable: { color: '#A9B1BD' },
+        cold_streak: { color: '#FF4136' },
+    };
+    const currentForm = config[form] || config.stable;
+    
+    const commonProps: React.SVGProps<SVGSVGElement> = {
+        width: "24",
+        height: "24",
+        viewBox: "0 0 24 24",
+        fill: "none",
+        stroke: currentForm.color,
+        strokeWidth: "2.5",
+        strokeLinecap: "round",
+        strokeLinejoin: "round",
+    };
+
+    switch (form) {
+        case 'hot_streak':
+            return (
+                <svg {...commonProps}><path d="M12 19V5m-6 7l6-6 6 6"/></svg>
+            );
+        case 'cold_streak':
+            return (
+                <svg {...commonProps}><path d="M12 5v14M12 5v14M5 12l7 7 7-7"/></svg>
+            );
+        case 'stable':
+        default:
+            return (
+                <svg {...commonProps}><path d="M5 12h14m-6-6l6 6-6 6"/></svg>
+            );
+    }
 };
 
 const StaticSoccerBall: React.FC = () => (
@@ -47,22 +84,6 @@ const StaticSoccerBall: React.FC = () => (
         </svg>
     </div>
 );
-
-const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
-    const config = {
-        hot_streak: { color: '#4CFF5F' }, stable: { color: '#A9B1BD' }, cold_streak: { color: '#FF4136' },
-    };
-    const currentForm = config[form] || config.stable;
-    const commonProps: React.SVGProps<SVGSVGElement> = {
-        width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: currentForm.color,
-        strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round",
-    };
-    switch (form) {
-        case 'hot_streak': return <svg {...commonProps}><path d="M12 19V5m-6 7l6-6 6 6"/></svg>;
-        case 'cold_streak': return <svg {...commonProps}><path d="M12 5v14M12 5v14M5 12l7 7 7-7"/></svg>;
-        default: return <svg {...commonProps}><path d="M5 12h14m-6-6l6 6-6 6"/></svg>;
-    }
-};
 
 const NoLeadersPlaceholder: React.FC = () => {
     const t = useTranslation();
@@ -426,7 +447,7 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                         <span className="font-bold text-xs text-white tracking-wider">{skillAbbreviations[skill]}</span>
                     </div>
                 ))}</div></div>)}
-                <div className="relative z-10 h-full flex flex-col justify-between p-1">
+                <div className="relative z-10 h-full flex flex-col justify-between p-1.5">
                      <div className="flex justify-between items-start">
                         <div>
                             <p style={{ color: '#00F2FE' }} className="text-base font-black leading-none">532</p>
@@ -504,16 +525,8 @@ export const PublicHubScreen: React.FC = () => {
 
     const displayData = useMemo(() => {
         const confirmedRealPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
-        const sorted = [...confirmedRealPlayers].sort((a, b) => {
-            if (b.rating !== a.rating) return b.rating - a.rating;
-            const scoreA = (a.totalGoals || 0) + (a.totalAssists || 0);
-            const scoreB = (b.totalGoals || 0) + (b.totalAssists || 0);
-            if (scoreB !== scoreA) return scoreB - scoreA;
-            const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0;
-            const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0;
-            if (wrB !== wrA) return wrB - wrA;
-            return (b.totalGames || 0) - (a.totalGames || 0);
-        });
+        // SYNC FIX: Use unified comparePlayers utility
+        const sorted = [...confirmedRealPlayers].sort(comparePlayers);
         return { top: sorted.slice(0, 3) };
     }, [allPlayers]);
     
