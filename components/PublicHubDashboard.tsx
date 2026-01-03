@@ -1,5 +1,6 @@
 
 import React, { useMemo, useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
 import { NewsItem, Player, Team, WeatherCondition } from '../types';
@@ -149,21 +150,24 @@ const HubCard: React.FC<{
     );
 };
 
-const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any, t: any }> = ({ teams, players, session, t }) => (
+const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any, teamStats: any[], t: any }> = ({ teams, players, session, teamStats, t }) => (
     <div className="flex h-full w-full divide-x divide-white/10 bg-black/20">
         {teams.map((team) => {
             const teamPlayers = team.playerIds.map(pid => players.find(p => p.id === pid)).filter(Boolean) as Player[];
             const avgOvr = teamPlayers.length > 0 ? Math.round(teamPlayers.reduce((sum, p) => sum + p.rating, 0) / teamPlayers.length) : 0;
             
-            let goals = 0;
+            // Sync with Standings Table
+            const stats = teamStats.find(ts => ts.team.id === team.id);
+            const gf = stats?.goalsFor || 0;
+            const ga = stats?.goalsAgainst || 0;
+            
+            // Synergy calculation
             let assistedGoals = 0;
             session.games.filter((g: any) => g.status === 'finished').forEach((g: any) => {
-                const teamGoals = g.goals.filter((goal: any) => goal.teamId === team.id && !goal.isOwnGoal);
-                goals += teamGoals.length;
-                assistedGoals += teamGoals.filter((goal: any) => goal.assistantId).length;
+                assistedGoals += g.goals.filter((goal: any) => goal.teamId === team.id && goal.assistantId).length;
             });
 
-            const synergy = goals > 0 ? Math.round((assistedGoals / goals) * 100) : 0;
+            const synergy = gf > 0 ? Math.round((assistedGoals / gf) * 100) : 0;
             const synergyColor = synergy >= 60 ? 'text-[#4CFF5F]' : synergy <= 30 ? 'text-orange-400' : 'text-[#00F2FE]';
 
             return (
@@ -187,14 +191,18 @@ const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any
                     
                     <div className="py-2 border-t border-white/5 bg-black/40 flex items-center divide-x divide-white/10">
                         <div className="flex-1 flex flex-col items-center justify-center">
-                            <span className="text-[12px] font-black text-slate-200 leading-none">{goals}</span>
-                            <span className="text-[5px] text-white/30 uppercase font-bold tracking-widest mt-0.5">{t.hubGoals}</span>
+                            <span className="text-[12px] font-black text-slate-200 leading-none">{gf}</span>
+                            <span className="text-[5px] text-white/30 uppercase font-bold tracking-widest mt-0.5">{t.thGF}</span>
+                        </div>
+                        <div className="flex-1 flex flex-col items-center justify-center">
+                            <span className="text-[12px] font-black text-slate-200 leading-none">{ga}</span>
+                            <span className="text-[5px] text-white/30 uppercase font-bold tracking-widest mt-0.5">{t.thGA}</span>
                         </div>
                         <div className="flex-1 flex flex-col items-center justify-center">
                             <span className={`text-[12px] font-black leading-none ${synergyColor}`}>
                                 {synergy}%
                             </span>
-                            <span className="text-[5px] text-white/30 uppercase font-bold tracking-widest mt-0.5">SYNERGY</span>
+                            <span className="text-[5px] text-white/30 uppercase font-bold tracking-widest mt-0.5">SYN</span>
                         </div>
                     </div>
                 </div>
@@ -466,7 +474,9 @@ export const PublicHubDashboard: React.FC = () => {
                                 <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-[#020617] to-transparent z-20 pointer-events-none" />
                             </div>
                         </HubCard>
-                        <HubCard title={t.hubSessionSquads} icon={<Target />} variant="standings" className="h-full min-h-0" bodyClassName="flex flex-col"><TacticalRosters teams={session.teams} players={session.playerPool} session={session} t={t} /></HubCard>
+                        <HubCard title={t.hubSessionSquads} icon={<Target />} variant="standings" className="h-full min-h-0" bodyClassName="flex flex-col">
+                            <TacticalRosters teams={session.teams} players={session.playerPool} session={session} teamStats={teamStats} t={t} />
+                        </HubCard>
                     </div>
                 </div>
 
