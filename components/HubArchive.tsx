@@ -49,24 +49,25 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
         <div className="absolute inset-0 flex flex-row animate-in fade-in duration-700 overflow-hidden rounded-[2.5rem]">
             {/* --- SIDEBAR: SESSION LIST --- */}
             <div className="w-[350px] flex flex-col border-r border-white/5 bg-black/40 relative z-20 shrink-0">
-                {/* Header shifted right as requested */}
-                <div className="p-6 pb-4 space-y-4 pt-4 pl-16"> 
+                {/* Header shifted significantly right (pl-44 is approx 176px ~ 4.5cm) */}
+                <div className="p-6 pb-4 space-y-4 pt-6 pl-44"> 
                     <div className="flex flex-col gap-1 pr-2">
                         <span className="font-blackops text-[24px] text-[#00F2FE] uppercase tracking-[0.1em] italic leading-none" style={{ textShadow: '0 0 10px rgba(0,242,254,0.4)' }}>
                             ARCHIVE
                         </span>
-                        <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.3em]">Historical Data Access</span>
+                        <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.3em] whitespace-nowrap">Historical Data Access</span>
                     </div>
 
-                    <div className="relative group w-full h-[34px] -ml-10"> {/* Pulled search slightly back to align better */}
+                    {/* Search bar pulled back left to avoid overflowing right column, but keeping header right */}
+                    <div className="relative group w-full h-[34px] -ml-36"> 
                         <input 
                             type="text" 
                             placeholder="SEARCH SESSIONS..." 
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full h-full bg-white/5 border border-white/10 rounded-xl pl-4 pr-10 text-[10px] font-chakra font-black text-white uppercase tracking-[0.15em] focus:outline-none focus:border-[#00F2FE]/40 transition-all placeholder:text-white/20" 
+                            className="w-[310px] h-full bg-white/5 border border-white/10 rounded-xl pl-4 pr-10 text-[10px] font-chakra font-black text-white uppercase tracking-[0.15em] focus:outline-none focus:border-[#00F2FE]/40 transition-all placeholder:text-white/20" 
                         />
-                        <div className="absolute right-5 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#00F2FE] transition-colors">
+                        <div className="absolute right-10 top-1/2 -translate-y-1/2 text-white/20 group-focus-within:text-[#00F2FE] transition-colors">
                             <Search className="w-4 h-4" />
                         </div>
                     </div>
@@ -85,7 +86,7 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                                         : 'bg-gradient-to-br from-[#161a1f] to-[#0d1013] border-white/5 shadow-[0_4px_10px_rgba(0,0,0,0.4),inset_0_1px_0.5px_rgba(255,255,255,0.05)] hover:border-white/10'
                                     }`}
                             >
-                                {/* Selection indicator: Thinner and more compact (1.5px wide, 24px height) */}
+                                {/* Selection indicator: Extreme thin (1.5px) and compact (h-6) */}
                                 <div 
                                     className="absolute left-0 top-1/2 -translate-y-1/2 w-[1.5px] h-6 rounded-r-full transition-all duration-500" 
                                     style={{ 
