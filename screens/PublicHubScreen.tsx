@@ -47,6 +47,7 @@ const StaticSoccerBall: React.FC = () => (
     </div>
 );
 
+// ... (Other helper components like FormArrowIndicator, NoLeadersPlaceholder, MotivationalTicker, HangingTag, NavHubButton remain unchanged)
 const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
     const config = {
         hot_streak: { color: '#4CFF5F' }, stable: { color: '#A9B1BD' }, cold_streak: { color: '#FF4136' },
@@ -195,7 +196,7 @@ const HubNav: React.FC<{
 
     const navContainerClass = `
         fixed top-3 left-1/2 -translate-x-1/2 z-[100] 
-        flex items-center justify-between 
+        flex items-center justify-center 
         w-full max-w-[1450px] pr-4 py-0 
         bg-black/85 backdrop-blur-xl rounded-2xl border border-white/10
         shadow-[0_8px_20px_-6px_rgba(0,0,0,0.5),0_0_15px_rgba(0,242,254,0.1),inset_0_1px_0_rgba(255,255,255,0.05)] 
@@ -210,7 +211,7 @@ const HubNav: React.FC<{
                 .animate-pendant-swing { animation: pendant-swing 5s ease-in-out infinite; }
                 .animate-fiber-pulse { animation: fiber-pulse 3.5s linear infinite; }
             `}} />
-            <div className="flex items-center shrink-0 h-full relative pl-10">
+            <div className="absolute left-10 flex items-center shrink-0 h-full">
                 <div className="flex items-center">
                     <HangingTag digit="5" label="PLAYERS" height={20} delay="0s" pulseDuration="2.8s" />
                     <HangingTag digit="3" label="SQUADS" height={50} delay="1.5s" pulseDuration="4.2s" />
@@ -226,7 +227,7 @@ const HubNav: React.FC<{
                 </div>
             </div>
             
-            <div className={`flex-grow h-full overflow-hidden flex items-center ${isDashboardOpen ? 'justify-center px-4' : 'justify-start pl-12 pr-4'}`}>
+            <div className={`flex-grow h-full overflow-hidden flex items-center ${isDashboardOpen ? 'justify-center px-4' : 'justify-start pl-48 pr-4'}`}>
                 {isDashboardOpen ? (
                     <div className="flex items-center gap-8 min-w-fit">
                         <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center">
@@ -258,7 +259,8 @@ const HubNav: React.FC<{
                     <MotivationalTicker />
                 )}
             </div>
-            <div className="flex items-center gap-1 md:gap-3 shrink-0 h-full py-1">
+            
+            <div className="absolute right-4 flex items-center gap-1 md:gap-3 shrink-0 h-full py-1">
                 {isDashboardOpen && (
                     <div className="flex items-center gap-2 md:gap-4 mr-2 h-full animate-in fade-in slide-in-from-right-3 duration-500">
                         <div className="mr-3 flex items-center border-r border-white/10 pr-4 gap-3">
@@ -530,10 +532,14 @@ export const PublicHubScreen: React.FC = () => {
                 }}
             />
 
-            <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
-                <div className="absolute inset-0 z-0 pointer-events-none">
-                    <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-                </div>
+            {/* DASHBOARD OVERLAY - FIXED BACKGROUND APPLIED HERE */}
+            <div 
+                className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none 
+                ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}
+                bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#13161c] via-[#050608] to-[#000000]
+                `}
+            >
+                {/* No Texture Overlay - Pure Clean Background */}
                 <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10">
                     <ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} />
                 </div>

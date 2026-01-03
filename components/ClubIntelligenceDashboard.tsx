@@ -12,25 +12,10 @@ interface ClubIntelligenceDashboardProps {
     onArchiveViewChange?: (date: string | null) => void;
 }
 
-const VIEW_THEMES: Record<string, { bottomStop: string }> = {
-    dashboard: { bottomStop: '#020617' }, 
-    roster: { bottomStop: '#01040a' },    
-    archive: { bottomStop: '#01040a' },   
-    info: { bottomStop: '#020617' },      
-    tournaments: { bottomStop: '#0a0c10' },
-    league: { bottomStop: '#0a0c10' },
-};
-
 export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps> = ({ currentView, setView, onArchiveViewChange }) => {
     const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
     const [hubSortBy, setHubSortBy] = useState<'name' | 'rating' | 'date'>('rating');
     const [hubSearch, setHubSearch] = useState('');
-
-    const activeTheme = useMemo(() => {
-        // Если выбран игрок в режиме ростера, используем чуть более глубокий темный цвет
-        if (selectedPlayerId && currentView === 'roster') return { bottomStop: '#01040a' };
-        return VIEW_THEMES[currentView] || { bottomStop: '#0a0c10' };
-    }, [currentView, selectedPlayerId]);
 
     useEffect(() => {
         logAnalyticsEvent('view_tab', currentView);
@@ -44,17 +29,8 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
 
     return (
         <div className="w-full h-full animate-in fade-in duration-700 relative">
-            <div 
-                className="fixed top-0 left-0 right-0 h-20 md:h-24 z-[95] pointer-events-none transition-all duration-700 ease-in-out"
-                style={{
-                    background: `linear-gradient(to bottom, 
-                        #0a0c10 0%, 
-                        ${activeTheme.bottomStop} 40%, 
-                        transparent 100%)`
-                }}
-            ></div>
-
-            <div className="w-full h-[calc(100vh-110px)] md:h-[calc(100dvh-110px)] min-h-[650px] relative overflow-hidden">
+            {/* Main Content Area */}
+            <div className="w-full h-full relative overflow-hidden">
                 {currentView === 'dashboard' && <PublicHubDashboard />}
                 
                 {(currentView === 'roster' || currentView === 'duel') && (
@@ -68,7 +44,7 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
                         setSortBy={setHubSortBy}
                         search={hubSearch}
                         setSearch={setHubSearch}
-                        onStartDuel={() => {}} // Обработка теперь внутри HubRoster
+                        onStartDuel={() => {}} 
                     />
                 )}
                 
@@ -81,16 +57,6 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
                     </div>
                 )}
             </div>
-
-            <div 
-                className="fixed bottom-0 left-0 right-0 h-8 md:h-10 z-[150] pointer-events-none transition-all duration-700 ease-in-out"
-                style={{
-                    background: `linear-gradient(to bottom, 
-                        transparent 0%, 
-                        ${activeTheme.bottomStop} 20%, 
-                        #0a0c10 100%)`
-                }}
-            ></div>
             
             <style dangerouslySetInnerHTML={{ __html: `
                 .custom-hub-scrollbar::-webkit-scrollbar { width: 4px; }
