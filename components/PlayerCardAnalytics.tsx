@@ -26,14 +26,12 @@ const RatingChangePill: React.FC<{ value: number, label: string }> = ({ value, l
 };
 
 export const LastSessionBreakdown: React.FC<{ player: Player; usePromoStyle?: boolean }> = ({ player, usePromoStyle = false }) => {
-    // FIX: Cast translation object to any to bypass strict type checking for potentially out-of-sync translation keys
     const t = useTranslation() as any;
     const location = useLocation();
     const breakdown = player.lastRatingChange;
 
     if (!breakdown) return null;
 
-    // Detect if we are in the Club Hub
     const isHub = location.pathname.includes('/hub');
     const isPenalty = player.consecutiveMissedSessions && player.consecutiveMissedSessions >= 3;
 
@@ -64,7 +62,6 @@ export const LastSessionBreakdown: React.FC<{ player: Player; usePromoStyle?: bo
                 <RatingCircle rating={breakdown.previousRating} />
                 
                 <div className="flex flex-col items-center justify-center gap-1.5 flex-grow px-2">
-                     {/* Check for penalty mode in Hub */}
                      {isHub && isPenalty ? (
                         <div className="flex flex-col items-center justify-center text-center">
                             <span className="text-xl font-black text-red-500 leading-none">-{Math.abs(breakdown.finalChange).toFixed(1)}</span>
@@ -91,16 +88,13 @@ export const LastSessionBreakdown: React.FC<{ player: Player; usePromoStyle?: bo
                 <RatingCircle rating={breakdown.newRating} isNew />
             </div>
 
-            {/* Penalty Alert Box for Hub */}
             {isHub && isPenalty ? (
                 <div className="pt-3 mt-3 border-t border-red-500/20">
                     <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 flex flex-col items-center gap-2">
                         <div className="flex items-center gap-2 text-red-500">
                             <ExclamationIcon className="w-5 h-5 shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
-                            {/* FIX: Access penalty_title via any-casted translation object */}
                             <span className="font-russo text-xs tracking-widest uppercase">{t.penalty_title}</span>
                         </div>
-                        {/* FIX: Access penalty_message via any-casted translation object */}
                         <p className="text-[10px] font-chakra font-bold text-red-200/60 uppercase leading-relaxed text-center">
                             {t.penalty_message?.replace('{n}', '1').replace('{m}', (player.consecutiveMissedSessions || 0).toString())}
                         </p>
@@ -154,11 +148,25 @@ export const ClubRankings: React.FC<{ player: Player; usePromoStyle?: boolean }>
     const rankings = React.useMemo(() => {
         const confirmedPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
         
-        if (confirmedPlayers.length < 2) return null;
+        if (confirmedPlayers.length < 1) return null;
 
         const sortedByGoals = [...confirmedPlayers].sort((a, b) => b.totalGoals - a.totalGoals);
         const sortedByAssists = [...confirmedPlayers].sort((a, b) => b.totalAssists - a.totalAssists);
-        const sortedByRating = [...confirmedPlayers].sort((a, b) => b.rating - a.rating);
+        
+        // SYNCED RANKING LOGIC (Rating -> G+A -> WinRate -> GP)
+        const sortedByRating = [...confirmedPlayers].sort((a, b) => {
+            if (b.rating !== a.rating) return b.rating - a.rating;
+            
+            const scoreA = (a.totalGoals || 0) + (a.totalAssists || 0);
+            const scoreB = (b.totalGoals || 0) + (b.totalAssists || 0);
+            if (scoreB !== scoreA) return scoreB - scoreA;
+            
+            const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0;
+            const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0;
+            if (wrB !== wrA) return wrB - wrA;
+            
+            return (b.totalGames || 0) - (a.totalGames || 0);
+        });
 
         const goalRank = sortedByGoals.findIndex(p => p.id === player.id) + 1;
         const assistRank = sortedByAssists.findIndex(p => p.id === player.id) + 1;
@@ -170,7 +178,7 @@ export const ClubRankings: React.FC<{ player: Player; usePromoStyle?: boolean }>
     const RankItem: React.FC<{ label: string; rank: number; total: number }> = ({ label, rank, total }) => (
         <div className="flex flex-col items-center gap-1 text-center py-1">
             <div className="flex items-baseline gap-1">
-                <p className="text-lg font-bold text-[#00F2FE]">{rank}</p>
+                <p className="text-lg font-bold text-[#00F2FE]">{rank > 0 ? rank : '-'}</p>
                 <p className="text-[10px] text-dark-text-secondary font-medium">/ {total}</p>
             </div>
             <p className="text-[9px] text-dark-text-secondary uppercase font-semibold">{label}</p>
@@ -268,7 +276,6 @@ export const PlayerProgressChart: React.FC<{ history: PlayerHistoryEntry[], useP
         return history;
     }, [history]);
 
-    // Enhanced scroll logic: ensure we see the pulsing dot immediately
     useEffect(() => {
         const scrollToLatest = () => {
             if (scrollContainerRef.current) {
@@ -277,7 +284,6 @@ export const PlayerProgressChart: React.FC<{ history: PlayerHistoryEntry[], useP
             }
         };
 
-        // Execute immediately and after a short delay to account for view transitions
         scrollToLatest();
         const timer = setTimeout(scrollToLatest, 50);
         return () => clearTimeout(timer);
