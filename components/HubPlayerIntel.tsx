@@ -154,9 +154,38 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
     const rankings = useMemo(() => {
         const confirmedPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
         if (confirmedPlayers.length === 0) return { goals: '-', assists: '-', rating: '-', total: 0 };
-        const sortedByGoals = [...confirmedPlayers].sort((a, b) => b.totalGoals - a.totalGoals);
-        const sortedByAssists = [...confirmedPlayers].sort((a, b) => b.totalAssists - a.totalAssists);
-        const sortedByRating = [...confirmedPlayers].sort((a, b) => b.rating - a.rating);
+        
+        const getWR = (p: Player) => p.totalGames > 0 ? (p.totalWins / p.totalGames) : 0;
+
+        // TIE-BREAKER LOGIC MATCHING CLUB HUB LEADERS
+        const sortedByGoals = [...confirmedPlayers].sort((a, b) => {
+            if (b.totalGoals !== a.totalGoals) return b.totalGoals - a.totalGoals;
+            if (b.rating !== a.rating) return b.rating - a.rating;
+            if (b.totalAssists !== a.totalAssists) return b.totalAssists - a.totalAssists;
+            const wrA = getWR(a); const wrB = getWR(b);
+            if (wrB !== wrA) return wrB - wrA;
+            return b.totalGames - a.totalGames;
+        });
+
+        const sortedByAssists = [...confirmedPlayers].sort((a, b) => {
+            if (b.totalAssists !== a.totalAssists) return b.totalAssists - a.totalAssists;
+            if (b.rating !== a.rating) return b.rating - a.rating;
+            if (b.totalGoals !== a.totalGoals) return b.totalGoals - a.totalGoals;
+            const wrA = getWR(a); const wrB = getWR(b);
+            if (wrB !== wrA) return wrB - wrA;
+            return b.totalGames - a.totalGames;
+        });
+
+        const sortedByRating = [...confirmedPlayers].sort((a, b) => {
+            if (b.rating !== a.rating) return b.rating - a.rating;
+            const scoreA = (a.totalGoals || 0) + (a.totalAssists || 0);
+            const scoreB = (b.totalGoals || 0) + (b.totalAssists || 0);
+            if (scoreB !== scoreA) return scoreB - scoreA;
+            const wrA = getWR(a); const wrB = getWR(b);
+            if (wrB !== wrA) return wrB - wrA;
+            return b.totalGames - a.totalGames;
+        });
+
         return {
             goals: sortedByGoals.findIndex(p => p.id === player.id) + 1 || '-',
             assists: sortedByAssists.findIndex(p => p.id === player.id) + 1 || '-',
@@ -174,7 +203,6 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
 
     const tierColor = TIER_COLORS[player.tier] || '#00F2FE';
     const perimeterStyle: React.CSSProperties = {
-        // RE-ADJUSTED GLOW: Slightly increased intensity for better visual "pop" compared to last version.
         boxShadow: `
             0 0 15px -1px ${tierColor}aa,
             0 0 45px -8px ${tierColor}66,

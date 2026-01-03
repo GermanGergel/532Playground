@@ -51,18 +51,41 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
         const confirmedPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
         if (confirmedPlayers.length < 1) return null;
 
-        const sortedByGoals = [...confirmedPlayers].sort((a, b) => b.totalGoals - a.totalGoals);
-        const sortedByAssists = [...confirmedPlayers].sort((a, b) => b.totalAssists - a.totalAssists);
-        const sortedByRating = [...confirmedPlayers].sort((a, b) => b.rating - a.rating);
+        const getWR = (p: Player) => p.totalGames > 0 ? (p.totalWins / p.totalGames) : 0;
 
-        const goalRank = sortedByGoals.findIndex(p => p.id === player.id) + 1;
-        const assistRank = sortedByAssists.findIndex(p => p.id === player.id) + 1;
-        const ratingRank = sortedByRating.findIndex(p => p.id === player.id) + 1;
+        // TIE-BREAKER LOGIC MATCHING CLUB HUB LEADERS
+        const sortedByGoals = [...confirmedPlayers].sort((a, b) => {
+            if (b.totalGoals !== a.totalGoals) return b.totalGoals - a.totalGoals;
+            if (b.rating !== a.rating) return b.rating - a.rating;
+            if (b.totalAssists !== a.totalAssists) return b.totalAssists - a.totalAssists;
+            const wrA = getWR(a); const wrB = getWR(b);
+            if (wrB !== wrA) return wrB - wrA;
+            return b.totalGames - a.totalGames;
+        });
+
+        const sortedByAssists = [...confirmedPlayers].sort((a, b) => {
+            if (b.totalAssists !== a.totalAssists) return b.totalAssists - a.totalAssists;
+            if (b.rating !== a.rating) return b.rating - a.rating;
+            if (b.totalGoals !== a.totalGoals) return b.totalGoals - a.totalGoals;
+            const wrA = getWR(a); const wrB = getWR(b);
+            if (wrB !== wrA) return wrB - wrA;
+            return b.totalGames - a.totalGames;
+        });
+
+        const sortedByRating = [...confirmedPlayers].sort((a, b) => {
+            if (b.rating !== a.rating) return b.rating - a.rating;
+            const scoreA = (a.totalGoals || 0) + (a.totalAssists || 0);
+            const scoreB = (b.totalGoals || 0) + (b.totalAssists || 0);
+            if (scoreB !== scoreA) return scoreB - scoreA;
+            const wrA = getWR(a); const wrB = getWR(b);
+            if (wrB !== wrA) return wrB - wrA;
+            return b.totalGames - a.totalGames;
+        });
 
         return {
-            goalRank,
-            assistRank,
-            ratingRank,
+            goalRank: sortedByGoals.findIndex(p => p.id === player.id) + 1,
+            assistRank: sortedByAssists.findIndex(p => p.id === player.id) + 1,
+            ratingRank: sortedByRating.findIndex(p => p.id === player.id) + 1,
             total: confirmedPlayers.length,
         };
     }, [allPlayers, player.id]);
@@ -122,10 +145,8 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
                         <p className="font-orbitron font-bold text-6xl text-dark-accent-start accent-text-glow leading-none" style={{ textShadow: '0 0 8px rgba(0, 242, 254, 0.8)' }}>
                             {player.rating}
                         </p>
-                        {/* UPDATED: Increased gap (mt-6) between rating and OVR/Tier info */}
                         <div className="mt-6 flex flex-col items-end">
                             <p className="text-xl tracking-widest leading-none font-bold">OVR</p>
-                            {/* Uses the generic t key format: tierLegend, tierElite, tierPro, tierRegular */}
                             <p className="text-sm font-semibold uppercase text-white/80 mt-1">{t[`tier${player.tier.charAt(0).toUpperCase() + player.tier.slice(1)}`as keyof typeof t]}</p>
                         </div>
                     </div>
