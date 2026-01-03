@@ -77,8 +77,8 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                     </div>
                 </div>
 
-                {/* Session List: Optimized spacing and height (h-[68px]) for perfect fit */}
-                <div className="flex-grow overflow-y-auto custom-hub-scrollbar p-4 pt-1 space-y-2">
+                {/* Session List: Optimized spacing (space-y-3) to prevent clipping */}
+                <div className="flex-grow overflow-y-auto custom-hub-scrollbar px-4 pb-4 pt-2 space-y-3">
                     {filteredHistory.map((session) => {
                         const isSelected = selectedSessionId === session.id;
                         return (
