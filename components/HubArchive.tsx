@@ -49,7 +49,8 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
         <div className="absolute inset-0 flex flex-row animate-in fade-in duration-700 overflow-hidden rounded-[2.5rem]">
             {/* --- SIDEBAR: SESSION LIST --- */}
             <div className="w-[350px] flex flex-col border-r border-white/5 bg-black/40 relative z-20 shrink-0">
-                <div className="p-6 pb-4 space-y-4 pt-4">
+                {/* Header shifted right as requested */}
+                <div className="p-6 pb-4 space-y-4 pt-4 pl-16"> 
                     <div className="flex flex-col gap-1 pr-2">
                         <span className="font-blackops text-[24px] text-[#00F2FE] uppercase tracking-[0.1em] italic leading-none" style={{ textShadow: '0 0 10px rgba(0,242,254,0.4)' }}>
                             ARCHIVE
@@ -57,7 +58,7 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                         <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.3em]">Historical Data Access</span>
                     </div>
 
-                    <div className="relative group w-full h-[34px] pr-2">
+                    <div className="relative group w-full h-[34px] -ml-10"> {/* Pulled search slightly back to align better */}
                         <input 
                             type="text" 
                             placeholder="SEARCH SESSIONS..." 
@@ -71,7 +72,7 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                     </div>
                 </div>
 
-                <div className="flex-grow overflow-y-auto custom-hub-scrollbar p-4 pt-0 space-y-3">
+                <div className="flex-grow overflow-y-auto custom-hub-scrollbar p-4 pt-0 space-y-2.5">
                     {filteredHistory.map((session) => {
                         const isSelected = selectedSessionId === session.id;
                         return (
@@ -84,19 +85,20 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                                         : 'bg-gradient-to-br from-[#161a1f] to-[#0d1013] border-white/5 shadow-[0_4px_10px_rgba(0,0,0,0.4),inset_0_1px_0.5px_rgba(255,255,255,0.05)] hover:border-white/10'
                                     }`}
                             >
+                                {/* Selection indicator: Thinner and more compact (1.5px wide, 24px height) */}
                                 <div 
-                                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-10 rounded-r-full transition-all duration-500" 
+                                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[1.5px] h-6 rounded-r-full transition-all duration-500" 
                                     style={{ 
                                         backgroundColor: isSelected ? '#00F2FE' : 'transparent', 
-                                        boxShadow: isSelected ? '0 0 12px #00F2FE' : 'none',
+                                        boxShadow: isSelected ? '0 0 10px #00F2FE' : 'none',
                                         opacity: isSelected ? 1 : 0
                                     }}
                                 ></div>
                                 
-                                <div className="flex items-center px-4 gap-4 w-full relative z-10">
-                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all duration-500 shrink-0
+                                <div className="flex items-center px-4 gap-3 w-full relative z-10">
+                                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all duration-500 shrink-0
                                         ${isSelected ? 'bg-[#00F2FE]/10 border-[#00F2FE]/30 text-[#00F2FE]' : 'bg-white/5 border-white/5 text-white/20'}`}>
-                                        <Calendar className="w-5 h-5" />
+                                        <Calendar className="w-4 h-4" />
                                     </div>
                                     <div className="flex flex-col min-w-0 flex-grow">
                                         <span className={`font-chakra font-black text-sm uppercase tracking-tight truncate transition-colors ${isSelected ? 'text-white' : 'text-white/60'}`}>
@@ -106,9 +108,18 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                                             {session.sessionName || '532 SESSION'}
                                         </span>
                                     </div>
-                                    <div className="flex flex-col items-end shrink-0">
-                                        <span className={`font-russo text-lg transition-colors ${isSelected ? 'text-[#00F2FE]' : 'text-white/20'}`}>{session.playerPool.length}</span>
-                                        <span className="text-[5px] font-mono font-black text-white/10 uppercase">UNITS</span>
+                                    
+                                    {/* Stats block: Restored Teams and Units */}
+                                    <div className="flex gap-3 items-center shrink-0">
+                                        <div className="flex flex-col items-end">
+                                            <span className={`font-russo text-base leading-none transition-colors ${isSelected ? 'text-[#00F2FE]' : 'text-white/20'}`}>{session.numTeams || session.teams.length}</span>
+                                            <span className="text-[5px] font-mono font-black text-white/10 uppercase">TEAMS</span>
+                                        </div>
+                                        <div className="w-px h-6 bg-white/5"></div>
+                                        <div className="flex flex-col items-end">
+                                            <span className={`font-russo text-base leading-none transition-colors ${isSelected ? 'text-[#00F2FE]' : 'text-white/20'}`}>{session.playerPool.length}</span>
+                                            <span className="text-[5px] font-mono font-black text-white/10 uppercase">UNITS</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
