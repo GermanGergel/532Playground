@@ -481,7 +481,7 @@ export const PublicHubDashboard: React.FC = () => {
                                 <thead>
                                     <tr className="bg-white/5 border-b border-white/10">
                                         <th className={`${thStandings} w-[6%]`}>#</th>
-                                        <th className={`${thStandings} w-[24%]`}>{t.team}</th>
+                                        <th className={`${thStandings} w-[18%]`}>{t.team}</th>
                                         <th className={`${thStandings} w-[7%]`}>{t.thP}</th>
                                         <th className={`${thStandings} w-[7%]`}>{t.thW}</th>
                                         <th className={`${thStandings} w-[7%]`}>{t.thD}</th>
@@ -489,13 +489,16 @@ export const PublicHubDashboard: React.FC = () => {
                                         <th className={`${thStandings} w-[9%]`}>{t.thGF}</th>
                                         <th className={`${thStandings} w-[9%]`}>{t.thGA}</th>
                                         <th className={`${thStandings} w-[12%]`}>{t.thGD}</th>
-                                        <th className={`${thStandings} w-[12%] text-white bg-white/[0.03]`}>PTS</th>
+                                        <th className={`${thStandings} w-[18%] text-white bg-white/[0.03]`}>PTS</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {teamStats.map((stat, idx) => (
-                                        <tr key={stat.team.id} className="border-b border-white/5 last:border-0 transition-colors">
-                                            <td className="py-1.5 text-center text-[9px] font-bold text-white/30">{idx + 1}</td>
+                                        <tr key={stat.team.id} className="group border-b border-white/5 last:border-0 transition-all duration-300 hover:bg-white/[0.04]">
+                                            <td className="py-1.5 text-center text-[9px] font-bold text-white/30 bg-white/[0.02] relative overflow-hidden">
+                                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-[40%] bg-[#00F2FE] opacity-0 group-hover:opacity-100 transition-opacity rounded-r shadow-[0_0_8px_rgba(0,242,254,0.4)]" />
+                                                {idx + 1}
+                                            </td>
                                             <td className="py-1.5 flex justify-center"><SubtleDashboardAvatar team={stat.team} size="xxs" isLight /></td>
                                             <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.gamesPlayed}</td>
                                             <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.wins}</td>
@@ -549,10 +552,11 @@ export const PublicHubDashboard: React.FC = () => {
                             {activeRightTab === 'players' ? (
                                 <div className="animate-in fade-in duration-500">
                                     <table className="w-full table-fixed border-collapse">
-                                        <thead><tr><th className={`${thStandings} w-[10%]`}>#</th><th className={`${thStandings} text-left pl-3 w-[49%]`}>{t.players}</th><th className={`${thStandings} w-[15%]`}>{t.thG}</th><th className={`${thStandings} w-[14%]`}>{t.thA}</th><th className={`${thStandings} w-[12%] text-white bg-white/[0.03]`}>TOT</th></tr></thead>
+                                        <thead><tr><th className={`${thStandings} w-[10%]`}>#</th><th className={`${thStandings} text-left pl-3 w-[45%]`}>{t.players}</th><th className={`${thStandings} w-[15%]`}>{t.thG}</th><th className={`${thStandings} w-[15%]`}>{t.thA}</th><th className={`${thStandings} w-[16%] text-white bg-white/[0.03]`}>TOT</th></tr></thead>
                                         <tbody>{sortedForTable.map((ps, idx) => (
-                                            <tr key={ps.player.id} className="group border-b border-white/5 last:border-0 transition-all duration-300">
+                                            <tr key={ps.player.id} className="group border-b border-white/5 last:border-0 transition-all duration-300 hover:bg-white/[0.04]">
                                                 <td className="py-2 text-center text-[9px] font-bold text-white/30 bg-white/[0.02] relative overflow-hidden">
+                                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-[40%] bg-[#00F2FE] opacity-0 group-hover:opacity-100 transition-opacity rounded-r shadow-[0_0_8px_rgba(0,242,254,0.4)]" />
                                                     {idx + 1}
                                                 </td>
                                                 <td className="py-2 text-left pl-3 relative overflow-hidden">
@@ -579,6 +583,7 @@ export const PublicHubDashboard: React.FC = () => {
                                                     onClick={() => totalScore > 0 && setExpandedMatchId(expandedMatchId === game.id ? null : game.id)}
                                                 >
                                                     <td className={`${tdBase} text-white/30 font-mono relative overflow-hidden`}>
+                                                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-[40%] bg-[#00F2FE] opacity-0 group-hover:opacity-100 transition-opacity rounded-r shadow-[0_0_8px_rgba(0,242,254,0.4)]" />
                                                         {game.gameNumber}
                                                     </td>
                                                     <td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team1Id) || {}} size="xxs" isLight={true} /></div></td>

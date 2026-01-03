@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { Player, PlayerStatus, PlayerHistoryEntry } from '../types';
 import { Card, useTranslation } from '../ui';
@@ -5,7 +6,6 @@ import { useApp } from '../context';
 import { BadgeIcon } from '../features';
 import { useLocation } from 'react-router-dom';
 import { ExclamationIcon } from '../icons';
-import { sortPlayersByRating } from '../services/statistics';
 
 const RatingChangePill: React.FC<{ value: number, label: string }> = ({ value, label }) => {
     if (value === 0) return null;
@@ -158,9 +158,7 @@ export const ClubRankings: React.FC<{ player: Player; usePromoStyle?: boolean }>
 
         const sortedByGoals = [...confirmedPlayers].sort((a, b) => b.totalGoals - a.totalGoals);
         const sortedByAssists = [...confirmedPlayers].sort((a, b) => b.totalAssists - a.totalAssists);
-        
-        // --- UPDATED TO USE UNIFIED SORTING LOGIC ---
-        const sortedByRating = sortPlayersByRating(confirmedPlayers);
+        const sortedByRating = [...confirmedPlayers].sort((a, b) => b.rating - a.rating);
 
         const goalRank = sortedByGoals.findIndex(p => p.id === player.id) + 1;
         const assistRank = sortedByAssists.findIndex(p => p.id === player.id) + 1;

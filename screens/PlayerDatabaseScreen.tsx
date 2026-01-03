@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { useApp, SortBy } from '../context';
@@ -8,8 +9,7 @@ import { Player, PlayerStatus, PlayerTier } from '../types';
 import { PlayerAddModal } from '../modals';
 import { newId } from './utils';
 import { getTierForRating } from '../services/rating';
-import { saveSinglePlayerToDB, loadPlayersFromDB } from '../db';
-import { sortPlayersByRating } from '../services/statistics';
+import { saveSinglePlayerToDB } from '../db';
 
 export const PlayerDatabaseScreen: React.FC = () => {
     const t = useTranslation();
@@ -30,29 +30,40 @@ export const PlayerDatabaseScreen: React.FC = () => {
     const [isAddModalOpen, setIsAddModalOpen] = React.useState(false);
     
     const playersToList = React.useMemo(() => {
-        const filtered = allPlayers
+        return allPlayers
             .filter(p => p.status === statusToShow)
             .filter(p => 
                 p.nickname.toLowerCase().includes(playerDbSearch.toLowerCase()) ||
                 p.surname.toLowerCase().includes(playerDbSearch.toLowerCase())
-            );
+            )
+            .sort((a, b) => {
+                if (a.id === 'test-player-showcase') return -1;
+                if (b.id === 'test-player-showcase') return 1;
+                switch (playerDbSort) {
+                    case 'rating':
+                        // --- SYNCED WITH SEASON LEADERS LOGIC ---
+                        if (b.rating !== a.rating) return b.rating - a.rating;
+                        
+                        // Tie-breaker 1: Total G+A
+                        const scoreA = (a.totalGoals || 0) + (a.totalAssists || 0);
+                        const scoreB = (b.totalGoals || 0) + (b.totalAssists || 0);
+                        if (scoreB !== scoreA) return scoreB - scoreA;
+                        
+                        // Tie-breaker 2: Win Rate
+                        const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0;
+                        const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0;
+                        if (wrB !== wrA) return wrB - wrA;
+                        
+                        // Tie-breaker 3: Games Played
+                        return (b.totalGames || 0) - (a.totalGames || 0);
 
-        if (playerDbSort === 'rating') {
-            // Use unified sorting logic for rating
-            return sortPlayersByRating(filtered);
-        }
-
-        return [...filtered].sort((a, b) => {
-            if (a.id === 'test-player-showcase') return -1;
-            if (b.id === 'test-player-showcase') return 1;
-            switch (playerDbSort) {
-                case 'name':
-                    return a.nickname.localeCompare(b.nickname);
-                case 'date':
-                default:
-                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-            }
-        });
+                    case 'name':
+                        return a.nickname.localeCompare(b.nickname);
+                    case 'date':
+                    default:
+                        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                }
+            });
     }, [allPlayers, statusToShow, playerDbSearch, playerDbSort]);
 
     const handleAddPlayer = (nickname: string) => {

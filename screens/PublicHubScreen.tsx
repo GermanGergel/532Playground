@@ -2,8 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-// FIX: Added PlayerTier to imports from types
-import { Player, PlayerStatus, PlayerForm, SkillType, PlayerTier } from '../types';
+import { Player, PlayerStatus, PlayerForm, SkillType } from '../types';
 import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, FacebookIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon } from '../icons';
 import { PlayerAvatar, TeamAvatar } from '../components/avatars';
 import { Language } from '../translations/index';
@@ -12,20 +11,6 @@ import { useTranslation } from '../ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { ClubIntelligenceDashboard } from '../components/ClubIntelligenceDashboard';
 import { RadioPlayer } from '../components/RadioPlayer';
-import { sortPlayersByRating } from '../services/statistics';
-
-// --- TYPE DEFINITIONS ---
-// FIX: Defined missing DashboardViewType
-type DashboardViewType = 'dashboard' | 'roster' | 'archive' | 'tournaments' | 'league' | 'info' | 'duel';
-
-// --- CONSTANTS ---
-// FIX: Defined TIER_COLORS for CinematicCard
-const TIER_COLORS = {
-    [PlayerTier.Legend]: '#d946ef',
-    [PlayerTier.Elite]: '#fbbf24',
-    [PlayerTier.Pro]: '#E2E8F0',
-    [PlayerTier.Regular]: '#00F2FE'
-};
 
 // --- SUB-COMPONENTS ---
 
@@ -142,142 +127,357 @@ const MotivationalTicker: React.FC = () => {
     );
 };
 
-// FIX: Added missing HubNav component
+// --- REDESIGNED HANGING TAG WITH GRUNGE STYLE ---
+const HangingTag: React.FC<{ digit: string; label: string; height: number; delay: string; pulseDuration: string }> = ({ digit, label, height, delay, pulseDuration }) => (
+    <div className="relative flex flex-col items-center group/fiber">
+        {/* GRUNGE DISTRESSED DIGIT: font-blackops + grungeFilter */}
+        <span 
+            className="font-blackops text-2xl md:text-3xl text-[#00F2FE] tracking-tighter z-10 leading-none" 
+            style={{ 
+                textShadow: '0 0 10px rgba(0,242,254,0.6)',
+                filter: 'url(#grungeFilter)' 
+            }}
+        >
+            {digit}
+        </span>
+        <div className="absolute top-[26px] w-[0.5px] bg-[#00F2FE]/10 origin-top animate-pendant-swing" style={{ height: `${height}px`, animationDelay: delay, boxShadow: '0 0 3px rgba(0,242,254,0.1)' }}>
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1.2px] h-[3px] bg-[#00F2FE] rounded-full opacity-0 animate-fiber-pulse" style={{ animationDuration: pulseDuration, animationDelay: delay, boxShadow: '0 0 5px #00F2FE' }}></div>
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full pt-1">
+                <div className="relative flex flex-col items-center">
+                    <div className="absolute inset-0 blur-[8px] bg-[#00F2FE]/20 rounded-full scale-[2.5] pointer-events-none opacity-40"></div>
+                    <span className="relative text-[7px] font-black tracking-[0.1em] text-[#00F2FE] whitespace-nowrap uppercase italic" style={{ textShadow: '0 0 8px rgba(0,242,254,0.8)' }}>{label}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+);
+
+const NavHubButton: React.FC<{ 
+    title: string; 
+    icon: React.ReactNode; 
+    isActive: boolean; 
+    onClick: () => void; 
+    isDisabled?: boolean;
+}> = ({ title, icon, isActive, onClick, isDisabled }) => (
+    <button 
+        onClick={isDisabled ? undefined : onClick}
+        className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 h-full min-w-[50px] group
+            ${isDisabled ? 'opacity-10 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-110'}`}
+    >
+        <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 
+            ${isActive 
+                ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 shadow-[0_0_15px_rgba(0,242,254,0.5),inset_0_0_6px_rgba(0,242,254,0.2)]' 
+                : 'text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.2)] hover:border-white/40 hover:text-white hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]'
+            }`}>
+            {React.cloneElement(icon as React.ReactElement<any>, { className: "w-4 h-4" })}
+        </div>
+        <span className={`text-[6px] font-black tracking-widest uppercase transition-colors ${isActive ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>
+            {title}
+        </span>
+    </button>
+);
+
 const HubNav: React.FC<{ 
     isDashboardOpen: boolean; 
-    sessionDate: string; 
-    activeTab: DashboardViewType;
-    onTabChange: (tab: DashboardViewType) => void;
+    sessionDate?: string;
+    activeTab: string;
+    onTabChange: (tab: any) => void;
     archiveViewDate: string | null;
     onHomeClick: () => void;
 }> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick }) => {
+    const { language, setLanguage } = useApp();
     const t = useTranslation();
-    const navItems: { id: DashboardViewType; label: string; icon: any }[] = [
-        { id: 'dashboard', label: t.hubDashboardBtn, icon: LayoutDashboard },
-        { id: 'roster', label: t.hubPlayers, icon: Users },
-        { id: 'archive', label: t.navHistory, icon: HistoryIcon },
-        { id: 'info', label: t.information, icon: InfoIcon },
-    ];
+    const [isLangOpen, setIsLangOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const languages: { code: Language; label: string }[] = [ { code: 'en', label: 'EN' }, { code: 'ua', label: 'UA' }, { code: 'vn', label: 'VN' }, { code: 'ru', label: 'RU' } ];
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => { if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) { setIsLangOpen(false); } };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const tabTitles: Record<string, string> = { 
+        'dashboard': t.hubDashboardBtn, 
+        'roster': t.playerHub, 
+        'archive': t.navHistory, 
+        'info': t.information 
+    };
+
+    const navContainerClass = `
+        fixed top-3 left-1/2 -translate-x-1/2 z-[100] 
+        flex items-center justify-between
+        w-full max-w-[1450px] px-6 py-0 
+        bg-black/85 backdrop-blur-xl rounded-2xl border border-white/10
+        shadow-[0_8px_20px_-6px_rgba(0,0,0,0.5),0_0_15px_rgba(0,242,254,0.1),inset_0_1px_0_rgba(255,255,255,0.05)] 
+        h-[42px] md:h-[54px] transition-all duration-300
+    `;
 
     return (
-        <nav className="fixed top-0 left-0 right-0 h-16 bg-[#0a0c10]/80 backdrop-blur-xl border-b border-white/5 z-[100] flex items-center justify-between px-6">
-            <div className="flex items-center gap-4 cursor-pointer" onClick={onHomeClick}>
-                <div className="flex flex-col items-start">
-                    <span className="text-xl font-black text-[#00F2FE] leading-none">532</span>
-                    <span className="text-[6px] font-bold text-white tracking-[0.2em]">HUB</span>
+        <nav className={navContainerClass}>
+            {/* SVG GRUNGE FILTER DEFINITION */}
+            <svg className="absolute w-0 h-0 invisible">
+                <defs>
+                    <filter id="grungeFilter">
+                        <feTurbulence type="fractalNoise" baseFrequency="0.25" numOctaves="3" result="noise" />
+                        <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" />
+                        <feComponentTransfer>
+                            <feFuncA type="linear" slope="0.9" />
+                        </feComponentTransfer>
+                    </filter>
+                </defs>
+            </svg>
+
+            <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes pendant-swing { 0% { transform: rotate(-0.5deg); } 50% { transform: rotate(0.5deg); } 100% { transform: rotate(-0.5deg); } }
+                @keyframes fiber-pulse { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+                .animate-pendant-swing { animation: pendant-swing 5s ease-in-out infinite; }
+                .animate-fiber-pulse { animation: fiber-pulse 3.5s linear infinite; }
+            `}} />
+            
+            {/* LEFT SECTION - Fixed Content (Logo + Ball) */}
+            <div className="flex items-center gap-4 shrink-0 h-full">
+                <div className="flex items-center">
+                    <HangingTag digit="5" label="PLAYERS" height={20} delay="0s" pulseDuration="2.8s" />
+                    <HangingTag digit="3" label="SQUADS" height={50} delay="1.5s" pulseDuration="4.2s" />
+                    <HangingTag digit="2" label="GOALS" height={80} delay="0.8s" pulseDuration="3.7s" />
+                    
+                    <div className="h-4 w-px bg-white/15 ml-3 md:ml-4"></div>
+                    <div className="flex flex-col space-y-0.5 ml-2">
+                        <span className="font-black text-[9px] tracking-[0.15em] text-white uppercase leading-none">Club</span>
+                        <span className="font-black text-[7px] tracking-[0.15em] text-white/30 uppercase leading-none">Center</span>
+                    </div>
+                    
+                    <StaticSoccerBall />
                 </div>
             </div>
-
-            {isDashboardOpen ? (
-                <div className="flex items-center gap-1 md:gap-4">
-                    {navItems.map(item => (
-                        <button
-                            key={item.id}
-                            onClick={() => onTabChange(item.id)}
-                            className={`px-3 py-1.5 rounded-lg flex items-center gap-2 transition-all ${activeTab === item.id ? 'bg-[#00F2FE]/10 text-[#00F2FE] border border-[#00F2FE]/20' : 'text-white/40 hover:text-white/60'}`}
-                        >
-                            <item.icon className="w-3.5 h-3.5" />
-                            <span className="text-[10px] font-black uppercase tracking-widest hidden sm:block">{item.label}</span>
-                        </button>
-                    ))}
-                </div>
-            ) : (
-                <div className="flex flex-col items-end">
-                    <span className="text-[10px] font-black text-white/80 uppercase tracking-widest leading-none">{t.hubTicker1}</span>
-                    <span className="text-[7px] font-mono text-white/30 uppercase mt-1 tracking-wider">{sessionDate}</span>
-                </div>
-            )}
             
-            <div className="flex items-center gap-4">
-                <RadioPlayer />
-                {!isDashboardOpen && (
-                   <button 
-                       onClick={() => onTabChange('dashboard')} 
-                       className="bg-[#00F2FE] text-black font-black text-[10px] px-4 py-2 rounded-lg tracking-widest uppercase hover:scale-105 active:scale-95 transition-all"
-                   >
-                       {t.hubDashboardBtn}
-                   </button>
+            {/* CENTER SECTION - Dynamic Content (Title/Ticker) */}
+            <div className="flex-grow h-full flex items-center justify-center pl-[20px] pr-[20px] overflow-hidden min-w-0">
+                {isDashboardOpen ? (
+                    <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center pointer-events-none text-center w-full min-w-0">
+                        {activeTab === 'dashboard' ? (
+                            <>
+                                <span className="font-russo text-[7px] text-[#00F2FE] tracking-[0.3em] uppercase leading-none opacity-80 mb-0.5">SESSION BROADCAST</span>
+                                <span className="font-chakra text-sm md:text-lg font-bold text-white tracking-widest leading-none truncate w-full">{sessionDate || 'LIVE'}</span>
+                            </>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center w-full">
+                                {activeTab === 'archive' && archiveViewDate ? (
+                                    <>
+                                        <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none truncate w-full" style={{ textShadow: '0 0 25px rgba(255, 255, 255, 0.2)' }}>{archiveViewDate}</span>
+                                        <span className="text-[7px] md:text-[8px] font-chakra font-black text-[#00F2FE] uppercase tracking-[0.4em] mt-0.5 ml-1 opacity-90 shadow-[0_0_10px_rgba(0,242,254,0.4)]">ARCHIVE</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none truncate w-full" style={{ textShadow: '0 0 25px rgba(255, 255, 255, 0.2)' }}>{tabTitles[activeTab] || 'DASHBOARD'}</span>
+                                        {activeTab === 'archive' && !archiveViewDate && (
+                                            <span className="text-[7px] md:text-[8px] font-chakra font-black text-[#00F2FE] uppercase tracking-[0.4em] mt-0.5 ml-1 opacity-90 shadow-[0_0_10px_rgba(0,242,254,0.4)]">HISTORY</span>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <div className="w-full h-full">
+                        <MotivationalTicker />
+                    </div>
                 )}
+            </div>
+            
+            {/* RIGHT SECTION - Controls (Buttons + Language) */}
+            <div className="flex items-center gap-1 md:gap-3 shrink-0 h-full py-1">
                 {isDashboardOpen && (
-                   <button 
-                       onClick={onHomeClick} 
-                       className="text-white/40 hover:text-white transition-colors"
-                   >
-                       <XCircle className="w-6 h-6" />
-                   </button>
+                    <div className="flex items-center gap-2 md:gap-4 mr-2 h-full animate-in fade-in slide-in-from-right-3 duration-500">
+                        <div className="mr-3 flex items-center border-r border-white/10 pr-4 gap-3">
+                            <button 
+                                onClick={onHomeClick}
+                                className="flex flex-col items-center justify-center gap-1 transition-all duration-300 group cursor-pointer hover:scale-110"
+                                title="Home"
+                            >
+                                <div className="w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.2)] hover:border-white/40 hover:text-white hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                                    <Home className="w-4 h-4" />
+                                </div>
+                                <span className="text-[6px] font-black tracking-widest uppercase text-white/30 group-hover:text-white/60 transition-colors">
+                                    {t.navHome}
+                                </span>
+                            </button>
+                            <RadioPlayer />
+                        </div>
+                        <NavHubButton title={t.hubDashboardBtn} icon={<LayoutDashboard />} isActive={activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} />
+                        <NavHubButton title={t.playerHub} icon={<Users />} isActive={activeTab === 'roster' || activeTab === 'duel'} onClick={() => onTabChange('roster')} />
+                        <NavHubButton title={t.navHistory} icon={<HistoryIcon />} isActive={activeTab === 'archive'} onClick={() => onTabChange('archive')} />
+                        <NavHubButton title={t.information} icon={<InfoIcon />} isActive={activeTab === 'info'} onClick={() => onTabChange('info')} />
+                    </div>
                 )}
+                <div className="flex items-center gap-2 group h-full relative" ref={dropdownRef}>
+                    {!isDashboardOpen && (
+                        <div className="hidden md:flex flex-col items-end justify-center h-full animate-in fade-in duration-500 pr-2">
+                            <span className="text-[8px] font-black tracking-[0.2em] text-white/30 uppercase group-hover:text-white transition-colors cursor-default leading-none">Language</span>
+                        </div>
+                    )}
+                    <div className="relative h-full flex items-center justify-center">
+                        {isDashboardOpen ? (
+                            <button onClick={() => setIsLangOpen(!isLangOpen)} className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 h-full min-w-[50px] group cursor-pointer hover:scale-110`}>
+                                <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isLangOpen ? 'text-[#00F2FE]' : 'text-white/60 border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.1)]' }`}>
+                                    <span className="font-black text-[10px] uppercase leading-none">{language}</span>
+                                </div>
+                                <span className={`text-[6px] font-black tracking-widest uppercase transition-colors ${isLangOpen ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>LANG</span>
+                            </button>
+                        ) : (
+                            <button onClick={() => setIsLangOpen(!isLangOpen)} className="w-8 h-8 rounded-full border border-white/20 bg-black/60 flex items-center justify-center transition-all shadow-[0_0_10px_rgba(255,255,255,0.15)] hover:border-white/60 hover:bg-white/5 hover:shadow-[0_0_15px_rgba(255,255,255,0.3)] group/lang">
+                                <span className="text-[9px] font-black text-white/80 group-hover/lang:text-white uppercase leading-none transition-colors" style={{ textShadow: '0 0 5px rgba(255,255,255,0.3)' }}>{language}</span>
+                            </button>
+                        )}
+                        {isLangOpen && (
+                            <div className="absolute left-1/2 -translate-x-1/2 w-9 bg-[#05070a] border border-white/10 rounded-full shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200 z-[200]" style={{ top: isDashboardOpen ? 'calc(100% - 2px)' : '100%', marginTop: isDashboardOpen ? '0' : '8px' }}>
+                                <div className="py-1 flex flex-col items-center gap-1">
+                                    {languages.map((lang) => (
+                                        <button key={lang.code} onClick={() => { setLanguage(lang.code); setIsLangOpen(false); }} className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 ${language === lang.code ? 'bg-[#00F2FE]/10 text-[#00F2FE] border border-[#00F2FE]/30 shadow-[0_0_8px_rgba(0,242,254,0.2)]' : 'text-white/40 hover:text-white hover:bg-white/10' }`}><span className="text-[8px] font-black uppercase leading-none">{lang.label}</span></button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
         </nav>
     );
 };
 
-// FIX: Added missing HeroTitle component
+const DispersingWord: React.FC<{ words: string[] }> = ({ words }) => {
+    const [index, setIndex] = useState(0);
+    const [state, setState] = useState<'entering' | 'active' | 'exiting'>('entering');
+    useEffect(() => {
+        const cycle = async () => {
+            setState('entering');
+            setTimeout(() => setState('active'), 1200);
+            setTimeout(() => { setState('exiting'); setTimeout(() => { setIndex((prev) => (prev + 1) % words.length); }, 1200); }, 5000);
+        };
+        cycle();
+        const interval = setInterval(cycle, 6500);
+        return () => clearInterval(interval);
+    }, [words.length]);
+    const getStyles = () => {
+        switch (state) {
+            case 'entering': return "scale-[0.4] opacity-0 blur-[40px] translate-z-[-200px]";
+            case 'active': return "scale-[1.1] opacity-100 blur-0 translate-z-0";
+            case 'exiting': return "scale-[0.8] opacity-0 blur-[30px] translate-z-[-100px]";
+            default: return "";
+        }
+    };
+    return (
+        <span className="relative inline-block h-[1.1em] min-w-[280px] md:min-w-[500px] align-top text-center perspective-1000 px-10">
+            <span className={`block px-4 text-transparent bg-clip-text bg-gradient-to-b from-[#00F2FE] to-[#00F2FE]/30 transition-all duration-[1200ms] ease-[cubic-bezier(0.2,0,0.2,1)] ${getStyles()}`} style={{ textShadow: state === 'active' ? '0 0 30px rgba(0, 242, 254, 0.5)' : 'none' }}>{words[index]}</span>
+            {state === 'active' && (<span className="absolute inset-0 px-4 text-transparent bg-clip-text bg-gradient-to-b from-[#00F2FE] to-transparent pointer-events-none z-0 opacity-20" style={{ filter: 'blur(20px)', WebkitTextFillColor: 'transparent' }}>{words[index]}</span>)}
+        </span>
+    );
+};
+
 const HeroTitle: React.FC = () => {
     const t = useTranslation();
+    const words = ["GAME", "LEGACY", "VICTORY"];
     return (
-        <div className="mt-16 mb-12 flex flex-col items-center">
-            <StaticSoccerBall />
-            <div className="text-center mt-6">
-                <h1 className="text-6xl md:text-8xl font-black italic tracking-tighter text-white" style={{ textShadow: '0 0 30px rgba(255, 255, 255, 0.1)' }}>
-                    <span className="text-[#00F2FE]">532</span> HUB
+        <div className="text-center mt-32 md:mt-44 mb-12 md:mb-16 relative">
+            <div className="inline-block relative">
+                <h1 className="font-russo text-4xl md:text-[9rem] leading-[1.1] uppercase tracking-tighter drop-shadow-2xl">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/20">DEFINE YOUR</span> <br />
+                    <DispersingWord words={words} />
                 </h1>
-                <p className="text-[10px] md:text-xs font-chakra font-bold text-white/40 uppercase tracking-[0.6em] mt-4 max-w-sm mx-auto leading-relaxed text-center px-4">
-                    {t.hubWelcomeText}
-                </p>
+                <div className="mt-8 mb-10 max-w-lg mx-auto px-4">
+                    <p className="font-chakra text-[10px] md:text-xs text-white/50 font-medium uppercase tracking-[0.3em] lifestyle-relaxed leading-loose">
+                        {t.hubWelcomeText}
+                    </p>
+                </div>
+                <div className="mt-6 h-px w-48 md:w-64 bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent mx-auto opacity-60 shadow-[0_0_10px_#00F2FE]"></div>
             </div>
         </div>
     );
 };
 
-// FIX: Added missing CinematicCard component
-const CinematicCard: React.FC<{ player: Player; rank: number }> = ({ player, rank }) => {
+const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, rank }) => {
+    const cardRef = useRef<HTMLDivElement>(null);
     const t = useTranslation();
-    const tierColor = TIER_COLORS[player.tier] || '#00F2FE';
-    const countryCodeAlpha2 = player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null;
+    const isFirst = rank === 1;
+    const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
+    const countryCodeAlpha2 = useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
+    const podiumGlowStyle = useMemo(() => {
+        const glows: Record<number, string> = { 1: '0 25px 40px -20px rgba(255, 215, 0, 0.5)', 2: '0 20px 35px -15px rgba(192, 192, 192, 0.5)', 3: '0 20px 35px -15px rgba(205, 127, 50, 0.6)' };
+        return { boxShadow: glows[rank] || 'none' };
+    }, [rank]);
     
+    const topBadges = useMemo(() => sortBadgesByPriority(player.badges || {}).slice(0, 5), [player.badges]);
+
+    useEffect(() => {
+        const card = cardRef.current; if (!card) return;
+        const handleMouseMove = (e: MouseEvent) => { const rect = card.getBoundingClientRect(); const x = e.clientX - rect.left; const y = e.clientY - rect.top; card.style.setProperty('--mouse-x', `${x}px`); card.style.setProperty('--mouse-y', `${y}px`); };
+        card.addEventListener('mousemove', handleMouseMove);
+        return () => { card.addEventListener('mousemove', handleMouseMove); };
+    }, []);
     return (
-        <div className={`relative group transition-all duration-700 hover:scale-105 ${rank === 1 ? 'w-[280px] md:w-[320px] h-[400px] md:h-[460px] z-20' : 'w-[220px] md:w-[260px] h-[320px] md:h-[380px] z-10'}`}>
-            <div className="absolute inset-0 rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl bg-[#161b22]">
-                {player.playerCard && (
-                    <div className="absolute inset-0 bg-cover bg-no-repeat grayscale-[0.2] group-hover:grayscale-0 transition-all duration-700" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }} />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
-                <div className="absolute inset-0 p-6 flex flex-col justify-between">
-                    <div className="flex justify-between items-start">
-                        <div className="flex flex-col">
-                            <span className="text-2xl font-black text-[#00F2FE] leading-none">532</span>
-                            {countryCodeAlpha2 && <img src={`https://flagcdn.com/w80/${countryCodeAlpha2.toLowerCase()}.png`} className="w-6 h-auto mt-2 rounded-sm" alt="" />}
+        <div style={podiumGlowStyle} className={`relative group ${isFirst ? 'scale-105 z-20' : 'scale-90 md:scale-100 z-10'} rounded-3xl transition-shadow duration-300`}>
+            <div ref={cardRef} className={`interactive-card relative ${isFirst ? 'w-[280px] h-[390px]' : 'w-[260px] h-[360px]'} rounded-3xl p-4 overflow-hidden text-white bg-dark-surface border border-white/10`}>
+                {player.playerCard && (<div className="absolute inset-0 w-full h-full bg-cover bg-no-repeat" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }}/>)}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+                {!isBadgeModalOpen && (<div className="absolute top-24 left-4 z-20"><div className="space-y-4">{(player.skills || []).map(skill => (
+                    <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
+                        <StarIcon className="w-4 h-4 text-[#00F2FE]" />
+                        <span className="font-bold text-xs text-white tracking-wider">{skillAbbreviations[skill]}</span>
+                    </div>
+                ))}</div></div>)}
+                <div className="relative z-10 h-full flex flex-col justify-between p-1">
+                     <div className="flex justify-between items-start">
+                        <div>
+                            <p style={{ color: '#00F2FE' }} className="text-base font-black leading-none">532</p>
+                            <p className="text-white text-[7px] font-bold tracking-[0.15em] font-chakra leading-none mt-1">PLAYGROUND</p>
+                            {countryCodeAlpha2 && (<img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} alt={`${player.countryCode} flag`} className="w-6 h-auto mt-3 rounded-sm"/>)}
                         </div>
-                        <div className="flex flex-col items-end">
-                            <span className="text-4xl font-black text-[#00F2FE] leading-none">{player.rating}</span>
-                            <span className="text-[8px] font-black tracking-widest text-white/50 mt-1 uppercase">OVR</span>
+                        <div className="flex flex-col items-center max-w-[50%]">
+                            <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
+                            <p className="font-bold text-white tracking-widest text-sm">OVR</p>
+                            <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
+                            
+                            {topBadges.length > 0 && (
+                                <div className="flex flex-col items-center gap-1 mt-2">
+                                    {topBadges.map(badge => (
+                                        <div key={badge}>
+                                            <BadgeIcon badge={badge} className="w-7 h-7" />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
-                    <div className="text-center">
-                        <div className="inline-block px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-3">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-white/80">{rank === 1 ? '🥇 LEADER' : rank === 2 ? '🥈 CONTENDER' : '🥉 ELITE'}</span>
-                        </div>
-                        <h3 className="text-3xl font-russo uppercase tracking-tighter text-white drop-shadow-lg leading-none">{player.nickname}</h3>
-                        <p className="text-[8px] font-black text-white/40 uppercase tracking-[0.4em] mt-2 italic">{player.tier}</p>
+                    <div className="absolute bottom-2 left-0 right-0 text-center z-30 px-1">
+                        <h1 className="font-black uppercase tracking-tight drop-shadow-lg leading-[0.85]">
+                            <span className="text-3xl md:text-4xl block text-white">{player.nickname}</span>
+                            {player.surname && (
+                                <span className="text-lg md:text-xl block text-white/90 mt-1">{player.surname}</span>
+                            )}
+                        </h1>
                     </div>
                 </div>
             </div>
-            <div className={`absolute -top-3 -right-3 w-10 h-10 rounded-full flex items-center justify-center border-2 z-30 shadow-xl ${rank === 1 ? 'bg-[#FFD700] border-white text-black' : 'bg-[#0a0c10] border-white/20 text-white'}`}>
-                <span className="font-russo font-bold text-lg">#{rank}</span>
-            </div>
         </div>
     );
 };
 
-// FIX: Added missing CinematicStatCard component
-const CinematicStatCard: React.FC<{ value: number; label: string }> = ({ value, label }) => (
-    <div className="flex-1 w-full md:w-auto p-8 rounded-[2rem] bg-white/[0.02] border border-white/5 flex flex-col items-center justify-center group hover:bg-white/[0.04] hover:border-[#00F2FE]/20 transition-all duration-500">
-        <span className="text-5xl md:text-7xl font-russo font-black text-white/90 mb-2 group-hover:text-[#00F2FE] transition-colors">{value}</span>
-        <div className="h-px w-8 bg-white/10 group-hover:w-16 group-hover:bg-[#00F2FE]/50 transition-all duration-500 mb-2"></div>
-        <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] group-hover:text-white/60 transition-colors">{label}</span>
+const CinematicStatCard: React.FC<{ value: string | number; label: string; }> = ({ value, label }) => (
+    <div className="w-full md:flex-1 max-w-xs md:max-w-none h-40">
+        <div className="relative rounded-3xl overflow-hidden bg-white/[0.03] border border-white/10 shadow-2xl h-full backdrop-blur-md">
+            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-40"></div>
+            <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-white/5 to-transparent blur-xl"></div>
+            <div className="relative h-full z-10 flex flex-col items-center justify-center gap-2">
+                <span className="font-russo font-black text-6xl md:text-7xl text-white tracking-widest leading-none">{value}</span>
+                <span className="font-chakra font-bold text-xs text-white/50 uppercase tracking-[0.2em]">{label}</span>
+            </div>
+        </div>
     </div>
 );
 
+// Define allowed view types to match ClubIntelligenceDashboard and avoid TS2322
+type DashboardViewType = 'info' | 'dashboard' | 'roster' | 'archive' | 'duel' | 'tournaments' | 'league';
 
 export const PublicHubScreen: React.FC = () => {
     const navigate = useNavigate();
@@ -304,10 +504,16 @@ export const PublicHubScreen: React.FC = () => {
 
     const displayData = useMemo(() => {
         const confirmedRealPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
-        
-        // --- UPDATED TO USE UNIFIED SORTING LOGIC ---
-        const sorted = sortPlayersByRating(confirmedRealPlayers);
-        
+        const sorted = [...confirmedRealPlayers].sort((a, b) => {
+            if (b.rating !== a.rating) return b.rating - a.rating;
+            const scoreA = (a.totalGoals || 0) + (a.totalAssists || 0);
+            const scoreB = (b.totalGoals || 0) + (b.totalAssists || 0);
+            if (scoreB !== scoreA) return scoreB - scoreA;
+            const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0;
+            const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0;
+            if (wrB !== wrA) return wrB - wrA;
+            return (b.totalGames || 0) - (a.totalGames || 0);
+        });
         return { top: sorted.slice(0, 3) };
     }, [allPlayers]);
     
@@ -332,7 +538,6 @@ export const PublicHubScreen: React.FC = () => {
     // Helper for safe tab changes
     const handleTabChange = (tab: any) => {
         setDashboardView(tab as DashboardViewType);
-        if (!isDashboardOpen) setIsDashboardOpen(true); // Ensure dashboard opens when a tab is selected
     };
 
     return (
@@ -401,10 +606,7 @@ export const PublicHubScreen: React.FC = () => {
                         <div className="text-center px-4">
                             <div className="mt-10 mb-24">
                                 <button 
-                                    onClick={() => {
-                                        setIsDashboardOpen(true);
-                                        setDashboardView('dashboard');
-                                    }} 
+                                    onClick={() => setIsDashboardOpen(true)} 
                                     className="mx-auto block bg-transparent text-[#00F2FE] font-bold text-lg py-3.5 px-10 rounded-xl shadow-[0_0_20px_rgba(0,242,254,0.4)] hover:shadow-[0_0_30px_rgba(0,242,254,0.6)] hover:bg-[#00F2FE]/10 transition-all transform hover:scale-[1.05] active:scale-95 group border border-[#00F2FE]/20"
                                 >
                                     <span className="font-chakra font-black text-xl uppercase tracking-[0.25em] group-hover:text-white transition-colors">{t.hubDashboardBtn}</span>

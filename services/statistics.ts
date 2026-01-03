@@ -31,34 +31,6 @@ interface TeamStats {
 
 const getPlayerById = (id: string, players: Player[]) => players.find(p => p.id === id);
 
-/**
- * Unified sorting logic for all player leaderboards and rankings.
- * Priority: 
- * 1. Rating (DESC)
- * 2. Total Contributions (Goals + Assists) (DESC)
- * 3. Win Rate (DESC)
- * 4. Games Played (DESC)
- */
-export const sortPlayersByRating = (players: Player[]): Player[] => {
-    return [...players].sort((a, b) => {
-        // 1. Rating
-        if (b.rating !== a.rating) return b.rating - a.rating;
-
-        // 2. Tie-breaker: Goals + Assists
-        const scoreA = (a.totalGoals || 0) + (a.totalAssists || 0);
-        const scoreB = (b.totalGoals || 0) + (b.totalAssists || 0);
-        if (scoreB !== scoreA) return scoreB - scoreA;
-
-        // 3. Tie-breaker: Win Rate
-        const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0;
-        const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0;
-        if (wrB !== wrA) return wrB - wrA;
-
-        // 4. Tie-breaker: Experience (Total games played)
-        return (b.totalGames || 0) - (a.totalGames || 0);
-    });
-};
-
 export const calculateAllStats = (session: Session) => {
     // Safeguard: ensure teams exists (handle corrupted legacy data)
     const teams = session.teams || [];
