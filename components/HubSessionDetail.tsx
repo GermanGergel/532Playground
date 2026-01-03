@@ -157,14 +157,14 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
                                         {idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'}
                                     </div>
                                     <div className="flex flex-col justify-center">
-                                        <span className={`font-russo text-xs md:text-sm uppercase tracking-wide truncate max-w-[140px] leading-none ${idx === 0 ? 'text-white' : 'text-slate-300'}`}>
+                                        <span className={`font-russo text-xs uppercase tracking-wide truncate max-w-[140px] leading-none ${idx === 0 ? 'text-white' : 'text-slate-300'}`}>
                                             {stat.player.nickname || 'Unknown'}
                                         </span>
                                         {idx === 0 && <span className="text-[8px] font-bold text-[#FFD700] tracking-widest uppercase mt-1">MVP OF THE MATCH</span>}
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-end justify-center bg-black/20 px-3 py-1.5 rounded-xl border border-white/5 min-w-[75px]">
-                                    <span className="font-mono font-black text-lg text-white leading-none tracking-tight">{impact.toFixed(1)}</span>
+                                    <span className="font-mono font-black text-base text-white leading-none tracking-tight">{impact.toFixed(1)}</span>
                                     <span className="text-[8px] text-[#00F2FE] font-black tracking-widest uppercase mt-0.5">PTS</span>
                                 </div>
                             </div>
@@ -302,21 +302,21 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                             </thead>
                                             <tbody>
                                                 {sortedByStats.map((ps, idx) => (
-                                                    <tr key={ps.player.id} className="group border-b border-white/5 last:border-0">
-                                                        <td className={`${tdBase} text-white/30 font-mono`}>{idx + 1}</td>
-                                                        <td className="py-2 text-left pl-4 relative overflow-hidden">
+                                                    <tr key={ps.player.id} className="group border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors">
+                                                        <td className={`${tdBase} py-3 text-white/30 font-mono`}>{idx + 1}</td>
+                                                        <td className="py-3 text-left pl-4 relative overflow-hidden">
                                                             <div 
-                                                                className="absolute left-0 top-1/2 -translate-y-1/2 w-[1.5px] h-3 rounded-full"
+                                                                className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-4 rounded-full"
                                                                 style={{ 
                                                                     backgroundColor: ps.team.color,
                                                                     boxShadow: `0 0 8px ${ps.team.color}`
                                                                 }}
                                                             />
-                                                            <span className="text-slate-300 font-bold uppercase truncate text-[10px] block w-full pl-2 transition-colors">{ps.player.nickname || 'Unknown'}</span>
+                                                            <span className="text-slate-300 font-bold uppercase truncate text-[11px] block w-full pl-3 transition-colors group-hover:text-white">{ps.player.nickname || 'Unknown'}</span>
                                                         </td>
-                                                        <td className={`${tdBase} text-white/70 font-mono`}>{ps.goals}</td>
-                                                        <td className={`${tdBase} text-white/70 font-mono`}>{ps.assists}</td>
-                                                        <td className={`${tdBase} text-white font-black text-[11px]`}>{ps.goals + ps.assists}</td>
+                                                        <td className={`${tdBase} py-3 text-white/70 font-mono`}>{ps.goals}</td>
+                                                        <td className={`${tdBase} py-3 text-white/70 font-mono`}>{ps.assists}</td>
+                                                        <td className={`${tdBase} py-3 text-white font-black text-[12px]`}>{ps.goals + ps.assists}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -340,14 +340,14 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                                             className={`group border-b border-white/5 last:border-0 transition-transform duration-300 will-change-transform ${totalScore > 0 ? 'hover:scale-[1.03] hover:relative hover:z-20 cursor-pointer hover:bg-white/5' : 'cursor-default'} ${expandedMatchId === game.id ? 'bg-white/5' : ''}`}
                                                             onClick={() => totalScore > 0 && setExpandedMatchId(expandedMatchId === game.id ? null : game.id)}
                                                         >
-                                                            <td className={`${tdBase} text-white/30 font-mono`}>{game.gameNumber}</td>
-                                                            <td className="py-2.5 text-center">
+                                                            <td className={`${tdBase} py-3.5 text-white/30 font-mono`}>{game.gameNumber}</td>
+                                                            <td className="py-3.5 text-center">
                                                                 <div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team1Id) || {}} size="xxs" isLight={true} /></div>
                                                             </td>
-                                                            <td className="py-2.5 text-center">
+                                                            <td className="py-3.5 text-center">
                                                                 <span className="font-bold text-[11px] md:text-[12px] text-slate-200 tabular-nums tracking-tighter bg-white/5 px-2 py-1 rounded transition-colors group-hover:text-white group-hover:bg-[#00F2FE]/10">{game.team1Score} : {game.team2Score}</span>
                                                             </td>
-                                                            <td className="py-2.5 text-center">
+                                                            <td className="py-3.5 text-center">
                                                                 <div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team2Id) || {}} size="xxs" isLight={true} /></div>
                                                             </td>
                                                         </tr>
