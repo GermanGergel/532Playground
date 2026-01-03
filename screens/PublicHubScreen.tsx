@@ -20,7 +20,7 @@ const skillAbbreviations: Record<SkillType, string> = {
 };
 
 const StaticSoccerBall: React.FC = () => (
-    <div className="absolute bottom-[4px] left-[120px] md:left-[160px] w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none transition-all duration-500">
+    <div className="relative w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none ml-3">
         <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] overflow-visible">
             <defs>
                 <radialGradient id="ballShading" cx="40%" cy="35%" r="65%"><stop offset="0%" stopColor="#ffffff" /><stop offset="50%" stopColor="#e2e8f0" /><stop offset="85%" stopColor="#94a3b8" /><stop offset="100%" stopColor="#1e293b" /></radialGradient>
@@ -47,7 +47,7 @@ const StaticSoccerBall: React.FC = () => (
     </div>
 );
 
-// ... (Other helper components like FormArrowIndicator, NoLeadersPlaceholder, MotivationalTicker, HangingTag, NavHubButton remain unchanged)
+// ... (Other helper components remain unchanged)
 const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
     const config = {
         hot_streak: { color: '#4CFF5F' }, stable: { color: '#A9B1BD' }, cold_streak: { color: '#FF4136' },
@@ -196,8 +196,8 @@ const HubNav: React.FC<{
 
     const navContainerClass = `
         fixed top-3 left-1/2 -translate-x-1/2 z-[100] 
-        flex items-center justify-center 
-        w-full max-w-[1450px] pr-4 py-0 
+        flex items-center justify-between
+        w-full max-w-[1450px] px-6 py-0 
         bg-black/85 backdrop-blur-xl rounded-2xl border border-white/10
         shadow-[0_8px_20px_-6px_rgba(0,0,0,0.5),0_0_15px_rgba(0,242,254,0.1),inset_0_1px_0_rgba(255,255,255,0.05)] 
         h-[42px] md:h-[54px] transition-all duration-300
@@ -211,7 +211,9 @@ const HubNav: React.FC<{
                 .animate-pendant-swing { animation: pendant-swing 5s ease-in-out infinite; }
                 .animate-fiber-pulse { animation: fiber-pulse 3.5s linear infinite; }
             `}} />
-            <div className="absolute left-10 flex items-center shrink-0 h-full">
+            
+            {/* LEFT SECTION */}
+            <div className="flex items-center gap-4 shrink-0 h-full">
                 <div className="flex items-center">
                     <HangingTag digit="5" label="PLAYERS" height={20} delay="0s" pulseDuration="2.8s" />
                     <HangingTag digit="3" label="SQUADS" height={50} delay="1.5s" pulseDuration="4.2s" />
@@ -227,40 +229,42 @@ const HubNav: React.FC<{
                 </div>
             </div>
             
-            <div className={`flex-grow h-full overflow-hidden flex items-center ${isDashboardOpen ? 'justify-center px-4' : 'justify-start pl-48 pr-4'}`}>
+            {/* CENTER SECTION - ABSOLUTELY CENTERED FOR PERFECT ALIGNMENT */}
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none w-full max-w-[400px]">
                 {isDashboardOpen ? (
-                    <div className="flex items-center gap-8 min-w-fit">
-                        <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center">
-                            {activeTab === 'dashboard' ? (
-                                <>
-                                    <span className="font-russo text-[7px] text-[#00F2FE] tracking-[0.3em] uppercase leading-none opacity-80 mb-0.5">SESSION BROADCAST</span>
-                                    <span className="font-chakra text-sm md:text-lg font-bold text-white tracking-widest leading-none">{sessionDate || 'LIVE'}</span>
-                                </>
-                            ) : (
-                                <div className="flex flex-col items-center justify-center">
-                                    {activeTab === 'archive' && archiveViewDate ? (
-                                        <>
-                                            <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none" style={{ textShadow: '0 0 25px rgba(255, 255, 255, 0.2)' }}>{archiveViewDate}</span>
-                                            <span className="text-[7px] md:text-[8px] font-chakra font-black text-[#00F2FE] uppercase tracking-[0.4em] mt-0.5 ml-1 opacity-90 shadow-[0_0_10px_rgba(0,242,254,0.4)]">ARCHIVE</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none" style={{ textShadow: '0 0 25px rgba(255, 255, 255, 0.2)' }}>{tabTitles[activeTab] || 'DASHBOARD'}</span>
-                                            {activeTab === 'archive' && !archiveViewDate && (
-                                                <span className="text-[7px] md:text-[8px] font-chakra font-black text-[#00F2FE] uppercase tracking-[0.4em] mt-0.5 ml-1 opacity-90 shadow-[0_0_10px_rgba(0,242,254,0.4)]">HISTORY</span>
-                                            )}
-                                        </>
-                                    )}
-                                </div>
-                            )}
-                        </div>
+                    <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center">
+                        {activeTab === 'dashboard' ? (
+                            <>
+                                <span className="font-russo text-[7px] text-[#00F2FE] tracking-[0.3em] uppercase leading-none opacity-80 mb-0.5">SESSION BROADCAST</span>
+                                <span className="font-chakra text-sm md:text-lg font-bold text-white tracking-widest leading-none text-center truncate w-full">{sessionDate || 'LIVE'}</span>
+                            </>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center">
+                                {activeTab === 'archive' && archiveViewDate ? (
+                                    <>
+                                        <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none" style={{ textShadow: '0 0 25px rgba(255, 255, 255, 0.2)' }}>{archiveViewDate}</span>
+                                        <span className="text-[7px] md:text-[8px] font-chakra font-black text-[#00F2FE] uppercase tracking-[0.4em] mt-0.5 ml-1 opacity-90 shadow-[0_0_10px_rgba(0,242,254,0.4)]">ARCHIVE</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none" style={{ textShadow: '0 0 25px rgba(255, 255, 255, 0.2)' }}>{tabTitles[activeTab] || 'DASHBOARD'}</span>
+                                        {activeTab === 'archive' && !archiveViewDate && (
+                                            <span className="text-[7px] md:text-[8px] font-chakra font-black text-[#00F2FE] uppercase tracking-[0.4em] mt-0.5 ml-1 opacity-90 shadow-[0_0_10px_rgba(0,242,254,0.4)]">HISTORY</span>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        )}
                     </div>
                 ) : (
-                    <MotivationalTicker />
+                    <div className="w-full flex items-center justify-center pointer-events-auto">
+                        <MotivationalTicker />
+                    </div>
                 )}
             </div>
             
-            <div className="absolute right-4 flex items-center gap-1 md:gap-3 shrink-0 h-full py-1">
+            {/* RIGHT SECTION */}
+            <div className="flex items-center gap-1 md:gap-3 shrink-0 h-full py-1">
                 {isDashboardOpen && (
                     <div className="flex items-center gap-2 md:gap-4 mr-2 h-full animate-in fade-in slide-in-from-right-3 duration-500">
                         <div className="mr-3 flex items-center border-r border-white/10 pr-4 gap-3">
