@@ -84,74 +84,98 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
-            <div className="grid grid-cols-1 gap-2 shrink-0">
-                <div className="flex items-center gap-2 bg-white/[0.02] border border-white/5 rounded-xl p-2">
-                    <div className="w-8 h-8 rounded-lg bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shrink-0"><MapPinIcon className="w-4 h-4" /></div>
+            {/* TOP SECTION: Fixed Height Elements */}
+            <div className="flex flex-col gap-3 shrink-0 mb-4">
+                {/* Location */}
+                <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-2xl p-3 shadow-sm">
+                    <div className="w-10 h-10 rounded-xl bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shrink-0">
+                        <MapPinIcon className="w-5 h-5" />
+                    </div>
                     <div className="flex flex-col min-w-0">
-                        <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.2em]">LOCATION</span>
+                        <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">LOCATION</span>
                         {mapsLink ? (
                             <a 
                                 href={mapsLink} 
                                 target="_blank" 
                                 rel="noopener noreferrer" 
-                                className="group/loc flex items-center gap-1 font-chakra font-bold text-xs text-slate-200 uppercase tracking-wide truncate hover:text-[#00F2FE] transition-colors"
+                                className="group/loc flex items-center gap-1 font-chakra font-bold text-sm text-slate-200 uppercase tracking-wide truncate hover:text-[#00F2FE] transition-colors"
                             >
-                                <span className="truncate border-b border-white/5 group-hover/loc:border-[#00F2FE]/40">{data.location}</span>
-                                <svg className="w-2.5 h-2.5 opacity-30 group-hover/loc:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+                                <span className="truncate border-b border-white/10 group-hover/loc:border-[#00F2FE]/40">{data.location}</span>
+                                <svg className="w-3 h-3 opacity-30 group-hover/loc:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
                             </a>
                         ) : (
-                            <span className="font-chakra font-bold text-xs text-slate-200 uppercase tracking-wide truncate">{data.location}</span>
+                            <span className="font-chakra font-bold text-sm text-slate-200 uppercase tracking-wide truncate">{data.location}</span>
                         )}
                     </div>
                 </div>
                 
-                <div className="flex items-center justify-between gap-2">
-                    <div className="flex-grow flex items-center gap-2 bg-white/[0.02] border border-white/5 rounded-xl p-2">
-                        <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0"><ClockIcon className="w-4 h-4" /></div>
-                        <div className="flex flex-col">
-                            <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.2em]">TIME</span>
-                            <span className="font-mono font-bold text-xs text-slate-200 tracking-widest">{data.time}</span>
+                <div className="flex items-stretch gap-3">
+                    {/* Time */}
+                    <div className="flex-grow flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-2xl p-3 shadow-sm">
+                        <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0">
+                            <ClockIcon className="w-5 h-5" />
+                        </div>
+                        <div className="flex flex-col justify-center">
+                            <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">TIME</span>
+                            <span className="font-mono font-bold text-sm text-slate-200 tracking-widest">{data.time}</span>
                         </div>
                     </div>
                     
-                    <div className="flex items-center gap-2 px-3 h-12 bg-indigo-900/20 rounded-xl border border-indigo-500/20 shrink-0">
-                        <div className="flex flex-col items-end">
-                            <span className="font-russo text-lg text-slate-200 leading-none">{data.temp}</span>
-                            <span className="text-[6px] font-bold text-indigo-300 uppercase tracking-wider">{data.condition}</span>
+                    {/* Weather */}
+                    <div className="flex items-center gap-3 px-4 bg-indigo-900/20 rounded-2xl border border-indigo-500/20 shrink-0 shadow-sm">
+                        <div className="flex flex-col items-end justify-center">
+                            <span className="font-russo text-2xl text-slate-200 leading-none">{data.temp}</span>
+                            <span className="text-[8px] font-bold text-indigo-300 uppercase tracking-wider mt-0.5">{data.condition}</span>
                         </div>
-                        {getWeatherIcon(data.condition)}
+                        <div className="scale-110">{getWeatherIcon(data.condition)}</div>
                     </div>
                 </div>
             </div>
 
-            <div className="mt-3 flex-grow flex flex-col min-h-0">
-                <div className="flex items-center gap-2 mb-1.5 opacity-80 shrink-0">
-                    <TrophyIcon className="w-2.5 h-2.5 text-[#FFD700]" />
-                    <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.2em]">SESSION LEADERS (IMPACT)</span>
+            {/* BOTTOM SECTION: Expanding Leaders List */}
+            <div className="flex-grow flex flex-col min-h-0">
+                <div className="flex items-center gap-2 mb-2 opacity-90 shrink-0 pl-1">
+                    <TrophyIcon className="w-3.5 h-3.5 text-[#FFD700]" />
+                    <span className="text-[9px] font-black text-white/50 uppercase tracking-[0.25em]">SESSION LEADERS (IMPACT)</span>
                 </div>
                 
-                <div className="flex-grow overflow-y-auto custom-hub-scrollbar pr-0.5">
-                    <div className="flex flex-col gap-1">
-                        {topPlayers.slice(0, 3).map((stat, idx) => {
-                            const impact = getImpactScore(stat);
-                            return (
-                                <div key={stat.player.id} className="flex items-center justify-between p-2 rounded-xl bg-white/[0.03] border border-white/5">
-                                    <div className="flex items-center gap-2.5">
-                                        <div className="w-5 h-5 rounded-lg bg-black/40 flex items-center justify-center border border-white/5 text-[10px]">
-                                            {idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'}
-                                        </div>
-                                        <span className={`font-russo text-[10px] uppercase tracking-wide truncate max-w-[120px] ${idx === 0 ? 'text-[#FFD700]' : idx === 1 ? 'text-slate-300' : 'text-amber-700'}`}>
+                {/* Use flex-grow and gap to fill vertical space */}
+                <div className="flex-grow flex flex-col gap-2 min-h-0">
+                    {topPlayers.slice(0, 3).map((stat, idx) => {
+                        const impact = getImpactScore(stat);
+                        // Using flex-1 to make items expand equally to fill the container height
+                        return (
+                            <div key={stat.player.id} className="flex-1 flex items-center justify-between px-4 rounded-2xl bg-white/[0.03] border border-white/5 relative overflow-hidden group hover:bg-white/[0.05] transition-colors">
+                                {/* Rank Color Strip */}
+                                <div className={`absolute left-0 top-0 bottom-0 w-1 ${idx === 0 ? 'bg-[#FFD700]' : idx === 1 ? 'bg-slate-300' : 'bg-amber-700'}`}></div>
+
+                                <div className="flex items-center gap-4 pl-2">
+                                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center border text-xs font-black shadow-lg
+                                        ${idx === 0 ? 'bg-[#FFD700]/10 border-[#FFD700]/30 text-[#FFD700]' : 
+                                          idx === 1 ? 'bg-slate-300/10 border-slate-300/30 text-slate-300' : 
+                                          'bg-amber-700/10 border-amber-700/30 text-amber-700'}`}>
+                                        {idx === 0 ? '1' : idx === 1 ? '2' : '3'}
+                                    </div>
+                                    <div className="flex flex-col justify-center">
+                                        <span className={`font-russo text-sm md:text-base uppercase tracking-wide truncate max-w-[140px] leading-none ${idx === 0 ? 'text-white' : 'text-slate-300'}`}>
                                             {stat.player.nickname || 'Unknown'}
                                         </span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 shrink-0 bg-black/20 px-2 py-1 rounded-lg border border-white/5">
-                                        <span className="font-mono font-black text-[11px] text-white leading-none">{impact.toFixed(1)}</span>
-                                        <span className="text-[6px] text-[#00F2FE] font-black tracking-widest uppercase">PTS</span>
+                                        {idx === 0 && <span className="text-[8px] font-bold text-[#FFD700] tracking-widest uppercase mt-1">MVP OF THE MATCH</span>}
                                     </div>
                                 </div>
-                            );
-                        })}
-                    </div>
+                                <div className="flex flex-col items-end justify-center bg-black/20 px-3 py-1.5 rounded-xl border border-white/5 min-w-[75px]">
+                                    <span className="font-mono font-black text-xl text-white leading-none tracking-tight">{impact.toFixed(1)}</span>
+                                    <span className="text-[8px] text-[#00F2FE] font-black tracking-widest uppercase mt-0.5">PTS</span>
+                                </div>
+                            </div>
+                        );
+                    })}
+                    {/* Fill empty state if no players */}
+                    {topPlayers.length === 0 && (
+                        <div className="flex-1 flex items-center justify-center text-white/20 text-xs font-bold uppercase tracking-widest border border-white/5 rounded-2xl bg-white/[0.01]">
+                            No Stats Available
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
