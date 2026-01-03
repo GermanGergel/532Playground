@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { useApp } from '../context';
 import { HubProgressChart } from './HubAnalytics';
@@ -173,12 +174,11 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
 
     const tierColor = TIER_COLORS[player.tier] || '#00F2FE';
     const perimeterStyle: React.CSSProperties = {
-        // FURTHER ENHANCED GLOW: Added more layers and wider spread to fully wrap the rounded-[2.5rem] corners evenly.
+        // REDUCED GLOW INTENSITY: Lowered the spread and blur values for a subtler, cleaner appearance as requested.
         boxShadow: `
-            0 0 15px -2px ${tierColor}aa,
-            0 0 45px -8px ${tierColor}77,
-            0 0 90px -15px ${tierColor}44,
-            inset 0 0 20px -10px ${tierColor}88
+            0 0 10px -2px ${tierColor}88,
+            0 0 30px -10px ${tierColor}55,
+            inset 0 0 15px -10px ${tierColor}66
         `,
         borderRadius: '2.5rem',
         background: 'transparent',

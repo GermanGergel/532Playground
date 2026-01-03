@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApp } from '../context';
 import { PlayerTier, PlayerStatus, Player } from '../types';
@@ -104,8 +105,6 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
             setDuelSlots([null, null]);
         } else {
             setViewMode('duel');
-            // CRITICAL FIX: When entering duel mode, we reset slots to [null, null] 
-            // instead of taking the currently selected player from intel mode.
             setDuelSlots([null, null]);
         }
     };
@@ -190,7 +189,8 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                                         <span className="text-[7px] font-mono font-black text-white/20 uppercase tracking-[0.2em]">{person.tier}</span>
                                     </div>
                                     <div className="flex flex-col items-end shrink-0">
-                                        <div className="flex items-baseline gap-1">
+                                        {/* ADJUSTED GAP: Increased from gap-1 to gap-2.5 for better spacing between Rating and OVR */}
+                                        <div className="flex items-baseline gap-2.5">
                                             <span 
                                                 className={`font-russo text-2xl transition-all duration-300 ${isSelected ? 'text-white scale-110' : 'text-white/40'}`}
                                                 style={{ 
