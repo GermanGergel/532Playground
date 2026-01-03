@@ -40,6 +40,7 @@ const StaticSoccerBall: React.FC = () => (
                 <path d="M 18 42 L 18 20 C 18 -15, 88 -18, 90 25 L 82 42 Z" fill="url(#hatBodyGradient)" stroke="#7f1d1d" strokeWidth="0.3" />
                 <path d="M 22 25 C 22 -5, 75 -10, 80 20" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" opacity="0.1" />
                 <circle cx="90" cy="25" r="8.5" fill="url(#pompomGradient)" stroke="#94a3b8" strokeWidth="0.1" /><circle cx="90" cy="25" r="8.5" fill="black" opacity="0.05" transform="translate(-1, 1)" />
+                <circle cx="90" cy="25" r="8.5" fill="black" opacity="0.05" transform="translate(-1, 1)" />
                 <g filter="url(#furTexture)"><path d="M 8 40 Q 50 25 92 40 Q 96 48 92 55 Q 50 40 8 55 Q 4 48 8 40 Z" fill="#FFFFFF" stroke="#f1f5f9" strokeWidth="0.2" /></g>
                 <path d="M 12 48 Q 50 38 88 48" fill="none" stroke="#cbd5e1" strokeWidth="0.5" opacity="0.3" />
             </g>
@@ -47,7 +48,6 @@ const StaticSoccerBall: React.FC = () => (
     </div>
 );
 
-// ... (Other helper components remain unchanged)
 const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
     const config = {
         hot_streak: { color: '#4CFF5F' }, stable: { color: '#A9B1BD' }, cold_streak: { color: '#FF4136' },
@@ -230,8 +230,8 @@ const HubNav: React.FC<{
             </div>
             
             {/* CENTER SECTION - Dynamic Content (Title/Ticker) */}
-            {/* pl-[40px] = 1cm, pr-[20px] = 0.5cm relative to neighboring blocks */}
-            <div className="flex-grow h-full flex items-center justify-center pl-[40px] pr-[20px] overflow-hidden min-w-0">
+            {/* pl-[20px] = 0.5cm from ball, pr-[20px] = 0.5cm from block language */}
+            <div className="flex-grow h-full flex items-center justify-center pl-[20px] pr-[20px] overflow-hidden min-w-0">
                 {isDashboardOpen ? (
                     <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center pointer-events-none text-center w-full min-w-0">
                         {activeTab === 'dashboard' ? (
