@@ -516,35 +516,31 @@ export const PublicHubDashboard: React.FC = () => {
                     
                     <HubCard 
                         title={
-                            <div className="flex items-center gap-3">
+                            <div className="relative group/tab">
                                 <button 
                                     onClick={() => handleManualTabChange('players')} 
                                     className={`font-russo text-[10px] uppercase tracking-widest transition-all duration-300 ${activeRightTab === 'players' ? 'text-[#00F2FE]' : 'opacity-20 hover:opacity-50'}`}
                                 >
                                     {t.hubPlayers}
                                 </button>
-                                
-                                {isAutoSwitching && (
-                                    <div className="w-10 h-[1.5px] bg-white/10 relative overflow-hidden rounded-full">
-                                        <div 
-                                            className="absolute top-0 h-full bg-[#00F2FE] transition-all duration-75 shadow-[0_0_5px_#00F2FE]" 
-                                            style={{ 
-                                                width: `${autoSwitchProgress}%`,
-                                                left: activeRightTab === 'players' ? 0 : 'auto',
-                                                right: activeRightTab === 'players' ? 'auto' : 0
-                                            }} 
-                                        />
-                                    </div>
+                                {isAutoSwitching && activeRightTab === 'players' && (
+                                    <div className="absolute -bottom-1 left-0 h-[1.5px] bg-[#00F2FE] transition-all duration-75 shadow-[0_0_5px_#00F2FE]" style={{ width: `${autoSwitchProgress}%` }} />
                                 )}
-
+                            </div>
+                        } 
+                        headerExtra={
+                            <div className="relative group/tab">
                                 <button 
                                     onClick={() => handleManualTabChange('games')} 
                                     className={`font-russo text-[10px] uppercase tracking-widest transition-all duration-300 ${activeRightTab === 'games' ? 'text-[#00F2FE]' : 'opacity-20 hover:opacity-50'}`}
                                 >
                                     {t.hubGames}
                                 </button>
+                                {isAutoSwitching && activeRightTab === 'games' && (
+                                    <div className="absolute -bottom-1 left-0 h-[1.5px] bg-[#00F2FE] transition-all duration-75 shadow-[0_0_5px_#00F2FE]" style={{ width: `${autoSwitchProgress}%` }} />
+                                )}
                             </div>
-                        } 
+                        }
                         icon={activeRightTab === 'players' ? <Users /> : <HistoryIcon />} 
                         variant="standings" 
                         accent="#00F2FE" 
@@ -591,7 +587,7 @@ export const PublicHubDashboard: React.FC = () => {
                                                     <td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team2Id) || {}} size="xxs" isLight={true} /></div></td>
                                                 </tr>
                                                 {expandedMatchId === game.id && (
-                                                    <tr className="bg-black/60 animate-in slide-in-from-top-2 fade-in duration-300">
+                                                    <tr className="bg-white/[0.03] animate-in slide-in-from-top-2 fade-in duration-300">
                                                         <td colSpan={4} className="p-3">
                                                             <div className="flex flex-col gap-2">
                                                                 {game.goals.length > 0 ? (

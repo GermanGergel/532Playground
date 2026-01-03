@@ -322,7 +322,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                                             </td>
                                                         </tr>
                                                         {expandedMatchId === game.id && (
-                                                            <tr className="bg-black/50 animate-in slide-in-from-top-2 fade-in duration-300">
+                                                            <tr className="bg-white/[0.03] animate-in slide-in-from-top-2 fade-in duration-300">
                                                                 <td colSpan={4} className="p-3">
                                                                     <div className="flex flex-col gap-2">
                                                                         {game.goals.length > 0 ? (
