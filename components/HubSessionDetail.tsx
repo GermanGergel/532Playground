@@ -184,7 +184,7 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
 
 const HubCard: React.FC<{ title: React.ReactNode; icon: React.ReactNode; children: React.ReactNode; className?: string; bodyClassName?: string; accent?: string; }> = ({ title, icon, children, className = "", bodyClassName = "", accent = "#fff" }) => {
     return (
-        <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#161b22] to-[#0a0d14] border border-white/[0.06] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.05)] group/bento flex flex-col ${className}`}>
+        <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0d1117] to-[#010409] border border-white/[0.06] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.05)] group/bento flex flex-col ${className}`}>
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`, backgroundSize: '4px 4px' }}></div>
             <div className="absolute -top-10 -left-10 w-40 h-40 bg-[#00F2FE]/[0.03] rounded-full blur-[40px] pointer-events-none z-0 animate-pulse" style={{ animationDuration: '4s' }}></div>
             <div className="relative py-2.5 px-5 flex items-center shrink-0 bg-transparent border-b border-white/5 z-10 justify-between">
@@ -212,8 +212,12 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
 
     const sortedByStats = useMemo(() => [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists)), [allPlayersStats]);
     const finishedGames = session.games.filter(g => g.status === 'finished');
-    const thClass = "py-2 text-white/40 uppercase tracking-tighter text-[8px] font-black text-center sticky top-0 bg-transparent backdrop-blur-sm z-10 border-b border-white/5";
-    const tdBase = "py-1.5 text-center text-[10px] font-bold transition-colors";
+    
+    // Increased vertical padding (py-3) and slightly increased font size (text-[9px]) for header
+    const thClass = "py-3 text-white/40 uppercase tracking-tighter text-[9px] font-black text-center sticky top-0 bg-[#12161b] backdrop-blur-md z-10 border-b border-white/5";
+    
+    // Increased vertical padding (py-2.5) and font size (text-[11px]) for data rows
+    const tdBase = "py-2.5 text-center text-[11px] font-bold transition-colors";
 
     return (
         <div className={`${isEmbedded ? 'relative h-full w-full' : 'absolute inset-0 z-30'} flex flex-col animate-in slide-in-from-right duration-500 overflow-hidden ${!isEmbedded ? 'rounded-[2.5rem]' : ''}`}>
@@ -259,7 +263,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                             {teamStats.map((stat, idx) => (
                                                 <tr key={stat.team.id} className="group border-b border-white/5 last:border-0 transition-all duration-300">
                                                     <td className={`${tdBase} text-white/30 bg-white/[0.02]`}>{idx + 1}</td>
-                                                    <td className="py-1.5 flex justify-center">
+                                                    <td className="py-2.5 flex justify-center">
                                                         <SubtleDashboardAvatar team={stat.team} size="xxs" isLight={true} />
                                                     </td>
                                                     <td className={`${tdBase} text-slate-300`}>{stat.gamesPlayed}</td>
@@ -303,8 +307,8 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                             <tbody>
                                                 {sortedByStats.map((ps, idx) => (
                                                     <tr key={ps.player.id} className="group border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors">
-                                                        <td className={`${tdBase} py-1.5 text-white/30 font-mono`}>{idx + 1}</td>
-                                                        <td className="py-1.5 text-left pl-4 relative overflow-hidden">
+                                                        <td className={`${tdBase} text-white/30 font-mono`}>{idx + 1}</td>
+                                                        <td className="py-2.5 text-left pl-4 relative overflow-hidden">
                                                             <div 
                                                                 className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-3 rounded-full"
                                                                 style={{ 
@@ -312,11 +316,11 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                                                     boxShadow: `0 0 8px ${ps.team.color}`
                                                                 }}
                                                             />
-                                                            <span className="text-slate-300 font-bold uppercase truncate text-[10px] block w-full pl-3 transition-colors group-hover:text-white">{ps.player.nickname || 'Unknown'}</span>
+                                                            <span className="text-slate-300 font-bold uppercase truncate text-[11px] block w-full pl-3 transition-colors group-hover:text-white">{ps.player.nickname || 'Unknown'}</span>
                                                         </td>
-                                                        <td className={`${tdBase} py-1.5 text-white/70 font-mono`}>{ps.goals}</td>
-                                                        <td className={`${tdBase} py-1.5 text-white/70 font-mono`}>{ps.assists}</td>
-                                                        <td className={`${tdBase} py-1.5 text-white font-black text-[11px]`}>{ps.goals + ps.assists}</td>
+                                                        <td className={`${tdBase} text-white/70 font-mono`}>{ps.goals}</td>
+                                                        <td className={`${tdBase} text-white/70 font-mono`}>{ps.assists}</td>
+                                                        <td className={`${tdBase} text-white font-black text-[12px]`}>{ps.goals + ps.assists}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -340,14 +344,14 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                                             className={`group border-b border-white/5 last:border-0 transition-transform duration-300 will-change-transform ${totalScore > 0 ? 'hover:scale-[1.03] hover:relative hover:z-20 cursor-pointer hover:bg-white/5' : 'cursor-default'} ${expandedMatchId === game.id ? 'bg-white/5' : ''}`}
                                                             onClick={() => totalScore > 0 && setExpandedMatchId(expandedMatchId === game.id ? null : game.id)}
                                                         >
-                                                            <td className={`${tdBase} py-3.5 text-white/30 font-mono`}>{game.gameNumber}</td>
-                                                            <td className="py-3.5 text-center">
+                                                            <td className={`${tdBase} text-white/30 font-mono`}>{game.gameNumber}</td>
+                                                            <td className="py-2.5 text-center">
                                                                 <div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team1Id) || {}} size="xxs" isLight={true} /></div>
                                                             </td>
-                                                            <td className="py-3.5 text-center">
+                                                            <td className="py-2.5 text-center">
                                                                 <span className="font-bold text-[11px] md:text-[12px] text-slate-200 tabular-nums tracking-tighter bg-white/5 px-2 py-1 rounded transition-colors group-hover:text-white group-hover:bg-[#00F2FE]/10">{game.team1Score} : {game.team2Score}</span>
                                                             </td>
-                                                            <td className="py-3.5 text-center">
+                                                            <td className="py-2.5 text-center">
                                                                 <div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team2Id) || {}} size="xxs" isLight={true} /></div>
                                                             </td>
                                                         </tr>
