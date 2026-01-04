@@ -465,7 +465,7 @@ export const PublicHubDashboard: React.FC = () => {
                                 {newsFeed.slice(0, 15).map(item => <NewsVanguardCard key={item.id} item={item} />)}
                                 {newsFeed.length === 0 && <p className="text-center py-10 opacity-20 text-[10px] tracking-widest uppercase">No Intel Updates</p>}
                                 <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-[#0f172a] to-transparent z-20 pointer-events-none" />
-                                <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#020617] to-transparent z-20 pointer-events-none" />
+                                <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-[#020617] to-transparent z-20 pointer-events-none" />
                             </div>
                         </HubCard>
                         <HubCard title={t.hubSessionSquads} icon={<Target />} variant="standings" className="h-full min-h-0" bodyClassName="flex flex-col">
@@ -653,7 +653,7 @@ export const PublicHubDashboard: React.FC = () => {
             </div>
             
             {/* GLOBAL FADE OVERLAY */}
-            <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#0a0c10] via-[#0a0c10]/80 to-transparent pointer-events-none z-50"></div>
+            <div className="absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-[#0a0c10] to-transparent pointer-events-none z-50"></div>
         </div>
     );
 };
