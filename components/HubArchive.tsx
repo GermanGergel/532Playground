@@ -88,7 +88,8 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                                 className={`group relative flex items-center h-[68px] w-full rounded-2xl transition-all duration-300 cursor-pointer border overflow-hidden
                                     ${isSelected 
                                         ? 'bg-gradient-to-br from-[#1e2329] to-[#12161b] border-white/20 shadow-[0_10px_20px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.1)]' 
-                                        : 'bg-gradient-to-br from-[#161a1f] to-[#0d1013] border-white/5 shadow-[0_4px_10px_rgba(0,0,0,0.4),inset_0_1px_0.5px_rgba(255,255,255,0.05)] hover:border-white/10'
+                                        // UPDATED: Used darker gradient [from-[#0d1117] to-[#010409]] to match HubSessionDetail cards
+                                        : 'bg-gradient-to-br from-[#0d1117] to-[#010409] border-white/5 shadow-[0_4px_10px_rgba(0,0,0,0.4),inset_0_1px_0.5px_rgba(255,255,255,0.05)] hover:border-white/10'
                                     }`}
                             >
                                 {/* TEXTURE OVERLAY */}
