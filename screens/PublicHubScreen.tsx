@@ -559,15 +559,7 @@ export const PublicHubScreen: React.FC = () => {
                 ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}
                 bg-[#0a0c10]
                 `}
-                style={{
-                    // Scroll Mask to fade out content at top and bottom edges
-                    maskImage: 'linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%)',
-                    WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%)'
-                }}
             >
-                {/* Global Vignette for Cinematic Look - REDUCED INTENSITY */}
-                <div className="fixed inset-0 z-[150] pointer-events-none bg-[radial-gradient(circle_at_center,transparent_50%,rgba(0,0,0,0.4)_90%,rgba(0,0,0,0.8)_100%)]"></div>
-
                 {/* No Texture Overlay - Pure Clean Background */}
                 <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10">
                     <ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} />
