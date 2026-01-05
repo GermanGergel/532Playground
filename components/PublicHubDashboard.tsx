@@ -442,40 +442,45 @@ export const PublicHubDashboard: React.FC = () => {
     const thStandings = "py-2 text-white/40 uppercase tracking-tighter text-[8px] font-black text-center sticky top-0 bg-[#1e293b]/50 backdrop-blur-sm z-10 border-b border-white/5";
 
     return (
-        <div className="h-full flex flex-col w-full relative overflow-hidden">
+        <div className="w-full h-full flex flex-col relative overflow-hidden">
+            {/* MOTHER PLATE - MAXIMIZED */}
             <div 
-                className="mother-plate-container relative mx-[2px] mt-[0.5cm] mb-[0.5cm] rounded-[2.5rem] border border-white/10 flex flex-col overflow-hidden"
+                className="mother-plate-container relative mx-[4px] mt-[0.5cm] mb-[0.5cm] rounded-[2.5rem] border border-white/10 flex flex-col flex-grow min-h-[calc(100vh-1.2cm)] overflow-hidden"
                 style={{
                     background: 'radial-gradient(ellipse at top, #0f172a, #020617, black)',
                 }}
             >
-                <div className="h-full w-full flex flex-col p-2 md:p-3 relative z-10">
-                    <div className="flex-grow grid grid-cols-12 gap-4 min-h-0 items-stretch relative z-10 overflow-hidden">
-                        <div className="col-span-12 md:col-span-9 flex flex-col gap-4 h-full min-h-[600px] overflow-hidden">
-                            <div className="flex-[4] min-h-0 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200 flex gap-3">
-                                <HubCard title={t.hubSessionLeaders} align="right" icon={<AwardIcon />} accent="#FFD700" variant="elite" className="flex-[2] h-full min-h-[350px]" bodyClassName="flex flex-col bg-transparent">
+                <div className="h-full w-full flex flex-col p-3 md:p-5 relative z-10 flex-grow">
+                    <div className="flex-grow grid grid-cols-12 gap-5 items-stretch relative z-10 overflow-hidden h-full">
+                        {/* LEFT COLUMN */}
+                        <div className="col-span-12 md:col-span-9 flex flex-col gap-5 h-full overflow-hidden">
+                            {/* TOP ROW: LEADERS + REPORT */}
+                            <div className="flex-[5] min-h-0 shrink-0 flex gap-5">
+                                <HubCard title={t.hubSessionLeaders} align="right" icon={<AwardIcon />} accent="#FFD700" variant="elite" className="flex-[2] h-full" bodyClassName="flex flex-col bg-transparent">
                                     <div className="flex-grow relative"><SessionPodium players={top3PodiumPlayers} t={t} /></div>
                                 </HubCard>
-                                <HubCard title={t.hubMatchReport} icon={<Target />} accent="#00F2FE" variant="standings" className="flex-1 h-full min-h-[350px]" bodyClassName="flex flex-col p-5"><MatchEnvironmentWidget session={session} t={t} /></HubCard>
+                                <HubCard title={t.hubMatchReport} icon={<Target />} accent="#00F2FE" variant="standings" className="flex-1 h-full" bodyClassName="flex flex-col p-6"><MatchEnvironmentWidget session={session} t={t} /></HubCard>
                             </div>
 
-                            <div className="flex-[3] min-h-0 shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <HubCard title={t.hubSessionNews} icon={<Zap />} accent="#00F2FE" variant="standings" className="h-full min-h-0" bodyClassName="p-0 flex flex-col">
-                                    <div className="flex-grow relative overflow-y-auto custom-hub-scrollbar p-3 bg-black/10">
+                            {/* BOTTOM ROW: NEWS + SQUADS */}
+                            <div className="flex-[4] min-h-0 shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                <HubCard title={t.hubSessionNews} icon={<Zap />} accent="#00F2FE" variant="standings" className="h-full" bodyClassName="p-0 flex flex-col">
+                                    <div className="flex-grow relative overflow-y-auto custom-hub-scrollbar p-4 bg-black/10">
                                         {newsFeed.slice(0, 15).map(item => <NewsVanguardCard key={item.id} item={item} />)}
                                         {newsFeed.length === 0 && <p className="text-center py-10 opacity-20 text-[10px] tracking-widest uppercase">No Intel Updates</p>}
-                                        <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-[#0f172a] to-transparent z-20 pointer-events-none" />
-                                        <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-[#020617] to-transparent z-20 pointer-events-none" />
+                                        <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-[#0f172a] to-transparent z-20 pointer-events-none" />
+                                        <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#020617] to-transparent z-20 pointer-events-none" />
                                     </div>
                                 </HubCard>
-                                <HubCard title={t.hubSessionSquads} icon={<Target />} variant="standings" className="h-full min-h-0" bodyClassName="flex flex-col">
+                                <HubCard title={t.hubSessionSquads} icon={<Target />} variant="standings" className="h-full" bodyClassName="flex flex-col">
                                     <TacticalRosters teams={session.teams} players={session.playerPool} session={session} teamStats={teamStats} t={t} />
                                 </HubCard>
                             </div>
                         </div>
 
-                        <div className="col-span-12 md:col-span-3 flex flex-col gap-4 h-full min-h-[600px] overflow-hidden">
-                            <HubCard title={t.hubTeamStandings} icon={<TrophyIcon />} variant="standings" className="shrink-0" bodyClassName="flex flex-col">
+                        {/* RIGHT COLUMN */}
+                        <div className="col-span-12 md:col-span-3 flex flex-col gap-5 h-full overflow-hidden">
+                            <HubCard title={t.hubTeamStandings} icon={<TrophyIcon />} variant="standings" className="flex-[4] shrink-0" bodyClassName="flex flex-col">
                                 <div className="p-1">
                                     <table className="w-full table-fixed border-collapse">
                                         <thead>
@@ -488,25 +493,25 @@ export const PublicHubDashboard: React.FC = () => {
                                                 <th className={`${thStandings} w-[7%]`}>{t.thL}</th>
                                                 <th className={`${thStandings} w-[10%]`}>{t.thGF}</th>
                                                 <th className={`${thStandings} w-[10%]`}>{t.thGA}</th>
-                                                <th className={`${thStandings} w-[10%]`}>{t.thGD}</th>
+                                                <th className={`${thStandings} w-[10%]`}>GD</th>
                                                 <th className={`${thStandings} w-[10%] text-white bg-white/[0.03]`}>PTS</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {teamStats.map((stat, idx) => (
                                                 <tr key={stat.team.id} className="group border-b border-white/5 last:border-0 transition-all duration-300">
-                                                    <td className="py-1.5 text-center text-[9px] font-bold text-white/30 bg-white/[0.02] relative overflow-hidden">
+                                                    <td className="py-2 text-center text-[9px] font-bold text-white/30 bg-white/[0.02] relative overflow-hidden">
                                                         {idx + 1}
                                                     </td>
-                                                    <td className="py-1.5 flex justify-center"><SubtleDashboardAvatar team={stat.team} size="xxs" isLight /></td>
-                                                    <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.gamesPlayed}</td>
-                                                    <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.wins}</td>
-                                                    <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.draws}</td>
-                                                    <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.losses}</td>
-                                                    <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.goalsFor}</td>
-                                                    <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.goalsAgainst}</td>
-                                                    <td className="py-1.5 text-center text-[10px] font-bold text-white/40">{stat.goalDifference > 0 ? `+${stat.goalDifference}` : stat.goalDifference}</td>
-                                                    <td className="py-1.5 text-center text-[12px] font-black text-white bg-white/[0.03]">{stat.points}</td>
+                                                    <td className="py-2 flex justify-center"><SubtleDashboardAvatar team={stat.team} size="xxs" isLight /></td>
+                                                    <td className="py-2 text-center text-[10px] font-bold text-slate-300">{stat.gamesPlayed}</td>
+                                                    <td className="py-2 text-center text-[10px] font-bold text-slate-300">{stat.wins}</td>
+                                                    <td className="py-2 text-center text-[10px] font-bold text-slate-300">{stat.draws}</td>
+                                                    <td className="py-2 text-center text-[10px] font-bold text-slate-300">{stat.losses}</td>
+                                                    <td className="py-2 text-center text-[10px] font-bold text-slate-300">{stat.goalsFor}</td>
+                                                    <td className="py-2 text-center text-[10px] font-bold text-slate-300">{stat.goalsAgainst}</td>
+                                                    <td className="py-2 text-center text-[10px] font-bold text-white/40">{stat.goalDifference > 0 ? `+${stat.goalDifference}` : stat.goalDifference}</td>
+                                                    <td className="py-2 text-center text-[12px] font-black text-white bg-white/[0.03]">{stat.points}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -586,7 +591,7 @@ export const PublicHubDashboard: React.FC = () => {
                                                             className={`group border-b border-white/5 last:border-0 transition-all duration-300 ${totalScore > 0 ? 'hover:bg-white/[0.04] cursor-pointer' : 'cursor-default'} ${expandedMatchId === game.id ? 'bg-[#00F2FE]/5' : ''}`}
                                                             onClick={() => totalScore > 0 && setExpandedMatchId(expandedMatchId === game.id ? null : game.id)}
                                                         >
-                                                            <td className="py-1.5 text-center text-[10px] font-bold transition-colors text-white/30 font-mono relative overflow-hidden">
+                                                            <td className="py-2 text-center text-[10px] font-bold transition-colors text-white/30 font-mono relative overflow-hidden">
                                                                 {game.gameNumber}
                                                             </td>
                                                             <td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team1Id) || {}} size="xxs" isLight={true} /></div></td>
@@ -643,8 +648,7 @@ export const PublicHubDashboard: React.FC = () => {
                                                             </tr>
                                                         )}
                                                     </React.Fragment>
-                                                )})}
-                                                </tbody>
+                                                )})}</tbody>
                                             </table>
                                         </div>
                                     )}
