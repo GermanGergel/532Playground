@@ -28,85 +28,80 @@ const TermometerIcon = ({ className }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
 );
 
-// --- TACTICAL SOCCER BACKGROUND (CHALKBOARD STYLE WITH REAL TEXTURE) ---
+// --- TACTICAL SOCCER BACKGROUND (CHALK STYLE) ---
 const SoccerTacticsBackground: React.FC = () => (
-    <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-        {/* Base Color: Deep Charcoal */}
-        <div className="absolute inset-0 bg-[#0a0d12]"></div>
-        
-        {/* Chalk Smudges Layer 1: Hazy Gradients */}
-        <div className="absolute inset-0 opacity-40 mix-blend-screen">
-            <div className="absolute top-[-10%] left-[10%] w-[60%] h-[60%] bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.08)_0%,_transparent_70%)] blur-2xl"></div>
-            <div className="absolute bottom-[5%] right-[15%] w-[50%] h-[50%] bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.05)_0%,_transparent_60%)] blur-3xl"></div>
-            <div className="absolute top-[40%] left-[40%] w-[40%] h-[40%] bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.03)_0%,_transparent_50%)] blur-xl"></div>
-        </div>
-
-        {/* Grainy Texture Overlay */}
-        <div className="absolute inset-0 opacity-[0.15] bg-[url('https://www.transparenttextures.com/patterns/asfalt-dark.png')]"></div>
-
-        {/* SVG Drawing Layer */}
-        <svg width="100%" height="100%" viewBox="0 0 800 450" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" className="relative z-10">
+    <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.2]">
+        <svg width="100%" height="100%" viewBox="0 0 800 450" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
                 <marker id="arrowhead-chalk" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-                    <polygon points="0 0, 10 3.5, 0 7" fill="rgba(255,255,255,0.5)" />
+                    <polygon points="0 0, 10 3.5, 0 7" fill="rgba(255,255,255,0.8)" />
                 </marker>
-                <filter id="chalkBlur">
-                    <feGaussianBlur in="SourceGraphic" stdDeviation="0.8" />
+                <filter id="chalkEffect">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="0.6" />
                 </filter>
             </defs>
             
-            {/* Field Lines (Chalk style) */}
-            <g stroke="white" strokeWidth="2.5" fill="none" filter="url(#chalkBlur)" strokeOpacity="0.3">
+            {/* Field Structure */}
+            <g stroke="white" strokeWidth="2" fill="none" filter="url(#chalkEffect)" strokeOpacity="0.6">
                 {/* Center Line & Circle */}
                 <line x1="400" y1="0" x2="400" y2="450" />
-                <circle cx="400" cy="225" r="65" />
-                <circle cx="400" cy="225" r="3" fill="white" fillOpacity="0.4" />
+                <circle cx="400" cy="225" r="55" />
+                <circle cx="400" cy="225" r="2.5" fill="white" fillOpacity="0.6" />
                 
-                {/* Left Pitch Area */}
-                <rect x="0" y="145" width="80" height="160" />
-                <rect x="0" y="195" width="30" height="60" />
-                <path d="M 80 185 Q 110 225 80 265" />
+                {/* Left Goal Area (Tactical) */}
+                <rect x="0" y="145" width="70" height="160" />
+                <rect x="0" y="195" width="25" height="60" />
+                <path d="M 70 185 Q 95 225 70 265" />
 
-                {/* Right Pitch Area */}
-                <rect x="720" y="145" width="80" height="160" />
-                <rect x="770" y="195" width="30" height="60" />
-                <path d="M 720 185 Q 690 225 720 265" />
+                {/* Right Goal Area (Tactical) */}
+                <rect x="730" y="145" width="70" height="160" />
+                <rect x="775" y="195" width="25" height="60" />
+                <path d="M 730 185 Q 705 225 730 265" />
             </g>
 
-            {/* Tactical Moves (Chalk Drawing Style) */}
-            <g fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" filter="url(#chalkBlur)" strokeOpacity="0.5">
-                {/* Replicating screenshot movements */}
-                <circle cx="210" cy="75" r="10" />
-                <path d="M 225 85 Q 300 95 330 130" markerEnd="url(#arrowhead-chalk)" />
-                <g transform="translate(345, 140) rotate(45)">
+            {/* Tactical Moves - Replicating User Screenshot */}
+            <g fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" filter="url(#chalkEffect)" strokeOpacity="0.7">
+                {/* TOP LEFT SCHEME (Circle -> Arrow -> X) */}
+                <circle cx="230" cy="80" r="10" />
+                <path d="M 245 85 Q 310 95 340 120" markerEnd="url(#arrowhead-chalk)" />
+                <g transform="translate(355, 125) rotate(45)">
                     <line x1="-8" y1="0" x2="8" y2="0" /><line x1="0" y1="-8" x2="0" y2="8" />
                 </g>
 
-                <g transform="translate(100, 240) rotate(45)">
+                {/* BOTTOM LEFT SCHEME (Dashed curve) */}
+                <g transform="translate(80, 225) rotate(45)">
                     <line x1="-8" y1="0" x2="8" y2="0" /><line x1="0" y1="-8" x2="0" y2="8" />
                 </g>
-                <path d="M 120 255 Q 170 300 230 330" strokeDasharray="6 6" markerEnd="url(#arrowhead-chalk)" />
+                <path d="M 100 240 Q 150 280 230 330" strokeDasharray="6 6" markerEnd="url(#arrowhead-chalk)" />
                 <g transform="translate(245, 340) rotate(45)">
                     <line x1="-8" y1="0" x2="8" y2="0" /><line x1="0" y1="-8" x2="0" y2="8" />
                 </g>
 
+                {/* TOP RIGHT SCHEME (X -> Dashed -> X) */}
                 <g transform="translate(560, 90) rotate(45)">
                     <line x1="-8" y1="0" x2="8" y2="0" /><line x1="0" y1="-8" x2="0" y2="8" />
                 </g>
-                <path d="M 580 100 Q 650 110 700 90" strokeDasharray="6 6" markerEnd="url(#arrowhead-chalk)" />
-                <g transform="translate(720, 80) rotate(45)">
+                <path d="M 575 100 Q 640 110 700 90" strokeDasharray="6 6" markerEnd="url(#arrowhead-chalk)" />
+                <g transform="translate(715, 80) rotate(45)">
                     <line x1="-8" y1="0" x2="8" y2="0" /><line x1="0" y1="-8" x2="0" y2="8" />
                 </g>
 
+                {/* BOTTOM RIGHT SCHEME (O -> Arrow -> O) */}
                 <circle cx="580" cy="380" r="10" />
                 <path d="M 600 375 Q 650 350 710 360" markerEnd="url(#arrowhead-chalk)" />
                 <circle cx="730" cy="365" r="10" />
 
-                {/* Flavor Xs and Os */}
-                <circle cx="50" cy="50" r="8" strokeOpacity="0.2" />
-                <circle cx="420" cy="400" r="8" strokeOpacity="0.2" />
-                <g transform="translate(415, 180) rotate(45)" opacity="0.3">
-                    <line x1="-8" y1="0" x2="8" y2="0" /><line x1="0" y1="-8" x2="0" y2="8" />
+                {/* CENTER X */}
+                <g transform="translate(420, 190) rotate(45)">
+                    <line x1="-10" y1="0" x2="10" y2="0" /><line x1="0" y1="-10" x2="0" y2="10" />
+                </g>
+
+                {/* Random scattered Os and Xs for flavor around edges */}
+                <circle cx="50" cy="50" r="7" strokeOpacity="0.3" />
+                <circle cx="750" cy="400" r="7" strokeOpacity="0.3" />
+                <circle cx="350" cy="400" r="7" strokeOpacity="0.3" />
+                <g transform="translate(50, 400) rotate(45)" opacity="0.3">
+                    <line x1="-5" y1="0" x2="5" y2="0" /><line x1="0" y1="-5" x2="0" y2="5" />
                 </g>
             </g>
         </svg>
@@ -550,7 +545,6 @@ export const PublicHubDashboard: React.FC = () => {
 
                     <div className="flex-[3] min-h-0 shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <HubCard title={t.hubSessionNews} icon={<Zap />} accent="#00F2FE" variant="standings" className="h-full min-h-0" bodyClassName="p-0 flex flex-col relative">
-                            {/* SCROLL FADE OVERLAYS - HEIGHT REDUCED TO h-4 */}
                             <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
                             
                             <div className="flex-grow relative overflow-y-auto custom-hub-scrollbar p-3 bg-black/10">
@@ -639,7 +633,6 @@ export const PublicHubDashboard: React.FC = () => {
                         className="flex-grow min-h-0" 
                         bodyClassName="flex flex-col h-full min-h-0 relative"
                     >
-                        {/* SCROLL FADE OVERLAYS FOR RIGHT SIDEBAR - HEIGHT REDUCED TO h-4 */}
                         <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
 
                         <div className="flex-grow overflow-y-auto custom-hub-scrollbar h-full">
