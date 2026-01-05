@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApp } from '../context';
 import { PlayerTier, PlayerStatus, Player } from '../types';
@@ -127,7 +128,7 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                                     <span className="text-[6px] font-black text-white/40 uppercase tracking-[0.2em] leading-none group-hover:text-[#00F2FE] transition-colors">
                                         {viewMode === 'duel' ? 'EXIT' : 'INITIATE'}
                                     </span>
-                                    <span className="text-[6px] font-black text-white/40 uppercase tracking-[0.2em] leading-none mt-[2px] group-hover:text-[#00F2FE] transition-colors">
+                                    <span className="text-[6px] font-black text-white/40 uppercase tracking-[0.2em] font-black leading-none mt-[2px] group-hover:text-[#00F2FE] transition-colors">
                                         {viewMode === 'duel' ? 'INTERFACE' : 'SIMULATION'}
                                     </span>
                                 </div>
@@ -174,7 +175,7 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                                         style={{ 
                                             backgroundColor: isSelected ? (viewMode === 'duel' ? '#00F2FE' : tierColor) : tierColor, 
                                             boxShadow: isSelected ? `0 0 12px ${viewMode === 'duel' ? '#00F2FE' : tierColor}` : 'none',
-                                            opacity: isSelected ? 1 : 0.4
+                                            opacity: isSelected ? 1 : 0
                                         }}
                                     ></div>
                                     
@@ -208,12 +209,12 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                             );
                         })}
                     </div>
-                    {/* SCROLL FADE BOTTOM ONLY - HEIGHT FURTHER REDUCED TO h-4 */}
-                    <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
+                    {/* ADJUSTED: Scroll fade height reduced to h-2 and made more transparent */}
+                    <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
                 </div>
             </div>
 
-            {/* CONTENT AREA - RIGHT COLUMN - BACKGROUND UPDATED TO #05070a */}
+            {/* CONTENT AREA - RIGHT COLUMN */}
             <div className="flex-grow relative bg-[#05070a] overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-black to-black opacity-60"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>

@@ -32,7 +32,6 @@ const IntelSectionHeader = ({ title, icon: Icon, accent = "#00F2FE" }: any) => (
     </div>
 );
 
-// Компонент для иконки судейской карточки
 const RefereeCardIcon = () => (
     <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.6)]">
         <rect x="7" y="4" width="10" height="16" rx="1.5" />
@@ -45,16 +44,15 @@ export const HubInfo: React.FC = () => {
 
     return (
         <div className="absolute inset-0 z-20 flex flex-col animate-in fade-in duration-500 rounded-[2.5rem] overflow-hidden">
-            {/* Background: Updated to deep black/blue system theme */}
+            {/* Global background behind cards remains deep black system theme */}
             <div className="absolute -top-24 bottom-0 -left-4 -right-4 z-0 pointer-events-none">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#05080f] via-[#01040a] to-black"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
             </div>
 
-            {/* NEW: SCROLL FADE OVERLAY AT BOTTOM */}
-            <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-[#05070a] to-transparent z-30 pointer-events-none"></div>
+            {/* ADJUSTED: Scroll fade overlay moved lower (height h-2 instead of h-6) */}
+            <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-t from-[#05070a] to-transparent z-30 pointer-events-none"></div>
 
-            {/* Scrollable Content Container */}
             <div className="relative z-10 flex-grow overflow-y-auto custom-hub-scrollbar">
                 <div className="space-y-16 pb-32 pt-12 w-full max-w-3xl mx-auto px-6">
                     
@@ -66,8 +64,8 @@ export const HubInfo: React.FC = () => {
                                 {t.ratingCalculationDesc}
                             </p>
                             
-                            {/* Compact Glass Card */}
-                            <div className="p-6 rounded-3xl bg-black/40 backdrop-blur-md border border-white/10 shadow-2xl relative overflow-hidden">
+                            {/* Restored glass-style background for the plate */}
+                            <div className="p-6 rounded-3xl bg-white/5 backdrop-blur-md border border-white/10 shadow-2xl relative overflow-hidden">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#00F2FE]/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
                                 
                                 <h5 className="font-black text-[10px] tracking-[0.2em] text-[#00F2FE] uppercase mb-6 flex items-center gap-2">
@@ -89,16 +87,15 @@ export const HubInfo: React.FC = () => {
                                 </ul>
                             </div>
 
-                            {/* NEW: RATING RULES (Inactivity & Protection) */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/10 hover:bg-amber-500/10 transition-colors">
+                                <div className="p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors backdrop-blur-sm">
                                     <div className="flex items-center gap-3 mb-2">
                                         <RefreshCw className="w-4 h-4 text-amber-500" />
                                         <h5 className="font-black text-white text-xs uppercase">{t.infoInactivityTitle}</h5>
                                     </div>
                                     <p className="text-xs text-white/60 leading-relaxed">{t.infoInactivityDesc}</p>
                                 </div>
-                                <div className="p-5 rounded-2xl bg-blue-500/5 border border-blue-500/10 hover:bg-blue-500/10 transition-colors">
+                                <div className="p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors backdrop-blur-sm">
                                     <div className="flex items-center gap-3 mb-2">
                                         <div className="w-4 h-4 flex items-center justify-center rounded-full border border-blue-500 text-blue-500 text-[9px] font-black">S</div>
                                         <h5 className="font-black text-white text-xs uppercase">Safety Net</h5>
@@ -112,7 +109,7 @@ export const HubInfo: React.FC = () => {
                     {/* 2. LEGIONNAIRE PROTOCOL */}
                     <section>
                         <IntelSectionHeader title={t.infoLegionnaireTitle} icon={Users} accent="#a855f7" />
-                        <div className="p-6 rounded-3xl bg-purple-500/5 border border-purple-500/10 shadow-lg relative overflow-hidden group">
+                        <div className="p-6 rounded-3xl bg-white/5 border border-white/10 shadow-lg relative overflow-hidden group backdrop-blur-sm">
                             <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 rounded-full blur-[60px] -mr-20 -mt-20 pointer-events-none group-hover:bg-purple-500/20 transition-all"></div>
                             <div className="relative z-10 flex flex-col sm:flex-row gap-6 items-center">
                                 <div className="flex-grow text-center sm:text-left">
@@ -136,8 +133,7 @@ export const HubInfo: React.FC = () => {
                     <section>
                         <IntelSectionHeader title={t.disciplineTitle} icon={ExclamationIcon} accent="#ef4444" />
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {/* Rule: Handball */}
-                            <div className="p-5 rounded-2xl bg-red-500/5 border border-red-500/10 shadow-sm hover:bg-red-500/10 transition-all">
+                            <div className="p-5 rounded-2xl bg-white/5 border border-white/10 shadow-sm hover:bg-white/10 transition-all backdrop-blur-sm">
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center text-xl">🧤</div>
                                     <h5 className="font-black text-white text-xs uppercase tracking-tight">{t.ruleHandballTitle}</h5>
@@ -148,8 +144,7 @@ export const HubInfo: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Rule: No Show */}
-                            <div className="p-5 rounded-2xl bg-white/5 border border-white/10 shadow-sm hover:bg-white/10 transition-all">
+                            <div className="p-5 rounded-2xl bg-white/5 border border-white/10 shadow-sm hover:bg-white/10 transition-all backdrop-blur-sm">
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl">💰</div>
                                     <h5 className="font-black text-white text-xs uppercase tracking-tight">{t.ruleNoShowTitle}</h5>
@@ -160,8 +155,7 @@ export const HubInfo: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Rule: Late */}
-                            <div className="p-5 rounded-2xl bg-white/5 border border-white/10 shadow-sm hover:bg-white/10 transition-all">
+                            <div className="p-5 rounded-2xl bg-white/5 border border-white/10 shadow-sm hover:bg-white/10 transition-all backdrop-blur-sm">
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl">🕒</div>
                                     <h5 className="font-black text-white text-xs uppercase tracking-tight">{t.ruleLateTitle}</h5>
@@ -172,8 +166,7 @@ export const HubInfo: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Rule: Respect */}
-                            <div className="p-5 rounded-2xl bg-white/5 border border-white/10 shadow-sm hover:bg-white/10 transition-all">
+                            <div className="p-5 rounded-2xl bg-white/5 border border-white/10 shadow-sm hover:bg-white/10 transition-all backdrop-blur-sm">
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center">
                                         <RefereeCardIcon />
@@ -191,13 +184,13 @@ export const HubInfo: React.FC = () => {
                     {/* 4. BADGE BONUSES */}
                     <section>
                         <IntelSectionHeader title={t.badgeBonusTitle} icon={LightbulbIcon} accent="#10b981" />
-                        <div className="rounded-3xl bg-emerald-500/5 p-6 border border-emerald-500/10 shadow-lg relative overflow-hidden group">
+                        <div className="rounded-3xl bg-white/5 p-6 border border-white/10 shadow-lg relative overflow-hidden group backdrop-blur-sm">
                             <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-[60px] -mr-20 -mt-20"></div>
                             <div className="relative z-10">
                                 <h4 className="text-xl font-black text-white mb-2 uppercase tracking-tight">{t.badgeBonusTitle}</h4>
                                 <p className="text-xs text-white/50 mb-6 max-w-lg leading-relaxed font-medium">{t.badgeBonusDesc}</p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="flex items-center gap-4 p-4 rounded-2xl bg-black/40 border border-emerald-500/10 shadow-sm hover:border-emerald-500/30 transition-all">
+                                    <div className="flex items-center gap-4 p-4 rounded-2xl bg-black/40 border border-white/10 shadow-sm hover:border-[#4CFF5F]/30 transition-all">
                                         <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
                                             <Zap className="w-5 h-5 text-emerald-500" />
                                         </div>
@@ -206,7 +199,7 @@ export const HubInfo: React.FC = () => {
                                             <span className="text-[9px] font-bold text-emerald-500/60 uppercase">Elite Protocol</span>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-4 p-4 rounded-2xl bg-black/40 border border-emerald-500/10 shadow-sm hover:border-emerald-500/30 transition-all">
+                                    <div className="flex items-center gap-4 p-4 rounded-2xl bg-black/40 border border-white/10 shadow-sm hover:border-[#4CFF5F]/30 transition-all">
                                         <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
                                             <Zap className="w-5 h-5 text-emerald-500" />
                                         </div>

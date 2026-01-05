@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { useApp } from '../context';
 import { HubProgressChart } from './HubAnalytics';
@@ -156,7 +157,6 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
         
         const getWR = (p: Player) => p.totalGames > 0 ? (p.totalWins / p.totalGames) : 0;
 
-        // TIE-BREAKER LOGIC MATCHING CLUB HUB LEADERS
         const sortedByGoals = [...confirmedPlayers].sort((a, b) => {
             if (b.totalGoals !== a.totalGoals) return b.totalGoals - a.totalGoals;
             if (b.rating !== a.rating) return b.rating - a.rating;
@@ -221,8 +221,8 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                 </div>
             )}
 
-            {/* SCROLL FADE FOR INTEL AREA - HEIGHT FURTHER REDUCED TO h-4 */}
-            <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#05070a] to-transparent z-30 pointer-events-none"></div>
+            {/* ADJUSTED: Scroll fade height reduced to h-2 */}
+            <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-t from-[#05070a] to-transparent z-30 pointer-events-none"></div>
 
             <div className="relative z-10 flex-grow overflow-y-auto custom-hub-scrollbar">
                 <div className={`w-full max-w-[1200px] mx-auto px-4 ${isEmbedded ? 'md:px-8' : 'md:px-12 lg:px-20'} py-6 pb-48 flex flex-col h-full`}>
