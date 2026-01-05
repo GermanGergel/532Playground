@@ -54,12 +54,12 @@ const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
     };
     const currentForm = config[form] || config.stable;
     const commonProps: React.SVGProps<SVGSVGElement> = {
-        width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: currentForm.color,
-        strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round",
+        width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: currentForm.color,
+        strokeWidth: "3", strokeLinecap: "round", strokeLinejoin: "round",
     };
     switch (form) {
         case 'hot_streak': return <svg {...commonProps}><path d="M12 19V5m-6 7l6-6 6 6"/></svg>;
-        case 'cold_streak': return <svg {...commonProps}><path d="M12 5v14M12 5v14M5 12l7 7 7-7"/></svg>;
+        case 'cold_streak': return <svg {...commonProps}><path d="M12 5v14M5 12l7 7 7-7"/></svg>;
         default: return <svg {...commonProps}><path d="M5 12h14m-6-6l6 6-6 6"/></svg>;
     }
 };
@@ -143,7 +143,7 @@ const HangingTag: React.FC<{ digit: string; label: string; height: number; delay
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full pt-1">
                 <div className="relative flex flex-col items-center">
                     <div className="absolute inset-0 blur-[8px] bg-[#00F2FE]/20 rounded-full scale-[2.5] pointer-events-none opacity-40"></div>
-                    <span className="relative text-[7px] font-black tracking-[0.1em] text-[#00F2FE] whitespace-nowrap uppercase italic" style={{ textShadow: '0 0 8px rgba(0,242,254,0.8)' }}>{label}</span>
+                    <span className="relative text-[7px] font-black tracking-[0.15em] text-[#00F2FE] whitespace-nowrap uppercase italic" style={{ textShadow: '0 0 8px rgba(0,242,254,0.8)' }}>{label}</span>
                 </div>
             </div>
         </div>
@@ -203,7 +203,7 @@ const HubNav: React.FC<{
     };
 
     const navContainerClass = `
-        fixed top-3 left-1/2 -translate-x-1/2 z-[100] 
+        fixed top-3 left-1/2 -translate-x-1/2 z-[150] 
         flex items-center justify-between
         w-full max-w-[1450px] px-6 py-0 
         bg-black/85 backdrop-blur-xl rounded-2xl border border-white/10
@@ -325,7 +325,7 @@ const HubNav: React.FC<{
                             </button>
                         )}
                         {isLangOpen && (
-                            <div className="absolute left-1/2 -translate-x-1/2 w-9 bg-[#05070a] border border-white/10 rounded-full shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200 z-[200]" style={{ top: isDashboardOpen ? 'calc(100% - 2px)' : '100%', marginTop: isDashboardOpen ? '0' : '8px' }}>
+                            <div className="absolute left-1/2 -translate-x-1/2 w-9 bg-[#05070a] border border-white/10 rounded-full shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200 z-[250]" style={{ top: isDashboardOpen ? 'calc(100% - 2px)' : '100%', marginTop: isDashboardOpen ? '0' : '8px' }}>
                                 <div className="py-1 flex flex-col items-center gap-1">
                                     {languages.map((lang) => (
                                         <button key={lang.code} onClick={() => { setLanguage(lang.code); setIsLangOpen(false); }} className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 ${language === lang.code ? 'bg-[#00F2FE]/10 text-[#00F2FE] border border-[#00F2FE]/30 shadow-[0_0_8px_rgba(0,242,254,0.2)]' : 'text-white/40 hover:text-white hover:bg-white/10' }`}><span className="text-[8px] font-black uppercase leading-none">{lang.label}</span></button>
@@ -621,6 +621,9 @@ export const PublicHubScreen: React.FC = () => {
                 <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10">
                     <ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} />
                 </div>
+
+                {/* ГЛОБАЛЬНАЯ НАКЛАДКА ДЛЯ БЕСШОВНОГО ПЕРЕХОДА (FADE OUT BOTTOM) */}
+                <div className="fixed bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#0a0c10] via-[#0a0c10]/80 to-transparent z-[110] pointer-events-none opacity-0 transition-opacity duration-700 delay-300" style={{ opacity: isDashboardOpen ? 1 : 0 }}></div>
             </div>
 
             <div className={`relative z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}>
