@@ -259,9 +259,9 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
 
     return (
         <div className="flex items-end justify-center gap-3 h-full px-4 relative">
-            <div className="w-[110px] md:w-[155px] h-full flex flex-col justify-end z-10 shrink-0"><PodiumSpot p={p2} rank={2} height="90px" color="#94a3b8" delay="delay-100" /></div>
+            <div className="w-[110px] md:w-[165px] h-full flex flex-col justify-end z-10 shrink-0"><PodiumSpot p={p2} rank={2} height="90px" color="#94a3b8" delay="delay-100" /></div>
             <div className="w-[125px] md:w-[175px] h-full flex flex-col justify-end z-20 pb-4 shrink-0"><PodiumSpot p={p1} rank={1} height="130px" color="#FFD700" delay="delay-0" /></div>
-            <div className="w-[110px] md:w-[155px] h-full flex flex-col justify-end z-10 shrink-0"><PodiumSpot p={p3} rank={3} height="75px" color="#CD7F32" delay="delay-200" /></div>
+            <div className="w-[110px] md:w-[165px] h-full flex flex-col justify-end z-10 shrink-0"><PodiumSpot p={p3} rank={3} height="75px" color="#CD7F32" delay="delay-200" /></div>
         </div>
     );
 };
@@ -651,9 +651,9 @@ export const PublicHubDashboard: React.FC = () => {
                 </div>
             </div>
 
-            {/* Bottom Fade Gradient Overlay (~2cm / 75px) */}
+            {/* Bottom Fade Gradient Overlay (~50px) */}
             <div 
-                className="absolute bottom-0 left-0 right-0 h-[75px] pointer-events-none z-[100] bg-gradient-to-t from-[#0a0c10] via-[#0a0c10]/70 to-transparent"
+                className="absolute bottom-0 left-0 right-0 h-[50px] pointer-events-none z-[100] bg-gradient-to-t from-black via-[#0a0c10]/90 to-transparent"
             />
         </div>
     );
