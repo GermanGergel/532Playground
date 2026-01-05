@@ -430,7 +430,7 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                         </div>
                         <div className="flex flex-col items-center max-w-[50%]">
                             <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
-                            <p className="font-bold text-white tracking-widest text-sm">OVR</p>
+                            <p className="font-bold text-white tracking-widest text-sm mt-2">OVR</p>
                             <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
                             
                             {topBadges.length > 0 && (
@@ -626,12 +626,12 @@ export const PublicHubScreen: React.FC = () => {
                     <ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} />
                 </div>
 
-                {/* ГЛОБАЛЬНАЯ НАКЛАДКА ДЛЯ БЕСШОВНОГО ПЕРЕХОДА (ПОДЛОЖКА) */}
+                {/* ГЛОБАЛЬНАЯ НАКЛАДКА ДЛЯ БЕСШОВНОГО ПЕРЕХОДА (ПОДЛОЖКА) - ОПУЩЕНА НИЖЕ */}
                 <div 
-                    className="fixed bottom-0 left-0 right-0 h-28 z-[110] pointer-events-none opacity-0 transition-all duration-700 delay-300" 
+                    className="fixed bottom-0 left-0 right-0 h-16 z-[110] pointer-events-none opacity-0 transition-all duration-700 delay-300" 
                     style={{ 
                         opacity: isDashboardOpen ? 1 : 0,
-                        background: `linear-gradient(to top, ${getBottomPatchColor()} 30%, ${getBottomPatchColor()}cc 60%, transparent 100%)`
+                        background: `linear-gradient(to top, ${getBottomPatchColor()} 50%, ${getBottomPatchColor()}cc 80%, transparent 100%)`
                     }}
                 ></div>
             </div>

@@ -137,8 +137,8 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                             </div>
                         )}
                     </div>
-                    {/* ЭФФЕКТ МЯГКОГО СКРЫТИЯ ВНИЗУ СПИСКА */}
-                    <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#05070a] to-transparent z-30 pointer-events-none"></div>
+                    {/* ЭФФЕКТ МЯГКОГО СКРЫТИЯ ВНИЗУ СПИСКА - ВЫСОТА УМЕНЬШЕНА */}
+                    <div className="absolute bottom-0 left-0 right-0 h-5 bg-gradient-to-t from-[#05070a] to-transparent z-30 pointer-events-none"></div>
                 </div>
             </div>
 

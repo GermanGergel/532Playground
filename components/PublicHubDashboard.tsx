@@ -445,7 +445,8 @@ export const PublicHubDashboard: React.FC = () => {
                     </div>
                     <div className="flex-[3] min-h-0 shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <HubCard title={t.hubSessionNews} icon={<Zap />} accent="#00F2FE" variant="standings" className="h-full min-h-0" bodyClassName="p-0 flex flex-col relative">
-                            <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
+                            {/* ЭФФЕКТ МЯГКОГО СКРЫТИЯ - ОПУЩЕН НИЖЕ */}
+                            <div className="absolute bottom-0 left-0 right-0 h-3 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
                             <div className="flex-grow relative overflow-y-auto custom-hub-scrollbar p-3 bg-black/10">
                                 <div className="py-2">
                                     {newsFeed.slice(0, 15).map(item => <NewsVanguardCard key={item.id} item={item} />)}
@@ -501,7 +502,8 @@ export const PublicHubDashboard: React.FC = () => {
                         icon={activeRightTab === 'players' ? <Users /> : <HistoryIcon />} 
                         variant="standings" accent="#00F2FE" className="flex-grow min-h-0" bodyClassName="flex flex-col h-full min-h-0 relative"
                     >
-                        <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
+                        {/* ЭФФЕКТ МЯГКОГО СКРЫТИЯ - ОПУЩЕН НИЖЕ */}
+                        <div className="absolute bottom-0 left-0 right-0 h-3 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
                         <div className="flex-grow overflow-y-auto custom-hub-scrollbar h-full">
                             <div className="py-2">
                                 {activeRightTab === 'players' ? (
