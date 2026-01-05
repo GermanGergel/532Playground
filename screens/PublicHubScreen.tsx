@@ -555,7 +555,7 @@ export const PublicHubScreen: React.FC = () => {
 
             {/* DASHBOARD OVERLAY - FIXED BACKGROUND APPLIED HERE */}
             <div 
-                className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none 
+                className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-20 md:pb-24 overflow-y-auto overscroll-none 
                 ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}
                 bg-[#0a0c10]
                 `}
@@ -565,6 +565,14 @@ export const PublicHubScreen: React.FC = () => {
                     <ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} />
                 </div>
             </div>
+
+            {/* NEW: Bottom Cinematic Shadow Fade Overlay */}
+            <div 
+                className={`fixed bottom-0 left-0 right-0 h-40 pointer-events-none z-[120] transition-opacity duration-1000 ${isDashboardOpen ? 'opacity-100' : 'opacity-0'}`}
+                style={{ 
+                    background: 'linear-gradient(to top, #0a0c10 15%, rgba(10, 12, 16, 0.95) 40%, rgba(10, 12, 16, 0.6) 70%, transparent 100%)' 
+                }}
+            />
 
             <div className={`relative z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}>
                 <HeroTitle />
