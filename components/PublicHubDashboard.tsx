@@ -28,75 +28,6 @@ const TermometerIcon = ({ className }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
 );
 
-// --- TACTICAL SOCCER BACKGROUND ---
-const SoccerTacticsBackground: React.FC = () => (
-    <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.15]">
-        <svg width="100%" height="100%" viewBox="0 0 800 400" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-                    <polygon points="0 0, 10 3.5, 0 7" fill="white" />
-                </marker>
-                <filter id="chalkBlur">
-                    <feGaussianBlur in="SourceGraphic" stdDeviation="0.5" />
-                </filter>
-            </defs>
-            
-            {/* Field Lines */}
-            <g stroke="white" strokeWidth="2" fill="none" filter="url(#chalkBlur)">
-                {/* Center Line */}
-                <line x1="400" y1="0" x2="400" y2="400" />
-                {/* Center Circle */}
-                <circle cx="400" cy="200" r="60" />
-                <circle cx="400" cy="200" r="3" fill="white" />
-                
-                {/* Left Goal Area */}
-                <rect x="0" y="120" width="60" height="160" />
-                <rect x="0" y="160" width="25" height="80" />
-                <path d="M 60 160 Q 85 200 60 240" />
-
-                {/* Right Goal Area */}
-                <rect x="740" y="120" width="60" height="160" />
-                <rect x="775" y="160" width="25" height="80" />
-                <path d="M 740 160 Q 715 200 740 240" />
-
-                {/* Corner Arcs */}
-                <path d="M 0 20 Q 20 20 20 0" />
-                <path d="M 780 0 Q 780 20 800 20" />
-                <path d="M 0 380 Q 20 380 20 400" />
-                <path d="M 780 400 Q 780 380 800 380" />
-            </g>
-
-            {/* Tactical Schemes - White Chalk Style */}
-            <g fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" filter="url(#chalkBlur)">
-                {/* Movement top left (uncovered area) */}
-                <circle cx="100" cy="80" r="8" opacity="0.8" />
-                <path d="M 115 70 Q 180 50 250 80" markerEnd="url(#arrowhead)" opacity="0.6" />
-                <line x1="265" y1="80" x2="280" y2="95" strokeWidth="2" opacity="0.9" />
-                <line x1="280" y1="80" x2="265" y2="95" strokeWidth="2" opacity="0.9" />
-
-                {/* Tactical group mid top right */}
-                <circle cx="580" cy="110" r="8" opacity="0.8" />
-                <path d="M 595 110 L 650 110" strokeDasharray="5 5" markerEnd="url(#arrowhead)" opacity="0.6" />
-                <line x1="665" y1="105" x2="680" y2="120" strokeWidth="2" opacity="0.9" />
-                <line x1="680" y1="105" x2="665" y2="120" strokeWidth="2" opacity="0.9" />
-
-                {/* Long curved arrow bottom right to top (sideline) */}
-                <path d="M 750 350 Q 800 200 760 100" strokeDasharray="6 4" markerEnd="url(#arrowhead)" opacity="0.5" />
-                
-                {/* Action in the very center top */}
-                <line x1="390" y1="40" x2="410" y2="60" strokeWidth="2" opacity="0.9" />
-                <line x1="410" y1="40" x2="390" y2="60" strokeWidth="2" opacity="0.9" />
-                <path d="M 400 70 Q 400 120 350 140" markerEnd="url(#arrowhead)" opacity="0.6" />
-                
-                {/* Some O's scattered in corners */}
-                <circle cx="50" cy="350" r="8" opacity="0.4" />
-                <circle cx="750" cy="50" r="8" opacity="0.4" />
-                <circle cx="450" cy="360" r="8" opacity="0.4" />
-            </g>
-        </svg>
-    </div>
-);
-
 // --- STANDBY SCREEN ---
 const StandbyScreen: React.FC = () => {
     const t = useTranslation();
@@ -193,15 +124,10 @@ const HubCard: React.FC<{
 
     return (
         <div className={`relative overflow-hidden rounded-[1.5rem] flex flex-col border ${bgStyleClass} ${className}`}>
-            {/* Background Texture Overlay */}
-            {isElite ? (
-                <SoccerTacticsBackground />
-            ) : (
-                <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ 
-                    backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`,
-                    backgroundSize: '4px 4px'
-                }}></div>
-            )}
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ 
+                backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`,
+                backgroundSize: '4px 4px'
+            }}></div>
 
             <div className={`absolute -top-10 -left-10 w-40 h-40 ${isElite ? 'bg-[#00F2FE]/[0.05]' : 'bg-[#00F2FE]/[0.03]'} rounded-full blur-[45px] pointer-events-none z-0 animate-pulse`} style={{ animationDuration: '6s' }}></div>
             
@@ -534,7 +460,6 @@ export const PublicHubDashboard: React.FC = () => {
 
                     <div className="flex-[3] min-h-0 shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <HubCard title={t.hubSessionNews} icon={<Zap />} accent="#00F2FE" variant="standings" className="h-full min-h-0" bodyClassName="p-0 flex flex-col relative">
-                            {/* SCROLL FADE OVERLAYS - HEIGHT REDUCED TO h-4 */}
                             <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
                             
                             <div className="flex-grow relative overflow-y-auto custom-hub-scrollbar p-3 bg-black/10">
@@ -623,7 +548,6 @@ export const PublicHubDashboard: React.FC = () => {
                         className="flex-grow min-h-0" 
                         bodyClassName="flex flex-col h-full min-h-0 relative"
                     >
-                        {/* SCROLL FADE OVERLAYS FOR RIGHT SIDEBAR - HEIGHT REDUCED TO h-4 */}
                         <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
 
                         <div className="flex-grow overflow-y-auto custom-hub-scrollbar h-full">
@@ -664,7 +588,7 @@ export const PublicHubDashboard: React.FC = () => {
                                                 <React.Fragment key={game.id}>
                                                     <tr 
                                                         className={`group border-b border-white/5 last:border-0 transition-all duration-300 ${totalScore > 0 ? 'hover:bg-white/[0.04] cursor-pointer' : 'cursor-default'} ${expandedMatchId === game.id ? 'bg-[#00F2FE]/5' : ''}`}
-                                                        onClick={() => totalScore > 0 && setExpandedMatchId(expandedMatchId === game.id ? null : game.id)}
+                                                        onClick={() => (totalScore > 0 && setExpandedMatchId(expandedMatchId === game.id ? null : game.id))}
                                                     >
                                                         <td className={`${tdBase} text-white/30 font-mono relative overflow-hidden`}>
                                                             {game.gameNumber}
@@ -678,7 +602,7 @@ export const PublicHubDashboard: React.FC = () => {
                                                             <td colSpan={4} className="p-3">
                                                                 <div className="flex flex-col gap-2">
                                                                     {game.goals.length > 0 ? (
-                                                                        game.goals.map((goal, gIdx) => {
+                                                                        game.goals.map((goal) => {
                                                                             const scorer = session.playerPool.find(p => p.id === goal.scorerId);
                                                                             const assistant = session.playerPool.find(p => p.id === goal.assistantId);
                                                                             const team = session.teams.find(t => t.id === goal.teamId);
@@ -725,8 +649,8 @@ export const PublicHubDashboard: React.FC = () => {
                                                 </React.Fragment>
                                             )})}</tbody>
                                         </table>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </HubCard>
