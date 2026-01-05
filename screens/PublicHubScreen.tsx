@@ -610,10 +610,11 @@ export const PublicHubScreen: React.FC = () => {
                 }}
             />
 
-            {/* DASHBOARD OVERLAY - UNIFIED BACKGROUND APPLIED HERE */}
+            {/* DASHBOARD OVERLAY - DYNAMIC BACKGROUND APPLIED HERE */}
             <div 
-                className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none bg-[#05070a]
+                className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none 
                 ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}
+                ${(dashboardView === 'dashboard' || dashboardView === 'roster') ? 'bg-[#05070a]' : 'bg-[#0a0c10]'}
                 `}
             >
                 {/* Clean Layering */}
