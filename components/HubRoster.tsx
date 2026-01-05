@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApp } from '../context';
 import { PlayerTier, PlayerStatus, Player } from '../types';
@@ -154,7 +155,13 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                 </div>
 
                 <div className="flex-grow relative overflow-hidden flex flex-col">
-                    <div className="flex-grow overflow-y-auto custom-hub-scrollbar p-4 pt-4 space-y-3.5">
+                    <div 
+                        className="flex-grow overflow-y-auto custom-hub-scrollbar p-4 pt-4 space-y-3.5 pb-20"
+                        style={{
+                            maskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)',
+                            WebkitMaskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)'
+                        }}
+                    >
                         {confirmedPersonnel.map((person) => {
                             const isSelected = viewMode === 'intel' ? selectedPlayerId === person.id : duelSlots.includes(person.id);
                             const tierColor = TIER_COLORS[person.tier] || '#94a3b8';
@@ -208,8 +215,6 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                             );
                         })}
                     </div>
-                    {/* SCROLL FADE BOTTOM ONLY - HEIGHT FURTHER REDUCED TO h-4 */}
-                    <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
                 </div>
             </div>
 

@@ -52,7 +52,13 @@ export const HubInfo: React.FC = () => {
             </div>
 
             {/* Scrollable Content Container */}
-            <div className="relative z-10 flex-grow overflow-y-auto custom-hub-scrollbar">
+            <div 
+                className="relative z-10 flex-grow overflow-y-auto custom-hub-scrollbar"
+                style={{
+                    maskImage: 'linear-gradient(to bottom, black 95%, transparent 100%)',
+                    WebkitMaskImage: 'linear-gradient(to bottom, black 95%, transparent 100%)'
+                }}
+            >
                 <div className="space-y-16 pb-32 pt-12 w-full max-w-3xl mx-auto px-6">
                     
                     {/* 1. HOW RATING WORKS */}
