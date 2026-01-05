@@ -30,9 +30,9 @@ const TermometerIcon = ({ className }: { className?: string }) => (
 );
 
 // --- ASSETS ---
-// Tactical Board SVG (Resized to act as the container border itself)
-// Using 100% width/height logic in SVG
-const tacticalBoardBg = `data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 360' fill='none'%3e%3cdefs%3e%3cfilter id='chalk'%3e%3cfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3' result='noise'/%3e%3cfeDisplacementMap in='SourceGraphic' in2='noise' scale='2'/%3e%3c/filter%3e%3c/defs%3e%3cg filter='url(%23chalk)' stroke='white' stroke-width='3' stroke-linecap='round' stroke-opacity='0.15'%3e%3c!-- Full Field Border (Inset slightly to fit card) --%3e%3crect x='5' y='5' width='590' height='350' rx='25' /%3e%3c!-- Center Line --%3e%3cline x1='300' y1='5' x2='300' y2='355' /%3e%3ccircle cx='300' cy='180' r='60' /%3e%3c!-- Left Goal Area --%3e%3cpath d='M 5 120 L 60 120 L 60 240 L 5 240' /%3e%3c!-- Right Goal Area --%3e%3cpath d='M 595 120 L 540 120 L 540 240 L 595 240' /%3e%3c!-- TACTICS (Upper Half Focus) --%3e%3c!-- Left Wing Attack --%3e%3cpath d='M 80 200 Q 60 80 140 60' marker-end='url(%23arrow)' stroke-width='4' stroke-opacity='0.2'/%3e%3cpath d='M 130 55 L 142 60 L 135 70' fill='white' fill-opacity='0.2' stroke='none'/%3e%3cline x1='70' y1='210' x2='90' y2='190' stroke-width='4' stroke-opacity='0.2'/%3e%3cline x1='90' y1='210' x2='70' y2='190' stroke-width='4' stroke-opacity='0.2'/%3e%3c!-- Center Play --%3e%3cpath d='M 250 80 Q 350 40 480 70' stroke-dasharray='12,8' stroke-width='3' stroke-opacity='0.2'/%3e%3ccircle cx='490' cy='75' r='10' stroke-width='3' stroke-opacity='0.2'/%3e%3c!-- Right Side Overlap --%3e%3cpath d='M 520 220 Q 550 150 520 60' marker-end='url(%23arrow)' stroke-width='4' stroke-opacity='0.2'/%3e%3cpath d='M 510 65 L 520 58 L 530 65' fill='white' fill-opacity='0.2' stroke='none'/%3e%3c/g%3e%3c/svg%3e`;
+// Tactical Board SVG (Customized to fit around podium cards)
+// Elements are placed in top-left, top-right, and top-center to avoid the bottom-center "podium" area.
+const tacticalBoardBg = `data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300' fill='none'%3e%3cdefs%3e%3cfilter id='chalk'%3e%3cfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' result='noise'/%3e%3cfeDisplacementMap in='SourceGraphic' in2='noise' scale='1.5'/%3e%3c/filter%3e%3c/defs%3e%3cg filter='url(%23chalk)' stroke='white' stroke-width='2' stroke-linecap='round' stroke-opacity='0.25'%3e%3c!-- Field Outline --%3e%3crect x='10' y='10' width='380' height='280' rx='10' stroke-width='1' stroke-opacity='0.1'/%3e%3cpath d='M 200 10 L 200 290' stroke-width='1' stroke-dasharray='4,4' stroke-opacity='0.1'/%3e%3ccircle cx='200' cy='150' r='40' stroke-width='1' stroke-opacity='0.1'/%3e%3c!-- Top Left Play (Winger Cutting In) --%3e%3cpath d='M 40 60 L 50 70 M 60 50 L 50 60' stroke-width='2' /%3e%3c!-- X --%3e%3cpath d='M 60 70 Q 100 100 140 80' marker-end='url(%23arrow)' /%3e%3cpath d='M 135 75 L 142 80 L 135 85' fill='white' fill-opacity='0.25' stroke='none'/%3e%3c!-- Top Right Play (Overlapping Run) --%3e%3cpath d='M 340 50 L 350 60 M 360 50 L 350 60' stroke-width='2' /%3e%3c!-- X --%3e%3cpath d='M 340 70 Q 300 110 260 90' stroke-dasharray='6,4' /%3e%3c!-- Dashed Pass --%3e%3ccircle cx='250' cy='85' r='6' stroke-width='2' /%3e%3c!-- O --%3e%3c!-- Center Play (Above Rank 1 Card) --%3e%3cpath d='M 180 50 L 190 60 M 200 50 L 190 60' stroke-width='2' /%3e%3c!-- X --%3e%3cpath d='M 190 65 Q 200 100 220 65' stroke-width='1.5' /%3e%3cpath d='M 215 62 L 222 64 L 218 70' fill='white' fill-opacity='0.25' stroke='none'/%3e%3c!-- Side Support (Left Mid) --%3e%3ccircle cx='30' cy='140' r='6' stroke-width='2' /%3e%3cpath d='M 40 140 L 70 140' stroke-dasharray='4,2' /%3e%3c!-- Side Support (Right Mid) --%3e%3cpath d='M 360 130 L 370 140 M 380 130 L 370 140' stroke-width='2' /%3e%3cpath d='M 365 145 Q 350 170 330 150' marker-end='url(%23arrow)' /%3e%3cpath d='M 328 145 L 328 152 L 335 152' fill='white' fill-opacity='0.25' stroke='none'/%3e%3c/g%3e%3c/svg%3e`;
 
 // --- STANDBY SCREEN ---
 const StandbyScreen: React.FC = () => {
@@ -117,8 +117,7 @@ const HubCard: React.FC<{
         titleColor = 'text-white';
         iconBg = 'bg-white/10 border-white/20';
     } else if (isElite) {
-        // Reduced borders here because the SVG will provide the "field border"
-        bgStyleClass = 'bg-[#020308] border-0'; 
+        bgStyleClass = 'bg-[#020308] border-white/10';
         headerStyleClass = 'bg-transparent !border-0';
         titleColor = 'text-white'; 
         iconBg = 'bg-white/5 border-white/10 text-[#FFD700]';
@@ -131,12 +130,10 @@ const HubCard: React.FC<{
 
     return (
         <div className={`relative overflow-hidden rounded-[1.5rem] flex flex-col border ${bgStyleClass} ${className}`}>
-            {!isElite && (
-                <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ 
-                    backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`,
-                    backgroundSize: '4px 4px'
-                }}></div>
-            )}
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ 
+                backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`,
+                backgroundSize: '4px 4px'
+            }}></div>
 
             <div className={`absolute -top-10 -left-10 w-40 h-40 ${isElite ? 'bg-[#00F2FE]/[0.05]' : 'bg-[#00F2FE]/[0.03]'} rounded-full blur-[45px] pointer-events-none z-0 animate-pulse`} style={{ animationDuration: '6s' }}></div>
             
@@ -462,13 +459,13 @@ export const PublicHubDashboard: React.FC = () => {
                 <div className="col-span-12 md:col-span-9 flex flex-col gap-4 h-full min-h-[600px] overflow-hidden">
                     <div className="flex-[4] min-h-0 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200 flex gap-3">
                          <HubCard title={t.hubSessionLeaders} align="right" icon={<AwardIcon />} accent="#FFD700" variant="elite" className="flex-[2] h-full min-h-[350px]" bodyClassName="flex flex-col bg-transparent">
-                            {/* CUSTOM SVG BACKGROUND - UPDATED TO 100% STRETCH */}
+                            {/* CUSTOM SVG BACKGROUND */}
                             <div 
-                                className="absolute inset-0 z-0 pointer-events-none opacity-25"
+                                className="absolute inset-0 z-0 pointer-events-none opacity-20"
                                 style={{ 
                                     backgroundImage: `url("${tacticalBoardBg}")`,
-                                    backgroundSize: '100% 100%',
-                                    backgroundPosition: 'center',
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'top center',
                                     backgroundRepeat: 'no-repeat'
                                 }}
                             />
