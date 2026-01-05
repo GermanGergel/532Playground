@@ -452,14 +452,14 @@ export const PublicHubDashboard: React.FC = () => {
         <div className="h-full flex flex-col animate-in fade-in duration-700 w-full relative p-2 md:p-3 overflow-hidden">
             <div className="flex-grow grid grid-cols-12 gap-4 min-h-0 items-stretch relative z-10 overflow-hidden">
                 <div className="col-span-12 md:col-span-9 flex flex-col gap-4 h-full min-h-[600px] overflow-hidden">
-                    <div className="flex-[3.5] min-h-0 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200 flex gap-3">
+                    <div className="flex-[4] min-h-0 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200 flex gap-3">
                          <HubCard title={t.hubSessionLeaders} align="right" icon={<AwardIcon />} accent="#FFD700" variant="elite" className="flex-[2] h-full min-h-[350px]" bodyClassName="flex flex-col bg-transparent">
                             <div className="flex-grow relative"><SessionPodium players={top3PodiumPlayers} t={t} /></div>
                         </HubCard>
                         <HubCard title={t.hubMatchReport} icon={<Target />} accent="#00F2FE" variant="standings" className="flex-1 h-full min-h-[350px]" bodyClassName="flex flex-col p-5"><MatchEnvironmentWidget session={session} t={t} /></HubCard>
                     </div>
 
-                    <div className="flex-[4] min-h-0 shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex-[3] min-h-0 shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <HubCard title={t.hubSessionNews} icon={<Zap />} accent="#00F2FE" variant="standings" className="h-full min-h-0" bodyClassName="p-0 flex flex-col">
                             <div className="flex-grow relative overflow-y-auto custom-hub-scrollbar p-3 bg-black/10">
                                 {newsFeed.slice(0, 15).map(item => <NewsVanguardCard key={item.id} item={item} />)}
@@ -468,7 +468,7 @@ export const PublicHubDashboard: React.FC = () => {
                                 <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-[#020617] to-transparent z-20 pointer-events-none" />
                             </div>
                         </HubCard>
-                        <HubCard title={t.hubSessionSquads} icon={<Target />} variant="standings" className="h-full min-h-0 self-start" bodyClassName="flex flex-col">
+                        <HubCard title={t.hubSessionSquads} icon={<Target />} variant="standings" className="h-full min-h-0" bodyClassName="flex flex-col">
                             <TacticalRosters teams={session.teams} players={session.playerPool} session={session} teamStats={teamStats} t={t} />
                         </HubCard>
                     </div>
