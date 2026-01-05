@@ -1,6 +1,5 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
 import { NewsItem, Player, Team, WeatherCondition } from '../types';
@@ -156,12 +155,10 @@ const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any
             const teamPlayers = team.playerIds.map(pid => players.find(p => p.id === pid)).filter(Boolean) as Player[];
             const avgOvr = teamPlayers.length > 0 ? Math.round(teamPlayers.reduce((sum, p) => sum + p.rating, 0) / teamPlayers.length) : 0;
             
-            // Sync with Standings Table
             const stats = teamStats.find(ts => ts.team.id === team.id);
             const gf = stats?.goalsFor || 0;
             const ga = stats?.goalsAgainst || 0;
             
-            // Synergy calculation
             let assistedGoals = 0;
             session.games.filter((g: any) => g.status === 'finished').forEach((g: any) => {
                 assistedGoals += g.goals.filter((goal: any) => goal.teamId === team.id && goal.assistantId).length;
@@ -322,7 +319,6 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
         return <MoonIcon className="w-16 h-16 text-slate-200/90" />;
     };
 
-    // Construct Maps Search Link
     const mapsLink = session.location 
         ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(session.location)}` 
         : null;
@@ -376,13 +372,11 @@ export const PublicHubDashboard: React.FC = () => {
     const [activeRightTab, setActiveRightTab] = useState<'players' | 'games'>('players');
     const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
     
-    // Presentation Mode (Tabs)
     const [isAutoSwitching, setIsAutoSwitching] = useState(true);
     const [autoSwitchProgress, setAutoSwitchProgress] = useState(0);
 
     const session = history[0];
 
-    // --- INFINITE AUTO SWITCH LOGIC (TABS) ---
     useEffect(() => {
         if (!isAutoSwitching || !session) return;
 
@@ -403,7 +397,7 @@ export const PublicHubDashboard: React.FC = () => {
                     return next;
                 });
                 setAutoSwitchProgress(0);
-                setExpandedMatchId(null); // Close expanded match on auto-switch
+                setExpandedMatchId(null);
             } else {
                 setAutoSwitchProgress(progress);
             }
@@ -446,11 +440,9 @@ export const PublicHubDashboard: React.FC = () => {
         .sort((a, b) => a.gameNumber - b.gameNumber);
 
     const thStandings = "py-2 text-white/40 uppercase tracking-tighter text-[8px] font-black text-center sticky top-0 bg-[#1e293b]/50 backdrop-blur-sm z-10 border-b border-white/5";
-    const tdBase = "py-1.5 text-center text-[10px] font-bold transition-colors";
 
     return (
         <div className="h-full flex flex-col w-full relative overflow-hidden">
-            {/* MOTHER PLATE */}
             <div 
                 className="mother-plate-container relative mx-[2px] mt-[0.5cm] mb-[0.5cm] rounded-[2.5rem] border border-white/10 flex flex-col overflow-hidden"
                 style={{
@@ -594,7 +586,7 @@ export const PublicHubDashboard: React.FC = () => {
                                                             className={`group border-b border-white/5 last:border-0 transition-all duration-300 ${totalScore > 0 ? 'hover:bg-white/[0.04] cursor-pointer' : 'cursor-default'} ${expandedMatchId === game.id ? 'bg-[#00F2FE]/5' : ''}`}
                                                             onClick={() => totalScore > 0 && setExpandedMatchId(expandedMatchId === game.id ? null : game.id)}
                                                         >
-                                                            <td className={`${tdBase} text-white/30 font-mono relative overflow-hidden`}>
+                                                            <td className="py-1.5 text-center text-[10px] font-bold transition-colors text-white/30 font-mono relative overflow-hidden">
                                                                 {game.gameNumber}
                                                             </td>
                                                             <td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team1Id) || {}} size="xxs" isLight={true} /></div></td>
@@ -606,7 +598,7 @@ export const PublicHubDashboard: React.FC = () => {
                                                                 <td colSpan={4} className="p-3">
                                                                     <div className="flex flex-col gap-2">
                                                                         {game.goals.length > 0 ? (
-                                                                            game.goals.map((goal, gIdx) => {
+                                                                            game.goals.map((goal) => {
                                                                                 const scorer = session.playerPool.find(p => p.id === goal.scorerId);
                                                                                 const assistant = session.playerPool.find(p => p.id === goal.assistantId);
                                                                                 const team = session.teams.find(t => t.id === goal.teamId);
@@ -651,8 +643,11 @@ export const PublicHubDashboard: React.FC = () => {
                                                             </tr>
                                                         )}
                                                     </React.Fragment>
-                                                )})}</tbody>
-                                    </table>
+                                                )})}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
                                 </div>
                             </HubCard>
                         </div>
