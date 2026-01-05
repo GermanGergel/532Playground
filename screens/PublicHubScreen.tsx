@@ -473,6 +473,21 @@ const CinematicStatCard: React.FC<{ value: string | number; label: string; }> = 
 // Define allowed view types to match ClubIntelligenceDashboard and avoid TS2322
 type DashboardViewType = 'info' | 'dashboard' | 'roster' | 'archive' | 'duel' | 'tournaments' | 'league';
 
+// --- NEW TERMINAL FRAME COMPONENT ---
+const DashboardTerminalFrame: React.FC = () => (
+    <div className="fixed inset-0 z-[55] pointer-events-none overflow-hidden">
+        {/* TOP FRAME - Blocks content under the nav bar */}
+        <div className="absolute top-0 left-0 right-0 h-24 bg-[#05070a] shadow-[0_10px_30px_rgba(0,0,0,0.8)]"></div>
+        
+        {/* BOTTOM FRAME - Gradient for content disappearing behind the shell */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#05070a] via-[#05070a]/90 to-transparent z-20"></div>
+        
+        {/* SIDE SHUTTERS - Adds soft cinematic focus */}
+        <div className="absolute top-24 bottom-32 left-0 w-2 md:w-6 lg:w-10 bg-gradient-to-r from-[#05070a] to-transparent"></div>
+        <div className="absolute top-24 bottom-32 right-0 w-2 md:w-6 lg:w-10 bg-gradient-to-l from-[#05070a] to-transparent"></div>
+    </div>
+);
+
 export const PublicHubScreen: React.FC = () => {
     const navigate = useNavigate();
     const { allPlayers, history } = useApp();
@@ -560,8 +575,11 @@ export const PublicHubScreen: React.FC = () => {
                 bg-[#0a0c10]
                 `}
             >
-                {/* No Texture Overlay - Pure Clean Background */}
-                <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10">
+                {/* TERMINAL FRAME OVERLAY */}
+                {isDashboardOpen && <DashboardTerminalFrame />}
+
+                {/* Content with padding to avoid overlapping the top frame */}
+                <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10 pt-4 pb-32">
                     <ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} />
                 </div>
             </div>
