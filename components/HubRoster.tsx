@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApp } from '../context';
 import { PlayerTier, PlayerStatus, Player } from '../types';
@@ -209,8 +208,8 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                             );
                         })}
                     </div>
-                    {/* SCROLL FADE BOTTOM ONLY - HEIGHT REDUCED TO h-10 */}
-                    <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
+                    {/* SCROLL FADE BOTTOM ONLY - HEIGHT REDUCED TO h-6 */}
+                    <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
                 </div>
             </div>
 
