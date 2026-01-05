@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { useApp } from '../context';
 import { HubProgressChart } from './HubAnalytics';
@@ -148,9 +149,12 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
     const { allPlayers, language } = useApp();
     const t = translations[language];
 
-    const player = useMemo(() => (allPlayers.find(p => p.id === playerId)) as Player, [allPlayers, playerId]);
+    const player = useMemo(() => (allPlayers.find(p => p.id === playerId)), [allPlayers, playerId]);
 
     const rankings = useMemo(() => {
+        // SAFETY GUARD: Если игрок не найден (загрузка или сбой синхронизации), возвращаем дефолтные значения вместо краша
+        if (!player) return { goals: '-', assists: '-', rating: '-', total: 0 };
+
         const confirmedPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
         if (confirmedPlayers.length === 0) return { goals: '-', assists: '-', rating: '-', total: 0 };
         
@@ -191,9 +195,16 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
             rating: sortedByRating.findIndex(p => p.id === player.id) + 1 || '-',
             total: confirmedPlayers.length
         };
-    }, [allPlayers, player.id]);
+    }, [allPlayers, player]); // Зависим от всего объекта игрока
 
-    if (!player) return null;
+    if (!player) {
+        return (
+            <div className="h-full w-full flex flex-col items-center justify-center opacity-10">
+                <Users className="w-32 h-32 mb-6" />
+                <span className="font-orbitron text-xl uppercase tracking-[0.6em] font-black">Syncing Unit Data...</span>
+            </div>
+        );
+    }
     
     const countryCodeAlpha2 = player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : 'VN';
     const winRate = player.totalGames > 0 ? `${Math.round((player.totalWins / player.totalGames) * 100)}%` : '0%';
