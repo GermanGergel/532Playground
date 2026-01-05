@@ -28,83 +28,84 @@ const TermometerIcon = ({ className }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
 );
 
-// --- TACTICAL SOCCER BACKGROUND (CHALKBOARD STYLE WITH SMUDGES) ---
+// --- TACTICAL SOCCER BACKGROUND (CHALKBOARD STYLE WITH REAL TEXTURE) ---
 const SoccerTacticsBackground: React.FC = () => (
-    <div className="absolute inset-0 z-0 pointer-events-none">
-        {/* Blackboard Texture Base */}
-        <div className="absolute inset-0 bg-[#0a0c10]"></div>
+    <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        {/* Base Color: Deep Charcoal */}
+        <div className="absolute inset-0 bg-[#0a0d12]"></div>
         
-        {/* Chalk Smudges & Dust (Visual Texture) */}
-        <div className="absolute inset-0 opacity-40 mix-blend-screen overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_30%,_rgba(255,255,255,0.08)_0%,_transparent_50%)]"></div>
-            <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_70%,_rgba(255,255,255,0.05)_0%,_transparent_60%)]"></div>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-[url('https://www.transparenttextures.com/patterns/asfalt-dark.png')] opacity-20"></div>
+        {/* Chalk Smudges Layer 1: Hazy Gradients */}
+        <div className="absolute inset-0 opacity-40 mix-blend-screen">
+            <div className="absolute top-[-10%] left-[10%] w-[60%] h-[60%] bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.08)_0%,_transparent_70%)] blur-2xl"></div>
+            <div className="absolute bottom-[5%] right-[15%] w-[50%] h-[50%] bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.05)_0%,_transparent_60%)] blur-3xl"></div>
+            <div className="absolute top-[40%] left-[40%] w-[40%] h-[40%] bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.03)_0%,_transparent_50%)] blur-xl"></div>
         </div>
 
+        {/* Grainy Texture Overlay */}
+        <div className="absolute inset-0 opacity-[0.15] bg-[url('https://www.transparenttextures.com/patterns/asfalt-dark.png')]"></div>
+
+        {/* SVG Drawing Layer */}
         <svg width="100%" height="100%" viewBox="0 0 800 450" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" className="relative z-10">
             <defs>
                 <marker id="arrowhead-chalk" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-                    <polygon points="0 0, 10 3.5, 0 7" fill="rgba(255,255,255,0.7)" />
+                    <polygon points="0 0, 10 3.5, 0 7" fill="rgba(255,255,255,0.5)" />
                 </marker>
-                <filter id="chalkEffect">
+                <filter id="chalkBlur">
                     <feGaussianBlur in="SourceGraphic" stdDeviation="0.8" />
                 </filter>
             </defs>
             
-            {/* Field Structure (Chalk Lines) */}
-            <g stroke="white" strokeWidth="2.5" fill="none" filter="url(#chalkEffect)" strokeOpacity="0.4">
+            {/* Field Lines (Chalk style) */}
+            <g stroke="white" strokeWidth="2.5" fill="none" filter="url(#chalkBlur)" strokeOpacity="0.3">
                 {/* Center Line & Circle */}
                 <line x1="400" y1="0" x2="400" y2="450" />
-                <circle cx="400" cy="225" r="60" />
-                <circle cx="400" cy="225" r="3" fill="white" fillOpacity="0.5" />
+                <circle cx="400" cy="225" r="65" />
+                <circle cx="400" cy="225" r="3" fill="white" fillOpacity="0.4" />
                 
-                {/* Left Goal Area */}
+                {/* Left Pitch Area */}
                 <rect x="0" y="145" width="80" height="160" />
                 <rect x="0" y="195" width="30" height="60" />
                 <path d="M 80 185 Q 110 225 80 265" />
 
-                {/* Right Goal Area */}
+                {/* Right Pitch Area */}
                 <rect x="720" y="145" width="80" height="160" />
                 <rect x="770" y="195" width="30" height="60" />
                 <path d="M 720 185 Q 690 225 720 265" />
             </g>
 
-            {/* Tactical Moves (Chalk Drawings) */}
-            <g fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" filter="url(#chalkEffect)" strokeOpacity="0.6">
-                {/* TOP LEFT SCHEME (Circle -> Arrow -> X) */}
-                <circle cx="210" cy="70" r="12" />
-                <path d="M 230 75 Q 310 85 340 120" markerEnd="url(#arrowhead-chalk)" />
-                <g transform="translate(360, 130) rotate(45)">
-                    <line x1="-10" y1="0" x2="10" y2="0" /><line x1="0" y1="-10" x2="0" y2="10" />
+            {/* Tactical Moves (Chalk Drawing Style) */}
+            <g fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" filter="url(#chalkBlur)" strokeOpacity="0.5">
+                {/* Replicating screenshot movements */}
+                <circle cx="210" cy="75" r="10" />
+                <path d="M 225 85 Q 300 95 330 130" markerEnd="url(#arrowhead-chalk)" />
+                <g transform="translate(345, 140) rotate(45)">
+                    <line x1="-8" y1="0" x2="8" y2="0" /><line x1="0" y1="-8" x2="0" y2="8" />
                 </g>
 
-                {/* BOTTOM LEFT SCHEME (X -> Dashed curve) */}
-                <g transform="translate(110, 240) rotate(45)">
-                    <line x1="-10" y1="0" x2="10" y2="0" /><line x1="0" y1="-10" x2="0" y2="10" />
+                <g transform="translate(100, 240) rotate(45)">
+                    <line x1="-8" y1="0" x2="8" y2="0" /><line x1="0" y1="-8" x2="0" y2="8" />
                 </g>
-                <path d="M 130 255 Q 180 300 240 340" strokeDasharray="8 8" markerEnd="url(#arrowhead-chalk)" />
-                <g transform="translate(260, 355) rotate(45)">
-                    <line x1="-10" y1="0" x2="10" y2="0" /><line x1="0" y1="-10" x2="0" y2="10" />
-                </g>
-
-                {/* TOP RIGHT SCHEME (X -> Dashed -> X) */}
-                <g transform="translate(580, 80) rotate(45)">
-                    <line x1="-10" y1="0" x2="10" y2="0" /><line x1="0" y1="-10" x2="0" y2="10" />
-                </g>
-                <path d="M 600 90 Q 670 100 710 80" strokeDasharray="8 8" markerEnd="url(#arrowhead-chalk)" />
-                <g transform="translate(730, 70) rotate(45)">
-                    <line x1="-10" y1="0" x2="10" y2="0" /><line x1="0" y1="-10" x2="0" y2="10" />
+                <path d="M 120 255 Q 170 300 230 330" strokeDasharray="6 6" markerEnd="url(#arrowhead-chalk)" />
+                <g transform="translate(245, 340) rotate(45)">
+                    <line x1="-8" y1="0" x2="8" y2="0" /><line x1="0" y1="-8" x2="0" y2="8" />
                 </g>
 
-                {/* BOTTOM RIGHT SCHEME (O -> Arrow -> O) */}
-                <circle cx="600" cy="380" r="12" />
-                <path d="M 625 375 Q 670 350 720 360" markerEnd="url(#arrowhead-chalk)" />
-                <circle cx="745" cy="365" r="12" />
+                <g transform="translate(560, 90) rotate(45)">
+                    <line x1="-8" y1="0" x2="8" y2="0" /><line x1="0" y1="-8" x2="0" y2="8" />
+                </g>
+                <path d="M 580 100 Q 650 110 700 90" strokeDasharray="6 6" markerEnd="url(#arrowhead-chalk)" />
+                <g transform="translate(720, 80) rotate(45)">
+                    <line x1="-8" y1="0" x2="8" y2="0" /><line x1="0" y1="-8" x2="0" y2="8" />
+                </g>
 
-                {/* RANDOM SCATTERED ELEMENTS FOR EXTRA DETAIL */}
-                <circle cx="60" cy="60" r="8" strokeOpacity="0.2" />
-                <circle cx="450" cy="400" r="8" strokeOpacity="0.2" />
-                <g transform="translate(420, 190) rotate(45)" opacity="0.3">
+                <circle cx="580" cy="380" r="10" />
+                <path d="M 600 375 Q 650 350 710 360" markerEnd="url(#arrowhead-chalk)" />
+                <circle cx="730" cy="365" r="10" />
+
+                {/* Flavor Xs and Os */}
+                <circle cx="50" cy="50" r="8" strokeOpacity="0.2" />
+                <circle cx="420" cy="400" r="8" strokeOpacity="0.2" />
+                <g transform="translate(415, 180) rotate(45)" opacity="0.3">
                     <line x1="-8" y1="0" x2="8" y2="0" /><line x1="0" y1="-8" x2="0" y2="8" />
                 </g>
             </g>
@@ -740,8 +741,8 @@ export const PublicHubDashboard: React.FC = () => {
                                                 </React.Fragment>
                                             )})}</tbody>
                                         </table>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </HubCard>
