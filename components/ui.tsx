@@ -1,5 +1,5 @@
-
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { translations } from '../translations/index';
@@ -47,7 +47,7 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, 
   };
   const paddingClass = size === 'xs' ? 'p-4' : 'p-6';
   
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-[9999] p-4 backdrop-blur-sm">
       <div className={`relative bg-dark-surface text-dark-text rounded-2xl shadow-2xl w-full ${sizeClasses[size]} ${paddingClass} border border-white/10 ${containerClassName}`}>
         {title && (
@@ -61,7 +61,8 @@ export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, 
         )}
         <div>{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
