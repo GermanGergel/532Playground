@@ -73,6 +73,20 @@ export const JokerBadgeIcon = (props: React.SVGProps<SVGSVGElement>) => <svg vie
 export const CrisisManagerBadgeIcon = (props: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 2v20" /><path d="M2 12h20" /><circle cx="12" cy="12" r="10" /></svg>;
 export const IronLungBadgeIcon = (props: React.SVGProps<SVGSVGElement>) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" /><circle cx="12" cy="3" r="3" /></svg>;
 
+// --- TOTM ICON (TEAM OF THE MONTH) ---
+export const TOTMBadgeIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        {/* Hexagonal Medal Shape */}
+        <path d="M12 2L19.5 5.5V13.5L12 17.5L4.5 13.5V5.5L12 2Z" fill="currentColor" fillOpacity="0.15" stroke="currentColor" strokeWidth="2" />
+        {/* Ribbon Bottom Left */}
+        <path d="M7 16V22L10 20" stroke="currentColor" strokeWidth="1.5" />
+        {/* Ribbon Bottom Right */}
+        <path d="M17 16V22L14 20" stroke="currentColor" strokeWidth="1.5" />
+        {/* Inner Content (Star) */}
+        <path d="M12 6L13.5 9.5H17L14.25 11.5L15.25 15L12 13L8.75 15L9.75 11.5L7 9.5H10.5L12 6Z" fill="#FFF" />
+    </svg>
+);
+
 // --- RANKING ICONS ---
 export const BootIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M18.5 8l2.5 1-3 5-1-1-1 2-2 1-1-2-1-1-3-1-1-3 1-3 2-1 3-1 2 1 2 1z"/><path d="M11.5 13.5l-2-3-2-1-2 1-1 3 2 3h3"/></svg>

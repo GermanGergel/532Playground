@@ -11,6 +11,7 @@ import { useTranslation } from '../ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { ClubIntelligenceDashboard } from '../components/ClubIntelligenceDashboard';
 import { RadioPlayer } from '../components/RadioPlayer';
+import { HubTOTMButton } from '../components/HubTOTMButton';
 
 // --- SUB-COMPONENTS ---
 
@@ -199,7 +200,8 @@ const HubNav: React.FC<{
         'dashboard': t.hubDashboardBtn, 
         'roster': t.playerHub, 
         'archive': t.navHistory, 
-        'info': t.information 
+        'info': t.information,
+        'totm': 'TEAM OF THE MONTH'
     };
 
     const navContainerClass = `
@@ -285,6 +287,10 @@ const HubNav: React.FC<{
                 {isDashboardOpen && (
                     <div className="flex items-center gap-2 md:gap-4 mr-2 h-full animate-in fade-in slide-in-from-right-3 duration-500">
                         <div className="mr-3 flex items-center border-r border-white/10 pr-4 gap-3">
+                            <HubTOTMButton 
+                                isActive={activeTab === 'totm'} 
+                                onClick={() => onTabChange('totm')} 
+                            />
                             <button 
                                 onClick={onHomeClick}
                                 className="flex flex-col items-center justify-center gap-1 transition-all duration-300 group cursor-pointer hover:scale-110"
@@ -425,7 +431,7 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                         <div>
                             <p style={{ color: '#00F2FE' }} className="text-base font-black leading-none">532</p>
                             <p className="text-white text-[7px] font-bold tracking-[0.15em] font-chakra leading-none mt-1">PLAYGROUND</p>
-                            {countryCodeAlpha2 && (<img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} alt={`${player.countryCode} flag`} className="w-6 h-auto mt-3 rounded-sm"/>)}
+                            {countryCodeAlpha2 && (<img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} alt={`${player.countryCode} flag`} className="w-6 h-auto mt-3 rounded-sm" />)}
                         </div>
                         <div className="flex flex-col items-center max-w-[50%]">
                             <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
@@ -471,7 +477,7 @@ const CinematicStatCard: React.FC<{ value: string | number; label: string; }> = 
 );
 
 // Define allowed view types to match ClubIntelligenceDashboard and avoid TS2322
-type DashboardViewType = 'info' | 'dashboard' | 'roster' | 'archive' | 'duel' | 'tournaments' | 'league';
+type DashboardViewType = 'info' | 'dashboard' | 'roster' | 'archive' | 'duel' | 'tournaments' | 'league' | 'totm';
 
 export const PublicHubScreen: React.FC = () => {
     const navigate = useNavigate();
