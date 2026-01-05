@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApp } from '../context';
 import { PlayerTier, PlayerStatus, Player } from '../types';
@@ -111,7 +112,7 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
     return (
         <div className="absolute inset-0 flex flex-row animate-in fade-in duration-700 overflow-hidden rounded-[2.5rem]">
             {/* SIDEBAR - LEFT COLUMN */}
-            <div className="w-[350px] flex flex-col border-r border-white/5 bg-black/40 relative z-20 shrink-0">
+            <div className="w-[350px] flex flex-col border-r border-white/5 bg-[#05070a] relative z-20 shrink-0">
                 <div className="p-6 pb-2 space-y-3 pt-4">
                     <div className="flex items-center justify-start mb-1 pr-2 pl-44">
                         <button 
@@ -209,12 +210,12 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                         })}
                     </div>
                     {/* SCROLL FADE BOTTOM ONLY - HEIGHT FURTHER REDUCED TO h-4 */}
-                    <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
+                    <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#01040a] to-transparent z-20 pointer-events-none"></div>
                 </div>
             </div>
 
-            {/* CONTENT AREA - RIGHT COLUMN - BACKGROUND UPDATED TO #05070a */}
-            <div className="flex-grow relative bg-[#05070a] overflow-hidden">
+            {/* CONTENT AREA - RIGHT COLUMN - Obsidian Black (#01040a) */}
+            <div className="flex-grow relative bg-[#01040a] overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-black to-black opacity-60"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
 

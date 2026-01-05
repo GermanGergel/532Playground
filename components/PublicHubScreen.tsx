@@ -590,10 +590,9 @@ export const PublicHubScreen: React.FC = () => {
         setDashboardView(tab as DashboardViewType);
     };
 
-    // ОПРЕДЕЛЕНИЕ ЦВЕТА ПОДЛОЖКИ
+    // ОПРЕДЕЛЕНИЕ ЦВЕТА ПОДЛОЖКИ - УНИФИЦИРОВАНО НА САМЫЙ ТЕМНЫЙ
     const getBottomPatchColor = () => {
-        if (dashboardView === 'archive') return '#01040a';
-        if (dashboardView === 'dashboard' || dashboardView === 'roster' || dashboardView === 'info') return '#05070a';
+        if (dashboardView === 'archive' || dashboardView === 'dashboard' || dashboardView === 'roster' || dashboardView === 'info') return '#01040a';
         return '#0a0c10';
     };
 

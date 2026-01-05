@@ -153,7 +153,6 @@ const HubCard: React.FC<{
         titleColor = 'text-white';
         iconBg = 'bg-white/10 border-white/20';
     } else if (isElite) {
-        // ULTIMATE DARK: Deep radial void for Session Leaders
         bgStyleClass = 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#050608] via-[#010101] to-black border-white/5';
         headerStyleClass = 'bg-transparent !border-0';
         titleColor = 'text-white'; 
@@ -167,17 +166,9 @@ const HubCard: React.FC<{
 
     return (
         <div className={`relative overflow-hidden rounded-[1.5rem] flex flex-col border ${bgStyleClass} ${className}`}>
-            {/* 1. Global Texture Overlay (Micro-grid) */}
-            <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ 
-                backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`,
-                backgroundSize: '4px 4px'
-            }}></div>
-
-            {/* 2. Tactical Overlay (Only for elite, on top of texture) */}
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`, backgroundSize: '4px 4px' }}></div>
             {isElite && <SoccerTacticsBackground />}
-
             <div className={`absolute -top-10 -left-10 w-40 h-40 ${isElite ? 'bg-[#00F2FE]/[0.05]' : 'bg-[#00F2FE]/[0.03]'} rounded-full blur-[45px] pointer-events-none z-0 animate-pulse`} style={{ animationDuration: '6s' }}></div>
-            
             <div className={`relative z-10 py-1.5 px-4 flex items-center shrink-0 ${headerStyleClass} ${isRight ? 'flex-row-reverse justify-start' : 'justify-between'}`}>
                  <div className={`flex items-center gap-2 relative z-10 ${isRight ? 'flex-row-reverse' : ''}`}>
                     <div className={`w-4 h-4 rounded-md flex items-center justify-center shadow-sm border ${iconBg} shrink-0`} style={{ color: accent }}>
@@ -430,7 +421,7 @@ export const PublicHubDashboard: React.FC = () => {
         .map((p, i) => ({ player: p.player, score: getImpactScore(p), rank: (i + 1) as 1 | 2 | 3 }));
 
     const finishedGames = [...session.games].filter(g => g.status === 'finished').sort((a, b) => a.gameNumber - b.gameNumber);
-    const thStandings = "py-2 text-white/40 uppercase tracking-tighter text-[8px] font-black text-center sticky top-0 bg-[#05070a] backdrop-blur-sm z-10 border-b border-white/5";
+    const thStandings = "py-2 text-white/40 uppercase tracking-tighter text-[8px] font-black text-center sticky top-0 bg-[#01040a] backdrop-blur-sm z-10 border-b border-white/5";
     const tdBase = "py-1.5 text-center text-[10px] font-bold transition-colors";
 
     return (
@@ -445,8 +436,8 @@ export const PublicHubDashboard: React.FC = () => {
                     </div>
                     <div className="flex-[3] min-h-0 shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <HubCard title={t.hubSessionNews} icon={<Zap />} accent="#00F2FE" variant="standings" className="h-full min-h-0" bodyClassName="p-0 flex flex-col relative">
-                            {/* ЭФФЕКТ МЯГКОГО СКРЫТИЯ - ОПУЩЕН НИЖЕ */}
-                            <div className="absolute bottom-0 left-0 right-0 h-3 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
+                            {/* ЭФФЕКТ МЯГКОГО СКРЫТИЯ - Obsidian Black (#01040a) */}
+                            <div className="absolute bottom-0 left-0 right-0 h-3 bg-gradient-to-t from-[#01040a] to-transparent z-20 pointer-events-none"></div>
                             <div className="flex-grow relative overflow-y-auto custom-hub-scrollbar p-3 bg-black/10">
                                 <div className="py-2">
                                     {newsFeed.slice(0, 15).map(item => <NewsVanguardCard key={item.id} item={item} />)}
@@ -502,8 +493,8 @@ export const PublicHubDashboard: React.FC = () => {
                         icon={activeRightTab === 'players' ? <Users /> : <HistoryIcon />} 
                         variant="standings" accent="#00F2FE" className="flex-grow min-h-0" bodyClassName="flex flex-col h-full min-h-0 relative"
                     >
-                        {/* ЭФФЕКТ МЯГКОГО СКРЫТИЯ - ОПУЩЕН НИЖЕ */}
-                        <div className="absolute bottom-0 left-0 right-0 h-3 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
+                        {/* ЭФФЕКТ МЯГКОГО СКРЫТИЯ - Obsidian Black (#01040a) */}
+                        <div className="absolute bottom-0 left-0 right-0 h-3 bg-gradient-to-t from-[#01040a] to-transparent z-20 pointer-events-none"></div>
                         <div className="flex-grow overflow-y-auto custom-hub-scrollbar h-full">
                             <div className="py-2">
                                 {activeRightTab === 'players' ? (

@@ -391,8 +391,8 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                         </table>
                                     )}
                                 </div>
-                                {/* ЭФФЕКТ МЯГКОГО СКРЫТИЯ - ВЫСОТА УМЕНЬШЕНА */}
-                                <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#010409] to-transparent z-20 pointer-events-none"></div>
+                                {/* ЭФФЕКТ МЯГКОГО СКРЫТИЯ - Obsidian Black (#01040a) */}
+                                <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#01040a] to-transparent z-20 pointer-events-none"></div>
                             </HubCard>
                         </div>
                     </div>

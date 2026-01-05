@@ -24,7 +24,7 @@ const ALL_SKILLS: SkillType[] = [
 
 const IntelSectionHeader = ({ title, icon: Icon, accent = "#00F2FE" }: any) => (
     <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 rounded-xl bg-white/5 border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.1)] shrink-0">
+        <div className="p-2 rounded-xl bg-white/5 border border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.05)] shrink-0">
             <Icon className="w-4 h-4" style={{ color: accent }} />
         </div>
         <h4 className="font-russo text-lg text-white tracking-tight leading-none uppercase">{title}</h4>
@@ -32,7 +32,6 @@ const IntelSectionHeader = ({ title, icon: Icon, accent = "#00F2FE" }: any) => (
     </div>
 );
 
-// Компонент для иконки судейской карточки
 const RefereeCardIcon = () => (
     <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.6)]">
         <rect x="7" y="4" width="10" height="16" rx="1.5" />
@@ -45,9 +44,9 @@ export const HubInfo: React.FC = () => {
 
     return (
         <div className="absolute inset-0 z-20 flex flex-col animate-in fade-in duration-500 rounded-[2.5rem] overflow-hidden">
-            {/* Background: Dashboard Style (Dark Radial + Carbon) - Extending behind nav */}
-            <div className="absolute -top-24 bottom-0 -left-4 -right-4 z-0 pointer-events-none">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#05070a] to-black"></div>
+            {/* Background: Deep Obsidian - Unfied with Terminal */}
+            <div className="absolute inset-0 z-0 pointer-events-none bg-[#01040a]">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-black to-black opacity-40"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
             </div>
 
@@ -185,7 +184,7 @@ export const HubInfo: React.FC = () => {
                         </div>
                     </section>
 
-                    {/* 4. BADGE BONUSES - Compacted */}
+                    {/* 4. BADGE BONUSES */}
                     <section>
                         <IntelSectionHeader title={t.badgeBonusTitle} icon={LightbulbIcon} accent="#10b981" />
                         <div className="rounded-3xl bg-emerald-500/5 p-6 border border-emerald-500/10 shadow-lg relative overflow-hidden group">
@@ -217,7 +216,7 @@ export const HubInfo: React.FC = () => {
                         </div>
                     </section>
 
-                    {/* 5. SKILLS - Compact Grid */}
+                    {/* 5. SKILLS */}
                     <section>
                         <IntelSectionHeader title="Specializations" icon={StarIcon} accent="#00F2FE" />
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -263,8 +262,8 @@ export const HubInfo: React.FC = () => {
                 </div>
             </div>
 
-            {/* SCROLL FADE BOTTOM ONLY - Унифицирован с Player Hub */}
-            <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#05070a] to-transparent z-30 pointer-events-none"></div>
+            {/* SCROLL FADE BOTTOM ONLY - Unfied Obsidian (#01040a) */}
+            <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-[#01040a] to-transparent z-30 pointer-events-none"></div>
         </div>
     );
 };
