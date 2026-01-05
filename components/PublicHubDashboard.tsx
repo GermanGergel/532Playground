@@ -260,9 +260,9 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
 
     return (
         <div className="flex items-end justify-center gap-3 h-full px-4 relative">
-            <div className="w-[110px] md:w-[155px] h-full flex flex-col justify-end z-10 shrink-0"><PodiumSpot p={p2} rank={2} height="90px" color="#94a3b8" delay="delay-100" /></div>
-            <div className="w-[125px] md:w-[175px] h-full flex flex-col justify-end z-20 pb-4 shrink-0"><PodiumSpot p={p1} rank={1} height="130px" color="#FFD700" delay="delay-0" /></div>
-            <div className="w-[110px] md:w-[155px] h-full flex flex-col justify-end z-10 shrink-0"><PodiumSpot p={p3} rank={3} height="75px" color="#CD7F32" delay="delay-200" /></div>
+            <div className="w-[115px] md:w-[165px] h-full flex flex-col justify-end z-10 shrink-0"><PodiumSpot p={p2} rank={2} height="90px" color="#94a3b8" delay="delay-100" /></div>
+            <div className="w-[115px] md:w-[165px] h-full flex flex-col justify-end z-20 pb-4 shrink-0"><PodiumSpot p={p1} rank={1} height="130px" color="#FFD700" delay="delay-0" /></div>
+            <div className="w-[115px] md:w-[165px] h-full flex flex-col justify-end z-10 shrink-0"><PodiumSpot p={p3} rank={3} height="75px" color="#CD7F32" delay="delay-200" /></div>
         </div>
     );
 };

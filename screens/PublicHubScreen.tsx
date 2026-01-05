@@ -610,14 +610,14 @@ export const PublicHubScreen: React.FC = () => {
                 }}
             />
 
-            {/* DASHBOARD OVERLAY - FIXED BACKGROUND APPLIED HERE */}
+            {/* DASHBOARD OVERLAY - FIXED BACKGROUND APPLIED HERE (#05070a - deepest obsidian) */}
             <div 
                 className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none 
                 ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}
-                bg-[#0a0c10]
+                bg-[#05070a]
                 `}
             >
-                {/* No Texture Overlay - Pure Clean Background */}
+                {/* Clean Layering */}
                 <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10">
                     <ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} />
                 </div>
