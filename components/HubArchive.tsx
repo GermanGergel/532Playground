@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context';
 import { Calendar, History as HistoryIcon, Search } from '../icons';
@@ -47,7 +48,7 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
     return (
         <div className="absolute inset-0 flex flex-row animate-in fade-in duration-700 overflow-hidden rounded-[2.5rem]">
             {/* --- SIDEBAR: SESSION LIST --- */}
-            <div className="w-[350px] flex flex-col border-r border-white/5 bg-black/60 relative z-20 shrink-0">
+            <div className="w-[350px] flex flex-col border-r border-white/5 bg-black/40 relative z-20 shrink-0">
                 {/* Header Section: Shifted further right (pl-40) */}
                 <div className="pt-8 pl-40 flex flex-col items-start shrink-0"> 
                     <div className="flex flex-col items-center">
@@ -87,6 +88,7 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                                 className={`group relative flex items-center h-[68px] w-full rounded-2xl transition-all duration-300 cursor-pointer border overflow-hidden
                                     ${isSelected 
                                         ? 'bg-gradient-to-br from-[#1e2329] to-[#12161b] border-white/20 shadow-[0_10px_20px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.1)]' 
+                                        // UPDATED: Used darker gradient [from-[#0d1117] to-[#010409]] to match HubSessionDetail cards
                                         : 'bg-gradient-to-br from-[#0d1117] to-[#010409] border-white/5 shadow-[0_4px_10px_rgba(0,0,0,0.4),inset_0_1px_0.5px_rgba(255,255,255,0.05)] hover:border-white/10'
                                     }`}
                             >
@@ -142,8 +144,8 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                 </div>
             </div>
 
-            {/* --- CONTENT AREA: SESSION DETAIL - DARKER BACKGROUND --- */}
-            <div className="flex-grow relative bg-[#010409] overflow-hidden">
+            {/* --- CONTENT AREA: SESSION DETAIL --- */}
+            <div className="flex-grow relative bg-[#01040a] overflow-hidden">
                 {selectedSession ? (
                     <div key={selectedSession.id} className="h-full w-full animate-in fade-in slide-in-from-right-4 duration-500">
                         <HubSessionDetail 

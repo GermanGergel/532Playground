@@ -133,7 +133,7 @@ const TerminalSessionTrend = ({ history }: { history?: Player['sessionHistory'] 
                 const barHeight = Math.max(s.winRate, 15); 
                 return (
                     <div key={i} className="flex flex-col items-center gap-1.5 h-full justify-end group/bar relative">
-                        <div className={`w-6 rounded-t-sm transition-all duration-1000 ease-out relative ${s.iDemo ? 'opacity-0' : 'opacity-100'}`} style={{ height: `${barHeight}%`, background: `linear-gradient(to top, ${color}22, ${color})`, borderTop: `2px solid ${color}88`, }}>
+                        <div className={`w-6 rounded-t-sm transition-all duration-1000 ease-out relative ${s.iDemo ? 'opacity-0' : 'opacity-100'}`} style={{ height: `${barHeight}%`, background: `linear-gradient(to top, ${color}22, ${color})`, borderTop: `1px solid ${color}88`, }}>
                              {!s.iDemo && (<div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20"><span className="text-[8px] font-black text-white bg-black/90 px-1.5 py-0.5 rounded border border-white/10">{s.winRate}%</span></div>)}
                         </div>
                         <span className={`text-[6px] font-black tracking-tighter transition-colors ${s.iDemo ? 'text-white/0' : 'text-white/30'}`}>{s.iDemo ? '' : `S${safeHistory.length - (4 - i)}`}</span>
@@ -216,13 +216,13 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
         <div className={`absolute inset-0 z-20 flex flex-col animate-in fade-in duration-700 overflow-hidden ${!isEmbedded ? 'rounded-[2.5rem]' : ''}`}>
             {!isEmbedded && (
                 <div className="absolute inset-0 z-0 pointer-events-none">
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#010409] to-black"></div>
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#01040a] to-black"></div>
                     <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] pointer-events-none"></div>
                 </div>
             )}
 
             {/* SCROLL FADE FOR INTEL AREA - HEIGHT FURTHER REDUCED TO h-4 */}
-            <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#010409] to-transparent z-30 pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#05070a] to-transparent z-30 pointer-events-none"></div>
 
             <div className="relative z-10 flex-grow overflow-y-auto custom-hub-scrollbar">
                 <div className={`w-full max-w-[1200px] mx-auto px-4 ${isEmbedded ? 'md:px-8' : 'md:px-12 lg:px-20'} py-6 pb-48 flex flex-col h-full`}>
