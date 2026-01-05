@@ -145,7 +145,7 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
             </div>
 
             {/* --- CONTENT AREA: SESSION DETAIL --- */}
-            <div className="flex-grow relative bg-[#01040a] overflow-hidden">
+            <div className="flex-grow relative bg-[#05070a] overflow-hidden">
                 {selectedSession ? (
                     <div key={selectedSession.id} className="h-full w-full animate-in fade-in slide-in-from-right-4 duration-500">
                         <HubSessionDetail 
