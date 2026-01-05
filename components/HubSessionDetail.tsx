@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import { Session, WeatherCondition } from '../types';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
@@ -84,9 +83,7 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
-            {/* TOP SECTION: Fixed Height Elements */}
             <div className="flex flex-col gap-3 shrink-0 mb-4">
-                {/* Location */}
                 <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-2xl p-3 shadow-sm">
                     <div className="w-10 h-10 rounded-xl bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shrink-0">
                         <MapPinIcon className="w-5 h-5" />
@@ -110,7 +107,6 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
                 </div>
                 
                 <div className="flex items-stretch gap-3">
-                    {/* Time */}
                     <div className="flex-grow flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-2xl p-3 shadow-sm">
                         <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0">
                             <ClockIcon className="w-5 h-5" />
@@ -121,7 +117,6 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
                         </div>
                     </div>
                     
-                    {/* Weather */}
                     <div className="flex items-center gap-3 px-4 bg-indigo-900/20 rounded-2xl border border-indigo-500/20 shrink-0 shadow-sm">
                         <div className="flex flex-col items-end justify-center">
                             <span className="font-russo text-2xl text-slate-200 leading-none">{data.temp}</span>
@@ -132,21 +127,17 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
                 </div>
             </div>
 
-            {/* BOTTOM SECTION: Expanding Leaders List */}
             <div className="flex-grow flex flex-col min-h-0">
                 <div className="flex items-center gap-2 mb-2 opacity-90 shrink-0 pl-1">
                     <TrophyIcon className="w-3.5 h-3.5 text-[#FFD700]" />
                     <span className="text-[9px] font-black text-white/50 uppercase tracking-[0.25em]">SESSION LEADERS (IMPACT)</span>
                 </div>
                 
-                {/* Use flex-grow and gap to fill vertical space */}
                 <div className="flex-grow flex flex-col gap-2 min-h-0">
                     {topPlayers.slice(0, 3).map((stat, idx) => {
                         const impact = getImpactScore(stat);
-                        // Using flex-1 to make items expand equally to fill the container height
                         return (
                             <div key={stat.player.id} className="flex-1 flex items-center justify-between px-4 rounded-2xl bg-white/[0.03] border border-white/5 relative overflow-hidden group hover:bg-white/[0.05] transition-colors">
-                                {/* Rank Color Strip */}
                                 <div className={`absolute left-0 top-0 bottom-0 w-1 ${idx === 0 ? 'bg-[#FFD700]' : idx === 1 ? 'bg-slate-300' : 'bg-amber-700'}`}></div>
 
                                 <div className="flex items-center gap-4 pl-2">
@@ -170,7 +161,6 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
                             </div>
                         );
                     })}
-                    {/* Fill empty state if no players */}
                     {topPlayers.length === 0 && (
                         <div className="flex-1 flex items-center justify-center text-white/20 text-xs font-bold uppercase tracking-widest border border-white/5 rounded-2xl bg-white/[0.01]">
                             No Stats Available
@@ -213,10 +203,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
     const sortedByStats = useMemo(() => [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists)), [allPlayersStats]);
     const finishedGames = session.games.filter(g => g.status === 'finished');
     
-    // UPDATED: Reduced vertical padding (py-2) to fit more rows
     const thClass = "py-2 text-white/40 uppercase tracking-tighter text-[9px] font-black text-center sticky top-0 bg-[#12161b] backdrop-blur-md z-10 border-b border-white/5";
-    
-    // UPDATED: Reduced vertical padding (py-2) to fit more rows
     const tdBase = "py-2 text-center text-[11px] font-bold transition-colors";
 
     return (
@@ -284,14 +271,14 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                 <ArchiveEnvironmentWidget topPlayers={sortedByImpact} session={session} />
                             </HubCard>
                         </div>
-                        <div className="w-full h-full min-h-0">
+                        <div className="w-full h-full min-h-0 relative">
                             <HubCard title={
                                 <div className="flex items-center gap-4 md:gap-8 px-4 md:px-6">
                                     <button onClick={() => { setActiveTab('players'); setExpandedMatchId(null); }} className={`font-russo text-[8px] md:text-[9px] uppercase tracking-widest transition-all ${activeTab === 'players' ? 'text-[#00F2FE]' : 'text-white/20'}`}>PLAYER STATISTICS</button>
                                     <div className="w-px h-3 bg-white/10"></div>
                                     <button onClick={() => { setActiveTab('matches'); setExpandedMatchId(null); }} className={`font-russo text-[8px] md:text-[9px] uppercase tracking-widest transition-all ${activeTab === 'matches' ? 'text-[#00F2FE]' : 'text-white/20'}`}>MATCH HISTORY</button>
                                 </div>
-                            } icon={activeTab === 'players' ? <Users /> : <HistoryIcon />} accent="#00F2FE" className="h-full flex flex-col" bodyClassName="flex flex-col h-full min-h-0">
+                            } icon={activeTab === 'players' ? <Users /> : <HistoryIcon />} accent="#00F2FE" className="h-full flex flex-col" bodyClassName="flex flex-col h-full min-h-0 relative">
                                 <div className="flex-grow overflow-y-auto custom-hub-scrollbar p-1">
                                     {activeTab === 'players' ? (
                                         <table className="w-full table-fixed border-collapse">
@@ -404,11 +391,15 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                         </table>
                                     )}
                                 </div>
+                                {/* SCROLL FADE INSIDE CARD - h-4 */}
+                                <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#010409] to-transparent z-20 pointer-events-none"></div>
                             </HubCard>
                         </div>
                     </div>
                 </div>
             </div>
+            {/* SCROLL FADE BOTTOM - Global content area - h-4 */}
+            <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#01040a] to-transparent z-30 pointer-events-none"></div>
         </div>
     );
 };

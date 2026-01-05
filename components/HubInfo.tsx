@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useApp } from '../context';
 import { translations } from '../translations/index';
@@ -45,9 +44,9 @@ export const HubInfo: React.FC = () => {
 
     return (
         <div className="absolute inset-0 z-20 flex flex-col animate-in fade-in duration-500 rounded-[2.5rem] overflow-hidden">
-            {/* Background: Dashboard Style (Dark Radial + Carbon) - Extending behind nav */}
+            {/* Background: Dashboard Style - Using #0a1121 for consistency with Information context */}
             <div className="absolute -top-24 bottom-0 -left-4 -right-4 z-0 pointer-events-none">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#05070a] to-black"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
             </div>
 
@@ -59,11 +58,10 @@ export const HubInfo: React.FC = () => {
                     <section>
                         <IntelSectionHeader title={t.ratingCalculationTitle} icon={InfoIcon} />
                         <div className="space-y-6">
-                            <p className="text-base text-white/70 leading-relaxed font-medium pl-1">
+                            <p className="text-base text-white/70 leading-relaxed font-medium font-chakra pl-1">
                                 {t.ratingCalculationDesc}
                             </p>
                             
-                            {/* Compact Glass Card */}
                             <div className="p-6 rounded-3xl bg-black/40 backdrop-blur-md border border-white/10 shadow-2xl relative overflow-hidden">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#00F2FE]/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
                                 
@@ -86,7 +84,6 @@ export const HubInfo: React.FC = () => {
                                 </ul>
                             </div>
 
-                            {/* NEW: RATING RULES (Inactivity & Protection) */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/10 hover:bg-amber-500/10 transition-colors">
                                     <div className="flex items-center gap-3 mb-2">
@@ -109,7 +106,6 @@ export const HubInfo: React.FC = () => {
                     {/* 2. LEGIONNAIRE PROTOCOL */}
                     <section>
                         <IntelSectionHeader title={t.infoLegionnaireTitle} icon={Users} accent="#a855f7" />
-                        {/* More compact padding (p-6 instead of p-8) */}
                         <div className="p-6 rounded-3xl bg-purple-500/5 border border-purple-500/10 shadow-lg relative overflow-hidden group">
                             <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 rounded-full blur-[60px] -mr-20 -mt-20 pointer-events-none group-hover:bg-purple-500/20 transition-all"></div>
                             <div className="relative z-10 flex flex-col sm:flex-row gap-6 items-center">
@@ -134,7 +130,6 @@ export const HubInfo: React.FC = () => {
                     <section>
                         <IntelSectionHeader title={t.disciplineTitle} icon={ExclamationIcon} accent="#ef4444" />
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {/* Rule: Handball */}
                             <div className="p-5 rounded-2xl bg-red-500/5 border border-red-500/10 shadow-sm hover:bg-red-500/10 transition-all">
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center text-xl">🧤</div>
@@ -145,8 +140,6 @@ export const HubInfo: React.FC = () => {
                                     <span className="text-[9px] font-black text-red-400 uppercase tracking-widest">{t.ruleHandballPenalty}</span>
                                 </div>
                             </div>
-
-                            {/* Rule: No Show */}
                             <div className="p-5 rounded-2xl bg-white/5 border border-white/10 shadow-sm hover:bg-white/10 transition-all">
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl">💰</div>
@@ -157,8 +150,6 @@ export const HubInfo: React.FC = () => {
                                     <span className="text-[9px] font-black text-white/80 uppercase tracking-widest">{t.ruleNoShowPenalty}</span>
                                 </div>
                             </div>
-
-                            {/* Rule: Late */}
                             <div className="p-5 rounded-2xl bg-white/5 border border-white/10 shadow-sm hover:bg-white/10 transition-all">
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl">🕒</div>
@@ -169,8 +160,6 @@ export const HubInfo: React.FC = () => {
                                     <span className="text-[9px] font-black text-white/80 uppercase tracking-widest">{t.ruleLatePenalty}</span>
                                 </div>
                             </div>
-
-                            {/* Rule: Respect */}
                             <div className="p-5 rounded-2xl bg-white/5 border border-white/10 shadow-sm hover:bg-white/10 transition-all">
                                 <div className="flex items-center gap-3 mb-3">
                                     <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center">
@@ -186,7 +175,7 @@ export const HubInfo: React.FC = () => {
                         </div>
                     </section>
 
-                    {/* 4. BADGE BONUSES - Compacted */}
+                    {/* 4. BADGE BONUSES */}
                     <section>
                         <IntelSectionHeader title={t.badgeBonusTitle} icon={LightbulbIcon} accent="#10b981" />
                         <div className="rounded-3xl bg-emerald-500/5 p-6 border border-emerald-500/10 shadow-lg relative overflow-hidden group">
@@ -218,7 +207,7 @@ export const HubInfo: React.FC = () => {
                         </div>
                     </section>
 
-                    {/* 5. SKILLS - Compact Grid */}
+                    {/* 5. SKILLS */}
                     <section>
                         <IntelSectionHeader title="Specializations" icon={StarIcon} accent="#00F2FE" />
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -227,7 +216,7 @@ export const HubInfo: React.FC = () => {
                                     <div className="w-10 h-10 rounded-xl bg-black/40 flex items-center justify-center border border-white/5 group-hover:bg-[#00F2FE]/10 transition-all shrink-0">
                                         <StarIcon className="w-5 h-5 text-[#00F2FE]" style={{ filter: 'drop-shadow(0 0 5px rgba(0,242,254,0.3))' }} />
                                     </div>
-                                    <div className="flex flex-col min-w-0">
+                                    <div className="flex flex-col min-0">
                                         <span className="text-[11px] font-black text-white/90 uppercase tracking-wide truncate">
                                             {t[`skill_${skill}` as keyof typeof t]}
                                         </span>
@@ -263,6 +252,8 @@ export const HubInfo: React.FC = () => {
                     </section>
                 </div>
             </div>
+            {/* SCROLL FADE BOTTOM - h-4 */}
+            <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
         </div>
     );
 };
