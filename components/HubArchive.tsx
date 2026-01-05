@@ -78,13 +78,7 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                 </div>
 
                 {/* Session List: Increased spacing to space-y-5 (approx +4px/1mm) */}
-                <div 
-                    className="flex-grow overflow-y-auto custom-hub-scrollbar px-4 pb-20 pt-2 space-y-5"
-                    style={{
-                        maskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)'
-                    }}
-                >
+                <div className="flex-grow overflow-y-auto custom-hub-scrollbar px-4 pb-4 pt-2 space-y-5">
                     {filteredHistory.map((session) => {
                         const isSelected = selectedSessionId === session.id;
                         return (
@@ -94,6 +88,7 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                                 className={`group relative flex items-center h-[68px] w-full rounded-2xl transition-all duration-300 cursor-pointer border overflow-hidden
                                     ${isSelected 
                                         ? 'bg-gradient-to-br from-[#1e2329] to-[#12161b] border-white/20 shadow-[0_10px_20px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.1)]' 
+                                        // UPDATED: Used darker gradient [from-[#0d1117] to-[#010409]] to match HubSessionDetail cards
                                         : 'bg-gradient-to-br from-[#0d1117] to-[#010409] border-white/5 shadow-[0_4px_10px_rgba(0,0,0,0.4),inset_0_1px_0.5px_rgba(255,255,255,0.05)] hover:border-white/10'
                                     }`}
                             >
@@ -102,7 +97,7 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
 
                                 {/* Selection indicator: Extreme thin (1.5px) and compact (h-6) */}
                                 <div 
-                                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-8 rounded-r-full transition-all duration-500 z-10" 
+                                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[1.5px] h-6 rounded-r-full transition-all duration-500 z-10" 
                                     style={{ 
                                         backgroundColor: isSelected ? '#00F2FE' : 'transparent', 
                                         boxShadow: isSelected ? '0 0 10px #00F2FE' : 'none',

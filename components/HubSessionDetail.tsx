@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import { Session, WeatherCondition } from '../types';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
