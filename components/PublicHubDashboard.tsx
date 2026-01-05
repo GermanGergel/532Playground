@@ -651,10 +651,13 @@ export const PublicHubDashboard: React.FC = () => {
                 </div>
             </div>
 
-            {/* Bottom Fade Gradient Overlay (~50px) */}
-            <div 
-                className="absolute bottom-0 left-0 right-0 h-[50px] pointer-events-none z-[100] bg-gradient-to-t from-black via-[#0a0c10]/90 to-transparent"
-            />
+            {/* Bottom Screen Mask - Fixed edge-to-edge footer fill */}
+            <div className="fixed bottom-0 left-0 right-0 pointer-events-none z-[100] flex flex-col">
+                {/* Fade layer: transitions from transparent to card-background color */}
+                <div className="h-[50px] bg-gradient-to-t from-[#0a0c10] to-transparent" />
+                {/* Solid layer: transitions from card-background to pure black at the monitor edge */}
+                <div className="h-[150px] bg-gradient-to-t from-black via-black/80 to-[#0a0c10]" />
+            </div>
         </div>
     );
 };
