@@ -1,4 +1,3 @@
-
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { PlayerHistoryEntry } from '../types';
 import { History as HistoryIcon } from '../icons';
@@ -16,6 +15,15 @@ export const HubProgressChart: React.FC<{ history: PlayerHistoryEntry[], headerT
         return history;
     }, [history]);
 
+    const theme = useMemo(() => {
+        switch (activeMetric) {
+            case 'rating': return { color: '#00F2FE' };
+            case 'winRate': return { color: '#4CFF5F' };
+            case 'goals': return { color: '#FFD700' };
+            default: return { color: '#00F2FE' };
+        }
+    }, [activeMetric]);
+
     // Force scroll to end after render/resize
     useEffect(() => {
         const scrollToLatest = () => {
@@ -31,6 +39,7 @@ export const HubProgressChart: React.FC<{ history: PlayerHistoryEntry[], headerT
         return () => clearTimeout(timer);
     }, [chartData, activeMetric]);
 
+    // CRITICAL: Hooks must be called before conditional returns
     if (chartData.length === 0) return null;
 
     // --- CHART CONFIGURATION ---
@@ -86,29 +95,19 @@ export const HubProgressChart: React.FC<{ history: PlayerHistoryEntry[], headerT
         return height - paddingBottom - (normalized * availableHeight);
     };
 
-    const linePath = useMemo(() => {
-        return chartData.map((entry, index) => {
-            const x = getX(index);
-            const y = getY(getValue(entry));
-            return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
-        }).join(' ');
-    }, [chartData, activeMetric, yMin, yMax, width]);
+    const linePath = chartData.map((entry, index) => {
+        const x = getX(index);
+        const y = getY(getValue(entry));
+        return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
+    }).join(' ');
 
-    const areaPath = useMemo(() => {
+    const areaPath = (() => {
         if (!linePath) return '';
         const lastX = getX(chartData.length - 1);
         const bottomY = height - paddingBottom;
         const firstX = getX(0);
         return `${linePath} L ${lastX} ${bottomY} L ${firstX} ${bottomY} Z`;
-    }, [linePath, width]);
-
-    const theme = useMemo(() => {
-        switch (activeMetric) {
-            case 'rating': return { color: '#00F2FE' };
-            case 'winRate': return { color: '#4CFF5F' };
-            case 'goals': return { color: '#FFD700' };
-        }
-    }, [activeMetric]);
+    })();
 
     const currentValue = values[values.length - 1];
     
@@ -178,7 +177,6 @@ export const HubProgressChart: React.FC<{ history: PlayerHistoryEntry[], headerT
             </div>
 
             {/* --- CHART AREA (Fills Container) --- */}
-            {/* maskImage ensures the chart fades out slightly at the left edge if scrolled */}
             <div ref={scrollContainerRef} className="w-full h-full overflow-x-auto no-scrollbar relative z-10" style={{ maskImage: 'linear-gradient(to right, transparent, black 5%)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 5%)' }}>
                 <div style={{ width: `${width}px`, height: '100%' }}>
                     <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible" preserveAspectRatio="none">
@@ -191,7 +189,6 @@ export const HubProgressChart: React.FC<{ history: PlayerHistoryEntry[], headerT
                         
                         {/* Grid Lines - subtle */}
                         {[0.2, 0.5, 0.8].map((tick) => {
-                            // Calculate Y based on available height area
                             const availableHeight = height - paddingTop - paddingBottom;
                             const y = paddingTop + (tick * availableHeight);
                             return (
@@ -217,7 +214,6 @@ export const HubProgressChart: React.FC<{ history: PlayerHistoryEntry[], headerT
                             
                             return (
                                 <g key={index}>
-                                    {/* Line connecting point to bottom date - optional, good for readability */}
                                     <line x1={x} y1={y} x2={x} y2={height - paddingBottom} stroke={theme.color} strokeOpacity="0.1" strokeWidth="1" strokeDasharray="2 2" />
 
                                     <circle cx={x} cy={y} r={isLast ? "3.5" : "2"} fill="#0C0E12" stroke={theme.color} strokeWidth="1.5" />
@@ -228,12 +224,10 @@ export const HubProgressChart: React.FC<{ history: PlayerHistoryEntry[], headerT
                                         </circle>
                                     )}
                                     
-                                    {/* Value Label (Top of point) */}
                                     <text x={x} y={y - 12} fill="white" fontSize="9" fontWeight="black" textAnchor="middle" opacity={isLast ? "1" : "0.6"} style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
                                         {val}
                                     </text>
                                     
-                                    {/* Date Label (Bottom of chart area) */}
                                     <text x={x} y={height - 10} fill="white" fillOpacity="0.4" fontSize="9" textAnchor="middle" fontWeight="bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                                         {entry.date}
                                     </text>
