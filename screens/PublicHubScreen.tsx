@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -590,10 +589,9 @@ export const PublicHubScreen: React.FC = () => {
         setDashboardView(tab as DashboardViewType);
     };
 
-    // ОПРЕДЕЛЕНИЕ ЦВЕТА ПОДЛОЖКИ
+    // ОПРЕДЕЛЕНИЕ ЦВЕТА ПОДЛОЖКИ - УНИФИЦИРОВАНО НА ОБСИДИАН ДЛЯ ВСЕХ ВКЛАДОК
     const getBottomPatchColor = () => {
-        if (dashboardView === 'archive') return '#01040a';
-        if (dashboardView === 'dashboard' || dashboardView === 'roster') return '#05070a';
+        if (dashboardView === 'archive' || dashboardView === 'dashboard' || dashboardView === 'roster' || dashboardView === 'info') return '#01040a';
         return '#0a0c10';
     };
 

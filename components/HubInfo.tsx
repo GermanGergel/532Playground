@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useApp } from '../context';
 import { translations } from '../translations/index';
@@ -43,7 +42,7 @@ export const HubInfo: React.FC = () => {
     const t = translations[language];
 
     return (
-        <div className="absolute inset-0 z-20 flex flex-col animate-in fade-in duration-500 rounded-[2.5rem] overflow-hidden">
+        <div className="absolute inset-0 z-20 flex flex-col animate-in fade-in duration-500 rounded-[2.5rem] overflow-hidden bg-[#01040a]">
             {/* Background: Deep Obsidian - Unfied with Terminal */}
             <div className="absolute inset-0 z-0 pointer-events-none bg-[#01040a]">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-black to-black opacity-40"></div>

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Player, PlayerTier, PlayerStatus, BadgeType, PlayerForm, SkillType } from '../types';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
@@ -102,7 +101,7 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
                         </div>
                     </div>
                 )}
-                <div className="relative z-10 h-full flex flex-col justify-between">
+                <div className="relative z-10 h-full flex flex-col justify-between p-1">
                     <div className="flex justify-between items-start">
                         <div>
                             <p style={{ color: '#00F2FE' }} className="text-base font-black leading-none">532</p>
@@ -336,10 +335,10 @@ const InfoView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     ];
     const ALL_SKILLS: SkillType[] = ['goalkeeper', 'power_shot', 'technique', 'defender', 'playmaker', 'finisher', 'versatile', 'tireless_motor', 'leader'];
     
-    // --- APPLIED "BADGE OVERFLOW" STYLE TO INFO VIEW CONTAINER ---
+    // --- UPDATED InfoView background to match Terminal Obsidian ---
     return (
         <div 
-            className="pb-10 !bg-[#0a0c10] !border !border-[#1e293b] !shadow-2xl overflow-hidden relative rounded-3xl"
+            className="pb-10 !bg-[#01040a] !border !border-[#1e293b] !shadow-2xl overflow-hidden relative rounded-3xl"
         >
             {/* DECORATIVE HEADER ELEMENTS */}
             <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent opacity-100 z-50"></div>
