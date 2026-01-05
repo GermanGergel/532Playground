@@ -139,11 +139,14 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
                     <span className="text-[9px] font-black text-white/50 uppercase tracking-[0.25em]">SESSION LEADERS (IMPACT)</span>
                 </div>
                 
+                {/* Use flex-grow and gap to fill vertical space */}
                 <div className="flex-grow flex flex-col gap-2 min-h-0">
                     {topPlayers.slice(0, 3).map((stat, idx) => {
                         const impact = getImpactScore(stat);
+                        // Using flex-1 to make items expand equally to fill the container height
                         return (
                             <div key={stat.player.id} className="flex-1 flex items-center justify-between px-4 rounded-2xl bg-white/[0.03] border border-white/5 relative overflow-hidden group hover:bg-white/[0.05] transition-colors">
+                                {/* Rank Color Strip */}
                                 <div className={`absolute left-0 top-0 bottom-0 w-1 ${idx === 0 ? 'bg-[#FFD700]' : idx === 1 ? 'bg-slate-300' : 'bg-amber-700'}`}></div>
 
                                 <div className="flex items-center gap-4 pl-2">
@@ -167,6 +170,7 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
                             </div>
                         );
                     })}
+                    {/* Fill empty state if no players */}
                     {topPlayers.length === 0 && (
                         <div className="flex-1 flex items-center justify-center text-white/20 text-xs font-bold uppercase tracking-widest border border-white/5 rounded-2xl bg-white/[0.01]">
                             No Stats Available
@@ -209,15 +213,18 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
     const sortedByStats = useMemo(() => [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists)), [allPlayersStats]);
     const finishedGames = session.games.filter(g => g.status === 'finished');
     
+    // UPDATED: Reduced vertical padding (py-2) to fit more rows
     const thClass = "py-2 text-white/40 uppercase tracking-tighter text-[9px] font-black text-center sticky top-0 bg-[#12161b] backdrop-blur-md z-10 border-b border-white/5";
+    
+    // UPDATED: Reduced vertical padding (py-2) to fit more rows
     const tdBase = "py-2 text-center text-[11px] font-bold transition-colors";
 
     return (
-        <div className={`${isEmbedded ? 'relative h-full w-full bg-[#01040a]' : 'absolute inset-0 z-30'} flex flex-col animate-in slide-in-from-right duration-500 overflow-hidden ${!isEmbedded ? 'rounded-[2.5rem]' : ''}`}>
+        <div className={`${isEmbedded ? 'relative h-full w-full' : 'absolute inset-0 z-30'} flex flex-col animate-in slide-in-from-right duration-500 overflow-hidden ${!isEmbedded ? 'rounded-[2.5rem]' : ''}`}>
             {!isEmbedded && (
                 <div className="absolute inset-0 z-0 pointer-events-none">
                     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#01040a] to-black"></div>
-                    <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] pointer-events-none"></div>
+                    <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
                 </div>
             )}
             
@@ -284,8 +291,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                     <div className="w-px h-3 bg-white/10"></div>
                                     <button onClick={() => { setActiveTab('matches'); setExpandedMatchId(null); }} className={`font-russo text-[8px] md:text-[9px] uppercase tracking-widest transition-all ${activeTab === 'matches' ? 'text-[#00F2FE]' : 'text-white/20'}`}>MATCH HISTORY</button>
                                 </div>
-                            } icon={activeTab === 'players' ? <Users /> : <HistoryIcon />} accent="#00F2FE" className="h-full flex flex-col" bodyClassName="flex flex-col h-full min-h-0 relative">
-                                
+                            } icon={activeTab === 'players' ? <Users /> : <HistoryIcon />} accent="#00F2FE" className="h-full flex flex-col" bodyClassName="flex flex-col h-full min-h-0">
                                 <div className="flex-grow overflow-y-auto custom-hub-scrollbar p-1">
                                     {activeTab === 'players' ? (
                                         <table className="w-full table-fixed border-collapse">
@@ -398,8 +404,6 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                         </table>
                                     )}
                                 </div>
-                                {/* SCROLL FADE BOTTOM - Archive Color #01040a */}
-                                <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#01040a] to-transparent z-30 pointer-events-none"></div>
                             </HubCard>
                         </div>
                     </div>
