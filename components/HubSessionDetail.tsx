@@ -140,7 +140,7 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
                 </div>
                 
                 {/* Use flex-grow and gap to fill vertical space */}
-                <div className="flex-grow flex flex-col gap-2 min-h-0">
+                <div className="flex-grow flex flex-col gap-2 min-h-0 relative">
                     {topPlayers.slice(0, 3).map((stat, idx) => {
                         const impact = getImpactScore(stat);
                         // Using flex-1 to make items expand equally to fill the container height
@@ -242,7 +242,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                 <div className="max-w-6xl mx-auto w-full h-full flex flex-col gap-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch w-full h-full min-h-0">
                         <div className="flex flex-col gap-4 w-full h-full min-h-0">
-                            <HubCard title="TEAM STANDINGS" icon={<TrophyIcon />} accent="#FFD700" className="shrink-0 max-h-[45%] flex flex-col">
+                            <HubCard title="TEAM STANDINGS" icon={<TrophyIcon />} accent="#FFD700" className="shrink-0 max-h-[45%] flex flex-col" bodyClassName="relative overflow-hidden">
                                 <div className="p-1 overflow-y-auto custom-hub-scrollbar">
                                     <table className="w-full table-fixed border-collapse">
                                         <thead>
@@ -279,9 +279,13 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                         </tbody>
                                     </table>
                                 </div>
+                                {/* SCROLL FADE BOTTOM OVERLAY */}
+                                <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
                             </HubCard>
-                            <HubCard title="MATCH REPORT" icon={<Target />} accent="#00F2FE" className="w-full flex-grow min-h-0" bodyClassName="p-4">
+                            <HubCard title="MATCH REPORT" icon={<Target />} accent="#00F2FE" className="w-full flex-grow min-h-0" bodyClassName="p-4 relative overflow-hidden">
                                 <ArchiveEnvironmentWidget topPlayers={sortedByImpact} session={session} />
+                                {/* SCROLL FADE BOTTOM OVERLAY */}
+                                <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
                             </HubCard>
                         </div>
                         <div className="w-full h-full min-h-0">
@@ -291,7 +295,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                     <div className="w-px h-3 bg-white/10"></div>
                                     <button onClick={() => { setActiveTab('matches'); setExpandedMatchId(null); }} className={`font-russo text-[8px] md:text-[9px] uppercase tracking-widest transition-all ${activeTab === 'matches' ? 'text-[#00F2FE]' : 'text-white/20'}`}>MATCH HISTORY</button>
                                 </div>
-                            } icon={activeTab === 'players' ? <Users /> : <HistoryIcon />} accent="#00F2FE" className="h-full flex flex-col" bodyClassName="flex flex-col h-full min-h-0">
+                            } icon={activeTab === 'players' ? <Users /> : <HistoryIcon />} accent="#00F2FE" className="h-full flex flex-col" bodyClassName="flex flex-col h-full min-h-0 relative overflow-hidden">
                                 <div className="flex-grow overflow-y-auto custom-hub-scrollbar p-1">
                                     {activeTab === 'players' ? (
                                         <table className="w-full table-fixed border-collapse">
@@ -404,6 +408,8 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                         </table>
                                     )}
                                 </div>
+                                {/* SCROLL FADE BOTTOM OVERLAY */}
+                                <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
                             </HubCard>
                         </div>
                     </div>
