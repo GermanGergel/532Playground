@@ -473,18 +473,18 @@ const CinematicStatCard: React.FC<{ value: string | number; label: string; }> = 
 // Define allowed view types to match ClubIntelligenceDashboard and avoid TS2322
 type DashboardViewType = 'info' | 'dashboard' | 'roster' | 'archive' | 'duel' | 'tournaments' | 'league';
 
-// --- NEW TERMINAL FRAME COMPONENT ---
+// --- OPTIMIZED TERMINAL FRAME COMPONENT ---
 const DashboardTerminalFrame: React.FC = () => (
     <div className="fixed inset-0 z-[55] pointer-events-none overflow-hidden">
-        {/* TOP FRAME - Blocks content under the nav bar */}
-        <div className="absolute top-0 left-0 right-0 h-24 bg-[#05070a] shadow-[0_10px_30px_rgba(0,0,0,0.8)]"></div>
+        {/* TOP FRAME - Slimmer block under the nav bar */}
+        <div className="absolute top-0 left-0 right-0 h-20 bg-[#05070a] shadow-[0_5px_20px_rgba(0,0,0,0.8)]"></div>
         
-        {/* BOTTOM FRAME - Gradient for content disappearing behind the shell */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#05070a] via-[#05070a]/90 to-transparent z-20"></div>
+        {/* BOTTOM FRAME - Tighter Gradient to keep more info visible */}
+        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#05070a] via-[#05070a]/80 to-transparent z-20"></div>
         
-        {/* SIDE SHUTTERS - Adds soft cinematic focus */}
-        <div className="absolute top-24 bottom-32 left-0 w-2 md:w-6 lg:w-10 bg-gradient-to-r from-[#05070a] to-transparent"></div>
-        <div className="absolute top-24 bottom-32 right-0 w-2 md:w-6 lg:w-10 bg-gradient-to-l from-[#05070a] to-transparent"></div>
+        {/* SIDE SHUTTERS - Compact framing */}
+        <div className="absolute top-20 bottom-16 left-0 w-2 md:w-6 lg:w-8 bg-gradient-to-r from-[#05070a] to-transparent"></div>
+        <div className="absolute top-20 bottom-16 right-0 w-2 md:w-6 lg:w-8 bg-gradient-to-l from-[#05070a] to-transparent"></div>
     </div>
 );
 
@@ -568,9 +568,9 @@ export const PublicHubScreen: React.FC = () => {
                 }}
             />
 
-            {/* DASHBOARD OVERLAY - FIXED BACKGROUND APPLIED HERE */}
+            {/* DASHBOARD OVERLAY - REDUCED TOP PADDING */}
             <div 
-                className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none 
+                className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-16 pb-2 overflow-y-auto overscroll-none 
                 ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}
                 bg-[#0a0c10]
                 `}
@@ -578,8 +578,8 @@ export const PublicHubScreen: React.FC = () => {
                 {/* TERMINAL FRAME OVERLAY */}
                 {isDashboardOpen && <DashboardTerminalFrame />}
 
-                {/* Content with padding to avoid overlapping the top frame */}
-                <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10 pt-4 pb-32">
+                {/* Content with tight vertical padding */}
+                <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10 pt-2 pb-20">
                     <ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} />
                 </div>
             </div>
