@@ -166,8 +166,8 @@ const HubCard: React.FC<{
         titleColor = 'text-white';
         iconBg = 'bg-white/10 border-white/20';
     } else if (isElite) {
-        // UPDATED: Used same textured background as other dark cards
-        bgStyleClass = 'bg-gradient-to-br from-[#161b22] to-[#0a0d14] border-white/10';
+        // RESTORED: Back to deep dark colors (Obsidian style)
+        bgStyleClass = 'bg-gradient-to-br from-[#0a0d14] via-[#05070a] to-black border-white/10';
         headerStyleClass = 'bg-transparent !border-0';
         titleColor = 'text-white'; 
         iconBg = 'bg-white/5 border-white/10 text-[#FFD700]';
@@ -180,7 +180,7 @@ const HubCard: React.FC<{
 
     return (
         <div className={`relative overflow-hidden rounded-[1.5rem] flex flex-col border ${bgStyleClass} ${className}`}>
-            {/* 1. Global Texture Overlay (Denim/Carbon) */}
+            {/* 1. Global Texture Overlay (Micro-grid) */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ 
                 backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`,
                 backgroundSize: '4px 4px'
