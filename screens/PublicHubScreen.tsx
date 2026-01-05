@@ -41,6 +41,7 @@ const StaticSoccerBall: React.FC = () => (
                 <path d="M 22 25 C 22 -5, 75 -10, 80 20" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" opacity="0.1" />
                 <circle cx="90" cy="25" r="8.5" fill="url(#pompomGradient)" stroke="#94a3b8" strokeWidth="0.1" /><circle cx="90" cy="25" r="8.5" fill="black" opacity="0.05" transform="translate(-1, 1)" />
                 <circle cx="90" cy="25" r="8.5" fill="black" opacity="0.05" transform="translate(-1, 1)" />
+                <circle cx="90" cy="25" r="8.5" fill="black" opacity="0.05" transform="translate(-1, 1)" />
                 <g filter="url(#furTexture)"><path d="M 8 40 Q 50 25 92 40 Q 96 48 92 55 Q 50 40 8 55 Q 4 48 8 40 Z" fill="#FFFFFF" stroke="#f1f5f9" strokeWidth="0.2" /></g>
                 <path d="M 12 48 Q 50 38 88 48" fill="none" stroke="#cbd5e1" strokeWidth="0.5" opacity="0.3" />
             </g>
@@ -470,7 +471,7 @@ const CinematicStatCard: React.FC<{ value: string | number; label: string; }> = 
     </div>
 );
 
-// Define allowed view types to match ClubIntelligenceDashboard and avoid TS2322
+// Define allowed view types to match Club Intelligence Dashboard and avoid TS2322
 type DashboardViewType = 'info' | 'dashboard' | 'roster' | 'archive' | 'duel' | 'tournaments' | 'league';
 
 const PodiumSpot = ({ p, rank, height, color, delay, t }: { p?: any, rank: number, height: string, color: string, delay: string, t: any }) => (
@@ -535,7 +536,6 @@ export const PublicHubScreen: React.FC = () => {
     const { allPlayers, history } = useApp();
     const [isDashboardOpen, setIsDashboardOpen] = useState(false);
     
-    // TYPED STATE: dashboardView now strictly follows DashboardViewType
     const [dashboardView, setDashboardView] = useState<DashboardViewType>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
 
@@ -586,9 +586,15 @@ export const PublicHubScreen: React.FC = () => {
         tiktok: "https://www.tiktok.com/@532playground",
     };
 
-    // Helper for safe tab changes
     const handleTabChange = (tab: any) => {
         setDashboardView(tab as DashboardViewType);
+    };
+
+    // ОПРЕДЕЛЕНИЕ ЦВЕТА ПОДЛОЖКИ
+    const getBottomPatchColor = () => {
+        if (dashboardView === 'archive') return '#01040a';
+        if (dashboardView === 'dashboard' || dashboardView === 'roster') return '#05070a';
+        return '#0a0c10';
     };
 
     return (
@@ -605,25 +611,29 @@ export const PublicHubScreen: React.FC = () => {
                 archiveViewDate={archiveViewDate}
                 onHomeClick={() => {
                     setIsDashboardOpen(false);
-                    setDashboardView('dashboard'); // Reset to default view
+                    setDashboardView('dashboard');
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
             />
 
-            {/* DASHBOARD OVERLAY - DYNAMIC BACKGROUND APPLIED HERE */}
             <div 
                 className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none 
                 ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}
-                ${(dashboardView === 'dashboard' || dashboardView === 'roster') ? 'bg-[#05070a]' : 'bg-[#0a0c10]'}
                 `}
+                style={{ backgroundColor: getBottomPatchColor() }}
             >
-                {/* Clean Layering */}
                 <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10">
                     <ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} />
                 </div>
 
-                {/* ГЛОБАЛЬНАЯ НАКЛАДКА ДЛЯ БЕСШОВНОГО ПЕРЕХОДА (FADE OUT BOTTOM) */}
-                <div className="fixed bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#0a0c10] via-[#0a0c10]/80 to-transparent z-[110] pointer-events-none opacity-0 transition-opacity duration-700 delay-300" style={{ opacity: isDashboardOpen ? 1 : 0 }}></div>
+                {/* ГЛОБАЛЬНАЯ НАКЛАДКА ДЛЯ БЕСШОВНОГО ПЕРЕХОДА (ПОДЛОЖКА) */}
+                <div 
+                    className="fixed bottom-0 left-0 right-0 h-28 z-[110] pointer-events-none opacity-0 transition-all duration-700 delay-300" 
+                    style={{ 
+                        opacity: isDashboardOpen ? 1 : 0,
+                        background: `linear-gradient(to top, ${getBottomPatchColor()} 30%, ${getBottomPatchColor()}cc 60%, transparent 100%)`
+                    }}
+                ></div>
             </div>
 
             <div className={`relative z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}>
