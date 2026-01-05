@@ -28,6 +28,86 @@ const TermometerIcon = ({ className }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
 );
 
+// --- TACTICAL SOCCER BACKGROUND (CHALK STYLE) ---
+const SoccerTacticsBackground: React.FC = () => (
+    <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.2]">
+        <svg width="100%" height="100%" viewBox="0 0 800 450" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <marker id="arrowhead-chalk" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="rgba(255,255,255,0.8)" />
+                </marker>
+                <filter id="chalkEffect">
+                    <feGaussianBlur in="SourceGraphic" stdDeviation="0.6" />
+                </filter>
+            </defs>
+            
+            {/* Field Structure */}
+            <g stroke="white" strokeWidth="2" fill="none" filter="url(#chalkEffect)" strokeOpacity="0.6">
+                {/* Center Line & Circle */}
+                <line x1="400" y1="0" x2="400" y2="450" />
+                <circle cx="400" cy="225" r="55" />
+                <circle cx="400" cy="225" r="2.5" fill="white" fillOpacity="0.6" />
+                
+                {/* Left Goal Area (Tactical) */}
+                <rect x="0" y="145" width="70" height="160" />
+                <rect x="0" y="195" width="25" height="60" />
+                <path d="M 70 185 Q 95 225 70 265" />
+
+                {/* Right Goal Area (Tactical) */}
+                <rect x="730" y="145" width="70" height="160" />
+                <rect x="775" y="195" width="25" height="60" />
+                <path d="M 730 185 Q 705 225 730 265" />
+            </g>
+
+            {/* Tactical Moves - Replicating User Screenshot */}
+            <g fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" filter="url(#chalkEffect)" strokeOpacity="0.7">
+                {/* TOP LEFT SCHEME (Circle -> Arrow -> X) */}
+                <circle cx="230" cy="80" r="10" />
+                <path d="M 245 85 Q 310 95 340 120" markerEnd="url(#arrowhead-chalk)" />
+                <g transform="translate(355, 125) rotate(45)">
+                    <line x1="-8" y1="0" x2="8" y2="0" /><line x1="0" y1="-8" x2="0" y2="8" />
+                </g>
+
+                {/* BOTTOM LEFT SCHEME (Dashed curve) */}
+                <g transform="translate(80, 225) rotate(45)">
+                    <line x1="-8" y1="0" x2="8" y2="0" /><line x1="0" y1="-8" x2="0" y2="8" />
+                </g>
+                <path d="M 100 240 Q 150 280 230 330" strokeDasharray="6 6" markerEnd="url(#arrowhead-chalk)" />
+                <g transform="translate(245, 340) rotate(45)">
+                    <line x1="-8" y1="0" x2="8" y2="0" /><line x1="0" y1="-8" x2="0" y2="8" />
+                </g>
+
+                {/* TOP RIGHT SCHEME (X -> Dashed -> X) */}
+                <g transform="translate(560, 90) rotate(45)">
+                    <line x1="-8" y1="0" x2="8" y2="0" /><line x1="0" y1="-8" x2="0" y2="8" />
+                </g>
+                <path d="M 575 100 Q 640 110 700 90" strokeDasharray="6 6" markerEnd="url(#arrowhead-chalk)" />
+                <g transform="translate(715, 80) rotate(45)">
+                    <line x1="-8" y1="0" x2="8" y2="0" /><line x1="0" y1="-8" x2="0" y2="8" />
+                </g>
+
+                {/* BOTTOM RIGHT SCHEME (O -> Arrow -> O) */}
+                <circle cx="580" cy="380" r="10" />
+                <path d="M 600 375 Q 650 350 710 360" markerEnd="url(#arrowhead-chalk)" />
+                <circle cx="730" cy="365" r="10" />
+
+                {/* CENTER X */}
+                <g transform="translate(420, 190) rotate(45)">
+                    <line x1="-10" y1="0" x2="10" y2="0" /><line x1="0" y1="-10" x2="0" y2="10" />
+                </g>
+
+                {/* Random scattered Os and Xs for flavor around edges */}
+                <circle cx="50" cy="50" r="7" strokeOpacity="0.3" />
+                <circle cx="750" cy="400" r="7" strokeOpacity="0.3" />
+                <circle cx="350" cy="400" r="7" strokeOpacity="0.3" />
+                <g transform="translate(50, 400) rotate(45)" opacity="0.3">
+                    <line x1="-5" y1="0" x2="5" y2="0" /><line x1="0" y1="-5" x2="0" y2="5" />
+                </g>
+            </g>
+        </svg>
+    </div>
+);
+
 // --- STANDBY SCREEN ---
 const StandbyScreen: React.FC = () => {
     const t = useTranslation();
@@ -124,10 +204,15 @@ const HubCard: React.FC<{
 
     return (
         <div className={`relative overflow-hidden rounded-[1.5rem] flex flex-col border ${bgStyleClass} ${className}`}>
-            <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ 
-                backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`,
-                backgroundSize: '4px 4px'
-            }}></div>
+            {/* Background Texture Overlay */}
+            {isElite ? (
+                <SoccerTacticsBackground />
+            ) : (
+                <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ 
+                    backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`,
+                    backgroundSize: '4px 4px'
+                }}></div>
+            )}
 
             <div className={`absolute -top-10 -left-10 w-40 h-40 ${isElite ? 'bg-[#00F2FE]/[0.05]' : 'bg-[#00F2FE]/[0.03]'} rounded-full blur-[45px] pointer-events-none z-0 animate-pulse`} style={{ animationDuration: '6s' }}></div>
             
