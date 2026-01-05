@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import { Session, WeatherCondition } from '../types';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
@@ -214,7 +213,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
     const finishedGames = session.games.filter(g => g.status === 'finished');
     
     // UPDATED: Reduced vertical padding (py-2) to fit more rows
-    const thClass = "py-2 text-white/40 uppercase tracking-tighter text-[9px] font-black text-center sticky top-0 bg-[#12161b] backdrop-blur-md z-10 border-b border-white/5";
+    const thClass = "py-2 text-white/40 uppercase tracking-tighter text-[9px] font-black text-center sticky top-0 bg-[#010409] backdrop-blur-md z-10 border-b border-white/5";
     
     // UPDATED: Reduced vertical padding (py-2) to fit more rows
     const tdBase = "py-2 text-center text-[11px] font-bold transition-colors";
@@ -223,8 +222,8 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
         <div className={`${isEmbedded ? 'relative h-full w-full' : 'absolute inset-0 z-30'} flex flex-col animate-in slide-in-from-right duration-500 overflow-hidden ${!isEmbedded ? 'rounded-[2.5rem]' : ''}`}>
             {!isEmbedded && (
                 <div className="absolute inset-0 z-0 pointer-events-none">
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-[#01040a] to-black"></div>
-                    <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#010409] to-black"></div>
+                    <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] pointer-events-none"></div>
                 </div>
             )}
             
