@@ -88,7 +88,6 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                                 className={`group relative flex items-center h-[68px] w-full rounded-2xl transition-all duration-300 cursor-pointer border overflow-hidden
                                     ${isSelected 
                                         ? 'bg-gradient-to-br from-[#1e2329] to-[#12161b] border-white/20 shadow-[0_10px_20px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.1)]' 
-                                        // UPDATED: Used darker gradient [from-[#0d1117] to-[#010409]] to match HubSessionDetail cards
                                         : 'bg-gradient-to-br from-[#0d1117] to-[#010409] border-white/5 shadow-[0_4px_10px_rgba(0,0,0,0.4),inset_0_1px_0.5px_rgba(255,255,255,0.05)] hover:border-white/10'
                                     }`}
                             >
@@ -144,10 +143,13 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                 </div>
             </div>
 
-            {/* --- CONTENT AREA: SESSION DETAIL --- */}
-            <div className="flex-grow relative bg-[#01040a] overflow-hidden">
+            {/* --- CONTENT AREA: SESSION DETAIL - BACKGROUND UPDATED TO #05070a --- */}
+            <div className="flex-grow relative bg-[#05070a] overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-black to-black opacity-60"></div>
+                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+
                 {selectedSession ? (
-                    <div key={selectedSession.id} className="h-full w-full animate-in fade-in slide-in-from-right-4 duration-500">
+                    <div key={selectedSession.id} className="h-full w-full animate-in fade-in slide-in-from-right-4 duration-500 relative z-10">
                         <HubSessionDetail 
                             session={selectedSession} 
                             isEmbedded={true}
@@ -155,7 +157,7 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                         />
                     </div>
                 ) : (
-                    <div className="h-full w-full flex flex-col items-center justify-center opacity-10">
+                    <div className="h-full w-full flex flex-col items-center justify-center opacity-10 relative z-10">
                         <HistoryIcon className="w-32 h-32 mb-6" />
                         <span className="font-orbitron text-xl uppercase tracking-[0.6em] font-black">Select Session Intel</span>
                     </div>
