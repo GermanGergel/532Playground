@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -651,6 +650,11 @@ export const PublicHubDashboard: React.FC = () => {
                     </HubCard>
                 </div>
             </div>
+
+            {/* Bottom Fade Gradient Overlay (~2cm / 75px) */}
+            <div 
+                className="absolute bottom-0 left-0 right-0 h-[75px] pointer-events-none z-[100] bg-gradient-to-t from-[#0a0c10] via-[#0a0c10]/70 to-transparent"
+            />
         </div>
     );
 };
