@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -27,6 +28,10 @@ const MoonIcon = ({ className }: { className?: string }) => (
 const TermometerIcon = ({ className }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
 );
+
+// --- ASSETS ---
+// Tactical Board SVG (Chalk style)
+const tacticalBoardBg = `data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250' fill='none'%3e%3cdefs%3e%3cfilter id='chalk'%3e%3cfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='2' result='noise'/%3e%3cfeDisplacementMap in='SourceGraphic' in2='noise' scale='2'/%3e%3c/filter%3e%3c/defs%3e%3cg filter='url(%23chalk)' stroke='white' stroke-width='2' stroke-linecap='round' stroke-opacity='0.15'%3e%3crect x='20' y='20' width='360' height='210' rx='10' stroke-width='1'/%3e%3cline x1='200' y1='20' x2='200' y2='230' stroke-width='1'/%3e%3ccircle cx='200' cy='125' r='30' stroke-width='1'/%3e%3cpath d='M 80 180 Q 140 140 190 80' stroke-dasharray='8,6' /%3e%3cpath d='M 180 85 L 195 75 L 195 90' fill='white' fill-opacity='0.15' stroke='none'/%3e%3cpath d='M 210 160 Q 260 160 310 120' stroke-dasharray='8,6' /%3e%3cpath d='M 300 115 L 315 115 L 305 130' fill='white' fill-opacity='0.15' stroke='none'/%3e%3cpath d='M 65 165 l 10 10 m -10 0 l 10 -10' stroke-width='2' /%3e%3cpath d='M 200 160 l 10 10 m -10 0 l 10 -10' stroke-width='2' /%3e%3ccircle cx='320' cy='110' r='6' stroke-width='2' /%3e%3cpath d='M 20 90 L 60 90 L 60 160 L 20 160' stroke-width='1' fill='none'/%3e%3cpath d='M 380 90 L 340 90 L 340 160 L 380 160' stroke-width='1' fill='none'/%3e%3c/g%3e%3c/svg%3e`;
 
 // --- STANDBY SCREEN ---
 const StandbyScreen: React.FC = () => {
@@ -453,7 +458,17 @@ export const PublicHubDashboard: React.FC = () => {
                 <div className="col-span-12 md:col-span-9 flex flex-col gap-4 h-full min-h-[600px] overflow-hidden">
                     <div className="flex-[4] min-h-0 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200 flex gap-3">
                          <HubCard title={t.hubSessionLeaders} align="right" icon={<AwardIcon />} accent="#FFD700" variant="elite" className="flex-[2] h-full min-h-[350px]" bodyClassName="flex flex-col bg-transparent">
-                            <div className="flex-grow relative"><SessionPodium players={top3PodiumPlayers} t={t} /></div>
+                            {/* NEW BACKGROUND */}
+                            <div 
+                                className="absolute inset-0 z-0 pointer-events-none opacity-20"
+                                style={{ 
+                                    backgroundImage: `url("${tacticalBoardBg}")`,
+                                    backgroundSize: '90%',
+                                    backgroundPosition: 'center',
+                                    backgroundRepeat: 'no-repeat'
+                                }}
+                            />
+                            <div className="flex-grow relative z-10"><SessionPodium players={top3PodiumPlayers} t={t} /></div>
                         </HubCard>
                         <HubCard title={t.hubMatchReport} icon={<Target />} accent="#00F2FE" variant="standings" className="flex-1 h-full min-h-[350px]" bodyClassName="flex flex-col p-5"><MatchEnvironmentWidget session={session} t={t} /></HubCard>
                     </div>
