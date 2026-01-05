@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -28,11 +27,6 @@ const MoonIcon = ({ className }: { className?: string }) => (
 const TermometerIcon = ({ className }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
 );
-
-// --- ASSETS ---
-// Tactical Board SVG (Customized to fit around podium cards)
-// Elements are placed in top-left, top-right, and top-center to avoid the bottom-center "podium" area.
-const tacticalBoardBg = `data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300' fill='none'%3e%3cdefs%3e%3cfilter id='chalk'%3e%3cfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' result='noise'/%3e%3cfeDisplacementMap in='SourceGraphic' in2='noise' scale='1.5'/%3e%3c/filter%3e%3c/defs%3e%3cg filter='url(%23chalk)' stroke='white' stroke-width='2' stroke-linecap='round' stroke-opacity='0.25'%3e%3c!-- Field Outline --%3e%3crect x='10' y='10' width='380' height='280' rx='10' stroke-width='1' stroke-opacity='0.1'/%3e%3cpath d='M 200 10 L 200 290' stroke-width='1' stroke-dasharray='4,4' stroke-opacity='0.1'/%3e%3ccircle cx='200' cy='150' r='40' stroke-width='1' stroke-opacity='0.1'/%3e%3c!-- Top Left Play (Winger Cutting In) --%3e%3cpath d='M 40 60 L 50 70 M 60 50 L 50 60' stroke-width='2' /%3e%3c!-- X --%3e%3cpath d='M 60 70 Q 100 100 140 80' marker-end='url(%23arrow)' /%3e%3cpath d='M 135 75 L 142 80 L 135 85' fill='white' fill-opacity='0.25' stroke='none'/%3e%3c!-- Top Right Play (Overlapping Run) --%3e%3cpath d='M 340 50 L 350 60 M 360 50 L 350 60' stroke-width='2' /%3e%3c!-- X --%3e%3cpath d='M 340 70 Q 300 110 260 90' stroke-dasharray='6,4' /%3e%3c!-- Dashed Pass --%3e%3ccircle cx='250' cy='85' r='6' stroke-width='2' /%3e%3c!-- O --%3e%3c!-- Center Play (Above Rank 1 Card) --%3e%3cpath d='M 180 50 L 190 60 M 200 50 L 190 60' stroke-width='2' /%3e%3c!-- X --%3e%3cpath d='M 190 65 Q 200 100 220 65' stroke-width='1.5' /%3e%3cpath d='M 215 62 L 222 64 L 218 70' fill='white' fill-opacity='0.25' stroke='none'/%3e%3c!-- Side Support (Left Mid) --%3e%3ccircle cx='30' cy='140' r='6' stroke-width='2' /%3e%3cpath d='M 40 140 L 70 140' stroke-dasharray='4,2' /%3e%3c!-- Side Support (Right Mid) --%3e%3cpath d='M 360 130 L 370 140 M 380 130 L 370 140' stroke-width='2' /%3e%3cpath d='M 365 145 Q 350 170 330 150' marker-end='url(%23arrow)' /%3e%3cpath d='M 328 145 L 328 152 L 335 152' fill='white' fill-opacity='0.25' stroke='none'/%3e%3c/g%3e%3c/svg%3e`;
 
 // --- STANDBY SCREEN ---
 const StandbyScreen: React.FC = () => {
@@ -359,7 +353,7 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
             </div>
             <div className="flex-grow flex flex-col justify-end pt-2">
                 <div className="relative rounded-2xl bg-gradient-to-br from-indigo-900/40 to-black border border-indigo-500/20 p-4 flex items-center justify-between overflow-hidden">
-                    <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-striped-brick.png')]"></div>
+                    <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
                     <div className="relative z-10 flex flex-col">
                         <span className="text-[9px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-1">{t.hubWeather}</span>
                         <div className="flex items-baseline gap-1"><span className="font-russo text-4xl text-slate-200 leading-none">{session.weather?.temperature || 26}°C</span><TermometerIcon className="w-4 h-4 text-white/40" /></div>
@@ -459,16 +453,6 @@ export const PublicHubDashboard: React.FC = () => {
                 <div className="col-span-12 md:col-span-9 flex flex-col gap-4 h-full min-h-[600px] overflow-hidden">
                     <div className="flex-[4] min-h-0 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200 flex gap-3">
                          <HubCard title={t.hubSessionLeaders} align="right" icon={<AwardIcon />} accent="#FFD700" variant="elite" className="flex-[2] h-full min-h-[350px]" bodyClassName="flex flex-col bg-transparent">
-                            {/* CUSTOM SVG BACKGROUND */}
-                            <div 
-                                className="absolute inset-0 z-0 pointer-events-none opacity-20"
-                                style={{ 
-                                    backgroundImage: `url("${tacticalBoardBg}")`,
-                                    backgroundSize: 'cover',
-                                    backgroundPosition: 'top center',
-                                    backgroundRepeat: 'no-repeat'
-                                }}
-                            />
                             <div className="flex-grow relative z-10"><SessionPodium players={top3PodiumPlayers} t={t} /></div>
                         </HubCard>
                         <HubCard title={t.hubMatchReport} icon={<Target />} accent="#00F2FE" variant="standings" className="flex-1 h-full min-h-[350px]" bodyClassName="flex flex-col p-5"><MatchEnvironmentWidget session={session} t={t} /></HubCard>
@@ -667,8 +651,8 @@ export const PublicHubDashboard: React.FC = () => {
                                                 </React.Fragment>
                                             )})}</tbody>
                                         </table>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </HubCard>
