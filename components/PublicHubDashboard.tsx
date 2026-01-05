@@ -462,11 +462,10 @@ export const PublicHubDashboard: React.FC = () => {
                     <div className="flex-[3] min-h-0 shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <HubCard title={t.hubSessionNews} icon={<Zap />} accent="#00F2FE" variant="standings" className="h-full min-h-0" bodyClassName="p-0 flex flex-col relative">
                             {/* SCROLL FADE OVERLAYS */}
-                            <div className="absolute top-[34px] left-0 right-0 h-8 bg-gradient-to-b from-[#05070a] to-transparent z-20 pointer-events-none"></div>
                             <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
                             
                             <div className="flex-grow relative overflow-y-auto custom-hub-scrollbar p-3 bg-black/10">
-                                <div className="py-4"> {/* Padding to avoid fade covering content initially */}
+                                <div className="py-2">
                                     {newsFeed.slice(0, 15).map(item => <NewsVanguardCard key={item.id} item={item} />)}
                                     {newsFeed.length === 0 && <p className="text-center py-10 opacity-20 text-[10px] tracking-widest uppercase">No Intel Updates</p>}
                                 </div>
@@ -552,11 +551,10 @@ export const PublicHubDashboard: React.FC = () => {
                         bodyClassName="flex flex-col h-full min-h-0 relative"
                     >
                         {/* SCROLL FADE OVERLAYS FOR RIGHT SIDEBAR */}
-                        <div className="absolute top-[34px] left-0 right-0 h-8 bg-gradient-to-b from-[#05070a] to-transparent z-20 pointer-events-none"></div>
                         <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
 
                         <div className="flex-grow overflow-y-auto custom-hub-scrollbar h-full">
-                            <div className="py-6"> {/* Padding to avoid fade covering table header */}
+                            <div className="py-2">
                                 {activeRightTab === 'players' ? (
                                     <div className="animate-in fade-in duration-500">
                                         <table className="w-full table-fixed border-collapse">
