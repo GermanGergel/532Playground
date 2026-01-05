@@ -654,12 +654,11 @@ export const PublicHubDashboard: React.FC = () => {
                                                 )})}</tbody>
                                     </table>
                                 </div>
-                            )}
+                            </HubCard>
                         </div>
-                    </HubCard>
+                    </div>
                 </div>
             </div>
-        </div>
         </div>
     );
 };
