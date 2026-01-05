@@ -155,7 +155,7 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                 </div>
 
                 <div className="flex-grow relative overflow-hidden flex flex-col">
-                    <div className="flex-grow overflow-y-auto custom-hub-scrollbar p-4 pt-4 space-y-3.5 pb-20">
+                    <div className="flex-grow overflow-y-auto custom-hub-scrollbar p-4 pt-4 space-y-3.5 pb-12">
                         {confirmedPersonnel.map((person) => {
                             const isSelected = viewMode === 'intel' ? selectedPlayerId === person.id : duelSlots.includes(person.id);
                             const tierColor = TIER_COLORS[person.tier] || '#94a3b8';
@@ -209,8 +209,8 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                             );
                         })}
                     </div>
-                    {/* SCROLL FADE BOTTOM ONLY - HEIGHT INCREASED TO h-24 FOR SOFTNESS */}
-                    <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#05070a] via-[#05070a]/80 to-transparent z-20 pointer-events-none"></div>
+                    {/* SCROLL FADE - REDUCED HEIGHT (h-10) AND INCREASED SOFTNESS (via-60) */}
+                    <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-[#05070a] via-[#05070a]/60 to-transparent z-20 pointer-events-none"></div>
                 </div>
             </div>
 
