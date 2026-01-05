@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useApp } from '../context';
 import { HubProgressChart } from './HubAnalytics';
 import { StarIcon, TrophyIcon, BarChartDynamic, History as HistoryIcon, Zap, Users, ChevronLeft, AwardIcon, Target, Calendar, ExclamationIcon } from '../icons';
-import { PlayerForm, SkillType, Player, PlayerStatus, BadgeType, PlayerTier } from '../types';
+import { PlayerForm, SkillType, Player, PlayerStatus, BadgeType, PlayerTier, PlayerRecords } from '../types';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { BadgeIcon } from '../features';
 import { translations } from '../translations/index';
@@ -212,8 +212,8 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
         border: `1px solid ${tierColor}44`
     };
 
-    // Deep check for records object
-    const safeRecords = player.records || {};
+    // Deep check for records object with proper type casting to avoid TS2339
+    const safeRecords = (player.records || {}) as any;
 
     return (
         <div className={`absolute inset-0 z-20 flex flex-col animate-in fade-in duration-700 overflow-hidden ${!isEmbedded ? 'rounded-[2.5rem]' : ''}`}>
