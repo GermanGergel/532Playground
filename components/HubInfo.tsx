@@ -45,11 +45,14 @@ export const HubInfo: React.FC = () => {
 
     return (
         <div className="absolute inset-0 z-20 flex flex-col animate-in fade-in duration-500 rounded-[2.5rem] overflow-hidden">
-            {/* Background: Dashboard Style (Dark Radial + Carbon) - Extending behind nav */}
+            {/* Background: Updated to deep black/blue system theme */}
             <div className="absolute -top-24 bottom-0 -left-4 -right-4 z-0 pointer-events-none">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#05080f] via-[#01040a] to-black"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
             </div>
+
+            {/* NEW: SCROLL FADE OVERLAY AT BOTTOM */}
+            <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-[#05070a] to-transparent z-30 pointer-events-none"></div>
 
             {/* Scrollable Content Container */}
             <div className="relative z-10 flex-grow overflow-y-auto custom-hub-scrollbar">
@@ -109,7 +112,6 @@ export const HubInfo: React.FC = () => {
                     {/* 2. LEGIONNAIRE PROTOCOL */}
                     <section>
                         <IntelSectionHeader title={t.infoLegionnaireTitle} icon={Users} accent="#a855f7" />
-                        {/* More compact padding (p-6 instead of p-8) */}
                         <div className="p-6 rounded-3xl bg-purple-500/5 border border-purple-500/10 shadow-lg relative overflow-hidden group">
                             <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 rounded-full blur-[60px] -mr-20 -mt-20 pointer-events-none group-hover:bg-purple-500/20 transition-all"></div>
                             <div className="relative z-10 flex flex-col sm:flex-row gap-6 items-center">
@@ -186,7 +188,7 @@ export const HubInfo: React.FC = () => {
                         </div>
                     </section>
 
-                    {/* 4. BADGE BONUSES - Compacted */}
+                    {/* 4. BADGE BONUSES */}
                     <section>
                         <IntelSectionHeader title={t.badgeBonusTitle} icon={LightbulbIcon} accent="#10b981" />
                         <div className="rounded-3xl bg-emerald-500/5 p-6 border border-emerald-500/10 shadow-lg relative overflow-hidden group">
@@ -218,7 +220,7 @@ export const HubInfo: React.FC = () => {
                         </div>
                     </section>
 
-                    {/* 5. SKILLS - Compact Grid */}
+                    {/* 5. SKILLS */}
                     <section>
                         <IntelSectionHeader title="Specializations" icon={StarIcon} accent="#00F2FE" />
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
