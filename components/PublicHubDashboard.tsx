@@ -445,7 +445,7 @@ export const PublicHubDashboard: React.FC = () => {
         .filter(g => g.status === 'finished')
         .sort((a, b) => a.gameNumber - b.gameNumber);
 
-    const thStandings = "py-2 text-white/40 uppercase tracking-tighter text-[8px] font-black text-center sticky top-0 bg-[#1e293b]/50 backdrop-blur-sm z-10 border-b border-white/5";
+    const thStandings = "py-2 text-white/40 uppercase tracking-tighter text-[8px] font-black text-center sticky top-0 bg-[#05070a] backdrop-blur-sm z-10 border-b border-white/5";
     const tdBase = "py-1.5 text-center text-[10px] font-bold transition-colors";
 
     return (
@@ -460,12 +460,16 @@ export const PublicHubDashboard: React.FC = () => {
                     </div>
 
                     <div className="flex-[3] min-h-0 shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <HubCard title={t.hubSessionNews} icon={<Zap />} accent="#00F2FE" variant="standings" className="h-full min-h-0" bodyClassName="p-0 flex flex-col">
+                        <HubCard title={t.hubSessionNews} icon={<Zap />} accent="#00F2FE" variant="standings" className="h-full min-h-0" bodyClassName="p-0 flex flex-col relative">
+                            {/* SCROLL FADE OVERLAYS */}
+                            <div className="absolute top-[34px] left-0 right-0 h-8 bg-gradient-to-b from-[#05070a] to-transparent z-20 pointer-events-none"></div>
+                            <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
+                            
                             <div className="flex-grow relative overflow-y-auto custom-hub-scrollbar p-3 bg-black/10">
-                                {newsFeed.slice(0, 15).map(item => <NewsVanguardCard key={item.id} item={item} />)}
-                                {newsFeed.length === 0 && <p className="text-center py-10 opacity-20 text-[10px] tracking-widest uppercase">No Intel Updates</p>}
-                                <div className="absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-[#0f172a] to-transparent z-20 pointer-events-none" />
-                                <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-[#020617] to-transparent z-20 pointer-events-none" />
+                                <div className="py-4"> {/* Padding to avoid fade covering content initially */}
+                                    {newsFeed.slice(0, 15).map(item => <NewsVanguardCard key={item.id} item={item} />)}
+                                    {newsFeed.length === 0 && <p className="text-center py-10 opacity-20 text-[10px] tracking-widest uppercase">No Intel Updates</p>}
+                                </div>
                             </div>
                         </HubCard>
                         <HubCard title={t.hubSessionSquads} icon={<Target />} variant="standings" className="h-full min-h-0" bodyClassName="flex flex-col">
@@ -545,108 +549,114 @@ export const PublicHubDashboard: React.FC = () => {
                         variant="standings" 
                         accent="#00F2FE" 
                         className="flex-grow min-h-0" 
-                        bodyClassName="flex flex-col h-full min-h-0"
+                        bodyClassName="flex flex-col h-full min-h-0 relative"
                     >
+                        {/* SCROLL FADE OVERLAYS FOR RIGHT SIDEBAR */}
+                        <div className="absolute top-[34px] left-0 right-0 h-8 bg-gradient-to-b from-[#05070a] to-transparent z-20 pointer-events-none"></div>
+                        <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
+
                         <div className="flex-grow overflow-y-auto custom-hub-scrollbar h-full">
-                            {activeRightTab === 'players' ? (
-                                <div className="animate-in fade-in duration-500">
-                                    <table className="w-full table-fixed border-collapse">
-                                        <thead><tr><th className={`${thStandings} w-[10%]`}>#</th><th className={`${thStandings} text-left pl-3 w-[50%]`}>{t.players}</th><th className={`${thStandings} w-[15%]`}>{t.thG}</th><th className={`${thStandings} w-[15%]`}>{t.thA}</th><th className={`${thStandings} w-[10%] text-white bg-white/[0.03]`}>TOT</th></tr></thead>
-                                        <tbody>{sortedForTable.map((ps, idx) => (
-                                            <tr key={ps.player.id} className="group border-b border-white/5 last:border-0 transition-all duration-300">
-                                                <td className="py-2 text-center text-[9px] font-bold text-white/30 bg-white/[0.02] relative overflow-hidden">
-                                                    {idx + 1}
-                                                </td>
-                                                <td className="py-2 text-left pl-3 relative overflow-hidden">
-                                                    <div 
-                                                        className="absolute left-0 top-1/2 -translate-y-1/2 w-[1.5px] h-3 rounded-full"
-                                                        style={{ 
-                                                            backgroundColor: ps.team.color,
-                                                            boxShadow: `0 0 8px ${ps.team.color}`
-                                                        }}
-                                                    />
-                                                    <span className="text-slate-300 font-bold uppercase truncate text-[11px] block w-full pl-2 transition-colors">{ps.player.nickname || 'Unknown'}</span>
-                                                </td>
-                                                <td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.goals}</td>
-                                                <td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.assists}</td>
-                                                <td className="py-2 text-center text-[12px] font-black text-white bg-white/[0.03]">{ps.goals + ps.assists}</td>
-                                            </tr>))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            ) : (
-                                <div className="animate-in fade-in duration-500">
-                                    <table className="w-full table-fixed border-collapse">
-                                        <thead><tr><th className={`${thStandings} w-[15%]`}>#</th><th className={`${thStandings} w-[25%] text-center`}>{t.hubHome}</th><th className={`${thStandings} w-[35%] text-center`}>{t.hubResult}</th><th className={`${thStandings} w-[25%] text-center`}>{t.hubAway}</th></tr></thead>
-                                        <tbody>{finishedGames.map((game) => {
-                                            const totalScore = game.team1Score + game.team2Score;
-                                            return (
-                                            <React.Fragment key={game.id}>
-                                                <tr 
-                                                    className={`group border-b border-white/5 last:border-0 transition-all duration-300 ${totalScore > 0 ? 'hover:bg-white/[0.04] cursor-pointer' : 'cursor-default'} ${expandedMatchId === game.id ? 'bg-[#00F2FE]/5' : ''}`}
-                                                    onClick={() => totalScore > 0 && setExpandedMatchId(expandedMatchId === game.id ? null : game.id)}
-                                                >
-                                                    <td className={`${tdBase} text-white/30 font-mono relative overflow-hidden`}>
-                                                        {game.gameNumber}
+                            <div className="py-6"> {/* Padding to avoid fade covering table header */}
+                                {activeRightTab === 'players' ? (
+                                    <div className="animate-in fade-in duration-500">
+                                        <table className="w-full table-fixed border-collapse">
+                                            <thead><tr><th className={`${thStandings} w-[10%]`}>#</th><th className={`${thStandings} text-left pl-3 w-[50%]`}>{t.players}</th><th className={`${thStandings} w-[15%]`}>{t.thG}</th><th className={`${thStandings} w-[15%]`}>{t.thA}</th><th className={`${thStandings} w-[10%] text-white bg-white/[0.03]`}>TOT</th></tr></thead>
+                                            <tbody>{sortedForTable.map((ps, idx) => (
+                                                <tr key={ps.player.id} className="group border-b border-white/5 last:border-0 transition-all duration-300">
+                                                    <td className="py-2 text-center text-[9px] font-bold text-white/30 bg-white/[0.02] relative overflow-hidden">
+                                                        {idx + 1}
                                                     </td>
-                                                    <td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team1Id) || {}} size="xxs" isLight={true} /></div></td>
-                                                    <td className="py-2.5 text-center"><span className="font-bold text-[11px] md:text-[12px] text-slate-200 tabular-nums tracking-tighter bg-white/5 px-2 py-1 rounded transition-colors group-hover:text-white group-hover:bg-[#00F2FE]/10">{game.team1Score} : {game.team2Score}</span></td>
-                                                    <td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team2Id) || {}} size="xxs" isLight={true} /></div></td>
-                                                </tr>
-                                                {expandedMatchId === game.id && (
-                                                    <tr className="bg-white/[0.03] animate-in slide-in-from-top-2 fade-in duration-300">
-                                                        <td colSpan={4} className="p-3">
-                                                            <div className="flex flex-col gap-2">
-                                                                {game.goals.length > 0 ? (
-                                                                    game.goals.map((goal, gIdx) => {
-                                                                        const scorer = session.playerPool.find(p => p.id === goal.scorerId);
-                                                                        const assistant = session.playerPool.find(p => p.id === goal.assistantId);
-                                                                        const team = session.teams.find(t => t.id === goal.teamId);
-                                                                        return (
-                                                                            <div key={goal.id} className="flex items-center gap-2 px-3 py-1 relative">
-                                                                                <div 
-                                                                                    className="w-[1px] h-2.5 rounded-full shrink-0" 
-                                                                                    style={{ 
-                                                                                        backgroundColor: team?.color || '#fff',
-                                                                                        boxShadow: `0 0 6px ${team?.color || '#fff'}`
-                                                                                    }}
-                                                                                ></div>
-                                                                                <div className="shrink-0 ml-1">
-                                                                                    {goal.isOwnGoal ? (
-                                                                                        <span className="text-[10px]">🧤</span>
-                                                                                    ) : (
-                                                                                        <span className="text-[10px]">⚽</span>
-                                                                                    )}
-                                                                                </div>
-                                                                                <div className="flex flex-col min-w-0">
-                                                                                    <div className="flex flex-wrap items-baseline gap-x-2">
-                                                                                        <span className="text-[11px] font-black uppercase text-slate-200 tracking-wide truncate">
-                                                                                            {scorer?.nickname || (goal.isOwnGoal ? t.ownGoal : 'Unknown')}
-                                                                                        </span>
-                                                                                        {assistant && (
-                                                                                            <span className="text-[8px] font-bold text-white/20 uppercase italic shrink-0">
-                                                                                                {t.assistant}: {assistant.nickname}
-                                                                                            </span>
+                                                    <td className="py-2 text-left pl-3 relative overflow-hidden">
+                                                        <div 
+                                                            className="absolute left-0 top-1/2 -translate-y-1/2 w-[1.5px] h-3 rounded-full"
+                                                            style={{ 
+                                                                backgroundColor: ps.team.color,
+                                                                boxShadow: `0 0 8px ${ps.team.color}`
+                                                            }}
+                                                        />
+                                                        <span className="text-slate-300 font-bold uppercase truncate text-[11px] block w-full pl-2 transition-colors">{ps.player.nickname || 'Unknown'}</span>
+                                                    </td>
+                                                    <td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.goals}</td>
+                                                    <td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.assists}</td>
+                                                    <td className="py-2 text-center text-[12px] font-black text-white bg-white/[0.03]">{ps.goals + ps.assists}</td>
+                                                </tr>))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <div className="animate-in fade-in duration-500">
+                                        <table className="w-full table-fixed border-collapse">
+                                            <thead><tr><th className={`${thStandings} w-[15%]`}>#</th><th className={`${thStandings} w-[25%] text-center`}>{t.hubHome}</th><th className={`${thStandings} w-[35%] text-center`}>{t.hubResult}</th><th className={`${thStandings} w-[25%] text-center`}>{t.hubAway}</th></tr></thead>
+                                            <tbody>{finishedGames.map((game) => {
+                                                const totalScore = game.team1Score + game.team2Score;
+                                                return (
+                                                <React.Fragment key={game.id}>
+                                                    <tr 
+                                                        className={`group border-b border-white/5 last:border-0 transition-all duration-300 ${totalScore > 0 ? 'hover:bg-white/[0.04] cursor-pointer' : 'cursor-default'} ${expandedMatchId === game.id ? 'bg-[#00F2FE]/5' : ''}`}
+                                                        onClick={() => totalScore > 0 && setExpandedMatchId(expandedMatchId === game.id ? null : game.id)}
+                                                    >
+                                                        <td className={`${tdBase} text-white/30 font-mono relative overflow-hidden`}>
+                                                            {game.gameNumber}
+                                                        </td>
+                                                        <td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team1Id) || {}} size="xxs" isLight={true} /></div></td>
+                                                        <td className="py-2.5 text-center"><span className="font-bold text-[11px] md:text-[12px] text-slate-200 tabular-nums tracking-tighter bg-white/5 px-2 py-1 rounded transition-colors group-hover:text-white group-hover:bg-[#00F2FE]/10">{game.team1Score} : {game.team2Score}</span></td>
+                                                        <td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team2Id) || {}} size="xxs" isLight={true} /></div></td>
+                                                    </tr>
+                                                    {expandedMatchId === game.id && (
+                                                        <tr className="bg-white/[0.03] animate-in slide-in-from-top-2 fade-in duration-300">
+                                                            <td colSpan={4} className="p-3">
+                                                                <div className="flex flex-col gap-2">
+                                                                    {game.goals.length > 0 ? (
+                                                                        game.goals.map((goal, gIdx) => {
+                                                                            const scorer = session.playerPool.find(p => p.id === goal.scorerId);
+                                                                            const assistant = session.playerPool.find(p => p.id === goal.assistantId);
+                                                                            const team = session.teams.find(t => t.id === goal.teamId);
+                                                                            return (
+                                                                                <div key={goal.id} className="flex items-center gap-2 px-3 py-1 relative">
+                                                                                    <div 
+                                                                                        className="w-[1px] h-2.5 rounded-full shrink-0" 
+                                                                                        style={{ 
+                                                                                            backgroundColor: team?.color || '#fff',
+                                                                                            boxShadow: `0 0 6px ${team?.color || '#fff'}`
+                                                                                        }}
+                                                                                    ></div>
+                                                                                    <div className="shrink-0 ml-1">
+                                                                                        {goal.isOwnGoal ? (
+                                                                                            <span className="text-[10px]">🧤</span>
+                                                                                        ) : (
+                                                                                            <span className="text-[10px]">⚽</span>
                                                                                         )}
                                                                                     </div>
+                                                                                    <div className="flex flex-col min-w-0">
+                                                                                        <div className="flex flex-wrap items-baseline gap-x-2">
+                                                                                            <span className="text-[11px] font-black uppercase text-slate-200 tracking-wide truncate">
+                                                                                                {scorer?.nickname || (goal.isOwnGoal ? t.ownGoal : 'Unknown')}
+                                                                                            </span>
+                                                                                            {assistant && (
+                                                                                                <span className="text-[8px] font-bold text-white/20 uppercase italic shrink-0">
+                                                                                                    {t.assistant}: {assistant.nickname}
+                                                                                                </span>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    </div>
                                                                                 </div>
-                                                                            </div>
-                                                                        );
-                                                                    })
-                                                                ) : (
-                                                                    <div className="text-center py-2">
-                                                                        <span className="text-[8px] font-black text-white/20 uppercase tracking-[0.3em]">No goal events recorded</span>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                            </React.Fragment>
-                                        )})}</tbody>
-                                    </table>
-                                </div>
-                            )}
+                                                                            );
+                                                                        })
+                                                                    ) : (
+                                                                        <div className="text-center py-2">
+                                                                            <span className="text-[8px] font-black text-white/20 uppercase tracking-[0.3em]">No goal events recorded</span>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    )}
+                                                </React.Fragment>
+                                            )})}</tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </HubCard>
                 </div>

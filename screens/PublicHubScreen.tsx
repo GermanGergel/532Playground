@@ -477,7 +477,7 @@ const PodiumSpot = ({ p, rank, height, color, delay, t }: { p?: any, rank: numbe
     <div className={`flex flex-col items-center justify-end h-full ${delay} animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both relative`}>
         {p && (
             <div className="mb-3 relative z-20 flex flex-col items-center w-full px-1">
-                 <div className={`relative rounded-lg overflow-hidden border border-white/20 shadow-lg flex flex-col shrink-0 ${rank === 1 ? 'w-[110px] h-[155px] md:w-[135px] md:h-[185px] z-20' : 'w-[95px] h-[130px] md:w-[115px] md:h-[155px] z-10'}`}>
+                 <div className={`relative rounded-lg overflow-hidden border border-white/20 shadow-lg flex flex-col shrink-0 ${rank === 1 ? 'w-[110px] h-[155px] md:w-[135px] md:h-[185px] z-20' : 'w-[115px] h-[130px] md:w-[115px] md:h-[155px] z-10'}`}>
                     {p.player.playerCard ? <div className="absolute inset-0 bg-cover bg-no-repeat" style={{ backgroundImage: `url(${p.player.playerCard})`, backgroundPosition: 'center 5%' }} /> : <div className="absolute inset-0 bg-gradient-to-b from-slate-700 to-slate-900" />}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
                     <div className="relative z-10 h-full flex flex-col justify-between p-1.5">
@@ -610,11 +610,11 @@ export const PublicHubScreen: React.FC = () => {
                 }}
             />
 
-            {/* DASHBOARD OVERLAY - FIXED BACKGROUND APPLIED HERE (#05070a - deepest obsidian) */}
+            {/* DASHBOARD OVERLAY - DYNAMIC BACKGROUND APPLIED HERE */}
             <div 
                 className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none 
                 ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}
-                bg-[#05070a]
+                ${dashboardView === 'dashboard' ? 'bg-[#05070a]' : 'bg-[#0a0c10]'}
                 `}
             >
                 {/* Clean Layering */}
