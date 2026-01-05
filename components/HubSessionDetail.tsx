@@ -140,39 +140,40 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
                 </div>
                 
                 {/* Use flex-grow and gap to fill vertical space */}
-                <div className="flex-grow flex flex-col gap-2 min-h-0">
-                    {topPlayers.slice(0, 3).map((stat, idx) => {
-                        const impact = getImpactScore(stat);
-                        // Using flex-1 to make items expand equally to fill the container height
-                        return (
-                            <div key={stat.player.id} className="flex-1 flex items-center justify-between px-4 rounded-2xl bg-white/[0.03] border border-white/5 relative overflow-hidden group hover:bg-white/[0.05] transition-colors">
-                                {/* Rank Color Strip */}
-                                <div className={`absolute left-0 top-0 bottom-0 w-1 ${idx === 0 ? 'bg-[#FFD700]' : idx === 1 ? 'bg-slate-300' : 'bg-amber-700'}`}></div>
+                <div className="flex-grow flex flex-col gap-2 min-h-0 relative">
+                    <div className="flex-grow overflow-y-auto custom-hub-scrollbar space-y-2 pb-4">
+                        {topPlayers.slice(0, 3).map((stat, idx) => {
+                            const impact = getImpactScore(stat);
+                            return (
+                                <div key={stat.player.id} className="h-16 flex items-center justify-between px-4 rounded-2xl bg-white/[0.03] border border-white/5 relative overflow-hidden group hover:bg-white/[0.05] transition-colors">
+                                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${idx === 0 ? 'bg-[#FFD700]' : idx === 1 ? 'bg-slate-300' : 'bg-amber-700'}`}></div>
+                                    <div className="flex items-center gap-4 pl-2">
+                                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center border text-sm shadow-lg
+                                            ${idx === 0 ? 'bg-[#FFD700]/10 border-[#FFD700]/30' : 
+                                              idx === 1 ? 'bg-slate-300/10 border-slate-300/30' : 
+                                              'bg-amber-700/10 border-amber-700/30'}`}>
+                                            {idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'}
+                                        </div>
+                                        <div className="flex flex-col justify-center">
+                                            <span className={`font-russo text-xs uppercase tracking-wide truncate max-w-[140px] leading-none ${idx === 0 ? 'text-white' : 'text-slate-300'}`}>
+                                                {stat.player.nickname || 'Unknown'}
+                                            </span>
+                                            {idx === 0 && <span className="text-[8px] font-bold text-[#FFD700] tracking-widest uppercase mt-1">MVP OF THE MATCH</span>}
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col items-end justify-center bg-black/20 px-3 py-1.5 rounded-xl border border-white/5 min-w-[75px]">
+                                        <span className="font-mono font-black text-base text-white leading-none tracking-tight">{impact.toFixed(1)}</span>
+                                        <span className="text-[8px] text-[#00F2FE] font-black tracking-widest uppercase mt-0.5">PTS</span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    {/* SCROLL FADE - HEIGHT REDUCED TO h-4 */}
+                    <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#0d1117] to-transparent z-20 pointer-events-none"></div>
 
-                                <div className="flex items-center gap-4 pl-2">
-                                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center border text-sm shadow-lg
-                                        ${idx === 0 ? 'bg-[#FFD700]/10 border-[#FFD700]/30' : 
-                                          idx === 1 ? 'bg-slate-300/10 border-slate-300/30' : 
-                                          'bg-amber-700/10 border-amber-700/30'}`}>
-                                        {idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'}
-                                    </div>
-                                    <div className="flex flex-col justify-center">
-                                        <span className={`font-russo text-xs uppercase tracking-wide truncate max-w-[140px] leading-none ${idx === 0 ? 'text-white' : 'text-slate-300'}`}>
-                                            {stat.player.nickname || 'Unknown'}
-                                        </span>
-                                        {idx === 0 && <span className="text-[8px] font-bold text-[#FFD700] tracking-widest uppercase mt-1">MVP OF THE MATCH</span>}
-                                    </div>
-                                </div>
-                                <div className="flex flex-col items-end justify-center bg-black/20 px-3 py-1.5 rounded-xl border border-white/5 min-w-[75px]">
-                                    <span className="font-mono font-black text-base text-white leading-none tracking-tight">{impact.toFixed(1)}</span>
-                                    <span className="text-[8px] text-[#00F2FE] font-black tracking-widest uppercase mt-0.5">PTS</span>
-                                </div>
-                            </div>
-                        );
-                    })}
-                    {/* Fill empty state if no players */}
                     {topPlayers.length === 0 && (
-                        <div className="flex-1 flex items-center justify-center text-white/20 text-xs font-bold uppercase tracking-widest border border-white/5 rounded-2xl bg-white/[0.01]">
+                        <div className="flex-grow flex items-center justify-center text-white/20 text-xs font-bold uppercase tracking-widest border border-white/5 rounded-2xl bg-white/[0.01]">
                             No Stats Available
                         </div>
                     )}
@@ -213,10 +214,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
     const sortedByStats = useMemo(() => [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists)), [allPlayersStats]);
     const finishedGames = session.games.filter(g => g.status === 'finished');
     
-    // UPDATED: Reduced vertical padding (py-2) to fit more rows
     const thClass = "py-2 text-white/40 uppercase tracking-tighter text-[9px] font-black text-center sticky top-0 bg-[#12161b] backdrop-blur-md z-10 border-b border-white/5";
-    
-    // UPDATED: Reduced vertical padding (py-2) to fit more rows
     const tdBase = "py-2 text-center text-[11px] font-bold transition-colors";
 
     return (
@@ -242,7 +240,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                 <div className="max-w-6xl mx-auto w-full h-full flex flex-col gap-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch w-full h-full min-h-0">
                         <div className="flex flex-col gap-4 w-full h-full min-h-0">
-                            <HubCard title="TEAM STANDINGS" icon={<TrophyIcon />} accent="#FFD700" className="shrink-0 max-h-[45%] flex flex-col">
+                            <HubCard title="TEAM STANDINGS" icon={<TrophyIcon />} accent="#FFD700" className="shrink-0 max-h-[45%] flex flex-col" bodyClassName="relative overflow-hidden flex flex-col">
                                 <div className="p-1 overflow-y-auto custom-hub-scrollbar">
                                     <table className="w-full table-fixed border-collapse">
                                         <thead>
@@ -279,6 +277,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                         </tbody>
                                     </table>
                                 </div>
+                                <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#0d1117] to-transparent z-20 pointer-events-none"></div>
                             </HubCard>
                             <HubCard title="MATCH REPORT" icon={<Target />} accent="#00F2FE" className="w-full flex-grow min-h-0" bodyClassName="p-4">
                                 <ArchiveEnvironmentWidget topPlayers={sortedByImpact} session={session} />
@@ -291,7 +290,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                     <div className="w-px h-3 bg-white/10"></div>
                                     <button onClick={() => { setActiveTab('matches'); setExpandedMatchId(null); }} className={`font-russo text-[8px] md:text-[9px] uppercase tracking-widest transition-all ${activeTab === 'matches' ? 'text-[#00F2FE]' : 'text-white/20'}`}>MATCH HISTORY</button>
                                 </div>
-                            } icon={activeTab === 'players' ? <Users /> : <HistoryIcon />} accent="#00F2FE" className="h-full flex flex-col" bodyClassName="flex flex-col h-full min-h-0">
+                            } icon={activeTab === 'players' ? <Users /> : <HistoryIcon />} accent="#00F2FE" className="h-full flex flex-col" bodyClassName="flex flex-col h-full min-h-0 relative">
                                 <div className="flex-grow overflow-y-auto custom-hub-scrollbar p-1">
                                     {activeTab === 'players' ? (
                                         <table className="w-full table-fixed border-collapse">
@@ -404,6 +403,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                         </table>
                                     )}
                                 </div>
+                                <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#0d1117] to-transparent z-20 pointer-events-none"></div>
                             </HubCard>
                         </div>
                     </div>

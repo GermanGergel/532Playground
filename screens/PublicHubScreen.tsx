@@ -614,7 +614,7 @@ export const PublicHubScreen: React.FC = () => {
             <div 
                 className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none 
                 ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}
-                ${(dashboardView === 'dashboard' || dashboardView === 'roster') ? 'bg-[#05070a]' : 'bg-[#0a0c10]'}
+                ${(dashboardView === 'dashboard' || dashboardView === 'roster' || dashboardView === 'archive') ? 'bg-[#05070a]' : 'bg-[#0a0c10]'}
                 `}
             >
                 {/* Clean Layering */}
