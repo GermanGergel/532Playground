@@ -592,8 +592,8 @@ export const PublicHubScreen: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen text-white relative selection:bg-[#00F2FE] selection:text-black bg-[#0a0c10] pt-px overscroll-none">
-            <style dangerouslySetInnerHTML={{__html: `html, body { background-color: #0a0c10; overscroll-behavior-y: none; }`}} />
+        <div className="min-h-screen text-white relative selection:bg-[#00F2FE] selection:text-black bg-[#05070a] pt-px overscroll-none">
+            <style dangerouslySetInnerHTML={{__html: `html, body { background-color: #05070a; overscroll-behavior-y: none; }`}} />
             
             <div className={`fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50 z-[110]`}></div>
             
@@ -610,11 +610,10 @@ export const PublicHubScreen: React.FC = () => {
                 }}
             />
 
-            {/* DASHBOARD OVERLAY - DYNAMIC BACKGROUND APPLIED HERE */}
+            {/* DASHBOARD OVERLAY - FULL OBISIDIAN BACKGROUND */}
             <div 
-                className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none 
+                className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none bg-[#05070a]
                 ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}
-                ${(dashboardView === 'dashboard' || dashboardView === 'roster') ? 'bg-[#05070a]' : 'bg-[#0a0c10]'}
                 `}
             >
                 {/* Clean Layering */}
