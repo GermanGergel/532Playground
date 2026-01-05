@@ -31,7 +31,7 @@ const TermometerIcon = ({ className }: { className?: string }) => (
 
 // --- TACTICAL SOCCER BACKGROUND (CHALK STYLE) ---
 const SoccerTacticsBackground: React.FC = () => (
-    <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.2]">
+    <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.25]">
         <svg width="100%" height="100%" viewBox="0 0 800 450" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
                 <marker id="arrowhead-chalk" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
@@ -42,26 +42,19 @@ const SoccerTacticsBackground: React.FC = () => (
                 </filter>
             </defs>
             
-            {/* Field Structure */}
-            <g stroke="white" strokeWidth="2" fill="none" filter="url(#chalkEffect)" strokeOpacity="0.6">
-                {/* Center Line & Circle */}
+            <g stroke="white" strokeWidth="2" fill="none" filter="url(#chalkEffect)" strokeOpacity="0.5">
                 <line x1="400" y1="0" x2="400" y2="450" />
                 <circle cx="400" cy="225" r="55" />
-                <circle cx="400" cy="225" r="2.5" fill="white" fillOpacity="0.6" />
-                
-                {/* Left Goal Area (Tactical) */}
+                <circle cx="400" cy="225" r="2.5" fill="white" fillOpacity="0.5" />
                 <rect x="0" y="145" width="70" height="160" />
                 <rect x="0" y="195" width="25" height="60" />
                 <path d="M 70 185 Q 95 225 70 265" />
-
-                {/* Right Goal Area (Tactical) */}
                 <rect x="730" y="145" width="70" height="160" />
                 <rect x="775" y="195" width="25" height="60" />
                 <path d="M 730 185 Q 705 225 730 265" />
             </g>
 
-            {/* Tactical Moves */}
-            <g fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" filter="url(#chalkEffect)" strokeOpacity="0.7">
+            <g fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" filter="url(#chalkEffect)" strokeOpacity="0.6">
                 <circle cx="230" cy="80" r="10" />
                 <path d="M 245 85 Q 310 95 340 120" markerEnd="url(#arrowhead-chalk)" />
                 <g transform="translate(355, 125) rotate(45)">
@@ -86,12 +79,6 @@ const SoccerTacticsBackground: React.FC = () => (
                 <circle cx="730" cy="365" r="10" />
                 <g transform="translate(420, 190) rotate(45)">
                     <line x1="-10" y1="0" x2="10" y2="0" /><line x1="0" y1="-10" x2="0" y2="10" />
-                </g>
-                <circle cx="50" cy="50" r="7" strokeOpacity="0.3" />
-                <circle cx="750" cy="400" r="7" strokeOpacity="0.3" />
-                <circle cx="350" cy="400" r="7" strokeOpacity="0.3" />
-                <g transform="translate(50, 400) rotate(45)" opacity="0.3">
-                    <line x1="-5" y1="0" x2="5" y2="0" /><line x1="0" y1="-5" x2="0" y2="5" />
                 </g>
             </g>
         </svg>
@@ -166,8 +153,8 @@ const HubCard: React.FC<{
         titleColor = 'text-white';
         iconBg = 'bg-white/10 border-white/20';
     } else if (isElite) {
-        // RESTORED: Back to deep dark colors (Obsidian style)
-        bgStyleClass = 'bg-gradient-to-br from-[#0a0d14] via-[#05070a] to-black border-white/10';
+        // ULTIMATE DARK: Deep radial void for Session Leaders
+        bgStyleClass = 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#050608] via-[#010101] to-black border-white/5';
         headerStyleClass = 'bg-transparent !border-0';
         titleColor = 'text-white'; 
         iconBg = 'bg-white/5 border-white/10 text-[#FFD700]';
