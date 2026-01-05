@@ -3,35 +3,67 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
-import { NewsItem, Player, Team, WeatherCondition, Session } from '../types';
-import { TrophyIcon, Zap, History as HistoryIcon, Users, AwardIcon, Target, StarIcon } from '../icons';
+import { NewsItem, Player, Team, WeatherCondition } from '../types';
+import { TrophyIcon, Zap, History as HistoryIcon, Users, AwardIcon, Target } from '../icons';
 import { useTranslation } from '../ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { TeamAvatar } from './avatars';
 
-// --- TYPES ---
-interface TopPlayerStats {
-    player: Player;
-    score: number;
-    rank: 1 | 2 | 3;
-}
+// --- LOCAL ICONS FOR WIDGET ---
+const MapPinIcon = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+);
+const ClockIcon = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+);
+const CloudRainIcon = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M16 14v6"/><path d="M8 14v6"/><path d="M12 16v6"/></svg>
+);
+const CloudIcon = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M17.5 19c0-1.7-1.3-3-3-3h-1.1c-.2-3.4-3.1-6-6.5-6-3.8 0-6.8 3.1-6.8 7s3 7 6.8 7h8a4 4 0 0 0 2.6-7.3Z"/></svg>
+);
+const MoonIcon = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+);
+const TermometerIcon = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
+);
 
-// --- HELPERS ---
-const getImpactScore = (stats: PlayerStats): number => {
-    let score = 0;
-    const nonCleanSheetWins = stats.wins - (stats.cleanSheetWins || 0);
-    score += nonCleanSheetWins * 2.0;
-    score += (stats.cleanSheetWins || 0) * 2.5;
-    score += stats.draws * 0.5;
-    score += stats.goals * 1.0;
-    score += stats.assists * 1.0;
-    score += stats.ownGoals * -1.0;
-    return score;
+// --- STANDBY SCREEN ---
+const StandbyScreen: React.FC = () => {
+    const t = useTranslation();
+    return (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black overflow-hidden rounded-[2.5rem]">
+            <div className="absolute w-[600px] h-[600px] border border-[#00F2FE]/20 rounded-full animate-ping-slow"></div>
+            <div className="absolute w-[400px] h-[400px] border border-[#00F2FE]/10 rounded-full animate-ping-slower"></div>
+            
+            <div className="relative z-10 flex flex-col items-center gap-6">
+                <div className="text-center space-y-4">
+                    <h2 className="font-orbitron text-3xl md:text-5xl font-black text-white tracking-[0.3em] uppercase opacity-90">
+                        STANDBY
+                    </h2>
+                    <div className="flex items-center justify-center gap-3">
+                        <div className="h-px w-8 bg-[#00F2FE]/40"></div>
+                        <span className="font-chakra text-sm font-bold text-[#00F2FE] tracking-[0.5em] animate-pulse">SEARCHING FOR BROADCAST</span>
+                        <div className="h-px w-8 bg-[#00F2FE]/40"></div>
+                    </div>
+                </div>
+                
+                <p className="max-w-xs text-center text-[10px] font-mono text-white/30 uppercase tracking-[0.2em] mt-8">
+                    {t.hubAwaitingStats}<br/>SYSTEM IDLE. AWAITING UPLINK SIGNAL...
+                </p>
+            </div>
+            <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes ping-slow { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(1.5); opacity: 0; } }
+                .animate-ping-slow { animation: ping-slow 4s cubic-bezier(0, 0, 0.2, 1) infinite; }
+                .animate-ping-slower { animation: ping-slow 6s cubic-bezier(0, 0, 0.2, 1) infinite; }
+            `}} />
+        </div>
+    );
 };
 
-// --- COMPONENTS ---
+// --- DASHBOARD UI HELPERS ---
 
-// FIX: Added SubtleDashboardAvatar to resolve 'Cannot find name' error.
 const SubtleDashboardAvatar: React.FC<{ team: any; size?: string; isLight?: boolean }> = ({ team }) => {
     const color = team?.color || '#A9B1BD';
     return (
@@ -55,206 +87,287 @@ const SubtleDashboardAvatar: React.FC<{ team: any; size?: string; isLight?: bool
     );
 };
 
-// FIX: Added HubCard to resolve 'Cannot find name' error.
-const HubCard: React.FC<{
-    title: React.ReactNode;
-    icon: React.ReactNode;
-    children: React.ReactNode;
-    className?: string;
-    bodyClassName?: string;
-    accent?: string;
-    align?: 'left' | 'right' | 'center';
-    variant?: 'standings' | 'elite';
-    headerExtra?: React.ReactNode;
-}> = ({ title, icon, children, className = "", bodyClassName = "", accent = "#fff", align = 'left', variant = 'standings', headerExtra }) => {
+const HubCard: React.FC<{ 
+    title: React.ReactNode; 
+    icon: React.ReactNode; 
+    children: React.ReactNode; 
+    className?: string; 
+    accent?: string; 
+    variant?: 'default' | 'dark' | 'midnight' | 'glass' | 'ocean' | 'elite' | 'standings' | 'obsidian';
+    bodyClassName?: string; 
+    headerExtra?: React.ReactNode; 
+    align?: 'left' | 'right';
+}> = ({ title, icon, children, className = "", accent = "#00F2FE", variant = 'default', bodyClassName = "", headerExtra, align = 'left' }) => {
+    const isElite = variant === 'elite';
+    const isStandings = variant === 'standings';
+    const isRight = align === 'right';
+
+    let bgStyleClass = 'bg-white/80 backdrop-blur-2xl border-slate-200'; 
+    let headerStyleClass = 'bg-gradient-to-b from-white to-slate-50/50 border-b border-slate-100'; 
+    let titleColor = 'text-slate-800';
+    let iconBg = 'bg-white border-slate-100';
+
+    if (variant === 'dark') {
+        headerStyleClass = 'border-b border-white/10';
+        titleColor = 'text-white';
+        iconBg = 'bg-white/10 border-white/20';
+    } else if (isElite) {
+        bgStyleClass = 'bg-[#020308] border-white/10';
+        headerStyleClass = 'bg-transparent !border-0';
+        titleColor = 'text-white'; 
+        iconBg = 'bg-white/5 border-white/10 text-[#FFD700]';
+    } else if (isStandings) {
+        bgStyleClass = 'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black border-white/10';
+        headerStyleClass = 'bg-transparent !border-0';
+        titleColor = 'text-white';
+        iconBg = 'bg-white/10 border-white/20 text-white';
+    }
+
     return (
-        <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0d1117] to-[#010409] border border-white/[0.06] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.05)] group/bento flex flex-col ${className}`}>
-            <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`, backgroundSize: '4px 4px' }}></div>
-            <div className="absolute -top-10 -left-10 w-40 h-40 bg-[#00F2FE]/[0.03] rounded-full blur-[40px] pointer-events-none z-0 animate-pulse" style={{ animationDuration: '4s' }}></div>
-            <div className="relative py-2.5 px-5 flex items-center shrink-0 bg-transparent border-b border-white/5 z-10 justify-between">
-                 <div className="flex items-center gap-3 relative z-10 w-full">
-                    <div className="w-5 h-5 rounded-md flex items-center justify-center shadow-sm border bg-white/10 border-white/20 text-white" style={{ color: accent }}>
-                        {React.cloneElement(icon as React.ReactElement<any>, { className: "w-3 h-3" })}
+        <div className={`relative overflow-hidden rounded-[1.5rem] flex flex-col border ${bgStyleClass} ${className}`}>
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ 
+                backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`,
+                backgroundSize: '4px 4px'
+            }}></div>
+
+            <div className={`absolute -top-10 -left-10 w-40 h-40 ${isElite ? 'bg-[#00F2FE]/[0.05]' : 'bg-[#00F2FE]/[0.03]'} rounded-full blur-[45px] pointer-events-none z-0 animate-pulse`} style={{ animationDuration: '6s' }}></div>
+            
+            <div className={`relative z-10 py-1.5 px-4 flex items-center shrink-0 ${headerStyleClass} ${isRight ? 'flex-row-reverse justify-start' : 'justify-between'}`}>
+                 <div className={`flex items-center gap-2 relative z-10 ${isRight ? 'flex-row-reverse' : ''}`}>
+                    <div className={`w-4 h-4 rounded-md flex items-center justify-center shadow-sm border ${iconBg} shrink-0`} style={{ color: accent }}>
+                        {React.cloneElement(icon as React.ReactElement<any>, { className: "w-2.5 h-2.5" })}
                     </div>
-                    <div className="flex-grow">{typeof title === 'string' ? <h3 className="font-russo text-[11px] uppercase tracking-widest text-white">{title}</h3> : title}</div>
-                    {headerExtra && <div className="ml-auto">{headerExtra}</div>}
+                    <div>
+                        {typeof title === 'string' ? <h3 className={`font-russo text-[10px] uppercase tracking-widest ${titleColor}`}>{title}</h3> : title}
+                    </div>
                  </div>
+                 {headerExtra && <div className="relative z-10">{headerExtra}</div>}
             </div>
-            <div className={`relative overflow-hidden flex flex-col z-10 flex-grow ${bodyClassName}`}>{children}</div>
+            <div className={`flex-grow relative overflow-hidden flex flex-col z-10 ${bodyClassName || 'p-0'}`}>
+                {children}
+            </div>
         </div>
     );
 };
 
-// FIX: Added PodiumSpot to resolve dependencies in SessionPodium.
-const PodiumSpot = ({ p, rank, height, color, delay, t }: { p?: any, rank: number, height: string, color: string, delay: string, t: any }) => (
-    <div className={`flex flex-col items-center justify-end h-full ${delay} animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both relative`}>
-        {p && (
-            <div className="mb-3 relative z-20 flex flex-col items-center w-full px-1">
-                 <div className={`relative rounded-lg overflow-hidden border border-white/20 shadow-lg flex flex-col shrink-0 ${rank === 1 ? 'w-[110px] h-[155px] md:w-[135px] md:h-[185px] z-20' : 'w-[115px] h-[130px] md:w-[115px] md:h-[155px] z-10'}`}>
-                    {p.player.playerCard ? <div className="absolute inset-0 bg-cover bg-no-repeat" style={{ backgroundImage: `url(${p.player.playerCard})`, backgroundPosition: 'center 5%' }} /> : <div className="absolute inset-0 bg-gradient-to-b from-slate-700 to-slate-900" />}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
-                    <div className="relative z-10 h-full flex flex-col justify-between p-1.5">
-                        <div className="flex justify-between items-start w-full">
-                            {p.player.countryCode && <img src={`https://flagcdn.com/w40/${convertCountryCodeAlpha3ToAlpha2(p.player.countryCode)?.toLowerCase()}.png`} className="w-3 h-auto rounded-sm opacity-90" alt="" />}
-                            <div className="flex flex-col items-end leading-none">
-                                <span className="font-russo text-lg text-[#00F2FE]">{p.player.rating}</span>
-                                <span className="text-[5px] font-black text-white">OVR</span>
-                            </div>
+const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any, teamStats: any[], t: any }> = ({ teams, players, session, teamStats, t }) => (
+    <div className="flex h-full w-full divide-x divide-white/10 bg-black/20">
+        {teams.map((team) => {
+            const teamPlayers = team.playerIds.map(pid => players.find(p => p.id === pid)).filter(Boolean) as Player[];
+            const avgOvr = teamPlayers.length > 0 ? Math.round(teamPlayers.reduce((sum, p) => sum + p.rating, 0) / teamPlayers.length) : 0;
+            
+            // Sync with Standings Table
+            const stats = teamStats.find(ts => ts.team.id === team.id);
+            const gf = stats?.goalsFor || 0;
+            const ga = stats?.goalsAgainst || 0;
+            
+            // Synergy calculation
+            let assistedGoals = 0;
+            session.games.filter((g: any) => g.status === 'finished').forEach((g: any) => {
+                assistedGoals += g.goals.filter((goal: any) => goal.teamId === team.id && goal.assistantId).length;
+            });
+
+            const synergy = gf > 0 ? Math.round((assistedGoals / gf) * 100) : 0;
+            const synergyColor = synergy >= 60 ? 'text-[#4CFF5F]' : synergy <= 30 ? 'text-orange-400' : 'text-[#00F2FE]';
+
+            return (
+                <div key={team.id} className="flex-1 flex flex-col min-w-0">
+                    <div className="h-10 border-b border-white/5 flex items-end justify-center pb-2 relative overflow-hidden" style={{ background: `linear-gradient(to bottom, ${team.color}25, transparent)` }}>
+                         <div className="flex items-center gap-1 bg-black/40 px-2 py-0.5 rounded text-[8px] font-black tracking-widest border border-white/10 text-white/60">
+                            <span>OVR</span> <span className="text-white">{avgOvr}</span>
+                         </div>
+                    </div>
+                    <div className="flex-grow flex flex-col p-1 gap-1 overflow-hidden">
+                        {team.playerIds.map((pid, idx) => {
+                            const p = players.find(player => player.id === pid);
+                            return (
+                                <div key={pid} className="flex-1 flex items-center bg-white/[0.02] rounded-lg px-3 border border-transparent transition-all min-h-[24px]">
+                                    <span className="font-mono text-[8px] text-white/20 w-4 shrink-0">{(idx + 1)}</span>
+                                    <span className="text-[10px] font-black text-slate-400 uppercase truncate flex-grow">{p?.nickname || 'UNKNOWN'}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    
+                    <div className="py-2 border-t border-white/5 bg-black/40 flex items-center divide-x divide-white/10">
+                        <div className="flex-1 flex flex-col items-center justify-center">
+                            <span className="text-[12px] font-black text-slate-200 leading-none">{gf}</span>
+                            <span className="text-[5px] text-white/30 uppercase font-bold tracking-widest mt-0.5">{t.thGF}</span>
                         </div>
-                        <div className="w-full text-center pb-1"><span className="text-white font-russo text-[10px] uppercase truncate px-1">{p.player.nickname}</span></div>
+                        <div className="flex-1 flex flex-col items-center justify-center">
+                            <span className="text-[12px] font-black text-slate-200 leading-none">{ga}</span>
+                            <span className="text-[5px] text-white/30 uppercase font-bold tracking-widest mt-0.5">{t.thGA}</span>
+                        </div>
+                        <div className="flex-1 flex flex-col items-center justify-center">
+                            <span className={`text-[12px] font-black leading-none ${synergyColor}`}>
+                                {synergy}%
+                            </span>
+                            <span className="text-[5px] text-white/30 uppercase font-bold tracking-widest mt-0.5">SYN</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-        )}
-        {!p && (
-            <div className="mb-12 opacity-10">
-                <div className="w-12 h-16 rounded border-2 border-dashed border-white/30"></div>
-            </div>
-        )}
-        
-        <div className="w-full relative overflow-hidden backdrop-blur-md rounded-t-xl flex flex-col items-center justify-center pt-2 pb-1.5 z-10" style={{ height: height, background: `linear-gradient(to bottom, ${color}35, ${color}08, transparent)`, borderTop: `2px solid ${color}` }}>
-            {p && (
-                <div className="relative z-10 flex flex-col items-center">
-                    <span className="font-russo text-xl text-white leading-none tracking-tighter">{p.score.toFixed(1)}</span>
-                    <span className="text-[5.5px] font-black text-white/50 uppercase tracking-[0.2em] mt-1">{t.hubImpact}</span>
-                </div>
-            )}
-        </div>
+            );
+        })}
     </div>
 );
 
-// FIX: Added SessionPodium to resolve 'Cannot find name' error.
-const SessionPodium: React.FC<{ players: any[], t: any }> = ({ players, t }) => {
+interface TopPlayerStats {
+    player: Player; 
+    score: number; 
+    rank: 1 | 2 | 3;
+}
+
+const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ players, t }) => {
     const p1 = players.find(p => p.rank === 1);
     const p2 = players.find(p => p.rank === 2);
     const p3 = players.find(p => p.rank === 3);
 
-    return (
-        <div className="flex items-end justify-center gap-3 h-full px-4 relative">
-            <div className="w-[115px] md:w-[165px] h-full flex flex-col justify-end z-10 shrink-0">
-                <PodiumSpot p={p2} rank={2} height="90px" color="#94a3b8" delay="delay-100" t={t} />
+    const MiniCard = ({ p }: { p: TopPlayerStats }) => {
+        const countryCodeAlpha2 = useMemo(() => p.player.countryCode ? convertCountryCodeAlpha3ToAlpha2(p.player.countryCode) : null, [p.player.countryCode]);
+        const sizeClasses = p.rank === 1 ? 'w-[110px] h-[155px] md:w-[135px] md:h-[185px] z-20' : 'w-[95px] h-[130px] md:w-[115px] md:h-[155px] z-10';
+        return (
+            <div className={`relative rounded-lg overflow-hidden border border-white/20 shadow-lg flex flex-col shrink-0 ${sizeClasses}`}>
+                {p.player.playerCard ? <div className="absolute inset-0 bg-cover bg-no-repeat" style={{ backgroundImage: `url(${p.player.playerCard})`, backgroundPosition: 'center 5%' }} /> : <div className="absolute inset-0 bg-gradient-to-b from-slate-700 to-slate-900" />}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+                <div className="relative z-10 h-full flex flex-col justify-between p-1.5">
+                    <div className="flex justify-between items-start w-full">
+                        {countryCodeAlpha2 && <img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} className="w-3 h-auto rounded-sm opacity-90" alt="" />}
+                        <div className="flex flex-col items-end leading-none">
+                            <span className="font-russo text-lg text-[#00F2FE]">{p.player.rating}</span>
+                            <span className="text-[5px] font-black text-white">OVR</span>
+                        </div>
+                    </div>
+                    <div className="w-full text-center pb-1"><span className="text-white font-russo text-[10px] uppercase truncate px-1">{p.player.nickname}</span></div>
+                </div>
             </div>
-            <div className="w-[115px] md:w-[165px] h-full flex flex-col justify-end z-20 pb-4 shrink-0">
-                <PodiumSpot p={p1} rank={1} height="130px" color="#FFD700" delay="delay-0" t={t} />
-            </div>
-            <div className="w-[115px] md:w-[165px] h-full flex flex-col justify-end z-10 shrink-0">
-                <PodiumSpot p={p3} rank={3} height="75px" color="#CD7F32" delay="delay-200" t={t} />
-            </div>
-        </div>
-    );
-};
-
-// FIX: Added StandbyScreen to resolve 'Cannot find name' error.
-const StandbyScreen: React.FC = () => {
-    const t = useTranslation();
-    return (
-        <div className="h-full flex flex-col items-center justify-center opacity-20">
-            <TrophyIcon className="w-32 h-32 mb-6" />
-            <span className="font-orbitron text-xl uppercase tracking-[0.5em] font-black">{t.hubAwaitingStats}</span>
-        </div>
-    );
-};
-
-// FIX: Added MatchEnvironmentWidget to resolve 'Cannot find name' error.
-const MatchEnvironmentWidget: React.FC<{ session: Session, t: any }> = ({ session, t }) => {
-    const data = {
-        location: session.location || "PITCH DATA UNAVAILABLE",
-        time: session.timeString || "19:30 - 21:00",
-        temp: session.weather ? `${session.weather.temperature}°C` : "26°C",
-        condition: session.weather?.condition ? session.weather.condition.toUpperCase() : "CLEAR"
+        );
     };
 
+    const PodiumSpot = ({ p, rank, height, color, delay }: { p?: TopPlayerStats, rank: number, height: string, color: string, delay: string }) => (
+        <div className={`flex flex-col items-center justify-end h-full ${delay} animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both relative`}>
+            {p ? <div className="mb-3 relative z-20 flex flex-col items-center w-full px-1"><MiniCard p={p} /></div> : <div className="mb-12 opacity-10"><div className="w-12 h-16 rounded border-2 border-dashed border-white/30"></div></div>}
+            
+            <div className="w-full relative overflow-hidden backdrop-blur-md rounded-t-xl flex flex-col items-center justify-center pt-2 pb-1.5 z-10" style={{ height: height, background: `linear-gradient(to bottom, ${color}35, ${color}08, transparent)`, borderTop: `2px solid ${color}` }}>
+                {p && (
+                    <div className="relative z-10 flex flex-col items-center">
+                        <span className="font-russo text-xl text-white leading-none tracking-tighter">{p.score.toFixed(1)}</span>
+                        <span className="text-[5.5px] font-black text-white/50 uppercase tracking-[0.2em] mt-1">{t.hubImpact}</span>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+
     return (
-        <div className="flex flex-col h-full justify-around">
-            <div className="flex items-center gap-4 bg-white/[0.03] p-4 rounded-2xl border border-white/5">
-                <div className="w-12 h-12 rounded-xl bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE]">
-                    <Target className="w-6 h-6" />
-                </div>
-                <div>
-                    <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">{t.hubLocation}</p>
-                    <p className="font-chakra font-bold text-sm text-slate-200 uppercase">{data.location}</p>
-                </div>
-            </div>
-            <div className="flex items-center gap-4 bg-white/[0.03] p-4 rounded-2xl border border-white/5">
-                <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50">
-                    <HistoryIcon className="w-6 h-6" />
-                </div>
-                <div>
-                    <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">{t.hubTimeFrame}</p>
-                    <p className="font-mono font-bold text-sm text-slate-200 tracking-widest">{data.time}</p>
-                </div>
-            </div>
-            <div className="flex items-center gap-4 bg-indigo-900/20 p-4 rounded-2xl border border-indigo-500/20">
-                <div className="text-3xl">
-                    {data.condition.includes('RAIN') ? '🌧️' : data.condition.includes('CLOUD') ? '☁️' : '🌙'}
-                </div>
-                <div>
-                    <p className="text-[10px] font-black text-indigo-300/50 uppercase tracking-[0.2em]">{t.hubWeather}</p>
-                    <p className="font-russo text-xl text-slate-200">{data.temp} <span className="text-[10px] text-indigo-300 font-bold ml-1">{data.condition}</span></p>
-                </div>
-            </div>
+        <div className="flex items-end justify-center gap-3 h-full px-4 relative">
+            <div className="w-[115px] md:w-[165px] h-full flex flex-col justify-end z-10 shrink-0"><PodiumSpot p={p2} rank={2} height="90px" color="#94a3b8" delay="delay-100" /></div>
+            <div className="w-[115px] md:w-[165px] h-full flex flex-col justify-end z-20 pb-4 shrink-0"><PodiumSpot p={p1} rank={1} height="130px" color="#FFD700" delay="delay-0" /></div>
+            <div className="w-[115px] md:w-[165px] h-full flex flex-col justify-end z-10 shrink-0"><PodiumSpot p={p3} rank={3} height="75px" color="#CD7F32" delay="delay-200" /></div>
         </div>
     );
 };
 
-// FIX: Added NewsVanguardCard to resolve 'Cannot find name' error.
 const NewsVanguardCard: React.FC<{ item: NewsItem }> = ({ item }) => {
     return (
-        <div className="mb-3 last:mb-0 relative group/news p-3 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-white/10 transition-all">
-            <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center shrink-0 border border-white/5">
-                    {item.isHot ? <Zap className="w-4 h-4 text-[#00F2FE]" /> : <StarIcon className="w-4 h-4 text-white/20" />}
-                </div>
-                <div className="min-w-0 flex-grow">
-                    <div className="flex justify-between items-center mb-0.5">
-                        <span className="font-chakra font-black text-[11px] text-white uppercase truncate">{item.playerName}</span>
-                        <span className="font-mono text-[7px] text-white/20">{new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+        <div className="mb-3 relative px-1 animate-in fade-in slide-in-from-right-4 duration-500">
+            <div className="relative rounded-2xl overflow-hidden p-3.5 border border-indigo-500/20 bg-gradient-to-br from-indigo-900/40 to-black">
+                <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+                <div className="absolute top-3.5 left-0 w-1.5 h-7 rounded-r-full bg-[#818cf8]" style={{ boxShadow: '0 0 10px #818cf8' }}></div>
+                <div className="relative z-10 flex flex-col gap-1 pl-3">
+                    <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-[7px] font-black tracking-[0.2em] uppercase px-1.5 py-0.5 rounded-sm bg-white/5 text-indigo-300">
+                            {item.type.replace('_', ' ')}
+                        </span>
+                        <div className="flex items-center gap-1.5 ml-2">
+                             <span className="text-[7px] font-mono text-white/20">
+                                {new Date(item.timestamp).toLocaleDateString([], {day:'2-digit', month:'2-digit'})}
+                            </span>
+                            <span className="text-[7px] font-mono text-white/40">
+                                {new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+                            </span>
+                        </div>
+                        {item.isHot && <Zap className="w-3 h-3 text-indigo-400 animate-pulse" />}
                     </div>
-                    <p className="text-[10px] text-white/40 truncate leading-none uppercase tracking-wide">{item.message.replace(item.playerName, '').trim() || item.subMessage}</p>
+                    <div className="flex items-baseline gap-2 overflow-hidden">
+                        <h4 className="text-[14px] font-black text-slate-100 uppercase shrink-0 tracking-wide">
+                            {item.playerName}
+                        </h4>
+                        <p className="text-[12px] text-indigo-100/60 leading-tight truncate italic font-chakra">
+                            {item.message.replace(item.playerName, '').trim() || item.subMessage}
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
     );
 };
 
-// FIX: Added TacticalRosters to resolve 'Cannot find name' error.
-const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: Session, teamStats: any[], t: any }> = ({ teams, players, session, teamStats, t }) => {
+const getImpactScore = (stats: PlayerStats): number => {
+    let score = 0;
+    const nonCleanSheetWins = stats.wins - (stats.cleanSheetWins || 0);
+    score += nonCleanSheetWins * 2.0;
+    score += (stats.cleanSheetWins || 0) * 2.5;
+    score += stats.draws * 0.5;
+    score += stats.goals * 1.0;
+    score += stats.assists * 1.0;
+    score -= stats.ownGoals * 1.0;
+    return score;
+};
+
+const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t }) => {
+    const getWeatherIcon = (cond: WeatherCondition | string = 'clear') => {
+        const c = cond.toLowerCase();
+        if (c.includes('rain') || c.includes('storm')) return <CloudRainIcon className="w-16 h-16 text-slate-200/90" />;
+        if (c.includes('cloud') || c.includes('fog')) return <CloudIcon className="w-16 h-16 text-slate-200/90" />;
+        return <MoonIcon className="w-16 h-16 text-slate-200/90" />;
+    };
+
+    // Construct Maps Search Link
+    const mapsLink = session.location 
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(session.location)}` 
+        : null;
+
     return (
-        <div className="flex-grow overflow-y-auto custom-hub-scrollbar p-3 space-y-4">
-            {teams.map(team => {
-                const stats = teamStats.find(ts => ts.team.id === team.id);
-                const roster = team.playerIds.map(id => players.find(p => p.id === id)).filter(Boolean) as Player[];
-                return (
-                    <div key={team.id} className="relative p-3 rounded-2xl bg-white/[0.02] border border-white/5">
-                        <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-2">
-                            <div className="flex items-center gap-2">
-                                <SubtleDashboardAvatar team={team} isLight />
-                                <span className="font-russo text-[10px] text-white uppercase tracking-wider">{team.name}</span>
-                            </div>
-                            <div className="flex gap-3">
-                                <div className="flex flex-col items-center">
-                                    <span className="text-[10px] font-black text-white leading-none">{stats?.points || 0}</span>
-                                    <span className="text-[6px] text-white/20 uppercase font-black">PTS</span>
-                                </div>
-                                <div className="flex flex-col items-center">
-                                    <span className="text-[10px] font-black text-white leading-none">{stats?.goalsFor || 0}</span>
-                                    <span className="text-[6px] text-white/20 uppercase font-black">GF</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
-                            {roster.map(p => (
-                                <div key={p.id} className="px-2 py-1 rounded-full bg-white/5 border border-white/5">
-                                    <span className="text-[9px] font-bold text-slate-300 uppercase">{p.nickname}</span>
-                                </div>
-                            ))}
-                        </div>
+        <div className="flex flex-col h-full justify-between py-2">
+            <div className="flex items-start gap-3 border-b border-white/5 pb-4">
+                <div className="w-10 h-10 rounded-xl bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shrink-0"><MapPinIcon className="w-5 h-5" /></div>
+                <div className="flex flex-col pt-0.5 min-w-0">
+                    <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">{t.hubLocation}</span>
+                    {mapsLink ? (
+                        <a 
+                            href={mapsLink} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="group/loc flex items-center gap-1.5 font-chakra font-bold text-base text-slate-200 uppercase tracking-wide truncate max-w-[200px] md:max-w-[250px] hover:text-[#00F2FE] transition-colors"
+                        >
+                            <span className="truncate border-b border-white/10 group-hover/loc:border-[#00F2FE]/50">{session.location}</span>
+                            <svg className="w-3 h-3 opacity-30 group-hover/loc:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+                        </a>
+                    ) : (
+                        <span className="font-chakra font-bold text-base text-slate-200 uppercase tracking-wide truncate max-w-[200px] md:max-w-[250px]">PITCH DATA UNAVAILABLE</span>
+                    )}
+                </div>
+            </div>
+            <div className="flex items-center gap-3 border-b border-white/5 py-4">
+                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0"><ClockIcon className="w-5 h-5" /></div>
+                <div className="flex flex-col"><span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">{t.hubTimeFrame}</span><span className="font-mono font-bold text-xl text-slate-200 tracking-widest">{session.timeString || "19:30 - 21:00"}</span></div>
+            </div>
+            <div className="flex-grow flex flex-col justify-end pt-2">
+                <div className="relative rounded-2xl bg-gradient-to-br from-indigo-900/40 to-black border border-indigo-500/20 p-4 flex items-center justify-between overflow-hidden">
+                    <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/diagonal-striped-brick.png')]"></div>
+                    <div className="relative z-10 flex flex-col">
+                        <span className="text-[9px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-1">{t.hubWeather}</span>
+                        <div className="flex items-baseline gap-1"><span className="font-russo text-4xl text-slate-200 leading-none">{session.weather?.temperature || 26}°C</span><TermometerIcon className="w-4 h-4 text-white/40" /></div>
+                        <span className="font-chakra text-xs text-indigo-200 font-bold uppercase tracking-wider mt-1">{session.weather?.condition || "CLEAR"}</span>
                     </div>
-                );
-            })}
+                    <div className="relative z-10">{getWeatherIcon(session.weather?.condition)}</div>
+                </div>
+            </div>
         </div>
     );
 };
+
+// --- MAIN DASHBOARD EXPORT ---
 
 export const PublicHubDashboard: React.FC = () => {
     const { history, newsFeed, allPlayers } = useApp();
@@ -290,7 +403,7 @@ export const PublicHubDashboard: React.FC = () => {
                     return next;
                 });
                 setAutoSwitchProgress(0);
-                setExpandedMatchId(null); 
+                setExpandedMatchId(null); // Close expanded match on auto-switch
             } else {
                 setAutoSwitchProgress(progress);
             }
@@ -348,8 +461,8 @@ export const PublicHubDashboard: React.FC = () => {
 
                     <div className="flex-[3] min-h-0 shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <HubCard title={t.hubSessionNews} icon={<Zap />} accent="#00F2FE" variant="standings" className="h-full min-h-0" bodyClassName="p-0 flex flex-col relative">
-                            {/* SCROLL FADE - UNIFIED h-10 */}
-                            <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-[#05070a] via-[#05070a]/60 to-transparent z-20 pointer-events-none"></div>
+                            {/* SCROLL FADE OVERLAYS */}
+                            <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
                             
                             <div className="flex-grow relative overflow-y-auto custom-hub-scrollbar p-3 bg-black/10">
                                 <div className="py-2">
@@ -437,8 +550,8 @@ export const PublicHubDashboard: React.FC = () => {
                         className="flex-grow min-h-0" 
                         bodyClassName="flex flex-col h-full min-h-0 relative"
                     >
-                        {/* SCROLL FADE - UNIFIED h-10 */}
-                        <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-[#05070a] via-[#05070a]/60 to-transparent z-20 pointer-events-none"></div>
+                        {/* SCROLL FADE OVERLAYS FOR RIGHT SIDEBAR */}
+                        <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
 
                         <div className="flex-grow overflow-y-auto custom-hub-scrollbar h-full">
                             <div className="py-2">

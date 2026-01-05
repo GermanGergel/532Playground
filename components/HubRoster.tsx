@@ -155,7 +155,7 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                 </div>
 
                 <div className="flex-grow relative overflow-hidden flex flex-col">
-                    <div className="flex-grow overflow-y-auto custom-hub-scrollbar p-4 pt-4 space-y-3.5 pb-12">
+                    <div className="flex-grow overflow-y-auto custom-hub-scrollbar p-4 pt-4 space-y-3.5">
                         {confirmedPersonnel.map((person) => {
                             const isSelected = viewMode === 'intel' ? selectedPlayerId === person.id : duelSlots.includes(person.id);
                             const tierColor = TIER_COLORS[person.tier] || '#94a3b8';
@@ -209,12 +209,12 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                             );
                         })}
                     </div>
-                    {/* SCROLL FADE - REDUCED HEIGHT (h-10) AND INCREASED SOFTNESS (via-60) */}
-                    <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-[#05070a] via-[#05070a]/60 to-transparent z-20 pointer-events-none"></div>
+                    {/* SCROLL FADE BOTTOM ONLY - HEIGHT REDUCED TO h-10 */}
+                    <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-[#05070a] to-transparent z-20 pointer-events-none"></div>
                 </div>
             </div>
 
-            {/* CONTENT AREA - RIGHT COLUMN */}
+            {/* CONTENT AREA - RIGHT COLUMN - BACKGROUND UPDATED TO #05070a */}
             <div className="flex-grow relative bg-[#05070a] overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-black to-black opacity-60"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
