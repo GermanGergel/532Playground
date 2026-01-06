@@ -51,8 +51,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Safety lock: Don't auto-save to DB until we have confirmed sync with cloud
   const [isSaveEnabled, setIsSaveEnabled] = React.useState(false);
 
-  const [allPlayers, setAllPlayers] = React.useState<Player[]>([]);
   const [activeSession, setActiveSession] = React.useState<Session | null>(null);
+  const [allPlayers, setAllPlayers] = React.useState<Player[]>([]);
   const [history, setHistory] = React.useState<Session[]>([]);
   const [newsFeed, setNewsFeed] = React.useState<NewsItem[]>([]);
   const [language, setLanguageState] = React.useState<Language>('en');
@@ -81,24 +81,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             // Remove Loading Screen quickly for UX
             setTimeout(() => setIsLoading(false), 500);
 
-            // 2. BACKGROUND SYNC
+            // 2. BACKGROUND SYNC (Crucial for fixing the "65 vs 68" issue)
+            // We do NOT enable saving yet. We wait to see if Cloud has newer data.
             setTimeout(async () => {
                 try {
                     const remotePlayers = await fetchRemotePlayers();
                     if (remotePlayers && remotePlayers.length > 0) {
-                        setAllPlayers(currentLocalPlayers => {
-                            // Smart Merge: Only update if cloud data is different
-                            // This prevents unnecessary re-renders that cause flickering
-                            const isDifferent = JSON.stringify(currentLocalPlayers) !== JSON.stringify(remotePlayers);
-                            if (!isDifferent) return currentLocalPlayers;
-                            
-                            console.log("Context: Syncing players from Cloud.");
-                            return remotePlayers;
-                        });
+                        console.log("Context: Overwriting local players with fresh Cloud data.");
+                        setAllPlayers(remotePlayers);
                     }
                 } catch (e) {
                     console.error("Background sync failed", e);
                 } finally {
+                    // 3. ENABLE SAVING
+                    // Only NOW do we allow the app to write back to the DB.
+                    // This prevents the 'stale local data' from overwriting the 'fresh cloud data' on boot.
+                    console.log("Context: Save Guard Lifted. Auto-save enabled.");
                     setIsSaveEnabled(true);
                 }
             }, 1000);
@@ -106,7 +104,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         } catch (error) {
             console.error("Critical error loading data:", error);
             setIsLoading(false);
-            setIsSaveEnabled(true); 
+            setIsSaveEnabled(true); // Enable anyway so user can at least work offline
         }
     };
 
@@ -129,7 +127,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   const fetchFullNews = React.useCallback(async () => {
-      const fullNews = await loadNewsFromDB(); 
+      const fullNews = await loadNewsFromDB(); // No limit = full fetch
       if (fullNews) {
           setNewsFeed(prev => {
               const demoNews = prev.filter(n => n.id.startsWith('demo_'));
@@ -143,6 +141,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   // --- PERSISTENCE EFFECT HOOKS (Save to DB) ---
+  // Added !isLoading AND isSaveEnabled checks to all save hooks
+
   React.useEffect(() => {
     if(!isLoading && isSaveEnabled) {
         savePlayersToDB(allPlayers);
@@ -204,6 +204,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#1A1D24]">
             <div className="relative flex flex-col items-center justify-center w-64 h-64">
+                {/* Rotating Ring */}
                 <div className="absolute inset-0 animate-spin" style={{ animationDuration: '2s' }}>
                     <svg viewBox="0 0 100 100" className="w-full h-full">
                         <defs>
@@ -218,11 +219,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                             stroke="url(#ringGradient)" 
                             strokeWidth="2"
                             strokeLinecap="round"
-                            strokeDasharray="200 300" 
+                            strokeDasharray="200 300" // Creates the partial arc effect
                         />
                     </svg>
                 </div>
 
+                {/* Static Text Content */}
                 <div className="flex flex-col items-center justify-center z-10">
                     <h1 className="text-5xl font-black text-[#00F2FE] tracking-tighter" style={{ textShadow: '0 0 15px rgba(0, 242, 254, 0.5)' }}>
                         532

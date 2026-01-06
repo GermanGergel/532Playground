@@ -627,7 +627,7 @@ export const PublicHubScreen: React.FC = () => {
                 }}
             />
 
-            {/* SQUAD OF THE MONTH BADGE - NOW CONDITIONALLY INTERACTIVE */}
+            {/* SQUAD OF THE MONTH BADGE - SET TO DISABLED AS REQUESTED */}
             {!isDashboardOpen && (
                 <SquadOfTheMonthBadge 
                     onClick={() => setIsTotmOpen(true)} 

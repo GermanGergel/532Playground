@@ -20,7 +20,7 @@ export const SquadOfTheMonthBadge: React.FC<SquadOfTheMonthBadgeProps> = ({ onCl
         onClick={isDisabled ? undefined : onClick}
         disabled={isDisabled}
         className={`group relative flex items-center justify-center w-28 h-28 transition-all duration-500 
-          ${isDisabled ? 'cursor-default opacity-100' : 'hover:scale-110 active:scale-95 cursor-pointer'}
+          ${isDisabled ? 'cursor-default' : 'hover:scale-110 active:scale-95 cursor-pointer'}
         `}
       >
         {/* --- 1. ВРАЩАЮЩЕЕСЯ ТЕКСТОВОЕ КОЛЬЦО --- */}

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Routes, Route, useLocation, useNavigate, matchPath } from 'react-router-dom';
+import { Routes, Route, useLocation, matchPath } from 'react-router-dom';
 import { BottomNav } from './components';
 import { 
     HomeScreen, NewGameSetupScreen, AssignPlayersScreen, LiveMatchScreen, 
@@ -14,7 +14,6 @@ import { useApp } from './context';
 
 const App: React.FC = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   const { activeSession, setPlayerDbSort, setPlayerDbSearch } = useApp();
 
   // Глобальная защита от случайной перезагрузки во время активной сессии
@@ -40,18 +39,34 @@ const App: React.FC = () => {
       }
   }, [location.pathname, setPlayerDbSort, setPlayerDbSearch]);
 
+  // Список путей, где НЕ нужна нижняя навигация
   const pathsWithoutNav = [
     '/public-profile/:id',
     '/promo',
     '/hub'
   ];
 
+  // Список путей, которые должны быть во весь экран (без ограничений по ширине)
+  const fullWidthPaths = [
+    '/hub',
+    '/promo',
+    '/public-profile/:id'
+  ];
+
   const showNav = !pathsWithoutNav.some(path => matchPath(path, location.pathname));
-  const isHub = !!matchPath('/hub', location.pathname);
+  const isFullWidth = fullWidthPaths.some(path => matchPath(path, location.pathname));
 
   return (
-    <div className="min-h-screen bg-dark-bg text-dark-text font-sans selection:bg-dark-accent-start selection:text-dark-bg">
-      <div className={`${isHub ? 'w-full' : 'max-w-md mx-auto'} min-h-screen relative shadow-2xl shadow-black/50 bg-dark-bg ${showNav ? 'pb-24' : ''}`}>
+    <div className="min-h-screen bg-[#0a0c10] text-dark-text font-sans selection:bg-dark-accent-start selection:text-dark-bg">
+      {/* 
+          Для Хаба и Промо используем всю ширину (w-full).
+          Для админ-панели используем max-w-lg (мобильный вид), но центрируем на десктопе.
+      */}
+      <div className={`
+        min-h-screen relative shadow-2xl shadow-black/50 bg-dark-bg transition-all duration-500
+        ${isFullWidth ? 'w-full' : 'max-w-lg mx-auto border-x border-white/5'}
+        ${showNav ? 'pb-24' : ''}
+      `}>
         <Routes>
           <Route path="/" element={<HomeScreen />} />
           <Route path="/setup" element={<NewGameSetupScreen />} />
@@ -74,7 +89,12 @@ const App: React.FC = () => {
           <Route path="/promo" element={<PromoScreen />} />
           <Route path="/hub" element={<PublicHubScreen />} />
         </Routes>
-        {showNav && <BottomNav />}
+        
+        {showNav && (
+            <div className="max-w-md mx-auto">
+                <BottomNav />
+            </div>
+        )}
       </div>
     </div>
   );

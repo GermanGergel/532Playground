@@ -7,7 +7,7 @@ import { NewsItem, Player, Team, WeatherCondition } from '../types';
 import { TrophyIcon, Zap, History as HistoryIcon, Users, AwardIcon, Target } from '../icons';
 import { useTranslation } from '../ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
-import { TeamAvatar, PlayerAvatar } from './avatars';
+import { TeamAvatar } from './avatars';
 
 // --- LOCAL ICONS FOR WIDGET ---
 const MapPinIcon = ({ className }: { className?: string }) => (
@@ -29,6 +29,7 @@ const TermometerIcon = ({ className }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z"/></svg>
 );
 
+// --- TACTICAL SOCCER BACKGROUND (CHALK STYLE) ---
 const SoccerTacticsBackground: React.FC = () => (
     <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.25]">
         <svg width="100%" height="100%" viewBox="0 0 800 450" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
@@ -84,6 +85,7 @@ const SoccerTacticsBackground: React.FC = () => (
     </div>
 );
 
+// --- STANDBY SCREEN ---
 const StandbyScreen: React.FC = () => {
     const t = useTranslation();
     return (
@@ -107,6 +109,8 @@ const StandbyScreen: React.FC = () => {
     );
 };
 
+// --- DASHBOARD UI HELPERS ---
+
 const SubtleDashboardAvatar: React.FC<{ team: any; size?: string; isLight?: boolean }> = ({ team }) => {
     const color = team?.color || '#A9B1BD';
     return (
@@ -116,7 +120,7 @@ const SubtleDashboardAvatar: React.FC<{ team: any; size?: string; isLight?: bool
                     <img src={team.logo} className="w-full h-full rounded-full object-cover" alt="" />
                 ) : (
                     <svg className="w-[55%] h-[55%]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M20.38 3.46L16 2a4 4 0 0 0-8 0L3.62 3.46L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99 .84H6v10c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" fill={color} fillOpacity="0.35" stroke={color} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M20.38 3.46L16 2a4 4 0 0 0-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99 .84H6v10c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" fill={color} fillOpacity="0.35" stroke={color} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                 )}
             </div>
@@ -241,24 +245,14 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
     const p1 = players.find(p => p.rank === 1);
     const p2 = players.find(p => p.rank === 2);
     const p3 = players.find(p => p.rank === 3);
-
     const MiniCard = ({ p }: { p: TopPlayerStats }) => {
         const countryCodeAlpha2 = useMemo(() => p.player.countryCode ? convertCountryCodeAlpha3ToAlpha2(p.player.countryCode) : null, [p.player.countryCode]);
         const sizeClasses = p.rank === 1 ? 'w-[110px] h-[155px] md:w-[135px] md:h-[185px] z-20' : 'w-[95px] h-[130px] md:w-[115px] md:h-[155px] z-10';
-        
         return (
-            <div className={`relative rounded-lg overflow-hidden border border-white/20 shadow-lg flex flex-col shrink-0 ${sizeClasses} bg-[#0f1216]`}>
-                <div className="absolute inset-0">
-                    <PlayerAvatar 
-                        player={p.player} 
-                        size="xl" 
-                        className="!w-full !h-full !rounded-none" 
-                        isSquare={true}
-                    />
-                </div>
-                
+            <div className={`relative rounded-lg overflow-hidden border border-white/20 shadow-lg flex flex-col shrink-0 ${sizeClasses}`}>
+                {p.player.playerCard ? <div className="absolute inset-0 bg-cover bg-no-repeat" style={{ backgroundImage: `url(${p.player.playerCard})`, backgroundPosition: 'center 5%' }} /> : <div className="absolute inset-0 bg-gradient-to-b from-slate-700 to-slate-900" />}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
-                <div className="relative z-10 h-full flex flex-col justify-between p-1.5 pointer-events-none">
+                <div className="relative z-10 h-full flex flex-col justify-between p-1.5">
                     <div className="flex justify-between items-start w-full">
                         {countryCodeAlpha2 && <img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} className="w-3 h-auto rounded-sm opacity-90" alt="" />}
                         <div className="flex flex-col items-end leading-none">
@@ -271,7 +265,6 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
             </div>
         );
     };
-
     const PodiumSpot = ({ p, rank, height, color, delay }: { p?: TopPlayerStats, rank: number, height: string, color: string, delay: string }) => (
         <div className={`flex flex-col items-center justify-end h-full ${delay} animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both relative`}>
             {p ? <div className="mb-3 relative z-20 flex flex-col items-center w-full px-1"><MiniCard p={p} /></div> : <div className="mb-12 opacity-10"><div className="w-12 h-16 rounded border-2 border-dashed border-white/30"></div></div>}
@@ -285,7 +278,6 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
             </div>
         </div>
     );
-
     return (
         <div className="flex items-end justify-center gap-3 h-full px-4 relative">
             <div className="w-[115px] md:w-[165px] h-full flex flex-col justify-end z-10 shrink-0"><PodiumSpot p={p2} rank={2} height="90px" color="#94a3b8" delay="delay-100" /></div>
@@ -444,6 +436,7 @@ export const PublicHubDashboard: React.FC = () => {
                     </div>
                     <div className="flex-[3] min-h-0 shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <HubCard title={t.hubSessionNews} icon={<Zap />} accent="#00F2FE" variant="standings" className="h-full min-h-0" bodyClassName="p-0 flex flex-col relative">
+                            {/* ЭФФЕКТ МЯГКОГО СКРЫТИЯ - Obsidian Black (#01040a) */}
                             <div className="absolute bottom-0 left-0 right-0 h-3 bg-gradient-to-t from-[#01040a] to-transparent z-20 pointer-events-none"></div>
                             <div className="flex-grow relative overflow-y-auto custom-hub-scrollbar p-3 bg-black/10">
                                 <div className="py-2">
@@ -500,6 +493,7 @@ export const PublicHubDashboard: React.FC = () => {
                         icon={activeRightTab === 'players' ? <Users /> : <HistoryIcon />} 
                         variant="standings" accent="#00F2FE" className="flex-grow min-h-0" bodyClassName="flex flex-col h-full min-h-0 relative"
                     >
+                        {/* ЭФФЕКТ МЯГКОГО СКРЫТИЯ - Obsidian Black (#01040a) */}
                         <div className="absolute bottom-0 left-0 right-0 h-3 bg-gradient-to-t from-[#01040a] to-transparent z-20 pointer-events-none"></div>
                         <div className="flex-grow overflow-y-auto custom-hub-scrollbar h-full">
                             <div className="py-2">
