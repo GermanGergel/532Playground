@@ -11,16 +11,19 @@ export const SquadOfTheMonthBadge: React.FC<SquadOfTheMonthBadgeProps> = ({ onCl
   const radius = 39;
   const circumference = 2 * Math.PI * radius; 
 
+  // Если заблокировано, используем div вместо button для исключения нативных браузерных реакций
+  const Tag = isDisabled ? 'div' : 'button';
+
   return (
     <div 
-      className="fixed right-4 z-[140] animate-in fade-in zoom-in duration-1000"
+      className={`fixed right-4 z-[140] animate-in fade-in zoom-in duration-1000 ${isDisabled ? 'pointer-events-none select-none' : 'pointer-events-auto'}`}
       style={{ top: '120px' }}
     >
-      <button
+      <Tag
         onClick={isDisabled ? undefined : onClick}
-        disabled={isDisabled}
-        className={`group relative flex items-center justify-center w-28 h-28 transition-all duration-500 
-          ${isDisabled ? 'cursor-default pointer-events-none grayscale opacity-80' : 'hover:scale-110 active:scale-95 cursor-pointer pointer-events-auto'}
+        {...(!isDisabled && { type: 'button' })}
+        className={`group relative flex items-center justify-center w-28 h-28 transition-all duration-500 outline-none
+          ${isDisabled ? 'cursor-default grayscale opacity-80' : 'hover:scale-110 active:scale-95 cursor-pointer'}
         `}
       >
         {/* --- 1. ВРАЩАЮЩЕЕСЯ ТЕКСТОВОЕ КОЛЬЦО --- */}
@@ -128,7 +131,7 @@ export const SquadOfTheMonthBadge: React.FC<SquadOfTheMonthBadgeProps> = ({ onCl
             </svg>
         </div>
 
-      </button>
+      </Tag>
       
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes spin-slow {
