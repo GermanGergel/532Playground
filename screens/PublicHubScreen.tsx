@@ -542,7 +542,7 @@ export const PublicHubScreen: React.FC = () => {
     const [dashboardView, setDashboardView] = useState<DashboardViewType>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
 
-    // DETERMINING ENVIRONMENT AS REQUESTED
+    // DETERMINING ENVIRONMENT
     const isDev = useMemo(() => {
         return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     }, []);
@@ -627,11 +627,11 @@ export const PublicHubScreen: React.FC = () => {
                 }}
             />
 
-            {/* SQUAD OF THE MONTH BADGE - NOW INTERACTIVE ONLY ON LOCALHOST */}
+            {/* SQUAD OF THE MONTH BADGE - NOW CONDITIONALLY INTERACTIVE */}
             {!isDashboardOpen && (
                 <SquadOfTheMonthBadge 
                     onClick={() => setIsTotmOpen(true)} 
-                    isDisabled={!isDev} 
+                    isDisabled={true} 
                 />
             )}
 
