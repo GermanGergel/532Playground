@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -10,6 +11,8 @@ import { useTranslation } from '../ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { ClubIntelligenceDashboard } from '../components/ClubIntelligenceDashboard';
 import { RadioPlayer } from '../components/RadioPlayer';
+import { SquadOfTheMonthBadge } from '../components/SquadOfTheMonthBadge';
+import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
 
 // --- SUB-COMPONENTS ---
 
@@ -214,15 +217,13 @@ const HubNav: React.FC<{
     return (
         <nav className={navContainerClass}>
             <svg className="absolute w-0 h-0 invisible">
-                <defs>
-                    <filter id="grungeFilter">
-                        <feTurbulence type="fractalNoise" baseFrequency="0.25" numOctaves="3" result="noise" />
-                        <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" />
-                        <feComponentTransfer>
-                            <feFuncA type="linear" slope="0.9" />
-                        </feComponentTransfer>
-                    </filter>
-                </defs>
+                <filter id="grungeFilter">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.25" numOctaves="3" result="noise" />
+                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" />
+                    <feComponentTransfer>
+                        <feFuncA type="linear" slope="0.9" />
+                    </feComponentTransfer>
+                </filter>
             </svg>
 
             <style dangerouslySetInnerHTML={{ __html: `
@@ -535,6 +536,9 @@ export const PublicHubScreen: React.FC = () => {
     const { allPlayers, history } = useApp();
     const [isDashboardOpen, setIsDashboardOpen] = useState(false);
     
+    // -- NEW: State for Team of the Month Modal --
+    const [isTotmOpen, setIsTotmOpen] = useState(false);
+    
     const [dashboardView, setDashboardView] = useState<DashboardViewType>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
 
@@ -547,10 +551,22 @@ export const PublicHubScreen: React.FC = () => {
         return () => { document.body.style.overflow = ''; };
     }, [isDashboardOpen]);
 
-    const latestSessionDate = useMemo(() => {
-        if (!history || history.length === 0) return '';
-        return new Date(history[0].date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    // SMART SESSION FILTERING:
+    // Finds the latest session that DOES NOT contain "Demo" or "Test" in its name.
+    const latestPublicSession = useMemo(() => {
+        return history.find(s => {
+            const name = (s.sessionName || '').toLowerCase();
+            return !name.includes('demo') && 
+                   !name.includes('test') && 
+                   !name.includes('демо') && 
+                   !name.includes('тест');
+        }) || null; 
     }, [history]);
+
+    const latestSessionDate = useMemo(() => {
+        if (!latestPublicSession) return '';
+        return new Date(latestPublicSession.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    }, [latestPublicSession]);
 
     const displayData = useMemo(() => {
         const confirmedRealPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
@@ -589,7 +605,7 @@ export const PublicHubScreen: React.FC = () => {
         setDashboardView(tab as DashboardViewType);
     };
 
-    // ОПРЕДЕЛЕНИЕ ЦВЕТА ПОДЛОЖКИ - УНИФИЦИРОВАНО НА ОБСИДИАН ДЛЯ ВСЕХ ВКЛАДОК
+    // ОПРЕДЕЛЕНИЕ ЦВЕТА ПОДЛОЖКИ - УНИФИЦИРОВАНО НА САМЫЙ ТЕМНЫЙ
     const getBottomPatchColor = () => {
         if (dashboardView === 'archive' || dashboardView === 'dashboard' || dashboardView === 'roster' || dashboardView === 'info') return '#01040a';
         return '#0a0c10';
@@ -597,6 +613,10 @@ export const PublicHubScreen: React.FC = () => {
 
     return (
         <div className="min-h-screen text-white relative selection:bg-[#00F2FE] selection:text-black bg-[#0a0c10] pt-px overscroll-none">
+            
+            {/* -- MODAL: Team of the Month -- */}
+            <TeamOfTheMonthModal isOpen={isTotmOpen} onClose={() => setIsTotmOpen(false)} />
+
             <style dangerouslySetInnerHTML={{__html: `html, body { background-color: #0a0c10; overscroll-behavior-y: none; }`}} />
             
             <div className={`fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50 z-[110]`}></div>
@@ -613,6 +633,11 @@ export const PublicHubScreen: React.FC = () => {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
             />
+
+            {/* SQUAD OF THE MONTH BADGE - NOW INTERACTIVE */}
+            {!isDashboardOpen && (
+                <SquadOfTheMonthBadge onClick={() => setIsTotmOpen(true)} />
+            )}
 
             <div 
                 className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none 

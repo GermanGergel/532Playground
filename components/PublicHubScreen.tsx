@@ -11,6 +11,8 @@ import { useTranslation } from '../ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { ClubIntelligenceDashboard } from '../components/ClubIntelligenceDashboard';
 import { RadioPlayer } from '../components/RadioPlayer';
+import { SquadOfTheMonthBadge } from '../components/SquadOfTheMonthBadge';
+import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
 
 // --- SUB-COMPONENTS ---
 
@@ -215,15 +217,13 @@ const HubNav: React.FC<{
     return (
         <nav className={navContainerClass}>
             <svg className="absolute w-0 h-0 invisible">
-                <defs>
-                    <filter id="grungeFilter">
-                        <feTurbulence type="fractalNoise" baseFrequency="0.25" numOctaves="3" result="noise" />
-                        <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" />
-                        <feComponentTransfer>
-                            <feFuncA type="linear" slope="0.9" />
-                        </feComponentTransfer>
-                    </filter>
-                </defs>
+                <filter id="grungeFilter">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.25" numOctaves="3" result="noise" />
+                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" />
+                    <feComponentTransfer>
+                        <feFuncA type="linear" slope="0.9" />
+                    </feComponentTransfer>
+                </filter>
             </svg>
 
             <style dangerouslySetInnerHTML={{ __html: `
@@ -536,8 +536,16 @@ export const PublicHubScreen: React.FC = () => {
     const { allPlayers, history } = useApp();
     const [isDashboardOpen, setIsDashboardOpen] = useState(false);
     
+    // -- NEW: State for Team of the Month Modal --
+    const [isTotmOpen, setIsTotmOpen] = useState(false);
+    
     const [dashboardView, setDashboardView] = useState<DashboardViewType>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
+
+    // DETERMINING ENVIRONMENT
+    const isDev = useMemo(() => {
+        return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    }, []);
 
     useEffect(() => {
         if (isDashboardOpen) {
@@ -598,6 +606,10 @@ export const PublicHubScreen: React.FC = () => {
 
     return (
         <div className="min-h-screen text-white relative selection:bg-[#00F2FE] selection:text-black bg-[#0a0c10] pt-px overscroll-none">
+            
+            {/* -- MODAL: Team of the Month -- */}
+            <TeamOfTheMonthModal isOpen={isTotmOpen} onClose={() => setIsTotmOpen(false)} />
+
             <style dangerouslySetInnerHTML={{__html: `html, body { background-color: #0a0c10; overscroll-behavior-y: none; }`}} />
             
             <div className={`fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50 z-[110]`}></div>
@@ -614,6 +626,14 @@ export const PublicHubScreen: React.FC = () => {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
             />
+
+            {/* SQUAD OF THE MONTH BADGE - NOW CONDITIONALLY INTERACTIVE */}
+            {!isDashboardOpen && (
+                <SquadOfTheMonthBadge 
+                    onClick={() => setIsTotmOpen(true)} 
+                    isDisabled={!isDev} 
+                />
+            )}
 
             <div 
                 className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none 

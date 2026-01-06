@@ -15,27 +15,38 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
     const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
 
-    // Выбираем самую свежую сессию по умолчанию
+    // FILTER: Exclude Demo/Test sessions from the history array entirely
+    const publicHistory = useMemo(() => {
+        return history.filter(s => {
+            const name = (s.sessionName || '').toLowerCase();
+            return !name.includes('demo') && 
+                   !name.includes('test') && 
+                   !name.includes('демо') && 
+                   !name.includes('тест');
+        });
+    }, [history]);
+
+    // Select the latest PUBLIC session by default
     useEffect(() => {
-        if (!selectedSessionId && history.length > 0) {
-            setSelectedSessionId(history[0].id);
+        if (!selectedSessionId && publicHistory.length > 0) {
+            setSelectedSessionId(publicHistory[0].id);
             if (onViewSession) {
-                const dateStr = new Date(history[0].date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+                const dateStr = new Date(publicHistory[0].date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
                 onViewSession(dateStr);
             }
         }
-    }, [history, selectedSessionId, onViewSession]);
+    }, [publicHistory, selectedSessionId, onViewSession]);
 
     const filteredHistory = useMemo(() => {
-        return history.filter(s => 
+        return publicHistory.filter(s => 
             s.sessionName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             new Date(s.date).toLocaleDateString().includes(searchTerm)
         );
-    }, [history, searchTerm]);
+    }, [publicHistory, searchTerm]);
 
     const selectedSession = useMemo(() => 
-        history.find(s => s.id === selectedSessionId), 
-    [history, selectedSessionId]);
+        publicHistory.find(s => s.id === selectedSessionId), 
+    [publicHistory, selectedSessionId]);
 
     const handleSessionClick = (session: any) => {
         setSelectedSessionId(session.id);
@@ -49,8 +60,8 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
         <div className="absolute inset-0 flex flex-row animate-in fade-in duration-700 overflow-hidden rounded-[2.5rem]">
             {/* --- SIDEBAR: SESSION LIST --- */}
             <div className="w-[350px] flex flex-col border-r border-white/5 bg-black/40 relative z-20 shrink-0">
-                {/* Header Section */}
-                <div className="pt-8 pl-40 flex flex-col items-start shrink-0"> 
+                {/* Header Section - Adjusted pt to 4 to align with right panel p-4 */}
+                <div className="pt-4 pl-40 flex flex-col items-start shrink-0"> 
                     <div className="flex flex-col items-center">
                         <span className="font-blackops text-[24px] text-[#00F2FE] uppercase tracking-[0.1em] italic leading-none" style={{ textShadow: '0 0 10px rgba(0,242,254,0.4)' }}>
                             ARCHIVE
@@ -61,8 +72,8 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                     </div>
                 </div>
 
-                {/* Search Bar */}
-                <div className="mt-6 px-4 mb-4 shrink-0">
+                {/* Search Bar - Reduced mt for compression */}
+                <div className="mt-2 px-4 mb-4 shrink-0">
                     <div className="relative group w-full h-[34px]"> 
                         <input 
                             type="text" 
@@ -137,7 +148,7 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                             </div>
                         )}
                     </div>
-                    {/* ЭФФЕКТ МЯГКОГО СКРЫТИЯ ВНИЗУ СПИСКА - ВЫСОТА УМЕНЬШЕНА */}
+                    {/* ЭФФЕКТ МЯГКОГО СКРЫТИЯ ВНИЗУ СПИСКА */}
                     <div className="absolute bottom-0 left-0 right-0 h-5 bg-gradient-to-t from-[#05070a] to-transparent z-30 pointer-events-none"></div>
                 </div>
             </div>
