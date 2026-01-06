@@ -544,7 +544,11 @@ export const PublicHubScreen: React.FC = () => {
 
     // DETERMINING ENVIRONMENT
     const isDev = useMemo(() => {
-        return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const hostname = window.location.hostname;
+        return hostname === 'localhost' || 
+               hostname === '127.0.0.1' || 
+               hostname.startsWith('192.168.') || 
+               hostname.startsWith('10.0.');
     }, []);
 
     useEffect(() => {

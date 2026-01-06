@@ -13,7 +13,7 @@ export const SquadOfTheMonthBadge: React.FC<SquadOfTheMonthBadgeProps> = ({ onCl
 
   return (
     <div 
-      className="fixed right-4 z-[140] animate-in fade-in zoom-in duration-1000"
+      className={`fixed right-4 z-[140] animate-in fade-in zoom-in duration-1000 ${isDisabled ? 'pointer-events-none opacity-80' : ''}`}
       style={{ top: '120px' }}
     >
       <button
