@@ -116,7 +116,7 @@ const SubtleDashboardAvatar: React.FC<{ team: any; size?: string; isLight?: bool
                     <img src={team.logo} className="w-full h-full rounded-full object-cover" alt="" />
                 ) : (
                     <svg className="w-[55%] h-[55%]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M20.38 3.46L16 2a4 4 0 0 0-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99 .84H6v10c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" fill={color} fillOpacity="0.35" stroke={color} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M20.38 3.46L16 2a4 4 0 0 0-8 0L3.62 3.46L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99 .84H6v10c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" fill={color} fillOpacity="0.35" stroke={color} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                 )}
             </div>
@@ -248,15 +248,12 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
         
         return (
             <div className={`relative rounded-lg overflow-hidden border border-white/20 shadow-lg flex flex-col shrink-0 ${sizeClasses} bg-[#0f1216]`}>
-                {/* 
-                    FIX: Replaced raw div background with PlayerAvatar logic for the Podium 
-                    to ensure consistent, non-flickering image loading.
-                */}
                 <div className="absolute inset-0">
                     <PlayerAvatar 
                         player={p.player} 
                         size="xl" 
                         className="!w-full !h-full !rounded-none" 
+                        isSquare={true}
                     />
                 </div>
                 

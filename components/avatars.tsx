@@ -58,7 +58,7 @@ export const TeamAvatar: React.FC<TeamAvatarProps> = ({ team, size = 'sm', onCli
                         className={`${baseClasses} w-full h-full flex items-center justify-center`}
                     >
                          <svg className="w-2/3 h-2/3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: teamColor }}>
-                            <path d="M20.38 3.46L16 2a4 4 0 0 0-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99 .84H6v10c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" fill={teamColor} fillOpacity={hollow ? "0" : "0.35"} stroke={teamColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M20.38 3.46L16 2a4 4 0 0 0-8 0L3.62 3.46 a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99 .84H6v10c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" fill={teamColor} fillOpacity={hollow ? "0" : "0.35"} stroke={teamColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                          </svg>
                     </div>
                     {showCircularText && (
@@ -93,9 +93,10 @@ interface PlayerAvatarProps {
   className?: string; 
   size?: 'sm' | 'md' | 'lg' | 'xl';
   draggable?: boolean;
+  isSquare?: boolean;
 }
 
-export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, className = '', size = 'md', draggable }) => {
+export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, className = '', size = 'md', draggable, isSquare = false }) => {
     const sizeClasses = {
         sm: 'w-10 h-10',
         md: 'w-10 h-10',
@@ -109,7 +110,7 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, className = 
         xl: 'w-14 h-14',
     };
 
-    const baseShapeClasses = `w-full h-full rounded-full overflow-hidden`;
+    const baseShapeClasses = `w-full h-full ${isSquare ? 'rounded-none' : 'rounded-full'} overflow-hidden`;
     
     let imageUrl = player?.photo || player?.playerCard;
 
@@ -137,8 +138,6 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, className = 
     }, [player?.id]);
 
     return (
-        // FIX: Using player.id as the key ensures the component doesn't remount
-        // when only the image URL (timestamp) changes, eliminating flicker.
         <div key={player?.id || 'empty'} className={`relative group ${sizeClasses[size]} ${baseShapeClasses} ${className}`} draggable={draggable}>
              {imageUrl ? (
                 <div
