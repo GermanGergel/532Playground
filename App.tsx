@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Routes, Route, useLocation, matchPath } from 'react-router-dom';
-import { BottomNav } from './components';
+import { Routes, Route, useLocation, matchPath, Navigate } from 'react-router-dom';
+import { BottomNav, Page } from './components';
 import { 
     HomeScreen, NewGameSetupScreen, AssignPlayersScreen, LiveMatchScreen, 
     StatisticsScreen, HistoryScreen, SessionReportScreen, SettingsScreen, 
@@ -12,6 +12,14 @@ import {
 } from './screens';
 import { useApp } from './context';
 
+const NotFound: React.FC = () => (
+    <Page className="flex flex-col items-center justify-center h-[80vh] text-center">
+        <h1 className="text-6xl font-black text-dark-accent-start mb-4">404</h1>
+        <p className="text-xl font-bold text-white mb-8 uppercase tracking-widest">Protocol Null: Page Not Found</p>
+        <Navigate to="/" replace />
+    </Page>
+);
+
 const App: React.FC = () => {
   const location = useLocation();
   const { activeSession, setPlayerDbSort, setPlayerDbSearch } = useApp();
@@ -19,14 +27,12 @@ const App: React.FC = () => {
   // Глобальная защита от случайной перезагрузки во время активной сессии
   React.useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-        event.preventDefault();
-        event.returnValue = ''; 
+        if (activeSession) {
+            event.preventDefault();
+            event.returnValue = ''; 
+        }
     };
-    if (activeSession) {
-        window.addEventListener('beforeunload', handleBeforeUnload);
-    } else {
-        window.removeEventListener('beforeunload', handleBeforeUnload);
-    }
+    window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [activeSession]);
 
@@ -39,34 +45,18 @@ const App: React.FC = () => {
       }
   }, [location.pathname, setPlayerDbSort, setPlayerDbSearch]);
 
-  // Список путей, где НЕ нужна нижняя навигация
   const pathsWithoutNav = [
     '/public-profile/:id',
     '/promo',
     '/hub'
   ];
 
-  // Список путей, которые должны быть во весь экран (без ограничений по ширине)
-  const fullWidthPaths = [
-    '/hub',
-    '/promo',
-    '/public-profile/:id'
-  ];
-
   const showNav = !pathsWithoutNav.some(path => matchPath(path, location.pathname));
-  const isFullWidth = fullWidthPaths.some(path => matchPath(path, location.pathname));
+  const isHub = !!matchPath('/hub', location.pathname);
 
   return (
-    <div className="min-h-screen bg-[#0a0c10] text-dark-text font-sans selection:bg-dark-accent-start selection:text-dark-bg">
-      {/* 
-          Для Хаба и Промо используем всю ширину (w-full).
-          Для админ-панели используем max-w-lg (мобильный вид), но центрируем на десктопе.
-      */}
-      <div className={`
-        min-h-screen relative shadow-2xl shadow-black/50 bg-dark-bg transition-all duration-500
-        ${isFullWidth ? 'w-full' : 'max-w-lg mx-auto border-x border-white/5'}
-        ${showNav ? 'pb-24' : ''}
-      `}>
+    <div className="min-h-screen bg-dark-bg text-dark-text font-sans selection:bg-dark-accent-start selection:text-dark-bg">
+      <div className={`${isHub ? 'w-full' : 'max-w-md mx-auto'} min-h-screen relative shadow-2xl shadow-black/50 bg-dark-bg ${showNav ? 'pb-24' : ''}`}>
         <Routes>
           <Route path="/" element={<HomeScreen />} />
           <Route path="/setup" element={<NewGameSetupScreen />} />
@@ -88,13 +78,10 @@ const App: React.FC = () => {
           <Route path="/announcement" element={<AnnouncementScreen />} />
           <Route path="/promo" element={<PromoScreen />} />
           <Route path="/hub" element={<PublicHubScreen />} />
+          {/* Fallback for web routing */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
-        
-        {showNav && (
-            <div className="max-w-md mx-auto">
-                <BottomNav />
-            </div>
-        )}
+        {showNav && <BottomNav />}
       </div>
     </div>
   );

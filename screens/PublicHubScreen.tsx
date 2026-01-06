@@ -627,11 +627,11 @@ export const PublicHubScreen: React.FC = () => {
                 }}
             />
 
-            {/* SQUAD OF THE MONTH BADGE - SET TO DISABLED AS REQUESTED */}
+            {/* SQUAD OF THE MONTH BADGE - REMOVED ENVIRONMENT CHECK PER USER REQUEST */}
             {!isDashboardOpen && (
                 <SquadOfTheMonthBadge 
                     onClick={() => setIsTotmOpen(true)} 
-                    isDisabled={true} 
+                    isDisabled={false} 
                 />
             )}
 
