@@ -542,6 +542,11 @@ export const PublicHubScreen: React.FC = () => {
     const [dashboardView, setDashboardView] = useState<DashboardViewType>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
 
+    // DETERMINING ENVIRONMENT AS REQUESTED
+    const isDev = useMemo(() => {
+        return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    }, []);
+
     useEffect(() => {
         if (isDashboardOpen) {
             document.body.style.overflow = 'hidden';
@@ -551,22 +556,10 @@ export const PublicHubScreen: React.FC = () => {
         return () => { document.body.style.overflow = ''; };
     }, [isDashboardOpen]);
 
-    // SMART SESSION FILTERING:
-    // Finds the latest session that DOES NOT contain "Demo" or "Test" in its name.
-    const latestPublicSession = useMemo(() => {
-        return history.find(s => {
-            const name = (s.sessionName || '').toLowerCase();
-            return !name.includes('demo') && 
-                   !name.includes('test') && 
-                   !name.includes('демо') && 
-                   !name.includes('тест');
-        }) || null; 
-    }, [history]);
-
     const latestSessionDate = useMemo(() => {
-        if (!latestPublicSession) return '';
-        return new Date(latestPublicSession.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-    }, [latestPublicSession]);
+        if (!history || history.length === 0) return '';
+        return new Date(history[0].date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    }, [history]);
 
     const displayData = useMemo(() => {
         const confirmedRealPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
@@ -634,9 +627,12 @@ export const PublicHubScreen: React.FC = () => {
                 }}
             />
 
-            {/* SQUAD OF THE MONTH BADGE - NOW INTERACTIVE */}
+            {/* SQUAD OF THE MONTH BADGE - NOW INTERACTIVE ONLY ON LOCALHOST */}
             {!isDashboardOpen && (
-                <SquadOfTheMonthBadge onClick={() => setIsTotmOpen(true)} />
+                <SquadOfTheMonthBadge 
+                    onClick={() => setIsTotmOpen(true)} 
+                    isDisabled={!isDev} 
+                />
             )}
 
             <div 

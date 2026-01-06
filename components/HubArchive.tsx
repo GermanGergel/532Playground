@@ -72,8 +72,8 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                     </div>
                 </div>
 
-                {/* Search Bar - Reduced mt for compression */}
-                <div className="mt-2 px-4 mb-4 shrink-0">
+                {/* Search Bar - Increased mt for breathing room as requested */}
+                <div className="mt-8 px-4 mb-4 shrink-0">
                     <div className="relative group w-full h-[34px]"> 
                         <input 
                             type="text" 

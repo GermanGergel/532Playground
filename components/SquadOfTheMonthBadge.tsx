@@ -13,14 +13,14 @@ export const SquadOfTheMonthBadge: React.FC<SquadOfTheMonthBadgeProps> = ({ onCl
 
   return (
     <div 
-      className={`fixed right-4 z-[140] animate-in fade-in zoom-in duration-1000 ${isDisabled ? 'pointer-events-none opacity-80' : ''}`}
+      className="fixed right-4 z-[140] animate-in fade-in zoom-in duration-1000"
       style={{ top: '120px' }}
     >
       <button
         onClick={isDisabled ? undefined : onClick}
         disabled={isDisabled}
         className={`group relative flex items-center justify-center w-28 h-28 transition-all duration-500 
-          ${isDisabled ? 'cursor-default' : 'hover:scale-105 active:scale-95 cursor-pointer'}
+          ${isDisabled ? 'cursor-default' : 'hover:scale-110 active:scale-95 cursor-pointer'}
         `}
       >
         {/* --- 1. ВРАЩАЮЩЕЕСЯ ТЕКСТОВОЕ КОЛЬЦО --- */}
