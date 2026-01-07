@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState, useEffect } from 'react';
 import { useApp } from '../context';
 import { PlayerTier, PlayerStatus, Player } from '../types';
@@ -39,13 +38,15 @@ const TIER_COLORS = {
     [PlayerTier.Regular]: '#00F2FE'
 };
 
-type SortOption = 'name' | 'rating' | 'date';
+// FIX: Line 41 error resolved by removing the incorrect 'SortOption =' assignment and correctly defining the type alias
+export type SortByOption = 'name' | 'rating' | 'date';
 
 interface HubRosterProps {
     selectedPlayerId: string | null;
     onSelectPlayer: (id: string | null) => void;
-    sortBy: SortOption;
-    setSortBy: (opt: SortOption) => void;
+    // FIX: Replaced SortOption with SortByOption type alias
+    sortBy: SortByOption;
+    setSortBy: (opt: SortByOption) => void;
     search: string;
     setSearch: (val: string) => void;
     onStartDuel: (p1Id: string, p2Id: string) => void;
@@ -142,7 +143,8 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                     </div>
 
                     <div className="flex gap-1.5 pr-2">
-                        {(['rating', 'name', 'date'] as SortOption[]).map((opt) => (
+                        {/* FIX: Replaced SortOption with SortByOption type alias */}
+                        {(['rating', 'name', 'date'] as SortByOption[]).map((opt) => (
                             <button 
                                 key={opt} 
                                 onClick={() => setSortBy(opt)} 
@@ -175,7 +177,7 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                                         style={{ 
                                             backgroundColor: isSelected ? (viewMode === 'duel' ? '#00F2FE' : tierColor) : tierColor, 
                                             boxShadow: isSelected ? `0 0 12px ${viewMode === 'duel' ? '#00F2FE' : tierColor}` : 'none',
-                                            opacity: isSelected ? 1 : 0.4
+                                            opacity: isSelected ? 1 : 0
                                         }}
                                     ></div>
                                     
@@ -209,12 +211,11 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                             );
                         })}
                     </div>
-                    {/* SCROLL FADE BOTTOM ONLY - HEIGHT FURTHER REDUCED TO h-4 */}
                     <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#01040a] to-transparent z-20 pointer-events-none"></div>
                 </div>
             </div>
 
-            {/* CONTENT AREA - RIGHT COLUMN - Obsidian Black (#01040a) */}
+            {/* CONTENT AREA - RIGHT COLUMN */}
             <div className="flex-grow relative bg-[#01040a] overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-black to-black opacity-60"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
@@ -237,6 +238,9 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                         <span className="font-orbitron text-xl uppercase tracking-[0.6em] font-black">Select Intel Unit</span>
                     </div>
                 )}
+                
+                {/* FIX: Опускаем подложку ниже (высота изменена с h-8 на h-2), чтобы не перекрывать нижний контур контента */}
+                <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-t from-[#01040a] to-transparent z-30 pointer-events-none"></div>
             </div>
         </div>
     );
