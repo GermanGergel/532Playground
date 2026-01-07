@@ -225,9 +225,15 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                 </div>
             )}
 
-            {/* Content Container */}
-            <div className="relative z-10 flex-grow overflow-y-auto custom-hub-scrollbar">
-                <div className={`w-full max-w-[1200px] mx-auto px-4 ${isEmbedded ? 'md:px-8' : 'md:px-12 lg:px-20'} py-6 pb-4 flex flex-col h-full`}>
+            {/* Content Container - Uses mask-image for fade-out without blocking design layers below */}
+            <div 
+                className="relative z-10 flex-grow overflow-y-auto custom-hub-scrollbar"
+                style={{
+                    maskImage: 'linear-gradient(to bottom, black 92%, transparent 98%)',
+                    WebkitMaskImage: 'linear-gradient(to bottom, black 92%, transparent 98%)'
+                }}
+            >
+                <div className={`w-full max-w-[1200px] mx-auto px-4 ${isEmbedded ? 'md:px-8' : 'md:px-12 lg:px-20'} py-6 pb-24 flex flex-col h-full`}>
                     
                     {!isEmbedded && (
                         <div className="flex items-center justify-between mb-6 shrink-0 px-2">
@@ -239,8 +245,8 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                         </div>
                     )}
 
-                    <div className={`${isEmbedded ? 'p-4' : 'p-6 md:p-10'} flex-grow transition-all duration-500 mb-2`} style={perimeterStyle}>
-                        <div className="space-y-6 pb-6">
+                    <div className={`${isEmbedded ? 'p-4' : 'p-6 md:p-10'} flex-grow transition-all duration-500 mb-6`} style={perimeterStyle}>
+                        <div className="space-y-6 pb-12">
                             <div className="flex flex-col xl:flex-row gap-4 items-stretch">
                                 <div className="w-full max-w-[260px] mx-auto xl:mx-0 xl:max-w-none xl:w-[250px] shrink-0 flex flex-col">
                                     <div className="relative aspect-[2.8/4] xl:aspect-auto w-full rounded-3xl overflow-hidden border border-white/15 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.08)] bg-gradient-to-br from-[#161b22] to-[#0a0d14] h-full">
@@ -279,8 +285,6 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                     </div>
                 </div>
             </div>
-            {/* SCROLL FADE BOTTOM - Height minimal, aligned at the very bottom of content area */}
-            <div className="absolute bottom-[2px] left-[40px] right-[40px] h-2 bg-gradient-to-t from-[#01040a] to-transparent z-30 pointer-events-none opacity-80"></div>
         </div>
     );
 };
