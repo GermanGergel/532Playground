@@ -245,29 +245,40 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
     const p1 = players.find(p => p.rank === 1);
     const p2 = players.find(p => p.rank === 2);
     const p3 = players.find(p => p.rank === 3);
-    const MiniCard = ({ p }: { p: TopPlayerStats }) => {
-        const countryCodeAlpha2 = useMemo(() => p.player.countryCode ? convertCountryCodeAlpha3ToAlpha2(p.player.countryCode) : null, [p.player.countryCode]);
-        const sizeClasses = p.rank === 1 ? 'w-[110px] h-[155px] md:w-[135px] md:h-[185px] z-20' : 'w-[95px] h-[130px] md:w-[115px] md:h-[155px] z-10';
-        return (
-            <div className={`relative rounded-lg overflow-hidden border border-white/20 shadow-lg flex flex-col shrink-0 ${sizeClasses}`}>
-                {p.player.playerCard ? <div className="absolute inset-0 bg-cover bg-no-repeat" style={{ backgroundImage: `url(${p.player.playerCard})`, backgroundPosition: 'center 5%' }} /> : <div className="absolute inset-0 bg-gradient-to-b from-slate-700 to-slate-900" />}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
-                <div className="relative z-10 h-full flex flex-col justify-between p-1.5">
-                    <div className="flex justify-between items-start w-full">
-                        {countryCodeAlpha2 && <img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} className="w-3 h-auto rounded-sm opacity-90" alt="" />}
-                        <div className="flex flex-col items-end leading-none">
-                            <span className="font-russo text-lg text-[#00F2FE]">{p.player.rating}</span>
-                            <span className="text-[5px] font-black text-white">OVR</span>
-                        </div>
-                    </div>
-                    <div className="w-full text-center pb-1"><span className="text-white font-russo text-[10px] uppercase truncate px-1">{p.player.nickname}</span></div>
-                </div>
-            </div>
-        );
-    };
+    
+    // --- UPDATED: Replaced background-image with IMG tag for stability ---
     const PodiumSpot = ({ p, rank, height, color, delay }: { p?: TopPlayerStats, rank: number, height: string, color: string, delay: string }) => (
         <div className={`flex flex-col items-center justify-end h-full ${delay} animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both relative`}>
-            {p ? <div className="mb-3 relative z-20 flex flex-col items-center w-full px-1"><MiniCard p={p} /></div> : <div className="mb-12 opacity-10"><div className="w-12 h-16 rounded border-2 border-dashed border-white/30"></div></div>}
+            {p ? (
+                <div className="mb-3 relative z-20 flex flex-col items-center w-full px-1">
+                     <div className={`relative rounded-lg overflow-hidden border border-white/20 shadow-lg flex flex-col shrink-0 ${rank === 1 ? 'w-[110px] h-[155px] md:w-[135px] md:h-[185px] z-20' : 'w-[115px] h-[130px] md:w-[115px] md:h-[155px] z-10'}`}>
+                        {/* FIX: Using IMG tag instead of CSS background-image to prevent flickering */}
+                        {p.player.playerCard ? (
+                            <img 
+                                src={p.player.playerCard} 
+                                alt={p.player.nickname} 
+                                className="absolute inset-0 w-full h-full object-cover"
+                                style={{ objectPosition: 'center 5%' }}
+                            />
+                        ) : (
+                            <div className="absolute inset-0 bg-gradient-to-b from-slate-700 to-slate-900" />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+                        <div className="relative z-10 h-full flex flex-col justify-between p-1.5">
+                            <div className="flex justify-between items-start w-full">
+                                {p.player.countryCode && <img src={`https://flagcdn.com/w40/${convertCountryCodeAlpha3ToAlpha2(p.player.countryCode)?.toLowerCase()}.png`} className="w-3 h-auto rounded-sm opacity-90" alt="" />}
+                                <div className="flex flex-col items-end leading-none">
+                                    <span className="font-russo text-lg text-[#00F2FE]">{p.player.rating}</span>
+                                    <span className="text-[5px] font-black text-white">OVR</span>
+                                </div>
+                            </div>
+                            <div className="w-full text-center pb-1"><span className="text-white font-russo text-[10px] uppercase truncate px-1">{p.player.nickname}</span></div>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <div className="mb-12 opacity-10"><div className="w-12 h-16 rounded border-2 border-dashed border-white/30"></div></div>
+            )}
             <div className="w-full relative overflow-hidden backdrop-blur-md rounded-t-xl flex flex-col items-center justify-center pt-2 pb-1.5 z-10" style={{ height: height, background: `linear-gradient(to bottom, ${color}35, ${color}08, transparent)`, borderTop: `2px solid ${color}` }}>
                 {p && (
                     <div className="relative z-10 flex flex-col items-center">
