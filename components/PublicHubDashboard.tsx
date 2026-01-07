@@ -241,33 +241,45 @@ const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any
 
 interface TopPlayerStats { player: Player; score: number; rank: 1 | 2 | 3; }
 
-const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ players, t }) => {
+// --- MEMOIZED SESSION PODIUM ---
+// Critical Fix: Wrapped in React.memo to prevent re-renders on timer ticks
+const SessionPodium = React.memo(({ players, t }: { players: TopPlayerStats[], t: any }) => {
     const p1 = players.find(p => p.rank === 1);
     const p2 = players.find(p => p.rank === 2);
     const p3 = players.find(p => p.rank === 3);
-    const MiniCard = ({ p }: { p: TopPlayerStats }) => {
-        const countryCodeAlpha2 = useMemo(() => p.player.countryCode ? convertCountryCodeAlpha3ToAlpha2(p.player.countryCode) : null, [p.player.countryCode]);
-        const sizeClasses = p.rank === 1 ? 'w-[110px] h-[155px] md:w-[135px] md:h-[185px] z-20' : 'w-[95px] h-[130px] md:w-[115px] md:h-[155px] z-10';
-        return (
-            <div className={`relative rounded-lg overflow-hidden border border-white/20 shadow-lg flex flex-col shrink-0 ${sizeClasses}`}>
-                {p.player.playerCard ? <div className="absolute inset-0 bg-cover bg-no-repeat" style={{ backgroundImage: `url(${p.player.playerCard})`, backgroundPosition: 'center 5%' }} /> : <div className="absolute inset-0 bg-gradient-to-b from-slate-700 to-slate-900" />}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
-                <div className="relative z-10 h-full flex flex-col justify-between p-1.5">
-                    <div className="flex justify-between items-start w-full">
-                        {countryCodeAlpha2 && <img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} className="w-3 h-auto rounded-sm opacity-90" alt="" />}
-                        <div className="flex flex-col items-end leading-none">
-                            <span className="font-russo text-lg text-[#00F2FE]">{p.player.rating}</span>
-                            <span className="text-[5px] font-black text-white">OVR</span>
-                        </div>
-                    </div>
-                    <div className="w-full text-center pb-1"><span className="text-white font-russo text-[10px] uppercase truncate px-1">{p.player.nickname}</span></div>
-                </div>
-            </div>
-        );
-    };
+    
     const PodiumSpot = ({ p, rank, height, color, delay }: { p?: TopPlayerStats, rank: number, height: string, color: string, delay: string }) => (
         <div className={`flex flex-col items-center justify-end h-full ${delay} animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both relative`}>
-            {p ? <div className="mb-3 relative z-20 flex flex-col items-center w-full px-1"><MiniCard p={p} /></div> : <div className="mb-12 opacity-10"><div className="w-12 h-16 rounded border-2 border-dashed border-white/30"></div></div>}
+            {p ? (
+                <div className="mb-3 relative z-20 flex flex-col items-center w-full px-1">
+                     <div className={`relative rounded-lg overflow-hidden border border-white/20 shadow-lg flex flex-col shrink-0 ${rank === 1 ? 'w-[110px] h-[155px] md:w-[135px] md:h-[185px] z-20' : 'w-[115px] h-[130px] md:w-[115px] md:h-[155px] z-10'}`}>
+                        {p.player.playerCard ? (
+                            <div 
+                                className="absolute inset-0 w-full h-full bg-cover bg-no-repeat"
+                                style={{ 
+                                    backgroundImage: `url(${p.player.playerCard})`, 
+                                    backgroundPosition: 'center 5%'
+                                }}
+                            />
+                        ) : (
+                            <div className="absolute inset-0 bg-gradient-to-b from-slate-700 to-slate-900" />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+                        <div className="relative z-10 h-full flex flex-col justify-between p-1.5">
+                            <div className="flex justify-between items-start w-full">
+                                {p.player.countryCode && <img src={`https://flagcdn.com/w40/${convertCountryCodeAlpha3ToAlpha2(p.player.countryCode)?.toLowerCase()}.png`} className="w-3 h-auto rounded-sm opacity-90" alt="" />}
+                                <div className="flex flex-col items-end leading-none">
+                                    <span className="font-russo text-lg text-[#00F2FE]">{p.player.rating}</span>
+                                    <span className="text-[5px] font-black text-white">OVR</span>
+                                </div>
+                            </div>
+                            <div className="w-full text-center pb-1"><span className="text-white font-russo text-[10px] uppercase truncate px-1">{p.player.nickname}</span></div>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <div className="mb-12 opacity-10"><div className="w-12 h-16 rounded border-2 border-dashed border-white/30"></div></div>
+            )}
             <div className="w-full relative overflow-hidden backdrop-blur-md rounded-t-xl flex flex-col items-center justify-center pt-2 pb-1.5 z-10" style={{ height: height, background: `linear-gradient(to bottom, ${color}35, ${color}08, transparent)`, borderTop: `2px solid ${color}` }}>
                 {p && (
                     <div className="relative z-10 flex flex-col items-center">
@@ -285,7 +297,7 @@ const SessionPodium: React.FC<{ players: TopPlayerStats[], t: any }> = ({ player
             <div className="w-[115px] md:w-[165px] h-full flex flex-col justify-end z-10 shrink-0"><PodiumSpot p={p3} rank={3} height="75px" color="#CD7F32" delay="delay-200" /></div>
         </div>
     );
-};
+});
 
 const NewsVanguardCard: React.FC<{ item: NewsItem }> = ({ item }) => {
     return (
@@ -404,8 +416,12 @@ export const PublicHubDashboard: React.FC = () => {
         setExpandedMatchId(null);
     };
 
-    if (!session) return <StandbyScreen />;
-    const { teamStats, allPlayersStats: rawPlayersStats } = calculateAllStats(session);
+    // Calculate stats ONLY when session changes
+    const { teamStats, allPlayersStats: rawPlayersStats } = useMemo(() => {
+        if (!session) return { teamStats: [], allPlayersStats: [] };
+        return calculateAllStats(session);
+    }, [session]); // Dependent on session reference only
+
     const allPlayersStats = useMemo(() => {
         return rawPlayersStats.map(stat => {
             const latestPlayer = allPlayers.find(p => p.id === stat.player.id);
@@ -413,12 +429,17 @@ export const PublicHubDashboard: React.FC = () => {
         });
     }, [rawPlayersStats, allPlayers]);
 
-    const sortedForPodium = [...allPlayersStats].sort((a, b) => getImpactScore(b) - getImpactScore(a));
-    const sortedForTable = [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists));
-    const top3PodiumPlayers: TopPlayerStats[] = sortedForPodium
+    // Derived states
+    const sortedForPodium = useMemo(() => [...allPlayersStats].sort((a, b) => getImpactScore(b) - getImpactScore(a)), [allPlayersStats]);
+    const sortedForTable = useMemo(() => [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists)), [allPlayersStats]);
+    
+    // Critical: Memoize top players list to prevent SessionPodium re-renders when timer ticks
+    const top3PodiumPlayers: TopPlayerStats[] = useMemo(() => sortedForPodium
         .filter(p => p.gamesPlayed > 0)
         .slice(0, 3)
-        .map((p, i) => ({ player: p.player, score: getImpactScore(p), rank: (i + 1) as 1 | 2 | 3 }));
+        .map((p, i) => ({ player: p.player, score: getImpactScore(p), rank: (i + 1) as 1 | 2 | 3 })), [sortedForPodium]);
+
+    if (!session) return <StandbyScreen />;
 
     const finishedGames = [...session.games].filter(g => g.status === 'finished').sort((a, b) => a.gameNumber - b.gameNumber);
     const thStandings = "py-2 text-white/40 uppercase tracking-tighter text-[8px] font-black text-center sticky top-0 bg-[#01040a] backdrop-blur-sm z-10 border-b border-white/5";
