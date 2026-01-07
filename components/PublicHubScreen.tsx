@@ -413,7 +413,18 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
     return (
         <div style={podiumGlowStyle} className={`relative group ${isFirst ? 'scale-105 z-20' : 'scale-90 md:scale-100 z-10'} rounded-3xl transition-shadow duration-300`}>
             <div ref={cardRef} className={`interactive-card relative ${isFirst ? 'w-[280px] h-[390px]' : 'w-[260px] h-[360px]'} rounded-3xl p-4 overflow-hidden text-white bg-dark-surface border border-white/10`}>
-                {player.playerCard && (<div className="absolute inset-0 w-full h-full bg-cover bg-no-repeat" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }}/>)}
+                {/* FIX: Using DIV with background-image + translateZ hack for Safari stability */}
+                {player.playerCard && (
+                    <div 
+                        className="absolute inset-0 w-full h-full bg-cover bg-no-repeat" 
+                        style={{ 
+                            backgroundImage: `url(${player.playerCard})`, 
+                            backgroundPosition: 'center 5%',
+                            transform: 'translateZ(0)',
+                            willChange: 'transform'
+                        }} 
+                    />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
                 {!isBadgeModalOpen && (<div className="absolute top-24 left-4 z-20"><div className="space-y-4">{(player.skills || []).map(skill => (
                     <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
