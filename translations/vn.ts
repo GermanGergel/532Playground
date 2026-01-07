@@ -194,10 +194,6 @@ export const vn = {
   information: "Thông Tin",
   statistics: "Thống Kê",
 
-  // Archive
-  archiveDescription: "Truy Cập Dữ Liệu",
-  searchSessions: "Tìm buổi tập...",
-
   // Info Content
   ratingCalculationTitle: "Hệ Thống Rating",
   ratingCalculationDesc: "Rating thay đổi dựa trên kết quả trận đấu, màn trình diễn cá nhân và đóng góp cho đội.",
