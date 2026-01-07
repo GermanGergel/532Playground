@@ -41,7 +41,9 @@ const StaticSoccerBall: React.FC = () => (
             <g transform="translate(0, -25)" filter="url(#hatShadow)">
                 <path d="M 18 42 L 18 20 C 18 -15, 88 -18, 90 25 L 82 42 Z" fill="url(#hatBodyGradient)" stroke="#7f1d1d" strokeWidth="0.3" />
                 <path d="M 22 25 C 22 -5, 75 -10, 80 20" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" opacity="0.1" />
-                <circle cx="90" cy="25" r="8.5" fill="url(#pompomGradient)" stroke="#94a3b8" strokeWidth="0.1" /><circle cx="90" cy="25" r="8.5" fill="black" opacity="0.05" transform="translate(-1, 1)" /><circle cx="90" cy="25" r="8.5" fill="black" opacity="0.05" transform="translate(-1, 1)" /><circle cx="90" cy="25" r="8.5" fill="black" opacity="0.05" transform="translate(-1, 1)" />
+                <circle cx="90" cy="25" r="8.5" fill="url(#pompomGradient)" stroke="#94a3b8" strokeWidth="0.1" /><circle cx="90" cy="25" r="8.5" fill="black" opacity="0.05" transform="translate(-1, 1)" />
+                <circle cx="90" cy="25" r="8.5" fill="black" opacity="0.05" transform="translate(-1, 1)" />
+                <circle cx="90" cy="25" r="8.5" fill="black" opacity="0.05" transform="translate(-1, 1)" />
                 <g filter="url(#furTexture)"><path d="M 8 40 Q 50 25 92 40 Q 96 48 92 55 Q 50 40 8 55 Q 4 48 8 40 Z" fill="#FFFFFF" stroke="#f1f5f9" strokeWidth="0.2" /></g>
                 <path d="M 12 48 Q 50 38 88 48" fill="none" stroke="#cbd5e1" strokeWidth="0.5" opacity="0.3" />
             </g>
@@ -639,16 +641,16 @@ export const PublicHubScreen: React.FC = () => {
                 `}
                 style={{ backgroundColor: getBottomPatchColor() }}
             >
-                <div className="relative max-w-[1450px] w-full mx-auto px-0 pb-16 z-10">
+                <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10">
                     <ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} />
                 </div>
 
-                {/* ГЛОБАЛЬНАЯ НАКЛАДКА ДЛЯ БЕСШОВНОГО ПЕРЕХОДА (ПОДЛОЖКА) - СДЕЛАНА БОЛЕЕ ТОНКОЙ */}
+                {/* ГЛОБАЛЬНАЯ НАКЛАДКА ДЛЯ БЕСШОВНОГО ПЕРЕХОДА (ПОДЛОЖКА) - ОПУЩЕНА НИЖЕ */}
                 <div 
-                    className="fixed bottom-0 left-0 right-0 h-10 z-[110] pointer-events-none opacity-0 transition-all duration-700 delay-300" 
+                    className="fixed bottom-0 left-0 right-0 h-16 z-[110] pointer-events-none opacity-0 transition-all duration-700 delay-300" 
                     style={{ 
                         opacity: isDashboardOpen ? 1 : 0,
-                        background: `linear-gradient(to top, ${getBottomPatchColor()} 30%, transparent 100%)`
+                        background: `linear-gradient(to top, ${getBottomPatchColor()} 50%, ${getBottomPatchColor()}cc 80%, transparent 100%)`
                     }}
                 ></div>
             </div>
