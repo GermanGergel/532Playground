@@ -279,7 +279,7 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                         </div>
                     </div>
                     {/* SPACER FOR EXTRA SCROLL */}
-                    <div className="h-28 shrink-0 w-full"></div>
+                    <div className="h-14 shrink-0 w-full"></div>
                 </div>
             </div>
         </div>
