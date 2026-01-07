@@ -225,15 +225,9 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                 </div>
             )}
 
-            {/* Content Container - Uses mask-image instead of a separate overlay to prevent blocking design elements */}
-            <div 
-                className="relative z-10 flex-grow overflow-y-auto custom-hub-scrollbar"
-                style={{
-                    maskImage: 'linear-gradient(to bottom, black 94%, transparent 100%)',
-                    WebkitMaskImage: 'linear-gradient(to bottom, black 94%, transparent 100%)'
-                }}
-            >
-                <div className={`w-full max-w-[1200px] mx-auto px-4 ${isEmbedded ? 'md:px-8' : 'md:px-12 lg:px-20'} py-6 pb-48 flex flex-col h-full`}>
+            {/* Content Container */}
+            <div className="relative z-10 flex-grow overflow-y-auto custom-hub-scrollbar">
+                <div className={`w-full max-w-[1200px] mx-auto px-4 ${isEmbedded ? 'md:px-8' : 'md:px-12 lg:px-20'} py-6 pb-4 flex flex-col h-full`}>
                     
                     {!isEmbedded && (
                         <div className="flex items-center justify-between mb-6 shrink-0 px-2">
@@ -245,8 +239,8 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                         </div>
                     )}
 
-                    <div className={`${isEmbedded ? 'p-4' : 'p-6 md:p-10'} flex-grow transition-all duration-500`} style={perimeterStyle}>
-                        <div className="space-y-6">
+                    <div className={`${isEmbedded ? 'p-4' : 'p-6 md:p-10'} flex-grow transition-all duration-500 mb-2`} style={perimeterStyle}>
+                        <div className="space-y-6 pb-6">
                             <div className="flex flex-col xl:flex-row gap-4 items-stretch">
                                 <div className="w-full max-w-[260px] mx-auto xl:mx-0 xl:max-w-none xl:w-[250px] shrink-0 flex flex-col">
                                     <div className="relative aspect-[2.8/4] xl:aspect-auto w-full rounded-3xl overflow-hidden border border-white/15 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.08)] bg-gradient-to-br from-[#161b22] to-[#0a0d14] h-full">
@@ -280,11 +274,13 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                                 <BentoBox className="h-full" contentClassName="h-full flex flex-col"><IntelHeader title={t?.bestSessionTitle} icon={TrophyIcon} accent="#FFD700" /><div className="flex-grow flex flex-col justify-center"><div className="grid grid-cols-3 gap-1 items-center justify-items-center h-full"><TerminalStat size="text-lg" label="G" value={safeRecords.bestGoalsInSession?.value || 0} /><TerminalStat size="text-lg" label="A" value={safeRecords.bestAssistsInSession?.value || 0} /><TerminalStat size="text-lg" label="Win%" value={`${safeRecords.bestWinRateInSession?.value || 0}%`} color="#fff" /></div></div></BentoBox>
                             </div>
 
-                            <BentoBox className="mb-12"><IntelHeader title={t?.awards} icon={AwardIcon} accent="#FF00D6" /><div className="grid grid-cols-8 sm:grid-cols-10 lg:grid-cols-12 gap-3">{ALL_BADGES.map(badge => { const isEarned = !!(player.badges && player.badges[badge]); return (<div key={badge} title={t[`badge_${badge}_desc` as keyof typeof t] || t[`badge_${badge}` as keyof typeof t]} className={`transition-all duration-500 transform hover:scale-125 cursor-help ${!isEarned ? 'opacity-[0.03] grayscale' : ''}`}><BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-8 h-8" /></div>); })}</div></BentoBox>
+                            <BentoBox className="mb-2"><IntelHeader title={t?.awards} icon={AwardIcon} accent="#FF00D6" /><div className="grid grid-cols-8 sm:grid-cols-10 lg:grid-cols-12 gap-3">{ALL_BADGES.map(badge => { const isEarned = !!(player.badges && player.badges[badge]); return (<div key={badge} title={t[`badge_${badge}_desc` as keyof typeof t] || t[`badge_${badge}` as keyof typeof t]} className={`transition-all duration-500 transform hover:scale-125 cursor-help ${!isEarned ? 'opacity-[0.03] grayscale' : ''}`}><BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-8 h-8" /></div>); })}</div></BentoBox>
                         </div>
                     </div>
                 </div>
             </div>
+            {/* SCROLL FADE BOTTOM - Height minimal, aligned at the very bottom of content area */}
+            <div className="absolute bottom-[2px] left-[40px] right-[40px] h-2 bg-gradient-to-t from-[#01040a] to-transparent z-30 pointer-events-none opacity-80"></div>
         </div>
     );
 };
