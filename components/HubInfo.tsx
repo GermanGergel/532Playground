@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useApp } from '../context';
 import { translations } from '../translations/index';
@@ -217,7 +218,7 @@ export const HubInfo: React.FC = () => {
 
                     {/* 5. SKILLS */}
                     <section>
-                        <IntelSectionHeader title="Specializations" icon={StarIcon} accent="#00F2FE" />
+                        <IntelSectionHeader title={t.keySkillsTitle} icon={StarIcon} accent="#00F2FE" />
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                             {ALL_SKILLS.map(skill => (
                                 <div key={skill} className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5 hover:border-[#00F2FE]/30 hover:bg-white/10 transition-all group">
@@ -237,7 +238,7 @@ export const HubInfo: React.FC = () => {
 
                     {/* 6. BADGE ENCYCLOPEDIA */}
                     <section>
-                        <IntelSectionHeader title="Awards Catalog" icon={TrophyIcon} accent="#FFD700" />
+                        <IntelSectionHeader title={t.badges} icon={TrophyIcon} accent="#FFD700" />
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6 pb-12">
                             {ALL_BADGES.map(badge => (
                                 <div key={badge} className="flex items-start gap-4 p-2 group hover:bg-white/[0.02] rounded-xl transition-colors">

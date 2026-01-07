@@ -189,6 +189,7 @@ export const vn = {
   monthlyGoals: "Bàn Thắng",
   monthlyAssists: "Kiến Tạo",
   monthlyWins: "Thắng",
+  careerStats: "Trung Bình Sự Nghiệp",
   session: "Buổi Tập",
   information: "Thông Tin",
   statistics: "Thống Kê",
@@ -203,7 +204,6 @@ export const vn = {
   ratingExampleLossClose: "Thua Sát Nút: -0.5 đ",
   ratingExampleLossHeavy: "Thua Đậm (-2GD): -0.8 đ",
   ratingExampleGoal: "Bàn Thắng: +1.0 đ (Tiền đạo +1.2)",
-  // FIX: Renamed ratingExampleAssistant to ratingExampleAssist to match key used in components and other translations
   ratingExampleAssist: "Kiến Tạo: +0.7 đ (Tiền vệ +1.0)",
   ratingExampleCleanSheet: "Sạch Lưới: +1.0 đ (Hậu vệ +2.0)",
   infoInactivityTitle: "Không Hoạt Động",
