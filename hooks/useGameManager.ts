@@ -339,7 +339,21 @@ export const useGameManager = () => {
         setActiveSession(s => {
             if (!s) return null;
             const games = [...s.games];
-            let currentGame = { ...games[s.games.length - 1] };
+            // DEFAULT: Uses current game if no explicit gameId in goalData (which happens for live)
+            // If goalData has a gameId (retroactive), we find that game.
+            
+            // NOTE: goalData passed from GoalModal usually only has {teamId, scorerId...}
+            // We need to support retroactive addition.
+            
+            // For LIVE match, we take the last game.
+            let targetGameIndex = s.games.length - 1;
+            
+            // BUT if we are in "Edit History" mode, we might need to target a specific game.
+            // The GoalModal doesn't pass gameId directly in the 'goalData' object usually.
+            // We'll rely on a separate handler for retroactive goals to keep this clean.
+            // THIS FUNCTION IS FOR LIVE GAME ONLY.
+            
+            let currentGame = { ...games[targetGameIndex] };
             
             if (currentGame.status === GameStatus.Finished) return s;
 
@@ -362,7 +376,7 @@ export const useGameManager = () => {
                 currentGame.team2Score++;
             }
             
-            games[s.games.length - 1] = currentGame;
+            games[targetGameIndex] = currentGame;
 
              const goalEvent: EventLogEntry = {
                 timestamp: new Date().toISOString(),
@@ -375,18 +389,86 @@ export const useGameManager = () => {
         });
     };
 
+    // --- NEW: REPLACE WHOLE GAME (For atomic saves in Editor) ---
+    const replaceGame = (updatedGame: Game) => {
+        setActiveSession(s => {
+            if (!s) return null;
+            const games = s.games.map(g => g.id === updatedGame.id ? updatedGame : g);
+            return { ...s, games };
+        });
+    };
+
+    const deleteGoal = (goalId: string) => {
+        setActiveSession(s => {
+            if (!s) return s;
+
+            const games = [...s.games];
+            let gameIndex = -1;
+            let goalIndex = -1;
+
+            for(let i=0; i<games.length; i++) {
+                const g = games[i];
+                const gIdx = g.goals.findIndex(goal => goal.id === goalId);
+                if (gIdx !== -1) {
+                    gameIndex = i;
+                    goalIndex = gIdx;
+                    break;
+                }
+            }
+
+            if (gameIndex === -1) return s;
+
+            const updatedGame = { ...games[gameIndex] };
+            const goalToDelete = updatedGame.goals[goalIndex];
+
+            // Decrement score
+            if (goalToDelete.teamId === updatedGame.team1Id) {
+                updatedGame.team1Score = Math.max(0, updatedGame.team1Score - 1);
+            } else {
+                updatedGame.team2Score = Math.max(0, updatedGame.team2Score - 1);
+            }
+
+            // Remove goal
+            updatedGame.goals = updatedGame.goals.filter(g => g.id !== goalId);
+
+            // Recalculate result logic (simplified for immediate update)
+            if (updatedGame.team1Score > updatedGame.team2Score) {
+                updatedGame.winnerTeamId = updatedGame.team1Id;
+                updatedGame.isDraw = false;
+            } else if (updatedGame.team2Score > updatedGame.team1Score) {
+                updatedGame.winnerTeamId = updatedGame.team2Id;
+                updatedGame.isDraw = false;
+            } else {
+                updatedGame.winnerTeamId = undefined;
+                updatedGame.isDraw = true;
+            }
+
+            games[gameIndex] = updatedGame;
+            return { ...s, games };
+        });
+    };
+
     const handleGoalUpdate = (goalId: string, updates: { scorerId?: string; assistantId?: string; isOwnGoal: boolean }) => {
         setActiveSession(s => {
-            if (!s || !currentGame) return s;
-    
+            if (!s) return s; 
+            
             const games = [...s.games];
-            const gameIndex = games.findIndex(g => g.id === currentGame.id);
+            let gameIndex = -1;
+            let goalIndex = -1;
+
+            for(let i=0; i<games.length; i++) {
+                const g = games[i];
+                const gIdx = g.goals.findIndex(goal => goal.id === goalId);
+                if (gIdx !== -1) {
+                    gameIndex = i;
+                    goalIndex = gIdx;
+                    break;
+                }
+            }
+
             if (gameIndex === -1) return s;
     
             const updatedGame = { ...games[gameIndex] };
-            const goalIndex = updatedGame.goals.findIndex(g => g.id === goalId);
-            if (goalIndex === -1) return s;
-    
             const originalGoal = updatedGame.goals[goalIndex];
             const updatedGoal = { ...originalGoal, ...updates };
 
@@ -396,38 +478,9 @@ export const useGameManager = () => {
             }
             updatedGame.goals[goalIndex] = updatedGoal;
             games[gameIndex] = updatedGame;
-    
-            const getPlayerNickname = (id?: string) => s.playerPool.find(p => p.id === id)?.nickname;
-            
-            const eventLog = [...s.eventLog];
-            let eventUpdated = false;
-            for (let i = eventLog.length - 1; i >= 0; i--) {
-                const event = eventLog[i];
-                 if (event.round === updatedGame.gameNumber && event.type === EventType.GOAL) {
-                    const eventTimestamp = new Date(event.timestamp).getTime();
-                    const goalTimestamp = (updatedGame.startTime || 0) + originalGoal.timestampSeconds * 1000;
-                    
-                    if (Math.abs(eventTimestamp - goalTimestamp) < 2000) {
-                        const payload = event.payload as GoalPayload;
-                        const originalTeamColor = s.teams.find(t => t.id === originalGoal.teamId)?.color;
-                        
-                        if(payload.team === originalTeamColor){
-                             const newPayload: GoalPayload = {
-                                ...payload,
-                                scorer: getPlayerNickname(updatedGoal.scorerId),
-                                assist: getPlayerNickname(updatedGoal.assistantId),
-                                isOwnGoal: updatedGoal.isOwnGoal,
-                            };
-                            eventLog[i] = { ...event, payload: newPayload };
-                            eventUpdated = true;
-                            break;
-                        }
-                    }
-                }
-            }
             
             setGoalToEdit(null);
-            return { ...s, games, eventLog: eventUpdated ? eventLog : s.eventLog };
+            return { ...s, games };
         });
     };
 
@@ -556,7 +609,7 @@ export const useGameManager = () => {
         isSelectWinnerModalOpen,
         goalToEdit,
         subModalState,
-        legionnaireModalState, // Exported
+        legionnaireModalState, 
         // Derived state
         currentGame,
         isTimerBasedGame,
@@ -565,7 +618,7 @@ export const useGameManager = () => {
         setIsEndSessionModalOpen,
         setGoalToEdit,
         setSubModalState,
-        setLegionnaireModalState, // Exported
+        setLegionnaireModalState, 
         finishCurrentGameAndSetupNext,
         handleStartGame,
         handleTogglePause,
@@ -573,7 +626,10 @@ export const useGameManager = () => {
         handleGoalUpdate,
         handleSubstitution,
         handleFinishSession,
-        handleLegionnaireSwap, // Exported
-        resetSession
+        handleLegionnaireSwap,
+        resetSession,
+        // New Retroactive Features
+        replaceGame, // EXPORTED FOR EDITOR
+        deleteGoal
     };
 };
