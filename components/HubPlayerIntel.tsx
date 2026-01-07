@@ -225,10 +225,10 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                 </div>
             )}
 
-            <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#05070a] to-transparent z-30 pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-[#05070a] to-transparent z-30 pointer-events-none"></div>
 
             <div className="relative z-10 flex-grow overflow-y-auto custom-hub-scrollbar">
-                <div className={`w-full max-w-[1200px] mx-auto px-4 ${isEmbedded ? 'md:px-8' : 'md:px-12 lg:px-20'} py-6 pb-48 flex flex-col h-full`}>
+                <div className={`w-full max-w-[1200px] mx-auto px-4 ${isEmbedded ? 'md:px-8' : 'md:px-12 lg:px-20'} py-6 flex flex-col h-full`}>
                     
                     {!isEmbedded && (
                         <div className="flex items-center justify-between mb-6 shrink-0 px-2">
@@ -278,6 +278,8 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                             <BentoBox className="mb-12"><IntelHeader title={t?.awards} icon={AwardIcon} accent="#FF00D6" /><div className="grid grid-cols-8 sm:grid-cols-10 lg:grid-cols-12 gap-3">{ALL_BADGES.map(badge => { const isEarned = !!(player.badges && player.badges[badge]); return (<div key={badge} title={t[`badge_${badge}_desc` as keyof typeof t] || t[`badge_${badge}` as keyof typeof t]} className={`transition-all duration-500 transform hover:scale-125 cursor-help ${!isEarned ? 'opacity-[0.03] grayscale' : ''}`}><BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-8 h-8" /></div>); })}</div></BentoBox>
                         </div>
                     </div>
+                    {/* SPACER FOR EXTRA SCROLL */}
+                    <div className="h-28 shrink-0 w-full"></div>
                 </div>
             </div>
         </div>
