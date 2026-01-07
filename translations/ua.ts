@@ -194,6 +194,10 @@ export const ua = {
   information: "Інформація",
   statistics: "Статистика",
 
+  // Archive
+  archiveDescription: "Доступ до Архіву",
+  searchSessions: "Пошук сесій...",
+
   // Penalty
   penalty_title: "СТАТУС: ШТРАФ ЗА НЕЯВКУ",
   penalty_message: "Рейтинг знижен на -{n} OVR из-за пропуска {m} сессий подряд.",

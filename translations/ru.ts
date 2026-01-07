@@ -194,6 +194,10 @@ export const ru = {
   information: "Информация",
   statistics: "Статистика",
 
+  // Archive
+  archiveDescription: "Доступ к Архиву",
+  searchSessions: "Поиск сессий...",
+
   // Penalty
   penalty_title: "СТАТУС: ШТРАФ ЗА НЕЯВКУ",
   penalty_message: "Рейтинг снижен на -{n} OVR из-за пропуска {m} сессий подряд.",

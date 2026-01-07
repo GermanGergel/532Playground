@@ -194,6 +194,10 @@ export const en = {
   information: "Information",
   statistics: "Statistics",
 
+  // Archive
+  archiveDescription: "Historical Data Access",
+  searchSessions: "Search sessions...",
+
   // Penalty
   penalty_title: "STATUS: INACTIVITY PENALTY",
   penalty_message: "Rating reduced by -{n} OVR due to missing {m} sessions in a row.",

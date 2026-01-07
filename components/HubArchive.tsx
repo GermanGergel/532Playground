@@ -64,10 +64,10 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                 <div className="pt-4 pl-40 flex flex-col items-start shrink-0"> 
                     <div className="flex flex-col items-center">
                         <span className="font-blackops text-[24px] text-[#00F2FE] uppercase tracking-[0.1em] italic leading-none" style={{ textShadow: '0 0 10px rgba(0,242,254,0.4)' }}>
-                            ARCHIVE
+                            {t.navHistory.toUpperCase()}
                         </span>
                         <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.3em] whitespace-nowrap mt-1">
-                            Historical Data Access
+                            {t.archiveDescription}
                         </span>
                     </div>
                 </div>
@@ -77,7 +77,7 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                     <div className="relative group w-full h-[34px]"> 
                         <input 
                             type="text" 
-                            placeholder="SEARCH SESSIONS..." 
+                            placeholder={t.searchSessions}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full h-full bg-white/5 border border-white/10 rounded-xl pl-4 pr-10 text-[10px] font-chakra font-black text-white uppercase tracking-[0.15em] focus:outline-none focus:border-[#00F2FE]/40 transition-all placeholder:text-white/20" 
