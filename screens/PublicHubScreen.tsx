@@ -627,11 +627,11 @@ export const PublicHubScreen: React.FC = () => {
                 }}
             />
 
-            {/* SQUAD OF THE MONTH BADGE - DISABLED FOR PRODUCTION */}
+            {/* SQUAD OF THE MONTH BADGE - NOW CONDITIONALLY INTERACTIVE */}
             {!isDashboardOpen && (
                 <SquadOfTheMonthBadge 
-                    onClick={() => {}} 
-                    isDisabled={true} 
+                    onClick={() => setIsTotmOpen(true)} 
+                    isDisabled={!isDev} 
                 />
             )}
 
@@ -647,7 +647,7 @@ export const PublicHubScreen: React.FC = () => {
 
                 {/* ГЛОБАЛЬНАЯ НАКЛАДКА ДЛЯ БЕСШОВНОГО ПЕРЕХОДА (ПОДЛОЖКА) - ОПУЩЕНА НИЖЕ */}
                 <div 
-                    className="fixed bottom-0 left-0 right-0 h-16 z-[110] pointer-events-none opacity-0 transition-all duration-700 delay-300" 
+                    className="fixed bottom-0 left-0 right-0 h-4 z-[110] pointer-events-none opacity-0 transition-all duration-700 delay-300" 
                     style={{ 
                         opacity: isDashboardOpen ? 1 : 0,
                         background: `linear-gradient(to top, ${getBottomPatchColor()} 50%, ${getBottomPatchColor()}cc 80%, transparent 100%)`
