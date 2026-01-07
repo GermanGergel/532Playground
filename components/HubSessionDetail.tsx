@@ -63,7 +63,7 @@ const getImpactScore = (stats: PlayerStats): number => {
     return score;
 };
 
-const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: Session }> = ({ topPlayers, session }) => {
+const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: Session, t: any }> = ({ topPlayers, session, t }) => {
     const data = {
         location: session.location || "PITCH DATA UNAVAILABLE",
         time: session.timeString || "19:30 - 21:00",
@@ -90,7 +90,7 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
                         <MapPinIcon className="w-5 h-5" />
                     </div>
                     <div className="flex flex-col min-w-0">
-                        <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">LOCATION</span>
+                        <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">{t.hubLocation}</span>
                         {mapsLink ? (
                             <a 
                                 href={mapsLink} 
@@ -113,7 +113,7 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
                             <ClockIcon className="w-5 h-5" />
                         </div>
                         <div className="flex flex-col justify-center">
-                            <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">TIME</span>
+                            <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">{t.hubTimeFrame}</span>
                             <span className="font-mono font-bold text-sm text-slate-200 tracking-widest">{data.time}</span>
                         </div>
                     </div>
@@ -130,7 +130,7 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
             <div className="flex-grow flex flex-col min-h-0">
                 <div className="flex items-center gap-2 mb-2 opacity-90 shrink-0 pl-1">
                     <TrophyIcon className="w-3.5 h-3.5 text-[#FFD700]" />
-                    <span className="text-[9px] font-black text-white/50 uppercase tracking-[0.25em]">SESSION LEADERS (IMPACT)</span>
+                    <span className="text-[9px] font-black text-white/50 uppercase tracking-[0.25em]">{t.hubSessionLeaders} (IMPACT)</span>
                 </div>
                 
                 <div className="flex-grow flex flex-col gap-2 min-h-0">
@@ -151,7 +151,7 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
                                         <span className={`font-russo text-xs uppercase tracking-wide truncate max-w-[140px] leading-none ${idx === 0 ? 'text-white' : 'text-slate-300'}`}>
                                             {stat.player.nickname || 'Unknown'}
                                         </span>
-                                        {idx === 0 && <span className="text-[8px] font-bold text-[#FFD700] tracking-widest uppercase mt-1">MVP OF THE MATCH</span>}
+                                        {idx === 0 && <span className="text-[8px] font-bold text-[#FFD700] tracking-widest uppercase mt-1">{t.badgeBonusMvp}</span>}
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-end justify-center bg-black/20 px-3 py-1.5 rounded-xl border border-white/5 min-w-[75px]">
@@ -229,20 +229,20 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                 <div className="max-w-6xl mx-auto w-full h-full flex flex-col gap-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch w-full h-full min-h-0">
                         <div className="flex flex-col gap-4 w-full h-full min-h-0">
-                            <HubCard title="TEAM STANDINGS" icon={<TrophyIcon />} accent="#FFD700" className="shrink-0 max-h-[45%] flex flex-col">
+                            <HubCard title={t.teamStandings} icon={<TrophyIcon />} accent="#FFD700" className="shrink-0 max-h-[45%] flex flex-col">
                                 <div className="p-1 overflow-y-auto custom-hub-scrollbar">
                                     <table className="w-full table-fixed border-collapse">
                                         <thead>
                                             <tr>
                                                 <th className={`${thClass} w-[6%]`}>#</th>
-                                                <th className={`${thClass} w-[26%] text-center`}>TEAM</th>
-                                                <th className={`${thClass} w-[7%]`}>P</th>
-                                                <th className={`${thClass} w-[7%]`}>W</th>
-                                                <th className={`${thClass} w-[7%]`}>D</th>
-                                                <th className={`${thClass} w-[7%]`}>L</th>
+                                                <th className={`${thClass} w-[26%] text-center`}>{t.team.toUpperCase()}</th>
+                                                <th className={`${thClass} w-[7%]`}>{t.thP}</th>
+                                                <th className={`${thClass} w-[7%]`}>{t.thW}</th>
+                                                <th className={`${thClass} w-[7%]`}>{t.thD}</th>
+                                                <th className={`${thClass} w-[7%]`}>{t.thL}</th>
                                                 <th className={`${thClass} w-[10%]`}>{t.thGF}</th>
                                                 <th className={`${thClass} w-[10%]`}>{t.thGA}</th>
-                                                <th className={`${thClass} w-[10%]`}>GD</th>
+                                                <th className={`${thClass} w-[10%]`}>{t.thGD}</th>
                                                 <th className={`${thClass} w-[10%] text-white bg-white/[0.03]`}>PTS</th>
                                             </tr>
                                         </thead>
@@ -267,16 +267,16 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                     </table>
                                 </div>
                             </HubCard>
-                            <HubCard title="MATCH REPORT" icon={<Target />} accent="#00F2FE" className="w-full flex-grow min-h-0" bodyClassName="p-4">
-                                <ArchiveEnvironmentWidget topPlayers={sortedByImpact} session={session} />
+                            <HubCard title={t.hubMatchReport} icon={<Target />} accent="#00F2FE" className="w-full flex-grow min-h-0" bodyClassName="p-4">
+                                <ArchiveEnvironmentWidget topPlayers={sortedByImpact} session={session} t={t} />
                             </HubCard>
                         </div>
                         <div className="w-full h-full min-h-0">
                             <HubCard title={
                                 <div className="flex items-center gap-4 md:gap-8 px-4 md:px-6">
-                                    <button onClick={() => { setActiveTab('players'); setExpandedMatchId(null); }} className={`font-russo text-[8px] md:text-[9px] uppercase tracking-widest transition-all ${activeTab === 'players' ? 'text-[#00F2FE]' : 'text-white/20'}`}>PLAYER STATISTICS</button>
+                                    <button onClick={() => { setActiveTab('players'); setExpandedMatchId(null); }} className={`font-russo text-[8px] md:text-[9px] uppercase tracking-widest transition-all ${activeTab === 'players' ? 'text-[#00F2FE]' : 'text-white/20'}`}>{t.playerStatistics}</button>
                                     <div className="w-px h-3 bg-white/10"></div>
-                                    <button onClick={() => { setActiveTab('matches'); setExpandedMatchId(null); }} className={`font-russo text-[8px] md:text-[9px] uppercase tracking-widest transition-all ${activeTab === 'matches' ? 'text-[#00F2FE]' : 'text-white/20'}`}>MATCH HISTORY</button>
+                                    <button onClick={() => { setActiveTab('matches'); setExpandedMatchId(null); }} className={`font-russo text-[8px] md:text-[9px] uppercase tracking-widest transition-all ${activeTab === 'matches' ? 'text-[#00F2FE]' : 'text-white/20'}`}>{t.gameHistory}</button>
                                 </div>
                             } icon={activeTab === 'players' ? <Users /> : <HistoryIcon />} accent="#00F2FE" className="h-full flex flex-col" bodyClassName="flex flex-col h-full min-h-0 relative">
                                 <div className="flex-grow overflow-y-auto custom-hub-scrollbar p-1 pb-10">
@@ -285,10 +285,10 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                             <thead>
                                                 <tr>
                                                     <th className={`${thClass} w-[10%]`}>#</th>
-                                                    <th className={`${thClass} w-[50%] text-left pl-4`}>PLAYER</th>
-                                                    <th className={`${thClass} w-[12%]`}>G</th>
-                                                    <th className={`${thClass} w-[12%]`}>A</th>
-                                                    <th className={`${thClass} w-[16%] text-white`}>TOT</th>
+                                                    <th className={`${thClass} w-[50%] text-left pl-4`}>{t.players.toUpperCase()}</th>
+                                                    <th className={`${thClass} w-[12%]`}>{t.thG}</th>
+                                                    <th className={`${thClass} w-[12%]`}>{t.thA}</th>
+                                                    <th className={`${thClass} w-[16%] text-white`}>{t.thTotal}</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -317,9 +317,9 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                             <thead>
                                                 <tr>
                                                     <th className={`${thClass} w-[15%]`}>#</th>
-                                                    <th className={`${thClass} w-[25%] text-center`}>HOME</th>
-                                                    <th className={`${thClass} w-[35%] text-center`}>RESULT</th>
-                                                    <th className={`${thClass} w-[25%] text-center`}>AWAY</th>
+                                                    <th className={`${thClass} w-[25%] text-center`}>{t.hubHome}</th>
+                                                    <th className={`${thClass} w-[35%] text-center`}>{t.hubResult}</th>
+                                                    <th className={`${thClass} w-[25%] text-center`}>{t.hubAway}</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -363,7 +363,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                                                                         <div className="flex flex-col min-w-0">
                                                                                             <div className="flex flex-wrap items-baseline gap-x-2">
                                                                                                 <span className="text-[11px] font-black uppercase text-slate-200 tracking-wide truncate">
-                                                                                                    {scorer?.nickname || (goal.isOwnGoal ? 'Own Goal' : 'Unknown')}
+                                                                                                    {scorer?.nickname || (goal.isOwnGoal ? t.ownGoal : 'Unknown')}
                                                                                                 </span>
                                                                                                 {assistant && (
                                                                                                     <span className="text-[8px] font-bold text-white/30 uppercase italic shrink-0">
