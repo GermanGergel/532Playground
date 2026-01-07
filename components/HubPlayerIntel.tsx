@@ -225,7 +225,7 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                 </div>
             )}
 
-            {/* Removed the absolute bottom fade div here to allow full visibility of content */}
+            <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#05070a] to-transparent z-30 pointer-events-none"></div>
 
             <div className="relative z-10 flex-grow overflow-y-auto custom-hub-scrollbar">
                 <div className={`w-full max-w-[1200px] mx-auto px-4 ${isEmbedded ? 'md:px-8' : 'md:px-12 lg:px-20'} py-6 pb-48 flex flex-col h-full`}>
