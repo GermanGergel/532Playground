@@ -1,3 +1,4 @@
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../context';
 import { Player, PlayerStatus, PlayerTier } from '../types';
@@ -290,29 +291,26 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/95 backdrop-blur-2xl animate-fade-in" onClick={onClose}></div>
             <div className="relative w-[95vw] md:w-[90vw] max-w-[1200px] h-[85vh] md:h-[80vh] animate-modal-pop">
-                <div className="absolute inset-[-15px] md:inset-[-30px] pointer-events-none z-0">
-                    <div className="absolute inset-0 bg-[#164e63]/25 blur-[40px] rounded-[3rem] animate-glow-pulse"></div>
-                    <div className="absolute inset-10 bg-[#0f172a]/50 blur-[60px] rounded-[3rem]"></div>
-                </div>
                 <div className="absolute inset-0 rounded-[2.5rem] overflow-hidden z-10">
                     <div className="absolute inset-0 p-[1px] bg-gradient-to-br from-[#00F2FE]/60 via-[#00F2FE]/10 to-[#00F2FE]/60 shadow-[0_0_40px_rgba(0,242,254,0.15)]">
                         <div className="w-full h-full bg-[#020408] rounded-[calc(2.5rem-1px)] overflow-hidden relative flex flex-col">
                             <StarrySky />
                             
-                            <div className="absolute top-[8%] left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center pointer-events-none select-none">
-                                <h2 className="font-blackops text-lg text-[#00F2FE] leading-none drop-shadow-[0_0_8px_rgba(0,242,254,0.6)]">
+                            {/* --- CLUB LOGO CENTERED IN THE GOAL AREA --- */}
+                            <div className="absolute top-[26%] left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center pointer-events-none select-none opacity-90">
+                                <h2 className="font-blackops text-4xl md:text-5xl text-[#00F2FE] leading-none drop-shadow-[0_0_15px_rgba(0,242,254,0.8)]">
                                     532
                                 </h2>
-                                <div className="flex flex-col items-center mt-0 relative">
-                                    <span className="font-russo text-[5.5px] text-white tracking-[0.25em] uppercase opacity-90 drop-shadow-md">
+                                <div className="flex flex-col items-center mt-1 relative">
+                                    <span className="font-russo text-[10px] md:text-[12px] text-white tracking-[0.3em] uppercase drop-shadow-md">
                                         Playground
                                     </span>
-                                    <div className="flex items-center gap-1 mt-0">
-                                        <div className="h-px w-1 bg-white/30"></div>
-                                        <span className="font-chakra text-[4.5px] font-black text-white tracking-[0.15em] uppercase drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]">
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <div className="h-px w-3 bg-white/30"></div>
+                                        <span className="font-chakra text-[8px] md:text-[9px] font-black text-white/50 tracking-[0.2em] uppercase">
                                             Club
                                         </span>
-                                        <div className="h-px w-1 bg-white/30"></div>
+                                        <div className="h-px w-3 bg-white/30"></div>
                                     </div>
                                 </div>
                             </div>
@@ -404,13 +402,10 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
                                                 </g>
                                             </g>
 
-                                            {/* FIXED: Adjusted translate y to 60 and scale to 1.5. 
-                                                The goal height is 60 units. 60 + 90 = 150. 
-                                                Base of goal is now exactly at y=150. */}
                                             <g transform="translate(425, 60) scale(1.5)">
                                                 <g opacity="0.4">
                                                     <path d="M 5,60 L 5,8 Q 5,0 13,0 L 87,0 Q 95,0 95,8 L 95,60" fill="none" stroke="#00F2FE" strokeWidth="1.2" filter="url(#goalGlow)" strokeLinecap="round" />
-                                                    <path d="M 5,0 L 15,-6 M 95,0 L 85,-6 M 15,-6 H 85" fill="none" stroke="#00F2FE" strokeWidth="0.5" opacity="0.3" />
+                                                    <path d="M 5,0 L 15,-6 H 85 L 95,0" fill="none" stroke="#00F2FE" strokeWidth="0.5" opacity="0.3" />
                                                     <g stroke="#00F2FE" strokeWidth="0.12" opacity="0.35">
                                                         {[3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57].map(y => <line key={y} x1="5" y1={y} x2="95" y2={y} />)}
                                                         {[8, 11, 14, 17, 20, 23, 26, 29, 32, 35, 38, 41, 44, 47, 50, 53, 56, 59, 62, 65, 68, 71, 74, 77, 80, 83, 86, 89, 92].map(x => <line key={x} x1={x} y1="0" x2={x} y2="60" />)}
