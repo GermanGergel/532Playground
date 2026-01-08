@@ -13,6 +13,7 @@ import { ClubIntelligenceDashboard } from '../components/ClubIntelligenceDashboa
 import { RadioPlayer } from '../components/RadioPlayer';
 import { SquadOfTheMonthBadge } from '../components/SquadOfTheMonthBadge';
 import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
+import { MiniSquadBadge } from './MiniSquadBadge';
 
 // --- SUB-COMPONENTS ---
 
@@ -185,7 +186,8 @@ const HubNav: React.FC<{
     onTabChange: (tab: any) => void;
     archiveViewDate: string | null;
     onHomeClick: () => void;
-}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick }) => {
+    onOpenTotm: () => void;
+}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, onOpenTotm }) => {
     const { language, setLanguage } = useApp();
     const t = useTranslation();
     const [isLangOpen, setIsLangOpen] = useState(false);
@@ -286,6 +288,8 @@ const HubNav: React.FC<{
                 {isDashboardOpen && (
                     <div className="flex items-center gap-2 md:gap-4 mr-2 h-full animate-in fade-in slide-in-from-right-3 duration-500">
                         <div className="mr-3 flex items-center border-r border-white/10 pr-4 gap-3">
+                            <MiniSquadBadge onClick={onOpenTotm} className="w-[42px] h-[42px] md:w-[54px] md:h-[54px] -my-1 mr-3" />
+
                             <button 
                                 onClick={onHomeClick}
                                 className="flex flex-col items-center justify-center gap-1 transition-all duration-300 group cursor-pointer hover:scale-110"
@@ -393,6 +397,7 @@ const HeroTitle: React.FC = () => {
 
 const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, rank }) => {
     const cardRef = useRef<HTMLDivElement>(null);
+    const { totmPlayerIds } = useApp();
     const t = useTranslation();
     const isFirst = rank === 1;
     const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
@@ -403,6 +408,9 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
     }, [rank]);
     
     const topBadges = useMemo(() => sortBadgesByPriority(player.badges || {}).slice(0, 5), [player.badges]);
+
+    // Check TOTM
+    const isTotm = totmPlayerIds.has(player.id);
 
     useEffect(() => {
         const card = cardRef.current; if (!card) return;
@@ -415,12 +423,25 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
             <div ref={cardRef} className={`interactive-card relative ${isFirst ? 'w-[280px] h-[390px]' : 'w-[260px] h-[360px]'} rounded-3xl p-4 overflow-hidden text-white bg-dark-surface border border-white/10`}>
                 {player.playerCard && (<div className="absolute inset-0 w-full h-full bg-cover bg-no-repeat" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }}/>)}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
-                {!isBadgeModalOpen && (<div className="absolute top-24 left-4 z-20"><div className="space-y-4">{(player.skills || []).map(skill => (
-                    <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
-                        <StarIcon className="w-4 h-4 text-[#00F2FE]" />
-                        <span className="font-bold text-xs text-white tracking-wider">{skillAbbreviations[skill]}</span>
+                
+                {!isBadgeModalOpen && (
+                    <div className="absolute top-24 left-4 z-20 flex flex-col gap-4">
+                        <div className="space-y-4">
+                            {(player.skills || []).map(skill => (
+                                <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
+                                    <StarIcon className="w-4 h-4 text-[#00F2FE]" />
+                                    <span className="font-bold text-xs text-white tracking-wider">{skillAbbreviations[skill]}</span>
+                                </div>
+                            ))}
+                        </div>
+                        {isTotm && (
+                            <div className="animate-in fade-in zoom-in duration-500">
+                                <MiniSquadBadge size="w-10 h-10" />
+                            </div>
+                        )}
                     </div>
-                ))}</div></div>)}
+                )}
+
                 <div className="relative z-10 h-full flex flex-col justify-between p-1">
                      <div className="flex justify-between items-start">
                         <div>
@@ -542,11 +563,6 @@ export const PublicHubScreen: React.FC = () => {
     const [dashboardView, setDashboardView] = useState<DashboardViewType>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
 
-    // DETERMINING ENVIRONMENT
-    const isDev = useMemo(() => {
-        return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    }, []);
-
     useEffect(() => {
         if (isDashboardOpen) {
             document.body.style.overflow = 'hidden';
@@ -625,15 +641,8 @@ export const PublicHubScreen: React.FC = () => {
                     setDashboardView('dashboard');
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
+                onOpenTotm={() => setIsTotmOpen(true)}
             />
-
-            {/* SQUAD OF THE MONTH BADGE - NOW CONDITIONALLY INTERACTIVE */}
-            {!isDashboardOpen && (
-                <SquadOfTheMonthBadge 
-                    onClick={() => setIsTotmOpen(true)} 
-                    isDisabled={!isDev} 
-                />
-            )}
 
             <div 
                 className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none 
@@ -673,7 +682,7 @@ export const PublicHubScreen: React.FC = () => {
                     <NoLeadersPlaceholder />
                 )}
 
-                <div className="mt-24 md:mt-32 pb-24">
+                <div className="mt-24 md:mt-32 pb-6"> {/* Reduced padding from pb-24 to pb-6 */}
                     <div className="text-center mb-12 md:mb-20">
                         <h2 className="font-orbitron text-lg md:text-2xl font-black uppercase tracking-[0.15em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubVitalsTitle}</h2>
                     </div>
@@ -685,9 +694,16 @@ export const PublicHubScreen: React.FC = () => {
                 </div>
                 
                 <div className="relative z-10 bg-transparent pb-8">
-                    <footer className="relative py-8 bg-transparent">
+                    <footer className="relative pt-0 pb-8 bg-transparent"> {/* Changed py-8 to pt-0 pb-8 */}
                         <div className="text-center px-4">
-                            <div className="mt-10 mb-24">
+                            <div className="mt-0 mb-24 flex flex-col items-center gap-6"> {/* Changed mt-10 to mt-0 */}
+                                {/* SQUAD OF THE MONTH BADGE - NOW POSITIONED ABOVE DASHBOARD BUTTON */}
+                                <SquadOfTheMonthBadge 
+                                    onClick={() => setIsTotmOpen(true)} 
+                                    isDisabled={false} 
+                                    className="animate-in fade-in zoom-in duration-1000 delay-500"
+                                />
+
                                 <button 
                                     onClick={() => setIsDashboardOpen(true)} 
                                     className="mx-auto block bg-transparent text-[#00F2FE] font-bold text-lg py-3.5 px-10 rounded-xl shadow-[0_0_20px_rgba(0,242,254,0.4)] hover:shadow-[0_0_30px_rgba(0,242,254,0.6)] hover:bg-[#00F2FE]/10 transition-all transform hover:scale-[1.05] active:scale-95 group border border-[#00F2FE]/20"
