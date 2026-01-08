@@ -502,12 +502,8 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
                                                     {/* Center Circle Arc */}
                                                     <path d="M 350,600 A 150,75 0 0,1 650,600" strokeWidth="2.5" />
                                                     
-                                                    {/* Large Penalty Area */}
-                                                    <path d="M 280,150 L 240,240 L 760,240 L 720,150" strokeWidth="1.5" />
-                                                    
-                                                    {/* Small Goal Area (Goalkeeper Box) - Aligned to Goalposts */}
-                                                    {/* Goalposts are at ~38% and ~62% of the width at the top edge */}
-                                                    <path d="M 380,150 L 350,185 L 650,185 L 620,150" strokeWidth="1.2" />
+                                                    {/* Narrower and Shorter Penalty Area */}
+                                                    <path d="M 330,150 L 310,210 L 690,210 L 670,150" strokeWidth="1.5" />
                                                 </g>
                                             </g>
                                         </g>
