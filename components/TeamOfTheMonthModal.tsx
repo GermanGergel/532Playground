@@ -299,7 +299,6 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
                         <div className="w-full h-full bg-[#020408] rounded-[calc(2.5rem-1px)] overflow-hidden relative flex flex-col">
                             <StarrySky />
                             
-                            {/* FIXED LOGO LAYER: Now purely content, independent of SVG pitch height */}
                             <div className="absolute top-[8%] left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center pointer-events-none select-none">
                                 <h2 className="font-blackops text-lg text-[#00F2FE] leading-none drop-shadow-[0_0_8px_rgba(0,242,254,0.6)]">
                                     532
@@ -405,8 +404,10 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
                                                 </g>
                                             </g>
 
-                                            {/* MOVED GOAL INSIDE SVG: Now it's locked to y=150 (the top line of the pitch) */}
-                                            <g transform="translate(425, 65) scale(1.5)">
+                                            {/* FIXED: Adjusted translate y to 60 and scale to 1.5. 
+                                                The goal height is 60 units. 60 + 90 = 150. 
+                                                Base of goal is now exactly at y=150. */}
+                                            <g transform="translate(425, 60) scale(1.5)">
                                                 <g opacity="0.4">
                                                     <path d="M 5,60 L 5,8 Q 5,0 13,0 L 87,0 Q 95,0 95,8 L 95,60" fill="none" stroke="#00F2FE" strokeWidth="1.2" filter="url(#goalGlow)" strokeLinecap="round" />
                                                     <path d="M 5,0 L 15,-6 M 95,0 L 85,-6 M 15,-6 H 85" fill="none" stroke="#00F2FE" strokeWidth="0.5" opacity="0.3" />
