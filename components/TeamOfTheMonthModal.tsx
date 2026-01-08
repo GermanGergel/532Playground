@@ -82,9 +82,8 @@ const PlayerPodium: React.FC<{ x: string; y: string; data: DisplayPlayer; accent
                                 </div>
                             </div>
 
-                            {/* UPDATED: Name display now supports wrapping into 2 lines */}
-                            <div className="w-full text-center pb-0.5">
-                                <span className="text-white font-russo text-xs uppercase block w-full drop-shadow-md tracking-tight leading-[0.9] line-clamp-2">
+                            <div className="w-full text-center pb-1">
+                                <span className="text-white font-russo text-sm uppercase truncate block w-full drop-shadow-md tracking-wide">
                                     {player.nickname}
                                 </span>
                             </div>
