@@ -415,7 +415,7 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
                                     </button>
                                     
                                     {isCalendarOpen && (
-                                        <div className="absolute top-[calc(100%+10px)] right-0 w-44 bg-[#0a0c10]/95 backdrop-blur-xl border border-[#00F2FE]/30 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(0,242,254,0.1)] overflow-hidden animate-in slide-in-from-top-2 fade-in duration-300 z-[110]">
+                                        <div className="absolute top-[calc(100%+10px)] right-0 w-36 bg-[#0a0c10]/95 backdrop-blur-xl border border-[#00F2FE]/30 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(0,242,254,0.1)] overflow-hidden animate-in slide-in-from-top-2 fade-in duration-300 z-[110]">
                                             <div className="max-h-60 overflow-y-auto no-scrollbar py-1">
                                                 {availableMonths.length > 0 ? availableMonths.map((m, idx) => {
                                                     const isSelected = m.date.getMonth() === selectedDate.getMonth() && m.date.getFullYear() === selectedDate.getFullYear();
@@ -426,17 +426,17 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
                                                                 setSelectedDate(m.date);
                                                                 setIsCalendarOpen(false);
                                                             }}
-                                                            className={`w-full text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all relative group/item
-                                                                ${isSelected ? 'text-[#00F2FE] bg-[#00F2FE]/5' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
+                                                            className={`w-full text-left px-4 py-1.5 text-[9px] font-black uppercase tracking-widest transition-all relative group/item
+                                                                ${isSelected ? 'text-white bg-[#00F2FE]/10' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
                                                         >
                                                             {isSelected && (
-                                                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-[#00F2FE] rounded-r-full shadow-[0_0_8px_#00F2FE]"></div>
+                                                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-3 bg-[#00F2FE] rounded-r-full shadow-[0_0_8px_#00F2FE]"></div>
                                                             )}
                                                             {m.label}
                                                         </button>
                                                     );
                                                 }) : (
-                                                    <div className="px-4 py-4 text-[9px] font-bold text-white/20 text-center uppercase tracking-widest">No History</div>
+                                                    <div className="px-4 py-4 text-[8px] font-bold text-white/20 text-center uppercase tracking-widest">No History</div>
                                                 )}
                                             </div>
                                         </div>
@@ -494,7 +494,7 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
                                             <path d="M 0,600 L 1000,600 L 750,150 L 250,150 Z" fill="url(#depthShadow)"/>
                                             <path d="M 0,600 L 500,600 L 400,150 L 250,150 Z" fill="url(#sideGlowLeft)" />
                                             <path d="M 500,600 L 1000,600 L 750,150 L 600,150 Z" fill="url(#sideGlowRight)" />
-                                            <g filter="url(#pitchLineGlow)"><g fill="none" stroke="#ffffff" strokeOpacity="0.3" strokeLinecap="round"><line x1="0" y1="600" x2="1000" y2="600" strokeWidth="2.5" /><path d="M 0,600 L 250,150" strokeWidth="2.5" /><path d="M 1000,600 L 750,150" strokeWidth="2.5" /><line x1="250" y1="150" x2="750" y2="150" strokeWidth="1.2" /><path d="M 350,600 A 150,75 0 0,1 650,600" strokeWidth="2.5" /><path d="M 280,150 L 240,240 L 760,240 L 720,150" strokeWidth="1.5" /><path d="M 400,150 L 385,185 L 615,185 L 600,150" strokeWidth="1.2" /></g></g>
+                                            <g filter="url(#pitchLineGlow)"><g fill="none" stroke="#ffffff" strokeOpacity="0.3" strokeLinecap="round"><line x1="0" y1="600" x2="1000" y2="600" strokeWidth="2.5" /><path d="M 0,600 L 250,150" strokeWidth="2.5" /><path d="M 1000,600 L 750,150" strokeWidth="2.5" /><line x1="250" y1="150" x2="750" y2="150" strokeWidth="1.2" /><path d="M 350,600 A 150,75 0 0,1 650,600" strokeWidth="2.5" /><path d="M 280,150 L 240,240 L 760,240 L 720,150" strokeWidth="1.5" /><path d="M 445,150 L 435,185 L 565,185 L 555,150" strokeWidth="1.2" /></g></g>
                                         </g>
                                     </svg>
                                 </div>
