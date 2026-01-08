@@ -82,7 +82,7 @@ const PlayerPodium: React.FC<{ x: string; y: string; data: DisplayPlayer; accent
                                 </div>
                             </div>
 
-                            {/* Name display now supports wrapping into 2 lines */}
+                            {/* UPDATED: Name display now supports wrapping into 2 lines */}
                             <div className="w-full text-center pb-0.5">
                                 <span className="text-white font-russo text-xs uppercase block w-full drop-shadow-md tracking-tight leading-[0.9] line-clamp-2">
                                     {player.nickname}
@@ -472,13 +472,7 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
                                 <div className="absolute inset-0 z-10">
                                     <svg width="100%" height="100%" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice" className="opacity-100">
                                         <defs>
-                                            <filter id="grassTexture">
-                                                <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="4" result="noise" />
-                                                <feDiffuseLighting in="noise" lightingColor="#1e293b" surfaceScale="2.5">
-                                                    <feDistantLight elevation="40" azimuth="45" />
-                                                </feDiffuseLighting>
-                                                <feComposite operator="in" in2="SourceGraphic" />
-                                            </filter>
+                                            <filter id="grassTexture"><feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="4" result="noise" /><feDiffuseLighting in="noise" lightingColor="#1e293b" surfaceScale="2.5"><feDiffuseLighting in="noise" lightingColor="#1e293b" surfaceScale="2.5"><feDistantLight elevation="40" azimuth="45" /></feDiffuseLighting><feDistantLight elevation="40" azimuth="45" /><feComposite operator="in" in2="SourceGraphic" /></filter>
                                             <linearGradient id="pitchGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="#020408" /><stop offset="100%" stopColor="#0f172a" /></linearGradient>
                                             
                                             <linearGradient id="depthShadow" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="black" stopOpacity="0.8" /><stop offset="30%" stopColor="black" stopOpacity="0.4" /><stop offset="100%" stopColor="transparent" stopOpacity="0" /></linearGradient>

@@ -22,12 +22,12 @@ const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
     };
     const currentForm = config[form] || config.stable;
     const commonProps: React.SVGProps<SVGSVGElement> = {
-        width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: currentForm.color,
-        strokeWidth: "3", strokeLinecap: "round", strokeLinejoin: "round",
+        width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: currentForm.color,
+        strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round",
     };
     switch (form) {
         case 'hot_streak': return <svg {...commonProps}><path d="M12 19V5m-6 7l6-6 6 6"/></svg>;
-        case 'cold_streak': return <svg {...commonProps}><path d="M12 5v14M5 12l7 7 7-7"/></svg>;
+        case 'cold_streak': return <svg {...commonProps}><path d="M12 5v14M12 5v14M5 12l7 7 7-7"/></svg>;
         default: return <svg {...commonProps}><path d="M5 12h14m-6-6l6 6-6 6"/></svg>;
     }
 };
@@ -130,7 +130,7 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
                         </div>
                     </div>
                     <div className="text-center flex-shrink-0 relative z-30 pb-1">
-                        <h1 className="font-black uppercase tracking-tight drop-shadow-lg leading-none mb-1">
+                        <h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg leading-none mb-1">
                             {player.nickname} {player.surname}
                         </h1>
                     </div>
