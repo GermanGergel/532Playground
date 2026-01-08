@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -7,7 +8,6 @@ import { TrophyIcon, Zap, History as HistoryIcon, Users, AwardIcon, Target } fro
 import { useTranslation } from '../ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { TeamAvatar } from './avatars';
-import { MiniSquadBadge } from './MiniSquadBadge';
 
 // --- LOCAL ICONS FOR WIDGET ---
 const MapPinIcon = ({ className }: { className?: string }) => (
@@ -243,65 +243,53 @@ interface TopPlayerStats { player: Player; score: number; rank: 1 | 2 | 3; }
 
 // --- MEMOIZED SESSION PODIUM ---
 // Critical Fix: Wrapped in React.memo to prevent re-renders on timer ticks
-const SessionPodium = React.memo(({ players, t, totmPlayerIds }: { players: TopPlayerStats[], t: any, totmPlayerIds: Set<string> }) => {
+const SessionPodium = React.memo(({ players, t }: { players: TopPlayerStats[], t: any }) => {
     const p1 = players.find(p => p.rank === 1);
     const p2 = players.find(p => p.rank === 2);
     const p3 = players.find(p => p.rank === 3);
     
-    const PodiumSpot = ({ p, rank, height, color, delay }: { p?: TopPlayerStats, rank: number, height: string, color: string, delay: string }) => {
-        const isTotm = p ? totmPlayerIds.has(p.player.id) : false;
-
-        return (
-            <div className={`flex flex-col items-center justify-end h-full ${delay} animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both relative`}>
-                {p ? (
-                    <div className="mb-3 relative z-20 flex flex-col items-center w-full px-1">
-                        <div className={`relative rounded-lg overflow-hidden border border-white/20 shadow-lg flex flex-col shrink-0 ${rank === 1 ? 'w-[110px] h-[155px] md:w-[135px] md:h-[185px] z-20' : 'w-[115px] h-[130px] md:w-[115px] md:h-[155px] z-10'}`}>
-                            {p.player.playerCard ? (
-                                <div 
-                                    className="absolute inset-0 bg-cover bg-no-repeat"
-                                    style={{ 
-                                        backgroundImage: `url(${p.player.playerCard})`, 
-                                        backgroundPosition: 'center 5%'
-                                    }}
-                                />
-                            ) : (
-                                <div className="absolute inset-0 bg-gradient-to-b from-slate-700 to-slate-900" />
-                            )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
-                            
-                            {/* TOTM BADGE ON PODIUM CARD */}
-                            {isTotm && (
-                                <div className="absolute top-1 left-1 z-30 transform scale-50 origin-top-left pointer-events-none">
-                                    <MiniSquadBadge size="w-12 h-12" />
+    const PodiumSpot = ({ p, rank, height, color, delay }: { p?: TopPlayerStats, rank: number, height: string, color: string, delay: string }) => (
+        <div className={`flex flex-col items-center justify-end h-full ${delay} animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both relative`}>
+            {p ? (
+                <div className="mb-3 relative z-20 flex flex-col items-center w-full px-1">
+                     <div className={`relative rounded-lg overflow-hidden border border-white/20 shadow-lg flex flex-col shrink-0 ${rank === 1 ? 'w-[110px] h-[155px] md:w-[135px] md:h-[185px] z-20' : 'w-[115px] h-[130px] md:w-[115px] md:h-[155px] z-10'}`}>
+                        {p.player.playerCard ? (
+                            <div 
+                                className="absolute inset-0 w-full h-full bg-cover bg-no-repeat"
+                                style={{ 
+                                    backgroundImage: `url(${p.player.playerCard})`, 
+                                    backgroundPosition: 'center 5%'
+                                }}
+                            />
+                        ) : (
+                            <div className="absolute inset-0 bg-gradient-to-b from-slate-700 to-slate-900" />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+                        <div className="relative z-10 h-full flex flex-col justify-between p-1.5">
+                            <div className="flex justify-between items-start w-full">
+                                {p.player.countryCode && <img src={`https://flagcdn.com/w40/${convertCountryCodeAlpha3ToAlpha2(p.player.countryCode)?.toLowerCase()}.png`} className="w-3 h-auto rounded-sm opacity-90" alt="" />}
+                                <div className="flex flex-col items-end leading-none">
+                                    <span className="font-russo text-lg text-[#00F2FE]">{p.player.rating}</span>
+                                    <span className="text-[5px] font-black text-white">OVR</span>
                                 </div>
-                            )}
-
-                            <div className="relative z-10 h-full flex flex-col justify-between p-1.5">
-                                <div className="flex justify-between items-start w-full">
-                                    {p.player.countryCode && <img src={`https://flagcdn.com/w40/${convertCountryCodeAlpha3ToAlpha2(p.player.countryCode)?.toLowerCase()}.png`} className="w-3 h-auto rounded-sm opacity-90" alt="" />}
-                                    <div className="flex flex-col items-end leading-none">
-                                        <span className="font-russo text-lg text-[#00F2FE]">{p.player.rating}</span>
-                                        <span className="text-[5px] font-black text-white">OVR</span>
-                                    </div>
-                                </div>
-                                <div className="w-full text-center pb-1"><span className="text-white font-russo text-[10px] uppercase truncate px-1">{p.player.nickname}</span></div>
                             </div>
+                            <div className="w-full text-center pb-1"><span className="text-white font-russo text-[10px] uppercase truncate px-1">{p.player.nickname}</span></div>
                         </div>
                     </div>
-                ) : (
-                    <div className="mb-12 opacity-10"><div className="w-12 h-16 rounded border-2 border-dashed border-white/30"></div></div>
-                )}
-                <div className="w-full relative overflow-hidden backdrop-blur-md rounded-t-xl flex flex-col items-center justify-center pt-2 pb-1.5 z-10" style={{ height: height, background: `linear-gradient(to bottom, ${color}35, ${color}08, transparent)`, borderTop: `2px solid ${color}` }}>
-                    {p && (
-                        <div className="relative z-10 flex flex-col items-center">
-                            <span className="font-russo text-xl text-white leading-none tracking-tighter">{p.score.toFixed(1)}</span>
-                            <span className="text-[5.5px] font-black text-white/50 uppercase tracking-[0.2em] mt-1">{t.hubImpact}</span>
-                        </div>
-                    )}
                 </div>
+            ) : (
+                <div className="mb-12 opacity-10"><div className="w-12 h-16 rounded border-2 border-dashed border-white/30"></div></div>
+            )}
+            <div className="w-full relative overflow-hidden backdrop-blur-md rounded-t-xl flex flex-col items-center justify-center pt-2 pb-1.5 z-10" style={{ height: height, background: `linear-gradient(to bottom, ${color}35, ${color}08, transparent)`, borderTop: `2px solid ${color}` }}>
+                {p && (
+                    <div className="relative z-10 flex flex-col items-center">
+                        <span className="font-russo text-xl text-white leading-none tracking-tighter">{p.score.toFixed(1)}</span>
+                        <span className="text-[5.5px] font-black text-white/50 uppercase tracking-[0.2em] mt-1">{t.hubImpact}</span>
+                    </div>
+                )}
             </div>
-        );
-    };
+        </div>
+    );
     return (
         <div className="flex items-end justify-center gap-3 h-full px-4 relative">
             <div className="w-[115px] md:w-[165px] h-full flex flex-col justify-end z-10 shrink-0"><PodiumSpot p={p2} rank={2} height="90px" color="#94a3b8" delay="delay-100" /></div>
@@ -392,7 +380,7 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
 // --- MAIN DASHBOARD EXPORT ---
 
 export const PublicHubDashboard: React.FC = () => {
-    const { history, newsFeed, allPlayers, totmPlayerIds } = useApp();
+    const { history, newsFeed, allPlayers } = useApp();
     const t = useTranslation();
     const [activeRightTab, setActiveRightTab] = useState<'players' | 'games'>('players');
     const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
@@ -463,7 +451,7 @@ export const PublicHubDashboard: React.FC = () => {
                 <div className="col-span-12 md:col-span-9 flex flex-col gap-4 h-full min-h-[600px] overflow-hidden">
                     <div className="flex-[4] min-h-0 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200 flex gap-3">
                          <HubCard title={t.hubSessionLeaders} align="right" icon={<AwardIcon />} accent="#FFD700" variant="elite" className="flex-[2] h-full min-h-[350px]" bodyClassName="flex flex-col bg-transparent">
-                            <div className="flex-grow relative z-10"><SessionPodium players={top3PodiumPlayers} t={t} totmPlayerIds={totmPlayerIds} /></div>
+                            <div className="flex-grow relative z-10"><SessionPodium players={top3PodiumPlayers} t={t} /></div>
                         </HubCard>
                         <HubCard title={t.hubMatchReport} icon={<Target />} accent="#00F2FE" variant="standings" className="flex-1 h-full min-h-[350px]" bodyClassName="flex flex-col p-5"><MatchEnvironmentWidget session={session} t={t} /></HubCard>
                     </div>
@@ -534,28 +522,14 @@ export const PublicHubDashboard: React.FC = () => {
                                     <div className="animate-in fade-in duration-500">
                                         <table className="w-full table-fixed border-collapse">
                                             <thead><tr><th className={`${thStandings} w-[10%]`}>#</th><th className={`${thStandings} text-left pl-3 w-[50%]`}>{t.players}</th><th className={`${thStandings} w-[15%]`}>{t.thG}</th><th className={`${thStandings} w-[15%]`}>{t.thA}</th><th className={`${thStandings} w-[10%] text-white bg-white/[0.03]`}>TOT</th></tr></thead>
-                                            <tbody>{sortedForTable.map((ps, idx) => {
-                                                const isTotm = totmPlayerIds.has(ps.player.id);
-                                                return (
-                                                    <tr key={ps.player.id} className="group border-b border-white/5 last:border-0 transition-all duration-300">
-                                                        <td className="py-2 text-center text-[9px] font-bold text-white/30 bg-white/[0.02] relative overflow-hidden">{idx + 1}</td>
-                                                        <td className="py-2 text-left pl-3 relative overflow-hidden">
-                                                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[1.5px] h-3 rounded-full" style={{ backgroundColor: ps.team.color, boxShadow: `0 0 8px ${ps.team.color}` }} />
-                                                            <div className="flex items-center gap-2 pl-2">
-                                                                <span className="text-slate-300 font-bold uppercase truncate text-[11px] block flex-grow transition-colors group-hover:text-white">{ps.player.nickname || 'Unknown'}</span>
-                                                                {isTotm && (
-                                                                    <div className="shrink-0 transform scale-50 -ml-1">
-                                                                        <MiniSquadBadge size="w-6 h-6" />
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </td>
-                                                        <td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.goals}</td>
-                                                        <td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.assists}</td>
-                                                        <td className="py-2 text-center text-[12px] font-black text-white bg-white/[0.03]">{ps.goals + ps.assists}</td>
-                                                    </tr>
-                                                );
-                                            })}
+                                            <tbody>{sortedForTable.map((ps, idx) => (
+                                                <tr key={ps.player.id} className="group border-b border-white/5 last:border-0 transition-all duration-300">
+                                                    <td className="py-2 text-center text-[9px] font-bold text-white/30 bg-white/[0.02] relative overflow-hidden">{idx + 1}</td>
+                                                    <td className="py-2 text-left pl-3 relative overflow-hidden"><div className="absolute left-0 top-1/2 -translate-y-1/2 w-[1.5px] h-3 rounded-full" style={{ backgroundColor: ps.team.color, boxShadow: `0 0 8px ${ps.team.color}` }} /><span className="text-slate-300 font-bold uppercase truncate text-[11px] block w-full pl-2 transition-colors">{ps.player.nickname || 'Unknown'}</span></td>
+                                                    <td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.goals}</td>
+                                                    <td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.assists}</td>
+                                                    <td className="py-2 text-center text-[12px] font-black text-white bg-white/[0.03]">{ps.goals + ps.assists}</td>
+                                                </tr>))}
                                             </tbody>
                                         </table>
                                     </div>
@@ -598,8 +572,8 @@ export const PublicHubDashboard: React.FC = () => {
                                                 </React.Fragment>
                                             )})}</tbody>
                                         </table>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </HubCard>

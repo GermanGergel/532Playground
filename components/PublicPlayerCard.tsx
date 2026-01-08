@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Player, PlayerTier, PlayerStatus, BadgeType, PlayerForm, SkillType } from '../types';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
@@ -26,7 +27,7 @@ const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
     };
     switch (form) {
         case 'hot_streak': return <svg {...commonProps}><path d="M12 19V5m-6 7l6-6 6 6"/></svg>;
-        case 'cold_streak': return <svg {...commonProps}><path d="M12 5v14M5 12l7 7 7-7"/></svg>;
+        case 'cold_streak': return <svg {...commonProps}><path d="M12 5v14M12 5v14M5 12l7 7 7-7"/></svg>;
         default: return <svg {...commonProps}><path d="M5 12h14m-6-6l6 6-6 6"/></svg>;
     }
 };
@@ -242,8 +243,7 @@ const StatsView: React.FC<{ player: Player; onBack: () => void; isPromo?: boolea
                     </PromoStatsContainer>
                 ) : (
                     <BestSessionCard player={player} />
-                )
-            }
+                )}
 
                 {/* 4. Club Rankings */}
                 {isPromo ? (

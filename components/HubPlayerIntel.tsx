@@ -7,6 +7,7 @@ import { PlayerForm, SkillType, Player, PlayerStatus, BadgeType, PlayerTier, Pla
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { BadgeIcon } from '../features';
 import { translations } from '../translations/index';
+import { MiniSquadBadge } from './MiniSquadBadge';
 
 const skillAbbreviations: Record<SkillType, string> = {
     goalkeeper: 'GK', power_shot: 'PS', technique: 'TQ', defender: 'DF', 
@@ -146,10 +147,13 @@ const TerminalSessionTrend = ({ history }: { history?: Player['sessionHistory'] 
 };
 
 export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; isEmbedded?: boolean }> = ({ playerId, onBack, isEmbedded = false }) => {
-    const { allPlayers, language } = useApp();
+    const { allPlayers, language, totmPlayerIds } = useApp();
     const t = translations[language] as any;
 
     const player = useMemo(() => (allPlayers.find(p => p.id === playerId)) as Player, [allPlayers, playerId]);
+    
+    // Check if player is in Team of the Month
+    const isTotm = useMemo(() => totmPlayerIds.has(playerId), [totmPlayerIds, playerId]);
 
     const rankings = useMemo(() => {
         const confirmedPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
@@ -157,7 +161,6 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
         
         const getWR = (p: Player) => p.totalGames > 0 ? (p.totalWins / p.totalGames) : 0;
 
-        // TIE-BREAKER LOGIC MATCHING CLUB HUB LEADERS
         const sortedByGoals = [...confirmedPlayers].sort((a, b) => {
             if (b.totalGoals !== a.totalGoals) return b.totalGoals - a.totalGoals;
             if (b.rating !== a.rating) return b.rating - a.rating;
@@ -213,7 +216,6 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
         border: `1px solid ${tierColor}44`
     };
 
-    // Deep check for records object with proper type casting to avoid TS2339
     const safeRecords = (player.records || {}) as any;
 
     return (
@@ -249,8 +251,22 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
                                         <div className="absolute inset-0 p-4 flex flex-col justify-between pointer-events-none">
                                             <div className="flex justify-between items-start">
-                                                <div className="flex flex-col items-start"><span className="font-black text-xl text-[#00F2FE] leading-none">532</span><span className="text-white text-[6px] font-bold tracking-[0.15em] leading-none mt-1">PLAYGROUND</span>{countryCodeAlpha2 && <img src={`https://flagcdn.com/w80/${countryCodeAlpha2.toLowerCase()}.png`} className="w-4 h-auto mt-2 rounded-sm opacity-60" alt="flag" />}</div>
-                                                <div className="flex flex-col items-end"><div className="text-3xl font-black text-[#00F2FE] leading-none">{player.rating}</div><p className="font-black text-[8px] tracking-[0.2em] text-white mt-1">OVR</p></div>
+                                                <div className="flex flex-col items-start">
+                                                    <span className="font-black text-xl text-[#00F2FE] leading-none">532</span>
+                                                    <span className="text-white text-[6px] font-bold tracking-[0.15em] leading-none mt-1">PLAYGROUND</span>
+                                                    {countryCodeAlpha2 && <img src={`https://flagcdn.com/w80/${countryCodeAlpha2.toLowerCase()}.png`} className="w-4 h-auto mt-2 rounded-sm opacity-60" alt="flag" />}
+                                                    
+                                                    {/* TEAM OF THE MONTH ICON */}
+                                                    {isTotm && (
+                                                        <div className="mt-3 animate-in fade-in zoom-in duration-700">
+                                                            <MiniSquadBadge size="w-8 h-8" className="opacity-90" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-col items-end">
+                                                    <div className="text-3xl font-black text-[#00F2FE] leading-none">{player.rating}</div>
+                                                    <p className="font-black text-[8px] tracking-[0.2em] text-white mt-1">OVR</p>
+                                                </div>
                                             </div>
                                             <div className="text-center"><h1 className="font-russo text-2xl uppercase tracking-tighter text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] truncate w-full px-1">{player.nickname}</h1><p className="text-[7px] font-black text-white/40 uppercase tracking-[0.4em] mt-1">{player.tier}</p></div>
                                         </div>
@@ -259,7 +275,7 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
 
                                 <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <BentoBox className="h-full" contentClassName="h-full flex flex-col justify-center"><IntelHeader title={t?.lastSessionAnalysis} icon={BarChartDynamic} /><div className="flex-grow flex flex-col justify-center"><TerminalLastSession player={player} /></div></BentoBox>
-                                    <BentoBox className="h-full" contentClassName="h-full flex flex-col"><IntelHeader title={t?.sessionTrend} icon={Zap} accent="#4CFF5F" /><div className="flex-grow flex flex-col justify-start space-y-1"><div className="grid grid-cols-3 gap-2 items-center bg-black/30 p-1.5 rounded-2xl border border-white/5 shadow-inner"><TerminalStat label="Current Form" value={player.form.split('_')[0].toUpperCase()} color={player.form === 'hot_streak' ? '#4CFF5F' : player.form === 'cold_streak' ? '#FF4136' : '#fff'} /><TerminalStat label="Win Ratio" value={winRate} color="#00F2FE" /><div className="flex justify-center"><FormArrowIndicator form={player.form} /></div></div><div className="py-1 bg-black/30 rounded-2xl border border-white/5 mt-auto shadow-inner"><TerminalSessionTrend history={player.sessionHistory} /></div>{player.skills && player.skills.length > 0 && (<div className="pt-2"><div className="flex flex-wrap justify-center gap-3 mt-1 pb-1">{player.skills.slice(0,3).map(skill => (<div key={skill} className="flex items-center gap-1 transition-all"><StarIcon className="w-2.5 h-2.5 text-[#00F2FE]" /><span className="text-[8px] font-black text-white/80 uppercase tracking-tight">{t[`skill_${skill}` as keyof typeof t]}</span></div>))}</div></div>)}</div></BentoBox>
+                                    <BentoBox className="h-full" contentClassName="h-full flex flex-col"><IntelHeader title={t?.sessionTrend} icon={Zap} accent="#4CFF5F" /><div className="flex-grow flex flex-col justify-start space-y-1"><div className="grid grid-cols-3 gap-2 items-center bg-black/30 p-1.5 rounded-2xl border border-white/5 shadow-inner"><TerminalStat label="Current Form" value={player.form.split('_')[0].toUpperCase()} color={player.form === 'hot_streak' ? '#4CFF5F' : player.form === 'cold_streak' ? '#FF4136' : '#fff'} /><TerminalStat label="Win Ratio" value={winRate} color="#00F2FE" /><div className="flex justify-center"><FormArrowIndicator form={player.form} /></div></div><div className="py-1 bg-black/30 rounded-2xl border border-white/5 mt-auto shadow-inner"><TerminalSessionTrend history={player.sessionHistory} /></div>{player.skills && player.skills.length > 0 && (<div className="pt-2"><div className="flex wrap justify-center gap-3 mt-1 pb-1">{player.skills.slice(0,3).map(skill => (<div key={skill} className="flex items-center gap-1 transition-all"><StarIcon className="w-2.5 h-2.5 text-[#00F2FE]" /><span className="text-[8px] font-black text-white/80 uppercase tracking-tight">{t[`skill_${skill}` as keyof typeof t]}</span></div>))}</div></div>)}</div></BentoBox>
                                     <BentoBox className="!p-2 h-full" contentClassName="h-full flex flex-col"><IntelHeader title={t?.clubRankings} icon={Users} accent="#FF00D6" /><div className="flex-grow flex flex-col justify-center pt-1 pb-1 px-1"><div className="grid grid-cols-3 gap-0.5 text-center w-full"><TerminalStat label="SCORER" value={rankings.goals} subValue={`/${rankings.total}`} color="#fff" /><TerminalStat label="ASSISTANT" value={rankings.assists} subValue={`/${rankings.total}`} color="#fff" /><TerminalStat label="RATING" value={rankings.rating} subValue={`/${rankings.total}`} color="#fff" /></div></div></BentoBox>
                                     <BentoBox className="!p-2 h-full" contentClassName="h-full flex flex-col justify-center"><IntelHeader title={t?.monthlyStatsTitle} icon={Calendar} /><div className="flex-grow flex flex-col justify-center"><div className="grid grid-cols-2 gap-y-1.5 gap-x-1 pt-1 pb-1 h-full items-center"><TerminalStat size="text-lg" label={t?.monthlyWins} value={player.monthlyWins} color="#fff" /><TerminalStat size="text-lg" label={t?.monthlyGoals} value={player.monthlyGoals} /><TerminalStat size="text-lg" label={t?.monthlyAssists} value={player.monthlyAssists} /><TerminalStat size="text-lg" label={t?.session} value={player.monthlySessionsPlayed} /></div></div></BentoBox>
                                 </div>
