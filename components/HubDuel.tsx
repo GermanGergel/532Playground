@@ -1,9 +1,11 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context';
 import { Player } from '../types';
 import { Zap } from '../icons';
 import { useTranslation } from '../ui';
 import { PlayerAvatar } from './avatars';
+import { logAnalyticsEvent } from '../db';
 
 // --- STYLED COMPONENTS ---
 
@@ -92,11 +94,6 @@ export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
         const getAvgGoals = (p: Player) => p.totalSessionsPlayed > 0 ? (p.totalGoals / p.totalSessionsPlayed) : 0;
         const getAvgAssists = (p: Player) => p.totalSessionsPlayed > 0 ? (p.totalAssists / p.totalSessionsPlayed) : 0;
         const getFormVal = (p: Player) => p.form === 'hot_streak' ? 3 : p.form === 'stable' ? 2 : 1;
-        const getEfficiency = (p: Player) => {
-            const wr = getWR(p);
-            const goals = getAvgGoals(p);
-            return (wr * 0.5) + (goals * 10);
-        };
 
         const rawData = [
             { id: 'ovr', label: 'Overall Rating', v1: player1.rating, v2: player2.rating },
@@ -130,6 +127,10 @@ export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
     const handleStartSequence = () => {
         if (!player1 || !player2) return;
         setIsCalculating(true);
+
+        // LOGGING: Track duel start
+        logAnalyticsEvent('start_duel', `${player1.nickname} vs ${player2.nickname}`);
+
         setTimeout(() => {
             setIsCalculating(false);
             setShowSequence(true);

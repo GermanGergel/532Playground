@@ -23,6 +23,8 @@ import {
     XCircle,
     Globe
 } from './icons';
+import { useApp } from './context';
+import { MiniSquadBadge } from './components/MiniSquadBadge';
 
 // Feature Components
 
@@ -365,10 +367,14 @@ export const BadgeDisplay: React.FC<{
 
 export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete, onUploadCard, onConfirmInitialRating, onDownloadCard, onShareProfile, isDownloading }) => {
     const t = useTranslation();
+    const { totmPlayerIds } = useApp(); // Access global TOTM cache
     const keyStats = React.useMemo(() => getPlayerKeyStats(player), [player]);
     const countryCodeAlpha2 = React.useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
     
     const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
+    
+    // Check if player is in Team of the Month
+    const isTotm = totmPlayerIds.has(player.id);
 
     const winRate = player.totalGames > 0 ? `${Math.round((player.totalWins / player.totalGames) * 100)}%` : 'N/A';
     const goalsPerSession = player.totalSessionsPlayed > 0 ? (player.totalGoals / player.totalSessionsPlayed).toFixed(2) : '0.00';
@@ -413,7 +419,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
                 
                 {!isBadgeModalOpen && (
-                    <div className="absolute top-24 left-4 z-20">
+                    <div className="absolute top-24 left-4 z-20 flex flex-col gap-4">
                         <div className="space-y-4">
                             {(player.skills || []).map(skill => (
                                 <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
@@ -422,6 +428,12 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                                 </div>
                             ))}
                         </div>
+                        {/* TOTM Badge placed below skills (automatically positioned by flex-col) */}
+                        {isTotm && (
+                            <div title="Team of the Month" className="animate-in fade-in zoom-in duration-500">
+                                <MiniSquadBadge size="w-10 h-10" />
+                            </div>
+                        )}
                     </div>
                 )}
 

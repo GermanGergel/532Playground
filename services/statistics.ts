@@ -1,3 +1,4 @@
+
 import { Session, Player, Team } from '../types';
 
 // Statistics Calculation Utilities
@@ -177,4 +178,112 @@ export const getPlayerKeyStats = (player: Player): { isTopScorer: boolean; isTop
     const isTopWinner = winRate >= 75; // e.g., wins 75% or more of their games
 
     return { isTopScorer, isTopWinner };
+};
+
+// --- NEW: TEAM OF THE MONTH CALCULATOR ---
+// Optimized for quick lookup
+export const getTotmPlayerIds = (history: Session[], allPlayers: Player[]): Set<string> => {
+    if (!history || history.length === 0 || allPlayers.length < 5) return new Set();
+
+    // 1. Determine "Previous Month"
+    const today = new Date();
+    // Move to 1st of current month, then subtract 1 second to go to last month
+    const targetDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const tMonth = targetDate.getMonth();
+    const tYear = targetDate.getFullYear();
+
+    // 2. Filter Sessions
+    const targetSessions = history.filter(s => {
+        if (!s || !s.date) return false;
+        try {
+            const d = new Date(s.date);
+            return d.getMonth() === tMonth && d.getFullYear() === tYear;
+        } catch { return false; }
+    });
+
+    if (targetSessions.length === 0) return new Set();
+
+    // 3. Aggregate Stats
+    const stats: Record<string, { goals: number, assists: number, wins: number, games: number, cleanSheets: number }> = {};
+
+    targetSessions.forEach(session => {
+        const teams = session.teams || [];
+        const games = session.games || [];
+        
+        session.playerPool.forEach(p => {
+            if (!stats[p.id]) stats[p.id] = { goals: 0, assists: 0, wins: 0, games: 0, cleanSheets: 0 };
+        });
+
+        games.forEach(game => {
+            if (game.status !== 'finished') return;
+            const score1 = game.team1Score;
+            const score2 = game.team2Score;
+            const t1 = teams.find(t => t.id === game.team1Id);
+            const t2 = teams.find(t => t.id === game.team2Id);
+            
+            // Stats aggregation logic mirrors TeamOfTheMonthModal
+            t1?.playerIds?.forEach(pid => { if(stats[pid]) stats[pid].games++ });
+            t2?.playerIds?.forEach(pid => { if(stats[pid]) stats[pid].games++ });
+
+            if (score1 > score2) {
+                t1?.playerIds?.forEach(pid => { if(stats[pid]) stats[pid].wins++ });
+                if (score2 === 0) t1?.playerIds?.forEach(pid => { if(stats[pid]) stats[pid].cleanSheets++ });
+            } else if (score2 > score1) {
+                t2?.playerIds?.forEach(pid => { if(stats[pid]) stats[pid].wins++ });
+                if (score1 === 0) t2?.playerIds?.forEach(pid => { if(stats[pid]) stats[pid].cleanSheets++ });
+            }
+
+            game.goals.forEach(g => {
+                if (!g.isOwnGoal && g.scorerId && stats[g.scorerId]) stats[g.scorerId].goals++;
+                if (g.assistantId && stats[g.assistantId]) stats[g.assistantId].assists++;
+            });
+        });
+    });
+
+    // 4. Select Winners (MVP, Sniper, Architect, Winner, Fortress)
+    const candidates = allPlayers.filter(p => stats[p.id] && stats[p.id].games >= 2);
+    if (candidates.length < 3) return new Set();
+
+    const corePool = candidates.filter(p => stats[p.id].games >= 4);
+    const reservePool = candidates.filter(p => stats[p.id].games < 4);
+
+    const pickBest = (criteriaFn: (pid: string) => number, tieBreakerFn: (pid: string) => number, excludeIds: Set<string>): string | null => {
+        let pool = corePool.filter(p => !excludeIds.has(p.id));
+        if (pool.length === 0) pool = reservePool.filter(p => !excludeIds.has(p.id));
+        if (pool.length === 0) return null;
+        const winner = pool.sort((a, b) => {
+            const valA = criteriaFn(a.id);
+            const valB = criteriaFn(b.id);
+            if (valB !== valA) return valB - valA; 
+            return tieBreakerFn(b.id) - tieBreakerFn(a.id);
+        })[0];
+        return winner ? winner.id : null;
+    };
+
+    const winners = new Set<string>();
+    
+    // Getters
+    const getRating = (pid: string) => allPlayers.find(p => p.id === pid)?.rating || 0;
+    const getG = (pid: string) => stats[pid].goals;
+    const getA = (pid: string) => stats[pid].assists;
+    const getW = (pid: string) => stats[pid].wins;
+    const getCS = (pid: string) => stats[pid].cleanSheets;
+    const getGP = (pid: string) => stats[pid].games;
+
+    const mvpId = pickBest(getRating, pid => getG(pid) + getA(pid), winners);
+    if (mvpId) winners.add(mvpId);
+
+    const sniperId = pickBest(getG, pid => -getGP(pid), winners);
+    if (sniperId) winners.add(sniperId);
+
+    const architectId = pickBest(getA, getG, winners);
+    if (architectId) winners.add(architectId);
+
+    const winnerId = pickBest(getW, getGP, winners);
+    if (winnerId) winners.add(winnerId);
+
+    const fortressId = pickBest(getCS, getGP, winners);
+    if (fortressId) winners.add(fortressId);
+
+    return winners;
 };

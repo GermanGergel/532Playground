@@ -15,6 +15,7 @@ import {
 } from './db';
 import { initializeAppState } from './services/appInitializer';
 import { useMatchTimer } from './hooks/useMatchTimer';
+import { getTotmPlayerIds } from './services/statistics';
 
 export type SortBy = 'rating' | 'name' | 'date';
 
@@ -41,6 +42,9 @@ interface AppContextType {
   setPlayerDbSort: React.Dispatch<React.SetStateAction<SortBy>>;
   playerDbSearch: string;
   setPlayerDbSearch: React.Dispatch<React.SetStateAction<string>>;
+
+  // Global TOTM Cache
+  totmPlayerIds: Set<string>;
 }
 
 const AppContext = React.createContext<AppContextType | undefined>(undefined);
@@ -65,6 +69,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // --- GLOBAL timer LOGIC ---
   const { displayTime } = useMatchTimer(activeSession, setActiveSession, activeVoicePack);
 
+  // --- CALCULATE TOTM ONCE (Optimized) ---
+  const totmPlayerIds = React.useMemo(() => {
+      if (allPlayers.length < 5 || history.length === 0) return new Set<string>();
+      return getTotmPlayerIds(history, allPlayers);
+  }, [history, allPlayers]); // Only recalculate when history/players change
+
   // --- INITIAL DATA LOAD ---
   React.useEffect(() => {
     const initApp = async () => {
@@ -82,7 +92,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setTimeout(() => setIsLoading(false), 500);
 
             // 2. BACKGROUND SYNC (Crucial for fixing the "65 vs 68" issue)
-            // We do NOT enable saving yet. We wait to see if Cloud has newer data.
+            // We do NOT enable saving yet. We wait for Cloud data.
             setTimeout(async () => {
                 try {
                     const remotePlayers = await fetchRemotePlayers();
@@ -94,8 +104,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     console.error("Background sync failed", e);
                 } finally {
                     // 3. ENABLE SAVING
-                    // Only NOW do we allow the app to write back to the DB.
-                    // This prevents the 'stale local data' from overwriting the 'fresh cloud data' on boot.
                     console.log("Context: Save Guard Lifted. Auto-save enabled.");
                     setIsSaveEnabled(true);
                 }
@@ -104,7 +112,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         } catch (error) {
             console.error("Critical error loading data:", error);
             setIsLoading(false);
-            setIsSaveEnabled(true); // Enable anyway so user can at least work offline
+            setIsSaveEnabled(true); 
         }
     };
 
@@ -141,8 +149,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   // --- PERSISTENCE EFFECT HOOKS (Save to DB) ---
-  // Added !isLoading AND isSaveEnabled checks to all save hooks
-
   React.useEffect(() => {
     if(!isLoading && isSaveEnabled) {
         savePlayersToDB(allPlayers);
@@ -197,14 +203,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     playerDbSort,
     setPlayerDbSort,
     playerDbSearch,
-    setPlayerDbSearch
+    setPlayerDbSearch,
+    totmPlayerIds // Exposed to all components
   };
 
   if(isLoading) {
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#1A1D24]">
             <div className="relative flex flex-col items-center justify-center w-64 h-64">
-                {/* Rotating Ring */}
                 <div className="absolute inset-0 animate-spin" style={{ animationDuration: '2s' }}>
                     <svg viewBox="0 0 100 100" className="w-full h-full">
                         <defs>
@@ -219,12 +225,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                             stroke="url(#ringGradient)" 
                             strokeWidth="2"
                             strokeLinecap="round"
-                            strokeDasharray="200 300" // Creates the partial arc effect
+                            strokeDasharray="200 300"
                         />
                     </svg>
                 </div>
-
-                {/* Static Text Content */}
                 <div className="flex flex-col items-center justify-center z-10">
                     <h1 className="text-5xl font-black text-[#00F2FE] tracking-tighter" style={{ textShadow: '0 0 15px rgba(0, 242, 254, 0.5)' }}>
                         532

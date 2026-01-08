@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Player, PlayerTier, PlayerStatus, BadgeType, PlayerForm, SkillType } from '../types';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
@@ -5,6 +6,8 @@ import { Card, useTranslation, Button } from '../ui';
 import { LastSessionBreakdown, ClubRankings, BestSessionCard, PlayerProgressChart } from './PlayerCardAnalytics';
 import { BadgeIcon, BadgeDisplay } from '../features';
 import { TrophyIcon, StarIcon, ChevronLeft, InfoIcon, LightbulbIcon, Zap, ExclamationIcon, RefreshCw, Users } from '../icons';
+import { useApp } from '../context';
+import { MiniSquadBadge } from './MiniSquadBadge';
 
 type View = 'main' | 'stats' | 'awards' | 'info';
 
@@ -75,9 +78,13 @@ const PromoStatsContainer: React.FC<{ children: React.ReactNode; title?: string 
 
 const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties }> = ({ player, style }) => {
     const t = useTranslation();
+    const { totmPlayerIds } = useApp();
     const countryCodeAlpha2 = React.useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
     const cardClass = "relative rounded-3xl h-[440px] overflow-hidden text-white p-4 bg-dark-surface border border-white/10 shadow-[0_0_20px_rgba(0,242,254,0.3)]";
     const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
+    
+    // Check if player is in Team of the Month
+    const isTotm = totmPlayerIds.has(player.id);
 
     return (
         <div>
@@ -90,7 +97,7 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
                 {!isBadgeModalOpen && (
-                    <div className="absolute top-24 left-4 z-20">
+                    <div className="absolute top-24 left-4 z-20 flex flex-col gap-4">
                         <div className="space-y-4">
                             {(player.skills || []).map(skill => (
                                 <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
@@ -99,6 +106,11 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
                                 </div>
                             ))}
                         </div>
+                        {isTotm && (
+                            <div className="animate-in fade-in zoom-in duration-500">
+                                <MiniSquadBadge size="w-10 h-10" />
+                            </div>
+                        )}
                     </div>
                 )}
                 <div className="relative z-10 h-full flex flex-col justify-between p-1">

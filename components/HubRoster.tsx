@@ -6,6 +6,7 @@ import { Search, XCircle, Zap, Users, ChevronLeft } from '../icons';
 import { useTranslation } from '../ui';
 import { HubPlayerIntel } from './HubPlayerIntel';
 import { HubDuel } from './HubDuel';
+import { logAnalyticsEvent } from '../db';
 
 const HubPortraitAvatar: React.FC<{ photo?: string; tierColor: string }> = ({ photo, tierColor }) => (
     <div 
@@ -106,6 +107,8 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
         } else {
             setViewMode('duel');
             setDuelSlots([null, null]);
+            // LOGGING: Track when user enters duel simulation mode
+            logAnalyticsEvent('view_tab', 'duel');
         }
     };
 
