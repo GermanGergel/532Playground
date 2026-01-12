@@ -189,14 +189,9 @@ export const en = {
   monthlyGoals: "Goals",
   monthlyAssists: "Assists",
   monthlyWins: "Wins",
-  careerStats: "Career Averages",
   session: "Sessions",
   information: "Information",
   statistics: "Statistics",
-
-  // Penalty
-  penalty_title: "STATUS: INACTIVITY PENALTY",
-  penalty_message: "Rating reduced by -{n} OVR due to missing {m} sessions in a row.",
 
   // Info Content
   ratingCalculationTitle: "Rating System",
@@ -236,6 +231,10 @@ export const en = {
   keySkillsTitle: "Key Skills",
   badges: "Badges",
   noBadges: "No badges yet",
+
+  // Penalty
+  penalty_title: "STATUS: NO SHOW PENALTY",
+  penalty_message: "Rating reduced by -{n} OVR due to missing {m} sessions.",
 
   // Hub
   hubTicker1: "ELITE PERFORMANCE TRACKING",
