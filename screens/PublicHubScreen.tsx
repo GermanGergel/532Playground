@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Player, PlayerStatus, PlayerForm, SkillType, PlayerTier } from '../types';
-import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, FacebookIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon } from '../icons';
+import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon } from '../icons';
 import { PlayerAvatar, TeamAvatar } from '../components/avatars';
 import { Language } from '../translations/index';
 import { BadgeDisplay, BadgeIcon, sortBadgesByPriority } from '../features';
@@ -560,6 +560,11 @@ export const PublicHubScreen: React.FC = () => {
     const [dashboardView, setDashboardView] = useState<DashboardViewType>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
 
+    // DETERMINING ENVIRONMENT
+    const isDev = useMemo(() => {
+        return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    }, []);
+
     useEffect(() => {
         if (isDashboardOpen) {
             document.body.style.overflow = 'hidden';
@@ -601,7 +606,7 @@ export const PublicHubScreen: React.FC = () => {
 
     const SOCIAL_LINKS = {
         whatsapp: "https://chat.whatsapp.com/CAJnChuM4lQFf3s2YUnhQr",
-        facebook: "https://www.facebook.com/share/g/1ANVC1p1K5/",
+        // Facebook removed
         youtube: "https://youtube.com/@playground532?si=_NqI_aOcvmjlSMFn",
         instagram: "https://www.instagram.com/532playground?igsh=MTdzdHpwMjY3aHN4cg%3D%3D&utm_source=qr",
         tiktok: "https://www.tiktok.com/@532playground",
@@ -641,6 +646,14 @@ export const PublicHubScreen: React.FC = () => {
                 onOpenTotm={() => setIsTotmOpen(true)}
             />
 
+            {/* SQUAD OF THE MONTH BADGE - NOW CONDITIONALLY INTERACTIVE */}
+            {!isDashboardOpen && (
+                <SquadOfTheMonthBadge 
+                    onClick={() => setIsTotmOpen(true)} 
+                    isDisabled={!isDev} 
+                />
+            )}
+
             <div 
                 className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none 
                 ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}
@@ -679,7 +692,7 @@ export const PublicHubScreen: React.FC = () => {
                     <NoLeadersPlaceholder />
                 )}
 
-                <div className="mt-24 md:mt-32 pb-6"> {/* Reduced padding from pb-24 to pb-6 */}
+                <div className="mt-24 md:mt-32 pb-24">
                     <div className="text-center mb-12 md:mb-20">
                         <h2 className="font-orbitron text-lg md:text-2xl font-black uppercase tracking-[0.15em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubVitalsTitle}</h2>
                     </div>
@@ -691,16 +704,9 @@ export const PublicHubScreen: React.FC = () => {
                 </div>
                 
                 <div className="relative z-10 bg-transparent pb-8">
-                    <footer className="relative pt-0 pb-8 bg-transparent"> {/* Changed py-8 to pt-0 pb-8 */}
+                    <footer className="relative py-8 bg-transparent">
                         <div className="text-center px-4">
-                            <div className="mt-0 mb-24 flex flex-col items-center gap-6"> {/* Changed mt-10 to mt-0 */}
-                                {/* SQUAD OF THE MONTH BADGE - NOW POSITIONED ABOVE DASHBOARD BUTTON */}
-                                <SquadOfTheMonthBadge 
-                                    onClick={() => setIsTotmOpen(true)} 
-                                    isDisabled={false} 
-                                    className="animate-in fade-in zoom-in duration-1000 delay-500"
-                                />
-
+                            <div className="mt-10 mb-24">
                                 <button 
                                     onClick={() => setIsDashboardOpen(true)} 
                                     className="mx-auto block bg-transparent text-[#00F2FE] font-bold text-lg py-3.5 px-10 rounded-xl shadow-[0_0_20px_rgba(0,242,254,0.4)] hover:shadow-[0_0_30px_rgba(0,242,254,0.6)] hover:bg-[#00F2FE]/10 transition-all transform hover:scale-[1.05] active:scale-95 group border border-[#00F2FE]/20"
@@ -720,7 +726,6 @@ export const PublicHubScreen: React.FC = () => {
                             <div className="flex justify-center gap-10">
                                 <a href={SOCIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><YouTubeIcon className="w-7 h-7" /></a>
                                 <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><InstagramIcon className="w-7 h-7" /></a>
-                                <a href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><FacebookIcon className="w-7 h-7" /></a>
                                 <a href={SOCIAL_LINKS.tiktok} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><TikTokIcon className="w-7 h-7" /></a>
                             </div>
                         </div>
