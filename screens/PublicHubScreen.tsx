@@ -642,6 +642,7 @@ export const PublicHubScreen: React.FC = () => {
                     setDashboardView('dashboard');
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
+                onOpenTotm={() => setIsTotmOpen(true)}
             />
 
             {/* SQUAD OF THE MONTH BADGE - NOW CONDITIONALLY INTERACTIVE */}
@@ -702,9 +703,9 @@ export const PublicHubScreen: React.FC = () => {
                 </div>
                 
                 <div className="relative z-10 bg-transparent pb-8">
-                    <footer className="relative pt-0 pb-8 bg-transparent"> {/* Changed py-8 to pt-0 pb-8 */}
+                    <footer className="relative pt-0 pb-8 bg-transparent">
                         <div className="text-center px-4">
-                            <div className="mt-0 mb-24 flex flex-col items-center gap-6"> {/* Changed mt-10 to mt-0 */}
+                            <div className="mt-0 mb-24 flex flex-col items-center gap-6">
                                 {/* SQUAD OF THE MONTH BADGE - NOW POSITIONED ABOVE DASHBOARD BUTTON */}
                                 <SquadOfTheMonthBadge 
                                     onClick={() => setIsTotmOpen(true)} 
