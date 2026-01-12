@@ -237,7 +237,7 @@ export const vn = {
   hubTicker1: "THEO DÕI HIỆU SUẤT",
   hubTicker2: "DỮ LIỆU TRỰC TIẾP",
   hubTicker3: "BẢNG XẾP HẠNG",
-  hubTicker4: "PHÂN TÍCH CẦU THỦ",
+  hubTicker4: "PHÂN TÍCH CẦУ THỦ",
   hubTicker5: "LƯU TRỮ TRẬN ĐẤU",
   hubAwaitingStats: "ĐANG CHỜ DỮ LIỆU",
   hubAnalyzingPerformance: "ĐANG PHÂN TÍCH...",
@@ -258,7 +258,7 @@ export const vn = {
   hubWeather: "THỜI TIẾT",
   hubImpact: "TÁC ĐỘNG",
   hubWelcomeText: "Chào mừng đến với Hub 532 Playground chính thức. Theo dõi chỉ số, so sánh với người khác và leo lên đỉnh vinh quang.",
-  hubLeadersTitle: "Dẫn Đầu Mùa Giải",
+  hubLeadersTitle: "Dẫn Đầu Buổi Tập",
   hubJoinSquad: "Tham Gia Đội Hình",
   
   // Duel

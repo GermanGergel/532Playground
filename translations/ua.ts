@@ -45,7 +45,7 @@ export const ua = {
   paused: "ПАУЗА",
   round: "Раунд",
   startGame: "Почати Гру",
-  finishGame: "Завершити Гру",
+  finishGame: "Завершить Гру",
   endSession: "Завершити Сесію",
   goal: "Гол",
   assistant: "Асист",
@@ -262,17 +262,8 @@ export const ua = {
   hubWeather: "ПОГОДА",
   hubImpact: "ІМПАКТ",
   hubWelcomeText: "Ласкаво просимо до офіційного хабу 532 Playground. Слідкуй за статистикою, порівнюй результати та прагни до вершини.",
-  hubLeadersTitle: "Лідери Сезону",
-  hubJoinSquad: "Вступить в Загін",
-  
-  // Duel
-  duel_title: "Вибір Дуелі",
-  duel_id_unit: "ОПОЗНАННЯ ЮНІТА...",
-  duel_initiate: "ЗАПУСТИТИ ПОСЛІДОВНІСТЬ",
-  duel_sector_empty: "Сектор порожній",
-  duel_complete: "ПОСЛЕДОВАТЕЛЬНОСТЬ ЗАВЕРШЕНА",
-  duel_score: "РАХУНОК",
-  duel_verified: "Індекс ефективності підтверджено",
+  hubLeadersTitle: "Лідери Сесії",
+  hubJoinSquad: "Вступити в Загін",
   
   // Promo
   hero_title: "ГРАЙ ЯК ПРОФІ",
@@ -402,6 +393,15 @@ export const ua = {
   badge_crisis_manager_desc: "2+ Г/А будучи Легионером",
   badge_iron_lung: "Залізні Легені",
   badge_iron_lung_desc: "Серія Перемога-Перемога-Перемога",
+
+  // Duel
+  duel_title: "Вибір Дуелі",
+  duel_id_unit: "ОПОЗНАННЯ ЮНІТА...",
+  duel_initiate: "ЗАПУСТИТИ ПОСЛІДОВНІСТЬ",
+  duel_sector_empty: "Сектор порожній",
+  duel_complete: "ПОСЛІДОВНІСТЬ ЗАВЕРШЕНА",
+  duel_score: "РАХУНОК",
+  duel_verified: "Індекс ефективності підтверджено",
   
   // Announcements
   announcement_start_match: "Початок Матчу",
