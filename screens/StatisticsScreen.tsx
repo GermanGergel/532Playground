@@ -63,8 +63,10 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
     const sortedPlayers = allPlayersStats.sort((a,b) => (b.goals + b.assists) - (a.goals + a.assists));
     const finishedGames = session.games.filter(g => g.status === 'finished');
     const roundsToDisplay = itemLimit ? finishedGames.slice(0, itemLimit) : finishedGames;
-    const tableTextClass = "text-[10px] sm:text-xs text-center table-fixed"; 
-    const cellPadding = "py-2 px-0.5";
+    const tableTextClass = "text-[10px] sm:text-xs text-center table-fixed border-collapse"; 
+    
+    // СТРОГОЕ ВЫРАВНИВАНИЕ ДЛЯ ЭКСПОРТА
+    const cellPadding = isExport ? "py-3 px-0.5 align-middle" : "py-2 px-0.5 align-middle";
     const playerNameClass = isExport ? `${cellPadding} text-left font-semibold truncate max-w-[200px] pr-2` : `${cellPadding} text-left font-semibold truncate pr-2 max-w-[80px] sm:max-w-[100px]`;
 
     return (
@@ -75,7 +77,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                 <div className="w-full overflow-x-auto touch-pan-y overscroll-x-contain">
                     <table className={`w-full ${tableTextClass} min-w-[280px]`}>
                         <thead>
-                            <tr className="text-dark-text-secondary">
+                            <tr className="text-dark-text-secondary border-b border-white/5">
                                 <th className={`text-left font-normal ${cellPadding}`} style={{ width: '8%' }}>#</th>
                                 <th className={`font-normal text-center ${cellPadding}`} style={{ width: '20%' }}>{t.team}</th>
                                 <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.thP}</th>
@@ -88,9 +90,16 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                         </thead>
                         <tbody>
                             {teamStats.map(({ team, gamesPlayed, wins, draws, losses, goalDifference, points }, index) => (
-                                <tr key={team.id} className="border-t border-white/10">
+                                <tr key={team.id} className="border-t border-white/10" style={isExport ? { height: '40px' } : {}}>
                                     <td className={`${cellPadding} text-left`}>{index + 1}</td>
-                                    <td className={`${cellPadding}`}><div className="flex justify-center items-center h-full"><TeamAvatar team={team} size="xxs" hollow={true} /></div></td>
+                                    <td className={`${cellPadding}`}>
+                                        <div className="flex justify-center items-center w-full h-full">
+                                            {/* Увеличено смещение до 3px для точного выравнивания */}
+                                            <div style={isExport ? { transform: 'translateY(3px)' } : {}}>
+                                                <TeamAvatar team={team} size="xxs" hollow={true} />
+                                            </div>
+                                        </div>
+                                    </td>
                                     <td className={cellPadding}>{gamesPlayed}</td>
                                     <td className={cellPadding}>{wins}</td>
                                     <td className={cellPadding}>{draws}</td>
@@ -110,7 +119,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                 <div className="w-full overflow-x-auto touch-pan-y overscroll-x-contain">
                     <table className={`w-full ${tableTextClass} min-w-[280px]`}>
                     <thead>
-                            <tr className="text-dark-text-secondary">
+                            <tr className="text-dark-text-secondary border-b border-white/5">
                                 <th className={`text-left font-normal ${cellPadding}`} style={{ width: '8%' }}>#</th>
                                 <th className={`text-left font-normal ${cellPadding}`} style={{ width: isExport ? '42%' : '35%' }}>{t.players}</th>
                                 <th className={`font-normal ${cellPadding}`} style={{ width: '10%' }}>{t.team}</th>
@@ -122,10 +131,17 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                         </thead>
                         <tbody>
                             {sortedPlayers.map((stats, index) => (
-                                <tr key={stats.player.id} className="border-t border-white/10">
+                                <tr key={stats.player.id} className="border-t border-white/10" style={isExport ? { height: '40px' } : {}}>
                                     <td className={`${cellPadding} text-left`}>{index + 1}</td>
                                     <td className={playerNameClass} title={stats.player.nickname}>{stats.player.nickname}</td>
-                                    <td className={cellPadding}><div className="flex justify-center items-center h-full"><TeamAvatar team={stats.team} size="xxs" hollow={true} /></div></td>
+                                    <td className={cellPadding}>
+                                        <div className="flex justify-center items-center w-full h-full">
+                                            {/* Увеличено смещение до 3px для точного выравнивания */}
+                                            <div style={isExport ? { transform: 'translateY(3px)' } : {}}>
+                                                <TeamAvatar team={stats.team} size="xxs" hollow={true} />
+                                            </div>
+                                        </div>
+                                    </td>
                                     <td className={cellPadding}>{stats.gamesPlayed}</td>
                                     <td className={cellPadding}>{stats.goals}</td>
                                     <td className={cellPadding}>{stats.assists}</td>
@@ -149,9 +165,13 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                              <li key={game.id} className={`flex items-center justify-between py-2 border-t border-white/10 first:border-t-0 ${isEditMode ? 'cursor-pointer hover:bg-white/5 pr-2' : ''}`} onClick={() => isEditMode && onEditMatch && onEditMatch(game)}>
                                 <span className="text-dark-text-secondary text-[10px] sm:text-xs shrink-0">{t.round} {game.gameNumber}</span>
                                 <div className="flex items-center justify-end gap-3 flex-grow">
-                                    <TeamAvatar team={team1} size="xxs" hollow={true} />
-                                    <span className={`font-bold tabular-nums w-14 sm:w-16 text-center text-sm leading-none ${isEditMode ? 'text-dark-accent-start' : ''}`}>{game.team1Score} : {game.team2Score}</span>
-                                    <TeamAvatar team={team2} size="xxs" hollow={true} />
+                                    <div className="flex items-center" style={isExport ? { height: '24px', transform: 'translateY(3px)' } : { height: '24px' }}>
+                                        <TeamAvatar team={team1} size="xxs" hollow={true} />
+                                    </div>
+                                    <span className={`font-bold tabular-nums w-14 sm:w-16 text-center text-sm leading-none flex items-center justify-center ${isEditMode ? 'text-dark-accent-start' : ''}`} style={{ height: '24px' }}>{game.team1Score} : {game.team2Score}</span>
+                                    <div className="flex items-center" style={isExport ? { height: '24px', transform: 'translateY(3px)' } : { height: '24px' }}>
+                                        <TeamAvatar team={team2} size="xxs" hollow={true} />
+                                    </div>
                                     {isEditMode && <Edit3 className="w-4 h-4 text-dark-text-secondary opacity-50" />}
                                 </div>
                             </li>

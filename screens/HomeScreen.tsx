@@ -192,6 +192,7 @@ export const HomeScreen: React.FC = () => {
                     >
                         {isGenerating ? "GENERATING..." : "SEND PROMO CARD"}
                     </Button>
+                    
                     <Button 
                         variant="ghost" 
                         onClick={() => setIsQrModalOpen(false)} 

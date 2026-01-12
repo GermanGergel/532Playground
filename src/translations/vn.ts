@@ -1,3 +1,4 @@
+
 export const vn = {
   // Navigation
   navHome: "Trang Chủ",
@@ -85,6 +86,8 @@ export const vn = {
   thW: "T",
   thD: "H",
   thL: "B",
+  thGF: "BT",
+  thGA: "BTh",
   thGD: "HS",
   thPts: "Đ",
   players: "Cầu Thủ",
@@ -188,6 +191,7 @@ export const vn = {
   monthlyGoals: "Bàn Thắng",
   monthlyAssists: "Kiến Tạo",
   monthlyWins: "Thắng",
+  careerStats: "Trung Bình Sự Nghiệp",
   session: "Buổi Tập",
   information: "Thông Tin",
   statistics: "Thống Kê",
@@ -256,7 +260,7 @@ export const vn = {
   hubWeather: "THỜI TIẾT",
   hubImpact: "TÁC ĐỘNG",
   hubWelcomeText: "Chào mừng đến với Hub 532 Playground chính thức. Theo dõi chỉ số, so sánh với người khác và leo lên đỉnh vinh quang.",
-  hubLeadersTitle: "Dẫn Đầu Buổi Tập",
+  hubLeadersTitle: "Dẫn Đầu Mùa Giải",
   hubJoinSquad: "Tham Gia Đội Hình",
   
   // FIX: Added missing Duel keys for Vietnamese translation
@@ -273,7 +277,7 @@ export const vn = {
   hero_title: "CHƠI NHƯ DÂN CHUYÊN",
   hero_subtitle: "Cộng đồng Futsal hiện đại nhất.",
   feature_card: "Thẻ Cầu Thủ Riêng",
-  feature_card_desc: "Sở hữu thẻ độc bản. Chỉ số cập nhật tự động sau mỗi trận dựa trên phong độ thực tế của bạn.",
+  feature_card_desc: "Sở hữu tấm thẻ độc bản. Chỉ số cập nhật tự động sau mỗi trận dựa trên phong độ thực tế của bạn.",
   feature_live: "Cập Nhật Live",
   feature_live_desc: "Theo dõi tác động lên rating.",
   feature_stats: "Thống Kê Chi Tiết",
