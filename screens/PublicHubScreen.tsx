@@ -684,7 +684,7 @@ export const PublicHubScreen: React.FC = () => {
                     <NoLeadersPlaceholder />
                 )}
 
-                <div className="mt-24 md:mt-32 pb-24">
+                <div className="mt-24 md:mt-32 pb-12">
                     <div className="text-center mb-12 md:mb-20">
                         <h2 className="font-orbitron text-lg md:text-2xl font-black uppercase tracking-[0.15em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubVitalsTitle}</h2>
                     </div>
@@ -696,11 +696,11 @@ export const PublicHubScreen: React.FC = () => {
                 </div>
                 
                 <div className="relative z-10 bg-transparent pb-8">
-                    <footer className="relative py-8 bg-transparent">
+                    <footer className="relative pb-8 pt-0 bg-transparent">
                         <div className="text-center px-4">
                             
                             {!isDashboardOpen && (
-                                <div className="flex justify-center mb-6 animate-in fade-in zoom-in duration-700">
+                                <div className="flex justify-center mb-6 -mt-4 animate-in fade-in zoom-in duration-700">
                                     <SquadOfTheMonthBadge 
                                         onClick={() => setIsTotmOpen(true)} 
                                         isDisabled={!isDev} 
