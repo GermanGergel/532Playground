@@ -45,7 +45,7 @@ export const ua = {
   paused: "ПАУЗА",
   round: "Раунд",
   startGame: "Почати Гру",
-  finishGame: "Завершить Гру",
+  finishGame: "Завершити Гру",
   endSession: "Завершити Сесію",
   goal: "Гол",
   assistant: "Асист",
@@ -70,7 +70,7 @@ export const ua = {
   summary_condition: "УМОВИ",
 
   // Stats
-  teamStandings: "Турнірна Таблиця",
+  teamStandings: "Турнирная Таблиця",
   playerStatistics: "Статистика Гравців",
   gameHistory: "Історія Матчів",
   liveStatistics: "Live Статистика",
@@ -262,8 +262,8 @@ export const ua = {
   hubWeather: "ПОГОДА",
   hubImpact: "ІМПАКТ",
   hubWelcomeText: "Ласкаво просимо до офіційного хабу 532 Playground. Слідкуй за статистикою, порівнюй результати та прагни до вершини.",
-  hubLeadersTitle: "Лідери Сесії",
-  hubJoinSquad: "Вступити в Загін",
+  hubLeadersTitle: "Лідери Сезону",
+  hubJoinSquad: "Вступить в Загін",
   
   // Promo
   hero_title: "ГРАЙ ЯК ПРОФІ",
@@ -281,7 +281,7 @@ export const ua = {
   roadmap_video_desc: "AI нарізки твоїх голів.",
   roadmap_leagues: "Ліги",
   roadmap_leagues_desc: "Сезонні кубки та призи.",
-  cta_join: "ВСТУПИТЬ",
+  cta_join: "ВСТУПИТИ",
   cta_desc: "Напиши нам, щоб записатися.",
   tap_to_enter: "НАТИСНИ, ЩОБ УВІЙТИ",
   hub_section_title: "ЕКОСИСТЕМА КЛУБУ",
@@ -393,15 +393,6 @@ export const ua = {
   badge_crisis_manager_desc: "2+ Г/А будучи Легионером",
   badge_iron_lung: "Залізні Легені",
   badge_iron_lung_desc: "Серія Перемога-Перемога-Перемога",
-
-  // Duel
-  duel_title: "Вибір Дуелі",
-  duel_id_unit: "ОПОЗНАННЯ ЮНІТА...",
-  duel_initiate: "ЗАПУСТИТИ ПОСЛІДОВНІСТЬ",
-  duel_sector_empty: "Сектор порожній",
-  duel_complete: "ПОСЛІДОВНІСТЬ ЗАВЕРШЕНА",
-  duel_score: "РАХУНОК",
-  duel_verified: "Індекс ефективності підтверджено",
   
   // Announcements
   announcement_start_match: "Початок Матчу",

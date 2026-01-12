@@ -1,3 +1,4 @@
+
 export const vn = {
   // Navigation
   navHome: "Trang Chủ",
@@ -85,6 +86,8 @@ export const vn = {
   thW: "T",
   thD: "H",
   thL: "B",
+  thGF: "BT",
+  thGA: "BB",
   thGD: "HS",
   thPts: "Đ",
   players: "Cầu Thủ",
@@ -188,6 +191,7 @@ export const vn = {
   monthlyGoals: "Bàn Thắng",
   monthlyAssists: "Kiến Tạo",
   monthlyWins: "Thắng",
+  careerStats: "Trung Bình Sự Nghiệp",
   session: "Buổi Tập",
   information: "Thông Tin",
   statistics: "Thống Kê",
