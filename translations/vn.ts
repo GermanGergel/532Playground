@@ -86,6 +86,8 @@ export const vn = {
   thW: "T",
   thD: "H",
   thL: "B",
+  thGF: "BT",
+  thGA: "BB",
   thGD: "HS",
   thPts: "Đ",
   players: "Cầu Thủ",
@@ -237,7 +239,7 @@ export const vn = {
   hubTicker1: "THEO DÕI HIỆU SUẤT",
   hubTicker2: "DỮ LIỆU TRỰC TIẾP",
   hubTicker3: "BẢNG XẾP HẠNG",
-  hubTicker4: "PHÂN TÍCH CẦУ THỦ",
+  hubTicker4: "PHÂN TÍCH CẦU THỦ",
   hubTicker5: "LƯU TRỮ TRẬN ĐẤU",
   hubAwaitingStats: "ĐANG CHỜ DỮ LIỆU",
   hubAnalyzingPerformance: "ĐANG PHÂN TÍCH...",
@@ -261,6 +263,7 @@ export const vn = {
   hubLeadersTitle: "Dẫn Đầu Mùa Giải",
   hubJoinSquad: "Tham Gia Đội Hình",
   
+  // FIX: Added missing Duel keys for Vietnamese translation
   // Duel
   duel_title: "Chọn Đối Thủ",
   duel_id_unit: "XÁC MINH CẦU THỦ...",

@@ -200,7 +200,7 @@ export const ru = {
 
   // Info Content
   ratingCalculationTitle: "Система Рейтинга",
-  ratingCalculationDesc: "Рейтинг меняется на основе результатов матча, командной игры и личного вклада.",
+  ratingCalculationDesc: "Рейтинг меняется на основе результатов матчу, командной игры и личного вклада.",
   ratingCalculationExamplesTitle: "Примеры Начисления",
   ratingExampleWinStrong: "Уверенная победа (+2GD): +1.3 очка",
   ratingExampleWinClose: "Обычная победа: +1.0 очко",
@@ -292,7 +292,7 @@ export const ru = {
   roadmap_leagues: "Ліги",
   roadmap_leagues_desc: "Сезонні кубки та призи.",
   cta_join: "ВСТУПИТИ",
-  cta_desc: "Напиши нам, щоб записатися.",
+  cta_desc: "Напиши нам, чтобы записатися.",
   tap_to_enter: "НАТИСНИ, ЩОБ УВІЙТИ",
   hub_section_title: "ЕКОСИСТЕМА КЛУБУ",
   hub_section_desc: "Центральний інтелект.",
