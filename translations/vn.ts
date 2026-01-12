@@ -57,12 +57,10 @@ export const vn = {
   selectWinnerDesc: "Chọn đội thắng để tiếp tục",
   onBench: "Dự Bị",
 
-  // FIX: Added missing Legionnaire keys for Vietnamese translation
   legionnaire_replace: "THAY THẾ",
   legionnaire_select: "CHỌN",
   legionnaire_no_players: "Không có cầu thủ dự bị",
 
-  // FIX: Added missing Session Summary keys for Vietnamese translation
   // Session Summary
   summary_title: "TỔNG KẾT BUỔI TẬP",
   summary_location: "ĐỊA ĐIỂM",
@@ -239,7 +237,7 @@ export const vn = {
   hubTicker1: "THEO DÕI HIỆU SUẤT",
   hubTicker2: "DỮ LIỆU TRỰC TIẾP",
   hubTicker3: "BẢNG XẾP HẠNG",
-  hubTicker4: "PHÂN TÍCH CẦU THỦ",
+  hubTicker4: "PHÂN TÍCH CẦУ THỦ",
   hubTicker5: "LƯU TRỮ TRẬN ĐẤU",
   hubAwaitingStats: "ĐANG CHỜ DỮ LIỆU",
   hubAnalyzingPerformance: "ĐANG PHÂN TÍCH...",
@@ -260,10 +258,9 @@ export const vn = {
   hubWeather: "THỜI TIẾT",
   hubImpact: "TÁC ĐỘNG",
   hubWelcomeText: "Chào mừng đến với Hub 532 Playground chính thức. Theo dõi chỉ số, so sánh với người khác và leo lên đỉnh vinh quang.",
-  hubLeadersTitle: "Dẫn Đầu Mùa Giải",
+  hubLeadersTitle: "Dẫn Đầu Buổi Tập",
   hubJoinSquad: "Tham Gia Đội Hình",
   
-  // FIX: Added missing Duel keys for Vietnamese translation
   // Duel
   duel_title: "Chọn Đối Thủ",
   duel_id_unit: "XÁC MINH CẦU THỦ...",
@@ -277,7 +274,7 @@ export const vn = {
   hero_title: "CHƠI NHƯ DÂN CHUYÊN",
   hero_subtitle: "Cộng đồng Futsal hiện đại nhất.",
   feature_card: "Thẻ Cầu Thủ Riêng",
-  feature_card_desc: "Sở hữu tấm thẻ độc bản. Chỉ số cập nhật tự động sau mỗi trận dựa trên phong độ thực tế của bạn.",
+  feature_card_desc: "Sở hữu thẻ độc bản. Chỉ số cập nhật tự động sau mỗi trận dựa trên phong độ thực tế của bạn.",
   feature_live: "Cập Nhật Live",
   feature_live_desc: "Theo dõi tác động lên rating.",
   feature_stats: "Thống Kê Chi Tiết",
