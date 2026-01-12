@@ -700,7 +700,7 @@ export const PublicHubScreen: React.FC = () => {
                         <div className="text-center px-4">
                             
                             {!isDashboardOpen && (
-                                <div className="flex justify-center mb-6 -mt-10 relative z-20 animate-in fade-in zoom-in duration-700">
+                                <div className="flex justify-center mb-6 -mt-4 relative z-20 animate-in fade-in zoom-in duration-700">
                                     <SquadOfTheMonthBadge 
                                         onClick={() => setIsTotmOpen(true)} 
                                         className="cursor-pointer"
