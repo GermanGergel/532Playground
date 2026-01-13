@@ -3,7 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { Session, WeatherCondition } from '../types';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
 import { TeamAvatar } from './avatars'; 
-import { ChevronLeft, TrophyIcon, Users, History as HistoryIcon, Target, AwardIcon } from '../icons';
+import { ChevronLeft, TrophyIcon, Users, History as HistoryIcon, Target, AwardIcon, YouTubeIcon } from '../icons';
 import { useTranslation } from '../ui';
 
 interface HubSessionDetailProps {
@@ -82,31 +82,54 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
         ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(session.location)}` 
         : null;
 
+    // Logic for Video Link (Consistent with Dashboard)
+    const videoKey = `video_link_${session.id}`;
+    const videoLink = localStorage.getItem(videoKey);
+
     return (
         <div className="flex flex-col h-full overflow-hidden">
             <div className="flex flex-col gap-3 shrink-0 mb-4">
-                <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-2xl p-3 shadow-sm">
-                    <div className="w-10 h-10 rounded-xl bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shrink-0">
-                        <MapPinIcon className="w-5 h-5" />
+                
+                {/* ROW 1: LOCATION + YOUTUBE */}
+                <div className="flex items-stretch gap-3">
+                    <div className="flex-grow flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-2xl p-3 shadow-sm">
+                        <div className="w-10 h-10 rounded-xl bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shrink-0">
+                            <MapPinIcon className="w-5 h-5" />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                            <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">{t.hubLocation}</span>
+                            {mapsLink ? (
+                                <a 
+                                    href={mapsLink} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="group/loc flex items-center gap-1 font-chakra font-bold text-sm text-slate-200 uppercase tracking-wide truncate hover:text-[#00F2FE] transition-colors"
+                                >
+                                    <span className="truncate border-b border-white/10 group-hover/loc:border-[#00F2FE]/40">{data.location}</span>
+                                    <svg className="w-3 h-3 opacity-30 group-hover/loc:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+                                </a>
+                            ) : (
+                                <span className="font-chakra font-bold text-sm text-slate-200 uppercase tracking-wide truncate">{data.location}</span>
+                            )}
+                        </div>
                     </div>
-                    <div className="flex flex-col min-w-0">
-                        <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">{t.hubLocation}</span>
-                        {mapsLink ? (
-                            <a 
-                                href={mapsLink} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="group/loc flex items-center gap-1 font-chakra font-bold text-sm text-slate-200 uppercase tracking-wide truncate hover:text-[#00F2FE] transition-colors"
-                            >
-                                <span className="truncate border-b border-white/10 group-hover/loc:border-[#00F2FE]/40">{data.location}</span>
-                                <svg className="w-3 h-3 opacity-30 group-hover/loc:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
-                            </a>
-                        ) : (
-                            <span className="font-chakra font-bold text-sm text-slate-200 uppercase tracking-wide truncate">{data.location}</span>
-                        )}
+
+                    {/* NEW: YOUTUBE BLOCK (SYMMETRICAL TO WEATHER) */}
+                    <div 
+                        onClick={() => videoLink && window.open(videoLink, '_blank')}
+                        className={`flex items-center justify-center px-5 rounded-2xl border shrink-0 shadow-sm transition-all duration-300
+                            ${videoLink 
+                                ? 'bg-red-900/20 border-red-500/20 cursor-pointer hover:bg-red-900/40 hover:border-red-500/40 hover:shadow-[0_0_15px_rgba(220,38,38,0.2)] group' 
+                                : 'bg-white/5 border-white/5 opacity-20 cursor-default'
+                            }`}
+                    >
+                        <YouTubeIcon 
+                            className={`w-6 h-6 transition-transform duration-300 ${videoLink ? 'text-red-500 drop-shadow-[0_0_8px_rgba(220,38,38,0.5)] group-hover:scale-110' : 'text-white'}`} 
+                        />
                     </div>
                 </div>
                 
+                {/* ROW 2: TIME + WEATHER */}
                 <div className="flex items-stretch gap-3">
                     <div className="flex-grow flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-2xl p-3 shadow-sm">
                         <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0">
