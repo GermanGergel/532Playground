@@ -205,7 +205,7 @@ export const ua = {
   ratingCalculationExamplesTitle: "Приклади Нарахування",
   ratingExampleWinStrong: "Впевнена перемога (+2GD): +1.3 очка",
   ratingExampleWinClose: "Звичайна перемога: +1.0 очко",
-  ratingExampleDraw: "Нічия: +0.4 очка",
+  ratingExampleDraw: "Ничья: +0.4 очка",
   ratingExampleLossClose: "Поразка: -0.5 очок",
   ratingExampleLossHeavy: "Великі поразка (-2GD): -0.8 очок",
   ratingExampleGoal: "Гол: +1.0 очко (Нападник +1.2)",
@@ -230,7 +230,7 @@ export const ua = {
   ruleRespectDesc: "Неспортивна поведінка або агресія.",
   ruleRespectPenalty: "БАН НА СЕССІЮ",
   badgeBonusTitle: "Бонуси Значків",
-  badgeBonusDesc: "Заробляйте значки, щоб підвищити рейтинг матча.",
+  badgeBonusDesc: "Заробляйте значки, щоб підвищити рейтинг матчу.",
   badgeBonusMvp: "MVP: +0.4 очка",
   badgeBonusTopScorer: "Бомбардир: +0.3 очка",
   keySkills: "Ключеві Навички",
@@ -240,7 +240,7 @@ export const ua = {
 
   // Hub
   hubTicker1: "ЕЛІТНИЙ ТРЕКІНГ",
-  hubTicker2: "LIVE ДАНІ СЕСІЇ",
+  hubTicker2: "LIVE ДАНІ СЕССИИ",
   hubTicker3: "ГЛОБАЛЬНИЙ РЕЙТИНГ",
   hubTicker4: "АНАЛІТИКА ГРАВЦІВ",
   hubTicker5: "АРХІВ МАТЧІВ",
@@ -264,7 +264,7 @@ export const ua = {
   hubImpact: "ІМПАКТ",
   hubWelcomeText: "Ласкаво просимо до офіційного хабу 532 Playground. Слідкуй за статистикою, порівнюй результати та прагни до вершини.",
   hubLeadersTitle: "Лідери Сезону",
-  hubJoinSquad: "Приєднатися до Загону",
+  hubJoinSquad: "Вступити в Загін",
   
   // Duel
   duel_title: "Вибір Дуелі",
