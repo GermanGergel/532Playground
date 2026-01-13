@@ -100,8 +100,8 @@ export const SessionReportScreen: React.FC = () => {
         let newLink = prompt("YouTube Video Link:", savedLink);
         
         if (newLink !== null) {
-            // Update session object
-            const updatedSession = { ...session, videoUrl: newLink };
+            // FIX: Explicitly set syncStatus to 'pending' to force the DB sync logic to pick this up
+            const updatedSession = { ...session, videoUrl: newLink, syncStatus: 'pending' as const };
             
             // Optimistic update
             setHistory(prev => prev.map(s => s.id === session.id ? updatedSession : s));
@@ -109,6 +109,7 @@ export const SessionReportScreen: React.FC = () => {
             // Sync to Cloud
             try {
                 await saveHistoryToDB([updatedSession]);
+                // Optional: Alert user it's saving
             } catch (error) {
                 console.error("Failed to save video link to DB", error);
                 alert("Failed to save link to cloud. Check connection.");
