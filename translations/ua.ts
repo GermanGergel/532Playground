@@ -57,6 +57,7 @@ export const ua = {
   selectWinnerDesc: "Виберіть переможця, щоб продовжити",
   onBench: "На лавці",
 
+  // Legionnaire
   legionnaire_replace: "ЗАМІНИТИ",
   legionnaire_select: "ВИБРАТИ",
   legionnaire_no_players: "Немає вільних гравців",
@@ -70,7 +71,7 @@ export const ua = {
   summary_condition: "УМОВИ",
 
   // Stats
-  teamStandings: "Турнирная Таблиця",
+  teamStandings: "Турнірна Таблиця",
   playerStatistics: "Статистика Гравців",
   gameHistory: "Історія Матчів",
   liveStatistics: "Live Статистика",
@@ -130,14 +131,14 @@ export const ua = {
 
   // Player Hub
   newPlayerManagement: "Новий Рекрут",
-  playerDatabase: "Base Даних",
-  clubNews: "Новости Клубу",
+  playerDatabase: "База Даних",
+  clubNews: "Новини Клубу",
   searchPlayers: "Пошук гравців...",
   sortBy: "Сортування:",
   sortByRating: "Рейтинг",
   sortByName: "Ім'я",
   sortByDate: "Дата",
-  unconfirmedBadge: "НОВЫЙ",
+  unconfirmedBadge: "НОВИЙ",
   noPlayersFound: "Гравців не знайдено.",
   addPlayerManually: "Додати Вручну",
   nickname: "Нікнейм",
@@ -196,7 +197,7 @@ export const ua = {
 
   // Penalty
   penalty_title: "СТАТУС: ШТРАФ ЗА НЕЯВКУ",
-  penalty_message: "Рейтинг знижен на -{n} OVR из-за пропуска {m} сессий подряд.",
+  penalty_message: "Рейтинг знижено на -{n} OVR через пропуск {m} сесій поспіль.",
 
   // Info Content
   ratingCalculationTitle: "Система Рейтингу",
@@ -252,18 +253,27 @@ export const ua = {
   hubSessionSquads: "СКЛАДИ",
   hubTeamStandings: "ТАБЛИЦЯ",
   hubPlayers: "ГРАВЦІ",
-  hubGames: "МАТЧИ",
+  hubGames: "МАТЧІ",
   hubVitalsTitle: "ПОКАЗНИКИ КЛУБУ",
   hubStatsMembers: "УЧАСНИКИ",
   hubSessionsPlayed: "СЕССІЇ",
   hubAvgRating: "СЕРЕДНІЙ OVR",
-  hubLocation: "ЛОКАЦИЯ",
+  hubLocation: "ЛОКАЦІЯ",
   hubTimeFrame: "ЧАС",
   hubWeather: "ПОГОДА",
   hubImpact: "ІМПАКТ",
   hubWelcomeText: "Ласкаво просимо до офіційного хабу 532 Playground. Слідкуй за статистикою, порівнюй результати та прагни до вершини.",
   hubLeadersTitle: "Лідери Сезону",
   hubJoinSquad: "Вступить в Загін",
+  
+  // Duel
+  duel_title: "Вибір Дуелі",
+  duel_id_unit: "ІДЕНТИФІКАЦІЯ ЮНІТА...",
+  duel_initiate: "ЗАПУСТИТИ ПОСЛІДОВНІСТЬ",
+  duel_sector_empty: "Сектор порожній",
+  duel_complete: "ПОСЛІДОВНІСТЬ ЗАВЕРШЕНА",
+  duel_score: "РАХУНОК",
+  duel_verified: "Індекс ефективності підтверджено",
   
   // Promo
   hero_title: "ГРАЙ ЯК ПРОФІ",
@@ -337,7 +347,7 @@ export const ua = {
   badge_unsung_hero_desc: "Найбільше перемог, мало очок",
   badge_first_blood: "Перша Кров",
   badge_first_blood_desc: "3x Відкриваючих гола",
-  badge_duplet: "Duplet",
+  badge_duplet: "Дуплет",
   badge_duplet_desc: "2x Дублі у перемогах",
   badge_maestro: "Маестро",
   badge_maestro_desc: "2x Дублі асистів у перемогах",
@@ -381,16 +391,16 @@ export const ua = {
   badge_career_100_wins_desc: "100 Перемог у кар'єрі",
   badge_career_150_influence: "Ікона",
   badge_career_150_influence_desc: "150 Г+А у кар'єрі",
-  badge_career_super_veteran: "Super Veteran",
+  badge_career_super_veteran: "Супер Ветеран",
   badge_career_super_veteran_desc: "100 Сесій",
   badge_mercenary: "Найманець",
   badge_mercenary_desc: "4+ Ігри Легіонером",
   badge_double_agent: "Подвійний Агент",
   badge_double_agent_desc: "3 Перемоги за кожну команду",
   badge_joker: "Джокер",
-  badge_joker_desc: "Г/А будучи Легионером",
+  badge_joker_desc: "Г/А будучи Легіонером",
   badge_crisis_manager: "Кризовий Менеджер",
-  badge_crisis_manager_desc: "2+ Г/А будучи Легионером",
+  badge_crisis_manager_desc: "2+ Г/А будучи Легіонером",
   badge_iron_lung: "Залізні Легені",
   badge_iron_lung_desc: "Серія Перемога-Перемога-Перемога",
   
