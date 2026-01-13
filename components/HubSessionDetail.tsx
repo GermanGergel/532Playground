@@ -125,8 +125,8 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
                     </div>
 
                     {/* YOUTUBE BUTTON INSERTED HERE */}
-                    {youtubeLink && (
-                        <div className="shrink-0">
+                    <div className="shrink-0">
+                        {youtubeLink ? (
                             <a 
                                 href={youtubeLink} 
                                 target="_blank" 
@@ -136,8 +136,13 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
                                 <YouTubeIcon className="w-4 h-4 fill-current" />
                                 <span className="font-chakra font-black tracking-widest uppercase">WATCH REPLAY</span>
                             </a>
-                        </div>
-                    )}
+                        ) : (
+                            <div className="flex items-center justify-center gap-2 w-full bg-white/5 border border-white/10 text-white/20 font-bold text-xs py-2 rounded-xl cursor-not-allowed">
+                                <YouTubeIcon className="w-4 h-4 fill-current opacity-50" />
+                                <span className="font-chakra font-black tracking-widest uppercase">REPLAY UNAVAILABLE</span>
+                            </div>
+                        )}
+                    </div>
 
                     <div className="flex items-center justify-between px-4 py-2 bg-indigo-900/20 rounded-2xl border border-indigo-500/20 shrink-0 shadow-sm">
                         <div className="flex flex-col justify-center">
@@ -258,7 +263,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                         <thead>
                                             <tr>
                                                 <th className={`${thClass} w-[6%]`}>#</th>
-                                                <th className={`${thClass} w-[26%] text-center`}>{t.team.toUpperCase()}</th>
+                                                <th className={`${thClass} w-[26%]`}>{t.team.toUpperCase()}</th>
                                                 <th className={`${thClass} w-[7%]`}>{t.thP}</th>
                                                 <th className={`${thClass} w-[7%]`}>{t.thW}</th>
                                                 <th className={`${thClass} w-[7%]`}>{t.thD}</th>

@@ -370,9 +370,9 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
                 <div className="flex flex-col"><span className="text-[7px] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">{t.hubTimeFrame}</span><span className="font-mono font-bold text-sm text-slate-200 tracking-widest">{session.timeString || "19:30 - 21:00"}</span></div>
             </div>
 
-            {/* ROW 3 (Optional): YouTube Button - SQUEEZED IN */}
-            {youtubeLink && (
-                <div className="py-1 shrink-0">
+            {/* ROW 3: YouTube Button - Fixed Slot */}
+            <div className="py-1 shrink-0">
+                {youtubeLink ? (
                     <a 
                         href={youtubeLink} 
                         target="_blank" 
@@ -382,8 +382,13 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
                         <YouTubeIcon className="w-4 h-4 fill-current" />
                         <span className="font-chakra font-black tracking-widest uppercase">WATCH REPLAY</span>
                     </a>
-                </div>
-            )}
+                ) : (
+                    <div className="flex items-center justify-center gap-2 w-full bg-white/5 border border-white/10 text-white/20 font-bold text-xs py-2 rounded-xl cursor-not-allowed">
+                        <YouTubeIcon className="w-4 h-4 fill-current opacity-50" />
+                        <span className="font-chakra font-black tracking-widest uppercase">REPLAY UNAVAILABLE</span>
+                    </div>
+                )}
+            </div>
 
             {/* ROW 4: Weather - COMPACT & FLEXIBLE HEIGHT */}
             <div className="flex-grow flex flex-col justify-end pt-1">

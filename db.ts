@@ -4,8 +4,7 @@ import { Player, Session, NewsItem, PromoData } from './types';
 import { Language } from './translations/index';
 import { get, set, del } from 'idb-keyval';
 
-// --- SUPABASE CONFIGURATION (HARDENED) ---
-// Функция для безопасного получения ключей в любой среде (Vite, локально и т.д.)
+// --- SUPABASE CONFIGURATION ---
 const getEnvVar = (key: string) => {
     try {
         // @ts-ignore
@@ -19,27 +18,14 @@ const getEnvVar = (key: string) => {
             return process.env[key];
         }
     } catch (e) { }
-    return '';
+    return undefined;
 };
 
 const supabaseUrl = getEnvVar('VITE_SUPABASE_URL');
 const supabaseAnonKey = getEnvVar('VITE_SUPABASE_ANON_KEY');
 
-// Логируем статус (для отладки в консоли браузера)
-console.log("DB Init:", supabaseUrl ? "URL Found" : "No URL", supabaseAnonKey ? "Key Found" : "No Key");
-
 const supabase = (supabaseUrl && supabaseAnonKey) 
-    ? createClient(supabaseUrl, supabaseAnonKey, {
-        auth: {
-            persistSession: true,
-            autoRefreshToken: true
-        },
-        global: {
-            headers: {
-                'apikey': supabaseAnonKey
-            }
-        }
-    }) 
+    ? createClient(supabaseUrl, supabaseAnonKey) 
     : null;
 
 export const isSupabaseConfigured = () => !!supabase;
@@ -80,7 +66,6 @@ const sanitizeObject = (obj: any): any => {
         const newObj: any = {};
         for (const key in obj) {
             if (key === 'syncStatus' || key === 'isTestMode' || key === 'isManual') continue;
-            // Не сохраняем base64 строки (картинки) напрямую в JSON базы данных, только ссылки
             const isImageKey = ['photo', 'playerCard', 'logo', 'playerPhoto'].includes(key);
             if (isImageKey && typeof obj[key] === 'string' && obj[key].startsWith('data:')) {
                 newObj[key] = null; 
@@ -153,8 +138,7 @@ export const uploadPlayerImage = async (playerId: string, base64Image: string, t
     try {
         const blob = base64ToBlob(base64Image);
         const filePath = `${playerId}/${type}_${Date.now()}.jpeg`;
-        // cacheControl 0 to force refresh on CDN side
-        const { error: uploadError } = await supabase!.storage.from(BUCKET_NAME).upload(filePath, blob, { cacheControl: '0', upsert: true });
+        const { error: uploadError } = await supabase!.storage.from(BUCKET_NAME).upload(filePath, blob, { cacheControl: '31536000', upsert: true });
         if (uploadError) throw uploadError;
         const { data } = supabase!.storage.from(BUCKET_NAME).getPublicUrl(filePath);
         return data.publicUrl;
@@ -171,26 +155,15 @@ export const deletePlayerImage = async (imageUrl: string) => {
 };
 
 export const saveSinglePlayerToDB = async (player: Player) => {
-    // 1. Сразу сохраняем в локальный кеш, чтобы UI обновился мгновенно
+    if (isSupabaseConfigured()) {
+        try {
+            await supabase!.from('players').upsert(sanitizeObject(player), { onConflict: 'id' });
+        } catch (error) {}
+    }
     const all = await get<Player[]>('players') || [];
     const idx = all.findIndex(p => p.id === player.id);
     if (idx > -1) all[idx] = player; else all.push(player);
     await set('players', all);
-
-    // 2. Отправляем в базу данных
-    if (isSupabaseConfigured()) {
-        try {
-            console.log(`[DB] Saving player ${player.nickname}...`);
-            const { error } = await supabase!.from('players').upsert(sanitizeObject(player), { onConflict: 'id' });
-            if (error) {
-                console.error("[DB] Save Error:", error);
-            } else {
-                console.log("[DB] Player saved successfully.");
-            }
-        } catch (error) {
-            console.error("[DB] Connection failed:", error);
-        }
-    }
 };
 
 export const loadSinglePlayerFromDB = async (id: string, skipCache: boolean = false): Promise<Player | null> => {
@@ -210,50 +183,36 @@ export const loadSinglePlayerFromDB = async (id: string, skipCache: boolean = fa
 
 export const savePlayersToDB = async (players: Player[]) => {
     const real = players; 
-    await set('players', real); // Local first
-
     if (isSupabaseConfigured()) {
         try {
-            // Bulk upsert is efficient
-            const sanitizedPlayers = real.map(p => sanitizeObject(p));
-            const { error } = await supabase!.from('players').upsert(sanitizedPlayers, { onConflict: 'id' });
-            if (error) console.error("Bulk Save Error:", error);
-        } catch (e) {
-            console.error("Bulk Save Exception:", e);
-        }
+            for (const player of real) {
+                await supabase!.from('players').upsert(sanitizeObject(player), { onConflict: 'id' });
+            }
+        } catch (e) {}
     }
+    await set('players', real);
 };
 
 export const loadPlayersFromDB = async () => {
     if (isSupabaseConfigured()) {
         try {
-            const { data, error } = await supabase!.from('players').select('*');
-            if (!error && data) {
-                await set('players', data);
-                return data as Player[];
-            }
+            const { data } = await supabase!.from('players').select('*');
+            if (data) await set('players', data);
+            return data as Player[];
         } catch (e) {}
     }
     return await get<Player[]>('players');
 };
 
-// NEW: Forced Cloud Fetch (Ignores local cache initially)
-// This is critical for the startup sync fix
-export const fetchRemotePlayers = async (): Promise<Player[] | null> => {
-    if (!isSupabaseConfigured()) return null;
-    try {
-        console.log("[DB] Force syncing players from cloud...");
-        const { data, error } = await supabase!.from('players').select('*');
-        if (!error && data) {
-            console.log(`[DB] Cloud sync success: ${data.length} players found.`);
-            // Update local cache immediately
-            await set('players', data);
-            return data as Player[];
-        } else {
-            console.error("[DB] Cloud sync failed or returned empty:", error);
-        }
-    } catch (e) {
-        console.error("[DB] Cloud sync exception:", e);
+export const fetchRemotePlayers = async () => {
+    if (isSupabaseConfigured()) {
+        try {
+            const { data } = await supabase!.from('players').select('*');
+            if (data) {
+                await set('players', data);
+                return data as Player[];
+            }
+        } catch (e) {}
     }
     return null;
 };
@@ -286,14 +245,26 @@ export const saveHistoryToDB = async (history: Session[]) => {
         try {
             const toSync = real.filter(s => s.status === 'completed' && s.syncStatus !== 'synced');
             if (toSync.length > 0) {
-                const dbReady = toSync.map(s => sanitizeObject(s));
+                // Map youtubeUrl to youtube_url for DB
+                const dbReady = toSync.map(s => {
+                    const sanitized = sanitizeObject(s);
+                    return {
+                        ...sanitized,
+                        youtube_url: s.youtubeUrl // Explicit mapping
+                    };
+                });
+                
                 const { error } = await supabase!.from('sessions').upsert(dbReady, { onConflict: 'id' });
                 if (!error) {
                     const final = real.map(s => toSync.some(ts => ts.id === s.id) ? {...s, syncStatus: 'synced' as const} : s);
                     await set('history', final);
+                } else {
+                    console.error("Supabase Save Error:", error);
                 }
             }
-        } catch (e) {}
+        } catch (e) {
+            console.error("Save Exception:", e);
+        }
     }
 };
 
@@ -314,7 +285,12 @@ export const loadHistoryFromDB = async (limit?: number) => {
                 const maxCloudTime = data.length > 0 ? Math.max(...cloudTimes) : 0;
 
                 const merged = [
-                    ...data.map(s => ({...s, syncStatus: 'synced' as const})), 
+                    // Map youtube_url back to youtubeUrl
+                    ...data.map(s => ({
+                        ...s, 
+                        syncStatus: 'synced' as const,
+                        youtubeUrl: s.youtube_url || s.youtubeUrl // Handle both snake and camel case
+                    })), 
                     ...local.filter(l => {
                         if (cloudIds.has(l.id)) return false;
                         if (l.syncStatus !== 'synced') return true;
