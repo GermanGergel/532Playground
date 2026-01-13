@@ -1,13 +1,11 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-import { Page, Button, Modal, useTranslation, Card } from '../ui';
+import { Page, Button, Modal, useTranslation } from '../ui';
 import { shareOrDownloadImages, exportSessionAsJson } from '../services/export';
 import { BrandedHeader, newId } from './utils';
 import { ShareableReport } from './StatisticsScreen';
-import { saveHistoryToDB } from '../db';
-import { YouTubeIcon } from '../icons';
 
 // Re-defining BrandedShareableReport locally to avoid import issues
 const BrandedShareableReport: React.FC<{
@@ -46,22 +44,14 @@ const BrandedShareableReport: React.FC<{
 
 export const SessionReportScreen: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-    const { history, isLoading, setHistory } = useApp();
+    const { history, isLoading } = useApp();
     const t = useTranslation();
     const navigate = useNavigate();
     const [isDownloadModalOpen, setIsDownloadModalOpen] = React.useState(false);
     const [isExporting, setIsExporting] = React.useState(false);
-    const [isVideoModalOpen, setIsVideoModalOpen] = React.useState(false);
-    const [videoLink, setVideoLink] = React.useState('');
     const exportContainerRef = React.useRef<HTMLDivElement>(null);
 
     const session = history.find(s => s.id === id);
-
-    React.useEffect(() => {
-        if (session) {
-            setVideoLink(session.youtubeUrl || '');
-        }
-    }, [session]);
 
     React.useEffect(() => {
         if (!isLoading && !session) {
@@ -78,22 +68,6 @@ export const SessionReportScreen: React.FC = () => {
         return null;
     }
     
-    const handleSaveVideoLink = async () => {
-        if (!session) return;
-        
-        // Update session locally
-        const updatedSession = { ...session, youtubeUrl: videoLink.trim(), syncStatus: 'pending' as const };
-        
-        // Update global history state
-        const updatedHistory = history.map(s => s.id === session.id ? updatedSession : s);
-        setHistory(updatedHistory);
-        
-        // Persist to DB
-        await saveHistoryToDB(updatedHistory);
-        
-        setIsVideoModalOpen(false);
-    };
-
     const handleExport = async (section: 'standings' | 'players') => {
         if (isExporting || !exportContainerRef.current || !session) return;
         setIsExporting(true);
@@ -120,7 +94,7 @@ export const SessionReportScreen: React.FC = () => {
     
     const displayDate = new Date(session.date).toLocaleString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
     
-    const combinedExportBackground = `data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 1200'%3e%3cdefs%3e%3cradialGradient id='g' cx='50%25' cy='50%25' r='50%25'%3e%3cstop offset='0%25' stop-color='%2300F2FE' stop-opacity='0.1' /%3e%3cstop offset='100%25' stop-color='%2300F2FE' stop-opacity='0' /%3e%3c/radialGradient%3e%3cfilter id='f'%3e%3cfeTurbulence type='fractalNoise' baseFrequency='0.02 0.05' numOctaves='3' /%3e%3c/filter%3e%3c/defs%3e%3crect width='100%25' height='100%25' fill='%231A1D24' /%3e%3crect x='0' y='0' width='100%25' height='100%25' fill='url(%23g)' /%3e%3crect x='0' y='0' width='100%25' height='100%25' fill='url(%23f)' opacity='0.03' /%3e%3c/svg%3e`;
+    const combinedExportBackground = `data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 1200'%3e%3cdefs%3e%3cradialGradient id='g' cx='50%25' cy='50%25' r='50%25'%3e%3cstop offset='0%25' stop-color='%2300F2FE' stop-opacity='0.1' /%3e%3cstop offset='100%25' stop-color='%2300F2FE' stop-opacity='0' /%3e%3c/radialGradient%3e%3cfilter id='f'%3e%3cfeTurbulence type='fractalNoise' baseFrequency='0.02 0.05' numOctaves='3' /%3e%3c/filter%3e%3c/defs%3e%3crect width='100%25' height='100%25' fill='%231A1D24' /%3e%3crect x='0' y='0' width='100%25' height='100%25' fill='url(%23g)' /%3e%3crect x='0' y='0' width='100%25' height='100%25' filter='url(%23f)' opacity='0.03' /%3e%3c/svg%3e`;
 
     return (
         <Page>
@@ -137,27 +111,6 @@ export const SessionReportScreen: React.FC = () => {
                     <Button variant="secondary" onClick={() => setIsDownloadModalOpen(false)} disabled={isExporting} className="w-full font-chakra font-bold text-xl tracking-wider !py-3 mt-2 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.cancel}</Button>
                 </div>
             </Modal>
-
-            <Modal
-                isOpen={isVideoModalOpen}
-                onClose={() => setIsVideoModalOpen(false)}
-                size="xs"
-                containerClassName="border border-red-500/40 shadow-[0_0_20px_rgba(239,68,68,0.3)] !p-5"
-            >
-                <h3 className="text-lg font-bold text-white mb-4 text-center">ATTACH VIDEO LINK</h3>
-                <input 
-                    type="text" 
-                    value={videoLink}
-                    onChange={(e) => setVideoLink(e.target.value)}
-                    placeholder="https://youtube.com/..."
-                    className="w-full p-3 bg-dark-bg rounded-lg border border-white/10 mb-4 focus:border-red-500 outline-none text-white text-sm"
-                />
-                <div className="flex gap-2">
-                    <Button variant="secondary" onClick={() => setIsVideoModalOpen(false)} className="flex-1">Cancel</Button>
-                    <Button onClick={handleSaveVideoLink} className="flex-1 bg-red-600 hover:bg-red-700 text-white border-none">Save</Button>
-                </div>
-            </Modal>
-
             <div className="w-full max-w-4xl mx-auto">
                  <BrandedHeader className="mb-4" />
                  <p className="text-dark-text-secondary mb-6">{new Date(session.date).toLocaleDateString('en-GB')}</p>
@@ -166,18 +119,6 @@ export const SessionReportScreen: React.FC = () => {
                 
                 <div className="mt-auto pt-6 w-full flex flex-col gap-3">
                     <Button variant="secondary" onClick={() => setIsDownloadModalOpen(true)} className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.saveTable}</Button>
-                    <Button 
-                        variant="secondary" 
-                        onClick={() => setIsVideoModalOpen(true)}
-                        className={`w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg border flex items-center justify-center gap-2
-                            ${session.youtubeUrl 
-                                ? 'border-red-500/50 shadow-red-500/20 text-red-400' 
-                                : 'border-white/10 shadow-white/5 text-white/60'
-                            }
-                        `}
-                    >
-                        <YouTubeIcon className="w-6 h-6" /> {session.youtubeUrl ? 'EDIT VIDEO LINK' : 'ATTACH VIDEO LINK'}
-                    </Button>
                     <Button variant="secondary" onClick={() => exportSessionAsJson(session)} className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.exportJson}</Button>
                 </div>
             </div>
