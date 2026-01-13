@@ -382,8 +382,8 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
                 className={`flex items-center gap-3 border-b border-white/5 py-2 mb-1 rounded-lg px-2 -mx-2 transition-colors ${videoLink ? 'group cursor-pointer hover:bg-white/5' : 'opacity-50 cursor-default'}`}
                 onClick={() => videoLink ? window.open(videoLink, '_blank') : null}
             >
-                {/* Dimmed red background and border */}
-                <div className="w-9 h-9 rounded-xl bg-red-500/5 border border-red-500/10 flex items-center justify-center text-red-500/60 shrink-0 shadow-[0_0_8px_rgba(239,68,68,0.15)]">
+                {/* Updated brightness and glow */}
+                <div className="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 shrink-0 shadow-[0_0_12px_rgba(239,68,68,0.25)]">
                     <YouTubeIcon className="w-4 h-4 fill-current" />
                 </div>
                 <div className="flex flex-col">
@@ -516,10 +516,8 @@ export const PublicHubDashboard: React.FC = () => {
                                         <th className={`${thStandings} w-[7%]`}>{t.thW}</th>
                                         <th className={`${thStandings} w-[7%]`}>{t.thD}</th>
                                         <th className={`${thStandings} w-[7%]`}>{t.thL}</th>
-                                        <th className={`${thStandings} w-[10%]`}>{t.thGF}</th>
-                                        <th className={`${thStandings} w-[10%]`}>{t.thGA}</th>
-                                        <th className={`${thStandings} w-[10%]`}>{t.thGD}</th>
-                                        <th className={`${thStandings} w-[10%] text-white bg-white/[0.03]`}>PTS</th>
+                                        <th className={`${thStandings} w-[12%]`}>{t.thGD}</th>
+                                        <th className={`${thStandings} w-[20%] text-white bg-white/[0.03]`}>PTS</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -531,8 +529,6 @@ export const PublicHubDashboard: React.FC = () => {
                                             <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.wins}</td>
                                             <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.draws}</td>
                                             <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.losses}</td>
-                                            <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.goalsFor}</td>
-                                            <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.goalsAgainst}</td>
                                             <td className="py-1.5 text-center text-[10px] font-bold text-white/40">{stat.goalDifference > 0 ? `+${stat.goalDifference}` : stat.goalDifference}</td>
                                             <td className="py-1.5 text-center text-[12px] font-black text-white bg-white/[0.03]">{stat.points}</td>
                                         </tr>
