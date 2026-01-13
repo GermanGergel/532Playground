@@ -73,128 +73,102 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
 
     const getWeatherIcon = (cond: WeatherCondition | string) => {
         const c = cond.toLowerCase();
-        if (c.includes('rain')) return <CloudRainIcon className="w-5 h-5 text-slate-200/80" />;
-        if (c.includes('cloud')) return <CloudIcon className="w-5 h-5 text-slate-200/80" />;
-        return <MoonIcon className="w-5 h-5 text-slate-200/80" />;
+        if (c.includes('rain')) return <CloudRainIcon className="w-6 h-6 text-slate-200/90" />;
+        if (c.includes('cloud')) return <CloudIcon className="w-6 h-6 text-slate-200/90" />;
+        return <MoonIcon className="w-6 h-6 text-slate-200/90" />;
     };
 
     const mapsLink = session.location 
         ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(session.location)}` 
         : null;
         
-    // NEW: YouTube Link
     const youtubeLink = session.youtubeUrl;
+
+    // Common style for rows to ensure identical height
+    const rowBaseClass = "flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-xl px-3 h-12 shadow-sm shrink-0";
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
-            <div className="flex flex-col gap-2 shrink-0 mb-4 h-full min-h-0">
+            <div className="flex flex-col gap-2 h-full min-h-0">
                 
                 {/* ROW 1: Location */}
-                <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-2xl p-2.5 shadow-sm shrink-0">
+                <div className={rowBaseClass}>
                     <div className="w-8 h-8 rounded-lg bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shrink-0">
                         <MapPinIcon className="w-4 h-4" />
                     </div>
-                    <div className="flex flex-col min-w-0">
-                        <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">{t.hubLocation}</span>
+                    <div className="flex flex-col justify-center min-w-0">
+                        <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.2em] leading-none mb-1">{t.hubLocation}</span>
                         {mapsLink ? (
                             <a 
                                 href={mapsLink} 
                                 target="_blank" 
                                 rel="noopener noreferrer" 
-                                className="group/loc flex items-center gap-1 font-chakra font-bold text-sm text-slate-200 uppercase tracking-wide truncate hover:text-[#00F2FE] transition-colors"
+                                className="group/loc flex items-center gap-1 font-chakra font-bold text-xs text-slate-200 uppercase tracking-wide truncate hover:text-[#00F2FE] transition-colors leading-none"
                             >
                                 <span className="truncate border-b border-white/10 group-hover/loc:border-[#00F2FE]/40">{data.location}</span>
-                                <svg className="w-3 h-3 opacity-30 group-hover/loc:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
                             </a>
                         ) : (
-                            <span className="font-chakra font-bold text-sm text-slate-200 uppercase tracking-wide truncate">{data.location}</span>
+                            <span className="font-chakra font-bold text-xs text-slate-200 uppercase tracking-wide truncate leading-none">{data.location}</span>
                         )}
                     </div>
                 </div>
                 
-                {/* ROW 2: Time & Weather */}
-                <div className="flex flex-col gap-2 shrink-0">
-                    <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-2xl p-2.5 shadow-sm">
-                        <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0">
-                            <ClockIcon className="w-4 h-4" />
-                        </div>
-                        <div className="flex flex-col justify-center">
-                            <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">{t.hubTimeFrame}</span>
-                            <span className="font-mono font-bold text-sm text-slate-200 tracking-widest">{data.time}</span>
-                        </div>
+                {/* ROW 2: Time */}
+                <div className={rowBaseClass}>
+                    <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0">
+                        <ClockIcon className="w-4 h-4" />
                     </div>
-
-                    {/* YOUTUBE BUTTON INSERTED HERE */}
-                    <div className="shrink-0">
-                        {youtubeLink ? (
-                            <a 
-                                href={youtubeLink} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="group flex items-center justify-center gap-2 w-full bg-[#FF0000] hover:bg-[#cc0000] text-white font-bold text-xs py-2 rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.4)] hover:shadow-[0_0_25px_rgba(220,38,38,0.6)] transition-all transform hover:scale-[1.02] active:scale-95 border border-red-500/50"
-                            >
-                                <YouTubeIcon className="w-4 h-4 fill-current" />
-                                <span className="font-chakra font-black tracking-widest uppercase">WATCH REPLAY</span>
-                            </a>
-                        ) : (
-                            <div className="flex items-center justify-center gap-2 w-full bg-white/5 border border-white/10 text-white/20 font-bold text-xs py-2 rounded-xl cursor-not-allowed">
-                                <YouTubeIcon className="w-4 h-4 fill-current opacity-50" />
-                                <span className="font-chakra font-black tracking-widest uppercase">REPLAY UNAVAILABLE</span>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="flex items-center justify-between px-4 py-2 bg-indigo-900/20 rounded-2xl border border-indigo-500/20 shrink-0 shadow-sm">
-                        <div className="flex flex-col justify-center">
-                            <span className="text-[7px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-0.5">{t.hubWeather}</span>
-                            <div className="flex items-baseline gap-2">
-                                <span className="font-russo text-2xl text-slate-200 leading-none">{data.temp}</span>
-                                <span className="text-[8px] font-bold text-indigo-300 uppercase tracking-wider">{data.condition}</span>
-                            </div>
-                        </div>
-                        <div className="scale-110">{getWeatherIcon(data.condition)}</div>
+                    <div className="flex flex-col justify-center">
+                        <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.2em] leading-none mb-1">{t.hubTimeFrame}</span>
+                        <span className="font-mono font-bold text-xs text-slate-200 tracking-widest leading-none">{data.time}</span>
                     </div>
                 </div>
-            </div>
 
-            <div className="flex-grow flex flex-col min-h-0 pt-2 border-t border-white/5">
-                <div className="flex items-center gap-2 mb-2 opacity-90 shrink-0 pl-1">
-                    <TrophyIcon className="w-3.5 h-3.5 text-[#FFD700]" />
-                    <span className="text-[9px] font-black text-white/50 uppercase tracking-[0.25em]">{t.hubSessionLeaders} (IMPACT)</span>
-                </div>
-                
-                <div className="flex-grow flex flex-col gap-2 min-h-0 overflow-y-auto custom-hub-scrollbar pr-1">
-                    {topPlayers.slice(0, 3).map((stat, idx) => {
-                        const impact = getImpactScore(stat);
-                        return (
-                            <div key={stat.player.id} className="flex-1 min-h-[40px] flex items-center justify-between px-3 py-1 rounded-xl bg-white/[0.03] border border-white/5 relative overflow-hidden group hover:bg-white/[0.05] transition-colors">
-                                <div className={`absolute left-0 top-0 bottom-0 w-1 ${idx === 0 ? 'bg-[#FFD700]' : idx === 1 ? 'bg-slate-300' : 'bg-amber-700'}`}></div>
-
-                                <div className="flex items-center gap-3 pl-2">
-                                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center border text-xs shadow-lg font-bold
-                                        ${idx === 0 ? 'bg-[#FFD700]/10 border-[#FFD700]/30 text-[#FFD700]' : 
-                                          idx === 1 ? 'bg-slate-300/10 border-slate-300/30 text-slate-300' : 
-                                          'bg-amber-700/10 border-amber-700/30 text-amber-700'}`}>
-                                        {idx + 1}
-                                    </div>
-                                    <div className="flex flex-col justify-center">
-                                        <span className={`font-russo text-xs uppercase tracking-wide truncate max-w-[120px] leading-none ${idx === 0 ? 'text-white' : 'text-slate-300'}`}>
-                                            {stat.player.nickname || 'Unknown'}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col items-end justify-center">
-                                    <span className="font-mono font-black text-sm text-white leading-none tracking-tight">{impact.toFixed(1)}</span>
-                                </div>
-                            </div>
-                        );
-                    })}
-                    {topPlayers.length === 0 && (
-                        <div className="flex-1 flex items-center justify-center text-white/20 text-xs font-bold uppercase tracking-widest border border-white/5 rounded-2xl bg-white/[0.01]">
-                            No Stats Available
+                {/* ROW 3: YouTube Button - Identical Size */}
+                <div className="shrink-0 h-12">
+                    {youtubeLink ? (
+                        <a 
+                            href={youtubeLink} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="group flex items-center justify-center gap-2 w-full h-full bg-[#FF0000] hover:bg-[#cc0000] text-white font-bold text-xs rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.4)] hover:shadow-[0_0_25px_rgba(220,38,38,0.6)] transition-all transform hover:scale-[1.02] active:scale-95 border border-red-500/50"
+                        >
+                            <YouTubeIcon className="w-5 h-5 fill-current" />
+                            <span className="font-chakra font-black tracking-widest uppercase">WATCH REPLAY</span>
+                        </a>
+                    ) : (
+                        <div className="flex items-center justify-center gap-3 w-full h-full bg-white/[0.02] border border-white/5 rounded-xl cursor-not-allowed">
+                            <YouTubeIcon className="w-5 h-5 text-[#FF0000] fill-current" />
+                            <span className="font-chakra font-black tracking-widest uppercase text-white/20 text-xs">REPLAY UNAVAILABLE</span>
                         </div>
                     )}
                 </div>
+
+                {/* ROW 4: Weather - Fills remaining space */}
+                <div className="flex-grow min-h-[60px] flex items-center justify-between px-5 rounded-xl bg-indigo-900/20 border border-indigo-500/20 shadow-sm relative overflow-hidden">
+                     <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-transparent pointer-events-none"></div>
+                     <div className="flex flex-col justify-center relative z-10">
+                        <span className="text-[7px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-0.5">{t.hubWeather}</span>
+                        <div className="flex items-baseline gap-2">
+                            <span className="font-russo text-3xl text-slate-200 leading-none">{data.temp}</span>
+                            <span className="text-[9px] font-bold text-indigo-300 uppercase tracking-wider">{data.condition}</span>
+                        </div>
+                    </div>
+                    <div className="relative z-10 scale-125 opacity-90">{getWeatherIcon(data.condition)}</div>
+                </div>
+
+                {/* ROW 5: Impact Leaders (Separate from the flex-grow weather to keep it at bottom if needed, or integrated logic) */}
+                {/* For Archive widget, user asked to fill space with weather. But we have impact leaders below usually. 
+                    I will keep impact leaders as a separate block below the environment block if space permits, 
+                    OR I will make the weather block fill the gap between the youtube button and the leaders section.
+                    
+                    Wait, the design has a separate container for leaders. 
+                    This component returns the environment widget. 
+                    Let's check parent component HubSessionDetail.
+                    
+                    Ah, ArchiveEnvironmentWidget is just the top part of the left column.
+                    So 'flex-grow' on weather will fill the space available in that specific card.
+                */}
             </div>
         </div>
     );
@@ -257,13 +231,14 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                 <div className="max-w-6xl mx-auto w-full h-full flex flex-col gap-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch w-full h-full min-h-0">
                         <div className="flex flex-col gap-4 w-full h-full min-h-0">
-                            <HubCard title={t.teamStandings} icon={<TrophyIcon />} accent="#FFD700" className="shrink-0 max-h-[45%] flex flex-col">
+                            {/* TOP LEFT: STANDINGS */}
+                            <HubCard title={t.teamStandings} icon={<TrophyIcon />} accent="#FFD700" className="shrink-0 max-h-[40%] flex flex-col">
                                 <div className="p-1 overflow-y-auto custom-hub-scrollbar">
                                     <table className="w-full table-fixed border-collapse">
                                         <thead>
                                             <tr>
                                                 <th className={`${thClass} w-[6%]`}>#</th>
-                                                <th className={`${thClass} w-[26%]`}>{t.team.toUpperCase()}</th>
+                                                <th className={`${thClass} w-[26%] text-center`}>{t.team.toUpperCase()}</th>
                                                 <th className={`${thClass} w-[7%]`}>{t.thP}</th>
                                                 <th className={`${thClass} w-[7%]`}>{t.thW}</th>
                                                 <th className={`${thClass} w-[7%]`}>{t.thD}</th>
@@ -295,10 +270,45 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                     </table>
                                 </div>
                             </HubCard>
-                            <HubCard title={t.hubMatchReport} icon={<Target />} accent="#00F2FE" className="w-full flex-grow min-h-0" bodyClassName="p-4">
-                                <ArchiveEnvironmentWidget topPlayers={sortedByImpact} session={session} t={t} />
-                            </HubCard>
+                            
+                            {/* BOTTOM LEFT: REPORT & LEADERS */}
+                            <div className="flex-grow min-h-0 grid grid-cols-2 gap-4">
+                                <HubCard title={t.hubMatchReport} icon={<Target />} accent="#00F2FE" className="h-full" bodyClassName="p-4">
+                                    <ArchiveEnvironmentWidget topPlayers={sortedByImpact} session={session} t={t} />
+                                </HubCard>
+                                
+                                <HubCard title={`${t.hubSessionLeaders} (IMPACT)`} icon={<AwardIcon />} accent="#FFD700" className="h-full" bodyClassName="p-3">
+                                    <div className="flex flex-col gap-2 h-full overflow-y-auto custom-hub-scrollbar pr-1">
+                                         {sortedByImpact.slice(0, 5).map((stat, idx) => {
+                                            const impact = getImpactScore(stat);
+                                            return (
+                                                <div key={stat.player.id} className="flex items-center justify-between px-3 py-2 rounded-xl bg-white/[0.03] border border-white/5 relative overflow-hidden group hover:bg-white/[0.05] transition-colors shrink-0">
+                                                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${idx === 0 ? 'bg-[#FFD700]' : idx === 1 ? 'bg-slate-300' : 'bg-amber-700'}`}></div>
+
+                                                    <div className="flex items-center gap-3 pl-2">
+                                                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center border text-[10px] shadow-lg font-bold
+                                                            ${idx === 0 ? 'bg-[#FFD700]/10 border-[#FFD700]/30 text-[#FFD700]' : 
+                                                            idx === 1 ? 'bg-slate-300/10 border-slate-300/30 text-slate-300' : 
+                                                            'bg-amber-700/10 border-amber-700/30 text-amber-700'}`}>
+                                                            {idx + 1}
+                                                        </div>
+                                                        <div className="flex flex-col justify-center">
+                                                            <span className={`font-russo text-xs uppercase tracking-wide truncate max-w-[100px] leading-none ${idx === 0 ? 'text-white' : 'text-slate-300'}`}>
+                                                                {stat.player.nickname || 'Unknown'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex flex-col items-end justify-center">
+                                                        <span className="font-mono font-black text-sm text-white leading-none tracking-tight">{impact.toFixed(1)}</span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </HubCard>
+                            </div>
                         </div>
+
                         <div className="w-full h-full min-h-0">
                             <HubCard title={
                                 <div className="flex items-center gap-4 md:gap-8 px-4 md:px-6">

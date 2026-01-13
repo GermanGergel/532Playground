@@ -339,68 +339,73 @@ const getImpactScore = (stats: PlayerStats): number => {
 const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t }) => {
     const getWeatherIcon = (cond: WeatherCondition | string = 'clear') => {
         const c = cond.toLowerCase();
-        if (c.includes('rain') || c.includes('storm')) return <CloudRainIcon className="w-16 h-16 text-slate-200/90" />;
-        if (c.includes('cloud') || c.includes('fog')) return <CloudIcon className="w-16 h-16 text-slate-200/90" />;
-        return <MoonIcon className="w-16 h-16 text-slate-200/90" />;
+        if (c.includes('rain') || c.includes('storm')) return <CloudRainIcon className="w-6 h-6 text-slate-200/90" />;
+        if (c.includes('cloud') || c.includes('fog')) return <CloudIcon className="w-6 h-6 text-slate-200/90" />;
+        return <MoonIcon className="w-6 h-6 text-slate-200/90" />;
     };
     const mapsLink = session.location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(session.location)}` : null;
     
     // NEW: YouTube Link Handling
     const youtubeLink = session.youtubeUrl;
 
+    // Common style for rows to ensure identical height
+    const rowBaseClass = "flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-xl px-3 h-12 shadow-sm shrink-0";
+
     return (
         <div className="flex flex-col h-full gap-2 relative">
-            {/* ROW 1: Location - COMPACT */}
-            <div className="flex items-center gap-3 border-b border-white/5 pb-2 shrink-0">
+            {/* ROW 1: Location */}
+            <div className={rowBaseClass}>
                 <div className="w-8 h-8 rounded-lg bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shrink-0"><MapPinIcon className="w-4 h-4" /></div>
-                <div className="flex flex-col min-w-0">
-                    <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">{t.hubLocation}</span>
+                <div className="flex flex-col justify-center min-w-0">
+                    <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.2em] mb-1 leading-none">{t.hubLocation}</span>
                     {mapsLink ? (
-                        <a href={mapsLink} target="_blank" rel="noopener noreferrer" className="group/loc flex items-center gap-1.5 font-chakra font-bold text-xs text-slate-200 uppercase tracking-wide truncate max-w-[180px] hover:text-[#00F2FE] transition-colors">
+                        <a href={mapsLink} target="_blank" rel="noopener noreferrer" className="group/loc flex items-center gap-1.5 font-chakra font-bold text-xs text-slate-200 uppercase tracking-wide truncate max-w-[180px] hover:text-[#00F2FE] transition-colors leading-none">
                             <span className="truncate border-b border-white/10 group-hover/loc:border-[#00F2FE]/50">{session.location}</span>
-                            <svg className="w-2.5 h-2.5 opacity-30 group-hover/loc:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
                         </a>
-                    ) : ( <span className="font-chakra font-bold text-xs text-slate-200 uppercase tracking-wide truncate max-w-[180px]">PITCH DATA UNAVAILABLE</span> )}
+                    ) : ( <span className="font-chakra font-bold text-xs text-slate-200 uppercase tracking-wide truncate max-w-[180px] leading-none">PITCH DATA UNAVAILABLE</span> )}
                 </div>
             </div>
 
-            {/* ROW 2: Time - COMPACT */}
-            <div className="flex items-center gap-3 border-b border-white/5 py-2 shrink-0">
+            {/* ROW 2: Time */}
+            <div className={rowBaseClass}>
                 <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0"><ClockIcon className="w-4 h-4" /></div>
-                <div className="flex flex-col"><span className="text-[7px] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">{t.hubTimeFrame}</span><span className="font-mono font-bold text-sm text-slate-200 tracking-widest">{session.timeString || "19:30 - 21:00"}</span></div>
+                <div className="flex flex-col justify-center">
+                    <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.2em] mb-1 leading-none">{t.hubTimeFrame}</span>
+                    <span className="font-mono font-bold text-xs text-slate-200 tracking-widest leading-none">{session.timeString || "19:30 - 21:00"}</span>
+                </div>
             </div>
 
-            {/* ROW 3: YouTube Button - Fixed Slot */}
-            <div className="py-1 shrink-0">
+            {/* ROW 3: YouTube Button - Identical Size */}
+            <div className="shrink-0 h-12">
                 {youtubeLink ? (
                     <a 
                         href={youtubeLink} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="group flex items-center justify-center gap-2 w-full bg-[#FF0000] hover:bg-[#cc0000] text-white font-bold text-xs py-2 rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.4)] hover:shadow-[0_0_25px_rgba(220,38,38,0.6)] transition-all transform hover:scale-[1.02] active:scale-95 border border-red-500/50"
+                        className="group flex items-center justify-center gap-2 w-full h-full bg-[#FF0000] hover:bg-[#cc0000] text-white font-bold text-xs rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.4)] hover:shadow-[0_0_25px_rgba(220,38,38,0.6)] transition-all transform hover:scale-[1.02] active:scale-95 border border-red-500/50"
                     >
-                        <YouTubeIcon className="w-4 h-4 fill-current" />
+                        <YouTubeIcon className="w-5 h-5 fill-current" />
                         <span className="font-chakra font-black tracking-widest uppercase">WATCH REPLAY</span>
                     </a>
                 ) : (
-                    <div className="flex items-center justify-center gap-2 w-full bg-white/5 border border-white/10 text-white/20 font-bold text-xs py-2 rounded-xl cursor-not-allowed">
-                        <YouTubeIcon className="w-4 h-4 fill-current opacity-50" />
-                        <span className="font-chakra font-black tracking-widest uppercase">REPLAY UNAVAILABLE</span>
+                    <div className="flex items-center justify-center gap-3 w-full h-full bg-white/[0.02] border border-white/5 rounded-xl cursor-not-allowed">
+                        <YouTubeIcon className="w-5 h-5 text-[#FF0000] fill-current" />
+                        <span className="font-chakra font-black tracking-widest uppercase text-white/20 text-xs">REPLAY UNAVAILABLE</span>
                     </div>
                 )}
             </div>
 
-            {/* ROW 4: Weather - COMPACT & FLEXIBLE HEIGHT */}
-            <div className="flex-grow flex flex-col justify-end pt-1">
-                <div className="relative rounded-2xl bg-gradient-to-br from-indigo-900/40 to-black border border-indigo-500/20 p-3 flex items-center justify-between overflow-hidden h-full min-h-[70px]">
-                    <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-                    <div className="relative z-10 flex flex-col justify-center">
-                        <span className="text-[7px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-0.5">{t.hubWeather}</span>
-                        <div className="flex items-baseline gap-1"><span className="font-russo text-3xl text-slate-200 leading-none">{session.weather?.temperature || 26}°C</span></div>
-                        <span className="font-chakra text-[9px] text-indigo-200 font-bold uppercase tracking-wider mt-0.5">{session.weather?.condition || "CLEAR"}</span>
+            {/* ROW 4: Weather - Fills remaining space */}
+            <div className="flex-grow min-h-[60px] flex items-center justify-between px-5 rounded-xl bg-indigo-900/20 border border-indigo-500/20 shadow-sm relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-transparent pointer-events-none"></div>
+                <div className="flex flex-col justify-center relative z-10">
+                    <span className="text-[7px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-0.5">{t.hubWeather}</span>
+                    <div className="flex items-baseline gap-2">
+                        <span className="font-russo text-3xl text-slate-200 leading-none">{session.weather?.temperature || 26}°C</span>
+                        <span className="font-chakra text-[9px] text-indigo-200 font-bold uppercase tracking-wider">{session.weather?.condition || "CLEAR"}</span>
                     </div>
-                    <div className="relative z-10 scale-90">{getWeatherIcon(session.weather?.condition)}</div>
                 </div>
+                <div className="relative z-10 scale-125 opacity-90">{getWeatherIcon(session.weather?.condition)}</div>
             </div>
         </div>
     );
