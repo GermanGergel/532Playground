@@ -1,4 +1,3 @@
-
 export const ua = {
   // Navigation
   navHome: "Головна",
@@ -31,8 +30,8 @@ export const ua = {
   addPlayer: "Додати",
   playerPool: "Лист Очікування",
   allPlayersAssigned: "Всі гравці розподілені",
-  autoBalanceTeams: "Auto-Баланс",
-  autoBalanceConfirmTitle: "Auto-баланс команд?",
+  autoBalanceTeams: "Авто-Баланс",
+  autoBalanceConfirmTitle: "Автобаланс команд?",
   autoBalanceConfirmDesc: "Гравці будуть перерозподілені за рейтингом.",
   startSession: "Почати Сесію",
   cancelSetup: "Скасувати",
@@ -57,11 +56,12 @@ export const ua = {
   selectWinnerDesc: "Виберіть переможця, щоб продовжити",
   onBench: "На лавці",
 
-  // Legionnaire
+  // FIX: Added missing Legionnaire keys for Ukrainian translation
   legionnaire_replace: "ЗАМІНИТИ",
   legionnaire_select: "ВИБРАТИ",
   legionnaire_no_players: "Немає вільних гравців",
 
+  // FIX: Added missing Session Summary keys for Ukrainian translation
   // Session Summary
   summary_title: "ПІДСУМКИ СЕСІЇ",
   summary_location: "ЛОКАЦІЯ",
@@ -85,8 +85,6 @@ export const ua = {
   thW: "В",
   thD: "Н",
   thL: "П",
-  thGF: "З",
-  thGA: "П",
   thGD: "РМ",
   thPts: "Очки",
   players: "Гравець",
@@ -131,14 +129,14 @@ export const ua = {
 
   // Player Hub
   newPlayerManagement: "Новий Рекрут",
-  playerDatabase: "База Даних",
-  clubNews: "Новини Клубу",
+  playerDatabase: "Base Даних",
+  clubNews: "Новости Клубу",
   searchPlayers: "Пошук гравців...",
   sortBy: "Сортування:",
   sortByRating: "Рейтинг",
   sortByName: "Ім'я",
   sortByDate: "Дата",
-  unconfirmedBadge: "НОВИЙ",
+  unconfirmedBadge: "НОВЫЙ",
   noPlayersFound: "Гравців не знайдено.",
   addPlayerManually: "Додати Вручну",
   nickname: "Нікнейм",
@@ -190,14 +188,9 @@ export const ua = {
   monthlyGoals: "Голи",
   monthlyAssists: "Асисти",
   monthlyWins: "Перемоги",
-  careerStats: "Середні Показники",
   session: "Сесії",
   information: "Інформація",
   statistics: "Статистика",
-
-  // Penalty
-  penalty_title: "СТАТУС: ШТРАФ ЗА НЕЯВКУ",
-  penalty_message: "Рейтинг знижено на -{n} OVR через пропуск {m} сесій поспіль.",
 
   // Info Content
   ratingCalculationTitle: "Система Рейтингу",
@@ -230,7 +223,7 @@ export const ua = {
   ruleRespectDesc: "Неспортивна поведінка або агресія.",
   ruleRespectPenalty: "БАН НА СЕССІЮ",
   badgeBonusTitle: "Бонуси Значків",
-  badgeBonusDesc: "Заробляйте значки, щоб підвищити рейтинг матча.",
+  badgeBonusDesc: "Заробляйте значки, щоб підвищити рейтинг матчу.",
   badgeBonusMvp: "MVP: +0.4 очка",
   badgeBonusTopScorer: "Бомбардир: +0.3 очка",
   keySkills: "Ключеві Навички",
@@ -240,7 +233,7 @@ export const ua = {
 
   // Hub
   hubTicker1: "ЕЛІТНИЙ ТРЕКІНГ",
-  hubTicker2: "LIVE ДАНІ СЕСІЇ",
+  hubTicker2: "LIVE ДАНІ СЕССИИ",
   hubTicker3: "ГЛОБАЛЬНИЙ РЕЙТИНГ",
   hubTicker4: "АНАЛІТИКА ГРАВЦІВ",
   hubTicker5: "АРХІВ МАТЧІВ",
@@ -253,27 +246,18 @@ export const ua = {
   hubSessionSquads: "СКЛАДИ",
   hubTeamStandings: "ТАБЛИЦЯ",
   hubPlayers: "ГРАВЦІ",
-  hubGames: "МАТЧІ",
+  hubGames: "МАТЧИ",
   hubVitalsTitle: "ПОКАЗНИКИ КЛУБУ",
   hubStatsMembers: "УЧАСНИКИ",
   hubSessionsPlayed: "СЕССІЇ",
   hubAvgRating: "СЕРЕДНІЙ OVR",
-  hubLocation: "ЛОКАЦІЯ",
+  hubLocation: "ЛОКАЦИЯ",
   hubTimeFrame: "ЧАС",
   hubWeather: "ПОГОДА",
   hubImpact: "ІМПАКТ",
   hubWelcomeText: "Ласкаво просимо до офіційного хабу 532 Playground. Слідкуй за статистикою, порівнюй результати та прагни до вершини.",
-  hubLeadersTitle: "Лідери Сезону",
-  hubJoinSquad: "Вступити до Загону",
-  
-  // Duel
-  duel_title: "Вибір Дуелі",
-  duel_id_unit: "ІДЕНТИФІКАЦІЯ ЮНІТА...",
-  duel_initiate: "ЗАПУСТИТИ ПОСЛІДОВНІСТЬ",
-  duel_sector_empty: "Сектор порожній",
-  duel_complete: "ПОСЛІДОВНІСТЬ ЗАВЕРШЕНА",
-  duel_score: "РАХУНОК",
-  duel_verified: "Індекс ефективності підтверджено",
+  hubLeadersTitle: "Лідери Сесії",
+  hubJoinSquad: "Вступити в Загін",
   
   // Promo
   hero_title: "ГРАЙ ЯК ПРОФІ",
@@ -283,7 +267,7 @@ export const ua = {
   feature_live: "Live Оновлення Рейтингу",
   feature_live_desc: "Дивись, як гра впливає на твій рейтинг.",
   feature_stats: "Детальна Статистика",
-  feature_stats_desc: "Ми рахуємо все: голи, асисти, перемоги та багато іншого.",
+  feature_stats_desc: "Ми рахуємо все: голи, ассисти, перемоги та багато іншого.",
   feature_fair: "Розумний Баланс",
   feature_fair_desc: "Команди балансуються алгоритмом.",
   roadmap_title: "МАЙБУТНЄ",
@@ -398,11 +382,21 @@ export const ua = {
   badge_double_agent: "Подвійний Агент",
   badge_double_agent_desc: "3 Перемоги за кожну команду",
   badge_joker: "Джокер",
-  badge_joker_desc: "Г/А будучи Легіонером",
+  badge_joker_desc: "Г/А будучи Легионером",
   badge_crisis_manager: "Кризовий Менеджер",
-  badge_crisis_manager_desc: "2+ Г/А будучи Легіонером",
+  badge_crisis_manager_desc: "2+ Г/А будучи Легионером",
   badge_iron_lung: "Залізні Легені",
   badge_iron_lung_desc: "Серія Перемога-Перемога-Перемога",
+
+  // FIX: Added missing Duel keys for Ukrainian translation
+  // Duel
+  duel_title: "Вибір Дуелі",
+  duel_id_unit: "ОПОЗНАННЯ ЮНІТА...",
+  duel_initiate: "ЗАПУСТИТИ ПОСЛІДОВНІСТЬ",
+  duel_sector_empty: "Сектор порожній",
+  duel_complete: "ПОСЛІДОВНІСТЬ ЗАВЕРШЕНА",
+  duel_score: "РАХУНОК",
+  duel_verified: "Індекс ефективності підтверджено",
   
   // Announcements
   announcement_start_match: "Початок Матчу",
