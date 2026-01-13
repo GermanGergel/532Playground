@@ -92,7 +92,7 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
                 
                 {/* ROW 1: LOCATION + YOUTUBE */}
                 <div className="flex items-stretch gap-3">
-                    <div className="flex-grow flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-2xl p-3 shadow-sm">
+                    <div className="flex-1 min-w-0 flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-2xl p-3 shadow-sm">
                         <div className="w-10 h-10 rounded-xl bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shrink-0">
                             <MapPinIcon className="w-5 h-5" />
                         </div>
@@ -117,7 +117,7 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
                     {/* NEW: YOUTUBE BLOCK (SYMMETRICAL TO WEATHER) */}
                     <div 
                         onClick={() => videoLink && window.open(videoLink, '_blank')}
-                        className={`flex items-center justify-center px-5 rounded-2xl border shrink-0 shadow-sm transition-all duration-300
+                        className={`w-28 shrink-0 flex items-center justify-center rounded-2xl border shadow-sm transition-all duration-300
                             ${videoLink 
                                 ? 'bg-red-900/20 border-red-500/20 cursor-pointer hover:bg-red-900/40 hover:border-red-500/40 hover:shadow-[0_0_15px_rgba(220,38,38,0.2)] group' 
                                 : 'bg-white/5 border-white/5 opacity-20 cursor-default'
@@ -131,7 +131,7 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
                 
                 {/* ROW 2: TIME + WEATHER */}
                 <div className="flex items-stretch gap-3">
-                    <div className="flex-grow flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-2xl p-3 shadow-sm">
+                    <div className="flex-1 min-w-0 flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-2xl p-3 shadow-sm">
                         <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0">
                             <ClockIcon className="w-5 h-5" />
                         </div>
@@ -140,9 +140,9 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
                             <span className="font-mono font-bold text-sm text-slate-200 tracking-widest">{data.time}</span>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3 px-4 bg-indigo-900/20 rounded-2xl border border-indigo-500/20 shrink-0 shadow-sm">
-                        <div className="flex flex-col items-end justify-center">
-                            <span className="font-russo text-2xl text-slate-200 leading-none">{data.temp}</span>
+                    <div className="w-28 shrink-0 flex items-center justify-between px-3 bg-indigo-900/20 rounded-2xl border border-indigo-500/20 shadow-sm">
+                        <div className="flex flex-col items-start justify-center">
+                            <span className="font-russo text-xl text-slate-200 leading-none">{data.temp}</span>
                             <span className="text-[8px] font-bold text-indigo-300 uppercase tracking-wider mt-0.5">{data.condition}</span>
                         </div>
                         <div className="scale-110">{getWeatherIcon(data.condition)}</div>
