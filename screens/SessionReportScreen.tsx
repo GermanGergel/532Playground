@@ -6,6 +6,7 @@ import { Page, Button, Modal, useTranslation } from '../ui';
 import { shareOrDownloadImages, exportSessionAsJson } from '../services/export';
 import { BrandedHeader, newId } from './utils';
 import { ShareableReport } from './StatisticsScreen';
+import { YouTubeIcon } from '../icons';
 
 // Re-defining BrandedShareableReport locally to avoid import issues
 const BrandedShareableReport: React.FC<{
@@ -16,7 +17,7 @@ const BrandedShareableReport: React.FC<{
     [key: string]: any;
 }> = ({ session, children, className, style, ...props }) => {
     const PADDING = 40;
-    const homeScreenBackground = `data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 1200'%3e%3cdefs%3e%3cradialGradient id='g' cx='50%25' cy='50%25' r='50%25'%3e%3cstop offset='0%25' stop-color='%2300F2FE' stop-opacity='0.1' /%3e%3cstop offset='100%25' stop-color='%2300F2FE' stop-opacity='0' /%3e%3c/radialGradient%3e%3cfilter id='f'%3e%3cfeTurbulence type='fractalNoise' baseFrequency='0.02 0.05' numOctaves='3' /%3e%3c/filter%3e%3c/defs%3e%3crect width='100%25' height='100%25' fill='%231A1D24' /%3e%3crect x='0' y='0' width='100%25' height='100%25' fill='url(%23g)' /%3e%3crect x='0' y='0' width='100%25' height='100%25' filter='url(%23f)' opacity='0.03' /%3e%3c/svg%3e`;
+    const homeScreenBackground = `data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 1200'%3e%3cdefs%3e%3cradialGradient id='g' cx='50%25' cy='50%25' r='50%25'%3e%3cstop offset='0%25' stop-color='%2300F2FE' stop-opacity='0.1' /%3e%3cstop offset='100%25' stop-color='%2300F2FE' stop-opacity='0' /%3e%3c/radialGradient%3e%3cfilter id='f'%3e%3cfeTurbulence type='fractalNoise' baseFrequency='0.02 0.05' numOctaves='3' /%3e%3c/filter%3e%3c/defs%3e%3crect width='100%25' height='100%25' fill='%231A1D24' /%3e%3crect x='0' y='0' width='100%25' height='100%25' fill='url(%23g)' /%3e%3crect x='0' y='0' width='100%25' height='100%25' fill='url(%23f)' opacity='0.03' /%3e%3c/svg%3e`;
 
 
     const containerStyle: React.CSSProperties = {
@@ -91,6 +92,29 @@ export const SessionReportScreen: React.FC = () => {
             setIsExporting(false);
         }
     };
+
+    const handleVideoLink = () => {
+        const key = `video_link_${session.id}`;
+        const savedLink = localStorage.getItem(key);
+        
+        if (savedLink) {
+            // If link exists, confirm to open or edit
+            if (window.confirm(`Open video link?\n\n${savedLink}\n\n(Cancel to edit link)`)) {
+                window.open(savedLink, '_blank');
+            } else {
+                const newLink = prompt("Enter new YouTube Video Link:", savedLink);
+                if (newLink) {
+                    localStorage.setItem(key, newLink);
+                }
+            }
+        } else {
+            const newLink = prompt("Enter YouTube Video Link:");
+            if (newLink) {
+                localStorage.setItem(key, newLink);
+                window.open(newLink, '_blank');
+            }
+        }
+    };
     
     const displayDate = new Date(session.date).toLocaleString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
     
@@ -120,6 +144,15 @@ export const SessionReportScreen: React.FC = () => {
                 <div className="mt-auto pt-6 w-full flex flex-col gap-3">
                     <Button variant="secondary" onClick={() => setIsDownloadModalOpen(true)} className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.saveTable}</Button>
                     <Button variant="secondary" onClick={() => exportSessionAsJson(session)} className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.exportJson}</Button>
+                    
+                    <Button 
+                        variant="secondary" 
+                        onClick={handleVideoLink} 
+                        className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 flex items-center justify-center gap-2"
+                    >
+                        <YouTubeIcon className="w-6 h-6 text-gray-500" />
+                        VIDEO LINK
+                    </Button>
                 </div>
             </div>
 

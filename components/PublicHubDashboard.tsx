@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
 import { NewsItem, Player, Team, WeatherCondition } from '../types';
-import { TrophyIcon, Zap, History as HistoryIcon, Users, AwardIcon, Target } from '../icons';
+import { TrophyIcon, Zap, History as HistoryIcon, Users, AwardIcon, Target, YouTubeIcon } from '../icons';
 import { useTranslation } from '../ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { TeamAvatar } from './avatars';
@@ -345,23 +345,48 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
     };
     const mapsLink = session.location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(session.location)}` : null;
     return (
-        <div className="flex flex-col h-full justify-between py-2">
-            <div className="flex items-start gap-3 border-b border-white/5 pb-4">
-                <div className="w-10 h-10 rounded-xl bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shrink-0"><MapPinIcon className="w-5 h-5" /></div>
+        <div className="flex flex-col h-full justify-between py-1">
+            {/* 1. Location (Compacted) */}
+            <div className="flex items-start gap-3 border-b border-white/5 pb-2 mb-1">
+                <div className="w-9 h-9 rounded-xl bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shrink-0">
+                    <MapPinIcon className="w-4 h-4" />
+                </div>
                 <div className="flex flex-col pt-0.5 min-w-0">
-                    <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">{t.hubLocation}</span>
+                    <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">{t.hubLocation}</span>
                     {mapsLink ? (
-                        <a href={mapsLink} target="_blank" rel="noopener noreferrer" className="group/loc flex items-center gap-1.5 font-chakra font-bold text-base text-slate-200 uppercase tracking-wide truncate max-w-[200px] md:max-w-[250px] hover:text-[#00F2FE] transition-colors">
+                        <a href={mapsLink} target="_blank" rel="noopener noreferrer" className="group/loc flex items-center gap-1 font-chakra font-bold text-sm text-slate-200 uppercase tracking-wide truncate max-w-[180px] md:max-w-[220px] hover:text-[#00F2FE] transition-colors">
                             <span className="truncate border-b border-white/10 group-hover/loc:border-[#00F2FE]/50">{session.location}</span>
                             <svg className="w-3 h-3 opacity-30 group-hover/loc:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
                         </a>
-                    ) : ( <span className="font-chakra font-bold text-base text-slate-200 uppercase tracking-wide truncate max-w-[200px] md:max-w-[250px]">PITCH DATA UNAVAILABLE</span> )}
+                    ) : ( <span className="font-chakra font-bold text-sm text-slate-200 uppercase tracking-wide truncate max-w-[180px] md:max-w-[220px]">PITCH DATA UNAVAILABLE</span> )}
                 </div>
             </div>
-            <div className="flex items-center gap-3 border-b border-white/5 py-4">
-                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0"><ClockIcon className="w-5 h-5" /></div>
-                <div className="flex flex-col"><span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">{t.hubTimeFrame}</span><span className="font-mono font-bold text-xl text-slate-200 tracking-widest">{session.timeString || "19:30 - 21:00"}</span></div>
+
+            {/* 2. Time (Compacted) */}
+            <div className="flex items-center gap-3 border-b border-white/5 py-2 mb-1">
+                <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0">
+                    <ClockIcon className="w-4 h-4" />
+                </div>
+                <div className="flex flex-col">
+                    <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">{t.hubTimeFrame}</span>
+                    <span className="font-mono font-bold text-lg text-slate-200 tracking-widest">{session.timeString || "19:30 - 21:00"}</span>
+                </div>
             </div>
+
+            {/* 3. MEDIA (YouTube Link) */}
+            <div className="flex items-center gap-3 border-b border-white/5 py-2 mb-1 group cursor-pointer hover:bg-white/5 transition-colors rounded-lg px-2 -mx-2">
+                <div className="w-9 h-9 rounded-xl bg-red-600/10 border border-red-600/30 flex items-center justify-center text-[#FF0000] shrink-0 shadow-[0_0_10px_rgba(255,0,0,0.2)]">
+                    <YouTubeIcon className="w-4 h-4 fill-current" />
+                </div>
+                <div className="flex flex-col">
+                    <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">MEDIA</span>
+                    <span className="font-chakra font-bold text-sm text-slate-200 group-hover:text-white transition-colors tracking-wide">
+                        WATCH VIDEO
+                    </span>
+                </div>
+            </div>
+
+            {/* 4. Weather (Pushed to bottom) */}
             <div className="flex-grow flex flex-col justify-end pt-2">
                 <div className="relative rounded-2xl bg-gradient-to-br from-indigo-900/40 to-black border border-indigo-500/20 p-4 flex items-center justify-between overflow-hidden">
                     <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
