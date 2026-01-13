@@ -344,6 +344,11 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
         return <MoonIcon className="w-16 h-16 text-slate-200/90" />;
     };
     const mapsLink = session.location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(session.location)}` : null;
+    
+    // Logic for Video Link
+    const videoKey = `video_link_${session.id}`;
+    const videoLink = localStorage.getItem(videoKey);
+
     return (
         <div className="flex flex-col h-full justify-between py-1">
             {/* 1. Location (Compacted) */}
@@ -374,14 +379,18 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
             </div>
 
             {/* 3. MEDIA (YouTube Link) */}
-            <div className="flex items-center gap-3 border-b border-white/5 py-2 mb-1 group cursor-pointer hover:bg-white/5 transition-colors rounded-lg px-2 -mx-2">
-                <div className="w-9 h-9 rounded-xl bg-red-600/10 border border-red-600/30 flex items-center justify-center text-[#FF0000] shrink-0 shadow-[0_0_10px_rgba(255,0,0,0.2)]">
+            <div 
+                className={`flex items-center gap-3 border-b border-white/5 py-2 mb-1 rounded-lg px-2 -mx-2 transition-colors ${videoLink ? 'group cursor-pointer hover:bg-white/5' : 'opacity-50 cursor-default'}`}
+                onClick={() => videoLink ? window.open(videoLink, '_blank') : null}
+            >
+                {/* Dimmed red background and border */}
+                <div className="w-9 h-9 rounded-xl bg-red-500/5 border border-red-500/10 flex items-center justify-center text-red-500/60 shrink-0 shadow-[0_0_8px_rgba(239,68,68,0.15)]">
                     <YouTubeIcon className="w-4 h-4 fill-current" />
                 </div>
                 <div className="flex flex-col">
                     <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">MEDIA</span>
-                    <span className="font-chakra font-bold text-sm text-slate-200 group-hover:text-white transition-colors tracking-wide">
-                        WATCH VIDEO
+                    <span className={`font-chakra font-bold text-sm tracking-wide transition-colors ${videoLink ? 'text-slate-200 group-hover:text-[#00F2FE]' : 'text-white/20'}`}>
+                        {videoLink ? 'WATCH VIDEO' : 'NO FOOTAGE'}
                     </span>
                 </div>
             </div>
