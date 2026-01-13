@@ -224,6 +224,7 @@ export interface Session {
         temperature: number;
         condition: WeatherCondition;
     };
+    videoUrl?: string; // YouTube Link for Hub
 }
 
 export type NewsType = 'tier_up' | 'badge' | 'milestone' | 'hot_streak' | 'penalty';

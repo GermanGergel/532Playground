@@ -7,6 +7,7 @@ import { shareOrDownloadImages, exportSessionAsJson } from '../services/export';
 import { BrandedHeader, newId } from './utils';
 import { ShareableReport } from './StatisticsScreen';
 import { YouTubeIcon } from '../icons';
+import { saveHistoryToDB } from '../db';
 
 // Re-defining BrandedShareableReport locally to avoid import issues
 const BrandedShareableReport: React.FC<{
@@ -45,7 +46,7 @@ const BrandedShareableReport: React.FC<{
 
 export const SessionReportScreen: React.FC = () => {
     const { id } = useParams<{ id: string }>();
-    const { history, isLoading } = useApp();
+    const { history, setHistory, isLoading } = useApp();
     const t = useTranslation();
     const navigate = useNavigate();
     const [isDownloadModalOpen, setIsDownloadModalOpen] = React.useState(false);
@@ -93,25 +94,24 @@ export const SessionReportScreen: React.FC = () => {
         }
     };
 
-    const handleVideoLink = () => {
-        const key = `video_link_${session.id}`;
-        const savedLink = localStorage.getItem(key);
+    const handleVideoLink = async () => {
+        const savedLink = session.videoUrl || '';
         
-        if (savedLink) {
-            // If link exists, confirm to open or edit
-            if (window.confirm(`Open video link?\n\n${savedLink}\n\n(Cancel to edit link)`)) {
-                window.open(savedLink, '_blank');
-            } else {
-                const newLink = prompt("Enter new YouTube Video Link:", savedLink);
-                if (newLink) {
-                    localStorage.setItem(key, newLink);
-                }
-            }
-        } else {
-            const newLink = prompt("Enter YouTube Video Link:");
-            if (newLink) {
-                localStorage.setItem(key, newLink);
-                window.open(newLink, '_blank');
+        let newLink = prompt("YouTube Video Link:", savedLink);
+        
+        if (newLink !== null) {
+            // Update session object
+            const updatedSession = { ...session, videoUrl: newLink };
+            
+            // Optimistic update
+            setHistory(prev => prev.map(s => s.id === session.id ? updatedSession : s));
+            
+            // Sync to Cloud
+            try {
+                await saveHistoryToDB([updatedSession]);
+            } catch (error) {
+                console.error("Failed to save video link to DB", error);
+                alert("Failed to save link to cloud. Check connection.");
             }
         }
     };
@@ -151,7 +151,7 @@ export const SessionReportScreen: React.FC = () => {
                         className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 flex items-center justify-center gap-2"
                     >
                         <YouTubeIcon className="w-6 h-6 text-gray-500" />
-                        VIDEO LINK
+                        {session.videoUrl ? 'EDIT VIDEO LINK' : 'ADD VIDEO LINK'}
                     </Button>
                 </div>
             </div>

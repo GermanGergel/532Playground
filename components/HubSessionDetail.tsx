@@ -82,9 +82,8 @@ const ArchiveEnvironmentWidget: React.FC<{ topPlayers: PlayerStats[], session: S
         ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(session.location)}` 
         : null;
 
-    // Logic for Video Link (Consistent with Dashboard)
-    const videoKey = `video_link_${session.id}`;
-    const videoLink = localStorage.getItem(videoKey);
+    // Logic for Video Link - NOW FROM SESSION OBJECT
+    const videoLink = session.videoUrl;
 
     return (
         <div className="flex flex-col h-full overflow-hidden">

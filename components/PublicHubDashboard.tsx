@@ -345,9 +345,8 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
     };
     const mapsLink = session.location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(session.location)}` : null;
     
-    // Logic for Video Link
-    const videoKey = `video_link_${session.id}`;
-    const videoLink = localStorage.getItem(videoKey);
+    // Logic for Video Link - NOW FROM SESSION OBJECT
+    const videoLink = session.videoUrl;
 
     return (
         <div className="flex flex-col h-full justify-between py-1">
