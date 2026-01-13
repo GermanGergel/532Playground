@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
 import { NewsItem, Player, Team, WeatherCondition } from '../types';
-import { TrophyIcon, Zap, History as HistoryIcon, Users, AwardIcon, Target } from '../icons';
+import { TrophyIcon, Zap, History as HistoryIcon, Users, AwardIcon, Target, YouTubeIcon } from '../icons';
 import { useTranslation } from '../ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { TeamAvatar } from './avatars';
@@ -344,33 +344,57 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
         return <MoonIcon className="w-16 h-16 text-slate-200/90" />;
     };
     const mapsLink = session.location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(session.location)}` : null;
+    
+    // NEW: YouTube Link Handling
+    const youtubeLink = session.youtubeUrl;
+
     return (
-        <div className="flex flex-col h-full justify-between py-2">
-            <div className="flex items-start gap-3 border-b border-white/5 pb-4">
-                <div className="w-10 h-10 rounded-xl bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shrink-0"><MapPinIcon className="w-5 h-5" /></div>
-                <div className="flex flex-col pt-0.5 min-w-0">
-                    <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">{t.hubLocation}</span>
+        <div className="flex flex-col h-full gap-2 relative">
+            {/* ROW 1: Location - COMPACT */}
+            <div className="flex items-center gap-3 border-b border-white/5 pb-2 shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shrink-0"><MapPinIcon className="w-4 h-4" /></div>
+                <div className="flex flex-col min-w-0">
+                    <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">{t.hubLocation}</span>
                     {mapsLink ? (
-                        <a href={mapsLink} target="_blank" rel="noopener noreferrer" className="group/loc flex items-center gap-1.5 font-chakra font-bold text-base text-slate-200 uppercase tracking-wide truncate max-w-[200px] md:max-w-[250px] hover:text-[#00F2FE] transition-colors">
+                        <a href={mapsLink} target="_blank" rel="noopener noreferrer" className="group/loc flex items-center gap-1.5 font-chakra font-bold text-xs text-slate-200 uppercase tracking-wide truncate max-w-[180px] hover:text-[#00F2FE] transition-colors">
                             <span className="truncate border-b border-white/10 group-hover/loc:border-[#00F2FE]/50">{session.location}</span>
-                            <svg className="w-3 h-3 opacity-30 group-hover/loc:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
+                            <svg className="w-2.5 h-2.5 opacity-30 group-hover/loc:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg>
                         </a>
-                    ) : ( <span className="font-chakra font-bold text-base text-slate-200 uppercase tracking-wide truncate max-w-[200px] md:max-w-[250px]">PITCH DATA UNAVAILABLE</span> )}
+                    ) : ( <span className="font-chakra font-bold text-xs text-slate-200 uppercase tracking-wide truncate max-w-[180px]">PITCH DATA UNAVAILABLE</span> )}
                 </div>
             </div>
-            <div className="flex items-center gap-3 border-b border-white/5 py-4">
-                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0"><ClockIcon className="w-5 h-5" /></div>
-                <div className="flex flex-col"><span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">{t.hubTimeFrame}</span><span className="font-mono font-bold text-xl text-slate-200 tracking-widest">{session.timeString || "19:30 - 21:00"}</span></div>
+
+            {/* ROW 2: Time - COMPACT */}
+            <div className="flex items-center gap-3 border-b border-white/5 py-2 shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0"><ClockIcon className="w-4 h-4" /></div>
+                <div className="flex flex-col"><span className="text-[7px] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">{t.hubTimeFrame}</span><span className="font-mono font-bold text-sm text-slate-200 tracking-widest">{session.timeString || "19:30 - 21:00"}</span></div>
             </div>
-            <div className="flex-grow flex flex-col justify-end pt-2">
-                <div className="relative rounded-2xl bg-gradient-to-br from-indigo-900/40 to-black border border-indigo-500/20 p-4 flex items-center justify-between overflow-hidden">
+
+            {/* ROW 3 (Optional): YouTube Button - SQUEEZED IN */}
+            {youtubeLink && (
+                <div className="py-1 shrink-0">
+                    <a 
+                        href={youtubeLink} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="group flex items-center justify-center gap-2 w-full bg-[#FF0000] hover:bg-[#cc0000] text-white font-bold text-xs py-2 rounded-xl shadow-[0_0_15px_rgba(220,38,38,0.4)] hover:shadow-[0_0_25px_rgba(220,38,38,0.6)] transition-all transform hover:scale-[1.02] active:scale-95 border border-red-500/50"
+                    >
+                        <YouTubeIcon className="w-4 h-4 fill-current" />
+                        <span className="font-chakra font-black tracking-widest uppercase">WATCH REPLAY</span>
+                    </a>
+                </div>
+            )}
+
+            {/* ROW 4: Weather - COMPACT & FLEXIBLE HEIGHT */}
+            <div className="flex-grow flex flex-col justify-end pt-1">
+                <div className="relative rounded-2xl bg-gradient-to-br from-indigo-900/40 to-black border border-indigo-500/20 p-3 flex items-center justify-between overflow-hidden h-full min-h-[70px]">
                     <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-                    <div className="relative z-10 flex flex-col">
-                        <span className="text-[9px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-1">{t.hubWeather}</span>
-                        <div className="flex items-baseline gap-1"><span className="font-russo text-4xl text-slate-200 leading-none">{session.weather?.temperature || 26}°C</span><TermometerIcon className="w-4 h-4 text-white/40" /></div>
-                        <span className="font-chakra text-xs text-indigo-200 font-bold uppercase tracking-wider mt-1">{session.weather?.condition || "CLEAR"}</span>
+                    <div className="relative z-10 flex flex-col justify-center">
+                        <span className="text-[7px] font-black text-indigo-300 uppercase tracking-[0.2em] mb-0.5">{t.hubWeather}</span>
+                        <div className="flex items-baseline gap-1"><span className="font-russo text-3xl text-slate-200 leading-none">{session.weather?.temperature || 26}°C</span></div>
+                        <span className="font-chakra text-[9px] text-indigo-200 font-bold uppercase tracking-wider mt-0.5">{session.weather?.condition || "CLEAR"}</span>
                     </div>
-                    <div className="relative z-10">{getWeatherIcon(session.weather?.condition)}</div>
+                    <div className="relative z-10 scale-90">{getWeatherIcon(session.weather?.condition)}</div>
                 </div>
             </div>
         </div>
