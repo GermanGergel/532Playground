@@ -85,8 +85,6 @@ export const en = {
   thW: "W",
   thD: "D",
   thL: "L",
-  thGF: "GF",
-  thGA: "GA",
   thGD: "GD",
   thPts: "Pts",
   players: "Player",
@@ -190,13 +188,10 @@ export const en = {
   monthlyGoals: "Goals",
   monthlyAssists: "Assists",
   monthlyWins: "Wins",
+  careerStats: "Career Averages",
   session: "Sessions",
   information: "Information",
   statistics: "Statistics",
-
-  // Penalty
-  penalty_title: "STATUS: PENALTY APPLIED",
-  penalty_message: "Rating reduced by -{n} OVR due to missing {m} consecutive sessions.",
 
   // Info Content
   ratingCalculationTitle: "Rating System",
@@ -237,6 +232,10 @@ export const en = {
   badges: "Badges",
   noBadges: "No badges yet",
 
+  // Penalty
+  penalty_title: "STATUS: ABSENCE PENALTY",
+  penalty_message: "Rating reduced by -{n} OVR due to missing {m} consecutive sessions.",
+
   // Hub
   hubTicker1: "ELITE PERFORMANCE TRACKING",
   hubTicker2: "LIVE SESSION DATA",
@@ -262,7 +261,7 @@ export const en = {
   hubWeather: "WEATHER",
   hubImpact: "IMPACT",
   hubWelcomeText: "Welcome to the official 532 Playground Hub. Track your stats, compare with others, and rise to the top.",
-  hubLeadersTitle: "SEASON LEADERS",
+  hubLeadersTitle: "Session Leaders",
   hubJoinSquad: "Join the Squad",
 
   // Duel
