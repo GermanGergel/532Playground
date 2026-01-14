@@ -2,8 +2,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-import { Player, PlayerStatus, PlayerForm, SkillType, PlayerTier } from '../types';
-import { TrophyIcon, Users, History as HistoryIcon, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, Home, LayoutDashboard, AwardIcon, Target, InfoIcon, FacebookIcon } from '../icons';
+import { Player, PlayerStatus, PlayerForm, SkillType } from '../types';
+import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, FacebookIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon } from '../icons';
 import { PlayerAvatar, TeamAvatar } from '../components/avatars';
 import { Language } from '../translations/index';
 import { BadgeDisplay, BadgeIcon, sortBadgesByPriority } from '../features';
@@ -24,6 +24,7 @@ const skillAbbreviations: Record<SkillType, string> = {
 };
 
 const StaticSoccerBall: React.FC = () => {
+    // В будущем здесь можно сделать переключатель через context или props
     const CurrentAccessory = BallDecorations.VietnamHelmet; 
 
     return (
@@ -40,6 +41,8 @@ const StaticSoccerBall: React.FC = () => {
                 <text x="51" y="52" textAnchor="middle" fill="#0f172a" className="font-aldrich font-black uppercase" style={{ fontSize: '17px', letterSpacing: '-0.02em', transform: 'scaleX(0.85) rotate(-3deg)', transformOrigin: 'center' }}>SELECT</text>
                 <text x="50" y="61" textAnchor="middle" fill="#475569" className="font-chakra font-black uppercase" style={{ fontSize: '3.2px', letterSpacing: '0.1em', opacity: 0.8, transform: 'rotate(-3deg)', transformOrigin: 'center' }}>Professional Futsal</text>
                 <ellipse cx="40" cy="25" rx="20" ry="10" fill="white" opacity="0.3" transform="rotate(-15, 40, 25)" />
+                
+                {/* Рендерим текущий аксессуар из хранилища */}
                 <CurrentAccessory />
             </svg>
         </div>
@@ -125,7 +128,7 @@ const MotivationalTicker: React.FC = () => {
     );
 };
 
-const HangingTag: React.FC<{ digit: string; label: string; height: number }> = ({ digit, label, height }) => (
+const HangingTag: React.FC<{ digit: string; label: string; height: number; delay: string; pulseDuration: string }> = ({ digit, label, height, delay, pulseDuration }) => (
     <div className="relative flex flex-col items-center group/fiber">
         <span 
             className="font-blackops text-2xl md:text-3xl text-[#00F2FE] tracking-tighter z-10 leading-none" 
@@ -136,7 +139,9 @@ const HangingTag: React.FC<{ digit: string; label: string; height: number }> = (
         >
             {digit}
         </span>
-        <div className="absolute top-[26px] w-[0.5px] bg-[#00F2FE]/10 origin-top" style={{ height: `${height}px`, boxShadow: '0 0 3px rgba(0,242,254,0.1)' }}>
+        <div className="absolute top-[26px] w-[0.5px] bg-[#00F2FE]/10 origin-top animate-pendant-swing" style={{ height: `${height}px`, animationDelay: delay, boxShadow: '0 0 3px rgba(0,242,254,0.1)' }}>
+            {/* PULSE REMOVED AS REQUESTED */}
+            {/* <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1.2px] h-[3px] bg-[#00F2FE] rounded-full opacity-0 animate-fiber-pulse" style={{ animationDuration: pulseDuration, animationDelay: delay, boxShadow: '0 0 5px #00F2FE' }}></div> */}
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full pt-1">
                 <div className="relative flex flex-col items-center">
                     <div className="absolute inset-0 blur-[8px] bg-[#00F2FE]/20 rounded-full scale-[2.5] pointer-events-none opacity-40"></div>
@@ -220,12 +225,19 @@ const HubNav: React.FC<{
                     </feComponentTransfer>
                 </filter>
             </svg>
+
+            <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes pendant-swing { 0% { transform: rotate(-0.5deg); } 50% { transform: rotate(0.5deg); } 100% { transform: rotate(-0.5deg); } }
+                @keyframes fiber-pulse { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+                .animate-pendant-swing { animation: pendant-swing 5s ease-in-out infinite; }
+                .animate-fiber-pulse { animation: fiber-pulse 3.5s linear infinite; }
+            `}} />
             
             <div className="flex items-center gap-4 shrink-0 h-full">
                 <div className="flex items-center">
-                    <HangingTag digit="5" label="PLAYERS" height={20} />
-                    <HangingTag digit="3" label="SQUADS" height={50} />
-                    <HangingTag digit="2" label="GOALS" height={80} />
+                    <HangingTag digit="5" label="PLAYERS" height={20} delay="0s" pulseDuration="2.8s" />
+                    <HangingTag digit="3" label="SQUADS" height={50} delay="1.5s" pulseDuration="4.2s" />
+                    <HangingTag digit="2" label="GOALS" height={80} delay="0.8s" pulseDuration="3.7s" />
                     
                     <div className="h-4 w-px bg-white/15 ml-3 md:ml-4"></div>
                     <div className="flex flex-col space-y-0.5 ml-2">
@@ -436,7 +448,7 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                             {countryCodeAlpha2 && (<img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} alt={`${player.countryCode} flag`} className="w-6 h-auto mt-3 rounded-sm" />)}
                         </div>
                         <div className="flex flex-col items-center max-w-[50%]">
-                            <div className="text-4xl font-black leading-none" style={{ color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
+                            <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
                             <p className="font-bold text-white tracking-widest text-sm mt-2">OVR</p>
                             <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
                             {player.badges && Object.keys(player.badges).length > 0 && (
@@ -533,6 +545,7 @@ export const PublicHubScreen: React.FC = () => {
     const { allPlayers, history } = useApp();
     const [isDashboardOpen, setIsDashboardOpen] = useState(false);
     
+    // -- NEW: State for Team of the Month Modal --
     const [isTotmOpen, setIsTotmOpen] = useState(false);
     
     const [dashboardView, setDashboardView] = useState<DashboardViewType>('dashboard');
@@ -603,6 +616,7 @@ export const PublicHubScreen: React.FC = () => {
     return (
         <div className="min-h-screen text-white relative selection:bg-[#00F2FE] selection:text-black bg-[#0a0c10] pt-px overscroll-none">
             
+            {/* -- MODAL: Team of the Month -- */}
             <TeamOfTheMonthModal isOpen={isTotmOpen} onClose={() => setIsTotmOpen(false)} />
 
             <style dangerouslySetInnerHTML={{__html: `html, body { background-color: #0a0c10; overscroll-behavior-y: none; }`}} />
@@ -623,6 +637,14 @@ export const PublicHubScreen: React.FC = () => {
                 onOpenTotm={() => setIsTotmOpen(true)}
             />
 
+            {/* SQUAD OF THE MONTH BADGE - NOW CONDITIONALLY INTERACTIVE */}
+            {!isDashboardOpen && (
+                <SquadOfTheMonthBadge 
+                    onClick={() => setIsTotmOpen(true)} 
+                    isDisabled={!isDev} 
+                />
+            )}
+
             <div 
                 className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none 
                 ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}
@@ -633,6 +655,7 @@ export const PublicHubScreen: React.FC = () => {
                     <ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} />
                 </div>
 
+                {/* ГЛОБАЛЬНАЯ НАКЛАДКА ДЛЯ БЕСШОВНОГО ПЕРЕХОДА (ПОДЛОЖКА) - ОПУЩЕНА НИЖЕ */}
                 <div 
                     className="fixed bottom-0 left-0 right-0 h-16 z-[110] pointer-events-none opacity-0 transition-all duration-700 delay-300" 
                     style={{ 
@@ -660,7 +683,7 @@ export const PublicHubScreen: React.FC = () => {
                     <NoLeadersPlaceholder />
                 )}
 
-                <div className="mt-24 md:mt-32 pb-12">
+                <div className="mt-24 md:mt-32 pb-24">
                     <div className="text-center mb-12 md:mb-20">
                         <h2 className="font-orbitron text-lg md:text-2xl font-black uppercase tracking-[0.15em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubVitalsTitle}</h2>
                     </div>
@@ -672,18 +695,8 @@ export const PublicHubScreen: React.FC = () => {
                 </div>
                 
                 <div className="relative z-10 bg-transparent pb-8">
-                    <footer className="relative pb-8 pt-0 bg-transparent">
+                    <footer className="relative py-8 bg-transparent">
                         <div className="text-center px-4">
-                            
-                            {!isDashboardOpen && (
-                                <div className="flex justify-center mb-6 -mt-4 relative z-20 animate-in fade-in zoom-in duration-700">
-                                    <SquadOfTheMonthBadge 
-                                        onClick={() => setIsTotmOpen(true)} 
-                                        className="cursor-pointer"
-                                    />
-                                </div>
-                            )}
-
                             <div className="mt-10 mb-24">
                                 <button 
                                     onClick={() => setIsDashboardOpen(true)} 
