@@ -1,4 +1,3 @@
-
 export const en = {
   // Navigation
   navHome: "Home",
@@ -57,7 +56,6 @@ export const en = {
   selectWinnerDesc: "Select the winning team to proceed",
   onBench: "On Bench",
 
-  // Legionnaire
   legionnaire_replace: "REPLACE",
   legionnaire_select: "SELECT",
   legionnaire_no_players: "No resting players available",
@@ -190,6 +188,7 @@ export const en = {
   monthlyGoals: "Goals",
   monthlyAssists: "Assists",
   monthlyWins: "Wins",
+  careerStats: "Career Averages",
   session: "Sessions",
   information: "Information",
   statistics: "Statistics",

@@ -1,4 +1,3 @@
-
 export const ua = {
   // Navigation
   navHome: "Головна",
@@ -32,7 +31,7 @@ export const ua = {
   playerPool: "Лист Очікування",
   allPlayersAssigned: "Всі гравці розподілені",
   autoBalanceTeams: "Auto-Баланс",
-  autoBalanceConfirmTitle: "Auto-баланс команд?",
+  autoBalanceConfirmTitle: "Автобаланс команд?",
   autoBalanceConfirmDesc: "Гравці будуть перерозподілені за рейтингом.",
   startSession: "Почати Сесію",
   cancelSetup: "Скасувати",
@@ -48,30 +47,29 @@ export const ua = {
   finishGame: "Завершити Гру",
   endSession: "Завершити Сесію",
   goal: "Гол",
-  assistant: "Асист",
+  assistant: "Асистент",
   ownGoal: "Автогол",
-  withoutAssist: "Соло / Без асистів",
+  withoutAssist: "Соло / Без асисту",
   editGoal: "Редагувати Гол",
   scorer: "Забив",
   saveChanges: "Зберегти",
   selectWinnerDesc: "Виберіть переможця, щоб продовжити",
   onBench: "На лавці",
 
-  // Legionnaire
   legionnaire_replace: "ЗАМІНИТИ",
   legionnaire_select: "ВИБРАТИ",
   legionnaire_no_players: "Немає вільних гравців",
 
   // Session Summary
   summary_title: "ПІДСУМКИ СЕСІЇ",
-  summary_location: "ЛОКАЦИЯ",
+  summary_location: "ЛОКАЦІЯ",
   summary_time: "ЧАС",
   summary_weather: "ПОГОДА",
   summary_temp: "ТЕМП",
   summary_condition: "УМОВИ",
 
   // Stats
-  teamStandings: "Турнирна Таблиця",
+  teamStandings: "Турнірна Таблиця",
   playerStatistics: "Статистика Гравців",
   gameHistory: "Історія Матчів",
   liveStatistics: "Live Статистика",
@@ -123,7 +121,7 @@ export const ua = {
   voicePack3: "Голос 3",
   customAudio: "Свій",
   defaultAudio: "Стандарт",
-  sessionAnthem: "Гімн Сесії",
+  sessionAnthem: "Гимн Сесії",
   sessionAnthemDesc: "Грає в Публичному Хабі",
   trackUploaded: "Трек Завантажено",
   noTrackUploaded: "Немає Треку",
@@ -132,7 +130,7 @@ export const ua = {
   // Player Hub
   newPlayerManagement: "Новий Рекрут",
   playerDatabase: "База Даних",
-  clubNews: "Новини Клубу",
+  clubNews: "Новости Клубу",
   searchPlayers: "Пошук гравців...",
   sortBy: "Сортування:",
   sortByRating: "Рейтинг",
@@ -165,7 +163,7 @@ export const ua = {
   // Analytics & Info
   lastSessionAnalysis: "Аналіз Останньої Сесії",
   lastSessionAnalysis_team: "Команда",
-  lastSessionAnalysis_indiv: "Індив.",
+  lastSessionAnalysis_indiv: "Індивід.",
   lastSessionAnalysis_badge: "Значки",
   finalChange: "Підсумок",
   newRating: "Новий OVR",
@@ -190,14 +188,9 @@ export const ua = {
   monthlyGoals: "Голи",
   monthlyAssists: "Асисти",
   monthlyWins: "Перемоги",
-  careerStats: "Середні Показники",
   session: "Сесії",
   information: "Інформація",
   statistics: "Статистика",
-
-  // Penalty
-  penalty_title: "СТАТУС: ШТРАФ ЗА НЕЯВКУ",
-  penalty_message: "Рейтинг знижено на -{n} OVR через пропуск {m} сесій поспіль.",
 
   // Info Content
   ratingCalculationTitle: "Система Рейтингу",
@@ -230,7 +223,7 @@ export const ua = {
   ruleRespectDesc: "Неспортивна поведінка або агресія.",
   ruleRespectPenalty: "БАН НА СЕССІЮ",
   badgeBonusTitle: "Бонуси Значків",
-  badgeBonusDesc: "Заробляйте значки, щоб підвищити рейтинг матча.",
+  badgeBonusDesc: "Заробляйте значки, щоб підвищити рейтинг матчу.",
   badgeBonusMvp: "MVP: +0.4 очка",
   badgeBonusTopScorer: "Бомбардир: +0.3 очка",
   keySkills: "Ключеві Навички",
@@ -243,7 +236,7 @@ export const ua = {
   hubTicker2: "LIVE ДАНІ СЕССИИ",
   hubTicker3: "ГЛОБАЛЬНИЙ РЕЙТИНГ",
   hubTicker4: "АНАЛІТИКА ГРАВЦІВ",
-  hubTicker5: "АРХІВ МАТЧІВ",
+  hubTicker5: "АРХИВ МАТЧІВ",
   hubAwaitingStats: "ОЧІКУВАННЯ ДАНИХ",
   hubAnalyzingPerformance: "АНАЛІЗ ЕФЕКТИВНОСТІ...",
   hubDashboardBtn: "ДАШБОРД",
@@ -263,17 +256,8 @@ export const ua = {
   hubWeather: "ПОГОДА",
   hubImpact: "ІМПАКТ",
   hubWelcomeText: "Ласкаво просимо до офіційного хабу 532 Playground. Слідкуй за статистикою, порівнюй результати та прагни до вершини.",
-  hubLeadersTitle: "ЛІДЕРИ СЕЗОНУ",
-  hubJoinSquad: "Вступити до Загону",
-  
-  // Duel
-  duel_title: "Вибір Дуелі",
-  duel_id_unit: "ІДЕНТИФІКАЦІЯ ЮНІТА...",
-  duel_initiate: "ЗАПУСТИТИ ПОСЛІДОВНІСТЬ",
-  duel_sector_empty: "Сектор порожній",
-  duel_complete: "ПОСЛІДОВНІСТЬ ЗАВЕРШЕНА",
-  duel_score: "РАХУНОК",
-  duel_verified: "Індекс ефективності підтверджено",
+  hubLeadersTitle: "Лідери Сесії",
+  hubJoinSquad: "Вступити в Загін",
   
   // Promo
   hero_title: "ГРАЙ ЯК ПРОФІ",
@@ -347,7 +331,7 @@ export const ua = {
   badge_unsung_hero_desc: "Найбільше перемог, мало очок",
   badge_first_blood: "Перша Кров",
   badge_first_blood_desc: "3x Відкриваючих гола",
-  badge_duplet: "Duplet",
+  badge_duplet: "Дублет",
   badge_duplet_desc: "2x Дублі у перемогах",
   badge_maestro: "Маестро",
   badge_maestro_desc: "2x Дублі асистів у перемогах",
@@ -366,6 +350,7 @@ export const ua = {
   badge_stable_striker: "Стабільний",
   badge_stable_striker_desc: "Серія голів 3 матчі",
   badge_victory_finisher: "Переможний Фініш",
+  /* FIX: Removed duplicate key 'badge_victory_finisher_desc' */
   badge_victory_finisher_desc: "Переможний гол в останній грі",
   badge_session_top_assistant: "Плеймейкер",
   badge_session_top_assistant_desc: "Найбільше асистів",
@@ -391,7 +376,7 @@ export const ua = {
   badge_career_100_wins_desc: "100 Перемог у кар'єрі",
   badge_career_150_influence: "Ікона",
   badge_career_150_influence_desc: "150 Г+А у кар'єрі",
-  badge_career_super_veteran: "Super Veteran",
+  badge_career_super_veteran: "Супер Ветеран",
   badge_career_super_veteran_desc: "100 Сесій",
   badge_mercenary: "Найманець",
   badge_mercenary_desc: "4+ Ігри Легіонером",
@@ -403,6 +388,16 @@ export const ua = {
   badge_crisis_manager_desc: "2+ Г/А будучи Легионером",
   badge_iron_lung: "Залізні Легені",
   badge_iron_lung_desc: "Серія Перемога-Перемога-Перемога",
+
+  // FIX: Added missing Duel keys for Ukrainian translation
+  // Duel
+  duel_title: "Вибір Дуелі",
+  duel_id_unit: "ОПОЗНАННЯ ЮНІТА...",
+  duel_initiate: "ЗАПУСТИТИ ПОСЛІДОВНІСТЬ",
+  duel_sector_empty: "Сектор порожній",
+  duel_complete: "ПОСЛІДОВНІСТЬ ЗАВЕРШЕНА",
+  duel_score: "РАХУНОК",
+  duel_verified: "Індекс ефективності підтверджено",
   
   // Announcements
   announcement_start_match: "Початок Матчу",
