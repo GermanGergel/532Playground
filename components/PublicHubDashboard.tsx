@@ -512,18 +512,17 @@ export const PublicHubDashboard: React.FC = () => {
                                 <thead>
                                     <tr className="bg-white/5 border-b border-white/10">
                                         <th className={`${thStandings} w-[6%]`}>#</th>
-                                        {/* EXPANDED TEAM NAME COLUMN WIDTH */}
-                                        <th className={`${thStandings} w-[30%]`}>{t.team}</th>
+                                        {/* EXPANDED TEAM NAME COLUMN WIDTH TO 34% (increased from 30%) */}
+                                        <th className={`${thStandings} w-[34%]`}>{t.team}</th>
                                         <th className={`${thStandings} w-[6%]`}>{t.thP}</th>
                                         <th className={`${thStandings} w-[6%]`}>{t.thW}</th>
                                         <th className={`${thStandings} w-[6%]`}>{t.thD}</th>
                                         <th className={`${thStandings} w-[6%]`}>{t.thL}</th>
-                                        {/* ADDED GF AND GA COLUMNS */}
                                         <th className={`${thStandings} w-[8%]`}>{t.thGF}</th>
                                         <th className={`${thStandings} w-[8%]`}>{t.thGA}</th>
                                         <th className={`${thStandings} w-[10%]`}>{t.thGD}</th>
-                                        {/* REDUCED PTS COLUMN WIDTH TO 14% */}
-                                        <th className={`${thStandings} w-[14%] text-white bg-white/[0.03]`}>PTS</th>
+                                        {/* REDUCED PTS COLUMN WIDTH TO 10% */}
+                                        <th className={`${thStandings} w-[10%] text-white bg-white/[0.03]`}>PTS</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -535,7 +534,6 @@ export const PublicHubDashboard: React.FC = () => {
                                             <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.wins}</td>
                                             <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.draws}</td>
                                             <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.losses}</td>
-                                            {/* ADDED GF AND GA DATA CELLS */}
                                             <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.goalsFor}</td>
                                             <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.goalsAgainst}</td>
                                             <td className="py-1.5 text-center text-[10px] font-bold text-white/40">{stat.goalDifference > 0 ? `+${stat.goalDifference}` : stat.goalDifference}</td>
