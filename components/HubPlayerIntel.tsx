@@ -8,6 +8,7 @@ import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { BadgeIcon } from '../features';
 import { translations } from '../translations/index';
 import { MiniSquadBadge } from './MiniSquadBadge';
+import { calculatePlayerMonthlyStats } from '../services/statistics';
 
 const skillAbbreviations: Record<SkillType, string> = {
     goalkeeper: 'GK', power_shot: 'PS', technique: 'TQ', defender: 'DF', 
@@ -147,7 +148,7 @@ const TerminalSessionTrend = ({ history }: { history?: Player['sessionHistory'] 
 };
 
 export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; isEmbedded?: boolean }> = ({ playerId, onBack, isEmbedded = false }) => {
-    const { allPlayers, language, totmPlayerIds } = useApp();
+    const { allPlayers, language, totmPlayerIds, history } = useApp();
     const t = translations[language] as any;
 
     const player = useMemo(() => (allPlayers.find(p => p.id === playerId)) as Player, [allPlayers, playerId]);
@@ -199,20 +200,17 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
 
     if (!player) return null;
     
-    // --- CHECK FOR CURRENT MONTH LOGIC ---
-    // If the player's last game was NOT in the current calendar month, we should display 0 for monthly stats
-    const isCurrentMonth = (dateStr?: string) => {
-        if (!dateStr) return false;
-        const d = new Date(dateStr);
-        const now = new Date();
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-    };
+    // --- RECALCULATE MONTHLY STATS DYNAMICALLY ---
+    // Instead of using dirty `player.monthlyGoals` from DB, recalculate from history
+    // This uses the hook-like behavior inside the component body, which is allowed.
+    const monthlyStats = useMemo(() => {
+        return calculatePlayerMonthlyStats(player.id, history);
+    }, [player.id, history]);
 
-    const showMonthlyStats = isCurrentMonth(player.lastPlayedAt);
-    const displayMonthlyGoals = showMonthlyStats ? player.monthlyGoals : 0;
-    const displayMonthlyAssists = showMonthlyStats ? player.monthlyAssists : 0;
-    const displayMonthlyWins = showMonthlyStats ? player.monthlyWins : 0;
-    const displayMonthlySessions = showMonthlyStats ? player.monthlySessionsPlayed : 0;
+    const displayMonthlyGoals = monthlyStats.goals;
+    const displayMonthlyAssists = monthlyStats.assists;
+    const displayMonthlyWins = monthlyStats.wins;
+    const displayMonthlySessions = monthlyStats.sessions;
 
     const countryCodeAlpha2 = player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : 'VN';
     const winRate = player.totalGames > 0 ? `${Math.round((player.totalWins / player.totalGames) * 100)}%` : '0%';

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Team, Player, PlayerTier, PlayerStatus, BadgeType, PlayerForm, SkillType } from './types';
-import { getPlayerKeyStats } from './services/statistics';
+import { getPlayerKeyStats, calculatePlayerMonthlyStats } from './services/statistics';
 import { convertCountryCodeAlpha3ToAlpha2 } from './utils/countries';
 import { Button, Modal, Card, useTranslation } from './ui';
 import { LastSessionBreakdown, ClubRankings, BestSessionCard } from './components/PlayerCardAnalytics';
@@ -367,7 +367,7 @@ export const BadgeDisplay: React.FC<{
 
 export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete, onUploadCard, onConfirmInitialRating, onDownloadCard, onShareProfile, isDownloading }) => {
     const t = useTranslation();
-    const { totmPlayerIds } = useApp(); // Access global TOTM cache
+    const { totmPlayerIds, history } = useApp(); // Access global TOTM cache & history
     const keyStats = React.useMemo(() => getPlayerKeyStats(player), [player]);
     const countryCodeAlpha2 = React.useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
     
@@ -380,21 +380,16 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
     const goalsPerSession = player.totalSessionsPlayed > 0 ? (player.totalGoals / player.totalSessionsPlayed).toFixed(2) : '0.00';
     const assistsPerSession = player.totalSessionsPlayed > 0 ? (player.totalAssists / player.totalSessionsPlayed).toFixed(2) : '0.00';
 
-    // --- CHECK FOR CURRENT MONTH LOGIC ---
-    // If the player's last game was NOT in the current calendar month, we should display 0 for monthly stats
-    const isCurrentMonth = (dateStr?: string) => {
-        if (!dateStr) return false;
-        const d = new Date(dateStr);
-        const now = new Date();
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-    };
+    // --- RECALCULATE MONTHLY STATS DYNAMICALLY ---
+    // Instead of using dirty `player.monthlyGoals` from DB, recalculate from history
+    const monthlyStats = React.useMemo(() => {
+        return calculatePlayerMonthlyStats(player.id, history);
+    }, [player.id, history]);
 
-    const showMonthlyStats = isCurrentMonth(player.lastPlayedAt);
-    const displayMonthlyGoals = showMonthlyStats ? player.monthlyGoals : 0;
-    const displayMonthlyAssists = showMonthlyStats ? player.monthlyAssists : 0;
-    const displayMonthlyGames = showMonthlyStats ? player.monthlyGames : 0; // Using monthlyGames label for 'Sessions' in Card below might be confusing if label is Session. But variable name is monthlyGames which implies matches. The UI label is "SESSIONS". Wait, player object has monthlySessionsPlayed.
-    const displayMonthlySessions = showMonthlyStats ? player.monthlySessionsPlayed : 0;
-    const displayMonthlyWins = showMonthlyStats ? player.monthlyWins : 0;
+    const displayMonthlyGoals = monthlyStats.goals;
+    const displayMonthlyAssists = monthlyStats.assists;
+    const displayMonthlyWins = monthlyStats.wins;
+    const displayMonthlySessions = monthlyStats.sessions;
 
 
     const StatItem: React.FC<{ label: string; value: string | number; isKeyStat?: boolean }> = ({ label, value, isKeyStat }) => (

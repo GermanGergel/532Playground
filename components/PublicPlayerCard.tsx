@@ -8,6 +8,7 @@ import { BadgeIcon, BadgeDisplay } from '../features';
 import { TrophyIcon, StarIcon, ChevronLeft, InfoIcon, LightbulbIcon, Zap, ExclamationIcon, RefreshCw, Users } from '../icons';
 import { useApp } from '../context';
 import { MiniSquadBadge } from './MiniSquadBadge';
+import { calculatePlayerMonthlyStats } from '../services/statistics';
 
 type View = 'main' | 'stats' | 'awards' | 'info';
 
@@ -194,24 +195,21 @@ const SessionTrendChart: React.FC<{ history?: Player['sessionHistory']; t: any }
 
 const StatsView: React.FC<{ player: Player; onBack: () => void; isPromo?: boolean }> = ({ player, onBack, isPromo }) => {
     const t = useTranslation();
+    const { history } = useApp();
     const winRate = player.totalGames > 0 ? `${Math.round((player.totalWins / player.totalGames) * 100)}%` : 'N/A';
     const goalsPerSession = player.totalSessionsPlayed > 0 ? (player.totalGoals / player.totalSessionsPlayed).toFixed(2) : '0.00';
     const assistsPerSession = player.totalSessionsPlayed > 0 ? (player.totalAssists / player.totalSessionsPlayed).toFixed(2) : '0.00';
     const cardNeonClasses = "border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)]";
 
-    // --- CHECK FOR CURRENT MONTH LOGIC ---
-    const isCurrentMonth = (dateStr?: string) => {
-        if (!dateStr) return false;
-        const d = new Date(dateStr);
-        const now = new Date();
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-    };
+    // --- RECALCULATE MONTHLY STATS DYNAMICALLY ---
+    const monthlyStats = React.useMemo(() => {
+        return calculatePlayerMonthlyStats(player.id, history);
+    }, [player.id, history]);
 
-    const showMonthlyStats = isCurrentMonth(player.lastPlayedAt);
-    const displayMonthlyGoals = showMonthlyStats ? player.monthlyGoals : 0;
-    const displayMonthlyAssists = showMonthlyStats ? player.monthlyAssists : 0;
-    const displayMonthlyWins = showMonthlyStats ? player.monthlyWins : 0;
-    const displayMonthlySessions = showMonthlyStats ? player.monthlySessionsPlayed : 0;
+    const displayMonthlyGoals = monthlyStats.goals;
+    const displayMonthlyAssists = monthlyStats.assists;
+    const displayMonthlyWins = monthlyStats.wins;
+    const displayMonthlySessions = monthlyStats.sessions;
 
     const StatItem: React.FC<{ label: string; value: string | number; }> = ({ label, value }) => (
         <div><p className={`text-base font-bold`}>{value}</p><p className="text-[10px] text-dark-text-secondary uppercase">{label}</p></div>

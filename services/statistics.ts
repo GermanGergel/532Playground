@@ -180,6 +180,54 @@ export const getPlayerKeyStats = (player: Player): { isTopScorer: boolean; isTop
     return { isTopScorer, isTopWinner };
 };
 
+// --- DYNAMIC MONTHLY STATS CALCULATION ---
+// Calculates true monthly stats from history logs, ignoring dirty cached data
+export const calculatePlayerMonthlyStats = (playerId: string, history: Session[]) => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    const stats = { goals: 0, assists: 0, wins: 0, games: 0, sessions: 0 };
+
+    history.forEach(session => {
+        const sDate = new Date(session.date);
+        // Strict check: Must be same Month AND Year, and session must be completed
+        if (sDate.getMonth() === currentMonth && sDate.getFullYear() === currentYear && session.status === 'completed') {
+            // Check if player participated in this session
+            const team = session.teams.find(t => t.playerIds.includes(playerId));
+            
+            if (team) {
+                stats.sessions++;
+                
+                // Iterate through finished games in this session
+                session.games.forEach(game => {
+                    if (game.status === 'finished') {
+                        // Check if player's team was part of this game
+                        const isTeam1 = game.team1Id === team.id;
+                        const isTeam2 = game.team2Id === team.id;
+                        
+                        if (isTeam1 || isTeam2) {
+                            stats.games++;
+                            
+                            if (game.winnerTeamId === team.id) {
+                                stats.wins++;
+                            }
+
+                            // Sum Goals & Assists
+                            game.goals.forEach(g => {
+                                if (g.scorerId === playerId && !g.isOwnGoal) stats.goals++;
+                                if (g.assistantId === playerId) stats.assists++;
+                            });
+                        }
+                    }
+                });
+            }
+        }
+    });
+
+    return stats;
+};
+
 // --- NEW: TEAM OF THE MONTH CALCULATOR ---
 // Optimized for quick lookup
 export const getTotmPlayerIds = (history: Session[], allPlayers: Player[]): Set<string> => {

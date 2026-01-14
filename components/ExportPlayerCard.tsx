@@ -1,10 +1,12 @@
 
 import React from 'react';
-import { Player, BadgeType, PlayerStatus, SkillType, PlayerForm } from '../types';
+import { Player, BadgeType, PlayerStatus, SkillType, PlayerForm, Session } from '../types';
 import { useTranslation } from '../ui';
 import { BadgeIcon, getBadgePriority } from '../features';
 import { StarIcon } from '../icons';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
+import { calculatePlayerMonthlyStats } from '../services/statistics';
+import { useApp } from '../context';
 
 const skillAbbreviations: Record<SkillType, string> = {
     goalkeeper: 'GK',
@@ -38,6 +40,7 @@ const RankItem: React.FC<{ label: string; rank: number; total: number }> = ({ la
 
 export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }> = ({ player, allPlayers }) => {
     const t = useTranslation();
+    const { history } = useApp(); // Access history to calculate monthly stats
     const countryCodeAlpha2 = React.useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
 
     const topBadges = React.useMemo(() => {
@@ -92,17 +95,13 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
 
     const winRate = player.totalGames > 0 ? `${Math.round((player.totalWins / player.totalGames) * 100)}%` : 'N/A';
     
-    // --- CHECK FOR CURRENT MONTH LOGIC ---
-    const isCurrentMonth = (dateStr?: string) => {
-        if (!dateStr) return false;
-        const d = new Date(dateStr);
-        const now = new Date();
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-    };
+    // --- RECALCULATE MONTHLY STATS DYNAMICALLY ---
+    const monthlyStats = React.useMemo(() => {
+        return calculatePlayerMonthlyStats(player.id, history);
+    }, [player.id, history]);
 
-    const showMonthlyStats = isCurrentMonth(player.lastPlayedAt);
-    const displayMonthlyGoals = showMonthlyStats ? player.monthlyGoals : 0;
-    const displayMonthlyAssists = showMonthlyStats ? player.monthlyAssists : 0;
+    const displayMonthlyGoals = monthlyStats.goals;
+    const displayMonthlyAssists = monthlyStats.assists;
 
     return (
         <div 
