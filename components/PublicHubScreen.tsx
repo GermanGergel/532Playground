@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-import { Player, PlayerStatus, PlayerForm, SkillType } from '../types';
+import { Player, PlayerStatus, PlayerForm, SkillType, PlayerTier } from '../types';
 import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, FacebookIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon } from '../icons';
 import { PlayerAvatar, TeamAvatar } from '../components/avatars';
 import { Language } from '../translations/index';
@@ -236,8 +236,8 @@ const HubNav: React.FC<{
             <div className="flex items-center gap-4 shrink-0 h-full">
                 <div className="flex items-center">
                     <HangingTag digit="5" label="PLAYERS" height={20} delay="0s" pulseDuration="2.8s" />
-                    <HangingTag digit="3" label="SQUADS" height={50} delay="1.5s" pulseDuration="4.2s" />
-                    <HangingTag digit="2" label="GOALS" height={80} delay="0.8s" pulseDuration="3.7s" />
+                    <HangingTag digit="3" label="SQUADS" height={38} delay="1.5s" pulseDuration="4.2s" />
+                    <HangingTag digit="2" label="GOALS" height={56} delay="0.8s" pulseDuration="3.7s" />
                     
                     <div className="h-4 w-px bg-white/15 ml-3 md:ml-4"></div>
                     <div className="flex flex-col space-y-0.5 ml-2">
