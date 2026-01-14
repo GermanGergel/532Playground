@@ -12,7 +12,7 @@ import { Language } from '../translations/index';
 // --- CONFIGURATION ---
 const SOCIAL_LINKS = {
     whatsapp: "https://chat.whatsapp.com/CAJnChuM4lQFf3s2YUnhQr",
-    zalo: "https://zalo.me/", // PLACEHOLDER: Update this with your actual Zalo profile link (e.g., https://zalo.me/0901234567)
+    zalo: "https://zalo.me/g/pjdfxl571", // Updated to Group Link
     instagram: "https://www.instagram.com/532playground?igsh=MTdzdHpwMjY3aHN4cg%3D%3D&utm_source=qr",
     youtube: "https://youtube.com/@playground532?si=_NqI_aOcvmjlSMFn",
     tiktok: "https://www.tiktok.com/@532playground",
@@ -508,7 +508,7 @@ export const PromoScreen: React.FC = () => {
                             href={SOCIAL_LINKS.zalo} 
                             target="_blank" 
                             rel="noreferrer"
-                            className="flex items-center justify-center gap-3 w-full bg-[#0068FF] hover:bg-[#0057d8] text-white font-bold text-base py-3 rounded-xl shadow-lg transition-all active:scale-95 mb-8"
+                            className="flex items-center justify-center gap-3 w-full bg-[#0068FF] hover:bg-[#0057d8] text-white font-bold text-lg py-3.5 rounded-xl shadow-[0_0_20px_rgba(0,104,255,0.4)] transition-all transform hover:scale-[1.02] active:scale-95 mb-8"
                         >
                             <ZaloIcon className="w-5 h-5 fill-current" />
                             Zalo
