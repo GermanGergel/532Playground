@@ -1,4 +1,3 @@
-
 import { Session, Player, NewsItem, BadgeType, PlayerRecords, PlayerHistoryEntry } from '../types';
 import { Language } from '../translations/index';
 import {
@@ -11,6 +10,7 @@ import {
     loadActiveVoicePackFromDB,
     savePlayersToDB
 } from '../db';
+import { get, set } from 'idb-keyval';
 import { getTierForRating } from './rating';
 
 interface InitialAppState {
@@ -28,6 +28,35 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
     let initialPlayers: Player[] = Array.isArray(loadedPlayersData) ? loadedPlayersData : [];
     
     let dataRepaired = false;
+
+    // --- NEW MONTHLY STATS RESET LOGIC ---
+    try {
+        const now = new Date();
+        const lastResetTimestamp = await get<number>('lastMonthlyResetTimestamp');
+
+        if (!lastResetTimestamp) {
+            // First time running this logic, just set the timestamp and don't reset.
+            await set('lastMonthlyResetTimestamp', now.getTime());
+        } else {
+            const lastResetDate = new Date(lastResetTimestamp);
+            if (now.getMonth() !== lastResetDate.getMonth() || now.getFullYear() !== lastResetDate.getFullYear()) {
+                console.log("New month detected. Resetting monthly stats for all players.");
+                initialPlayers = initialPlayers.map(player => ({
+                    ...player,
+                    monthlyGoals: 0,
+                    monthlyAssists: 0,
+                    monthlyGames: 0,
+                    monthlyWins: 0,
+                    monthlySessionsPlayed: 0,
+                }));
+                dataRepaired = true; // Use this flag to trigger a save.
+                await set('lastMonthlyResetTimestamp', now.getTime());
+            }
+        }
+    } catch (e) {
+        console.error("Failed to process monthly stat reset:", e);
+    }
+    // --- END OF NEW LOGIC ---
 
     initialPlayers = initialPlayers.map(p => {
         const migratedPlayer = { ...p };
@@ -78,7 +107,7 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
     });
 
     if (dataRepaired) {
-        savePlayersToDB(initialPlayers).catch(e => console.warn("Background repair sync failed", e));
+        savePlayersToDB(initialPlayers).catch(e => console.warn("Background repair/reset sync failed", e));
     }
 
     const loadedHistoryData = await loadHistoryFromDB(10);
