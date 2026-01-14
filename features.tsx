@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Team, Player, PlayerTier, PlayerStatus, BadgeType, PlayerForm, SkillType } from './types';
 import { getPlayerKeyStats } from './services/statistics';
@@ -492,7 +491,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                     </div>
                  </Card>
 
-                 <Card title="Career Averages" className={cardClass}>
+                 <Card title={t.careerStats} className={cardClass}>
                     <div className="grid grid-cols-2 gap-2 text-center">
                         <StatItem label={t.goalsPerSession} value={goalsPerSession} />
                         <StatItem label={t.assistsPerSession} value={assistsPerSession} />

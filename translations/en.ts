@@ -1,4 +1,3 @@
-
 export const en = {
   // Navigation
   navHome: "Home",
@@ -182,6 +181,8 @@ export const en = {
   winLossDraw: "W-D-L Record",
   sessionTrend: "Form Trend",
   allTimeStats: "Career Stats",
+  // FIX: Added missing translation key 'careerStats'
+  careerStats: "Career Averages",
   thSessions: "Sess",
   winRate: "Win %",
   goalsPerSession: "Goals/Sess",
