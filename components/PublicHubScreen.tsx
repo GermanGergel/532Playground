@@ -634,6 +634,7 @@ export const PublicHubScreen: React.FC = () => {
                     setDashboardView('dashboard');
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
+                onOpenTotm={() => setIsTotmOpen(true)}
             />
 
             {/* SQUAD OF THE MONTH BADGE - NOW CONDITIONALLY INTERACTIVE */}
