@@ -57,12 +57,11 @@ export const en = {
   selectWinnerDesc: "Select the winning team to proceed",
   onBench: "On Bench",
 
-  // FIX: Added missing Legionnaire keys for English translation
+  // Legionnaire
   legionnaire_replace: "REPLACE",
   legionnaire_select: "SELECT",
   legionnaire_no_players: "No resting players available",
 
-  // FIX: Added missing Session Summary keys for English translation
   // Session Summary
   summary_title: "SESSION SUMMARY",
   summary_location: "LOCATION",
@@ -263,10 +262,9 @@ export const en = {
   hubWeather: "WEATHER",
   hubImpact: "IMPACT",
   hubWelcomeText: "Welcome to the official 532 Playground Hub. Track your stats, compare with others, and rise to the top.",
-  hubLeadersTitle: "Session Leaders",
+  hubLeadersTitle: "SEASON LEADERS",
   hubJoinSquad: "Join the Squad",
 
-  // FIX: Added missing Duel keys for English translation
   // Duel
   duel_title: "Duel Selection",
   duel_id_unit: "IDENTIFY UNIT...",

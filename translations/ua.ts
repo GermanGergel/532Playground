@@ -64,7 +64,7 @@ export const ua = {
 
   // Session Summary
   summary_title: "ПІДСУМКИ СЕСІЇ",
-  summary_location: "ЛОКАЦІЯ",
+  summary_location: "ЛОКАЦИЯ",
   summary_time: "ЧАС",
   summary_weather: "ПОГОДА",
   summary_temp: "ТЕМП",
@@ -230,7 +230,7 @@ export const ua = {
   ruleRespectDesc: "Неспортивна поведінка або агресія.",
   ruleRespectPenalty: "БАН НА СЕССІЮ",
   badgeBonusTitle: "Бонуси Значків",
-  badgeBonusDesc: "Заробляйте значки, щоб підвищити рейтинг матчу.",
+  badgeBonusDesc: "Заробляйте значки, щоб підвищити рейтинг матча.",
   badgeBonusMvp: "MVP: +0.4 очка",
   badgeBonusTopScorer: "Бомбардир: +0.3 очка",
   keySkills: "Ключеві Навички",
@@ -258,12 +258,12 @@ export const ua = {
   hubStatsMembers: "УЧАСНИКИ",
   hubSessionsPlayed: "СЕССІЇ",
   hubAvgRating: "СЕРЕДНІЙ OVR",
-  hubLocation: "ЛОКАЦІЯ",
+  hubLocation: "ЛОКАЦИЯ",
   hubTimeFrame: "ЧАС",
   hubWeather: "ПОГОДА",
   hubImpact: "ІМПАКТ",
   hubWelcomeText: "Ласкаво просимо до офіційного хабу 532 Playground. Слідкуй за статистикою, порівнюй результати та прагни до вершини.",
-  hubLeadersTitle: "Лідери Сезону",
+  hubLeadersTitle: "ЛІДЕРИ СЕЗОНУ",
   hubJoinSquad: "Вступити до Загону",
   
   // Duel

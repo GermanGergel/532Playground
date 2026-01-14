@@ -264,7 +264,7 @@ export const vn = {
   hubWeather: "THỜI TIẾT",
   hubImpact: "TÁC ĐỘNG",
   hubWelcomeText: "Chào mừng đến với Hub 532 Playground chính thức. Theo dõi chỉ số, so sánh với người khác và leo lên đỉnh vinh quang.",
-  hubLeadersTitle: "Dẫn Đầu Mùa Giải",
+  hubLeadersTitle: "DẪN ĐẦU MÙA GIẢI",
   hubJoinSquad: "Tham Gia Đội Hình",
   
   // FIX: Added missing Duel keys for Vietnamese translation
