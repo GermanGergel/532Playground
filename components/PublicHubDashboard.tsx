@@ -511,18 +511,19 @@ export const PublicHubDashboard: React.FC = () => {
                             <table className="w-full table-fixed border-collapse">
                                 <thead>
                                     <tr className="bg-white/5 border-b border-white/10">
-                                        <th className={`${thStandings} w-[6%]`}>#</th>
-                                        {/* EXPANDED TEAM NAME COLUMN WIDTH TO 34% (increased from 30%) */}
-                                        <th className={`${thStandings} w-[34%]`}>{t.team}</th>
-                                        <th className={`${thStandings} w-[6%]`}>{t.thP}</th>
-                                        <th className={`${thStandings} w-[6%]`}>{t.thW}</th>
-                                        <th className={`${thStandings} w-[6%]`}>{t.thD}</th>
-                                        <th className={`${thStandings} w-[6%]`}>{t.thL}</th>
-                                        <th className={`${thStandings} w-[8%]`}>{t.thGF}</th>
-                                        <th className={`${thStandings} w-[8%]`}>{t.thGA}</th>
-                                        <th className={`${thStandings} w-[10%]`}>{t.thGD}</th>
-                                        {/* REDUCED PTS COLUMN WIDTH TO 10% */}
-                                        <th className={`${thStandings} w-[10%] text-white bg-white/[0.03]`}>PTS</th>
+                                        <th className={`${thStandings} w-[5%]`}>#</th>
+                                        {/* REDUCED TEAM NAME COLUMN WIDTH TO 25% (was 34%) */}
+                                        <th className={`${thStandings} w-[25%]`}>{t.team}</th>
+                                        {/* EXPANDED STAT COLUMNS FOR BREATHING ROOM */}
+                                        <th className={`${thStandings} w-[7%]`}>{t.thP}</th>
+                                        <th className={`${thStandings} w-[7%]`}>{t.thW}</th>
+                                        <th className={`${thStandings} w-[7%]`}>{t.thD}</th>
+                                        <th className={`${thStandings} w-[7%]`}>{t.thL}</th>
+                                        <th className={`${thStandings} w-[9%]`}>{t.thGF}</th>
+                                        <th className={`${thStandings} w-[9%]`}>{t.thGA}</th>
+                                        <th className={`${thStandings} w-[11%]`}>{t.thGD}</th>
+                                        {/* PTS COLUMN at 13% */}
+                                        <th className={`${thStandings} w-[13%] text-white bg-white/[0.03]`}>PTS</th>
                                     </tr>
                                 </thead>
                                 <tbody>

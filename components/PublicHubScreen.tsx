@@ -13,6 +13,8 @@ import { ClubIntelligenceDashboard } from '../components/ClubIntelligenceDashboa
 import { RadioPlayer } from '../components/RadioPlayer';
 import { SquadOfTheMonthBadge } from '../components/SquadOfTheMonthBadge';
 import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
+import { MiniSquadBadge } from '../components/MiniSquadBadge';
+import { BallDecorations } from '../components/BallDecorations';
 
 // --- SUB-COMPONENTS ---
 
@@ -21,35 +23,31 @@ const skillAbbreviations: Record<SkillType, string> = {
     playmaker: 'PM', finisher: 'FN', versatile: 'VS', tireless_motor: 'TM', leader: 'LD',
 };
 
-const StaticSoccerBall: React.FC = () => (
-    <div className="relative w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none ml-3">
-        <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] overflow-visible">
-            <defs>
-                <radialGradient id="ballShading" cx="40%" cy="35%" r="65%"><stop offset="0%" stopColor="#ffffff" /><stop offset="50%" stopColor="#e2e8f0" /><stop offset="85%" stopColor="#94a3b8" /><stop offset="100%" stopColor="#1e293b" /></radialGradient>
-                <linearGradient id="hatBodyGradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="#ff4d4d" /><stop offset="40%" stopColor="#e60000" /><stop offset="100%" stopColor="#990000" /></linearGradient>
-                <radialGradient id="pompomGradient" cx="40%" cy="35%" r="50%"><stop offset="0%" stopColor="#ffffff" /><stop offset="70%" stopColor="#f1f5f9" /><stop offset="100%" stopColor="#cbd5e1" /></radialGradient>
-                <filter id="hatShadow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.5" /><feOffset dx="0" dy="2" result="offsetblur" /><feComponentTransfer><feFuncA type="linear" slope="0.4" /></feComponentTransfer><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-                <filter id="furTexture"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" result="noise" /><feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5" /></filter>
-            </defs>
-            <circle cx="50" cy="50" r="48" fill="url(#ballShading)" />
-            <g stroke="#000" strokeWidth="0.8" fill="none" opacity="0.25">
-                <path d="M50 32 L68 45 L61 66 L39 66 L32 45 Z" /><path d="M50 32 L50 2" /><path d="M68 45 L95 38" /><path d="M61 66 L82 92" /><path d="M39 66 L18 92" /><path d="M32 45 L5 38" /><path d="M18 92 Q 50 98 82 92" /><path d="M5 38 Q 4 15 50 2" /><path d="M95 38 Q 96 15 50 2" />
-            </g>
-            <text x="51" y="52" textAnchor="middle" fill="#0f172a" className="font-aldrich font-black uppercase" style={{ fontSize: '17px', letterSpacing: '-0.02em', transform: 'scaleX(0.85) rotate(-3deg)', transformOrigin: 'center' }}>SELECT</text>
-            <text x="50" y="61" textAnchor="middle" fill="#475569" className="font-chakra font-black uppercase" style={{ fontSize: '3.2px', letterSpacing: '0.1em', opacity: 0.8, transform: 'rotate(-3deg)', transformOrigin: 'center' }}>Professional Futsal</text>
-            <ellipse cx="40" cy="25" rx="20" ry="10" fill="white" opacity="0.3" transform="rotate(-15, 40, 25)" />
-            <g transform="translate(0, -25)" filter="url(#hatShadow)">
-                <path d="M 18 42 L 18 20 C 18 -15, 88 -18, 90 25 L 82 42 Z" fill="url(#hatBodyGradient)" stroke="#7f1d1d" strokeWidth="0.3" />
-                <path d="M 22 25 C 22 -5, 75 -10, 80 20" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" opacity="0.1" />
-                <circle cx="90" cy="25" r="8.5" fill="url(#pompomGradient)" stroke="#94a3b8" strokeWidth="0.1" /><circle cx="90" cy="25" r="8.5" fill="black" opacity="0.05" transform="translate(-1, 1)" />
-                <circle cx="90" cy="25" r="8.5" fill="black" opacity="0.05" transform="translate(-1, 1)" />
-                <circle cx="90" cy="25" r="8.5" fill="black" opacity="0.05" transform="translate(-1, 1)" />
-                <g filter="url(#furTexture)"><path d="M 8 40 Q 50 25 92 40 Q 96 48 92 55 Q 50 40 8 55 Q 4 48 8 40 Z" fill="#FFFFFF" stroke="#f1f5f9" strokeWidth="0.2" /></g>
-                <path d="M 12 48 Q 50 38 88 48" fill="none" stroke="#cbd5e1" strokeWidth="0.5" opacity="0.3" />
-            </g>
-        </svg>
-    </div>
-);
+const StaticSoccerBall: React.FC = () => {
+    // В будущем здесь можно сделать переключатель через context или props
+    const CurrentAccessory = BallDecorations.VietnamHelmet; 
+
+    return (
+        <div className="relative w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none ml-3">
+            <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] overflow-visible">
+                <defs>
+                    <radialGradient id="ballShading" cx="40%" cy="35%" r="65%"><stop offset="0%" stopColor="#ffffff" /><stop offset="50%" stopColor="#e2e8f0" /><stop offset="85%" stopColor="#94a3b8" /><stop offset="100%" stopColor="#1e293b" /></radialGradient>
+                    <filter id="hatShadow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.5" /><feOffset dx="0" dy="2" result="offsetblur" /><feComponentTransfer><feFuncA type="linear" slope="0.4" /></feComponentTransfer><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+                </defs>
+                <circle cx="50" cy="50" r="48" fill="url(#ballShading)" />
+                <g stroke="#000" strokeWidth="0.8" fill="none" opacity="0.25">
+                    <path d="M50 32 L68 45 L61 66 L39 66 L32 45 Z" /><path d="M50 32 L50 2" /><path d="M68 45 L95 38" /><path d="M61 66 L82 92" /><path d="M39 66 L18 92" /><path d="M32 45 L5 38" /><path d="M18 92 Q 50 98 82 92" /><path d="M5 38 Q 4 15 50 2" /><path d="M95 38 Q 96 15 50 2" />
+                </g>
+                <text x="51" y="52" textAnchor="middle" fill="#0f172a" className="font-aldrich font-black uppercase" style={{ fontSize: '17px', letterSpacing: '-0.02em', transform: 'scaleX(0.85) rotate(-3deg)', transformOrigin: 'center' }}>SELECT</text>
+                <text x="50" y="61" textAnchor="middle" fill="#475569" className="font-chakra font-black uppercase" style={{ fontSize: '3.2px', letterSpacing: '0.1em', opacity: 0.8, transform: 'rotate(-3deg)', transformOrigin: 'center' }}>Professional Futsal</text>
+                <ellipse cx="40" cy="25" rx="20" ry="10" fill="white" opacity="0.3" transform="rotate(-15, 40, 25)" />
+                
+                {/* Рендерим текущий аксессуар из хранилища */}
+                <CurrentAccessory />
+            </svg>
+        </div>
+    );
+};
 
 const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
     const config = {
@@ -142,7 +140,8 @@ const HangingTag: React.FC<{ digit: string; label: string; height: number; delay
             {digit}
         </span>
         <div className="absolute top-[26px] w-[0.5px] bg-[#00F2FE]/10 origin-top animate-pendant-swing" style={{ height: `${height}px`, animationDelay: delay, boxShadow: '0 0 3px rgba(0,242,254,0.1)' }}>
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1.2px] h-[3px] bg-[#00F2FE] rounded-full opacity-0 animate-fiber-pulse" style={{ animationDuration: pulseDuration, animationDelay: delay, boxShadow: '0 0 5px #00F2FE' }}></div>
+            {/* PULSE REMOVED AS REQUESTED */}
+            {/* <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1.2px] h-[3px] bg-[#00F2FE] rounded-full opacity-0 animate-fiber-pulse" style={{ animationDuration: pulseDuration, animationDelay: delay, boxShadow: '0 0 5px #00F2FE' }}></div> */}
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full pt-1">
                 <div className="relative flex flex-col items-center">
                     <div className="absolute inset-0 blur-[8px] bg-[#00F2FE]/20 rounded-full scale-[2.5] pointer-events-none opacity-40"></div>
@@ -185,7 +184,8 @@ const HubNav: React.FC<{
     onTabChange: (tab: any) => void;
     archiveViewDate: string | null;
     onHomeClick: () => void;
-}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick }) => {
+    onOpenTotm: () => void;
+}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, onOpenTotm }) => {
     const { language, setLanguage } = useApp();
     const t = useTranslation();
     const [isLangOpen, setIsLangOpen] = useState(false);
@@ -286,6 +286,8 @@ const HubNav: React.FC<{
                 {isDashboardOpen && (
                     <div className="flex items-center gap-2 md:gap-4 mr-2 h-full animate-in fade-in slide-in-from-right-3 duration-500">
                         <div className="mr-3 flex items-center border-r border-white/10 pr-4 gap-3">
+                            <MiniSquadBadge onClick={onOpenTotm} className="w-[42px] h-[42px] md:w-[54px] md:h-[54px] -my-1 mr-3" />
+
                             <button 
                                 onClick={onHomeClick}
                                 className="flex flex-col items-center justify-center gap-1 transition-all duration-300 group cursor-pointer hover:scale-110"
@@ -393,6 +395,7 @@ const HeroTitle: React.FC = () => {
 
 const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, rank }) => {
     const cardRef = useRef<HTMLDivElement>(null);
+    const { totmPlayerIds } = useApp();
     const t = useTranslation();
     const isFirst = rank === 1;
     const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
@@ -404,6 +407,9 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
     
     const topBadges = useMemo(() => sortBadgesByPriority(player.badges || {}).slice(0, 5), [player.badges]);
 
+    // Check TOTM
+    const isTotm = totmPlayerIds.has(player.id);
+
     useEffect(() => {
         const card = cardRef.current; if (!card) return;
         const handleMouseMove = (e: MouseEvent) => { const rect = card.getBoundingClientRect(); const x = e.clientX - rect.left; const y = e.clientY - rect.top; card.style.setProperty('--mouse-x', `${x}px`); card.style.setProperty('--mouse-y', `${y}px`); };
@@ -414,42 +420,45 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
         <div style={podiumGlowStyle} className={`relative group ${isFirst ? 'scale-105 z-20' : 'scale-90 md:scale-100 z-10'} rounded-3xl transition-shadow duration-300`}>
             <div ref={cardRef} className={`interactive-card relative ${isFirst ? 'w-[280px] h-[390px]' : 'w-[260px] h-[360px]'} rounded-3xl p-4 overflow-hidden text-white bg-dark-surface border border-white/10`}>
                 {player.playerCard && (<div className="absolute inset-0 w-full h-full bg-cover bg-no-repeat" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }}/>)}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
-                {!isBadgeModalOpen && (<div className="absolute top-24 left-4 z-20"><div className="space-y-4">{(player.skills || []).map(skill => (
-                    <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
-                        <StarIcon className="w-4 h-4 text-[#00F2FE]" />
-                        <span className="font-bold text-xs text-white tracking-wider">{skillAbbreviations[skill]}</span>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                
+                {!isBadgeModalOpen && (
+                    <div className="absolute top-24 left-4 z-20 flex flex-col gap-4">
+                        <div className="space-y-4">
+                            {(player.skills || []).map(skill => (
+                                <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
+                                    <StarIcon className="w-4 h-4 text-[#00F2FE]" />
+                                    <span className="font-bold text-xs text-white tracking-wider">{skillAbbreviations[skill]}</span>
+                                </div>
+                            ))}
+                        </div>
+                        {isTotm && (
+                            <div className="animate-in fade-in zoom-in duration-500">
+                                <MiniSquadBadge size="w-10 h-10" />
+                            </div>
+                        )}
                     </div>
-                ))}</div></div>)}
+                )}
+
                 <div className="relative z-10 h-full flex flex-col justify-between p-1">
                      <div className="flex justify-between items-start">
                         <div>
                             <p style={{ color: '#00F2FE' }} className="text-base font-black leading-none">532</p>
                             <p className="text-white text-[7px] font-bold tracking-[0.15em] font-chakra leading-none mt-1">PLAYGROUND</p>
-                            {countryCodeAlpha2 && (<img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} alt={`${player.countryCode} flag`} className="w-6 h-auto mt-3 rounded-sm"/>)}
+                            {countryCodeAlpha2 && (<img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} alt={`${player.countryCode} flag`} className="w-6 h-auto mt-3 rounded-sm" />)}
                         </div>
                         <div className="flex flex-col items-center max-w-[50%]">
                             <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
                             <p className="font-bold text-white tracking-widest text-sm mt-2">OVR</p>
                             <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
-                            
-                            {topBadges.length > 0 && (
-                                <div className="flex flex-col items-center gap-1 mt-2">
-                                    {topBadges.map(badge => (
-                                        <div key={badge}>
-                                            <BadgeIcon badge={badge} className="w-7 h-7" />
-                                        </div>
-                                    ))}
-                                </div>
+                            {player.badges && Object.keys(player.badges).length > 0 && (
+                                <BadgeDisplay badges={player.badges} limit={6} onOpenChange={setIsBadgeModalOpen} />
                             )}
                         </div>
                     </div>
-                    <div className="absolute bottom-2 left-0 right-0 text-center z-30 px-1">
-                        <h1 className="font-black uppercase tracking-tight drop-shadow-lg leading-[0.85]">
-                            <span className="text-3xl md:text-4xl block text-white">{player.nickname}</span>
-                            {player.surname && (
-                                <span className="text-lg md:text-xl block text-white/90 mt-1">{player.surname}</span>
-                            )}
+                    <div className="text-center flex-shrink-0 relative z-30 pb-1">
+                        <h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg leading-none mb-1">
+                            {player.nickname} {player.surname}
                         </h1>
                     </div>
                 </div>
