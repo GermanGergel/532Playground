@@ -199,6 +199,21 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
 
     if (!player) return null;
     
+    // --- CHECK FOR CURRENT MONTH LOGIC ---
+    // If the player's last game was NOT in the current calendar month, we should display 0 for monthly stats
+    const isCurrentMonth = (dateStr?: string) => {
+        if (!dateStr) return false;
+        const d = new Date(dateStr);
+        const now = new Date();
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    };
+
+    const showMonthlyStats = isCurrentMonth(player.lastPlayedAt);
+    const displayMonthlyGoals = showMonthlyStats ? player.monthlyGoals : 0;
+    const displayMonthlyAssists = showMonthlyStats ? player.monthlyAssists : 0;
+    const displayMonthlyWins = showMonthlyStats ? player.monthlyWins : 0;
+    const displayMonthlySessions = showMonthlyStats ? player.monthlySessionsPlayed : 0;
+
     const countryCodeAlpha2 = player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : 'VN';
     const winRate = player.totalGames > 0 ? `${Math.round((player.totalWins / player.totalGames) * 100)}%` : '0%';
     const goalsPerSession = player.totalSessionsPlayed > 0 ? (player.totalGoals / player.totalSessionsPlayed).toFixed(2) : '0.00';
@@ -277,7 +292,7 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                                     <BentoBox className="h-full" contentClassName="h-full flex flex-col justify-center"><IntelHeader title={t?.lastSessionAnalysis} icon={BarChartDynamic} /><div className="flex-grow flex flex-col justify-center"><TerminalLastSession player={player} /></div></BentoBox>
                                     <BentoBox className="h-full" contentClassName="h-full flex flex-col"><IntelHeader title={t?.sessionTrend} icon={Zap} accent="#4CFF5F" /><div className="flex-grow flex flex-col justify-start space-y-1"><div className="grid grid-cols-3 gap-2 items-center bg-black/30 p-1.5 rounded-2xl border border-white/5 shadow-inner"><TerminalStat label="Current Form" value={player.form.split('_')[0].toUpperCase()} color={player.form === 'hot_streak' ? '#4CFF5F' : player.form === 'cold_streak' ? '#FF4136' : '#fff'} /><TerminalStat label="Win Ratio" value={winRate} color="#00F2FE" /><div className="flex justify-center"><FormArrowIndicator form={player.form} /></div></div><div className="py-1 bg-black/30 rounded-2xl border border-white/5 mt-auto shadow-inner"><TerminalSessionTrend history={player.sessionHistory} /></div>{player.skills && player.skills.length > 0 && (<div className="pt-2"><div className="flex wrap justify-center gap-3 mt-1 pb-1">{player.skills.slice(0,3).map(skill => (<div key={skill} className="flex items-center gap-1 transition-all"><StarIcon className="w-2.5 h-2.5 text-[#00F2FE]" /><span className="text-[8px] font-black text-white/80 uppercase tracking-tight">{t[`skill_${skill}` as keyof typeof t]}</span></div>))}</div></div>)}</div></BentoBox>
                                     <BentoBox className="!p-2 h-full" contentClassName="h-full flex flex-col"><IntelHeader title={t?.clubRankings} icon={Users} accent="#FF00D6" /><div className="flex-grow flex flex-col justify-center pt-1 pb-1 px-1"><div className="grid grid-cols-3 gap-0.5 text-center w-full"><TerminalStat label="SCORER" value={rankings.goals} subValue={`/${rankings.total}`} color="#fff" /><TerminalStat label="ASSISTANT" value={rankings.assists} subValue={`/${rankings.total}`} color="#fff" /><TerminalStat label="RATING" value={rankings.rating} subValue={`/${rankings.total}`} color="#fff" /></div></div></BentoBox>
-                                    <BentoBox className="!p-2 h-full" contentClassName="h-full flex flex-col justify-center"><IntelHeader title={t?.monthlyStatsTitle} icon={Calendar} /><div className="flex-grow flex flex-col justify-center"><div className="grid grid-cols-2 gap-y-1.5 gap-x-1 pt-1 pb-1 h-full items-center"><TerminalStat size="text-lg" label={t?.monthlyWins} value={player.monthlyWins} color="#fff" /><TerminalStat size="text-lg" label={t?.monthlyGoals} value={player.monthlyGoals} /><TerminalStat size="text-lg" label={t?.monthlyAssists} value={player.monthlyAssists} /><TerminalStat size="text-lg" label={t?.session} value={player.monthlySessionsPlayed} /></div></div></BentoBox>
+                                    <BentoBox className="!p-2 h-full" contentClassName="h-full flex flex-col justify-center"><IntelHeader title={t?.monthlyStatsTitle} icon={Calendar} /><div className="flex-grow flex flex-col justify-center"><div className="grid grid-cols-2 gap-y-1.5 gap-x-1 pt-1 pb-1 h-full items-center"><TerminalStat size="text-lg" label={t?.monthlyWins} value={displayMonthlyWins} color="#fff" /><TerminalStat size="text-lg" label={t?.monthlyGoals} value={displayMonthlyGoals} /><TerminalStat size="text-lg" label={t?.monthlyAssists} value={displayMonthlyAssists} /><TerminalStat size="text-lg" label={t?.session} value={displayMonthlySessions} /></div></div></BentoBox>
                                 </div>
                             </div>
 

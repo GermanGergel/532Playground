@@ -92,6 +92,18 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
 
     const winRate = player.totalGames > 0 ? `${Math.round((player.totalWins / player.totalGames) * 100)}%` : 'N/A';
     
+    // --- CHECK FOR CURRENT MONTH LOGIC ---
+    const isCurrentMonth = (dateStr?: string) => {
+        if (!dateStr) return false;
+        const d = new Date(dateStr);
+        const now = new Date();
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    };
+
+    const showMonthlyStats = isCurrentMonth(player.lastPlayedAt);
+    const displayMonthlyGoals = showMonthlyStats ? player.monthlyGoals : 0;
+    const displayMonthlyAssists = showMonthlyStats ? player.monthlyAssists : 0;
+
     return (
         <div 
             id="export-card-to-capture" 
@@ -177,8 +189,8 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
                 </section>
 
                 <section className="flex justify-around items-center my-1 py-2 border-t-2 border-dark-accent-start/30">
-                    <Stat value={player.totalGoals} label={t.monthlyGoals} />
-                    <Stat value={player.totalAssists} label={t.monthlyAssists} />
+                    <Stat value={displayMonthlyGoals} label={t.monthlyGoals} />
+                    <Stat value={displayMonthlyAssists} label={t.monthlyAssists} />
                     <Stat value={winRate} label={t.winRate} />
                 </section>
 

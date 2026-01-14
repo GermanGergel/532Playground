@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Team, Player, PlayerTier, PlayerStatus, BadgeType, PlayerForm, SkillType } from './types';
 import { getPlayerKeyStats } from './services/statistics';
@@ -379,6 +380,22 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
     const goalsPerSession = player.totalSessionsPlayed > 0 ? (player.totalGoals / player.totalSessionsPlayed).toFixed(2) : '0.00';
     const assistsPerSession = player.totalSessionsPlayed > 0 ? (player.totalAssists / player.totalSessionsPlayed).toFixed(2) : '0.00';
 
+    // --- CHECK FOR CURRENT MONTH LOGIC ---
+    // If the player's last game was NOT in the current calendar month, we should display 0 for monthly stats
+    const isCurrentMonth = (dateStr?: string) => {
+        if (!dateStr) return false;
+        const d = new Date(dateStr);
+        const now = new Date();
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    };
+
+    const showMonthlyStats = isCurrentMonth(player.lastPlayedAt);
+    const displayMonthlyGoals = showMonthlyStats ? player.monthlyGoals : 0;
+    const displayMonthlyAssists = showMonthlyStats ? player.monthlyAssists : 0;
+    const displayMonthlyGames = showMonthlyStats ? player.monthlyGames : 0; // Using monthlyGames label for 'Sessions' in Card below might be confusing if label is Session. But variable name is monthlyGames which implies matches. The UI label is "SESSIONS". Wait, player object has monthlySessionsPlayed.
+    const displayMonthlySessions = showMonthlyStats ? player.monthlySessionsPlayed : 0;
+    const displayMonthlyWins = showMonthlyStats ? player.monthlyWins : 0;
+
 
     const StatItem: React.FC<{ label: string; value: string | number; isKeyStat?: boolean }> = ({ label, value, isKeyStat }) => (
         <div>
@@ -500,10 +517,10 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
 
                  <Card id={`monthly-stats-${player.id}`} title={t.monthlyStatsTitle} className={cardClass}>
                      <div className="grid grid-cols-4 gap-2 text-center">
-                        <StatItem label={t.session.toUpperCase()} value={player.monthlySessionsPlayed} />
-                        <StatItem label={t.monthlyGoals.toUpperCase()} value={player.monthlyGoals} />
-                        <StatItem label={t.monthlyAssists.toUpperCase()} value={player.monthlyAssists} />
-                        <StatItem label={t.monthlyWins.toUpperCase()} value={player.monthlyWins} />
+                        <StatItem label={t.session.toUpperCase()} value={displayMonthlySessions} />
+                        <StatItem label={t.monthlyGoals.toUpperCase()} value={displayMonthlyGoals} />
+                        <StatItem label={t.monthlyAssists.toUpperCase()} value={displayMonthlyAssists} />
+                        <StatItem label={t.monthlyWins.toUpperCase()} value={displayMonthlyWins} />
                     </div>
                  </Card>
                  

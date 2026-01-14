@@ -199,6 +199,20 @@ const StatsView: React.FC<{ player: Player; onBack: () => void; isPromo?: boolea
     const assistsPerSession = player.totalSessionsPlayed > 0 ? (player.totalAssists / player.totalSessionsPlayed).toFixed(2) : '0.00';
     const cardNeonClasses = "border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)]";
 
+    // --- CHECK FOR CURRENT MONTH LOGIC ---
+    const isCurrentMonth = (dateStr?: string) => {
+        if (!dateStr) return false;
+        const d = new Date(dateStr);
+        const now = new Date();
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    };
+
+    const showMonthlyStats = isCurrentMonth(player.lastPlayedAt);
+    const displayMonthlyGoals = showMonthlyStats ? player.monthlyGoals : 0;
+    const displayMonthlyAssists = showMonthlyStats ? player.monthlyAssists : 0;
+    const displayMonthlyWins = showMonthlyStats ? player.monthlyWins : 0;
+    const displayMonthlySessions = showMonthlyStats ? player.monthlySessionsPlayed : 0;
+
     const StatItem: React.FC<{ label: string; value: string | number; }> = ({ label, value }) => (
         <div><p className={`text-base font-bold`}>{value}</p><p className="text-[10px] text-dark-text-secondary uppercase">{label}</p></div>
     );
@@ -265,10 +279,10 @@ const StatsView: React.FC<{ player: Player; onBack: () => void; isPromo?: boolea
 
                 <Wrapper title={t.monthlyStatsTitle}>
                     <div className="grid grid-cols-4 gap-2 text-center">
-                        <StatItem label={t.session.toUpperCase()} value={player.monthlySessionsPlayed} />
-                        <StatItem label={t.monthlyGoals.toUpperCase()} value={player.monthlyGoals} />
-                        <StatItem label={t.monthlyAssists.toUpperCase()} value={player.monthlyAssists} />
-                        <StatItem label={t.monthlyWins.toUpperCase()} value={player.monthlyWins} />
+                        <StatItem label={t.session.toUpperCase()} value={displayMonthlySessions} />
+                        <StatItem label={t.monthlyGoals.toUpperCase()} value={displayMonthlyGoals} />
+                        <StatItem label={t.monthlyAssists.toUpperCase()} value={displayMonthlyAssists} />
+                        <StatItem label={t.monthlyWins.toUpperCase()} value={displayMonthlyWins} />
                     </div>
                 </Wrapper>
 

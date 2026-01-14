@@ -28,6 +28,10 @@ export const processFinishedSession = ({
     const participatedIds = new Set(allPlayersStats.map(s => s.player.id));
     const penaltyNews: NewsItem[] = [];
     const timestamp = new Date().toISOString();
+    
+    // Get session month key to compare with player's last activity
+    const sessionDate = new Date(session.date);
+    const sessionMonthKey = `${sessionDate.getFullYear()}-${sessionDate.getMonth()}`;
 
     // --- 1. UPDATE PLAYERS (Participation & Inactivity Logic) ---
     let playersWithUpdatedStats = oldPlayers.map(player => {
@@ -35,6 +39,26 @@ export const processFinishedSession = ({
         const floor = player.initialRating || 68;
         
         if (sessionStats) {
+            // Check if this session is in the same month as the player's last game
+            const lastPlayedDate = player.lastPlayedAt ? new Date(player.lastPlayedAt) : new Date(0);
+            const lastPlayedMonthKey = `${lastPlayedDate.getFullYear()}-${lastPlayedDate.getMonth()}`;
+            const isSameMonth = sessionMonthKey === lastPlayedMonthKey;
+
+            // Reset monthly stats if it's a new month, otherwise keep accumulating
+            const baseMonthly = isSameMonth ? {
+                goals: player.monthlyGoals,
+                assists: player.monthlyAssists,
+                games: player.monthlyGames,
+                wins: player.monthlyWins,
+                sessions: player.monthlySessionsPlayed || 0
+            } : {
+                goals: 0,
+                assists: 0,
+                games: 0,
+                wins: 0,
+                sessions: 0
+            };
+
             // PLAYER PLAYED
             const updatedPlayer: Player = {
                 ...player,
@@ -45,12 +69,15 @@ export const processFinishedSession = ({
                 totalDraws: player.totalDraws + sessionStats.draws,
                 totalLosses: player.totalLosses + sessionStats.losses,
                 totalSessionsPlayed: (player.totalSessionsPlayed || 0) + 1,
-                monthlyGames: player.monthlyGames + sessionStats.gamesPlayed,
-                monthlyGoals: player.monthlyGoals + sessionStats.goals,
-                monthlyAssists: player.monthlyAssists + sessionStats.assists,
-                monthlyWins: player.monthlyWins + sessionStats.wins,
-                monthlySessionsPlayed: (player.monthlySessionsPlayed || 0) + 1,
-                lastPlayedAt: new Date().toISOString(),
+                
+                // Monthly Stats (Reset logic applied via baseMonthly)
+                monthlyGames: baseMonthly.games + sessionStats.gamesPlayed,
+                monthlyGoals: baseMonthly.goals + sessionStats.goals,
+                monthlyAssists: baseMonthly.assists + sessionStats.assists,
+                monthlyWins: baseMonthly.wins + sessionStats.wins,
+                monthlySessionsPlayed: baseMonthly.sessions + 1,
+                
+                lastPlayedAt: session.date, // Use session date instead of 'now' to be consistent
                 consecutiveMissedSessions: 0,
             };
             return updatedPlayer;
@@ -69,6 +96,8 @@ export const processFinishedSession = ({
                 }
             }
 
+            // Note: We do NOT reset monthly stats here. They are reset visually in UI if date is old,
+            // or reset permanently when they play their next game in a new month.
             const updatedPlayer = {
                 ...player,
                 consecutiveMissedSessions: currentMissed,
