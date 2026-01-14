@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Player, PlayerStatus, PlayerForm, SkillType, PlayerTier } from '../types';
-import { TrophyIcon, Users, History as HistoryIcon, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, LayoutDashboard, AwardIcon, Target, InfoIcon, FacebookIcon } from '../icons';
+import { TrophyIcon, Users, History as HistoryIcon, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, LayoutDashboard, AwardIcon, Target, InfoIcon, FacebookIcon, Home } from '../icons';
 import { PlayerAvatar, TeamAvatar } from '../components/avatars';
 import { Language } from '../translations/index';
 import { BadgeDisplay, BadgeIcon, sortBadgesByPriority } from '../features';
