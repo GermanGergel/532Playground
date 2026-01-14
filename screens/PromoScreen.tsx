@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { PublicPlayerCard } from '../components/PublicPlayerCard';
 import { LastSessionBreakdown } from '../components/PlayerCardAnalytics';
 import { Player, PlayerStatus, PlayerTier } from '../types';
-import { WhatsApp, TrophyIcon, VideoCamera, BarChartDynamic, FacebookIcon, YouTubeIcon, InstagramIcon, TikTokIcon, LayoutDashboard, Target, Zap, Cloud, MapPinIcon, History } from '../icons'; 
+import { WhatsApp, TrophyIcon, VideoCamera, BarChartDynamic, ZaloIcon, YouTubeIcon, InstagramIcon, TikTokIcon, LayoutDashboard, Target, Zap, Cloud, MapPinIcon, History } from '../icons'; 
 import { BrandedHeader } from './utils';
 import { loadPromoData, getSessionAnthemUrl } from '../db';
 import { useApp } from '../context';
@@ -11,7 +12,7 @@ import { Language } from '../translations/index';
 // --- CONFIGURATION ---
 const SOCIAL_LINKS = {
     whatsapp: "https://chat.whatsapp.com/CAJnChuM4lQFf3s2YUnhQr",
-    facebook: "https://www.facebook.com/share/g/1ANVC1p1K5/",
+    zalo: "https://zalo.me/", // PLACEHOLDER: Update this with your actual Zalo profile link (e.g., https://zalo.me/0901234567)
     instagram: "https://www.instagram.com/532playground?igsh=MTdzdHpwMjY3aHN4cg%3D%3D&utm_source=qr",
     youtube: "https://youtube.com/@playground532?si=_NqI_aOcvmjlSMFn",
     tiktok: "https://www.tiktok.com/@532playground",
@@ -86,7 +87,7 @@ const TEXT = {
         roadmap_leagues: "Leagues & Tournaments",
         roadmap_leagues_desc: "Compete for the seasonal cup and prizes.",
         cta_join: "JOIN THE SQUAD",
-        cta_desc: "Connect with us on WhatsApp to book your slot.",
+        cta_desc: "Connect with us on WhatsApp or Zalo to book your slot.",
         tap_to_enter: "TAP TO ENTER",
         
         // Hub Section
@@ -115,7 +116,7 @@ const TEXT = {
         roadmap_leagues: "Giải Đấu & Cúp",
         roadmap_leagues_desc: "Tranh tài giành cúp vô địch mùa giải và nhiều phần quà hấp dẫn.",
         cta_join: "THAM GIA NGAY",
-        cta_desc: "Liên hệ qua WhatsApp để đặt slot thi đấu.",
+        cta_desc: "Liên hệ qua WhatsApp hoặc Zalo để đặt slot thi đấu.",
         tap_to_enter: "NHẤN ĐỂ VÀO",
 
         // Hub Section
@@ -138,13 +139,13 @@ const TEXT = {
         feature_stats_desc: "Мы считаем всё: голы, пасы, победы и сухие матчи. Цифры определяют твой статус.",
         feature_fair: "Умный баланс команд",
         feature_fair_desc: "Алгоритм делит составы по силе. Новички проходят калибровку из 3 игр для определения точного уровня.",
-        roadmap_title: "ПЛАНЫ НА БУДУЩЕЕ",
+        roadmap_title: "ПЛАНИ НА БУДУЩЕЕ",
         roadmap_video: "Видео-хайлайты",
         roadmap_video_desc: "Нарезки твоих лучших голов, созданные нейросетью (Скоро).",
         roadmap_leagues: "Турниры и Лиги",
         roadmap_leagues_desc: "Борись за кубок сезона и ценные призы от клуба.",
         cta_join: "ВСТУПИТЬ В КЛУБ",
-        cta_desc: "Напиши нам в WhatsApp, чтобы записаться на игру.",
+        cta_desc: "Напиши нам в WhatsApp или Zalo, чтобы записаться на игру.",
         tap_to_enter: "НАЖМИ, ЧТОБЫ ВОЙТИ",
 
         // Hub Section
@@ -172,8 +173,8 @@ const TEXT = {
         roadmap_video_desc: "Нарізки твоїх найкращих голів (Скоро).",
         roadmap_leagues: "Турніри та Ліги",
         roadmap_leagues_desc: "Борись за кубок сезону та призи.",
-        cta_join: "ВСТУПИТИ В КЛУБ",
-        cta_desc: "Напиши нам у WhatsApp, щоб записатися на гру.",
+        cta_join: "ВСТУПИТЬ В КЛУБ",
+        cta_desc: "Напиши нам у WhatsApp або Zalo, щоб записатися на гру.",
         tap_to_enter: "НАТИСНИ, ЩОБ УВІЙТИ",
 
         // Hub Section
@@ -504,13 +505,13 @@ export const PromoScreen: React.FC = () => {
                         </a>
 
                         <a 
-                            href={SOCIAL_LINKS.facebook} 
+                            href={SOCIAL_LINKS.zalo} 
                             target="_blank" 
                             rel="noreferrer"
-                            className="flex items-center justify-center gap-3 w-full bg-[#1877F2] hover:bg-[#166fe5] text-white font-bold text-base py-3 rounded-xl shadow-lg transition-all active:scale-95 mb-8"
+                            className="flex items-center justify-center gap-3 w-full bg-[#0068FF] hover:bg-[#0057d8] text-white font-bold text-base py-3 rounded-xl shadow-lg transition-all active:scale-95 mb-8"
                         >
-                            <FacebookIcon className="w-5 h-5 fill-current" />
-                            Facebook
+                            <ZaloIcon className="w-5 h-5 fill-current" />
+                            Zalo
                         </a>
 
                         <div className="flex justify-center gap-8 opacity-70">
