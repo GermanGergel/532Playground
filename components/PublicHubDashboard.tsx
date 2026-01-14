@@ -505,19 +505,25 @@ export const PublicHubDashboard: React.FC = () => {
                     </div>
                 </div>
                 <div className="col-span-12 md:col-span-3 flex flex-col gap-4 h-full min-h-[600px] overflow-hidden">
-                    <HubCard title={t.hubTeamStandings} icon={<TrophyIcon />} variant="standings" className="shrink-0" bodyClassName="flex flex-col">
+                    {/* CHANGED TITLE: Use t.teamStandings instead of t.hubTeamStandings */}
+                    <HubCard title={t.teamStandings} icon={<TrophyIcon />} variant="standings" className="shrink-0" bodyClassName="flex flex-col">
                         <div className="p-1">
                             <table className="w-full table-fixed border-collapse">
                                 <thead>
                                     <tr className="bg-white/5 border-b border-white/10">
                                         <th className={`${thStandings} w-[6%]`}>#</th>
-                                        <th className={`${thStandings} w-[36%]`}>{t.team}</th>
-                                        <th className={`${thStandings} w-[7%]`}>{t.thP}</th>
-                                        <th className={`${thStandings} w-[7%]`}>{t.thW}</th>
-                                        <th className={`${thStandings} w-[7%]`}>{t.thD}</th>
-                                        <th className={`${thStandings} w-[7%]`}>{t.thL}</th>
-                                        <th className={`${thStandings} w-[12%]`}>{t.thGD}</th>
-                                        <th className={`${thStandings} w-[10%] text-white bg-white/[0.03]`}>PTS</th>
+                                        {/* EXPANDED TEAM NAME COLUMN WIDTH */}
+                                        <th className={`${thStandings} w-[30%]`}>{t.team}</th>
+                                        <th className={`${thStandings} w-[6%]`}>{t.thP}</th>
+                                        <th className={`${thStandings} w-[6%]`}>{t.thW}</th>
+                                        <th className={`${thStandings} w-[6%]`}>{t.thD}</th>
+                                        <th className={`${thStandings} w-[6%]`}>{t.thL}</th>
+                                        {/* ADDED GF AND GA COLUMNS */}
+                                        <th className={`${thStandings} w-[8%]`}>{t.thGF}</th>
+                                        <th className={`${thStandings} w-[8%]`}>{t.thGA}</th>
+                                        <th className={`${thStandings} w-[10%]`}>{t.thGD}</th>
+                                        {/* REDUCED PTS COLUMN WIDTH TO 14% */}
+                                        <th className={`${thStandings} w-[14%] text-white bg-white/[0.03]`}>PTS</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -529,6 +535,9 @@ export const PublicHubDashboard: React.FC = () => {
                                             <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.wins}</td>
                                             <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.draws}</td>
                                             <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.losses}</td>
+                                            {/* ADDED GF AND GA DATA CELLS */}
+                                            <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.goalsFor}</td>
+                                            <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.goalsAgainst}</td>
                                             <td className="py-1.5 text-center text-[10px] font-bold text-white/40">{stat.goalDifference > 0 ? `+${stat.goalDifference}` : stat.goalDifference}</td>
                                             <td className="py-1.5 text-center text-[12px] font-black text-white bg-white/[0.03]">{stat.points}</td>
                                         </tr>
