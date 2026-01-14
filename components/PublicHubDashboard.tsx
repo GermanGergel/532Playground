@@ -511,13 +511,13 @@ export const PublicHubDashboard: React.FC = () => {
                                 <thead>
                                     <tr className="bg-white/5 border-b border-white/10">
                                         <th className={`${thStandings} w-[6%]`}>#</th>
-                                        <th className={`${thStandings} w-[26%]`}>{t.team}</th>
+                                        <th className={`${thStandings} w-[36%]`}>{t.team}</th>
                                         <th className={`${thStandings} w-[7%]`}>{t.thP}</th>
                                         <th className={`${thStandings} w-[7%]`}>{t.thW}</th>
                                         <th className={`${thStandings} w-[7%]`}>{t.thD}</th>
                                         <th className={`${thStandings} w-[7%]`}>{t.thL}</th>
                                         <th className={`${thStandings} w-[12%]`}>{t.thGD}</th>
-                                        <th className={`${thStandings} w-[20%] text-white bg-white/[0.03]`}>PTS</th>
+                                        <th className={`${thStandings} w-[10%] text-white bg-white/[0.03]`}>PTS</th>
                                     </tr>
                                 </thead>
                                 <tbody>
