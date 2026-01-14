@@ -3,7 +3,8 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Player, PlayerStatus, PlayerForm, SkillType, PlayerTier } from '../types';
-import { TrophyIcon, Users, History as HistoryIcon, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, LayoutDashboard, AwardIcon, Target, InfoIcon, FacebookIcon, Home } from '../icons';
+// FIX: Added FacebookIcon to imports to fix the error on line 711
+import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon, FacebookIcon } from '../icons';
 import { PlayerAvatar, TeamAvatar } from '../components/avatars';
 import { Language } from '../translations/index';
 import { BadgeDisplay, BadgeIcon, sortBadgesByPriority } from '../features';
@@ -447,7 +448,7 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                             {countryCodeAlpha2 && (<img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} alt={`${player.countryCode} flag`} className="w-6 h-auto mt-3 rounded-sm" />)}
                         </div>
                         <div className="flex flex-col items-center max-w-[50%]">
-                            <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
+                            <div className="text-4xl font-black leading-none" style={{ color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
                             <p className="font-bold text-white tracking-widest text-sm mt-2">OVR</p>
                             <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
                             {player.badges && Object.keys(player.badges).length > 0 && (
@@ -596,7 +597,6 @@ export const PublicHubScreen: React.FC = () => {
 
     const SOCIAL_LINKS = {
         whatsapp: "https://chat.whatsapp.com/CAJnChuM4lQFf3s2YUnhQr",
-        facebook: "https://www.facebook.com/share/g/1ANVC1p1K5/",
         youtube: "https://youtube.com/@playground532?si=_NqI_aOcvmjlSMFn",
         instagram: "https://www.instagram.com/532playground?igsh=MTdzdHpwMjY3aHN4cg%3D%3D&utm_source=qr",
         tiktok: "https://www.tiktok.com/@532playground",
@@ -674,7 +674,7 @@ export const PublicHubScreen: React.FC = () => {
                     <NoLeadersPlaceholder />
                 )}
 
-                <div className="mt-24 md:mt-32 pb-24">
+                <div className="mt-24 md:mt-32 pb-12">
                     <div className="text-center mb-12 md:mb-20">
                         <h2 className="font-orbitron text-lg md:text-2xl font-black uppercase tracking-[0.15em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubVitalsTitle}</h2>
                     </div>
@@ -686,7 +686,7 @@ export const PublicHubScreen: React.FC = () => {
                 </div>
                 
                 <div className="relative z-10 bg-transparent pb-8">
-                    <footer className="relative py-8 bg-transparent">
+                    <footer className="relative pb-8 pt-0 bg-transparent">
                         <div className="text-center px-4">
                             
                             {!isDashboardOpen && (
