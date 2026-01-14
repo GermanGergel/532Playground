@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-import { Player, PlayerStatus, PlayerForm, SkillType } from '../types';
+import { Player, PlayerStatus, PlayerForm, SkillType, PlayerTier } from '../types';
 import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, FacebookIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon } from '../icons';
 import { PlayerAvatar, TeamAvatar } from '../components/avatars';
 import { Language } from '../translations/index';
@@ -133,19 +133,22 @@ const HangingTag: React.FC<{ digit: string; label: string; height: number; delay
         <span 
             className="font-blackops text-2xl md:text-3xl text-[#00F2FE] tracking-tighter z-10 leading-none" 
             style={{ 
-                textShadow: '0 0 10px rgba(0,242,254,0.6)',
+                // Removed pulse/flicker shadow, kept static glow
+                textShadow: '0 0 5px rgba(0,242,254,0.3)',
                 filter: 'url(#grungeFilter)' 
             }}
         >
             {digit}
         </span>
-        <div className="absolute top-[26px] w-[0.5px] bg-[#00F2FE]/10 origin-top animate-pendant-swing" style={{ height: `${height}px`, animationDelay: delay, boxShadow: '0 0 3px rgba(0,242,254,0.1)' }}>
-            {/* PULSE REMOVED AS REQUESTED */}
-            {/* <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1.2px] h-[3px] bg-[#00F2FE] rounded-full opacity-0 animate-fiber-pulse" style={{ animationDuration: pulseDuration, animationDelay: delay, boxShadow: '0 0 5px #00F2FE' }}></div> */}
+        <div className="absolute top-[26px] w-[0.5px] bg-[#00F2FE]/20 origin-top animate-pendant-swing" style={{ height: `${height}px`, animationDelay: delay }}>
+            {/* PULSE REMOVED: The travelling light div is commented out/removed to stop flickering */}
+            {/* <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1.2px] h-[3px] bg-[#00F2FE] rounded-full opacity-0 animate-fiber-pulse" ...></div> */}
+            
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full pt-1">
                 <div className="relative flex flex-col items-center">
-                    <div className="absolute inset-0 blur-[8px] bg-[#00F2FE]/20 rounded-full scale-[2.5] pointer-events-none opacity-40"></div>
-                    <span className="relative text-[7px] font-black tracking-[0.15em] text-[#00F2FE] whitespace-nowrap uppercase italic" style={{ textShadow: '0 0 8px rgba(0,242,254,0.8)' }}>{label}</span>
+                    {/* Static glow instead of pulsing blur */}
+                    <div className="absolute inset-0 bg-[#00F2FE]/10 rounded-full scale-[2.0] pointer-events-none opacity-20"></div>
+                    <span className="relative text-[7px] font-black tracking-[0.15em] text-[#00F2FE] whitespace-nowrap uppercase italic opacity-80" style={{ textShadow: 'none' }}>{label}</span>
                 </div>
             </div>
         </div>
