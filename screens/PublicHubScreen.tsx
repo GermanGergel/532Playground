@@ -1,9 +1,9 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Player, PlayerStatus, PlayerForm, SkillType, PlayerTier } from '../types';
-// FIX: Added FacebookIcon to the imports from '../icons'
-import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, FacebookIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon } from '../icons';
+import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon } from '../icons';
 import { PlayerAvatar, TeamAvatar } from '../components/avatars';
 import { Language } from '../translations/index';
 import { BadgeDisplay, BadgeIcon, sortBadgesByPriority } from '../features';
@@ -235,8 +235,8 @@ const HubNav: React.FC<{
             <div className="flex items-center gap-4 shrink-0 h-full">
                 <div className="flex items-center">
                     <HangingTag digit="5" label="PLAYERS" height={20} delay="0s" pulseDuration="2.8s" />
-                    <HangingTag digit="3" label="SQUADS" height={35} delay="1.5s" pulseDuration="4.2s" />
-                    <HangingTag digit="2" label="GOALS" height={50} delay="0.8s" pulseDuration="3.7s" />
+                    <HangingTag digit="3" label="SQUADS" height={50} delay="1.5s" pulseDuration="4.2s" />
+                    <HangingTag digit="2" label="GOALS" height={80} delay="0.8s" pulseDuration="3.7s" />
                     
                     <div className="h-4 w-px bg-white/15 ml-3 md:ml-4"></div>
                     <div className="flex flex-col space-y-0.5 ml-2">
@@ -419,7 +419,7 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
         <div style={podiumGlowStyle} className={`relative group ${isFirst ? 'scale-105 z-20' : 'scale-90 md:scale-100 z-10'} rounded-3xl transition-shadow duration-300`}>
             <div ref={cardRef} className={`interactive-card relative ${isFirst ? 'w-[280px] h-[390px]' : 'w-[260px] h-[360px]'} rounded-3xl p-4 overflow-hidden text-white bg-dark-surface border border-white/10`}>
                 {player.playerCard && (<div className="absolute inset-0 w-full h-full bg-cover bg-no-repeat" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }}/>)}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
                 
                 {!isBadgeModalOpen && (
                     <div className="absolute top-24 left-4 z-20 flex flex-col gap-4">
@@ -450,14 +450,24 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                             <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
                             <p className="font-bold text-white tracking-widest text-sm mt-2">OVR</p>
                             <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
-                            {player.badges && Object.keys(player.badges).length > 0 && (
-                                <BadgeDisplay badges={player.badges} limit={6} onOpenChange={setIsBadgeModalOpen} />
+                            
+                            {topBadges.length > 0 && (
+                                <div className="flex flex-col items-center gap-1 mt-2">
+                                    {topBadges.map(badge => (
+                                        <div key={badge}>
+                                            <BadgeIcon badge={badge} className="w-7 h-7" />
+                                        </div>
+                                    ))}
+                                </div>
                             )}
                         </div>
                     </div>
-                    <div className="text-center flex-shrink-0 relative z-30 pb-1">
-                        <h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg leading-none mb-1">
-                            {player.nickname} {player.surname}
+                    <div className="absolute bottom-2 left-0 right-0 text-center z-30 px-1">
+                        <h1 className="font-black uppercase tracking-tight drop-shadow-lg leading-[0.85]">
+                            <span className="text-3xl md:text-4xl block text-white">{player.nickname}</span>
+                            {player.surname && (
+                                <span className="text-lg md:text-xl block text-white/90 mt-1">{player.surname}</span>
+                            )}
                         </h1>
                     </div>
                 </div>
@@ -596,7 +606,7 @@ export const PublicHubScreen: React.FC = () => {
 
     const SOCIAL_LINKS = {
         whatsapp: "https://chat.whatsapp.com/CAJnChuM4lQFf3s2YUnhQr",
-        facebook: "https://www.facebook.com/share/g/1ANVC1p1K5/",
+        // Facebook removed
         youtube: "https://youtube.com/@playground532?si=_NqI_aOcvmjlSMFn",
         instagram: "https://www.instagram.com/532playground?igsh=MTdzdHpwMjY3aHN4cg%3D%3D&utm_source=qr",
         tiktok: "https://www.tiktok.com/@532playground",
@@ -718,7 +728,6 @@ export const PublicHubScreen: React.FC = () => {
                             <div className="flex justify-center gap-10">
                                 <a href={SOCIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><YouTubeIcon className="w-7 h-7" /></a>
                                 <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><InstagramIcon className="w-7 h-7" /></a>
-                                <a href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><FacebookIcon className="w-7 h-7" /></a>
                                 <a href={SOCIAL_LINKS.tiktok} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><TikTokIcon className="w-7 h-7" /></a>
                             </div>
                         </div>
