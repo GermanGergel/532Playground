@@ -196,6 +196,10 @@ export const vn = {
   information: "Thông Tin",
   statistics: "Thống Kê",
 
+  // Penalty
+  penalty_title: "TRẠNG THÁI: PHẠT VẮNG MẶT",
+  penalty_message: "Giảm -{n} OVR do vắng mặt {m} buổi liên tiếp.",
+
   // Info Content
   ratingCalculationTitle: "Hệ Thống Rating",
   ratingCalculationDesc: "Rating thay đổi dựa trên kết quả trận đấu, màn trình diễn cá nhân và đóng góp cho đội.",

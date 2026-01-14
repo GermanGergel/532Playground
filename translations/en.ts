@@ -195,6 +195,10 @@ export const en = {
   information: "Information",
   statistics: "Statistics",
 
+  // Penalty
+  penalty_title: "STATUS: PENALTY APPLIED",
+  penalty_message: "Rating reduced by -{n} OVR due to missing {m} consecutive sessions.",
+
   // Info Content
   ratingCalculationTitle: "Rating System",
   ratingCalculationDesc: "Your rating evolves based on match performance, team results, and individual contributions.",
@@ -259,7 +263,7 @@ export const en = {
   hubWeather: "WEATHER",
   hubImpact: "IMPACT",
   hubWelcomeText: "Welcome to the official 532 Playground Hub. Track your stats, compare with others, and rise to the top.",
-  hubLeadersTitle: "Season Leaders",
+  hubLeadersTitle: "Session Leaders",
   hubJoinSquad: "Join the Squad",
 
   // FIX: Added missing Duel keys for English translation
