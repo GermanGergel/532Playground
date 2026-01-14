@@ -1,3 +1,4 @@
+
 export const en = {
   // Navigation
   navHome: "Home",
@@ -190,6 +191,7 @@ export const en = {
   monthlyGoals: "Goals",
   monthlyAssists: "Assists",
   monthlyWins: "Wins",
+  careerStats: "Career Averages",
   session: "Sessions",
   information: "Information",
   statistics: "Statistics",
