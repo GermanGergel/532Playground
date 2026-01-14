@@ -1,11 +1,12 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Player, PlayerStatus, PlayerForm, SkillType, PlayerTier } from '../types';
-import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, FacebookIcon, Home, LayoutDashboard, AwardIcon, Target, InfoIcon } from '../icons';
-import { TeamAvatar } from '../components/avatars';
+import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon } from '../icons';
+import { PlayerAvatar, TeamAvatar } from '../components/avatars';
 import { Language } from '../translations/index';
-import { BadgeDisplay, sortBadgesByPriority } from '../features';
+import { BadgeDisplay, BadgeIcon, sortBadgesByPriority } from '../features';
 import { useTranslation } from '../ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { ClubIntelligenceDashboard } from '../components/ClubIntelligenceDashboard';
@@ -139,6 +140,7 @@ const HangingTag: React.FC<{ digit: string; label: string; height: number; delay
             {digit}
         </span>
         <div className="absolute top-[26px] w-[0.5px] bg-[#00F2FE]/10 origin-top animate-pendant-swing" style={{ height: `${height}px`, animationDelay: delay, boxShadow: '0 0 3px rgba(0,242,254,0.1)' }}>
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1.2px] h-[3px] bg-[#00F2FE] rounded-full opacity-0 animate-fiber-pulse" style={{ animationDuration: pulseDuration, animationDelay: delay, boxShadow: '0 0 5px #00F2FE' }}></div>
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full pt-1">
                 <div className="relative flex flex-col items-center">
                     <div className="absolute inset-0 blur-[8px] bg-[#00F2FE]/20 rounded-full scale-[2.5] pointer-events-none opacity-40"></div>
@@ -402,6 +404,8 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
         return { boxShadow: glows[rank] || 'none' };
     }, [rank]);
     
+    const topBadges = useMemo(() => sortBadgesByPriority(player.badges || {}).slice(0, 5), [player.badges]);
+
     // Check TOTM
     const isTotm = totmPlayerIds.has(player.id);
 
@@ -415,7 +419,7 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
         <div style={podiumGlowStyle} className={`relative group ${isFirst ? 'scale-105 z-20' : 'scale-90 md:scale-100 z-10'} rounded-3xl transition-shadow duration-300`}>
             <div ref={cardRef} className={`interactive-card relative ${isFirst ? 'w-[280px] h-[390px]' : 'w-[260px] h-[360px]'} rounded-3xl p-4 overflow-hidden text-white bg-dark-surface border border-white/10`}>
                 {player.playerCard && (<div className="absolute inset-0 w-full h-full bg-cover bg-no-repeat" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }}/>)}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
                 
                 {!isBadgeModalOpen && (
                     <div className="absolute top-24 left-4 z-20 flex flex-col gap-4">
@@ -446,14 +450,24 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                             <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
                             <p className="font-bold text-white tracking-widest text-sm mt-2">OVR</p>
                             <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
-                            {player.badges && Object.keys(player.badges).length > 0 && (
-                                <BadgeDisplay badges={player.badges} limit={6} onOpenChange={setIsBadgeModalOpen} />
+                            
+                            {topBadges.length > 0 && (
+                                <div className="flex flex-col items-center gap-1 mt-2">
+                                    {topBadges.map(badge => (
+                                        <div key={badge}>
+                                            <BadgeIcon badge={badge} className="w-7 h-7" />
+                                        </div>
+                                    ))}
+                                </div>
                             )}
                         </div>
                     </div>
-                    <div className="text-center flex-shrink-0 relative z-30 pb-1">
-                        <h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg leading-none mb-1">
-                            {player.nickname} {player.surname}
+                    <div className="absolute bottom-2 left-0 right-0 text-center z-30 px-1">
+                        <h1 className="font-black uppercase tracking-tight drop-shadow-lg leading-[0.85]">
+                            <span className="text-3xl md:text-4xl block text-white">{player.nickname}</span>
+                            {player.surname && (
+                                <span className="text-lg md:text-xl block text-white/90 mt-1">{player.surname}</span>
+                            )}
                         </h1>
                     </div>
                 </div>
@@ -477,6 +491,63 @@ const CinematicStatCard: React.FC<{ value: string | number; label: string; }> = 
 
 // Define allowed view types to match Club Intelligence Dashboard and avoid TS2322
 type DashboardViewType = 'info' | 'dashboard' | 'roster' | 'archive' | 'duel' | 'tournaments' | 'league';
+
+const PodiumSpot = ({ p, rank, height, color, delay, t }: { p?: any, rank: number, height: string, color: string, delay: string, t: any }) => (
+    <div className={`flex flex-col items-center justify-end h-full ${delay} animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both relative`}>
+        {p && (
+            <div className="mb-3 relative z-20 flex flex-col items-center w-full px-1">
+                 <div className={`relative rounded-lg overflow-hidden border border-white/20 shadow-lg flex flex-col shrink-0 ${rank === 1 ? 'w-[110px] h-[155px] md:w-[135px] md:h-[185px] z-20' : 'w-[115px] h-[130px] md:w-[115px] md:h-[155px] z-10'}`}>
+                    {p.player.playerCard ? <div className="absolute inset-0 bg-cover bg-no-repeat" style={{ backgroundImage: `url(${p.player.playerCard})`, backgroundPosition: 'center 5%' }} /> : <div className="absolute inset-0 bg-gradient-to-b from-slate-700 to-slate-900" />}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+                    <div className="relative z-10 h-full flex flex-col justify-between p-1.5">
+                        <div className="flex justify-between items-start w-full">
+                            {p.player.countryCode && <img src={`https://flagcdn.com/w40/${convertCountryCodeAlpha3ToAlpha2(p.player.countryCode)?.toLowerCase()}.png`} className="w-3 h-auto rounded-sm opacity-90" alt="" />}
+                            <div className="flex flex-col items-end leading-none">
+                                <span className="font-russo text-lg text-[#00F2FE]">{p.player.rating}</span>
+                                <span className="text-[5px] font-black text-white">OVR</span>
+                            </div>
+                        </div>
+                        <div className="w-full text-center pb-1"><span className="text-white font-russo text-[10px] uppercase truncate px-1">{p.player.nickname}</span></div>
+                    </div>
+                </div>
+            </div>
+        )}
+        {!p && (
+            <div className="mb-12 opacity-10">
+                <div className="w-12 h-16 rounded border-2 border-dashed border-white/30"></div>
+            </div>
+        )}
+        
+        <div className="w-full relative overflow-hidden backdrop-blur-md rounded-t-xl flex flex-col items-center justify-center pt-2 pb-1.5 z-10" style={{ height: height, background: `linear-gradient(to bottom, ${color}35, ${color}08, transparent)`, borderTop: `2px solid ${color}` }}>
+            {p && (
+                <div className="relative z-10 flex flex-col items-center">
+                    <span className="font-russo text-xl text-white leading-none tracking-tighter">{p.score.toFixed(1)}</span>
+                    <span className="text-[5.5px] font-black text-white/50 uppercase tracking-[0.2em] mt-1">{t.hubImpact}</span>
+                </div>
+            )}
+        </div>
+    </div>
+);
+
+const SessionPodium: React.FC<{ players: any[], t: any }> = ({ players, t }) => {
+    const p1 = players.find(p => p.rank === 1);
+    const p2 = players.find(p => p.rank === 2);
+    const p3 = players.find(p => p.rank === 3);
+
+    return (
+        <div className="flex items-end justify-center gap-3 h-full px-4 relative">
+            <div className="w-[115px] md:w-[165px] h-full flex flex-col justify-end z-10 shrink-0">
+                <PodiumSpot p={p2} rank={2} height="90px" color="#94a3b8" delay="delay-100" t={t} />
+            </div>
+            <div className="w-[115px] md:w-[165px] h-full flex flex-col justify-end z-20 pb-4 shrink-0">
+                <PodiumSpot p={p1} rank={1} height="130px" color="#FFD700" delay="delay-0" t={t} />
+            </div>
+            <div className="w-[115px] md:w-[165px] h-full flex flex-col justify-end z-10 shrink-0">
+                <PodiumSpot p={p3} rank={3} height="75px" color="#CD7F32" delay="delay-200" t={t} />
+            </div>
+        </div>
+    );
+};
 
 export const PublicHubScreen: React.FC = () => {
     const navigate = useNavigate();
@@ -535,7 +606,7 @@ export const PublicHubScreen: React.FC = () => {
 
     const SOCIAL_LINKS = {
         whatsapp: "https://chat.whatsapp.com/CAJnChuM4lQFf3s2YUnhQr",
-        facebook: "https://www.facebook.com/share/g/1ANVC1p1K5/",
+        // Facebook removed
         youtube: "https://youtube.com/@playground532?si=_NqI_aOcvmjlSMFn",
         instagram: "https://www.instagram.com/532playground?igsh=MTdzdHpwMjY3aHN4cg%3D%3D&utm_source=qr",
         tiktok: "https://www.tiktok.com/@532playground",
@@ -575,14 +646,6 @@ export const PublicHubScreen: React.FC = () => {
                 onOpenTotm={() => setIsTotmOpen(true)}
             />
 
-            {/* SQUAD OF THE MONTH BADGE - NOW CONDITIONALLY INTERACTIVE */}
-            {!isDashboardOpen && (
-                <SquadOfTheMonthBadge 
-                    onClick={() => setIsTotmOpen(true)} 
-                    isDisabled={!isDev} 
-                />
-            )}
-
             <div 
                 className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none 
                 ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}
@@ -621,7 +684,7 @@ export const PublicHubScreen: React.FC = () => {
                     <NoLeadersPlaceholder />
                 )}
 
-                <div className="mt-24 md:mt-32 pb-24">
+                <div className="mt-24 md:mt-32 pb-12">
                     <div className="text-center mb-12 md:mb-20">
                         <h2 className="font-orbitron text-lg md:text-2xl font-black uppercase tracking-[0.15em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubVitalsTitle}</h2>
                     </div>
@@ -633,8 +696,18 @@ export const PublicHubScreen: React.FC = () => {
                 </div>
                 
                 <div className="relative z-10 bg-transparent pb-8">
-                    <footer className="relative py-8 bg-transparent">
+                    <footer className="relative pb-8 pt-0 bg-transparent">
                         <div className="text-center px-4">
+                            
+                            {!isDashboardOpen && (
+                                <div className="flex justify-center mb-6 -mt-4 relative z-20 animate-in fade-in zoom-in duration-700">
+                                    <SquadOfTheMonthBadge 
+                                        onClick={() => setIsTotmOpen(true)} 
+                                        className="cursor-pointer"
+                                    />
+                                </div>
+                            )}
+
                             <div className="mt-10 mb-24">
                                 <button 
                                     onClick={() => setIsDashboardOpen(true)} 
@@ -655,7 +728,6 @@ export const PublicHubScreen: React.FC = () => {
                             <div className="flex justify-center gap-10">
                                 <a href={SOCIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><YouTubeIcon className="w-7 h-7" /></a>
                                 <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><InstagramIcon className="w-7 h-7" /></a>
-                                <a href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><FacebookIcon className="w-7 h-7" /></a>
                                 <a href={SOCIAL_LINKS.tiktok} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><TikTokIcon className="w-7 h-7" /></a>
                             </div>
                         </div>
