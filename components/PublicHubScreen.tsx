@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-import { Player, PlayerStatus, PlayerForm, SkillType } from '../types';
+import { Player, PlayerStatus, PlayerForm, SkillType, PlayerTier } from '../types';
 import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, FacebookIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon } from '../icons';
 import { PlayerAvatar, TeamAvatar } from '../components/avatars';
 import { Language } from '../translations/index';
@@ -25,7 +25,8 @@ const skillAbbreviations: Record<SkillType, string> = {
 
 const StaticSoccerBall: React.FC = () => {
     // В будущем здесь можно сделать переключатель через context или props
-    const CurrentAccessory = BallDecorations.VietnamHelmet; 
+    // const CurrentAccessory = BallDecorations.VietnamHelmet; 
+    const CurrentAccessory = null; // Аксессуар временно отключен
 
     return (
         <div className="relative w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none ml-3">
@@ -42,8 +43,8 @@ const StaticSoccerBall: React.FC = () => {
                 <text x="50" y="61" textAnchor="middle" fill="#475569" className="font-chakra font-black uppercase" style={{ fontSize: '3.2px', letterSpacing: '0.1em', opacity: 0.8, transform: 'rotate(-3deg)', transformOrigin: 'center' }}>Professional Futsal</text>
                 <ellipse cx="40" cy="25" rx="20" ry="10" fill="white" opacity="0.3" transform="rotate(-15, 40, 25)" />
                 
-                {/* Рендерим текущий аксессуар из хранилища */}
-                <CurrentAccessory />
+                {/* Рендерим текущий аксессуар из хранилища (если есть) */}
+                {CurrentAccessory && <CurrentAccessory />}
             </svg>
         </div>
     );
@@ -140,8 +141,6 @@ const HangingTag: React.FC<{ digit: string; label: string; height: number; delay
             {digit}
         </span>
         <div className="absolute top-[26px] w-[0.5px] bg-[#00F2FE]/10 origin-top animate-pendant-swing" style={{ height: `${height}px`, animationDelay: delay, boxShadow: '0 0 3px rgba(0,242,254,0.1)' }}>
-            {/* PULSE REMOVED AS REQUESTED */}
-            {/* <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1.2px] h-[3px] bg-[#00F2FE] rounded-full opacity-0 animate-fiber-pulse" style={{ animationDuration: pulseDuration, animationDelay: delay, boxShadow: '0 0 5px #00F2FE' }}></div> */}
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full pt-1">
                 <div className="relative flex flex-col items-center">
                     <div className="absolute inset-0 blur-[8px] bg-[#00F2FE]/20 rounded-full scale-[2.5] pointer-events-none opacity-40"></div>
@@ -457,7 +456,7 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                         </div>
                     </div>
                     <div className="text-center flex-shrink-0 relative z-30 pb-1">
-                        <h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg leading-none mb-1">
+                        <h1 className="font-black uppercase tracking-tight drop-shadow-lg leading-none mb-1">
                             {player.nickname} {player.surname}
                         </h1>
                     </div>
