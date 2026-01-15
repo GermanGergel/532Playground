@@ -426,7 +426,7 @@ export const PublicHubScreen: React.FC = () => {
     const clubStats = useMemo(() => {
         const confirmedPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
         const totalPlayers = confirmedPlayers.length;
-        const totalSessions = (history.length || 0) + 2;
+        const totalSessions = history.length || 0;
         const avgRating = totalPlayers > 0 ? Math.round(confirmedPlayers.reduce((sum, p) => sum + p.rating, 0) / totalPlayers) : 0;
         return { totalPlayers, totalSessions, avgRating };
     }, [allPlayers, history]);
