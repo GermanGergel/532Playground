@@ -389,13 +389,13 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
     const { totmPlayerIds } = useApp();
     const t = useTranslation();
     const isFirst = rank === 1;
+    const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
     const countryCodeAlpha2 = useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
     const podiumGlowStyle = useMemo(() => {
         const glows: Record<number, string> = { 1: '0 25px 40px -20px rgba(255, 215, 0, 0.5)', 2: '0 20px 35px -15px rgba(192, 192, 192, 0.5)', 3: '0 20px 35px -15px rgba(205, 127, 50, 0.6)' };
         return { boxShadow: glows[rank] || 'none' };
     }, [rank]);
     
-    // Fixed Top 5 badges, no interaction
     const topBadges = useMemo(() => sortBadgesByPriority(player.badges || {}).slice(0, 5), [player.badges]);
 
     // Check TOTM
@@ -413,22 +413,23 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                 {player.playerCard && (<div className="absolute inset-0 w-full h-full bg-cover bg-no-repeat" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }}/>)}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
                 
-                {/* Stats & Badges overlay */}
-                <div className="absolute top-24 left-4 z-20 flex flex-col gap-4">
-                    <div className="space-y-4">
-                        {(player.skills || []).map(skill => (
-                            <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
-                                <StarIcon className="w-4 h-4 text-[#00F2FE]" />
-                                <span className="font-bold text-xs text-white tracking-wider">{skillAbbreviations[skill]}</span>
-                            </div>
-                        ))}
-                    </div>
-                    {isTotm && (
-                        <div className="animate-in fade-in zoom-in duration-500">
-                            <MiniSquadBadge size="w-10 h-10" />
+                {!isBadgeModalOpen && (
+                    <div className="absolute top-24 left-4 z-20 flex flex-col gap-4">
+                        <div className="space-y-4">
+                            {(player.skills || []).map(skill => (
+                                <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
+                                    <StarIcon className="w-4 h-4 text-[#00F2FE]" />
+                                    <span className="font-bold text-xs text-white tracking-wider">{skillAbbreviations[skill]}</span>
+                                </div>
+                            ))}
                         </div>
-                    )}
-                </div>
+                        {isTotm && (
+                            <div className="animate-in fade-in zoom-in duration-500">
+                                <MiniSquadBadge size="w-10 h-10" />
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 <div className="relative z-10 h-full flex flex-col justify-between p-1">
                      <div className="flex justify-between items-start">
@@ -453,12 +454,12 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                         </div>
                     </div>
                     
-                    {/* Fixed names positioning - no more absolute bottom-2 to prevent shift */}
-                    <div className="text-center shrink-0 z-30 pb-4 -mb-1">
+                    {/* Fixed names positioning - raised slightly by increasing padding-bottom to pb-6 */}
+                    <div className="text-center shrink-0 z-30 pb-6">
                         <h1 className="font-black uppercase tracking-tight drop-shadow-lg leading-[0.9]">
                             <span className="text-3xl md:text-4xl block text-white">{player.nickname}</span>
                             {player.surname && (
-                                <span className="text-lg md:text-xl block text-white/90 mt-1.5">{player.surname}</span>
+                                <span className="text-lg md:text-xl block text-white/90 mt-1">{player.surname}</span>
                             )}
                         </h1>
                     </div>
