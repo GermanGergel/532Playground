@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -13,7 +14,6 @@ import { RadioPlayer } from '../components/RadioPlayer';
 import { SquadOfTheMonthBadge } from '../components/SquadOfTheMonthBadge';
 import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
 import { MiniSquadBadge } from '../components/MiniSquadBadge';
-import { BallDecorations } from '../components/BallDecorations';
 
 // --- SUB-COMPONENTS ---
 
@@ -23,15 +23,11 @@ const skillAbbreviations: Record<SkillType, string> = {
 };
 
 const StaticSoccerBall: React.FC = () => {
-    // В будущем здесь можно сделать переключатель через context или props
-    const CurrentAccessory = BallDecorations.VietnamHelmet; 
-
     return (
         <div className="relative w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none ml-3">
             <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] overflow-visible">
                 <defs>
                     <radialGradient id="ballShading" cx="40%" cy="35%" r="65%"><stop offset="0%" stopColor="#ffffff" /><stop offset="50%" stopColor="#e2e8f0" /><stop offset="85%" stopColor="#94a3b8" /><stop offset="100%" stopColor="#1e293b" /></radialGradient>
-                    <filter id="hatShadow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.5" /><feOffset dx="0" dy="2" result="offsetblur" /><feComponentTransfer><feFuncA type="linear" slope="0.4" /></feComponentTransfer><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                 </defs>
                 <circle cx="50" cy="50" r="48" fill="url(#ballShading)" />
                 <g stroke="#000" strokeWidth="0.8" fill="none" opacity="0.25">
@@ -40,9 +36,6 @@ const StaticSoccerBall: React.FC = () => {
                 <text x="51" y="52" textAnchor="middle" fill="#0f172a" className="font-aldrich font-black uppercase" style={{ fontSize: '17px', letterSpacing: '-0.02em', transform: 'scaleX(0.85) rotate(-3deg)', transformOrigin: 'center' }}>SELECT</text>
                 <text x="50" y="61" textAnchor="middle" fill="#475569" className="font-chakra font-black uppercase" style={{ fontSize: '3.2px', letterSpacing: '0.1em', opacity: 0.8, transform: 'rotate(-3deg)', transformOrigin: 'center' }}>Professional Futsal</text>
                 <ellipse cx="40" cy="25" rx="20" ry="10" fill="white" opacity="0.3" transform="rotate(-15, 40, 25)" />
-                
-                {/* Рендерим текущий аксессуар из хранилища */}
-                <CurrentAccessory />
             </svg>
         </div>
     );
