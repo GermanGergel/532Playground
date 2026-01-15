@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Player, PlayerStatus, PlayerForm, SkillType, PlayerTier } from '../types';
-import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon } from '../icons';
+import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, FacebookIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon } from '../icons';
 import { PlayerAvatar, TeamAvatar } from '../components/avatars';
 import { Language } from '../translations/index';
 import { BadgeDisplay, BadgeIcon, sortBadgesByPriority } from '../features';
@@ -14,7 +14,6 @@ import { RadioPlayer } from '../components/RadioPlayer';
 import { SquadOfTheMonthBadge } from '../components/SquadOfTheMonthBadge';
 import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
 import { MiniSquadBadge } from '../components/MiniSquadBadge';
-import { BallDecorations } from '../components/BallDecorations';
 
 // --- SUB-COMPONENTS ---
 
@@ -24,9 +23,6 @@ const skillAbbreviations: Record<SkillType, string> = {
 };
 
 const StaticSoccerBall: React.FC = () => {
-    // В будущем здесь можно сделать переключатель через context или props
-    const CurrentAccessory = BallDecorations.VietnamHelmet; 
-
     return (
         <div className="relative w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none ml-3">
             <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] overflow-visible">
@@ -41,9 +37,6 @@ const StaticSoccerBall: React.FC = () => {
                 <text x="51" y="52" textAnchor="middle" fill="#0f172a" className="font-aldrich font-black uppercase" style={{ fontSize: '17px', letterSpacing: '-0.02em', transform: 'scaleX(0.85) rotate(-3deg)', transformOrigin: 'center' }}>SELECT</text>
                 <text x="50" y="61" textAnchor="middle" fill="#475569" className="font-chakra font-black uppercase" style={{ fontSize: '3.2px', letterSpacing: '0.1em', opacity: 0.8, transform: 'rotate(-3deg)', transformOrigin: 'center' }}>Professional Futsal</text>
                 <ellipse cx="40" cy="25" rx="20" ry="10" fill="white" opacity="0.3" transform="rotate(-15, 40, 25)" />
-                
-                {/* Рендерим текущий аксессуар из хранилища */}
-                <CurrentAccessory />
             </svg>
         </div>
     );
@@ -140,7 +133,6 @@ const HangingTag: React.FC<{ digit: string; label: string; height: number; delay
             {digit}
         </span>
         <div className="absolute top-[26px] w-[0.5px] bg-[#00F2FE]/10 origin-top animate-pendant-swing" style={{ height: `${height}px`, animationDelay: delay, boxShadow: '0 0 3px rgba(0,242,254,0.1)' }}>
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1.2px] h-[3px] bg-[#00F2FE] rounded-full opacity-0 animate-fiber-pulse" style={{ animationDuration: pulseDuration, animationDelay: delay, boxShadow: '0 0 5px #00F2FE' }}></div>
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full pt-1">
                 <div className="relative flex flex-col items-center">
                     <div className="absolute inset-0 blur-[8px] bg-[#00F2FE]/20 rounded-full scale-[2.5] pointer-events-none opacity-40"></div>
@@ -358,7 +350,7 @@ const DispersingWord: React.FC<{ words: string[] }> = ({ words }) => {
     const getStyles = () => {
         switch (state) {
             case 'entering': return "scale-[0.4] opacity-0 blur-[40px] translate-z-[-200px]";
-            case 'active': return "scale-[1.1] opacity-100 blur-0 translate-z-0";
+            case 'active': return "scale(1.1) opacity-100 blur-0 translate-z-0";
             case 'exiting': return "scale-[0.8] opacity-0 blur-[30px] translate-z-[-100px]";
             default: return "";
         }
@@ -450,24 +442,14 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                             <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
                             <p className="font-bold text-white tracking-widest text-sm mt-2">OVR</p>
                             <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
-                            
-                            {topBadges.length > 0 && (
-                                <div className="flex flex-col items-center gap-1 mt-2">
-                                    {topBadges.map(badge => (
-                                        <div key={badge}>
-                                            <BadgeIcon badge={badge} className="w-7 h-7" />
-                                        </div>
-                                    ))}
-                                </div>
+                            {player.badges && Object.keys(player.badges).length > 0 && (
+                                <BadgeDisplay badges={player.badges} limit={6} onOpenChange={setIsBadgeModalOpen} />
                             )}
                         </div>
                     </div>
-                    <div className="absolute bottom-2 left-0 right-0 text-center z-30 px-1">
-                        <h1 className="font-black uppercase tracking-tight drop-shadow-lg leading-[0.85]">
-                            <span className="text-3xl md:text-4xl block text-white">{player.nickname}</span>
-                            {player.surname && (
-                                <span className="text-lg md:text-xl block text-white/90 mt-1">{player.surname}</span>
-                            )}
+                    <div className="text-center flex-shrink-0 relative z-30 pb-1">
+                        <h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg leading-none mb-1">
+                            {player.nickname} {player.surname}
                         </h1>
                     </div>
                 </div>
@@ -606,7 +588,7 @@ export const PublicHubScreen: React.FC = () => {
 
     const SOCIAL_LINKS = {
         whatsapp: "https://chat.whatsapp.com/CAJnChuM4lQFf3s2YUnhQr",
-        // Facebook removed
+        facebook: "https://www.facebook.com/share/g/1ANVC1p1K5/",
         youtube: "https://youtube.com/@playground532?si=_NqI_aOcvmjlSMFn",
         instagram: "https://www.instagram.com/532playground?igsh=MTdzdHpwMjY3aHN4cg%3D%3D&utm_source=qr",
         tiktok: "https://www.tiktok.com/@532playground",
@@ -684,7 +666,7 @@ export const PublicHubScreen: React.FC = () => {
                     <NoLeadersPlaceholder />
                 )}
 
-                <div className="mt-24 md:mt-32 pb-12">
+                <div className="mt-24 md:mt-32 pb-24">
                     <div className="text-center mb-12 md:mb-20">
                         <h2 className="font-orbitron text-lg md:text-2xl font-black uppercase tracking-[0.15em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubVitalsTitle}</h2>
                     </div>
@@ -696,7 +678,7 @@ export const PublicHubScreen: React.FC = () => {
                 </div>
                 
                 <div className="relative z-10 bg-transparent pb-8">
-                    <footer className="relative pb-8 pt-0 bg-transparent">
+                    <footer className="relative py-8 bg-transparent">
                         <div className="text-center px-4">
                             
                             {!isDashboardOpen && (
@@ -728,6 +710,7 @@ export const PublicHubScreen: React.FC = () => {
                             <div className="flex justify-center gap-10">
                                 <a href={SOCIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><YouTubeIcon className="w-7 h-7" /></a>
                                 <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><InstagramIcon className="w-7 h-7" /></a>
+                                <a href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><FacebookIcon className="w-7 h-7" /></a>
                                 <a href={SOCIAL_LINKS.tiktok} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><TikTokIcon className="w-7 h-7" /></a>
                             </div>
                         </div>
