@@ -307,8 +307,9 @@ const HubNav: React.FC<{
                         )}
                     </div>
                 </div>
-            </nav>
-        );
+            </div>
+        </nav>
+    );
 };
 
 const DispersingWord: React.FC<{ words: string[] }> = ({ words }) => {
