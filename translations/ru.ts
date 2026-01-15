@@ -1,4 +1,3 @@
-
 export const ru = {
   // Navigation
   navHome: "Главная",
@@ -246,7 +245,7 @@ export const ru = {
   hubAwaitingStats: "ОЖИДАНИЕ ДАННЫХ",
   hubAnalyzingPerformance: "АНАЛИЗ ЭФФЕКТИВНОСТИ...",
   hubDashboardBtn: "ДАШБОРД",
-  hubSessionLeaders: "ЛИДЕРЫ СЕССИИ", // Dashboard title
+  hubSessionLeaders: "ЛИДЕРЫ СЕССИИ",
   hubMatchReport: "ОТЧЕТ О МАТЧЕ",
   hubSessionNews: "РАЗВЕДДАННЫЕ",
   hubSessionSquads: "СОСТАВЫ",
@@ -347,9 +346,9 @@ export const ru = {
   badge_first_blood: "Перша Кров",
   badge_first_blood_desc: "3x Відкриваючих гола",
   badge_duplet: "Duplet",
-  badge_duplet_desc: "2x Дублі у перемогах",
-  badge_maestro: "Маестро",
-  badge_maestro_desc: "2x Дублі асистів у перемогах",
+  badge_duplet_desc: "2x Дубля в победах",
+  badge_maestro: "Маэстро",
+  badge_maestro_desc: "2x Дубля ассистов в победах",
   badge_comeback_kings: "Король Камбэков",
   badge_comeback_kings_desc: "3x Волевые победы",
   badge_fortress: "Крепость",

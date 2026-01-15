@@ -257,7 +257,7 @@ export const en = {
   hubVitalsTitle: "CLUB VITALS",
   hubStatsMembers: "MEMBERS",
   hubSessionsPlayed: "SESSIONS",
-  hubAvgRating: "AVG RATING",
+  hubAvgRating: "AVG OVR",
   hubLocation: "LOCATION",
   hubTimeFrame: "TIME FRAME",
   hubWeather: "WEATHER",
