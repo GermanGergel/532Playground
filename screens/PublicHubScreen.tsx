@@ -645,14 +645,6 @@ export const PublicHubScreen: React.FC = () => {
                 onOpenTotm={() => setIsTotmOpen(true)}
             />
 
-            {/* SQUAD OF THE MONTH BADGE - NOW CONDITIONALLY INTERACTIVE */}
-            {!isDashboardOpen && (
-                <SquadOfTheMonthBadge 
-                    onClick={() => setIsTotmOpen(true)} 
-                    isDisabled={!isDev} 
-                />
-            )}
-
             <div 
                 className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none 
                 ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}
@@ -706,6 +698,15 @@ export const PublicHubScreen: React.FC = () => {
                     <footer className="relative py-8 bg-transparent">
                         <div className="text-center px-4">
                             <div className="mt-10 mb-24">
+                                {!isDashboardOpen && (
+                                    <div className="mb-6 flex justify-center">
+                                        <SquadOfTheMonthBadge
+                                            onClick={() => setIsTotmOpen(true)}
+                                            isDisabled={!isDev}
+                                        />
+                                    </div>
+                                )}
+
                                 <button 
                                     onClick={() => setIsDashboardOpen(true)} 
                                     className="mx-auto block bg-transparent text-[#00F2FE] font-bold text-lg py-3.5 px-10 rounded-xl shadow-[0_0_20px_rgba(0,242,254,0.4)] hover:shadow-[0_0_30px_rgba(0,242,254,0.6)] hover:bg-[#00F2FE]/10 transition-all transform hover:scale-[1.05] active:scale-95 group border border-[#00F2FE]/20"
