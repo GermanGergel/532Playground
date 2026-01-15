@@ -1,4 +1,3 @@
-
 import { Session, Player, NewsItem, BadgeType, PlayerRecords, PlayerHistoryEntry } from '../types';
 import { Language } from '../translations/index';
 import {
@@ -81,7 +80,7 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
         savePlayersToDB(initialPlayers).catch(e => console.warn("Background repair sync failed", e));
     }
 
-    const loadedHistoryData = await loadHistoryFromDB(10);
+    const loadedHistoryData = await loadHistoryFromDB();
     const loadedNews = await loadNewsFromDB(10);
     const loadedLang = await loadLanguageFromDB() || 'en';
     const loadedPack = await loadActiveVoicePackFromDB() || 1;
