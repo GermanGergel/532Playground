@@ -225,8 +225,8 @@ const HubNav: React.FC<{
             <div className="flex items-center gap-4 shrink-0 h-full">
                 <div className="flex items-center">
                     <HangingTag digit="5" label="PLAYERS" height={20} delay="0s" pulseDuration="2.8s" />
-                    <HangingTag digit="3" label="SQUADS" height={50} delay="1.5s" pulseDuration="4.2s" />
-                    <HangingTag digit="2" label="GOALS" height={80} delay="0.8s" pulseDuration="3.7s" />
+                    <HangingTag digit="3" label="SQUADS" height={35} delay="1.5s" pulseDuration="4.2s" />
+                    <HangingTag digit="2" label="GOALS" height={50} delay="0.8s" pulseDuration="3.7s" />
                     
                     <div className="h-4 w-px bg-white/15 ml-3 md:ml-4"></div>
                     <div className="flex flex-col space-y-0.5 ml-2">
