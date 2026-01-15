@@ -14,6 +14,7 @@ import { RadioPlayer } from '../components/RadioPlayer';
 import { SquadOfTheMonthBadge } from '../components/SquadOfTheMonthBadge';
 import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
 import { MiniSquadBadge } from '../components/MiniSquadBadge';
+import { BallDecorations } from '../components/BallDecorations';
 
 // --- SUB-COMPONENTS ---
 
@@ -23,12 +24,12 @@ const skillAbbreviations: Record<SkillType, string> = {
 };
 
 const StaticSoccerBall: React.FC = () => {
+    // CurrentAccessory removed visually but keep the container logic
     return (
         <div className="relative w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none ml-3">
             <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] overflow-visible">
                 <defs>
                     <radialGradient id="ballShading" cx="40%" cy="35%" r="65%"><stop offset="0%" stopColor="#ffffff" /><stop offset="50%" stopColor="#e2e8f0" /><stop offset="85%" stopColor="#94a3b8" /><stop offset="100%" stopColor="#1e293b" /></radialGradient>
-                    <filter id="hatShadow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.5" /><feOffset dx="0" dy="2" result="offsetblur" /><feComponentTransfer><feFuncA type="linear" slope="0.4" /></feComponentTransfer><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                 </defs>
                 <circle cx="50" cy="50" r="48" fill="url(#ballShading)" />
                 <g stroke="#000" strokeWidth="0.8" fill="none" opacity="0.25">
@@ -133,6 +134,7 @@ const HangingTag: React.FC<{ digit: string; label: string; height: number; delay
             {digit}
         </span>
         <div className="absolute top-[26px] w-[0.5px] bg-[#00F2FE]/10 origin-top animate-pendant-swing" style={{ height: `${height}px`, animationDelay: delay, boxShadow: '0 0 3px rgba(0,242,254,0.1)' }}>
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1.2px] h-[3px] bg-[#00F2FE] rounded-full opacity-0 animate-fiber-pulse" style={{ animationDuration: pulseDuration, animationDelay: delay, boxShadow: '0 0 5px #00F2FE' }}></div>
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full pt-1">
                 <div className="relative flex flex-col items-center">
                     <div className="absolute inset-0 blur-[8px] bg-[#00F2FE]/20 rounded-full scale-[2.5] pointer-events-none opacity-40"></div>
@@ -389,13 +391,13 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
     const { totmPlayerIds } = useApp();
     const t = useTranslation();
     const isFirst = rank === 1;
-    const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
     const countryCodeAlpha2 = useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
     const podiumGlowStyle = useMemo(() => {
         const glows: Record<number, string> = { 1: '0 25px 40px -20px rgba(255, 215, 0, 0.5)', 2: '0 20px 35px -15px rgba(192, 192, 192, 0.5)', 3: '0 20px 35px -15px rgba(205, 127, 50, 0.6)' };
         return { boxShadow: glows[rank] || 'none' };
     }, [rank]);
     
+    // Fixed Top 5 badges, no interaction
     const topBadges = useMemo(() => sortBadgesByPriority(player.badges || {}).slice(0, 5), [player.badges]);
 
     // Check TOTM
@@ -413,23 +415,22 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                 {player.playerCard && (<div className="absolute inset-0 w-full h-full bg-cover bg-no-repeat" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }}/>)}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
                 
-                {!isBadgeModalOpen && (
-                    <div className="absolute top-24 left-4 z-20 flex flex-col gap-4">
-                        <div className="space-y-4">
-                            {(player.skills || []).map(skill => (
-                                <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
-                                    <StarIcon className="w-4 h-4 text-[#00F2FE]" />
-                                    <span className="font-bold text-xs text-white tracking-wider">{skillAbbreviations[skill]}</span>
-                                </div>
-                            ))}
-                        </div>
-                        {isTotm && (
-                            <div className="animate-in fade-in zoom-in duration-500">
-                                <MiniSquadBadge size="w-10 h-10" />
+                {/* Stats & Badges overlay */}
+                <div className="absolute top-24 left-4 z-20 flex flex-col gap-4">
+                    <div className="space-y-4">
+                        {(player.skills || []).map(skill => (
+                            <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
+                                <StarIcon className="w-4 h-4 text-[#00F2FE]" />
+                                <span className="font-bold text-xs text-white tracking-wider">{skillAbbreviations[skill]}</span>
                             </div>
-                        )}
+                        ))}
                     </div>
-                )}
+                    {isTotm && (
+                        <div className="animate-in fade-in zoom-in duration-500">
+                            <MiniSquadBadge size="w-10 h-10" />
+                        </div>
+                    )}
+                </div>
 
                 <div className="relative z-10 h-full flex flex-col justify-between p-1">
                      <div className="flex justify-between items-start">
@@ -442,14 +443,25 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                             <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
                             <p className="font-bold text-white tracking-widest text-sm mt-2">OVR</p>
                             <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
-                            {player.badges && Object.keys(player.badges).length > 0 && (
-                                <BadgeDisplay badges={player.badges} limit={6} onOpenChange={setIsBadgeModalOpen} />
-                            )}
+                            
+                            {/* NON-CLICKABLE TOP 5 BADGES */}
+                            <div className="mt-3 flex flex-col items-center gap-1 pointer-events-none">
+                                {topBadges.map(badge => (
+                                    <div key={badge} className="transition-transform">
+                                        <BadgeIcon badge={badge} count={player.badges[badge]} className="w-7 h-7" />
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
-                    <div className="text-center flex-shrink-0 relative z-30 pb-1">
-                        <h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg leading-none mb-1">
-                            {player.nickname} {player.surname}
+                    
+                    {/* Fixed names positioning - no more absolute bottom-2 to prevent shift */}
+                    <div className="text-center shrink-0 z-30 pb-2">
+                        <h1 className="font-black uppercase tracking-tight drop-shadow-lg leading-none">
+                            <span className="text-3xl md:text-4xl block text-white">{player.nickname}</span>
+                            {player.surname && (
+                                <span className="text-lg md:text-xl block text-white/90 mt-1">{player.surname}</span>
+                            )}
                         </h1>
                     </div>
                 </div>
