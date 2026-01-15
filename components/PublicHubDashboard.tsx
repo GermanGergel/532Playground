@@ -242,7 +242,6 @@ const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any
 interface TopPlayerStats { player: Player; score: number; rank: 1 | 2 | 3; }
 
 // --- MEMOIZED SESSION PODIUM ---
-// Critical Fix: Wrapped in React.memo to prevent re-renders on timer ticks
 const SessionPodium = React.memo(({ players, t }: { players: TopPlayerStats[], t: any }) => {
     const p1 = players.find(p => p.rank === 1);
     const p2 = players.find(p => p.rank === 2);
@@ -255,7 +254,7 @@ const SessionPodium = React.memo(({ players, t }: { players: TopPlayerStats[], t
                      <div className={`relative rounded-lg overflow-hidden border border-white/20 shadow-lg flex flex-col shrink-0 ${rank === 1 ? 'w-[110px] h-[155px] md:w-[135px] md:h-[185px] z-20' : 'w-[115px] h-[130px] md:w-[115px] md:h-[155px] z-10'}`}>
                         {p.player.playerCard ? (
                             <div 
-                                className="absolute inset-0 w-full h-full bg-cover bg-no-repeat"
+                                className="absolute inset-0 bg-cover bg-no-repeat"
                                 style={{ 
                                     backgroundImage: `url(${p.player.playerCard})`, 
                                     backgroundPosition: 'center 5%'
@@ -344,13 +343,10 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
         return <MoonIcon className="w-16 h-16 text-slate-200/90" />;
     };
     const mapsLink = session.location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(session.location)}` : null;
-    
-    // Logic for Video Link - NOW FROM SESSION OBJECT
     const videoLink = session.videoUrl;
 
     return (
         <div className="flex flex-col h-full justify-between py-1">
-            {/* 1. Location (Compacted) */}
             <div className="flex items-start gap-3 border-b border-white/5 pb-2 mb-1">
                 <div className="w-9 h-9 rounded-xl bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shrink-0">
                     <MapPinIcon className="w-4 h-4" />
@@ -366,7 +362,6 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
                 </div>
             </div>
 
-            {/* 2. Time (Compacted) */}
             <div className="flex items-center gap-3 border-b border-white/5 py-2 mb-1">
                 <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0">
                     <ClockIcon className="w-4 h-4" />
@@ -377,12 +372,10 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
                 </div>
             </div>
 
-            {/* 3. MEDIA (YouTube Link) */}
             <div 
                 className={`flex items-center gap-3 border-b border-white/5 py-2 mb-1 rounded-lg px-2 -mx-2 transition-colors ${videoLink ? 'group cursor-pointer hover:bg-white/5' : 'opacity-50 cursor-default'}`}
                 onClick={() => videoLink ? window.open(videoLink, '_blank') : null}
             >
-                {/* Updated brightness and glow */}
                 <div className="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 shrink-0 shadow-[0_0_12px_rgba(239,68,68,0.25)]">
                     <YouTubeIcon className="w-4 h-4 fill-current" />
                 </div>
@@ -394,7 +387,6 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
                 </div>
             </div>
 
-            {/* 4. Weather (Pushed to bottom) */}
             <div className="flex-grow flex flex-col justify-end pt-2">
                 <div className="relative rounded-2xl bg-gradient-to-br from-indigo-900/40 to-black border border-indigo-500/20 p-4 flex items-center justify-between overflow-hidden">
                     <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
@@ -449,11 +441,10 @@ export const PublicHubDashboard: React.FC = () => {
         setExpandedMatchId(null);
     };
 
-    // Calculate stats ONLY when session changes
     const { teamStats, allPlayersStats: rawPlayersStats } = useMemo(() => {
         if (!session) return { teamStats: [], allPlayersStats: [] };
         return calculateAllStats(session);
-    }, [session]); // Dependent on session reference only
+    }, [session]);
 
     const allPlayersStats = useMemo(() => {
         return rawPlayersStats.map(stat => {
@@ -462,11 +453,9 @@ export const PublicHubDashboard: React.FC = () => {
         });
     }, [rawPlayersStats, allPlayers]);
 
-    // Derived states
     const sortedForPodium = useMemo(() => [...allPlayersStats].sort((a, b) => getImpactScore(b) - getImpactScore(a)), [allPlayersStats]);
     const sortedForTable = useMemo(() => [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists)), [allPlayersStats]);
     
-    // Critical: Memoize top players list to prevent SessionPodium re-renders when timer ticks
     const top3PodiumPlayers: TopPlayerStats[] = useMemo(() => sortedForPodium
         .filter(p => p.gamesPlayed > 0)
         .slice(0, 3)
@@ -490,7 +479,6 @@ export const PublicHubDashboard: React.FC = () => {
                     </div>
                     <div className="flex-[3] min-h-0 shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <HubCard title={t.hubSessionNews} icon={<Zap />} accent="#00F2FE" variant="standings" className="h-full min-h-0" bodyClassName="p-0 flex flex-col relative">
-                            {/* ЭФФЕКТ МЯГКОГО СКРЫТИЯ - Obsidian Black (#01040a) */}
                             <div className="absolute bottom-0 left-0 right-0 h-3 bg-gradient-to-t from-[#01040a] to-transparent z-20 pointer-events-none"></div>
                             <div className="flex-grow relative overflow-y-auto custom-hub-scrollbar p-3 bg-black/10">
                                 <div className="py-2">
@@ -505,25 +493,21 @@ export const PublicHubDashboard: React.FC = () => {
                     </div>
                 </div>
                 <div className="col-span-12 md:col-span-3 flex flex-col gap-4 h-full min-h-[600px] overflow-hidden">
-                    {/* CHANGED TITLE: Use t.teamStandings instead of t.hubTeamStandings */}
                     <HubCard title={t.teamStandings} icon={<TrophyIcon />} variant="standings" className="shrink-0" bodyClassName="flex flex-col">
                         <div className="p-1">
                             <table className="w-full table-fixed border-collapse">
                                 <thead>
                                     <tr className="bg-white/5 border-b border-white/10">
                                         <th className={`${thStandings} w-[5%]`}>#</th>
-                                        {/* REDUCED TEAM NAME COLUMN WIDTH TO 25% (was 34%) */}
-                                        <th className={`${thStandings} w-[25%]`}>{t.team}</th>
-                                        {/* EXPANDED STAT COLUMNS FOR BREATHING ROOM */}
+                                        <th className={`${thStandings} w-[30%]`}>{t.team}</th>
                                         <th className={`${thStandings} w-[7%]`}>{t.thP}</th>
                                         <th className={`${thStandings} w-[7%]`}>{t.thW}</th>
                                         <th className={`${thStandings} w-[7%]`}>{t.thD}</th>
                                         <th className={`${thStandings} w-[7%]`}>{t.thL}</th>
                                         <th className={`${thStandings} w-[9%]`}>{t.thGF}</th>
                                         <th className={`${thStandings} w-[9%]`}>{t.thGA}</th>
-                                        <th className={`${thStandings} w-[11%]`}>{t.thGD}</th>
-                                        {/* PTS COLUMN at 13% */}
-                                        <th className={`${thStandings} w-[13%] text-white bg-white/[0.03]`}>PTS</th>
+                                        <th className={`${thStandings} w-[9%]`}>{t.thGD}</th>
+                                        <th className={`${thStandings} w-[10%] text-white bg-white/[0.03]`}>PTS</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -551,7 +535,6 @@ export const PublicHubDashboard: React.FC = () => {
                         icon={activeRightTab === 'players' ? <Users /> : <HistoryIcon />} 
                         variant="standings" accent="#00F2FE" className="flex-grow min-h-0" bodyClassName="flex flex-col h-full min-h-0 relative"
                     >
-                        {/* ЭФФЕКТ МЯГКОГО СКРЫТИЯ - Obsidian Black (#01040a) */}
                         <div className="absolute bottom-0 left-0 right-0 h-3 bg-gradient-to-t from-[#01040a] to-transparent z-20 pointer-events-none"></div>
                         <div className="flex-grow overflow-y-auto custom-hub-scrollbar h-full">
                             <div className="py-2">
