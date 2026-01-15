@@ -397,9 +397,8 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
     const topBadges = useMemo(() => sortBadgesByPriority(player.badges || {}).slice(0, 5), [player.badges]);
     const isTotm = totmPlayerIds.has(player.id);
 
-    // Adaptive font size based on name length
+    // Uniform font size for all cards
     const fullName = `${player.nickname} ${player.surname}`.trim();
-    const fontSizeClass = fullName.length > 15 ? 'text-xl' : fullName.length > 12 ? 'text-2xl' : 'text-4xl';
 
     useEffect(() => {
         const card = cardRef.current; if (!card) return;
@@ -453,9 +452,9 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                             )}
                         </div>
                     </div>
-                    {/* UPDATED: Center text alignment restored. Adaptive font size added. */}
-                    <div className="text-center z-30 pb-2 px-2">
-                        <h1 className={`${fontSizeClass} font-black uppercase tracking-tight drop-shadow-lg leading-tight mb-1`}>
+                    {/* UNIFIED: Common font size text-2xl and lifted slightly higher (pb-6) */}
+                    <div className="text-center z-30 pb-6 px-2">
+                        <h1 className="text-2xl font-black uppercase tracking-tight drop-shadow-lg leading-tight mb-1">
                             {fullName}
                         </h1>
                     </div>
@@ -586,7 +585,8 @@ export const PublicHubScreen: React.FC = () => {
     const clubStats = useMemo(() => {
         const confirmedPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
         const totalPlayers = confirmedPlayers.length;
-        const totalSessions = history.length + 1; 
+        // RESTORED: +1 correction logic for manually tracked session
+        const totalSessions = (history.length || 0) + 1; 
         const avgRating = totalPlayers > 0 ? Math.round(confirmedPlayers.reduce((sum, p) => sum + p.rating, 0) / totalPlayers) : 0;
         return { totalPlayers, totalSessions, avgRating };
     }, [allPlayers, history]);
