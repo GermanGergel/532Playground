@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -425,7 +426,7 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                     )}
                 </div>
 
-                <div className="relative z-10 h-full p-1">
+                <div className="relative z-10 h-full p-1 flex flex-col justify-between">
                      <div className="flex justify-between items-start">
                         <div>
                             <p style={{ color: '#00F2FE' }} className="text-base font-black leading-none">532</p>
@@ -448,8 +449,9 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                             )}
                         </div>
                     </div>
-                    <div className="absolute bottom-4 left-4 right-4 text-center z-30">
-                        <h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg leading-tight">
+                    {/* UPDATED: Container for nickname with right padding to protect badges */}
+                    <div className="text-center z-30 pb-2 pr-10">
+                        <h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg leading-[0.85] mb-1">
                             {player.nickname} {player.surname}
                         </h1>
                     </div>

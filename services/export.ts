@@ -1,9 +1,7 @@
 
-import { Session, EventType, GoalPayload, SubPayload, StartRoundPayload } from '../types';
-import html2canvas from 'html2canvas'; // Import html2canvas
+import { Session, EventType, GoalPayload, SubPayload, StartRoundPayload, Player } from '../types';
+import html2canvas from 'html2canvas';
 
-// Data Export Utilities
-// FIX: Using local date components instead of toISOString() to avoid UTC-shift errors (e.g. 23rd becoming 22nd)
 export const formatDate = (date: Date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -11,53 +9,95 @@ export const formatDate = (date: Date) => {
     return `${year}-${month}-${day}`;
 };
 
+/**
+ * Расширенный экспорт для видео-продакшена.
+ * Включает real_timestamp и полные объекты игроков.
+ */
 export const exportSessionAsJson = async (session: Session) => {
-    const { eventLog } = session;
+    const { eventLog, playerPool } = session;
 
     const formattedLog = eventLog.map(log => {
         const base = {
-            timestamp: log.timestamp,
+            timestamp: log.timestamp, // ISO string
+            real_timestamp: new Date(log.timestamp).getTime(), // Unix ms для точной синхронизации
             round: log.round,
             type: log.type,
         };
 
         let payload: any = {};
 
+        const getPlayerData = (nickname?: string) => {
+            if (!nickname) return null;
+            const p = playerPool.find(player => player.nickname === nickname);
+            if (!p) return { nickname };
+            return {
+                id: p.id,
+                nickname: p.nickname,
+                surname: p.surname,
+                rating: p.rating,
+                tier: p.tier,
+                photo: p.photo,
+                skills: p.skills
+            };
+        };
+
         switch (log.type) {
-             case EventType.GOAL:
+            case EventType.GOAL:
                 const goalPayload = log.payload as GoalPayload;
                 payload = {
-                    team: goalPayload.team,
-                    // Explicitly set scorer to null for own goals to ensure format consistency.
-                    scorer: goalPayload.isOwnGoal ? null : (goalPayload.scorer || null),
-                    assist: goalPayload.assist || null,
+                    team_color: goalPayload.team,
+                    is_own_goal: goalPayload.isOwnGoal || false,
+                    scorer: getPlayerData(goalPayload.scorer),
+                    assist: getPlayerData(goalPayload.assist),
                 };
                 break;
             case EventType.SUBSTITUTION:
-                 payload = log.payload as SubPayload;
-                 break;
+                const subPayload = log.payload as SubPayload;
+                payload = {
+                    side: subPayload.side,
+                    player_out: getPlayerData(subPayload.out),
+                    player_in: getPlayerData(subPayload.in),
+                };
+                break;
             case EventType.START_ROUND:
-                 payload = log.payload as StartRoundPayload;
-                 break;
+                const startPayload = log.payload as StartRoundPayload;
+                payload = {
+                    left_team: startPayload.leftTeam,
+                    right_team: startPayload.rightTeam,
+                    left_players: startPayload.leftPlayers.map(n => getPlayerData(n)),
+                    right_players: startPayload.rightPlayers.map(n => getPlayerData(n)),
+                };
+                break;
             default:
-                payload = {};
+                payload = log.payload;
         }
 
         return { ...base, payload };
     });
 
-    formattedLog.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    // Метаданные всей сессии для титров
+    const exportData = {
+        version: "532_PRO_VIDEO_V1",
+        session_info: {
+            id: session.id,
+            name: session.sessionName,
+            date: session.date,
+            location: session.location,
+            weather: session.weather
+        },
+        events: formattedLog.sort((a, b) => a.real_timestamp - b.real_timestamp)
+    };
 
-    const dataStr = JSON.stringify(formattedLog, null, 2);
+    const dataStr = JSON.stringify(exportData, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const filename = `${session.sessionName.replace(/\s/g, '_')}_${session.date}.json`;
+    const filename = `PRO_VIDEO_${session.sessionName.replace(/\s/g, '_')}_${session.date}.json`;
 
     if ('showSaveFilePicker' in window) {
         try {
             const handle = await (window as any).showSaveFilePicker({
                 suggestedName: filename,
                 types: [{
-                    description: 'JSON file',
+                    description: '532 Video Intel JSON',
                     accept: { 'application/json': ['.json'] },
                 }],
             });
@@ -65,16 +105,9 @@ export const exportSessionAsJson = async (session: Session) => {
             await writable.write(dataBlob);
             await writable.close();
             return;
-        } catch (err) {
-            if (err instanceof DOMException && err.name === 'AbortError') {
-                console.log('User cancelled save dialog.');
-                return; 
-            }
-            console.error('Error using showSaveFilePicker, falling back to download link.', err);
-        }
+        } catch (err) {}
     }
     
-    // Fallback for older browsers
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement('a');
     link.href = url;
@@ -85,112 +118,48 @@ export const exportSessionAsJson = async (session: Session) => {
     URL.revokeObjectURL(url);
 };
 
-
-// NEW HELPER FUNCTION TO FIX RACE CONDITION
-const waitForImages = (container: HTMLElement): Promise<void[]> => {
-    const images = Array.from(container.getElementsByTagName('img'));
-    return Promise.all(
-        images.map(img => {
-            return new Promise<void>((resolve, reject) => {
-                // If the image is already loaded (e.g., from cache), resolve immediately.
-                if (img.complete) {
-                    resolve();
-                } else {
-                    // Otherwise, wait for it to load.
-                    img.onload = () => resolve();
-                    // Or reject if it fails to load.
-                    img.onerror = () => reject(new Error(`Could not load image: ${img.src}`));
-                }
-            });
-        })
-    );
-};
-
-
-export const shareOrDownloadImages = async (elementId: string, sessionName: string, date: string, sectionName?: string) => {
+// FIX: Added missing exported member 'shareOrDownloadImages' to fix reference errors in StatisticsScreen and SessionReportScreen
+/**
+ * Captures a DOM element as an image and shares it via the Web Share API or downloads it.
+ */
+export const shareOrDownloadImages = async (elementId: string, sessionName: string, sessionDate: string, sectionName: string) => {
     const element = document.getElementById(elementId);
-
     if (!element) {
-        console.error(`Could not find the element with ID #${elementId} to export.`);
-        alert('Image export failed: element not found.');
+        console.error(`Element with id ${elementId} not found.`);
         return;
     }
-    
-    // FIX: Wait for all images inside the element to load before capturing.
-    // This prevents race conditions where the capture happens before an image is downloaded.
-    try {
-        await waitForImages(element);
-    } catch (error) {
-        console.error("Error waiting for images to load before export:", error);
-        // We can choose to proceed anyway, but it might result in a broken image.
-    }
-    
-    // FIX: Wait for all custom fonts to be fully loaded before rendering the canvas.
-    // This is the definitive solution to prevent text and numbers from being rendered with
-    // fallback fonts, which causes significant layout shifts and misalignment.
-    await document.fonts.ready;
-
-    const files: File[] = [];
 
     try {
         const canvas = await html2canvas(element, {
-            backgroundColor: null, // Transparent corners if container has them
-            scale: 3, // OPTIMIZED: Increased for maximum quality exports.
             useCORS: true,
-            logging: false,
-            windowWidth: 1200, // Force desktop-like rendering width
-            onclone: (clonedDoc: Document) => {
-                // Since we are cloning a specific ID, we can find it again
-                const clonedElement = clonedDoc.getElementById(elementId);
-                if (clonedElement) {
-                    // This element is already visible by nature of being cloned, so this might be redundant, but safe.
-                    clonedElement.style.visibility = 'visible';
-                }
-                // Hide specific elements marked to be ignored during export
-                const ignoredElements = clonedDoc.body.querySelectorAll('[data-html2canvas-ignore="true"]');
-                ignoredElements.forEach(el => (el as HTMLElement).style.display = 'none');
-            }
+            scale: 2,
+            backgroundColor: '#1A1D24',
         });
 
-        const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png', 1.0)); // Use max quality PNG
-        
-        if (blob) {
-            const sectionSuffix = sectionName ? `_${sectionName}` : '';
-            const filename = `532_Playground_${sessionName.replace(/\s/g, '_')}_${date}${sectionSuffix}.png`;
-            files.push(new File([blob], filename, { type: 'image/png' }));
-        }
+        const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+        if (!blob) throw new Error('Canvas to Blob conversion failed');
 
-    } catch (error) {
-        console.error(`Failed to capture image for element #${elementId}:`, error);
-    }
+        const filename = `532_${sessionName.replace(/\s/g, '_')}_${sessionDate}_${sectionName}.png`;
+        const file = new File([blob], filename, { type: 'image/png' });
 
-    if (files.length === 0) return;
-
-    // Try to share as a gallery/album
-    try {
-        if (navigator.share && navigator.canShare && navigator.canShare({ files })) {
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
             await navigator.share({
-                files: files,
+                files: [file],
+                title: `532 Playground - ${sectionName}`,
+                text: `Session: ${sessionName} (${sessionDate})`,
             });
         } else {
-            throw new Error('Sharing not supported');
-        }
-    } catch (shareError: any) {
-        if (shareError.name === 'AbortError') {
-            console.log('Share cancelled by user.');
-            return; // Don't fall back to download
-        }
-        console.log('Sharing failed or not supported, falling back to download.', shareError);
-        // Fallback: Download each file sequentially
-        files.forEach(file => {
-            const dataUrl = URL.createObjectURL(file);
+            const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
-            link.download = file.name;
-            link.href = dataUrl;
+            link.href = url;
+            link.download = filename;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            URL.revokeObjectURL(dataUrl);
-        });
+            URL.revokeObjectURL(url);
+        }
+    } catch (error) {
+        console.error('Error in shareOrDownloadImages:', error);
+        throw error;
     }
 };
