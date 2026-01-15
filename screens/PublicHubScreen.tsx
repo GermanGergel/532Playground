@@ -24,7 +24,6 @@ const skillAbbreviations: Record<SkillType, string> = {
 };
 
 const StaticSoccerBall: React.FC = () => {
-    // CurrentAccessory removed visually but keep the container logic
     return (
         <div className="relative w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none ml-3">
             <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] overflow-visible">
@@ -134,7 +133,6 @@ const HangingTag: React.FC<{ digit: string; label: string; height: number; delay
             {digit}
         </span>
         <div className="absolute top-[26px] w-[0.5px] bg-[#00F2FE]/10 origin-top animate-pendant-swing" style={{ height: `${height}px`, animationDelay: delay, boxShadow: '0 0 3px rgba(0,242,254,0.1)' }}>
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1.2px] h-[3px] bg-[#00F2FE] rounded-full opacity-0 animate-fiber-pulse" style={{ animationDuration: pulseDuration, animationDelay: delay, boxShadow: '0 0 5px #00F2FE' }}></div>
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full pt-1">
                 <div className="relative flex flex-col items-center">
                     <div className="absolute inset-0 blur-[8px] bg-[#00F2FE]/20 rounded-full scale-[2.5] pointer-events-none opacity-40"></div>
@@ -456,11 +454,11 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                     </div>
                     
                     {/* Fixed names positioning - no more absolute bottom-2 to prevent shift */}
-                    <div className="text-center shrink-0 z-30 pb-2">
-                        <h1 className="font-black uppercase tracking-tight drop-shadow-lg leading-none">
+                    <div className="text-center shrink-0 z-30 pb-4 -mb-1">
+                        <h1 className="font-black uppercase tracking-tight drop-shadow-lg leading-[0.9]">
                             <span className="text-3xl md:text-4xl block text-white">{player.nickname}</span>
                             {player.surname && (
-                                <span className="text-lg md:text-xl block text-white/90 mt-1">{player.surname}</span>
+                                <span className="text-lg md:text-xl block text-white/90 mt-1.5">{player.surname}</span>
                             )}
                         </h1>
                     </div>
