@@ -397,6 +397,10 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
     const topBadges = useMemo(() => sortBadgesByPriority(player.badges || {}).slice(0, 5), [player.badges]);
     const isTotm = totmPlayerIds.has(player.id);
 
+    // Adaptive font size based on name length
+    const fullName = `${player.nickname} ${player.surname}`.trim();
+    const fontSizeClass = fullName.length > 15 ? 'text-xl' : fullName.length > 12 ? 'text-2xl' : 'text-4xl';
+
     useEffect(() => {
         const card = cardRef.current; if (!card) return;
         const handleMouseMove = (e: MouseEvent) => { const rect = card.getBoundingClientRect(); const x = e.clientX - rect.left; const y = e.clientY - rect.top; card.style.setProperty('--mouse-x', `${x}px`); card.style.setProperty('--mouse-y', `${y}px`); };
@@ -449,10 +453,10 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                             )}
                         </div>
                     </div>
-                    {/* UPDATED: Container for nickname with right padding to protect badges */}
-                    <div className="text-center z-30 pb-2 pr-10">
-                        <h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg leading-[0.85] mb-1">
-                            {player.nickname} {player.surname}
+                    {/* UPDATED: Center text alignment restored. Adaptive font size added. */}
+                    <div className="text-center z-30 pb-2 px-2">
+                        <h1 className={`${fontSizeClass} font-black uppercase tracking-tight drop-shadow-lg leading-tight mb-1`}>
+                            {fullName}
                         </h1>
                     </div>
                 </div>
