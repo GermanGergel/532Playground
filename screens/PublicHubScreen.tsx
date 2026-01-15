@@ -15,13 +15,9 @@ import { SquadOfTheMonthBadge } from '../components/SquadOfTheMonthBadge';
 import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
 import { MiniSquadBadge } from '../components/MiniSquadBadge';
 import { BallDecorations } from '../components/BallDecorations';
+import { CinematicCard } from '../components/PublicHubScreen';
 
 // --- SUB-COMPONENTS ---
-
-const skillAbbreviations: Record<SkillType, string> = {
-    goalkeeper: 'GK', power_shot: 'PS', technique: 'TQ', defender: 'DF', 
-    playmaker: 'PM', finisher: 'FN', versatile: 'VS', tireless_motor: 'TM', leader: 'LD',
-};
 
 const StaticSoccerBall: React.FC = () => {
     return (
@@ -41,22 +37,6 @@ const StaticSoccerBall: React.FC = () => {
             </svg>
         </div>
     );
-};
-
-const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
-    const config = {
-        hot_streak: { color: '#4CFF5F' }, stable: { color: '#A9B1BD' }, cold_streak: { color: '#FF4136' },
-    };
-    const currentForm = config[form] || config.stable;
-    const commonProps: React.SVGProps<SVGSVGElement> = {
-        width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: currentForm.color,
-        strokeWidth: "3", strokeLinecap: "round", strokeLinejoin: "round",
-    };
-    switch (form) {
-        case 'hot_streak': return <svg {...commonProps}><path d="M12 19V5m-6 7l6-6 6 6"/></svg>;
-        case 'cold_streak': return <svg {...commonProps}><path d="M12 5v14M5 12l7 7 7-7"/></svg>;
-        default: return <svg {...commonProps}><path d="M5 12h14m-6-6l6 6-6 6"/></svg>;
-    }
 };
 
 const NoLeadersPlaceholder: React.FC = () => {
@@ -383,87 +363,6 @@ const HeroTitle: React.FC = () => {
     );
 };
 
-const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, rank }) => {
-    const cardRef = useRef<HTMLDivElement>(null);
-    const { totmPlayerIds } = useApp();
-    const t = useTranslation();
-    const isFirst = rank === 1;
-    const countryCodeAlpha2 = useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
-    const podiumGlowStyle = useMemo(() => {
-        const glows: Record<number, string> = { 1: '0 25px 40px -20px rgba(255, 215, 0, 0.5)', 2: '0 20px 35px -15px rgba(192, 192, 192, 0.5)', 3: '0 20px 35px -15px rgba(205, 127, 50, 0.6)' };
-        return { boxShadow: glows[rank] || 'none' };
-    }, [rank]);
-    
-    const topBadges = useMemo(() => sortBadgesByPriority(player.badges || {}).slice(0, 5), [player.badges]);
-    const isTotm = totmPlayerIds.has(player.id);
-
-    // Uniform font size for all cards
-    const fullName = `${player.nickname} ${player.surname}`.trim();
-
-    useEffect(() => {
-        const card = cardRef.current; if (!card) return;
-        const handleMouseMove = (e: MouseEvent) => { const rect = card.getBoundingClientRect(); const x = e.clientX - rect.left; const y = e.clientY - rect.top; card.style.setProperty('--mouse-x', `${x}px`); card.style.setProperty('--mouse-y', `${y}px`); };
-        card.addEventListener('mousemove', handleMouseMove);
-        return () => { card.removeEventListener('mousemove', handleMouseMove); };
-    }, []);
-
-    return (
-        <div style={podiumGlowStyle} className={`relative group ${isFirst ? 'scale-105 z-20' : 'scale-90 md:scale-100 z-10'} rounded-3xl transition-shadow duration-300`}>
-            <div ref={cardRef} className={`interactive-card relative ${isFirst ? 'w-[280px] h-[390px]' : 'w-[260px] h-[360px]'} rounded-3xl p-4 overflow-hidden text-white bg-dark-surface border border-white/10`}>
-                {player.playerCard && (<div className="absolute inset-0 w-full h-full bg-cover bg-no-repeat" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }}/>)}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-                
-                <div className="absolute top-24 left-4 z-20 flex flex-col gap-4">
-                    <div className="space-y-4">
-                        {(player.skills || []).map(skill => (
-                            <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
-                                <StarIcon className="w-4 h-4 text-[#00F2FE]" />
-                                <span className="font-bold text-xs text-white tracking-wider">{skillAbbreviations[skill]}</span>
-                            </div>
-                        ))}
-                    </div>
-                    {isTotm && (
-                        <div className="animate-in fade-in zoom-in duration-500">
-                            <MiniSquadBadge size="w-10 h-10" />
-                        </div>
-                    )}
-                </div>
-
-                <div className="relative z-10 h-full p-1 flex flex-col justify-between">
-                     <div className="flex justify-between items-start">
-                        <div>
-                            <p style={{ color: '#00F2FE' }} className="text-base font-black leading-none">532</p>
-                            <p className="text-white text-[7px] font-bold tracking-[0.15em] font-chakra leading-none mt-1">PLAYGROUND</p>
-                            {countryCodeAlpha2 && (<img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} alt={`${player.countryCode} flag`} className="w-6 h-auto mt-3 rounded-sm" />)}
-                        </div>
-                        <div className="flex flex-col items-center max-w-[50%]">
-                            <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
-                            <p className="font-bold text-white tracking-widest text-sm mt-2">OVR</p>
-                            <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
-                            
-                            {topBadges.length > 0 && (
-                                <div className="mt-3 flex flex-col items-center gap-1">
-                                    {topBadges.map(badge => (
-                                        <div key={badge} title={t[`badge_${badge}` as keyof typeof t] || String(badge)}>
-                                            <BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-7 h-7" />
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    {/* UNIFIED: Common font size text-2xl and lifted slightly higher (pb-6) */}
-                    <div className="text-center z-30 pb-6 px-2">
-                        <h1 className="text-2xl font-black uppercase tracking-tight drop-shadow-lg leading-tight mb-1">
-                            {fullName}
-                        </h1>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
 const CinematicStatCard: React.FC<{ value: string | number; label: string; }> = ({ value, label }) => (
     <div className="w-full md:flex-1 max-w-xs md:max-w-none h-40">
         <div className="relative rounded-3xl overflow-hidden bg-white/[0.03] border border-white/10 shadow-2xl h-full backdrop-blur-md">
@@ -479,63 +378,6 @@ const CinematicStatCard: React.FC<{ value: string | number; label: string; }> = 
 
 // Define allowed view types to match Club Intelligence Dashboard and avoid TS2322
 type DashboardViewType = 'info' | 'dashboard' | 'roster' | 'archive' | 'duel' | 'tournaments' | 'league';
-
-const PodiumSpot = ({ p, rank, height, color, delay, t }: { p?: any, rank: number, height: string, color: string, delay: string, t: any }) => (
-    <div className={`flex flex-col items-center justify-end h-full ${delay} animate-in fade-in slide-in-from-bottom-8 duration-1000 fill-mode-both relative`}>
-        {p && (
-            <div className="mb-3 relative z-20 flex flex-col items-center w-full px-1">
-                 <div className={`relative rounded-lg overflow-hidden border border-white/20 shadow-lg flex flex-col shrink-0 ${rank === 1 ? 'w-[110px] h-[155px] md:w-[135px] md:h-[185px] z-20' : 'w-[115px] h-[130px] md:w-[115px] md:h-[155px] z-10'}`}>
-                    {p.player.playerCard ? <div className="absolute inset-0 bg-cover bg-no-repeat" style={{ backgroundImage: `url(${p.player.playerCard})`, backgroundPosition: 'center 5%' }} /> : <div className="absolute inset-0 bg-gradient-to-b from-slate-700 to-slate-900" />}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
-                    <div className="relative z-10 h-full flex flex-col justify-between p-1.5">
-                        <div className="flex justify-between items-start w-full">
-                            {p.player.countryCode && <img src={`https://flagcdn.com/w40/${convertCountryCodeAlpha3ToAlpha2(p.player.countryCode)?.toLowerCase()}.png`} className="w-3 h-auto rounded-sm opacity-90" alt="" />}
-                            <div className="flex flex-col items-end leading-none">
-                                <span className="font-russo text-lg text-[#00F2FE]">{p.player.rating}</span>
-                                <span className="text-[5px] font-black text-white">OVR</span>
-                            </div>
-                        </div>
-                        <div className="w-full text-center pb-1"><span className="text-white font-russo text-[10px] uppercase truncate px-1">{p.player.nickname}</span></div>
-                    </div>
-                </div>
-            </div>
-        )}
-        {!p && (
-            <div className="mb-12 opacity-10">
-                <div className="w-12 h-16 rounded border-2 border-dashed border-white/30"></div>
-            </div>
-        )}
-        
-        <div className="w-full relative overflow-hidden backdrop-blur-md rounded-t-xl flex flex-col items-center justify-center pt-2 pb-1.5 z-10" style={{ height: height, background: `linear-gradient(to bottom, ${color}35, ${color}08, transparent)`, borderTop: `2px solid ${color}` }}>
-            {p && (
-                <div className="relative z-10 flex flex-col items-center">
-                    <span className="font-russo text-xl text-white leading-none tracking-tighter">{p.score.toFixed(1)}</span>
-                    <span className="text-[5.5px] font-black text-white/50 uppercase tracking-[0.2em] mt-1">{t.hubImpact}</span>
-                </div>
-            )}
-        </div>
-    </div>
-);
-
-const SessionPodium: React.FC<{ players: any[], t: any }> = ({ players, t }) => {
-    const p1 = players.find(p => p.rank === 1);
-    const p2 = players.find(p => p.rank === 2);
-    const p3 = players.find(p => p.rank === 3);
-
-    return (
-        <div className="flex items-end justify-center gap-3 h-full px-4 relative">
-            <div className="w-[115px] md:w-[165px] h-full flex flex-col justify-end z-10 shrink-0">
-                <PodiumSpot p={p2} rank={2} height="90px" color="#94a3b8" delay="delay-100" t={t} />
-            </div>
-            <div className="w-[115px] md:w-[165px] h-full flex flex-col justify-end z-20 pb-4 shrink-0">
-                <PodiumSpot p={p1} rank={1} height="130px" color="#FFD700" delay="delay-0" t={t} />
-            </div>
-            <div className="w-[115px] md:w-[165px] h-full flex flex-col justify-end z-10 shrink-0">
-                <PodiumSpot p={p3} rank={3} height="75px" color="#CD7F32" delay="delay-200" t={t} />
-            </div>
-        </div>
-    );
-};
 
 export const PublicHubScreen: React.FC = () => {
     const navigate = useNavigate();
