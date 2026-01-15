@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Player, PlayerStatus, PlayerForm, SkillType, PlayerTier } from '../types';
-import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, FacebookIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon } from '../icons';
+import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon } from '../icons';
 import { PlayerAvatar, TeamAvatar } from '../components/avatars';
 import { Language } from '../translations/index';
 import { BadgeDisplay, BadgeIcon, sortBadgesByPriority } from '../features';
@@ -24,11 +24,15 @@ const skillAbbreviations: Record<SkillType, string> = {
 };
 
 const StaticSoccerBall: React.FC = () => {
+    // В будущем здесь можно сделать переключатель через context или props
+    const CurrentAccessory = BallDecorations.VietnamHelmet; 
+
     return (
         <div className="relative w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none ml-3">
             <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] overflow-visible">
                 <defs>
                     <radialGradient id="ballShading" cx="40%" cy="35%" r="65%"><stop offset="0%" stopColor="#ffffff" /><stop offset="50%" stopColor="#e2e8f0" /><stop offset="85%" stopColor="#94a3b8" /><stop offset="100%" stopColor="#1e293b" /></radialGradient>
+                    <filter id="hatShadow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.5" /><feOffset dx="0" dy="2" result="offsetblur" /><feComponentTransfer><feFuncA type="linear" slope="0.4" /></feComponentTransfer><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                 </defs>
                 <circle cx="50" cy="50" r="48" fill="url(#ballShading)" />
                 <g stroke="#000" strokeWidth="0.8" fill="none" opacity="0.25">
@@ -37,6 +41,9 @@ const StaticSoccerBall: React.FC = () => {
                 <text x="51" y="52" textAnchor="middle" fill="#0f172a" className="font-aldrich font-black uppercase" style={{ fontSize: '17px', letterSpacing: '-0.02em', transform: 'scaleX(0.85) rotate(-3deg)', transformOrigin: 'center' }}>SELECT</text>
                 <text x="50" y="61" textAnchor="middle" fill="#475569" className="font-chakra font-black uppercase" style={{ fontSize: '3.2px', letterSpacing: '0.1em', opacity: 0.8, transform: 'rotate(-3deg)', transformOrigin: 'center' }}>Professional Futsal</text>
                 <ellipse cx="40" cy="25" rx="20" ry="10" fill="white" opacity="0.3" transform="rotate(-15, 40, 25)" />
+                
+                {/* Рендерим текущий аксессуар из хранилища */}
+                <CurrentAccessory />
             </svg>
         </div>
     );
@@ -133,6 +140,7 @@ const HangingTag: React.FC<{ digit: string; label: string; height: number; delay
             {digit}
         </span>
         <div className="absolute top-[26px] w-[0.5px] bg-[#00F2FE]/10 origin-top animate-pendant-swing" style={{ height: `${height}px`, animationDelay: delay, boxShadow: '0 0 3px rgba(0,242,254,0.1)' }}>
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1.2px] h-[3px] bg-[#00F2FE] rounded-full opacity-0 animate-fiber-pulse" style={{ animationDuration: pulseDuration, animationDelay: delay, boxShadow: '0 0 5px #00F2FE' }}></div>
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full pt-1">
                 <div className="relative flex flex-col items-center">
                     <div className="absolute inset-0 blur-[8px] bg-[#00F2FE]/20 rounded-full scale-[2.5] pointer-events-none opacity-40"></div>
@@ -350,7 +358,7 @@ const DispersingWord: React.FC<{ words: string[] }> = ({ words }) => {
     const getStyles = () => {
         switch (state) {
             case 'entering': return "scale-[0.4] opacity-0 blur-[40px] translate-z-[-200px]";
-            case 'active': return "scale(1.1) opacity-100 blur-0 translate-z-0";
+            case 'active': return "scale-[1.1] opacity-100 blur-0 translate-z-0";
             case 'exiting': return "scale-[0.8] opacity-0 blur-[30px] translate-z-[-100px]";
             default: return "";
         }
@@ -443,20 +451,19 @@ const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, ran
                             <p className="font-bold text-white tracking-widest text-sm mt-2">OVR</p>
                             <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
                             
-                            {/* NON-CLICKABLE TOP 5 BADGES */}
-                            <div className="mt-3 flex flex-col items-center gap-1 pointer-events-none">
-                                {topBadges.map(badge => (
-                                    <div key={badge} className="transition-transform">
-                                        <BadgeIcon badge={badge} count={player.badges[badge]} className="w-7 h-7" />
-                                    </div>
-                                ))}
-                            </div>
+                            {topBadges.length > 0 && (
+                                <div className="flex flex-col items-center gap-1 mt-2">
+                                    {topBadges.map(badge => (
+                                        <div key={badge}>
+                                            <BadgeIcon badge={badge} className="w-7 h-7" />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
-                    
-                    {/* Fixed names positioning - raised significantly by increasing padding-bottom to pb-12 */}
-                    <div className="text-center shrink-0 z-30 pb-12">
-                        <h1 className="font-black uppercase tracking-tight drop-shadow-lg leading-[0.9]">
+                    <div className="absolute bottom-2 left-0 right-0 text-center z-30 px-1">
+                        <h1 className="font-black uppercase tracking-tight drop-shadow-lg leading-[0.85]">
                             <span className="text-3xl md:text-4xl block text-white">{player.nickname}</span>
                             {player.surname && (
                                 <span className="text-lg md:text-xl block text-white/90 mt-1">{player.surname}</span>
@@ -599,7 +606,7 @@ export const PublicHubScreen: React.FC = () => {
 
     const SOCIAL_LINKS = {
         whatsapp: "https://chat.whatsapp.com/CAJnChuM4lQFf3s2YUnhQr",
-        facebook: "https://www.facebook.com/share/g/1ANVC1p1K5/",
+        // Facebook removed
         youtube: "https://youtube.com/@playground532?si=_NqI_aOcvmjlSMFn",
         instagram: "https://www.instagram.com/532playground?igsh=MTdzdHpwMjY3aHN4cg%3D%3D&utm_source=qr",
         tiktok: "https://www.tiktok.com/@532playground",
@@ -677,7 +684,7 @@ export const PublicHubScreen: React.FC = () => {
                     <NoLeadersPlaceholder />
                 )}
 
-                <div className="mt-24 md:mt-32 pb-24">
+                <div className="mt-24 md:mt-32 pb-12">
                     <div className="text-center mb-12 md:mb-20">
                         <h2 className="font-orbitron text-lg md:text-2xl font-black uppercase tracking-[0.15em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubVitalsTitle}</h2>
                     </div>
@@ -689,7 +696,7 @@ export const PublicHubScreen: React.FC = () => {
                 </div>
                 
                 <div className="relative z-10 bg-transparent pb-8">
-                    <footer className="relative py-8 bg-transparent">
+                    <footer className="relative pb-8 pt-0 bg-transparent">
                         <div className="text-center px-4">
                             
                             {!isDashboardOpen && (
@@ -721,7 +728,6 @@ export const PublicHubScreen: React.FC = () => {
                             <div className="flex justify-center gap-10">
                                 <a href={SOCIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><YouTubeIcon className="w-7 h-7" /></a>
                                 <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><InstagramIcon className="w-7 h-7" /></a>
-                                <a href={SOCIAL_LINKS.facebook} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><FacebookIcon className="w-7 h-7" /></a>
                                 <a href={SOCIAL_LINKS.tiktok} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><TikTokIcon className="w-7 h-7" /></a>
                             </div>
                         </div>
