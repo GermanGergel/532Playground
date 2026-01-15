@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -427,7 +426,6 @@ export const PublicHubScreen: React.FC = () => {
     const clubStats = useMemo(() => {
         const confirmedPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
         const totalPlayers = confirmedPlayers.length;
-        // RESTORED: +1 correction logic for manually tracked session
         const totalSessions = (history.length || 0) + 1; 
         const avgRating = totalPlayers > 0 ? Math.round(confirmedPlayers.reduce((sum, p) => sum + p.rating, 0) / totalPlayers) : 0;
         return { totalPlayers, totalSessions, avgRating };
