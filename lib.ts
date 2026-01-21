@@ -7,6 +7,7 @@ class AudioManager {
     private context: AudioContext | null = null;
     private bufferCache: Map<string, AudioBuffer> = new Map();
     private activeSource: AudioBufferSourceNode | null = null;
+    private isUnlocked: boolean = false;
     private announcementKeys = [
         'start_match', 'three_minutes', 'one_minute', 'thirty_seconds', 
         'five', 'four', 'three', 'two', 'one', 'finish_match'
@@ -17,19 +18,19 @@ class AudioManager {
             // Агрессивное пробуждение при возврате в приложение
             document.addEventListener('visibilitychange', () => {
                 if (!document.hidden) {
+                    console.log('📱 App visible, forcing audio wake up...');
                     this.forceResume();
                 }
             });
 
-            // Глобальные слушатели жестов для разблокировки звука при первом же касании любого элемента
+            // Глобальные слушатели жестов для разблокировки звука
             const unlockHandler = () => {
                 this.forceResume();
-                // Удаляем слушателей после первой успешной активации для экономии ресурсов
-                window.removeEventListener('click', unlockHandler, { capture: true });
-                window.removeEventListener('touchstart', unlockHandler, { capture: true });
+                this.isUnlocked = true;
             };
             window.addEventListener('click', unlockHandler, { capture: true });
             window.addEventListener('touchstart', unlockHandler, { capture: true });
+            window.addEventListener('mousedown', unlockHandler, { capture: true });
         }
     }
 
@@ -51,20 +52,25 @@ class AudioManager {
 
     /**
      * Принудительное возобновление контекста. 
-     * Пытается перевести контекст из 'suspended' в 'running'.
+     * Вызывается при кликах и возврате в приложение.
      */
     public async forceResume() {
         const ctx = this.getContext();
         if (ctx.state !== 'running') {
             try {
                 await ctx.resume();
-                // На некоторых iOS устройствах нужно проиграть пустой звук, чтобы "пробить" канал
+                // На некоторых устройствах нужно "протолкнуть" тишину для активации
                 this.playSilence();
-                console.log('🔊 AudioContext forced to resume. New state:', ctx.state);
+                console.log('🔊 AudioContext Resumed state:', ctx.state);
             } catch (e) {
                 console.warn('🔊 Failed to resume AudioContext', e);
             }
         }
+    }
+
+    // Алиас для старого кода
+    public async resumeContext() {
+        return this.forceResume();
     }
 
     private base64ToArrayBuffer(base64: string): ArrayBuffer {
@@ -78,6 +84,7 @@ class AudioManager {
     }
 
     public async preloadPack(voicePackId: number) {
+        console.log(`🔊 Preloading Voice Pack ${voicePackId}...`);
         const ctx = this.getContext();
         
         const loadPromises = this.announcementKeys.map(async (key) => {
@@ -97,7 +104,12 @@ class AudioManager {
     }
 
     public async play(key: string, fallbackText: string, voicePackId: number = 1): Promise<void> {
-        // КРИТИЧЕСКИ ВАЖНО: Пытаемся разбудить контекст ПЕРЕД каждым проигрыванием
+        if (key === 'silence') {
+            this.playSilence();
+            return;
+        }
+
+        // Каждый раз перед проигрыванием проверяем статус контекста
         await this.forceResume();
         
         const ctx = this.getContext();
@@ -105,7 +117,7 @@ class AudioManager {
 
         let buffer = this.bufferCache.get(cacheKey);
 
-        // Если буфера нет в кэше, пробуем достать из БД "на лету"
+        // --- IMPROVED: Try to load from DB if missing in memory cache ---
         if (!buffer) {
             const base64 = await loadCustomAudio(key, voicePackId);
             if (base64) {
@@ -144,14 +156,40 @@ class AudioManager {
             try { this.activeSource.stop(); } catch (e) {}
             this.activeSource = null;
         }
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
     }
 
     private speak(text: string) {
         if (!('speechSynthesis' in window)) return;
+        if (!this.assistantVoice) this.loadVoices();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'en-US';
+        if (this.assistantVoice) {
+            utterance.voice = this.assistantVoice;
+            utterance.pitch = 1.0;
+            utterance.rate = 1.1; 
+        }
         window.speechSynthesis.speak(utterance);
     }
+
+    private assistantVoice: SpeechSynthesisVoice | null = null;
+    private loadVoices() {
+        const voices = window.speechSynthesis.getVoices();
+        const preferredNames = ['samantha', 'google us english', 'microsoft zira', 'victoria'];
+        this.assistantVoice = 
+            voices.find(v => preferredNames.some(n => v.name.toLowerCase().includes(n))) ||
+            voices.find(v => v.name.toLowerCase().includes('female') && v.lang.startsWith('en')) ||
+            voices.find(v => v.lang.startsWith('en')) ||
+            null;
+    }
+}
+
+if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    window.speechSynthesis.onvoiceschanged = () => {
+        (AudioManager.getInstance() as any).loadVoices();
+    };
 }
 
 export const audioManager = AudioManager.getInstance();
