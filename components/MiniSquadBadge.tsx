@@ -29,9 +29,9 @@ export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, classNa
                         fill="#00F2FE" 
                         className="font-chakra font-black uppercase"
                         style={{ 
-                            fontSize: '8px',
+                            fontSize: '8.5px', // Немного увеличили шрифт для четкости
                             letterSpacing: '0.15em',
-                            textShadow: '0 0 2px rgba(0, 0, 0, 0.8)'
+                            textShadow: '0 0 3px rgba(0, 0, 0, 1), 0 0 5px rgba(0, 242, 254, 0.4)' // Усилили тень для четкости
                         }}
                     >
                         <textPath 
@@ -47,7 +47,7 @@ export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, classNa
             </div>
             
             {/* CORE SHIELD */}
-            <div className="absolute inset-0 flex items-center justify-center filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+            <div className="absolute inset-0 flex items-center justify-center filter drop-shadow-[0_3px_6px_rgba(0,0,0,0.7)]">
                 <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
                     <defs>
                         <linearGradient id="miniShieldBorderShared" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -60,8 +60,8 @@ export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, classNa
                             <stop offset="100%" stopColor="#000000" />
                         </linearGradient>
                         <radialGradient id="miniInnerGlowShared" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                            <stop offset="0%" stopColor="#00F2FE" stopOpacity="0.4" />
-                            <stop offset="70%" stopColor="#00F2FE" stopOpacity="0.1" />
+                            <stop offset="0%" stopColor="#00F2FE" stopOpacity="0.5" />
+                            <stop offset="70%" stopColor="#00F2FE" stopOpacity="0.2" />
                             <stop offset="100%" stopColor="transparent" stopOpacity="0" />
                         </radialGradient>
                         <path id="miniPlaygroundCurveShared" d="M 20,38 Q 50,30 80,38" />
@@ -75,16 +75,16 @@ export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, classNa
                             d="M 10,10 Q 50,0 90,10 L 90,45 Q 90,80 50,95 Q 10,80 10,45 Z" 
                             fill="url(#miniShieldBodyShared)" 
                             stroke="url(#miniShieldBorderShared)" 
-                            strokeWidth="4"
+                            strokeWidth="5" // Увеличили толщину обводки
                         />
                         <path 
                             d="M 15,15 Q 50,7 85,15 L 85,45 Q 85,75 50,88 Q 15,75 15,45 Z" 
                             fill="none" 
                             stroke="#ffffff" 
-                            strokeOpacity="0.1" 
+                            strokeOpacity="0.2" 
                             strokeWidth="2"
                         />
-                        <g fill="#00F2FE" opacity="0.8">
+                        <g fill="#00F2FE" opacity="1"> // Максимальная непрозрачность звезд
                             <use href="#miniStarItemShared" transform="translate(30, 32) scale(1.5)" />
                             <use href="#miniStarItemShared" transform="translate(70, 32) scale(1.5)" />
                             <use href="#miniStarItemShared" transform="translate(40, 48) scale(1.5)" />
@@ -93,7 +93,7 @@ export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, classNa
                         </g>
                     </g>
   
-                    <g style={{ filter: 'drop-shadow(0 0 3px rgba(0,242,254,0.3))' }}>
+                    <g style={{ filter: 'drop-shadow(0 0 4px rgba(0,242,254,0.5))' }}>
                         <text 
                             x="50" 
                             y="24" 

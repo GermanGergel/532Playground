@@ -176,7 +176,7 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
 
                     {/* Team of the Month Badge (Export Version) */}
                     {isTotm && (
-                        <div className="mt-6 pl-1">
+                        <div className="mt-6 -ml-1"> {/* Смещено на -ml-1 (чуть левее) для идеального выравнивания под звездами */}
                             <MiniSquadBadge size="w-12 h-12" />
                         </div>
                     )}
