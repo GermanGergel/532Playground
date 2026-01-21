@@ -7,6 +7,7 @@ import { homeScreenBackground } from '../assets';
 import { BrandedHeader } from './utils';
 import { Globe, Upload, XCircle, QrCode } from '../icons'; 
 import html2canvas from 'html2canvas';
+import { initAudioContext } from '../lib';
 
 export const HomeScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -27,7 +28,6 @@ export const HomeScreen: React.FC = () => {
 
   const promoUrl = `${window.location.origin}/promo`;
 
-  // Генерация QR-кода при открытии модалки
   useEffect(() => {
       if (isQrModalOpen) {
           const generateQrCode = async () => {
@@ -49,6 +49,7 @@ export const HomeScreen: React.FC = () => {
   }, [isQrModalOpen, promoUrl]);
 
   const handleContinue = () => {
+    initAudioContext(); // РАЗБЛОКИРОВКА ЗВУКА
     if (activeSession) {
       if (activeSession.games && activeSession.games.length > 0) {
         navigate('/match');
@@ -59,6 +60,7 @@ export const HomeScreen: React.FC = () => {
   };
 
   const handleStartNewSession = () => {
+    initAudioContext(); // РАЗБЛОКИРОВКА ЗВУКА
     navigate('/setup');
   };
 
@@ -84,7 +86,6 @@ export const HomeScreen: React.FC = () => {
       }
   };
 
-  // ЛОГИКА ОТПРАВКИ КАРТОЧКИ (КОПИЯ С ПРОФИЛЯ ИГРОКА)
   const handleSharePromoCard = async () => {
       if (!promoCardRef.current || isGenerating) return;
       setIsGenerating(true);
@@ -131,8 +132,6 @@ export const HomeScreen: React.FC = () => {
 
   return (
     <Page style={{ backgroundImage: `url("${homeScreenBackground}")`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
-        
-        {/* Recruit Modal - Updated to Match Player Share Design */}
         <Modal
             isOpen={isQrModalOpen}
             onClose={() => setIsQrModalOpen(false)}
@@ -141,7 +140,6 @@ export const HomeScreen: React.FC = () => {
             containerClassName="!p-4 !bg-dark-bg border border-[#00F2FE]/20"
         >
             <div className="flex flex-col items-center gap-6">
-                {/* ПРЕВЬЮ КАРТОЧКИ (КОПИРУЕМ СТИЛЬ SHARE_PROFILE_MODAL) */}
                 <div 
                     ref={promoCardRef} 
                     className="w-full bg-[#1A1D24] rounded-[2rem] p-6 flex flex-col items-center gap-6 border border-[#00F2FE]/30 shadow-[0_0_30px_rgba(0,242,254,0.15)]"
@@ -156,7 +154,6 @@ export const HomeScreen: React.FC = () => {
                         </p>
                     </div>
                     
-                    {/* Текст изменен на RECRUIT CARD */}
                     <div className="text-center space-y-1">
                         <h2 className="font-russo text-2xl text-white uppercase tracking-tight leading-none">
                             RECRUIT CARD
@@ -207,7 +204,7 @@ export const HomeScreen: React.FC = () => {
         <div className="flex flex-col min-h-[calc(100vh-8rem)] justify-between relative">
              <div className="absolute top-4 right-0 z-50 flex flex-row gap-3 items-center">
                  <button 
-                    onClick={handleShareHub}
+                    onClick={() => { initAudioContext(); handleShareHub(); }}
                     disabled={isSharing}
                     className={`${controlButtonClass} text-dark-accent-start border-dark-accent-start/30 ${isSharing ? 'opacity-50 cursor-wait' : ''}`}
                     title="Share Club Hub Access"
@@ -219,7 +216,7 @@ export const HomeScreen: React.FC = () => {
                     )}
                  </button>
                  <button 
-                    onClick={() => setIsQrModalOpen(true)}
+                    onClick={() => { initAudioContext(); setIsQrModalOpen(true); }}
                     className={`${controlButtonClass} text-dark-accent-start border-dark-accent-start/30`}
                     title="Recruit Player"
                  >
@@ -234,7 +231,7 @@ export const HomeScreen: React.FC = () => {
             <main className="flex flex-col items-center gap-4 w-full mt-auto">
                  <Button 
                     variant="secondary" 
-                    onClick={() => navigate('/hub')} 
+                    onClick={() => { initAudioContext(); navigate('/hub'); }} 
                     className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 border border-dark-accent-start/30"
                  >
                     {t.hubTitle}
@@ -249,10 +246,10 @@ export const HomeScreen: React.FC = () => {
                         {t.newSession}
                     </Button>
                  )}
-                 <Button variant="secondary" onClick={() => navigate('/player-hub')} className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">
+                 <Button variant="secondary" onClick={() => { initAudioContext(); navigate('/player-hub'); }} className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">
                     {t.playerHub}
                  </Button>
-                 <Button variant="secondary" onClick={() => navigate('/announcement')} className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">
+                 <Button variant="secondary" onClick={() => { initAudioContext(); navigate('/announcement'); }} className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">
                     {t.createAnnouncement}
                  </Button>
             </main>
