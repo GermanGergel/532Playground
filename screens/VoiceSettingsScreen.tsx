@@ -42,6 +42,7 @@ const AnthemSection: React.FC = () => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
+    // MAX FILE SIZE CONSTANT (5MB)
     const MAX_FILE_SIZE_MB = 5;
     const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
@@ -52,6 +53,7 @@ const AnthemSection: React.FC = () => {
         };
         checkAnthem();
 
+        // Cleanup: Stop audio when component unmounts (user leaves screen)
         return () => {
             if (audioRef.current) {
                 audioRef.current.pause();
@@ -68,12 +70,14 @@ const AnthemSection: React.FC = () => {
         const file = event.target.files?.[0];
         if (!file) return;
 
+        // 1. Check File Size
         if (file.size > MAX_FILE_SIZE_BYTES) {
-            alert(`File is too large! Please upload an MP3 smaller than ${MAX_FILE_SIZE_MB}MB.`);
-            if (event.target) event.target.value = '';
+            alert(`File is too large! Please upload an MP3 smaller than ${MAX_FILE_SIZE_MB}MB to save traffic for your players.`);
+            if (event.target) event.target.value = ''; // Reset input
             return;
         }
 
+        // 2. Check File Type (Basic check)
         if (!file.type.includes('audio') && !file.name.endsWith('.mp3')) {
             alert("Invalid file type. Please upload an MP3 file.");
             if (event.target) event.target.value = '';
@@ -92,7 +96,7 @@ const AnthemSection: React.FC = () => {
             };
             reader.readAsDataURL(file);
         } catch (error) {
-            alert('Upload failed.');
+            alert('Upload failed. Please check connection and try again.');
         } finally {
             setIsProcessing(false);
             if (event.target) event.target.value = '';
@@ -102,6 +106,7 @@ const AnthemSection: React.FC = () => {
     const handleDelete = async () => {
         setIsProcessing(true);
         try {
+            // Stop playing if deleting
             if (audioRef.current) {
                 audioRef.current.pause();
                 setIsPlaying(false);
@@ -109,13 +114,14 @@ const AnthemSection: React.FC = () => {
             await deleteSessionAnthem();
             setStatus('none');
         } catch (error) {
-            alert('Failed to delete.');
+            alert('Failed to delete. Please check connection.');
         } finally {
             setIsProcessing(false);
         }
     };
 
     const handlePreview = async () => {
+        // Toggle Logic
         if (isPlaying && audioRef.current) {
             audioRef.current.pause();
             audioRef.current.currentTime = 0;
@@ -125,21 +131,18 @@ const AnthemSection: React.FC = () => {
 
         const url = await getSessionAnthemUrl();
         if (url) {
-            // Пытаемся также разбудить аудио-контекст при работе с гимном
-            audioManager.unlockAudio();
-            
             if (audioRef.current) {
-                audioRef.current.pause();
+                audioRef.current.pause(); // Ensure old instance is stopped
             }
             const audio = new Audio(url);
-            audio.onended = () => setIsPlaying(false);
+            audio.onended = () => setIsPlaying(false); // Reset icon when song finishes
             audioRef.current = audio;
             
             try {
                 await audio.play();
                 setIsPlaying(true);
             } catch (e) {
-                console.error("Anthem playback failed", e);
+                console.error("Playback failed", e);
                 setIsPlaying(false);
             }
         }
@@ -191,8 +194,10 @@ export const VoiceSettingsScreen: React.FC = () => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [keyToUpload, setKeyToUpload] = useState<AnnouncementKey | null>(null);
 
+    // Limit for voice announcements (short clips) - 500KB is plenty
     const MAX_VOICE_SIZE_BYTES = 0.5 * 1024 * 1024; 
 
+    // TRIGGER SYNC ON MOUNT
     useEffect(() => {
         syncAndCacheAudioAssets();
     }, []);
@@ -220,8 +225,9 @@ export const VoiceSettingsScreen: React.FC = () => {
         const file = event.target.files?.[0];
         if (!file || !keyToUpload) return;
 
+        // Size check for voice clips
         if (file.size > MAX_VOICE_SIZE_BYTES) {
-            alert(`Voice clip is too large!`);
+            alert(`Voice clip is too large! Please keep it under 500KB.`);
             if (event.target) event.target.value = '';
             return;
         }
@@ -240,10 +246,12 @@ export const VoiceSettingsScreen: React.FC = () => {
             };
             reader.readAsDataURL(file);
         } catch (error) {
-            alert('Upload failed.');
+            alert('Upload failed. Please check connection and try again.');
             setIsProcessing(null);
         } finally {
-            if (event.target) event.target.value = '';
+            if (event.target) {
+                event.target.value = '';
+            }
         }
     };
 
@@ -253,19 +261,15 @@ export const VoiceSettingsScreen: React.FC = () => {
             await deleteCustomAudio(key, activeVoicePack);
             setCustomAudioStatus(prev => ({ ...prev, [key]: false }));
         } catch (error) {
-            alert('Failed to delete.');
+            alert('Failed to delete. Please check connection.');
         } finally {
             setIsProcessing(null);
         }
     };
 
     const handlePreview = async (key: AnnouncementKey, fallbackText: string) => {
-        // КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ:
-        // Прямо в момент клика разблокируем AudioContext. 
-        // Это связывает команду resume() с жестом пользователя.
+        // ПРИНУДИТЕЛЬНОЕ ПРОБУЖДЕНИЕ ПЕРЕД ПРЕВЬЮ
         await audioManager.unlockAudio();
-        
-        // После разблокировки запускаем звук
         playAnnouncement(key, fallbackText, activeVoicePack);
     };
 
@@ -285,7 +289,7 @@ export const VoiceSettingsScreen: React.FC = () => {
              {!canUseCloud && (
                 <Card className="mb-4 bg-yellow-900/50 border-yellow-500/50">
                     <p className="text-yellow-300 text-center text-sm">
-                        Cloud database not configured.
+                        Cloud database not configured. Audio files will be saved only on this device and will not sync.
                     </p>
                 </Card>
             )}

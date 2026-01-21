@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Session, GameStatus } from '../types';
-import { playAnnouncement, audioManager } from '../lib';
+import { playAnnouncement } from '../lib';
 
 export const useMatchTimer = (
     activeSession: Session | null,
@@ -87,10 +86,7 @@ export const useMatchTimer = (
         const milestone = milestones[remainingSeconds];
 
         if (milestone && !alreadyAnnounced.includes(remainingSeconds)) {
-            // ПРИНУДИТЕЛЬНО БУДИМ СИСТЕМУ ПЕРЕД ГУДКОМ
-            audioManager.forceResume().then(() => {
-                playAnnouncement(milestone.key, milestone.text, activeVoicePack);
-            });
+            playAnnouncement(milestone.key, milestone.text, activeVoicePack);
             
             setActiveSession(s => {
                 if (!s) return null;
