@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -415,12 +416,13 @@ export const PublicHubScreen: React.FC = () => {
             const scoreA = (a.totalGoals || 0) + (a.totalAssists || 0);
             const scoreB = (b.totalGoals || 0) + (b.totalAssists || 0);
             if (scoreB !== scoreA) return scoreB - scoreA;
-            const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0;
-            const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0;
+            const wrA = getWR(a); const wrB = getWR(b);
             if (wrB !== wrA) return wrB - wrA;
             return (b.totalGames || 0) - (a.totalGames || 0);
         });
         return { top: sorted.slice(0, 3) };
+        
+        function getWR(p: Player) { return p.totalGames > 0 ? (p.totalWins / p.totalGames) : 0; }
     }, [allPlayers]);
     
     const clubStats = useMemo(() => {
@@ -438,7 +440,7 @@ export const PublicHubScreen: React.FC = () => {
         // Facebook removed
         youtube: "https://youtube.com/@playground532?si=_NqI_aOcvmjlSMFn",
         instagram: "https://www.instagram.com/532playground?igsh=MTdzdHpwMjY3aHN4cg%3D%3D&utm_source=qr",
-        tiktok: "https://www.tiktok.com/@532playground",
+        tiktok: "https://www.tiktok.com/@532club?_r=1&_t=ZS-93FTnYnyHKx",
     };
 
     const handleTabChange = (tab: any) => {

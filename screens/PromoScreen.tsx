@@ -15,7 +15,7 @@ const SOCIAL_LINKS = {
     zalo: "https://zalo.me/g/pjdfxl571", // Updated to Group Link
     instagram: "https://www.instagram.com/532playground?igsh=MTdzdHpwMjY3aHN4cg%3D%3D&utm_source=qr",
     youtube: "https://youtube.com/@playground532?si=_NqI_aOcvmjlSMFn",
-    tiktok: "https://www.tiktok.com/@532playground",
+    tiktok: "https://www.tiktok.com/@532club?_r=1&_t=ZS-93FTnYnyHKx",
 };
 
 // Default Fallback if no DB data
@@ -151,7 +151,7 @@ const TEXT = {
         // Hub Section
         hub_section_title: "ЭКОСИСТЕМА КЛУБА",
         hub_section_desc: "Центральный интеллект. Доступ только для действующих игроков.",
-        hub_badge: "ТОЛЬКО ДЛЯ УЧАСТНИКОВ",
+        hub_badge: "ТОЛЬКО ДЛЯ УЧАСНИКІВ",
         hub_f1: "Рейтинги Клуба",
         hub_f2: "Архив Матчей",
         hub_f3: "Live Данные",
@@ -197,6 +197,7 @@ const PromoIntro: React.FC<{ onEnter: () => void, lang: Language }> = ({ onEnter
             <div className="absolute inset-0 animate-spin" style={{ animationDuration: '3s' }}>
                 <svg viewBox="0 0 100 100" className="w-full h-full">
                     <defs><linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#00F2FE" stopOpacity="1" /><stop offset="100%" stopColor="#00F2FE" stopOpacity="0" /></linearGradient></defs>
+                    {/* FIX: Removed duplicate 'strokeWidth' and 'strokeLinecap' attributes */}
                     <circle cx="50" cy="50" r="48" fill="none" stroke="url(#ringGradient)" strokeWidth="2" strokeLinecap="round" strokeDasharray="200 300" />
                 </svg>
             </div>
