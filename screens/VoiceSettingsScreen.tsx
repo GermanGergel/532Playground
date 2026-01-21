@@ -6,7 +6,7 @@ import {
     uploadSessionAnthem, deleteSessionAnthem, getSessionAnthemUrl,
     syncAndCacheAudioAssets
 } from '../db';
-import { playAnnouncement, initAudioContext } from '../lib';
+import { audioManager, playAnnouncement, initAudioContext } from '../lib';
 import { Upload, Trash2, Play, Pause } from '../icons';
 import { useApp } from '../context';
 
@@ -267,8 +267,9 @@ export const VoiceSettingsScreen: React.FC = () => {
         }
     };
 
-    const handlePreview = (key: AnnouncementKey, fallbackText: string) => {
-        initAudioContext();
+    const handlePreview = async (key: AnnouncementKey, fallbackText: string) => {
+        // ПРИНУДИТЕЛЬНОЕ ПРОБУЖДЕНИЕ ПЕРЕД ПРЕВЬЮ
+        await audioManager.unlockAudio();
         playAnnouncement(key, fallbackText, activeVoicePack);
     };
 

@@ -25,12 +25,14 @@ class AudioManager {
 
             // Глобальные слушатели жестов для разблокировки звука
             const unlockHandler = () => {
-                this.forceResume();
-                this.isUnlocked = true;
+                if (!this.isUnlocked) {
+                    this.forceResume();
+                    this.isUnlocked = true;
+                    console.log('🔊 Audio System Unlocked via user gesture');
+                }
             };
-            window.addEventListener('click', unlockHandler, { capture: true });
-            window.addEventListener('touchstart', unlockHandler, { capture: true });
-            window.addEventListener('mousedown', unlockHandler, { capture: true });
+            window.addEventListener('click', unlockHandler, { capture: true, once: false });
+            window.addEventListener('touchstart', unlockHandler, { capture: true, once: false });
         }
     }
 
@@ -51,20 +53,32 @@ class AudioManager {
     }
 
     /**
+     * Принудительное разблокирование аудио-канала.
+     * Проигрывает пустой буфер для активации контекста на iOS/Android.
+     */
+    public async unlockAudio() {
+        const ctx = this.getContext();
+        if (ctx.state === 'suspended') {
+            await ctx.resume();
+        }
+        this.playSilence();
+    }
+
+    /**
      * Принудительное возобновление контекста. 
      * Вызывается при кликах и возврате в приложение.
      */
     public async forceResume() {
         const ctx = this.getContext();
-        if (ctx.state !== 'running') {
-            try {
+        try {
+            if (ctx.state !== 'running') {
                 await ctx.resume();
-                // На некоторых устройствах нужно "протолкнуть" тишину для активации
-                this.playSilence();
                 console.log('🔊 AudioContext Resumed state:', ctx.state);
-            } catch (e) {
-                console.warn('🔊 Failed to resume AudioContext', e);
             }
+            // Всегда прокидываем тишину, чтобы "прогреть" канал
+            this.playSilence();
+        } catch (e) {
+            console.warn('🔊 Failed to resume AudioContext', e);
         }
     }
 
@@ -109,7 +123,7 @@ class AudioManager {
             return;
         }
 
-        // Каждый раз перед проигрыванием проверяем статус контекста
+        // КРИТИЧЕСКИЙ МОМЕНТ: Перед каждым проигрыванием будим контекст
         await this.forceResume();
         
         const ctx = this.getContext();
@@ -142,7 +156,8 @@ class AudioManager {
     private playSilence() {
         const ctx = this.getContext();
         try {
-            const buffer = ctx.createBuffer(1, 1, 22050);
+            // Создаем минимальный пустой звук (0.1 сек)
+            const buffer = ctx.createBuffer(1, 441, 44100);
             const source = ctx.createBufferSource();
             source.buffer = buffer;
             source.connect(ctx.destination);
