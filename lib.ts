@@ -18,21 +18,19 @@ class AudioManager {
             // Агрессивное пробуждение при возврате в приложение
             document.addEventListener('visibilitychange', () => {
                 if (!document.hidden) {
+                    console.log('📱 App visible, forcing audio wake up...');
                     this.forceResume();
                 }
             });
 
-            // Глобальный слушатель ЛЮБОГО клика для разблокировки звука (iOS/Chrome fix)
+            // Глобальные слушатели жестов для разблокировки звука
             const unlockHandler = () => {
-                this.unlock();
-                // Удаляем после первой успешной разблокировки
-                if (this.isUnlocked) {
-                    window.removeEventListener('click', unlockHandler);
-                    window.removeEventListener('touchstart', unlockHandler);
-                }
+                this.forceResume();
+                this.isUnlocked = true;
             };
             window.addEventListener('click', unlockHandler, { capture: true });
             window.addEventListener('touchstart', unlockHandler, { capture: true });
+            window.addEventListener('mousedown', unlockHandler, { capture: true });
         }
     }
 
@@ -53,39 +51,26 @@ class AudioManager {
     }
 
     /**
-     * Пытается разблокировать аудио-контекст. Должно вызываться внутри обработчика события пользователя.
+     * Принудительное возобновление контекста. 
+     * Вызывается при кликах и возврате в приложение.
      */
-    public async unlock() {
-        const ctx = this.getContext();
-        if (this.isUnlocked) return;
-
-        try {
-            if (ctx.state === 'suspended') {
-                await ctx.resume();
-            }
-            // Проигрываем микро-тишину для финализации разблокировки
-            const buffer = ctx.createBuffer(1, 1, 22050);
-            const source = ctx.createBufferSource();
-            source.buffer = buffer;
-            source.connect(ctx.destination);
-            source.start(0);
-            
-            this.isUnlocked = true;
-            console.log('🔊 AudioEngine Unlocked and Ready');
-        } catch (e) {
-            console.warn('🔊 AudioEngine unlock failed', e);
-        }
-    }
-
     public async forceResume() {
         const ctx = this.getContext();
         if (ctx.state !== 'running') {
             try {
                 await ctx.resume();
+                // На некоторых устройствах нужно "протолкнуть" тишину для активации
+                this.playSilence();
+                console.log('🔊 AudioContext Resumed state:', ctx.state);
             } catch (e) {
                 console.warn('🔊 Failed to resume AudioContext', e);
             }
         }
+    }
+
+    // Алиас для старого кода
+    public async resumeContext() {
+        return this.forceResume();
     }
 
     private base64ToArrayBuffer(base64: string): ArrayBuffer {
@@ -99,7 +84,9 @@ class AudioManager {
     }
 
     public async preloadPack(voicePackId: number) {
+        console.log(`🔊 Preloading Voice Pack ${voicePackId}...`);
         const ctx = this.getContext();
+        
         const loadPromises = this.announcementKeys.map(async (key) => {
             const cacheKey = `${voicePackId}_${key}`;
             if (this.bufferCache.has(cacheKey)) return;
@@ -112,11 +99,17 @@ class AudioManager {
                 this.bufferCache.set(cacheKey, buffer);
             } catch (e) {}
         });
+
         await Promise.all(loadPromises);
     }
 
     public async play(key: string, fallbackText: string, voicePackId: number = 1): Promise<void> {
-        // Всегда пробуем возобновить контекст перед игрой
+        if (key === 'silence') {
+            this.playSilence();
+            return;
+        }
+
+        // Каждый раз перед проигрыванием проверяем статус контекста
         await this.forceResume();
         
         const ctx = this.getContext();
@@ -146,6 +139,17 @@ class AudioManager {
         }
     }
 
+    private playSilence() {
+        const ctx = this.getContext();
+        try {
+            const buffer = ctx.createBuffer(1, 1, 22050);
+            const source = ctx.createBufferSource();
+            source.buffer = buffer;
+            source.connect(ctx.destination);
+            source.start(0);
+        } catch (e) {}
+    }
+
     private stopActiveSource() {
         if (this.activeSource) {
             try { this.activeSource.stop(); } catch (e) {}
@@ -158,14 +162,37 @@ class AudioManager {
 
     private speak(text: string) {
         if (!('speechSynthesis' in window)) return;
+        if (!this.assistantVoice) this.loadVoices();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'en-US';
+        if (this.assistantVoice) {
+            utterance.voice = this.assistantVoice;
+            utterance.pitch = 1.0;
+            utterance.rate = 1.1; 
+        }
         window.speechSynthesis.speak(utterance);
+    }
+
+    private assistantVoice: SpeechSynthesisVoice | null = null;
+    private loadVoices() {
+        const voices = window.speechSynthesis.getVoices();
+        const preferredNames = ['samantha', 'google us english', 'microsoft zira', 'victoria'];
+        this.assistantVoice = 
+            voices.find(v => preferredNames.some(n => v.name.toLowerCase().includes(n))) ||
+            voices.find(v => v.name.toLowerCase().includes('female') && v.lang.startsWith('en')) ||
+            voices.find(v => v.lang.startsWith('en')) ||
+            null;
     }
 }
 
+if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    window.speechSynthesis.onvoiceschanged = () => {
+        (AudioManager.getInstance() as any).loadVoices();
+    };
+}
+
 export const audioManager = AudioManager.getInstance();
-export const initAudioContext = () => audioManager.unlock();
+export const initAudioContext = () => audioManager.forceResume();
 export const playAnnouncement = (key: string, fallbackText: string, activeVoicePack: number = 1) => {
     audioManager.play(key, fallbackText, activeVoicePack);
 };

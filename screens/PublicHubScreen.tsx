@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -439,7 +438,7 @@ export const PublicHubScreen: React.FC = () => {
         // Facebook removed
         youtube: "https://youtube.com/@playground532?si=_NqI_aOcvmjlSMFn",
         instagram: "https://www.instagram.com/532playground?igsh=MTdzdHpwMjY3aHN4cg%3D%3D&utm_source=qr",
-        tiktok: "https://www.tiktok.com/@532club?_r=1&_t=ZS-93FUwJ2FEjY",
+        tiktok: "https://www.tiktok.com/@532playground",
     };
 
     const handleTabChange = (tab: any) => {

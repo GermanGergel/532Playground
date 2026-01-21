@@ -15,7 +15,7 @@ const SOCIAL_LINKS = {
     zalo: "https://zalo.me/g/pjdfxl571", // Updated to Group Link
     instagram: "https://www.instagram.com/532playground?igsh=MTdzdHpwMjY3aHN4cg%3D%3D&utm_source=qr",
     youtube: "https://youtube.com/@playground532?si=_NqI_aOcvmjlSMFn",
-    tiktok: "https://www.tiktok.com/@532club?_r=1&_t=ZS-93FUwJ2FEjY",
+    tiktok: "https://www.tiktok.com/@532playground",
 };
 
 // Default Fallback if no DB data
