@@ -14,25 +14,19 @@ class AudioManager {
     ];
 
     private constructor() {
-        if (typeof document !== 'undefined') {
-            // Агрессивное пробуждение при возврате в приложение
-            document.addEventListener('visibilitychange', () => {
-                if (!document.hidden) {
-                    console.log('📱 App visible, forcing audio wake up...');
-                    this.forceResume();
-                }
-            });
-
-            // Глобальные слушатели жестов для разблокировки звука
-            const unlockHandler = () => {
-                if (!this.isUnlocked) {
-                    this.forceResume();
+        if (typeof window !== 'undefined') {
+            // Глобальные слушатели для разблокировки при первом же касании
+            const unlock = () => {
+                this.forceResume();
+                if (this.context && this.context.state === 'running') {
                     this.isUnlocked = true;
-                    console.log('🔊 Audio System Unlocked via user gesture');
+                    window.removeEventListener('click', unlock);
+                    window.removeEventListener('touchstart', unlock);
+                    console.log('🔊 Audio System: Unlocked via Global Gesture');
                 }
             };
-            window.addEventListener('click', unlockHandler, { capture: true, once: false });
-            window.addEventListener('touchstart', unlockHandler, { capture: true, once: false });
+            window.addEventListener('click', unlock, { capture: true });
+            window.addEventListener('touchstart', unlock, { capture: true });
         }
     }
 
@@ -53,36 +47,31 @@ class AudioManager {
     }
 
     /**
-     * Принудительное разблокирование аудио-канала.
-     * Проигрывает пустой буфер для активации контекста на iOS/Android.
-     */
-    public async unlockAudio() {
-        const ctx = this.getContext();
-        if (ctx.state === 'suspended') {
-            await ctx.resume();
-        }
-        this.playSilence();
-    }
-
-    /**
-     * Принудительное возобновление контекста. 
-     * Вызывается при кликах и возврате в приложение.
+     * Принудительное возобновление работы контекста.
+     * Обязательно должно вызываться ВНУТРИ обработчика события клика.
      */
     public async forceResume() {
         const ctx = this.getContext();
         try {
             if (ctx.state !== 'running') {
                 await ctx.resume();
-                console.log('🔊 AudioContext Resumed state:', ctx.state);
+                console.log('🔊 AudioContext state:', ctx.state);
             }
-            // Всегда прокидываем тишину, чтобы "прогреть" канал
+            // Проигрываем микро-тишину для активации канала на iOS
             this.playSilence();
         } catch (e) {
-            console.warn('🔊 Failed to resume AudioContext', e);
+            console.warn('🔊 Audio System: Resume failed', e);
         }
     }
 
-    // Алиас для старого кода
+    /**
+     * Специальный метод для принудительной разблокировки из UI
+     */
+    public async unlockAudio() {
+        await this.forceResume();
+    }
+
+    // Для совместимости
     public async resumeContext() {
         return this.forceResume();
     }
@@ -123,7 +112,7 @@ class AudioManager {
             return;
         }
 
-        // КРИТИЧЕСКИЙ МОМЕНТ: Перед каждым проигрыванием будим контекст
+        // КРИТИЧЕСКИ: Сначала будим контекст, потом играем
         await this.forceResume();
         
         const ctx = this.getContext();
@@ -156,8 +145,7 @@ class AudioManager {
     private playSilence() {
         const ctx = this.getContext();
         try {
-            // Создаем минимальный пустой звук (0.1 сек)
-            const buffer = ctx.createBuffer(1, 441, 44100);
+            const buffer = ctx.createBuffer(1, 1, 22050);
             const source = ctx.createBufferSource();
             source.buffer = buffer;
             source.connect(ctx.destination);
