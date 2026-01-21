@@ -438,7 +438,7 @@ export const PublicHubScreen: React.FC = () => {
         // Facebook removed
         youtube: "https://youtube.com/@playground532?si=_NqI_aOcvmjlSMFn",
         instagram: "https://www.instagram.com/532playground?igsh=MTdzdHpwMjY3aHN4cg%3D%3D&utm_source=qr",
-        tiktok: "https://www.tiktok.com/@532playground",
+        tiktok: "https://www.tiktok.com/@532club?_r=1",
     };
 
     const handleTabChange = (tab: any) => {

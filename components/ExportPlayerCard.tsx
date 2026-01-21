@@ -5,7 +5,6 @@ import { useTranslation } from '../ui';
 import { BadgeIcon, getBadgePriority } from '../features';
 import { StarIcon } from '../icons';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
-import { calculatePlayerMonthlyStats } from '../services/statistics';
 import { useApp } from '../context';
 
 const skillAbbreviations: Record<SkillType, string> = {
@@ -40,7 +39,6 @@ const RankItem: React.FC<{ label: string; rank: number; total: number }> = ({ la
 
 export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }> = ({ player, allPlayers }) => {
     const t = useTranslation();
-    const { history } = useApp(); // Access history to calculate monthly stats
     const countryCodeAlpha2 = React.useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
 
     const topBadges = React.useMemo(() => {
@@ -95,14 +93,6 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
 
     const winRate = player.totalGames > 0 ? `${Math.round((player.totalWins / player.totalGames) * 100)}%` : 'N/A';
     
-    // --- RECALCULATE MONTHLY STATS DYNAMICALLY ---
-    const monthlyStats = React.useMemo(() => {
-        return calculatePlayerMonthlyStats(player.id, history);
-    }, [player.id, history]);
-
-    const displayMonthlyGoals = monthlyStats.goals;
-    const displayMonthlyAssists = monthlyStats.assists;
-
     return (
         <div 
             id="export-card-to-capture" 
@@ -153,7 +143,7 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
                         )}
                     </div>
                     <div className="text-right flex flex-col items-end">
-                        <p className="font-orbitron font-bold text-6xl text-dark-accent-start accent-text-glow leading-none" style={{ textShadow: '0 0 8px rgba(0, 242, 254, 0.8)' }}>
+                        <p className="font-orbitron font-bold text-5xl text-dark-accent-start accent-text-glow leading-none" style={{ textShadow: '0 0 8px rgba(0, 242, 254, 0.8)' }}>
                             {player.rating}
                         </p>
                         <div className="mt-6 flex flex-col items-end">
@@ -188,8 +178,8 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
                 </section>
 
                 <section className="flex justify-around items-center my-1 py-2 border-t-2 border-dark-accent-start/30">
-                    <Stat value={displayMonthlyGoals} label={t.monthlyGoals} />
-                    <Stat value={displayMonthlyAssists} label={t.monthlyAssists} />
+                    <Stat value={player.totalGoals} label={t.monthlyGoals} />
+                    <Stat value={player.totalAssists} label={t.monthlyAssists} />
                     <Stat value={winRate} label={t.winRate} />
                 </section>
 

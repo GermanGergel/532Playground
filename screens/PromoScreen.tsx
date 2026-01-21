@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { PublicPlayerCard } from '../components/PublicPlayerCard';
 import { LastSessionBreakdown } from '../components/PlayerCardAnalytics';
@@ -15,7 +14,7 @@ const SOCIAL_LINKS = {
     zalo: "https://zalo.me/g/pjdfxl571", // Updated to Group Link
     instagram: "https://www.instagram.com/532playground?igsh=MTdzdHpwMjY3aHN4cg%3D%3D&utm_source=qr",
     youtube: "https://youtube.com/@playground532?si=_NqI_aOcvmjlSMFn",
-    tiktok: "https://www.tiktok.com/@532playground",
+    tiktok: "https://www.tiktok.com/@532club?_r=1",
 };
 
 // Default Fallback if no DB data
