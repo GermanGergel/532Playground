@@ -6,6 +6,7 @@ import { BadgeIcon, getBadgePriority } from '../features';
 import { StarIcon } from '../icons';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { useApp } from '../context';
+import { MiniSquadBadge } from './MiniSquadBadge';
 
 const skillAbbreviations: Record<SkillType, string> = {
     goalkeeper: 'GK',
@@ -39,6 +40,11 @@ const RankItem: React.FC<{ label: string; rank: number; total: number }> = ({ la
 
 export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }> = ({ player, allPlayers }) => {
     const t = useTranslation();
+    const { totmPlayerIds } = useApp();
+    
+    // Check if player is currently in Team of the Month
+    const isTotm = totmPlayerIds.has(player.id);
+
     const countryCodeAlpha2 = React.useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
 
     const topBadges = React.useMemo(() => {
@@ -153,7 +159,7 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
                     </div>
                 </header>
                 
-                {/* Fixed Skill Alignment */}
+                {/* Fixed Skill Alignment & TOTM Badge */}
                 <div className="absolute top-40 left-6 z-30">
                     <div className="space-y-4">
                         {(player.skills || []).slice(0, 5).map(skill => (
@@ -167,6 +173,13 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
                             </div>
                         ))}
                     </div>
+
+                    {/* Team of the Month Badge (Export Version) */}
+                    {isTotm && (
+                        <div className="mt-6 pl-1">
+                            <MiniSquadBadge size="w-12 h-12" />
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex-grow" />
