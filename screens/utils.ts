@@ -10,7 +10,7 @@ export const hexToRgba = (hex: string, alpha: number) => {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
-// UPDATED: Added GFE to the branding text and adjusted letter spacing
+// UPDATED: Branding set to UNIT DANANG
 export const BrandedHeader: React.FC<{className?: string; isExport?: boolean}> = ({ className, isExport }) => (
     React.createElement('header', { className: `text-center ${className} ${isExport ? '-mt-4' : ''}` },
         React.createElement('h1', { 
@@ -26,6 +26,6 @@ export const BrandedHeader: React.FC<{className?: string; isExport?: boolean}> =
                     drop-shadow(4px 10px 15px rgba(0, 0, 0, 0.8))
                 `,
             } 
-        }, "UNIT GFE")
+        }, "UNIT DANANG")
     )
 );
