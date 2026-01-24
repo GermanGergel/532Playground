@@ -10,8 +10,8 @@ export const hexToRgba = (hex: string, alpha: number) => {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
-// UPDATED: Branding set to UNIT DANANG
-export const BrandedHeader: React.FC<{className?: string; isExport?: boolean}> = ({ className, isExport }) => (
+// UPDATED: Added 'short' prop to toggle between "UNIT" and "UNIT DANANG"
+export const BrandedHeader: React.FC<{className?: string; isExport?: boolean; short?: boolean}> = ({ className, isExport, short }) => (
     React.createElement('header', { className: `text-center ${className} ${isExport ? '-mt-4' : ''}` },
         React.createElement('h1', { 
             className: `text-5xl font-black uppercase leading-none font-russo tracking-[0.1em]`, 
@@ -26,6 +26,6 @@ export const BrandedHeader: React.FC<{className?: string; isExport?: boolean}> =
                     drop-shadow(4px 10px 15px rgba(0, 0, 0, 0.8))
                 `,
             } 
-        }, "UNIT DANANG")
+        }, short ? "UNIT" : "UNIT DANANG")
     )
 );

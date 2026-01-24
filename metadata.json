@@ -1,6 +1,6 @@
 {
-  "name": "UNIT DANANG",
-  "description": "UNIT Danang: A comprehensive application for managing futsal training sessions in Da Nang, tracking detailed statistics, and exporting results.",
+  "name": "UNIT CLUB",
+  "description": "UNIT Club: A comprehensive application for managing futsal training sessions in Da Nang, tracking detailed statistics, and exporting results.",
   "requestFramePermissions": [
     "camera",
     "geolocation"

@@ -40,7 +40,8 @@ export const HistoryScreen: React.FC = () => {
 
     return (
         <Page>
-            <BrandedHeader className="mb-8" />
+            {/* UPDATED: Added 'short' prop to only show "UNIT" as requested */}
+            <BrandedHeader className="mb-8" short />
             
             {history.length === 0 && !isLoadingMore ? (
                 <p className="text-center text-dark-text-secondary">{t.noSessionsFound}</p>
