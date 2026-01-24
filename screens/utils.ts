@@ -10,11 +10,11 @@ export const hexToRgba = (hex: string, alpha: number) => {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
-// UPDATED: Now uses a muted turquoise metallic gradient
+// UPDATED: Added GFE to the branding text and adjusted letter spacing
 export const BrandedHeader: React.FC<{className?: string; isExport?: boolean}> = ({ className, isExport }) => (
     React.createElement('header', { className: `text-center ${className} ${isExport ? '-mt-4' : ''}` },
         React.createElement('h1', { 
-            className: `text-6xl font-black uppercase leading-none font-russo tracking-[0.15em]`, 
+            className: `text-5xl font-black uppercase leading-none font-russo tracking-[0.1em]`, 
             style: { 
                 // Muted Turquoise Metal Gradient
                 background: 'linear-gradient(180deg, #48CFCB 0%, #083344 100%)',
@@ -26,6 +26,6 @@ export const BrandedHeader: React.FC<{className?: string; isExport?: boolean}> =
                     drop-shadow(4px 10px 15px rgba(0, 0, 0, 0.8))
                 `,
             } 
-        }, "UNIT")
+        }, "UNIT GFE")
     )
 );

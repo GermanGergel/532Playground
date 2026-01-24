@@ -1,7 +1,7 @@
 
 {
-  "name": "UNIT // Global Football Exchange",
-  "short_name": "UNIT // GFE",
+  "name": "UNIT Global Football Exchange",
+  "short_name": "UNIT GFE",
   "description": "A comprehensive application for managing futsal training sessions, tracking detailed statistics, and exporting results.",
   "start_url": "/",
   "display": "standalone",
