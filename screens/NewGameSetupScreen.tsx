@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-import { Page, Button, Card, ToggleSwitch, useTranslation } from '../components';
+import { Page, Button, Card, ToggleSwitch, useTranslation } from '../ui';
 import { Session, RotationMode, SessionStatus } from '../types';
 import { formatDate } from '../services/export';
 import { newId } from './utils';
@@ -12,7 +12,16 @@ export const NewGameSetupScreen: React.FC = () => {
     const navigate = useNavigate();
     const t = useTranslation();
 
-    const [sessionName, setSessionName] = React.useState('532 PLAYGROUND GAME');
+    // Logic to generate default name with current date using dots instead of slashes
+    const getDefaultSessionName = () => {
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = String(now.getFullYear()).slice(-2);
+        return `UNIT GAME ${day}.${month}.${year}`;
+    };
+
+    const [sessionName, setSessionName] = React.useState(getDefaultSessionName());
     const [numTeams, setNumTeams] = React.useState(3);
     const [playersPerTeam, setPlayersPerTeam] = React.useState(5);
     const [matchDuration, setMatchDuration] = React.useState(7);
@@ -35,7 +44,6 @@ export const NewGameSetupScreen: React.FC = () => {
             games: [],
             playerPool: [],
             eventLog: [],
-            // isTestMode removed
         };
         setActiveSession(newSession);
         navigate('/assign');
@@ -57,7 +65,7 @@ export const NewGameSetupScreen: React.FC = () => {
                             type="text" 
                             value={sessionName}
                             onChange={(e) => setSessionName(e.target.value)}
-                            className="w-full bg-transparent border-none focus:ring-0 p-0 gradient-text font-bold text-lg"
+                            className="w-full bg-transparent border-none focus:ring-0 p-0 gradient-text font-bold text-lg uppercase"
                         />
                     </Card>
                 </div>

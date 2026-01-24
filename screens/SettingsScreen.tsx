@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -194,7 +193,7 @@ export const SettingsScreen: React.FC = () => {
                 <NetworkHud />
                 
                 <div className="text-center opacity-40 hover:opacity-100 transition-opacity duration-500">
-                    <p className="font-orbitron font-bold text-sm tracking-widest text-dark-accent-start">532 PLAYGROUND</p>
+                    <p className="font-orbitron font-bold text-sm tracking-widest text-dark-accent-start uppercase">UNIT</p>
                     <p className="text-[10px] text-dark-text-secondary font-mono mt-1">v4.0.1 • SYSTEM READY</p>
                 </div>
             </div>

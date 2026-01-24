@@ -1,7 +1,7 @@
 
 {
-  "name": "532 Playground",
-  "short_name": "532",
+  "name": "UNIT",
+  "short_name": "UNIT",
   "description": "A comprehensive application for managing futsal training sessions, tracking detailed statistics, and exporting results.",
   "start_url": "/",
   "display": "standalone",

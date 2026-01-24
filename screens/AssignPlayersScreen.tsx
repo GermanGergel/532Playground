@@ -1,6 +1,5 @@
 
 import React from 'react';
-// FIX: Import directly from component files instead of barrel file to avoid import errors.
 import { Button, Card, useTranslation, Modal, SessionModeIndicator } from '../ui';
 import { TeamAvatar, PlayerAvatar } from '../components/avatars';
 import { Wand, XCircle } from '../icons';

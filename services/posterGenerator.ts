@@ -1,3 +1,4 @@
+
 import { WeatherData, getWeatherIconType } from './weather';
 
 interface PosterData {
@@ -203,11 +204,10 @@ export const generateAndSharePoster = async (options: PosterData) => {
         try {
             await navigator.share({ files: [file] });
         } catch (error: any) {
-            if (error.name === 'AbortError') {
-                console.log('Share cancelled by user.');
-                return;
+            if (error.name !== 'AbortError') {
+                console.error("Poster share error:", error);
+                throw error;
             }
-            throw error;
         }
     } else {
         const link = document.createElement('a');

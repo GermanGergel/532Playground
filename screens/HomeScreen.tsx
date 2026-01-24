@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Page, Button, useTranslation, Modal } from '../ui';
 import { homeScreenBackground } from '../assets';
-import { BrandedHeader } from './utils';
 import { Globe, Upload, XCircle, QrCode } from '../icons'; 
 import html2canvas from 'html2canvas';
 
@@ -27,7 +26,6 @@ export const HomeScreen: React.FC = () => {
 
   const promoUrl = `${window.location.origin}/promo`;
 
-  // Генерация QR-кода при открытии модалки
   useEffect(() => {
       if (isQrModalOpen) {
           const generateQrCode = async () => {
@@ -66,25 +64,29 @@ export const HomeScreen: React.FC = () => {
       if (isSharing) return;
       setIsSharing(true);
       const shareData = {
-          title: '532 CLUB HUB',
-          text: 'Check live stats, rankings, and match intelligence on 532 Playground.',
+          title: 'UNIT HUB',
+          text: 'Check live stats, rankings, and match intelligence on UNIT.',
           url: hubUrl,
       };
       try {
-          if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+          // Robust check for share capability
+          const canShare = navigator.share && typeof navigator.canShare === 'function' && navigator.canShare(shareData);
+          if (canShare) {
               await navigator.share(shareData);
           } else {
               await navigator.clipboard.writeText(hubUrl);
-              alert("Club Hub link copied to clipboard!");
+              alert("UNIT Hub link copied to clipboard!");
           }
-      } catch (error) {
-          console.error("Error sharing hub link:", error);
+      } catch (error: any) {
+          // Ignore cancellation errors
+          if (error.name !== 'AbortError') {
+              console.error("Error sharing hub link:", error);
+          }
       } finally {
           setIsSharing(false);
       }
   };
 
-  // ЛОГИКА ОТПРАВКИ КАРТОЧКИ (КОПИЯ С ПРОФИЛЯ ИГРОКА)
   const handleSharePromoCard = async () => {
       if (!promoCardRef.current || isGenerating) return;
       setIsGenerating(true);
@@ -98,16 +100,18 @@ export const HomeScreen: React.FC = () => {
           const blob = await new Promise<Blob|null>(resolve => canvas.toBlob(resolve, 'image/png'));
           if (!blob) throw new Error("Blob creation failed");
   
-          const filename = `532_Access_Card.png`;
+          const filename = `UNIT_Access_Card.png`;
           const file = new File([blob], filename, { type: 'image/png' });
 
           const shareData = {
               files: [file],
-              title: `532 PLAYGROUND // ACCESS`,
-              text: `Join the club: ${promoUrl}`
+              title: `UNIT // ACCESS`,
+              text: `Join the project: ${promoUrl}`
           };
 
-          if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+          const canShare = navigator.share && typeof navigator.canShare === 'function' && navigator.canShare(shareData);
+
+          if (canShare) {
               await navigator.share(shareData);
           } else {
               const url = URL.createObjectURL(blob);
@@ -120,19 +124,20 @@ export const HomeScreen: React.FC = () => {
               alert("Card downloaded and link copied to clipboard!");
           }
       } catch (error: any) {
-          console.error("Sharing error:", error);
+          if (error.name !== 'AbortError') {
+              console.error("Sharing error:", error);
+          }
       } finally {
           setIsGenerating(false);
           setIsQrModalOpen(false);
       }
   };
 
-  const controlButtonClass = "w-12 h-12 flex items-center justify-center bg-dark-surface/80 rounded-full border shadow-[0_0_15px_rgba(0,242,254,0.2)] active:scale-95 transition-all hover:bg-dark-surface hover:scale-110";
+  const controlButtonClass = "w-11 h-11 flex items-center justify-center bg-white/[0.03] backdrop-blur-md rounded-full border border-white/10 shadow-lg active:scale-95 transition-all hover:bg-white/10 hover:border-white/20";
 
   return (
     <Page style={{ backgroundImage: `url("${homeScreenBackground}")`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
         
-        {/* Recruit Modal - Updated to Match Player Share Design */}
         <Modal
             isOpen={isQrModalOpen}
             onClose={() => setIsQrModalOpen(false)}
@@ -141,22 +146,19 @@ export const HomeScreen: React.FC = () => {
             containerClassName="!p-4 !bg-dark-bg border border-[#00F2FE]/20"
         >
             <div className="flex flex-col items-center gap-6">
-                {/* ПРЕВЬЮ КАРТОЧКИ (КОПИРУЕМ СТИЛЬ SHARE_PROFILE_MODAL) */}
                 <div 
                     ref={promoCardRef} 
                     className="w-full bg-[#1A1D24] rounded-[2rem] p-6 flex flex-col items-center gap-6 border border-[#00F2FE]/30 shadow-[0_0_30px_rgba(0,242,254,0.15)]"
                 >
                     <div className="text-center">
-                        <h1 className="font-russo text-3xl flex items-baseline justify-center">
-                            <span className="text-[#00F2FE]">532</span>
-                            <span className="text-white ml-2 text-lg tracking-widest">PLAYGROUND</span>
+                        <h1 className="font-russo text-4xl italic text-white" style={{ textShadow: '0 0 10px rgba(0, 242, 254, 0.4)' }}>
+                            UNIT
                         </h1>
                         <p className="text-[9px] font-black tracking-[0.4em] text-white/40 mt-2 uppercase">
                             OFFICIAL ACCESS CARD
                         </p>
                     </div>
                     
-                    {/* Текст изменен на RECRUIT CARD */}
                     <div className="text-center space-y-1">
                         <h2 className="font-russo text-2xl text-white uppercase tracking-tight leading-none">
                             RECRUIT CARD
@@ -179,7 +181,7 @@ export const HomeScreen: React.FC = () => {
                     </div>
 
                     <p className="text-[10px] font-bold tracking-[0.2em] text-[#00F2FE] animate-pulse uppercase">
-                        SCAN TO JOIN THE CLUB
+                        SCAN TO JOIN THE UNIT
                     </p>
                 </div>
 
@@ -205,54 +207,85 @@ export const HomeScreen: React.FC = () => {
         </Modal>
         
         <div className="flex flex-col min-h-[calc(100vh-8rem)] justify-between relative">
-             <div className="absolute top-4 right-0 z-50 flex flex-row gap-3 items-center">
-                 <button 
-                    onClick={handleShareHub}
-                    disabled={isSharing}
-                    className={`${controlButtonClass} text-dark-accent-start border-dark-accent-start/30 ${isSharing ? 'opacity-50 cursor-wait' : ''}`}
-                    title="Share Club Hub Access"
-                 >
-                    {isSharing ? (
-                        <div className="w-5 h-5 border-2 border-dark-accent-start border-t-transparent rounded-full animate-spin"></div>
-                    ) : (
-                        <Globe className="w-6 h-6" />
-                    )}
-                 </button>
-                 <button 
-                    onClick={() => setIsQrModalOpen(true)}
-                    className={`${controlButtonClass} text-dark-accent-start border-dark-accent-start/30`}
-                    title="Recruit Player"
-                 >
-                    <QrCode className="w-6 h-6" />
-                 </button>
+             {/* TOP BAR: UNIT LOGO + CONTROLS */}
+             <div className="flex flex-row justify-between items-center w-full pt-4 mb-16 px-1">
+                 <div className="flex flex-col items-start relative select-none pointer-events-none">
+                    {/* Статичная подложка без свечения */}
+                    <div className="absolute -inset-4 bg-black/10 rounded-full blur-[40px] pointer-events-none"></div>
+                    
+                    <div className="flex flex-col relative z-10">
+                        <h1 
+                            className="text-7xl font-black uppercase leading-[0.8] font-russo tracking-[0.15em]" 
+                            style={{ 
+                                // UPDATED: Muted turquoise metallic gradient
+                                background: 'linear-gradient(180deg, #48CFCB 0%, #083344 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                filter: `
+                                    drop-shadow(1px 1px 0px #0E7490) 
+                                    drop-shadow(2px 2px 0px #000000) 
+                                    drop-shadow(4px 10px 15px rgba(0, 0, 0, 0.8))
+                                `,
+                            }}
+                        >
+                            UNIT
+                        </h1>
+                        <div className="flex items-center gap-2 mt-3 opacity-20">
+                            <div className="h-[1.5px] w-6 bg-white rounded-full"></div>
+                            <span className="text-[11px] font-bold text-white tracking-[0.3em] uppercase font-chakra">
+                                Level Up Together
+                            </span>
+                        </div>
+                    </div>
+                 </div>
+                 
+                 <div className="flex flex-row gap-3 pointer-events-auto">
+                    <button 
+                        onClick={handleShareHub}
+                        disabled={isSharing}
+                        className={`${controlButtonClass} text-white/80 hover:text-[#00D2D2] transition-colors ${isSharing ? 'opacity-50 cursor-wait' : ''}`}
+                        title="Share Unit Hub Access"
+                    >
+                        {isSharing ? (
+                            <div className="w-5 h-5 border-2 border-[#00D2D2] border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                            <Globe className="w-5 h-5" />
+                        )}
+                    </button>
+                    <button 
+                        onClick={() => setIsQrModalOpen(true)}
+                        className={`${controlButtonClass} text-white/80 hover:text-[#00D2D2] transition-colors`}
+                        title="Recruit Player"
+                    >
+                        <QrCode className="w-5 h-5" />
+                    </button>
+                 </div>
              </div>
 
-             <BrandedHeader className="mt-12" />
-
-            <div className="flex-grow flex items-center justify-center"></div>
+            <div className="flex-grow"></div>
             
             <main className="flex flex-col items-center gap-4 w-full mt-auto">
                  <Button 
                     variant="secondary" 
                     onClick={() => navigate('/hub')} 
-                    className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 border border-dark-accent-start/30"
+                    className="w-full font-chakra font-bold text-xl tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5 active:scale-[0.98] transition-all"
                  >
                     {t.hubTitle}
                  </Button>
 
                  {activeSession ? (
-                    <Button variant="secondary" onClick={handleContinue} className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">
+                    <Button variant="secondary" onClick={handleContinue} className="w-full font-chakra font-bold text-xl tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5">
                         {t.continueSession}
                     </Button>
                  ) : (
-                    <Button variant="secondary" onClick={handleStartNewSession} className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">
+                    <Button variant="secondary" onClick={handleStartNewSession} className="w-full font-chakra font-bold text-xl tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5">
                         {t.newSession}
                     </Button>
                  )}
-                 <Button variant="secondary" onClick={() => navigate('/player-hub')} className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">
+                 <Button variant="secondary" onClick={() => navigate('/player-hub')} className="w-full font-chakra font-bold text-xl tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5">
                     {t.playerHub}
                  </Button>
-                 <Button variant="secondary" onClick={() => navigate('/announcement')} className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">
+                 <Button variant="secondary" onClick={() => navigate('/announcement')} className="w-full font-chakra font-bold text-xl tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5">
                     {t.createAnnouncement}
                  </Button>
             </main>

@@ -108,8 +108,9 @@ export const generateAndShareBrandAssets = async (type: 'logo' | 'cover') => {
         try {
             await navigator.share({ files: [file] });
         } catch (error: any) {
-            if (error.name === 'AbortError') return;
-            throw error;
+            if (error.name !== 'AbortError') {
+                console.error("Brand share error:", error);
+            }
         }
     } else {
         const link = document.createElement('a');

@@ -118,7 +118,6 @@ export const exportSessionAsJson = async (session: Session) => {
     URL.revokeObjectURL(url);
 };
 
-// FIX: Added missing exported member 'shareOrDownloadImages' to fix reference errors in StatisticsScreen and SessionReportScreen
 /**
  * Captures a DOM element as an image and shares it via the Web Share API or downloads it.
  */
@@ -142,12 +141,16 @@ export const shareOrDownloadImages = async (elementId: string, sessionName: stri
         const filename = `532_${sessionName.replace(/\s/g, '_')}_${sessionDate}_${sectionName}.png`;
         const file = new File([blob], filename, { type: 'image/png' });
 
-        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({
-                files: [file],
-                title: `532 Playground - ${sectionName}`,
-                text: `Session: ${sessionName} (${sessionDate})`,
-            });
+        const shareData = {
+            files: [file],
+            title: `532 Playground - ${sectionName}`,
+            text: `Session: ${sessionName} (${sessionDate})`,
+        };
+
+        const canShare = navigator.share && typeof navigator.canShare === 'function' && navigator.canShare(shareData);
+
+        if (canShare) {
+            await navigator.share(shareData);
         } else {
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
@@ -158,8 +161,10 @@ export const shareOrDownloadImages = async (elementId: string, sessionName: stri
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
         }
-    } catch (error) {
-        console.error('Error in shareOrDownloadImages:', error);
-        throw error;
+    } catch (error: any) {
+        if (error.name !== 'AbortError') {
+            console.error('Error in shareOrDownloadImages:', error);
+            throw error;
+        }
     }
 };
