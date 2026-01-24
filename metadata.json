@@ -1,6 +1,6 @@
 {
-  "name": "UNIT",
-  "description": "A comprehensive application for managing futsal training sessions, tracking detailed statistics, and exporting results. It supports various game modes, team setups, and provides real-time updates during matches.",
+  "name": "UNIT // GFE",
+  "description": "UNIT // Global Football Exchange: A comprehensive application for managing futsal training sessions, tracking detailed statistics, and exporting results.",
   "requestFramePermissions": [
     "camera",
     "geolocation"
