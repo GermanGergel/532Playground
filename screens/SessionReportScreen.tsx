@@ -18,7 +18,7 @@ const BrandedShareableReport: React.FC<{
     [key: string]: any;
 }> = ({ session, children, className, style, ...props }) => {
     const PADDING = 40;
-    const homeScreenBackground = `data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 1200'%3e%3cdefs%3e%3cradialGradient id='g' cx='50%25' cy='50%25' r='50%25'%3e%3cstop offset='0%25' stop-color='%2300F2FE' stop-opacity='0.1' /%3e%3cstop offset='100%25' stop-color='%2300F2FE' stop-opacity='0' /%3e%3c/radialGradient%3e%3cfilter id='f'%3e%3cfeTurbulence type='fractalNoise' baseFrequency='0.02 0.05' numOctaves='3' /%3e%3c/filter%3e%3c/defs%3e%3crect width='100%25' height='100%25' fill='%231A1D24' /%3e%3crect x='0' y='0' width='100%25' height='100%25' fill='url(%23g)' /%3e%3crect x='0' y='0' width='100%25' height='100%25' fill='url(%23f)' opacity='0.03' /%3e%3c/svg%3e`;
+    const homeScreenBackground = `data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 1200'%3e%3cdefs%3e%3cradialGradient id='g' cx='50%25' cy='50%25' r='50%25'%3e%3cstop offset='0%25' stop-color='%2300F2FE' stop-opacity='0.1' /%3e%3cstop offset='100%25' stop-color='%2300F2FE' stop-opacity='0' /%3e%3c/radialGradient%3e%3cfilter id='f'%3e%3cfeTurbulence type='fractalNoise' baseFrequency='0.02 0.05' numOctaves='3' /%3e%3c/filter%3e%3c/defs%3e%3crect width='100%25' height='100%25' fill='%231A1D24' /%3e%3crect x='0' y='0' width='100%25' height='100%25' fill='url(%23g)' /%3e%3crect x='0' y='0' width='100%25' height='100%25' filter='url(%23f)' opacity='0.03' /%3e%3c/svg%3e`;
 
 
     const containerStyle: React.CSSProperties = {
@@ -137,7 +137,7 @@ export const SessionReportScreen: React.FC = () => {
                 </div>
             </Modal>
             <div className="w-full max-w-4xl mx-auto">
-                 <BrandedHeader className="mb-4" />
+                 <BrandedHeader className="mb-4" short />
                  <p className="text-dark-text-secondary mb-6">{new Date(session.date).toLocaleDateString('en-GB')}</p>
                 
                 <ShareableReport session={session} />
@@ -164,7 +164,7 @@ export const SessionReportScreen: React.FC = () => {
             >
                 <BrandedShareableReport session={session} data-export-section="standings" style={{ width: '600px' }}>
                     <div className="mb-4 text-left w-full">
-                        <BrandedHeader isExport={true} />
+                        <BrandedHeader isExport={true} short />
                         <p className="font-chakra text-dark-text mt-8 text-xl font-medium tracking-wider uppercase">{displayDate}</p>
                     </div>
                     <ShareableReport session={session} visibleSection="standings" isExport={true} />
