@@ -85,7 +85,6 @@ export const en = {
   thW: "W",
   thD: "D",
   thL: "L",
-  // Added missing translation keys thGF and thGA
   thGF: "GF",
   thGA: "GA",
   thGD: "GD",
@@ -183,6 +182,7 @@ export const en = {
   winLossDraw: "W-D-L Record",
   sessionTrend: "Form Trend",
   allTimeStats: "Career Stats",
+  careerStats: "Career Averages",
   thSessions: "Sess",
   winRate: "Win %",
   goalsPerSession: "Goals/Sess",
@@ -191,8 +191,6 @@ export const en = {
   monthlyGoals: "Goals",
   monthlyAssists: "Assists",
   monthlyWins: "Wins",
-  // Added missing translation key careerStats
-  careerStats: "Career Stats",
   session: "Sessions",
   information: "Information",
   statistics: "Statistics",

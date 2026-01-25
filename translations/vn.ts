@@ -261,14 +261,14 @@ export const vn = {
   hubTimeFrame: "THỜI GIAN",
   hubWeather: "THỜI TIẾT",
   hubImpact: "TÁC ĐỘNG",
-  hubWelcomeText: "Welcome to the official UNIT operational hub. Track your evolution, analyze match data, and redefine the game.",
+  hubWelcomeText: "Chào mừng bạn đến với trung tâm điều hành chính thức của UNIT. Theo dõi sự tiến hóa của bạn, phân tích dữ liệu trận đấu và định nghĩa lại cuộc chơi.",
   hubLeadersTitle: "DẪN ĐẦU MÙA GIẢI",
   hubJoinSquad: "Tham Gia Đội Hình",
   
   // Duel
   duel_title: "Chọn Đối Thủ",
   duel_id_unit: "XÁC MINH CẦU THỦ...",
-  duel_initiate: "BẮT ĐẦU ĐỐИ ĐẦU",
+  duel_initiate: "BẮT ĐẦU ĐỐI ĐẦU",
   duel_sector_empty: "Không có cầu thủ",
   duel_complete: "KẾT THÚC ĐỐI ĐẦU",
   duel_score: "TỈ SỐ",

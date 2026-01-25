@@ -1,4 +1,3 @@
-
 export const en = {
   // Navigation
   navHome: "Home",
@@ -57,11 +56,12 @@ export const en = {
   selectWinnerDesc: "Select the winning team to proceed",
   onBench: "On Bench",
 
-  // Added missing Legionnaire keys for English translation
+  // FIX: Added missing Legionnaire keys for English translation
   legionnaire_replace: "REPLACE",
   legionnaire_select: "SELECT",
   legionnaire_no_players: "No resting players available",
 
+  // FIX: Added missing Session Summary keys for English translation
   // Session Summary
   summary_title: "SESSION SUMMARY",
   summary_location: "LOCATION",
@@ -85,9 +85,6 @@ export const en = {
   thW: "W",
   thD: "D",
   thL: "L",
-  // Added missing translation keys thGF and thGA
-  thGF: "GF",
-  thGA: "GA",
   thGD: "GD",
   thPts: "Pts",
   players: "Player",
@@ -191,8 +188,6 @@ export const en = {
   monthlyGoals: "Goals",
   monthlyAssists: "Assists",
   monthlyWins: "Wins",
-  // Added missing translation key careerStats
-  careerStats: "Career Stats",
   session: "Sessions",
   information: "Information",
   statistics: "Statistics",
@@ -264,6 +259,7 @@ export const en = {
   hubLeadersTitle: "Session Leaders",
   hubJoinSquad: "Join the Squad",
 
+  // FIX: Added missing Duel keys for English translation
   // Duel
   duel_title: "Duel Selection",
   duel_id_unit: "IDENTIFY UNIT...",

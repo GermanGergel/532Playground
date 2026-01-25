@@ -153,6 +153,7 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
 
     const player = useMemo(() => (allPlayers.find(p => p.id === playerId)) as Player, [allPlayers, playerId]);
     
+    // Check if player is in Team of the Month
     const isTotm = useMemo(() => totmPlayerIds.has(playerId), [totmPlayerIds, playerId]);
 
     const rankings = useMemo(() => {
@@ -199,6 +200,7 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
 
     if (!player) return null;
     
+    // --- RECALCULATE MONTHLY STATS DYNAMICALLY ---
     const monthlyStats = useMemo(() => {
         return calculatePlayerMonthlyStats(player.id, history);
     }, [player.id, history]);
@@ -260,16 +262,19 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
                                         <div className="absolute inset-0 p-4 flex flex-col justify-between pointer-events-none">
                                             <div className="flex justify-between items-start">
-                                                <div className="flex flex-col items-start pt-2">
-                                                    {/* BRAND REPLACEMENT: UNIT */}
+                                                <div className="flex flex-col items-start">
+                                                    {/* BRAND REPLACEMENT: UNIT (Unified White) */}
                                                     <p 
                                                         className="font-russo text-xl leading-none tracking-tighter text-white"
-                                                        style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}
+                                                        style={{ 
+                                                            textShadow: '0 2px 10px rgba(0,0,0,0.5)',
+                                                        }}
                                                     >
                                                         UNIT
                                                     </p>
-                                                    {countryCodeAlpha2 && <img src={`https://flagcdn.com/w80/${countryCodeAlpha2.toLowerCase()}.png`} className="w-4 h-auto mt-4 rounded-sm opacity-60" alt="flag" />}
+                                                    {countryCodeAlpha2 && <img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} className="w-5 h-auto mt-4 rounded-sm opacity-80" alt="flag" />}
                                                     
+                                                    {/* TEAM OF THE MONTH ICON */}
                                                     {isTotm && (
                                                         <div className="mt-3 animate-in fade-in zoom-in duration-700">
                                                             <MiniSquadBadge size="w-8 h-8" className="opacity-90" />
