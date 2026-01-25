@@ -81,11 +81,15 @@ export const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ play
                 <div className="relative z-10 h-full p-1">
                      <div className="flex justify-between items-start">
                         <div className="pt-2">
-                            {/* BRAND REPLACEMENT: UNIT (Unified White) - No Clipping Bug */}
+                            {/* BRAND REPLACEMENT: DARK TURQUOISE (TEST) */}
                             <p 
-                                className="font-russo text-xl leading-none tracking-tighter text-white"
+                                className="font-russo text-xl leading-none tracking-tighter"
                                 style={{ 
-                                    textShadow: '0 2px 10px rgba(0,0,0,0.5)',
+                                    background: 'linear-gradient(180deg, #155e75 0%, #083344 100%)',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent',
+                                    opacity: 0.8,
+                                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))',
                                 }}
                             >
                                 UNIT
