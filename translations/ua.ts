@@ -57,7 +57,6 @@ export const ua = {
   selectWinnerDesc: "Виберіть переможця, щоб продовжити",
   onBench: "На лавці",
 
-  // Legionnaire
   legionnaire_replace: "ЗАМІНИТИ",
   legionnaire_select: "ВИБРАТИ",
   legionnaire_no_players: "Немає вільних гравців",
@@ -85,8 +84,6 @@ export const ua = {
   thW: "В",
   thD: "Н",
   thL: "П",
-  thGF: "З",
-  thGA: "П",
   thGD: "РМ",
   thPts: "Очки",
   players: "Гравець",
@@ -242,7 +239,7 @@ export const ua = {
   hubTicker1: "ЕЛІТНИЙ ТРЕКІНГ",
   hubTicker2: "LIVE ДАНІ СЕССИИ",
   hubTicker3: "ГЛОБАЛЬНИЙ РЕЙТИНГ",
-  hubTicker4: "АНАЛІТИКА ГРАВЦІВ",
+  hubTicker4: "АНАЛИТИКА ГРАВЦІВ",
   hubTicker5: "АРХИВ МАТЧІВ",
   hubAwaitingStats: "ОЧІКУВАННЯ ДАНИХ",
   hubAnalyzingPerformance: "АНАЛІЗ ЕФЕКТИВНОСТІ...",
@@ -262,9 +259,9 @@ export const ua = {
   hubTimeFrame: "ЧАС",
   hubWeather: "ПОГОДА",
   hubImpact: "ІМПАКТ",
-  hubWelcomeText: "Ласкаво просимо до операційного хабу UNIT. Відстежуй прогрес, аналізуй дані матчів та змінюй правила гри.",
+  hubWelcomeText: "Welcome to the official UNIT operational hub. Track your evolution, analyze match data, and redefine the game.",
   hubLeadersTitle: "Лідери Сесії",
-  hubJoinSquad: "Вступити в Загін",
+  hubJoinSquad: "Вступить в Загін",
   
   // Promo
   hero_title: "ГРАЙ ЯК ПРОФІ",
@@ -394,15 +391,6 @@ export const ua = {
   badge_crisis_manager_desc: "2+ Г/А будучи Легионером",
   badge_iron_lung: "Залізні Легені",
   badge_iron_lung_desc: "Серія Перемога-Перемога-Перемога",
-
-  // Duel
-  duel_title: "Вибір Дуелі",
-  duel_id_unit: "ОПОЗНАННЯ ЮНІТА...",
-  duel_initiate: "ЗАПУСТИТИ ПОСЛІДОВНІСТЬ",
-  duel_sector_empty: "Сектор порожній",
-  duel_complete: "ПОСЛІДОВНІСТЬ ЗАВЕРШЕНА",
-  duel_score: "РАХУНОК",
-  duel_verified: "Індекс ефективності підтверджено",
   
   // Announcements
   announcement_start_match: "Початок Матчу",

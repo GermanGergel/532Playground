@@ -153,7 +153,6 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
 
     const player = useMemo(() => (allPlayers.find(p => p.id === playerId)) as Player, [allPlayers, playerId]);
     
-    // Check if player is in Team of the Month
     const isTotm = useMemo(() => totmPlayerIds.has(playerId), [totmPlayerIds, playerId]);
 
     const rankings = useMemo(() => {
@@ -200,9 +199,6 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
 
     if (!player) return null;
     
-    // --- RECALCULATE MONTHLY STATS DYNAMICALLY ---
-    // Instead of using dirty `player.monthlyGoals` from DB, recalculate from history
-    // This uses the hook-like behavior inside the component body, which is allowed.
     const monthlyStats = useMemo(() => {
         return calculatePlayerMonthlyStats(player.id, history);
     }, [player.id, history]);
@@ -264,12 +260,16 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
                                         <div className="absolute inset-0 p-4 flex flex-col justify-between pointer-events-none">
                                             <div className="flex justify-between items-start">
-                                                <div className="flex flex-col items-start">
-                                                    <span className="font-black text-xl text-[#00F2FE] leading-none">532</span>
-                                                    <span className="text-white text-[6px] font-bold tracking-[0.15em] leading-none mt-1">PLAYGROUND</span>
-                                                    {countryCodeAlpha2 && <img src={`https://flagcdn.com/w80/${countryCodeAlpha2.toLowerCase()}.png`} className="w-4 h-auto mt-2 rounded-sm opacity-60" alt="flag" />}
+                                                <div className="flex flex-col items-start pt-2">
+                                                    {/* BRAND REPLACEMENT: UNIT */}
+                                                    <p 
+                                                        className="font-russo text-xl leading-none tracking-tighter text-white"
+                                                        style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}
+                                                    >
+                                                        UNIT
+                                                    </p>
+                                                    {countryCodeAlpha2 && <img src={`https://flagcdn.com/w80/${countryCodeAlpha2.toLowerCase()}.png`} className="w-4 h-auto mt-4 rounded-sm opacity-60" alt="flag" />}
                                                     
-                                                    {/* TEAM OF THE MONTH ICON */}
                                                     {isTotm && (
                                                         <div className="mt-3 animate-in fade-in zoom-in duration-700">
                                                             <MiniSquadBadge size="w-8 h-8" className="opacity-90" />

@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context';
 import { Calendar, History as HistoryIcon, Search, RefreshCw } from '../icons';
@@ -19,7 +20,7 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
     useEffect(() => {
         const loadFullHistory = async () => {
             setIsLoading(true);
-            await fetchHistory(); // Fetch all sessions
+            await fetchHistory(); 
             setIsLoading(false);
         };
         loadFullHistory();
@@ -137,7 +138,7 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                                                     {new Date(session.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
                                                 </span>
                                                 <span className="text-[6.5px] font-mono font-black text-white/20 uppercase tracking-[0.2em] truncate">
-                                                    {session.sessionName || '532 SESSION'}
+                                                    {session.sessionName || 'UNIT SESSION'}
                                                 </span>
                                             </div>
                                             <div className="flex gap-2.5 items-center shrink-0">
@@ -161,7 +162,6 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                             </div>
                         )}
                     </div>
-                    {/* SCROLL FADE BOTTOM ONLY */}
                     <div className="absolute bottom-0 left-0 right-0 h-5 bg-gradient-to-t from-[#05070a] to-transparent z-30 pointer-events-none"></div>
                 </div>
             </div>
