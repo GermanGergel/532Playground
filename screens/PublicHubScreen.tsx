@@ -418,7 +418,7 @@ export const PublicHubScreen: React.FC = () => {
         whatsapp: "https://chat.whatsapp.com/CAJnChuM4lQFf3s2YUnhQr",
         // Facebook removed
         youtube: "https://youtube.com/@playground532?si=_NqI_aOcvmjlSMFn",
-        instagram: "https://www.instagram.com/532playground?igsh=MTdzdHpwMjY3aHN4cg%3D%3D&utm_source=qr",
+        instagram: "https://www.instagram.com/unit.club.dn?igsh=MTdzdHpwMjY3aHN4cg%3D%3D&utm_source=qr",
         tiktok: "https://www.tiktok.com/@532club?_r=1",
     };
 

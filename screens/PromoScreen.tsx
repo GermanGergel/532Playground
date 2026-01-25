@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { PublicPlayerCard } from '../components/PublicPlayerCard';
 import { LastSessionBreakdown } from '../components/PlayerCardAnalytics';
@@ -12,7 +13,7 @@ import { Language } from '../translations/index';
 const SOCIAL_LINKS = {
     whatsapp: "https://chat.whatsapp.com/CAJnChuM4lQFf3s2YUnhQr",
     zalo: "https://zalo.me/g/pjdfxl571", // Updated to Group Link
-    instagram: "https://www.instagram.com/532playground?igsh=MTdzdHpwMjY3aHN4cg%3D%3D&utm_source=qr",
+    instagram: "https://www.instagram.com/unit.club.dn?igsh=MTdzdHpwMjY3aHN4cg%3D%3D&utm_source=qr",
     youtube: "https://youtube.com/@playground532?si=_NqI_aOcvmjlSMFn",
     tiktok: "https://www.tiktok.com/@532club?_r=1",
 };
@@ -150,7 +151,7 @@ const TEXT = {
         // Hub Section
         hub_section_title: "ЭКОСИСТЕМА КЛУБА",
         hub_section_desc: "Центральный интеллект. Доступ только для действующих игроков.",
-        hub_badge: "ТОЛЬКО ДЛЯ УЧАСТНИКОВ",
+        hub_badge: "ТОЛЬКО ДЛЯ УЧАСНИКОВ",
         hub_f1: "Рейтинги Клуба",
         hub_f2: "Архив Матчей",
         hub_f3: "Live Данные",
@@ -201,8 +202,21 @@ const PromoIntro: React.FC<{ onEnter: () => void, lang: Language }> = ({ onEnter
             </div>
             
             <div className="flex flex-col items-center justify-center z-10">
-                <h1 className="text-5xl font-black text-[#00F2FE] tracking-tighter" style={{ textShadow: '0 0 15px rgba(0, 242, 254, 0.5)' }}>532</h1>
-                <h2 className="text-xl font-bold text-white tracking-[0.2em] mt-1">PLAYGROUND</h2>
+                <h1 
+                    className="text-6xl font-black uppercase leading-none font-russo tracking-[0.1em] animate-pulse"
+                    style={{ 
+                        background: 'linear-gradient(180deg, #48CFCB 0%, #083344 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        filter: `
+                            drop-shadow(1px 1px 0px #0E7490) 
+                            drop-shadow(2px 2px 0px #000000) 
+                            drop-shadow(0 0 20px rgba(72, 207, 203, 0.3))
+                        `,
+                    }}
+                >
+                    UNIT
+                </h1>
             </div>
             
             <p className="absolute -bottom-10 text-lg font-bold text-white animate-pulse tracking-widest text-center whitespace-nowrap drop-shadow-[0_0_5px_rgba(0,242,254,0.5)]">

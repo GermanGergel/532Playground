@@ -24,10 +24,23 @@ const MusicLoader: React.FC<{ onInteract: () => void }> = ({ onInteract }) => {
                     </svg>
                 </div>
                 
-                {/* Content - Just Text, No Icon */}
+                {/* Content - Branded UNIT */}
                 <div className="flex flex-col items-center justify-center z-10">
-                    <h1 className="text-5xl font-black text-[#00F2FE] tracking-tighter" style={{ textShadow: '0 0 15px rgba(0, 242, 254, 0.5)' }}>532</h1>
-                    <h2 className="text-xl font-bold text-white tracking-[0.2em] mt-1">PLAYGROUND</h2>
+                    <h1 
+                        className="text-6xl font-black uppercase leading-none font-russo tracking-[0.1em] animate-pulse"
+                        style={{ 
+                            background: 'linear-gradient(180deg, #48CFCB 0%, #083344 100%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            filter: `
+                                drop-shadow(1px 1px 0px #0E7490) 
+                                drop-shadow(2px 2px 0px #000000) 
+                                drop-shadow(0 0 20px rgba(72, 207, 203, 0.3))
+                            `,
+                        }}
+                    >
+                        UNIT
+                    </h1>
                 </div>
                 
                 {/* CTA Text */}
@@ -230,8 +243,21 @@ export const PublicProfileScreen: React.FC = () => {
                             </svg>
                         </div>
                         <div className="flex flex-col items-center justify-center z-10">
-                            <h1 className="text-4xl font-black text-[#00F2FE] tracking-tighter" style={{ textShadow: '0 0 15px rgba(0, 242, 254, 0.5)' }}>532</h1>
-                            <h2 className="text-lg font-bold text-white tracking-[0.2em] mt-1">PLAYGROUND</h2>
+                            <h1 
+                                className="text-4xl font-black uppercase leading-none font-russo tracking-[0.1em] animate-pulse"
+                                style={{ 
+                                    background: 'linear-gradient(180deg, #48CFCB 0%, #083344 100%)',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent',
+                                    filter: `
+                                        drop-shadow(1px 1px 0px #0E7490) 
+                                        drop-shadow(2px 2px 0px #000000) 
+                                        drop-shadow(0 0 10px rgba(72, 207, 203, 0.3))
+                                    `,
+                                }}
+                            >
+                                UNIT
+                            </h1>
                         </div>
                     </div>
                 </div>
