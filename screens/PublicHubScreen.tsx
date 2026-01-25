@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -417,7 +416,7 @@ export const PublicHubScreen: React.FC = () => {
     const SOCIAL_LINKS = {
         whatsapp: "https://chat.whatsapp.com/CAJnChuM4lQFf3s2YUnhQr",
         // Facebook removed
-        youtube: "https://youtube.com/@playground532?si=_NqI_aOcvmjlSMFn",
+        youtube: "https://www.youtube.com/@UnitFootball",
         instagram: "https://www.instagram.com/unit.club.dn?igsh=MTdzdHpwMjY3aHN4cg%3D%3D&utm_source=qr",
         tiktok: "https://www.tiktok.com/@532club?_r=1",
     };

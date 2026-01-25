@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { PublicPlayerCard } from '../components/PublicPlayerCard';
 import { LastSessionBreakdown } from '../components/PlayerCardAnalytics';
@@ -14,7 +13,7 @@ const SOCIAL_LINKS = {
     whatsapp: "https://chat.whatsapp.com/CAJnChuM4lQFf3s2YUnhQr",
     zalo: "https://zalo.me/g/pjdfxl571", // Updated to Group Link
     instagram: "https://www.instagram.com/unit.club.dn?igsh=MTdzdHpwMjY3aHN4cg%3D%3D&utm_source=qr",
-    youtube: "https://youtube.com/@playground532?si=_NqI_aOcvmjlSMFn",
+    youtube: "https://www.youtube.com/@UnitFootball",
     tiktok: "https://www.tiktok.com/@532club?_r=1",
 };
 

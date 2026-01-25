@@ -1,4 +1,3 @@
-
 export const en = {
   // Navigation
   navHome: "Home",
@@ -262,7 +261,7 @@ export const en = {
   hubTimeFrame: "TIME FRAME",
   hubWeather: "WEATHER",
   hubImpact: "IMPACT",
-  hubWelcomeText: "Welcome to the official UNIT operational hub. Track your evolution, analyze match data, and redefine the game.",
+  hubWelcomeText: "Welcome to the official UNIT Hub. Track your stats, compare with others, and rise to the top.",
   hubLeadersTitle: "SEASON LEADERS",
   hubJoinSquad: "Join the Squad",
 

@@ -1,3 +1,4 @@
+
 export const ua = {
   // Navigation
   navHome: "Головна",
@@ -30,7 +31,7 @@ export const ua = {
   addPlayer: "Додати",
   playerPool: "Лист Очікування",
   allPlayersAssigned: "Всі гравці розподілені",
-  autoBalanceTeams: "Авто-Баланс",
+  autoBalanceTeams: "Auto-Баланс",
   autoBalanceConfirmTitle: "Автобаланс команд?",
   autoBalanceConfirmDesc: "Гравці будуть перерозподілені за рейтингом.",
   startSession: "Почати Сесію",
@@ -56,12 +57,11 @@ export const ua = {
   selectWinnerDesc: "Виберіть переможця, щоб продовжити",
   onBench: "На лавці",
 
-  // FIX: Added missing Legionnaire keys for Ukrainian translation
+  // Legionnaire
   legionnaire_replace: "ЗАМІНИТИ",
   legionnaire_select: "ВИБРАТИ",
   legionnaire_no_players: "Немає вільних гравців",
 
-  // FIX: Added missing Session Summary keys for Ukrainian translation
   // Session Summary
   summary_title: "ПІДСУМКИ СЕСІЇ",
   summary_location: "ЛОКАЦІЯ",
@@ -85,6 +85,9 @@ export const ua = {
   thW: "В",
   thD: "Н",
   thL: "П",
+  // Added missing thGF and thGA keys for standings table headers
+  thGF: "З",
+  thGA: "П",
   thGD: "РМ",
   thPts: "Очки",
   players: "Гравець",
@@ -188,9 +191,14 @@ export const ua = {
   monthlyGoals: "Голи",
   monthlyAssists: "Асисти",
   monthlyWins: "Перемоги",
+  careerStats: "Середні Показники",
   session: "Сесії",
   information: "Інформація",
   statistics: "Статистика",
+
+  // Penalty
+  penalty_title: "СТАТУС: ШТРАФ ЗА НЕЯВКУ",
+  penalty_message: "Рейтинг знижено на -{n} OVR через пропуск {m} сесій поспіль.",
 
   // Info Content
   ratingCalculationTitle: "Система Рейтингу",
@@ -236,7 +244,7 @@ export const ua = {
   hubTicker2: "LIVE ДАНІ СЕССИИ",
   hubTicker3: "ГЛОБАЛЬНИЙ РЕЙТИНГ",
   hubTicker4: "АНАЛІТИКА ГРАВЦІВ",
-  hubTicker5: "АРХІВ МАТЧІВ",
+  hubTicker5: "АРХИВ МАТЧІВ",
   hubAwaitingStats: "ОЧІКУВАННЯ ДАНИХ",
   hubAnalyzingPerformance: "АНАЛІЗ ЕФЕКТИВНОСТІ...",
   hubDashboardBtn: "ДАШБОРД",
@@ -257,7 +265,7 @@ export const ua = {
   hubImpact: "ІМПАКТ",
   hubWelcomeText: "Ласкаво просимо до офіційного хабу 532 Playground. Слідкуй за статистикою, порівнюй результати та прагни до вершини.",
   hubLeadersTitle: "Лідери Сесії",
-  hubJoinSquad: "Вступити в Загін",
+  hubJoinSquad: "Вступить в Загін",
   
   // Promo
   hero_title: "ГРАЙ ЯК ПРОФІ",
@@ -388,22 +396,12 @@ export const ua = {
   badge_iron_lung: "Залізні Легені",
   badge_iron_lung_desc: "Серія Перемога-Перемога-Перемога",
 
-  // FIX: Added missing Duel keys for Ukrainian translation
-  // Duel
-  duel_title: "Вибір Дуелі",
-  duel_id_unit: "ОПОЗНАННЯ ЮНІТА...",
-  duel_initiate: "ЗАПУСТИТИ ПОСЛІДОВНІСТЬ",
-  duel_sector_empty: "Сектор порожній",
-  duel_complete: "ПОСЛІДОВНІСТЬ ЗАВЕРШЕНА",
-  duel_score: "РАХУНОК",
-  duel_verified: "Індекс ефективності підтверджено",
-  
   // Announcements
   announcement_start_match: "Початок Матчу",
   announcement_three_minutes: "3 Хвилини",
   announcement_one_minute: "1 Хвилина",
   announcement_thirty_seconds: "30 Секунд",
-  announcement_five: "П'ять",
+  announcement_five: "P'ять",
   announcement_four: "Чотири",
   announcement_three: "Три",
   announcement_two: "Два",

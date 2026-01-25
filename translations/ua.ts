@@ -1,4 +1,3 @@
-
 export const ua = {
   // Navigation
   navHome: "Головна",
@@ -31,7 +30,7 @@ export const ua = {
   addPlayer: "Додати",
   playerPool: "Лист Очікування",
   allPlayersAssigned: "Всі гравці розподілені",
-  autoBalanceTeams: "Авто-Баланс",
+  autoBalanceTeams: "Auto-Баланс",
   autoBalanceConfirmTitle: "Автобаланс команд?",
   autoBalanceConfirmDesc: "Гравці будуть перерозподілені за рейтингом.",
   startSession: "Почати Сесію",
@@ -104,7 +103,7 @@ export const ua = {
   noSessionsFound: "Історія сесій порожня.",
   finished: "Завершено",
   confirmDeletion: "Підтвердіть видалення",
-  delete: "Видалити",
+  delete: "Вилучити",
 
   // Settings
   settingsTitle: "Налаштування",
@@ -131,16 +130,16 @@ export const ua = {
 
   // Player Hub
   newPlayerManagement: "Новий Рекрут",
-  playerDatabase: "Base Даних",
-  clubNews: "Новости Клубу",
+  playerDatabase: "База Даних",
+  clubNews: "Новини Клубу",
   searchPlayers: "Пошук гравців...",
   sortBy: "Сортування:",
   sortByRating: "Рейтинг",
   sortByName: "Ім'я",
   sortByDate: "Дата",
-  unconfirmedBadge: "НОВЫЙ",
+  unconfirmedBadge: "НОВИЙ",
   noPlayersFound: "Гравців не знайдено.",
-  addPlayerManually: "Додати Вручную",
+  addPlayerManually: "Додати Вручну",
   nickname: "Нікнейм",
   surname: "Прізвище",
 
@@ -228,9 +227,9 @@ export const ua = {
   ruleLatePenalty: "ШТРАФ 20K",
   ruleRespectTitle: "Повага",
   ruleRespectDesc: "Неспортивна поведінка або агресія.",
-  ruleRespectPenalty: "БАН НА СЕССІЮ",
+  ruleRespectPenalty: "БАН НА СЕСІЮ",
   badgeBonusTitle: "Бонуси Значків",
-  badgeBonusDesc: "Заробляйте значки, щоб підвищити рейтинг матча.",
+  badgeBonusDesc: "Заробляйте значки, щоб підвищити рейтинг матчу.",
   badgeBonusMvp: "MVP: +0.4 очка",
   badgeBonusTopScorer: "Бомбардир: +0.3 очка",
   keySkills: "Ключеві Навички",
@@ -240,10 +239,10 @@ export const ua = {
 
   // Hub
   hubTicker1: "ЕЛІТНИЙ ТРЕКІНГ",
-  hubTicker2: "LIVE ДАНІ СЕССИИ",
+  hubTicker2: "LIVE ДАНІ СЕСІЇ",
   hubTicker3: "ГЛОБАЛЬНИЙ РЕЙТИНГ",
   hubTicker4: "АНАЛІТИКА ГРАВЦІВ",
-  hubTicker5: "АРХИВ МАТЧІВ",
+  hubTicker5: "АРХІВ МАТЧІВ",
   hubAwaitingStats: "ОЧІКУВАННЯ ДАНИХ",
   hubAnalyzingPerformance: "АНАЛІЗ ЕФЕКТИВНОСТІ...",
   hubDashboardBtn: "ДАШБОРД",
@@ -253,16 +252,16 @@ export const ua = {
   hubSessionSquads: "СКЛАДИ",
   hubTeamStandings: "ТАБЛИЦЯ",
   hubPlayers: "ГРАВЦІ",
-  hubGames: "МАТЧИ",
+  hubGames: "МАТЧІ",
   hubVitalsTitle: "ПОКАЗНИКИ КЛУБУ",
   hubStatsMembers: "УЧАСНИКИ",
   hubSessionsPlayed: "СЕССІЇ",
   hubAvgRating: "СЕРЕДНІЙ OVR",
-  hubLocation: "ЛОКАЦИЯ",
+  hubLocation: "ЛОКАЦІЯ",
   hubTimeFrame: "ЧАС",
   hubWeather: "ПОГОДА",
   hubImpact: "ІМПАКТ",
-  hubWelcomeText: "Ласкаво просимо до операційного хабу UNIT. Відстежуй прогрес, аналізуй дані матчів та змінюй правила гри.",
+  hubWelcomeText: "Ласкаво просимо до офіційного хабу UNIT CLUB. Слідкуй за статистикою, порівнюй результати та прагни до вершини.",
   hubLeadersTitle: "Лідери Сесії",
   hubJoinSquad: "Вступити в Загін",
   
@@ -295,7 +294,7 @@ export const ua = {
 
   // Poster
   announcementGeneratorTitle: "Генератор Афіш",
-  posterDate: "Дата",
+  posterDate: "Date",
   posterTime: "Початок",
   posterEndTime: "Кінець",
   uploadBackground: "Завантажити Фон",
@@ -389,9 +388,9 @@ export const ua = {
   badge_double_agent: "Подвійний Агент",
   badge_double_agent_desc: "3 Перемоги за кожну команду",
   badge_joker: "Джокер",
-  badge_joker_desc: "Г/А будучи Легионером",
+  badge_joker_desc: "Г/А будучи Легіонером",
   badge_crisis_manager: "Кризовий Менеджер",
-  badge_crisis_manager_desc: "2+ Г/А будучи Легионером",
+  badge_crisis_manager_desc: "2+ Г/А будучи Легіонером",
   badge_iron_lung: "Залізні Легені",
   badge_iron_lung_desc: "Серія Перемога-Перемога-Перемога",
 

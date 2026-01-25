@@ -1,4 +1,3 @@
-
 export const vn = {
   // Navigation
   navHome: "Trang Chủ",
@@ -261,8 +260,8 @@ export const vn = {
   hubTimeFrame: "THỜI GIAN",
   hubWeather: "THỜI TIẾT",
   hubImpact: "TÁC ĐỘNG",
-  hubWelcomeText: "Chào mừng bạn đến với trung tâm điều hành chính thức của UNIT. Theo dõi sự tiến hóa của bạn, phân tích dữ liệu trận đấu và định nghĩa lại cuộc chơi.",
-  hubLeadersTitle: "DẪN ĐẦU MÙA GIẢI",
+  hubWelcomeText: "Chào mừng đến với Hub UNIT CLUB chính thức. Theo dõi chỉ số, so sánh kết quả và vươn tới đỉnh cao.",
+  hubLeadersTitle: "Dẫn Đầu Buổi Tập",
   hubJoinSquad: "Tham Gia Đội Hình",
   
   // Duel
@@ -385,7 +384,7 @@ export const vn = {
   badge_undefeated: "Bất Bại",
   badge_undefeated_desc: "Không thua (tối thiểu 6 trận)",
   badge_dominant_participant: "Đá 10+ trận",
-  badge_dominant_participant_desc: "10+ Games played",
+  badge_dominant_participant_desc: "Đã đá trên 10 trận",
   badge_career_100_wins: "Trăm Trận Thắng",
   badge_career_100_wins_desc: "100 Trận Thắng Sự Nghiệp",
   badge_career_150_influence: "Biểu Tượng",

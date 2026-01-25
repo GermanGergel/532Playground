@@ -1,3 +1,4 @@
+
 export const en = {
   // Navigation
   navHome: "Home",
@@ -85,6 +86,9 @@ export const en = {
   thW: "W",
   thD: "D",
   thL: "L",
+  // Added missing thGF and thGA keys for standings table headers
+  thGF: "GF",
+  thGA: "GA",
   thGD: "GD",
   thPts: "Pts",
   players: "Player",
@@ -180,6 +184,7 @@ export const en = {
   winLossDraw: "W-D-L Record",
   sessionTrend: "Form Trend",
   allTimeStats: "Career Stats",
+  careerStats: "Career Averages",
   thSessions: "Sess",
   winRate: "Win %",
   goalsPerSession: "Goals/Sess",
@@ -191,6 +196,10 @@ export const en = {
   session: "Sessions",
   information: "Information",
   statistics: "Statistics",
+
+  // Penalty
+  penalty_title: "STATUS: PENALTY APPLIED",
+  penalty_message: "Rating reduced by -{n} OVR due to missing {m} consecutive sessions.",
 
   // Info Content
   ratingCalculationTitle: "Rating System",
@@ -259,7 +268,6 @@ export const en = {
   hubLeadersTitle: "Session Leaders",
   hubJoinSquad: "Join the Squad",
 
-  // FIX: Added missing Duel keys for English translation
   // Duel
   duel_title: "Duel Selection",
   duel_id_unit: "IDENTIFY UNIT...",
