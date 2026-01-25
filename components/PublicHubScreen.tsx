@@ -24,7 +24,7 @@ const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
     };
     switch (form) {
         case 'hot_streak': return <svg {...commonProps}><path d="M12 19V5m-6 7l6-6 6 6"/></svg>;
-        case 'cold_streak': return <svg {...commonProps}><path d="M12 5v14M12 5v14M5 12l7 7 7-7"/></svg>;
+        case 'cold_streak': return <svg {...commonProps}><path d="M12 5v14M5 12l7 7 7-7"/></svg>;
         default: return <svg {...commonProps}><path d="M5 12h14m-6-6l6 6-6 6"/></svg>;
     }
 };
@@ -81,13 +81,11 @@ export const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ play
                 <div className="relative z-10 h-full p-1">
                      <div className="flex justify-between items-start">
                         <div className="pt-2">
-                            {/* BRAND REPLACEMENT: UNIT (Unified White Gradient) - COMPACT WIDTH */}
+                            {/* BRAND REPLACEMENT: UNIT (Unified White) - No Clipping Bug */}
                             <p 
-                                className="font-russo text-xl leading-none tracking-tighter"
+                                className="font-russo text-xl leading-none tracking-tighter text-white"
                                 style={{ 
-                                    background: 'linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.2) 100%)',
-                                    WebkitBackgroundClip: 'text',
-                                    WebkitTextFillColor: 'transparent',
+                                    textShadow: '0 2px 10px rgba(0,0,0,0.5)',
                                 }}
                             >
                                 UNIT

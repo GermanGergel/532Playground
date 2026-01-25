@@ -131,13 +131,11 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
             <div className="relative z-30 flex flex-col h-full p-6">
                 <header className="flex justify-between items-start">
                     <div className="pt-2">
-                        {/* EXPORT BRAND REPLACEMENT: UNIT (Unified White Gradient) - COMPACT WIDTH */}
+                        {/* EXPORT BRAND REPLACEMENT: UNIT (Solid White with Shadow to fix html2canvas clipping bug) */}
                         <p 
-                            className="font-russo text-4xl leading-none tracking-tighter"
+                            className="font-russo text-4xl leading-none tracking-tighter text-white"
                             style={{ 
-                                background: 'linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.2) 100%)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
+                                textShadow: '0 2px 10px rgba(0,0,0,0.5)',
                             }}
                         >
                             UNIT

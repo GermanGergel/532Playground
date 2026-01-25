@@ -117,13 +117,11 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
                 <div className="relative z-10 h-full flex flex-col justify-between p-1">
                     <div className="flex justify-between items-start">
                         <div className="pt-2">
-                            {/* BRAND REPLACEMENT: UNIT (Unified White Gradient) - COMPACT WIDTH */}
+                            {/* BRAND REPLACEMENT: UNIT (Unified White) - Fix for export consistency */}
                             <p 
-                                className="font-russo text-3xl leading-none tracking-tighter"
+                                className="font-russo text-3xl leading-none tracking-tighter text-white"
                                 style={{ 
-                                    background: 'linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.2) 100%)',
-                                    WebkitBackgroundClip: 'text',
-                                    WebkitTextFillColor: 'transparent',
+                                    textShadow: '0 2px 10px rgba(0,0,0,0.5)',
                                 }}
                             >
                                 UNIT
