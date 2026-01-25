@@ -81,7 +81,7 @@ export const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ play
                 <div className="relative z-10 h-full p-1">
                      <div className="flex justify-between items-start">
                         <div className="pt-2">
-                            {/* BRAND REPLACEMENT: DARK TURQUOISE (TEST) */}
+                            {/* BRAND REPLACEMENT: DARK TURQUOISE */}
                             <p 
                                 className="font-russo text-xl leading-none tracking-tighter"
                                 style={{ 
@@ -112,9 +112,18 @@ export const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ play
                             )}
                         </div>
                     </div>
-                    {/* UNIFIED ALIGNMENT: Absolute positioning from bottom to ensure all names align perfectly regardless of card height */}
+                    {/* UNIFIED ALIGNMENT: Absolute positioning from bottom */}
                     <div className="absolute bottom-5 left-0 right-0 text-center z-30 px-2">
-                        <h1 className="text-2xl font-black uppercase tracking-tight drop-shadow-lg leading-tight mb-1">
+                        <h1 
+                            className="text-2xl font-black uppercase tracking-tight leading-tight mb-1"
+                            style={{ 
+                                background: 'linear-gradient(180deg, #155e75 0%, #083344 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                opacity: 0.9,
+                                filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.6))',
+                            }}
+                        >
                             {fullName}
                         </h1>
                     </div>
