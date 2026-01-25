@@ -156,7 +156,7 @@ const HubNav: React.FC<{
     };
 
     const navContainerClass = `
-        fixed top-3 left-1/2 -translate-x-1/2 z-[150] 
+        fixed left-1/2 -translate-x-1/2 z-[150] 
         flex items-center justify-between
         w-full max-w-[1450px] px-6 py-0 
         bg-black/85 backdrop-blur-xl rounded-2xl border border-white/10
@@ -165,7 +165,7 @@ const HubNav: React.FC<{
     `;
 
     return (
-        <nav className={navContainerClass}>
+        <nav className={navContainerClass} style={{ top: 'calc(12px + env(safe-area-inset-top))' }}>
             <svg className="absolute w-0 h-0 invisible">
                 <filter id="grungeFilter">
                     <feTurbulence type="fractalNoise" baseFrequency="0.25" numOctaves="3" result="noise" />
@@ -462,7 +462,7 @@ export const PublicHubScreen: React.FC = () => {
                 `}
                 style={{ backgroundColor: getBottomPatchColor() }}
             >
-                <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10">
+                <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10" style={{ paddingTop: 'calc(40px + env(safe-area-inset-top))' }}>
                     <ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} />
                 </div>
 

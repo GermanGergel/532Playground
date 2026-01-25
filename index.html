@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -100,6 +101,11 @@
     }
   </script>
   <style>
+    :root {
+      --safe-top: env(safe-area-inset-top);
+      --safe-bottom: env(safe-area-inset-bottom);
+    }
+
     html, body {
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
@@ -120,6 +126,8 @@
         overflow-y: auto; /* Разрешаем скролл внутри приложения */
         -webkit-overflow-scrolling: touch; /* Плавный скролл для iOS */
         touch-action: pan-y; /* Разрешаем только вертикальный скролл контента */
+        /* Добавляем безопасную зону сверху для всех страниц по умолчанию */
+        padding-top: var(--safe-top);
     }
 
     ::selection {

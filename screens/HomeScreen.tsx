@@ -208,7 +208,7 @@ export const HomeScreen: React.FC = () => {
         
         <div className="flex flex-col min-h-[calc(100vh-8rem)] justify-between relative">
              {/* TOP BAR: UNIT LOGO + CONTROLS */}
-             <div className="flex flex-row justify-between items-center w-full pt-4 mb-16 px-1">
+             <div className="flex flex-row justify-between items-center w-full pt-8 mb-16 px-1">
                  <div className="flex flex-col items-start relative select-none pointer-events-none">
                     {/* Статичная подложка без свечения */}
                     <div className="absolute -inset-4 bg-black/10 rounded-full blur-[40px] pointer-events-none"></div>
