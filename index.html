@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -120,6 +121,12 @@
         overflow-y: auto; /* Разрешаем скролл внутри приложения */
         -webkit-overflow-scrolling: touch; /* Плавный скролл для iOS */
         touch-action: pan-y; /* Разрешаем только вертикальный скролл контента */
+        
+        /* SAFE AREA INSETS: Остановка контента перед челкой/нотчем */
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        padding-left: env(safe-area-inset-left, 0px);
+        padding-right: env(safe-area-inset-right, 0px);
     }
 
     ::selection {
