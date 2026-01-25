@@ -296,17 +296,17 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
                         <div className="w-full h-full bg-[#020408] rounded-[calc(2.5rem-1px)] overflow-hidden relative flex flex-col">
                             <StarrySky />
                             
-                            {/* UPDATED HEADER: Removed 532 Playground Club and replaced with UNIT Club */}
+                            {/* UPDATED HEADER: UNIT is more compact, Club is white */}
                             <div className="absolute top-[8%] left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center pointer-events-none select-none">
-                                <h2 className="font-blackops text-3xl text-[#00F2FE] leading-none drop-shadow-[0_0_12px_rgba(0,242,254,0.7)] tracking-tighter uppercase">
+                                <h2 className="font-blackops text-2xl text-[#00F2FE] leading-none drop-shadow-[0_0_10px_rgba(0,242,254,0.6)] tracking-tighter uppercase">
                                     UNIT
                                 </h2>
-                                <div className="flex items-center gap-1.5 mt-1">
-                                    <div className="h-[1px] w-2 bg-white/20"></div>
-                                    <span className="font-chakra text-[6px] font-black text-white/60 tracking-[0.2em] uppercase drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]">
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                    <div className="h-[1px] w-2 bg-white/30"></div>
+                                    <span className="font-chakra text-[6px] font-black text-white tracking-[0.2em] uppercase drop-shadow-[0_0_5px_rgba(255,255,255,0.4)]">
                                         Club
                                     </span>
-                                    <div className="h-[1px] w-2 bg-white/20"></div>
+                                    <div className="h-[1px] w-2 bg-white/30"></div>
                                 </div>
                             </div>
 
@@ -328,7 +328,7 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
                                                         <button
                                                             key={idx}
                                                             onClick={() => { setSelectedDate(m.date); setIsCalendarOpen(false); }}
-                                                            className={`w-full text-left px-3 py-1.5 text-[8px] font-black uppercase tracking-widest transition-all relative group/item ${isSelected ? 'text-white' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                                                            className={`w-full text-left px-3 py-1.5 text-[8px] font-black uppercase tracking-widest transition-all relative group/item ${isSelected ? 'text-white' : 'text-white/40 hover:text-white hover:bg-white/10'}`}
                                                         >
                                                             {m.label}
                                                         </button>
