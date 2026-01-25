@@ -276,7 +276,7 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                                                     
                                                     {/* TEAM OF THE MONTH ICON */}
                                                     {isTotm && (
-                                                        <div className="mt-3 animate-in fade-in zoom-in duration-700">
+                                                        <div className="mt-3 -ml-1 animate-in fade-in zoom-in duration-700">
                                                             <MiniSquadBadge size="w-8 h-8" className="opacity-90" />
                                                         </div>
                                                     )}
