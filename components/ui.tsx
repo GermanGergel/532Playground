@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { NavLink, useNavigate } from 'react-router-dom';
@@ -79,7 +78,7 @@ export const BottomNav: React.FC = () => {
     const navTextSize = (language === 'ru' || language === 'vn') ? 'text-[8px]' : 'text-xs';
 
     return (
-        <div className="fixed bottom-4 inset-x-0 px-4 z-50 mb-[env(safe-area-inset-bottom)]">
+        <div className="fixed bottom-4 inset-x-0 px-4 z-50">
             <nav className="max-w-md mx-auto h-16 flex justify-around items-center bg-dark-surface/40 backdrop-blur-xl border border-dark-accent-start/40 rounded-full shadow-[0_0_20px_rgba(0,242,254,0.3)]">
                 <NavLink to="/" className={({isActive}) => `${commonClass} ${isActive ? activeClass : ''}`}>
                     <Home className="mb-1"/>
@@ -107,8 +106,8 @@ export const BottomNav: React.FC = () => {
 };
 
 export const Page: React.FC<{children: React.ReactNode, title?: string, className?: string} & React.HTMLAttributes<HTMLDivElement>> = ({children, title, className = '', ...props}) => (
-    <div className={`p-4 pt-6 pb-32 w-full max-w-[100vw] overflow-x-hidden box-border relative ${className}`} {...props}>
-        {title && <h1 className="text-4xl font-bold mb-8">{title}</h1>}
+    <div className={`p-4 pb-28 w-full max-w-[100vw] overflow-x-hidden box-border relative ${className}`} {...props}>
+        {title && <h1 className="text-4xl font-bold mb-6">{title}</h1>}
         <div className="max-w-sm mx-auto w-full">
             {children}
         </div>
@@ -118,7 +117,7 @@ export const Page: React.FC<{children: React.ReactNode, title?: string, classNam
 export const PageHeader: React.FC<{ title: string; children?: React.ReactNode; hideBack?: boolean }> = ({ title, children, hideBack }) => {
     const navigate = useNavigate();
     return (
-        <div className="flex items-center justify-between mb-10 pt-2">
+        <div className="flex items-center justify-between mb-8">
             {hideBack ? (
                 <div className="w-9" />
             ) : (
