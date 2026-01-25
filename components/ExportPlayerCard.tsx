@@ -112,7 +112,7 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
             {/* Background Branding Name */}
             <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
                 <h2 
-                    className="font-blackops text-[130px] uppercase text-white/10 -rotate-90 origin-center tracking-widest"
+                    className="font-russo text-[130px] uppercase text-white/10 -rotate-90 origin-center tracking-widest"
                     style={{ textShadow: '0 0 15px rgba(0,0,0,0.5)' }}
                 >
                     {player.surname || player.nickname}
@@ -137,14 +137,14 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
 
             <div className="relative z-30 flex flex-col h-full p-6">
                 <header className="flex justify-between items-start">
-                    <div>
-                        <p className="font-blackops text-2xl text-dark-accent-start accent-text-glow">532</p>
-                        <p className="text-xs tracking-[0.2em] font-semibold text-white/80">PLAYGROUND</p>
+                    <div className="pt-2">
+                        {/* EXPORT BRAND REPLACEMENT: UNIT (Club Hub Style Gradient) */}
+                        <p className="font-russo text-4xl leading-none tracking-widest bg-gradient-to-b from-white to-white/20 bg-clip-text text-transparent">UNIT</p>
                         {countryCodeAlpha2 && (
                             <img 
                                 src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`}
                                 alt={`${player.countryCode} flag`}
-                                className="w-8 h-auto mt-4 rounded-sm shadow-md"
+                                className="w-8 h-auto mt-6 rounded-sm shadow-md opacity-90"
                             />
                         )}
                     </div>
@@ -176,7 +176,7 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
 
                     {/* Team of the Month Badge (Export Version) */}
                     {isTotm && (
-                        <div className="mt-6 -ml-1"> {/* Смещено на -ml-1 (чуть левее) для идеального выравнивания под звездами */}
+                        <div className="mt-6 -ml-1">
                             <MiniSquadBadge size="w-12 h-12" />
                         </div>
                     )}
@@ -214,7 +214,7 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
                             </div>
                         )) : (
                             <div className="w-full text-center">
-                                <p className="text-[10px] font-bold text-dark-text-secondary opacity-40 tracking-[0.3em]">532 AUTHENTIC</p>
+                                <p className="text-[10px] font-bold text-dark-text-secondary opacity-40 tracking-[0.3em]">UNIT AUTHENTIC</p>
                             </div>
                         )}
                     </div>

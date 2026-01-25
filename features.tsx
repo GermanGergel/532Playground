@@ -450,14 +450,14 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
 
                 <div className="relative z-10 h-full flex flex-col justify-between">
                      <div className="flex justify-between items-start">
-                        <div>
-                            <p style={{ color: '#00F2FE' }} className="text-base font-black leading-none">532</p>
-                            <p className="text-white text-[7px] font-bold tracking-[0.15em] leading-none mt-1">PLAYGROUND</p>
+                        <div className="pt-2">
+                            {/* BRAND REPLACEMENT: UNIT (Club Hub Style Gradient) */}
+                            <p className="font-russo text-3xl leading-none tracking-widest bg-gradient-to-b from-white to-white/20 bg-clip-text text-transparent">UNIT</p>
                             {countryCodeAlpha2 && (
                                 <img 
                                     src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`}
                                     alt={`${player.countryCode} flag`}
-                                    className="w-6 h-auto mt-3 rounded-sm"
+                                    className="w-6 h-auto mt-4 rounded-sm opacity-80"
                                 />
                             )}
                         </div>

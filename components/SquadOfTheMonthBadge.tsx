@@ -68,7 +68,6 @@ export const SquadOfTheMonthBadge: React.FC<SquadOfTheMonthBadgeProps> = ({ onCl
                         <stop offset="100%" stopColor="transparent" stopOpacity="0" />
                     </radialGradient>
 
-                    <path id="playgroundCurve" d="M 20,38 Q 50,30 80,38" />
                     <path id="starItem" d="M 0,-5 L 1.2,-1.5 L 4.8,-1.5 L 1.8,0.8 L 2.9,4.3 L 0,2.2 L -2.9,4.3 L -1.8,0.8 L -4.8,-1.5 L -1.2,-1.5 Z" />
                 </defs>
 
@@ -100,24 +99,19 @@ export const SquadOfTheMonthBadge: React.FC<SquadOfTheMonthBadgeProps> = ({ onCl
                 </g>
 
                 {/* --- ТЕКСТОВАЯ ГРУППА --- */}
-                <g style={{ filter: 'drop-shadow(0 0 3px rgba(0,242,254,0.3))' }}>
+                <g style={{ filter: 'drop-shadow(0 0 5px rgba(0,242,254,0.5))' }}>
                     <text 
                         x="50" 
-                        y="24" 
+                        y="36" 
                         textAnchor="middle" 
                         className="font-blackops" 
                         style={{ 
-                            fontSize: '11px', 
+                            fontSize: '16px', 
                             fill: '#00F2FE',
+                            letterSpacing: '0.05em'
                         }}
                     >
-                        532
-                    </text>
-                    
-                    <text className="font-blackops" style={{ fontSize: '5.5px', fill: '#00F2FE', letterSpacing: '0.12em' }}>
-                        <textPath href="#playgroundCurve" startOffset="50%" textAnchor="middle">
-                            PLAYGROUND
-                        </textPath>
+                        UNIT
                     </text>
                 </g>
             </svg>

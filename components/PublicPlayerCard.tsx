@@ -23,12 +23,12 @@ const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
     };
     const currentForm = config[form] || config.stable;
     const commonProps: React.SVGProps<SVGSVGElement> = {
-        width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: currentForm.color,
-        strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round",
+        width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: currentForm.color,
+        strokeWidth: "3", strokeLinecap: "round", strokeLinejoin: "round",
     };
     switch (form) {
         case 'hot_streak': return <svg {...commonProps}><path d="M12 19V5m-6 7l6-6 6 6"/></svg>;
-        case 'cold_streak': return <svg {...commonProps}><path d="M12 5v14M12 5v14M5 12l7 7 7-7"/></svg>;
+        case 'cold_streak': return <svg {...commonProps}><path d="M12 5v14M5 12l7 7 7-7"/></svg>;
         default: return <svg {...commonProps}><path d="M5 12h14m-6-6l6 6-6 6"/></svg>;
     }
 };
@@ -116,10 +116,10 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
                 )}
                 <div className="relative z-10 h-full flex flex-col justify-between p-1">
                     <div className="flex justify-between items-start">
-                        <div>
-                            <p style={{ color: '#00F2FE' }} className="text-base font-black leading-none">532</p>
-                            <p className="text-white text-[7px] font-bold tracking-[0.15em] leading-none mt-1">PLAYGROUND</p>
-                            {countryCodeAlpha2 && <img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} alt={`${player.countryCode} flag`} className="w-6 h-auto mt-3 rounded-sm" />}
+                        <div className="pt-2">
+                            {/* BRAND REPLACEMENT: UNIT (Club Hub Style Gradient) */}
+                            <p className="font-russo text-3xl leading-none tracking-widest bg-gradient-to-b from-white to-white/20 bg-clip-text text-transparent">UNIT</p>
+                            {countryCodeAlpha2 && <img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} alt={`${player.countryCode} flag`} className="w-6 h-auto mt-4 rounded-sm opacity-80" />}
                         </div>
                         <div className="flex flex-col items-center max-w-[50%]">
                             <div className="text-4xl font-black leading-none" style={{ color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
@@ -254,7 +254,8 @@ const StatsView: React.FC<{ player: Player; onBack: () => void; isPromo?: boolea
                         <BestSessionCard player={player} usePromoStyle={true} />
                     </PromoStatsContainer>
                 ) : (
-                    <BestSessionCard player={player} />
+                    <LastSessionBreakdown player={player} />
+                )
                 )}
 
                 {/* 4. Club Rankings */}
@@ -402,7 +403,7 @@ const InfoView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                     <div className="pt-6 border-t border-white/10">
                         <h3 className="text-lg font-bold mb-3 flex items-center gap-2"><Users className="w-5 h-5 text-purple-500" /> {t.infoLegionnaireTitle}</h3>
                         <div className="p-4 bg-purple-500/5 border border-purple-500/10 rounded-2xl">
-                            <p className="text-sm text-white/70 leading-relaxed">{t.infoLegionnaireDesc}</p>
+                            <p className="text-sm text-white/70 leading-relaxed font-medium mb-4">{t.infoLegionnaireDesc}</p>
                         </div>
                     </div>
 

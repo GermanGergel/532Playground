@@ -24,7 +24,7 @@ const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
     };
     switch (form) {
         case 'hot_streak': return <svg {...commonProps}><path d="M12 19V5m-6 7l6-6 6 6"/></svg>;
-        case 'cold_streak': return <svg {...commonProps}><path d="M12 5v14M5 12l7 7 7-7"/></svg>;
+        case 'cold_streak': return <svg {...commonProps}><path d="M12 5v14M12 5v14M5 12l7 7 7-7"/></svg>;
         default: return <svg {...commonProps}><path d="M5 12h14m-6-6l6 6-6 6"/></svg>;
     }
 };
@@ -80,10 +80,10 @@ export const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ play
 
                 <div className="relative z-10 h-full p-1">
                      <div className="flex justify-between items-start">
-                        <div>
-                            <p style={{ color: '#00F2FE' }} className="text-base font-black leading-none">532</p>
-                            <p className="text-white text-[7px] font-bold tracking-[0.15em] font-chakra leading-none mt-1">PLAYGROUND</p>
-                            {countryCodeAlpha2 && (<img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} alt={`${player.countryCode} flag`} className="w-6 h-auto mt-3 rounded-sm" />)}
+                        <div className="pt-2">
+                            {/* BRAND REPLACEMENT: UNIT (Aligned Russo One) */}
+                            <p style={{ color: '#00F2FE' }} className="font-russo text-xl leading-none tracking-widest">UNIT</p>
+                            {countryCodeAlpha2 && (<img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} alt={`${player.countryCode} flag`} className="w-6 h-auto mt-4 rounded-sm opacity-80" />)}
                         </div>
                         <div className="flex flex-col items-center max-w-[50%]">
                             <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>

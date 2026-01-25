@@ -62,8 +62,12 @@ export const TeamAvatar: React.FC<TeamAvatarProps> = ({ team, size = 'sm', onCli
                                 x="12" 
                                 y="9" 
                                 textAnchor="middle" 
-                                fill={teamColor} 
-                                style={{ fontSize: '5px', fontWeight: 900, fontFamily: 'Russo One, sans-serif' }}
+                                fill="currentColor" 
+                                style={{ 
+                                    fontSize: '5px', 
+                                    fontWeight: 900, 
+                                    fontFamily: 'Russo One, sans-serif'
+                                }}
                                 className="uppercase"
                             >
                                 UNIT

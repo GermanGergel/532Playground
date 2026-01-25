@@ -211,8 +211,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#1A1D24]">
             <div className="relative flex flex-col items-center justify-center w-64 h-64">
-                <div className="absolute inset-0 animate-spin" style={{ animationDuration: '2s' }}>
-                    <svg viewBox="0 0 100 100" className="w-full h-full">
+                <div className="absolute inset-0 animate-spin" style={{ animationDuration: '2.5s' }}>
+                    <svg viewBox="0 0 100 100" className="w-full h-full filter drop-shadow-[0_0_8px_rgba(0,242,254,0.4)]">
                         <defs>
                             <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                                 <stop offset="0%" stopColor="#00F2FE" stopOpacity="1" />
@@ -223,19 +223,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                             cx="50" cy="50" r="48" 
                             fill="none" 
                             stroke="url(#ringGradient)" 
-                            strokeWidth="2"
+                            strokeWidth="1.5"
                             strokeLinecap="round"
-                            strokeDasharray="200 300"
+                            strokeDasharray="180 300"
                         />
                     </svg>
                 </div>
+                
+                {/* Эффект свечения за текстом */}
+                <div className="absolute w-32 h-32 bg-dark-accent-start/10 blur-[40px] rounded-full animate-pulse"></div>
+
                 <div className="flex flex-col items-center justify-center z-10">
-                    <h1 className="text-5xl font-black text-[#00F2FE] tracking-tighter" style={{ textShadow: '0 0 15px rgba(0, 242, 254, 0.5)' }}>
-                        532
+                    <h1 
+                      className="text-6xl font-black uppercase leading-none font-russo tracking-[0.1em] animate-pulse"
+                      style={{ 
+                          background: 'linear-gradient(180deg, #48CFCB 0%, #083344 100%)',
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          filter: `
+                              drop-shadow(1px 1px 0px #0E7490) 
+                              drop-shadow(2px 2px 0px #000000) 
+                              drop-shadow(0 0 20px rgba(72, 207, 203, 0.3))
+                          `,
+                      }}
+                    >
+                        UNIT
                     </h1>
-                    <h2 className="text-xl font-bold text-white tracking-[0.2em] mt-1">
-                        PLAYGROUND
-                    </h2>
                 </div>
             </div>
         </div>

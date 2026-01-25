@@ -1,3 +1,4 @@
+
 export const en = {
   // Navigation
   navHome: "Home",
@@ -181,7 +182,6 @@ export const en = {
   winLossDraw: "W-D-L Record",
   sessionTrend: "Form Trend",
   allTimeStats: "Career Stats",
-  // FIX: Added missing translation key 'careerStats'
   careerStats: "Career Averages",
   thSessions: "Sess",
   winRate: "Win %",
@@ -262,7 +262,7 @@ export const en = {
   hubTimeFrame: "TIME FRAME",
   hubWeather: "WEATHER",
   hubImpact: "IMPACT",
-  hubWelcomeText: "Welcome to the official 532 Playground Hub. Track your stats, compare with others, and rise to the top.",
+  hubWelcomeText: "Welcome to the official UNIT operational hub. Track your evolution, analyze match data, and redefine the game.",
   hubLeadersTitle: "SEASON LEADERS",
   hubJoinSquad: "Join the Squad",
 

@@ -29,9 +29,9 @@ export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, classNa
                         fill="#00F2FE" 
                         className="font-chakra font-black uppercase"
                         style={{ 
-                            fontSize: '8.5px', // Немного увеличили шрифт для четкости
+                            fontSize: '8.5px', 
                             letterSpacing: '0.15em',
-                            textShadow: '0 0 3px rgba(0, 0, 0, 1), 0 0 5px rgba(0, 242, 254, 0.4)' // Усилили тень для четкости
+                            textShadow: '0 0 3px rgba(0, 0, 0, 1), 0 0 5px rgba(0, 242, 254, 0.4)' 
                         }}
                     >
                         <textPath 
@@ -64,7 +64,6 @@ export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, classNa
                             <stop offset="70%" stopColor="#00F2FE" stopOpacity="0.2" />
                             <stop offset="100%" stopColor="transparent" stopOpacity="0" />
                         </radialGradient>
-                        <path id="miniPlaygroundCurveShared" d="M 20,38 Q 50,30 80,38" />
                         <path id="miniStarItemShared" d="M 0,-5 L 1.2,-1.5 L 4.8,-1.5 L 1.8,0.8 L 2.9,4.3 L 0,2.2 L -2.9,4.3 L -1.8,0.8 L -4.8,-1.5 L -1.2,-1.5 Z" />
                     </defs>
   
@@ -75,7 +74,7 @@ export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, classNa
                             d="M 10,10 Q 50,0 90,10 L 90,45 Q 90,80 50,95 Q 10,80 10,45 Z" 
                             fill="url(#miniShieldBodyShared)" 
                             stroke="url(#miniShieldBorderShared)" 
-                            strokeWidth="5" // Увеличили толщину обводки
+                            strokeWidth="5"
                         />
                         <path 
                             d="M 15,15 Q 50,7 85,15 L 85,45 Q 85,75 50,88 Q 15,75 15,45 Z" 
@@ -84,7 +83,7 @@ export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, classNa
                             strokeOpacity="0.2" 
                             strokeWidth="2"
                         />
-                        <g fill="#00F2FE" opacity="1"> // Максимальная непрозрачность звезд
+                        <g fill="#00F2FE" opacity="1">
                             <use href="#miniStarItemShared" transform="translate(30, 32) scale(1.5)" />
                             <use href="#miniStarItemShared" transform="translate(70, 32) scale(1.5)" />
                             <use href="#miniStarItemShared" transform="translate(40, 48) scale(1.5)" />
@@ -93,20 +92,19 @@ export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, classNa
                         </g>
                     </g>
   
-                    <g style={{ filter: 'drop-shadow(0 0 4px rgba(0,242,254,0.5))' }}>
+                    <g style={{ filter: 'drop-shadow(0 0 5px rgba(0,242,254,0.6))' }}>
                         <text 
                             x="50" 
-                            y="24" 
+                            y="36" 
                             textAnchor="middle" 
                             className="font-blackops" 
-                            style={{ fontSize: '11px', fill: '#00F2FE' }}
+                            style={{ 
+                                fontSize: '16px', 
+                                fill: '#00F2FE',
+                                letterSpacing: '0.05em'
+                            }}
                         >
-                            532
-                        </text>
-                        <text className="font-blackops" style={{ fontSize: '5.5px', fill: '#00F2FE', letterSpacing: '0.12em' }}>
-                            <textPath href="#miniPlaygroundCurveShared" startOffset="50%" textAnchor="middle">
-                                PLAYGROUND
-                            </textPath>
+                            UNIT
                         </text>
                     </g>
                 </svg>

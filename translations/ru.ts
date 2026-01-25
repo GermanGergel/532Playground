@@ -1,3 +1,4 @@
+
 export const ru = {
   // Navigation
   navHome: "Главная",
@@ -153,7 +154,7 @@ export const ru = {
   takePhoto: "Фото",
   uploading: "Загрузка...",
   loading: "Загрузка...",
-  editData: "Ред. Інфо",
+  editData: "Ред. Инфо",
   downloadCard: "Экспорт Карты",
   shareProfile: "Поделиться",
   shareViaApp: "Отправить Ссылку",
@@ -199,7 +200,7 @@ export const ru = {
 
   // Info Content
   ratingCalculationTitle: "Система Рейтинга",
-  ratingCalculationDesc: "Рейтинг меняется на основе результатов матчу, командной игры и личного вклада.",
+  ratingCalculationDesc: "Рейтинг меняется на основе результатов матча, командной игры и личного вклада.",
   ratingCalculationExamplesTitle: "Примеры Начисления",
   ratingExampleWinStrong: "Уверенная победа (+2GD): +1.3 очка",
   ratingExampleWinClose: "Обычная победа: +1.0 очко",
@@ -249,19 +250,19 @@ export const ru = {
   hubMatchReport: "ОТЧЕТ О МАТЧЕ",
   hubSessionNews: "РАЗВЕДДАННЫЕ",
   hubSessionSquads: "СОСТАВЫ",
-  hubTeamStandings: "ТАБЛИЦЯ",
+  hubTeamStandings: "ТАБЛИЦА",
   hubPlayers: "ИГРОКИ",
   hubGames: "МАТЧИ",
   hubVitalsTitle: "ПОКАЗАТЕЛИ КЛУБА",
-  hubStatsMembers: "УЧАСТНИКИ",
+  hubStatsMembers: "УЧАСНИКИ",
   hubSessionsPlayed: "СЕССИИ",
   hubAvgRating: "СРЕДНИЙ OVR",
   hubLocation: "ЛОКАЦИЯ",
   hubTimeFrame: "ВРЕМЯ",
   hubWeather: "ПОГОДА",
   hubImpact: "ИМПАКТ",
-  hubWelcomeText: "Добро пожаловать в официальный хаб 532 Playground. Следи за статистикой, сравнивай результаты и стремись к вершине.",
-  hubLeadersTitle: "ЛИДЕРЫ СЕЗОНА", // Main menu title
+  hubWelcomeText: "Добро пожаловать в операционный хаб UNIT. Отслеживай прогресс, анализируй данные матчей и меняй правила игры.",
+  hubLeadersTitle: "ЛИДЕРЫ СЕЗОНА",
   hubJoinSquad: "Вступить в Отряд",
 
   // Duel
