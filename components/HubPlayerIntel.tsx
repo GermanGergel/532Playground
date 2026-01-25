@@ -263,23 +263,20 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                                         <div className="absolute inset-0 p-4 flex flex-col justify-between pointer-events-none">
                                             <div className="flex justify-between items-start">
                                                 <div className="flex flex-col items-start">
-                                                    {/* BRAND REPLACEMENT: DARK TURQUOISE */}
+                                                    {/* BRAND REPLACEMENT: UNIT (Unified White) */}
                                                     <p 
-                                                        className="font-russo text-xl leading-none tracking-tighter"
+                                                        className="font-russo text-xl leading-none tracking-tighter text-white"
                                                         style={{ 
-                                                            background: 'linear-gradient(180deg, #155e75 0%, #083344 100%)',
-                                                            WebkitBackgroundClip: 'text',
-                                                            WebkitTextFillColor: 'transparent',
-                                                            opacity: 0.8,
+                                                            textShadow: '0 2px 10px rgba(0,0,0,0.5)',
                                                         }}
                                                     >
                                                         UNIT
                                                     </p>
                                                     {countryCodeAlpha2 && <img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} className="w-5 h-auto mt-4 rounded-sm opacity-80" alt="flag" />}
                                                     
-                                                    {/* TEAM OF THE MONTH ICON - ADJUSTED ALIGNMENT (-ml-1.5) */}
+                                                    {/* TEAM OF THE MONTH ICON */}
                                                     {isTotm && (
-                                                        <div className="mt-3 -ml-1.5 animate-in fade-in zoom-in duration-700">
+                                                        <div className="mt-3 animate-in fade-in zoom-in duration-700">
                                                             <MiniSquadBadge size="w-8 h-8" className="opacity-90" />
                                                         </div>
                                                     )}
@@ -289,21 +286,7 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                                                     <p className="font-black text-[8px] tracking-[0.2em] text-white mt-1">OVR</p>
                                                 </div>
                                             </div>
-                                            <div className="text-center">
-                                                <h1 
-                                                    className="font-russo text-2xl uppercase tracking-tighter truncate w-full px-1"
-                                                    style={{ 
-                                                        background: 'linear-gradient(180deg, #155e75 0%, #083344 100%)',
-                                                        WebkitBackgroundClip: 'text',
-                                                        WebkitTextFillColor: 'transparent',
-                                                        opacity: 0.9,
-                                                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.8))',
-                                                    }}
-                                                >
-                                                    {player.nickname}
-                                                </h1>
-                                                <p className="text-[7px] font-black text-white/40 uppercase tracking-[0.4em] mt-1">{player.tier}</p>
-                                            </div>
+                                            <div className="text-center"><h1 className="font-russo text-2xl uppercase tracking-tighter text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] truncate w-full px-1">{player.nickname}</h1><p className="text-[7px] font-black text-white/40 uppercase tracking-[0.4em] mt-1">{player.tier}</p></div>
                                         </div>
                                     </div>
                                 </div>

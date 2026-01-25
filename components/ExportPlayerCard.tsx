@@ -131,14 +131,11 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
             <div className="relative z-30 flex flex-col h-full p-6">
                 <header className="flex justify-between items-start">
                     <div className="pt-2">
-                        {/* EXPORT BRAND REPLACEMENT: DARK TURQUOISE */}
+                        {/* EXPORT BRAND REPLACEMENT: UNIT (Solid White with Shadow to fix html2canvas clipping bug) */}
                         <p 
-                            className="font-russo text-4xl leading-none tracking-tighter"
+                            className="font-russo text-4xl leading-none tracking-tighter text-white"
                             style={{ 
-                                background: 'linear-gradient(180deg, #155e75 0%, #083344 100%)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                opacity: 0.8,
+                                textShadow: '0 2px 10px rgba(0,0,0,0.5)',
                             }}
                         >
                             UNIT
@@ -188,16 +185,7 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
                 <div className="flex-grow" />
 
                 <section className="text-center mb-5">
-                    <h1 
-                        className="font-russo text-4xl uppercase leading-tight"
-                        style={{ 
-                            background: 'linear-gradient(180deg, #155e75 0%, #083344 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            opacity: 0.9,
-                            filter: 'drop-shadow(0 1px 4px rgba(0,0,0,0.8))',
-                        }}
-                    >
+                    <h1 className="font-russo text-4xl uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] leading-tight">
                         {player.nickname} {player.surname}
                     </h1>
                 </section>
