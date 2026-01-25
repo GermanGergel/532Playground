@@ -1,3 +1,4 @@
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../context';
 import { Player, PlayerStatus, PlayerTier } from '../types';
@@ -122,14 +123,13 @@ const getDemoDreamTeam = (): { team: DisplayPlayer[], monthName: string } => {
     const roles = ["THE MVP", "THE SNIPER", "ARCHITECT", "WINNER", "FORTRESS"];
     const stats = ["RATING", "GOALS", "ASSISTS", "WINS", "CLEAN SHEETS"];
     const values = [94, 12, 8, 9, 3];
-    const tiers = [PlayerTier.Legend, PlayerTier.Elite, PlayerTier.Pro, PlayerTier.Elite, PlayerTier.Regular];
     const team = surnames.map((surname, i) => ({
         player: {
             id: `demo_${i}`,
             nickname: `Player ${i+1}`,
             surname: surname,
             rating: values[0] - (i*2),
-            tier: tiers[i],
+            tier: i === 0 ? PlayerTier.Legend : PlayerTier.Elite,
             playerCard: demoPhotos[i],
             countryCode: i % 2 === 0 ? "UA" : "VN",
             status: PlayerStatus.Confirmed,
@@ -196,6 +196,7 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
         }
         const targetMonth = selectedDate.getMonth();
         const targetYear = selectedDate.getFullYear();
+        
         const calculateForMonth = (tMonth: number, tYear: number) => {
             const targetSessions = history.filter(s => {
                 if (!s || !s.date) return false;
@@ -290,30 +291,22 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/95 backdrop-blur-2xl animate-fade-in" onClick={onClose}></div>
             <div className="relative w-[95vw] md:w-[90vw] max-w-[1200px] h-[85vh] md:h-[80vh] animate-modal-pop">
-                <div className="absolute inset-[-15px] md:inset-[-30px] pointer-events-none z-0">
-                    <div className="absolute inset-0 bg-[#164e63]/25 blur-[40px] rounded-[3rem] animate-glow-pulse"></div>
-                    <div className="absolute inset-10 bg-[#0f172a]/50 blur-[60px] rounded-[3rem]"></div>
-                </div>
                 <div className="absolute inset-0 rounded-[2.5rem] overflow-hidden z-10">
                     <div className="absolute inset-0 p-[1px] bg-gradient-to-br from-[#00F2FE]/60 via-[#00F2FE]/10 to-[#00F2FE]/60 shadow-[0_0_40px_rgba(0,242,254,0.15)]">
                         <div className="w-full h-full bg-[#020408] rounded-[calc(2.5rem-1px)] overflow-hidden relative flex flex-col">
                             <StarrySky />
                             
+                            {/* UPDATED HEADER: Removed 532 Playground Club and replaced with UNIT Club */}
                             <div className="absolute top-[8%] left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center pointer-events-none select-none">
-                                <h2 className="font-blackops text-lg text-[#00F2FE] leading-none drop-shadow-[0_0_8px_rgba(0,242,254,0.6)]">
-                                    532
+                                <h2 className="font-blackops text-3xl text-[#00F2FE] leading-none drop-shadow-[0_0_12px_rgba(0,242,254,0.7)] tracking-tighter uppercase">
+                                    UNIT
                                 </h2>
-                                <div className="flex flex-col items-center mt-0 relative">
-                                    <span className="font-russo text-[5.5px] text-white tracking-[0.25em] uppercase opacity-90 drop-shadow-md">
-                                        Playground
+                                <div className="flex items-center gap-1.5 mt-1">
+                                    <div className="h-[1px] w-2 bg-white/20"></div>
+                                    <span className="font-chakra text-[6px] font-black text-white/60 tracking-[0.2em] uppercase drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]">
+                                        Club
                                     </span>
-                                    <div className="flex items-center gap-1 mt-0">
-                                        <div className="h-px w-1 bg-white/30"></div>
-                                        <span className="font-chakra text-[4.5px] font-black text-white tracking-[0.15em] uppercase drop-shadow-[0_0_5px_rgba(255,255,255,0.3)]">
-                                            Club
-                                        </span>
-                                        <div className="h-px w-1 bg-white/30"></div>
-                                    </div>
+                                    <div className="h-[1px] w-2 bg-white/20"></div>
                                 </div>
                             </div>
 
@@ -404,9 +397,6 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
                                                 </g>
                                             </g>
 
-                                            {/* FIXED: Adjusted translate y to 60 and scale to 1.5. 
-                                                The goal height is 60 units. 60 + 90 = 150. 
-                                                Base of goal is now exactly at y=150. */}
                                             <g transform="translate(425, 60) scale(1.5)">
                                                 <g opacity="0.4">
                                                     <path d="M 5,60 L 5,8 Q 5,0 13,0 L 87,0 Q 95,0 95,8 L 95,60" fill="none" stroke="#00F2FE" strokeWidth="1.2" filter="url(#goalGlow)" strokeLinecap="round" />
