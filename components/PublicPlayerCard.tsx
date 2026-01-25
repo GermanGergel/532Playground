@@ -117,8 +117,17 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
                 <div className="relative z-10 h-full flex flex-col justify-between p-1">
                     <div className="flex justify-between items-start">
                         <div className="pt-2">
-                            {/* BRAND REPLACEMENT: UNIT (Club Hub Style Gradient) */}
-                            <p className="font-russo text-3xl leading-none tracking-widest bg-gradient-to-b from-white to-white/20 bg-clip-text text-transparent">UNIT</p>
+                            {/* BRAND REPLACEMENT: UNIT (Unified White Gradient) */}
+                            <p 
+                                className="font-russo text-3xl leading-none tracking-widest"
+                                style={{ 
+                                    background: 'linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.2) 100%)',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent',
+                                }}
+                            >
+                                UNIT
+                            </p>
                             {countryCodeAlpha2 && <img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} alt={`${player.countryCode} flag`} className="w-6 h-auto mt-4 rounded-sm opacity-80" />}
                         </div>
                         <div className="flex flex-col items-center max-w-[50%]">

@@ -81,8 +81,17 @@ export const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ play
                 <div className="relative z-10 h-full p-1">
                      <div className="flex justify-between items-start">
                         <div className="pt-2">
-                            {/* BRAND REPLACEMENT: UNIT (Aligned Russo One) */}
-                            <p style={{ color: '#00F2FE' }} className="font-russo text-xl leading-none tracking-widest">UNIT</p>
+                            {/* BRAND REPLACEMENT: UNIT (Unified White Gradient) */}
+                            <p 
+                                className="font-russo text-xl leading-none tracking-widest"
+                                style={{ 
+                                    background: 'linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.2) 100%)',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent',
+                                }}
+                            >
+                                UNIT
+                            </p>
                             {countryCodeAlpha2 && (<img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} alt={`${player.countryCode} flag`} className="w-6 h-auto mt-4 rounded-sm opacity-80" />)}
                         </div>
                         <div className="flex flex-col items-center max-w-[50%]">

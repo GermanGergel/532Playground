@@ -9,15 +9,8 @@ import { useApp } from '../context';
 import { MiniSquadBadge } from './MiniSquadBadge';
 
 const skillAbbreviations: Record<SkillType, string> = {
-    goalkeeper: 'GK',
-    power_shot: 'PS',
-    technique: 'TQ',
-    defender: 'DF',
-    playmaker: 'PM',
-    finisher: 'FN',
-    versatile: 'VS',
-    tireless_motor: 'TM',
-    leader: 'LD',
+    goalkeeper: 'GK', power_shot: 'PS', technique: 'TQ', defender: 'DF', 
+    playmaker: 'PM', finisher: 'FN', versatile: 'VS', tireless_motor: 'TM', leader: 'LD',
 };
 
 const Stat: React.FC<{ value: string | number, label: string }> = ({ value, label }) => (
@@ -138,8 +131,17 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
             <div className="relative z-30 flex flex-col h-full p-6">
                 <header className="flex justify-between items-start">
                     <div className="pt-2">
-                        {/* EXPORT BRAND REPLACEMENT: UNIT (Club Hub Style Gradient) */}
-                        <p className="font-russo text-4xl leading-none tracking-widest bg-gradient-to-b from-white to-white/20 bg-clip-text text-transparent">UNIT</p>
+                        {/* EXPORT BRAND REPLACEMENT: UNIT (Unified White Gradient) */}
+                        <p 
+                            className="font-russo text-4xl leading-none tracking-widest"
+                            style={{ 
+                                background: 'linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.2) 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                            }}
+                        >
+                            UNIT
+                        </p>
                         {countryCodeAlpha2 && (
                             <img 
                                 src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`}
