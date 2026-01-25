@@ -254,8 +254,7 @@ const StatsView: React.FC<{ player: Player; onBack: () => void; isPromo?: boolea
                         <BestSessionCard player={player} usePromoStyle={true} />
                     </PromoStatsContainer>
                 ) : (
-                    <LastSessionBreakdown player={player} />
-                )
+                    <BestSessionCard player={player} />
                 )}
 
                 {/* 4. Club Rankings */}
