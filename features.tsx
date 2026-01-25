@@ -381,7 +381,6 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
     const assistsPerSession = player.totalSessionsPlayed > 0 ? (player.totalAssists / player.totalSessionsPlayed).toFixed(2) : '0.00';
 
     // --- RECALCULATE MONTHLY STATS DYNAMICALLY ---
-    // Instead of using dirty `player.monthlyGoals` from DB, recalculate from history
     const monthlyStats = React.useMemo(() => {
         return calculatePlayerMonthlyStats(player.id, history);
     }, [player.id, history]);
@@ -451,13 +450,14 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                 <div className="relative z-10 h-full flex flex-col justify-between">
                      <div className="flex justify-between items-start">
                         <div className="pt-2">
-                            {/* BRAND REPLACEMENT: UNIT (Unified White Gradient) - COMPACT WIDTH */}
+                            {/* BRAND REPLACEMENT: DARK TURQUOISE */}
                             <p 
                                 className="font-russo text-3xl leading-none tracking-tighter"
                                 style={{ 
-                                    background: 'linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.2) 100%)',
+                                    background: 'linear-gradient(180deg, #155e75 0%, #083344 100%)',
                                     WebkitBackgroundClip: 'text',
                                     WebkitTextFillColor: 'transparent',
+                                    opacity: 0.8,
                                 }}
                             >
                                 UNIT
@@ -489,7 +489,18 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                     </div>
 
                     <div className="text-center flex-shrink-0 relative z-30 pb-1">
-                        <h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg">{player.nickname} {player.surname}</h1>
+                        <h1 
+                            className="text-4xl font-black uppercase tracking-tight leading-none mb-1"
+                            style={{ 
+                                background: 'linear-gradient(180deg, #155e75 0%, #083344 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                opacity: 0.9,
+                                filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.6))',
+                            }}
+                        >
+                            {player.nickname} {player.surname}
+                        </h1>
                     </div>
                 </div>
             </div>

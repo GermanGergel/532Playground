@@ -10,18 +10,18 @@ export const hexToRgba = (hex: string, alpha: number) => {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
-// UPDATED: Standardized "UNIT" style with white-to-faded gradient as per Club Hub "Define Your" style
+// UPDATED: Subtle dark turquoise metallic gradient for "UNIT" brand identity
 export const BrandedHeader: React.FC<{className?: string; isExport?: boolean; short?: boolean}> = ({ className, isExport }) => (
     React.createElement('header', { className: `text-center ${className} ${isExport ? '-mt-4' : ''}` },
         React.createElement('h1', { 
             className: `text-5xl font-black uppercase leading-none font-russo tracking-[0.2em]`, 
             style: { 
-                // Unified Style: White to White/20 Gradient
-                background: 'linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.2) 100%)',
+                background: 'linear-gradient(180deg, #155e75 0%, #083344 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
+                opacity: 0.85,
                 filter: `
-                    drop-shadow(4px 10px 15px rgba(0, 0, 0, 0.8))
+                    drop-shadow(0 1px 3px rgba(0, 0, 0, 0.4))
                 `,
             } 
         }, "UNIT")

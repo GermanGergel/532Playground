@@ -108,7 +108,7 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
                             ))}
                         </div>
                         {isTotm && (
-                            <div className="animate-in fade-in zoom-in duration-500">
+                            <div className="animate-in fade-in zoom-in duration-700">
                                 <MiniSquadBadge size="w-10 h-10" />
                             </div>
                         )}
@@ -117,11 +117,14 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
                 <div className="relative z-10 h-full flex flex-col justify-between p-1">
                     <div className="flex justify-between items-start">
                         <div className="pt-2">
-                            {/* BRAND REPLACEMENT: UNIT (Unified White) - Fix for export consistency */}
+                            {/* BRAND REPLACEMENT: DARK TURQUOISE */}
                             <p 
-                                className="font-russo text-3xl leading-none tracking-tighter text-white"
+                                className="font-russo text-3xl leading-none tracking-tighter"
                                 style={{ 
-                                    textShadow: '0 2px 10px rgba(0,0,0,0.5)',
+                                    background: 'linear-gradient(180deg, #155e75 0%, #083344 100%)',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent',
+                                    opacity: 0.8,
                                 }}
                             >
                                 UNIT
@@ -138,7 +141,16 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
                         </div>
                     </div>
                     <div className="text-center flex-shrink-0 relative z-30 pb-1">
-                        <h1 className="text-4xl font-black uppercase tracking-tight drop-shadow-lg leading-none mb-1">
+                        <h1 
+                            className="text-4xl font-black uppercase tracking-tight leading-none mb-1"
+                            style={{ 
+                                background: 'linear-gradient(180deg, #155e75 0%, #083344 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                opacity: 0.9,
+                                filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.6))',
+                            }}
+                        >
                             {player.nickname} {player.surname}
                         </h1>
                     </div>
@@ -193,7 +205,6 @@ const SessionTrendChart: React.FC<{ history?: Player['sessionHistory']; t: any }
         <div className="flex justify-around items-end h-16 px-2 pt-2">
             {displayData.map((session, index) => {
                 const height = session.winRate > 0 ? `${Math.max(session.winRate, 15)}%` : '5%';
-                // FIX: use session.winRate from map iteration instead of undefined winRate
                 const color = getBarColor(session.winRate);
                 return <div key={index} className="w-2.5 rounded-t-full transition-all duration-500 ease-out" style={{ height: height, background: `linear-gradient(to top, ${hexToRgba(color, 0.1)}, ${color})`, boxShadow: `0 0 4px ${color}`, opacity: session.winRate > 0 ? 1 : 0.2, }} title={`${t.winRate}: ${session.winRate > 0 ? session.winRate + '%' : 'N/A'}`} />;
             })}

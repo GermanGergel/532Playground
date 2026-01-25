@@ -187,7 +187,15 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                                             <HubPortraitAvatar photo={person.playerCard} tierColor={tierColor} />
                                         </div>
                                         <div className="flex flex-col min-w-0 flex-grow">
-                                            <span className={`font-chakra font-black text-sm uppercase tracking-wide truncate transition-colors ${isSelected ? 'text-white' : 'text-white/70'}`}>
+                                            <span 
+                                                className={`font-chakra font-black text-sm uppercase tracking-wide truncate transition-colors`}
+                                                style={isSelected ? { 
+                                                    background: 'linear-gradient(180deg, #155e75 0%, #083344 100%)',
+                                                    WebkitBackgroundClip: 'text',
+                                                    WebkitTextFillColor: 'transparent',
+                                                    opacity: 1,
+                                                } : { color: 'rgba(255,255,255,0.7)' }}
+                                            >
                                                 {person.nickname}
                                             </span>
                                             <span className="text-[7px] font-mono font-black text-white/20 uppercase tracking-[0.2em]">{person.tier}</span>
@@ -212,12 +220,12 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                             );
                         })}
                     </div>
-                    {/* SCROLL FADE BOTTOM ONLY - HEIGHT FURTHER REDUCED TO h-4 */}
+                    {/* SCROLL FADE BOTTOM ONLY */}
                     <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#01040a] to-transparent z-20 pointer-events-none"></div>
                 </div>
             </div>
 
-            {/* CONTENT AREA - RIGHT COLUMN - Obsidian Black (#01040a) */}
+            {/* CONTENT AREA - RIGHT COLUMN */}
             <div className="flex-grow relative bg-[#01040a] overflow-hidden">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0a1121] via-black to-black opacity-60"></div>
                 <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>

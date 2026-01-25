@@ -214,7 +214,17 @@ const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any
                             return (
                                 <div key={pid} className="flex-1 flex items-center bg-white/[0.02] rounded-lg px-3 border border-transparent transition-all min-h-[24px]">
                                     <span className="font-mono text-[8px] text-white/20 w-4 shrink-0">{(idx + 1)}</span>
-                                    <span className="text-[10px] font-black text-slate-400 uppercase truncate flex-grow">{p?.nickname || 'UNKNOWN'}</span>
+                                    <span 
+                                        className="text-[10px] font-black uppercase truncate flex-grow"
+                                        style={{ 
+                                            background: 'linear-gradient(180deg, #155e75 0%, #083344 100%)',
+                                            WebkitBackgroundClip: 'text',
+                                            WebkitTextFillColor: 'transparent',
+                                            opacity: 0.9,
+                                        }}
+                                    >
+                                        {p?.nickname || 'UNKNOWN'}
+                                    </span>
                                 </div>
                             );
                         })}
@@ -242,6 +252,7 @@ const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any
 interface TopPlayerStats { player: Player; score: number; rank: 1 | 2 | 3; }
 
 // --- MEMOIZED SESSION PODIUM ---
+// NOTE: Player names here stay white/default as per exception requested
 const SessionPodium = React.memo(({ players, t }: { players: TopPlayerStats[], t: any }) => {
     const p1 = players.find(p => p.rank === 1);
     const p2 = players.find(p => p.rank === 2);
@@ -314,7 +325,16 @@ const NewsVanguardCard: React.FC<{ item: NewsItem }> = ({ item }) => {
                         {item.isHot && <Zap className="w-3 h-3 text-indigo-400 animate-pulse" />}
                     </div>
                     <div className="flex items-baseline gap-2 overflow-hidden">
-                        <h4 className="text-[14px] font-black text-slate-100 uppercase shrink-0 tracking-wide">{item.playerName}</h4>
+                        <h4 
+                            className="text-[14px] font-black uppercase shrink-0 tracking-wide"
+                            style={{ 
+                                background: 'linear-gradient(180deg, #155e75 0%, #083344 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                            }}
+                        >
+                            {item.playerName}
+                        </h4>
                         <p className="text-[12px] text-indigo-100/60 leading-tight truncate italic font-chakra">{item.message.replace(item.playerName, '').trim() || item.subMessage}</p>
                     </div>
                 </div>
@@ -545,7 +565,18 @@ export const PublicHubDashboard: React.FC = () => {
                                             <tbody>{sortedForTable.map((ps, idx) => (
                                                 <tr key={ps.player.id} className="group border-b border-white/5 last:border-0 transition-all duration-300">
                                                     <td className="py-2 text-center text-[9px] font-bold text-white/30 bg-white/[0.02] relative overflow-hidden">{idx + 1}</td>
-                                                    <td className="py-2 text-left pl-3 relative overflow-hidden"><div className="absolute left-0 top-1/2 -translate-y-1/2 w-[1.5px] h-3 rounded-full" style={{ backgroundColor: ps.team.color, boxShadow: `0 0 8px ${ps.team.color}` }} /><span className="text-slate-300 font-bold uppercase truncate text-[11px] block w-full pl-2 transition-colors">{ps.player.nickname || 'Unknown'}</span></td>
+                                                    <td className="py-2 text-left pl-3 relative overflow-hidden"><div className="absolute left-0 top-1/2 -translate-y-1/2 w-[1.5px] h-3 rounded-full" style={{ backgroundColor: ps.team.color, boxShadow: `0 0 8px ${ps.team.color}` }} />
+                                                    <span 
+                                                        className="font-bold uppercase truncate text-[11px] block w-full pl-2 transition-colors"
+                                                        style={{ 
+                                                            background: 'linear-gradient(180deg, #155e75 0%, #083344 100%)',
+                                                            WebkitBackgroundClip: 'text',
+                                                            WebkitTextFillColor: 'transparent',
+                                                            opacity: 0.95,
+                                                        }}
+                                                    >
+                                                        {ps.player.nickname || 'Unknown'}
+                                                    </span></td>
                                                     <td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.goals}</td>
                                                     <td className="py-2 text-center text-[10px] font-bold text-white/70 font-mono">{ps.assists}</td>
                                                     <td className="py-2 text-center text-[12px] font-black text-white bg-white/[0.03]">{ps.goals + ps.assists}</td>
@@ -580,7 +611,18 @@ export const PublicHubDashboard: React.FC = () => {
                                                                                 <div key={goal.id} className="flex items-center gap-2 px-3 py-1 relative">
                                                                                     <div className="w-[1px] h-2.5 rounded-full shrink-0" style={{ backgroundColor: team?.color || '#fff', boxShadow: `0 0 6px ${team?.color || '#fff'}` }}></div>
                                                                                     <div className="shrink-0 ml-1">{goal.isOwnGoal ? ( <span className="text-[10px]">🧤</span> ) : ( <span className="text-[10px]">⚽</span> )}</div>
-                                                                                    <div className="flex flex-col min-w-0"><div className="flex flex-wrap items-baseline gap-x-2"><span className="text-[11px] font-black uppercase text-slate-200 tracking-wide truncate">{scorer?.nickname || (goal.isOwnGoal ? t.ownGoal : 'Unknown')}</span>{assistant && ( <span className="text-[8px] font-bold text-white/20 uppercase italic shrink-0">{t.assistant}: {assistant.nickname}</span> )}</div></div>
+                                                                                    <div className="flex flex-col min-w-0"><div className="flex flex-wrap items-baseline gap-x-2">
+                                                                                        <span 
+                                                                                            className="text-[11px] font-black uppercase tracking-wide truncate"
+                                                                                            style={{ 
+                                                                                                background: 'linear-gradient(180deg, #155e75 0%, #083344 100%)',
+                                                                                                WebkitBackgroundClip: 'text',
+                                                                                                WebkitTextFillColor: 'transparent',
+                                                                                            }}
+                                                                                        >
+                                                                                            {scorer?.nickname || (goal.isOwnGoal ? t.ownGoal : 'Unknown')}
+                                                                                        </span>
+                                                                                        {assistant && ( <span className="text-[8px] font-bold text-white/20 uppercase italic shrink-0">{t.assistant}: {assistant.nickname}</span> )}</div></div>
                                                                                 </div>
                                                                             );
                                                                         })
