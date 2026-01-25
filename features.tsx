@@ -451,9 +451,9 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
                 <div className="relative z-10 h-full flex flex-col justify-between">
                      <div className="flex justify-between items-start">
                         <div className="pt-2">
-                            {/* BRAND REPLACEMENT: UNIT (Unified White Gradient) */}
+                            {/* BRAND REPLACEMENT: UNIT (Unified White Gradient) - COMPACT WIDTH */}
                             <p 
-                                className="font-russo text-3xl leading-none tracking-widest"
+                                className="font-russo text-3xl leading-none tracking-tighter"
                                 style={{ 
                                     background: 'linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.2) 100%)',
                                     WebkitBackgroundClip: 'text',

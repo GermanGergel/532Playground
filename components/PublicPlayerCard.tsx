@@ -117,9 +117,9 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
                 <div className="relative z-10 h-full flex flex-col justify-between p-1">
                     <div className="flex justify-between items-start">
                         <div className="pt-2">
-                            {/* BRAND REPLACEMENT: UNIT (Unified White Gradient) */}
+                            {/* BRAND REPLACEMENT: UNIT (Unified White Gradient) - COMPACT WIDTH */}
                             <p 
-                                className="font-russo text-3xl leading-none tracking-widest"
+                                className="font-russo text-3xl leading-none tracking-tighter"
                                 style={{ 
                                     background: 'linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.2) 100%)',
                                     WebkitBackgroundClip: 'text',
@@ -195,6 +195,7 @@ const SessionTrendChart: React.FC<{ history?: Player['sessionHistory']; t: any }
         <div className="flex justify-around items-end h-16 px-2 pt-2">
             {displayData.map((session, index) => {
                 const height = session.winRate > 0 ? `${Math.max(session.winRate, 15)}%` : '5%';
+                // FIX: use session.winRate from map iteration instead of undefined winRate
                 const color = getBarColor(session.winRate);
                 return <div key={index} className="w-2.5 rounded-t-full transition-all duration-500 ease-out" style={{ height: height, background: `linear-gradient(to top, ${hexToRgba(color, 0.1)}, ${color})`, boxShadow: `0 0 4px ${color}`, opacity: session.winRate > 0 ? 1 : 0.2, }} title={`${t.winRate}: ${session.winRate > 0 ? session.winRate + '%' : 'N/A'}`} />;
             })}

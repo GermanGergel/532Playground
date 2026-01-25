@@ -131,9 +131,9 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
             <div className="relative z-30 flex flex-col h-full p-6">
                 <header className="flex justify-between items-start">
                     <div className="pt-2">
-                        {/* EXPORT BRAND REPLACEMENT: UNIT (Unified White Gradient) */}
+                        {/* EXPORT BRAND REPLACEMENT: UNIT (Unified White Gradient) - COMPACT WIDTH */}
                         <p 
-                            className="font-russo text-4xl leading-none tracking-widest"
+                            className="font-russo text-4xl leading-none tracking-tighter"
                             style={{ 
                                 background: 'linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.2) 100%)',
                                 WebkitBackgroundClip: 'text',
