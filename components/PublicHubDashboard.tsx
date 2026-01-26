@@ -485,7 +485,7 @@ export const PublicHubDashboard: React.FC = () => {
     const tdBase = "py-1.5 text-center text-[10px] font-bold transition-colors";
 
     return (
-        <div className="h-full flex flex-col animate-in fade-in duration-700 w-full relative p-2 md:p-3 overflow-hidden">
+        <div className="h-full flex flex-col animate-in fade-in duration-700 w-full relative p-2 md:p-3">
             <div key={session.id} className="flex-grow grid grid-cols-12 gap-4 min-h-0 items-stretch relative z-10 overflow-hidden animate-in fade-in duration-500">
                 <div className="col-span-12 md:col-span-9 flex flex-col gap-4 h-full min-h-[600px] overflow-hidden">
                     <div className="flex-[4] min-h-0 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200 flex gap-3">
@@ -619,7 +619,7 @@ export const PublicHubDashboard: React.FC = () => {
 
             {/* --- SESSION SELECTOR (BOTTOM CAPSULES) --- */}
             {sessionsOfCurrentDate.length >= 1 && (
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2 bg-black/60 backdrop-blur-md rounded-full border border-white/10 shadow-2xl animate-in slide-in-from-bottom-4 duration-500">
+                <div className="absolute -bottom-8 md:-bottom-12 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2 bg-black/60 backdrop-blur-md rounded-full border border-white/10 shadow-2xl animate-in slide-in-from-bottom-4 duration-500">
                     {sessionsOfCurrentDate.map((s, idx) => {
                         const isActive = selectedSessionIdx === idx;
                         return (

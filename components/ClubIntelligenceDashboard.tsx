@@ -29,8 +29,8 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
 
     return (
         <div className="w-full h-full animate-in fade-in duration-700 relative">
-            {/* Main Content Area */}
-            <div className="w-full h-full relative overflow-hidden">
+            {/* Main Content Area - Removed overflow-hidden to allow bottom capsule to hang */}
+            <div className="w-full h-full relative">
                 {currentView === 'dashboard' && <PublicHubDashboard />}
                 
                 {(currentView === 'roster' || currentView === 'duel') && (
