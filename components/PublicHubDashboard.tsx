@@ -3,7 +3,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
-import { NewsItem, Player, Team, WeatherCondition } from '../types';
+import { NewsItem, Player, Team, WeatherCondition, Session } from '../types';
 import { TrophyIcon, Zap, History as HistoryIcon, Users, AwardIcon, Target, YouTubeIcon } from '../icons';
 import { useTranslation } from '../ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
@@ -407,11 +407,31 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
 export const PublicHubDashboard: React.FC = () => {
     const { history, newsFeed, allPlayers } = useApp();
     const t = useTranslation();
+    
+    // --- MULTI-SESSION LOGIC ---
+    // 1. Identify "Latest Date" sessions
+    const latestSessions = useMemo(() => {
+        if (!history || history.length === 0) return [];
+        const latestDate = history[0].date;
+        // Find all sessions with the same date (up to a small threshold for time differences if any, 
+        // but since we save by day, exact match is usually fine)
+        const dateStr = (d: string) => new Date(d).toISOString().split('T')[0];
+        const targetDate = dateStr(latestDate);
+        return history.filter(s => dateStr(s.date) === targetDate);
+    }, [history]);
+
+    const [sessionIndex, setSessionIndex] = useState(0);
+    const session = latestSessions[sessionIndex] || history[0];
+
+    // Reset index if history changes
+    useEffect(() => {
+        setSessionIndex(0);
+    }, [history.length]);
+
     const [activeRightTab, setActiveRightTab] = useState<'players' | 'games'>('players');
     const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
     const [isAutoSwitching, setIsAutoSwitching] = useState(true);
     const [autoSwitchProgress, setAutoSwitchProgress] = useState(0);
-    const session = history[0];
 
     useEffect(() => {
         if (!isAutoSwitching || !session) return;
@@ -592,13 +612,45 @@ export const PublicHubDashboard: React.FC = () => {
                                                 </React.Fragment>
                                             )})}</tbody>
                                         </table>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </HubCard>
                 </div>
             </div>
+
+            {/* --- NEW: SESSION SWITCHER --- */}
+            {latestSessions.length > 1 && (
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[100] flex gap-2.5 p-1.5 bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5),0_0_20px_rgba(0,242,254,0.1)]">
+                    {latestSessions.map((s, idx) => {
+                        const isActive = idx === sessionIndex;
+                        return (
+                            <button
+                                key={s.id}
+                                onClick={() => {
+                                    setSessionIndex(idx);
+                                    setExpandedMatchId(null);
+                                }}
+                                className={`
+                                    relative px-5 py-1.5 rounded-xl transition-all duration-500 overflow-hidden
+                                    ${isActive 
+                                        ? 'bg-[#00F2FE]/10 border border-[#00F2FE]/40 shadow-[0_0_10px_rgba(0,242,254,0.2)]' 
+                                        : 'bg-white/5 border border-white/5 hover:bg-white/10 opacity-60'
+                                    }
+                                `}
+                            >
+                                <span className={`text-[10px] font-black uppercase tracking-[0.15em] transition-colors ${isActive ? 'text-[#00F2FE]' : 'text-white/40'}`}>
+                                    {s.sessionName.split(' ')[0]} {idx + 1}
+                                </span>
+                                {isActive && (
+                                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#00F2FE] animate-pulse"></div>
+                                )}
+                            </button>
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
 };
