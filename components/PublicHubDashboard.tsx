@@ -49,8 +49,8 @@ const SoccerTacticsBackground: React.FC = () => (
                 <rect x="0" y="145" width="70" height="160" />
                 <rect x="0" y="195" width="25" height="60" />
                 <path d="M 70 185 Q 95 225 70 265" />
-                <rect x="730" y="145" width="70" height="160" />
-                <rect x="775" y="195" width="25" height="60" />
+                <rect x="0" y="145" width="70" height="160" />
+                <rect x="0" y="195" width="25" height="60" />
                 <path d="M 730 185 Q 705 225 730 265" />
             </g>
 
@@ -520,9 +520,9 @@ export const PublicHubDashboard: React.FC = () => {
                                         <th className={`${thStandings} w-[7%]`}>{t.thW}</th>
                                         <th className={`${thStandings} w-[7%]`}>{t.thD}</th>
                                         <th className={`${thStandings} w-[7%]`}>{t.thL}</th>
-                                        <th className={`${thStandings} w-[9%]`}>{t.thGF}</th>
-                                        <th className={`${thStandings} w-[9%]`}>{t.thGA}</th>
-                                        <th className={`${thStandings} w-[9%]`}>{t.thGD}</th>
+                                        <th className={`${thStandings} w-[10%]`}>{t.thGF}</th>
+                                        <th className={`${thStandings} w-[10%]`}>{t.thGA}</th>
+                                        <th className={`${thStandings} w-[10%]`}>{t.thGD}</th>
                                         <th className={`${thStandings} w-[10%] text-white bg-white/[0.03]`}>PTS</th>
                                     </tr>
                                 </thead>
@@ -557,7 +557,7 @@ export const PublicHubDashboard: React.FC = () => {
                                 {activeRightTab === 'players' ? (
                                     <div className="animate-in fade-in duration-500">
                                         <table className="w-full table-fixed border-collapse">
-                                            <thead><tr><th className={`${thStandings} w-[10%]`}>#</th><th className={`${thStandings} text-left pl-3 w-[50%]`}>{t.players}</th><th className={`${thStandings} w-[15%]`}>{t.thG}</th><th className={`${thStandings} w-[15%]`}>{t.thA}</th><th className={`${thStandings} w-[10%] text-white bg-white/[0.03]`}>TOT</th></tr></thead>
+                                            <thead><tr><th className={`${thStandings} w-[10%]`}>#</th><th className={`${thStandings} text-left pl-3 w-[50%]`}>{t.players}</th><th className={`${thStandings} w-[12%]`}>{t.thG}</th><th className={`${thStandings} w-[12%]`}>{t.thA}</th><th className={`${thStandings} w-[16%] text-white bg-white/[0.03]`}>TOT</th></tr></thead>
                                             <tbody>{sortedForTable.map((ps, idx) => (
                                                 <tr key={ps.player.id} className="group border-b border-white/5 last:border-0 transition-all duration-300">
                                                     <td className="py-2 text-center text-[9px] font-bold text-white/30 bg-white/[0.02] relative overflow-hidden">{idx + 1}</td>
@@ -621,6 +621,12 @@ export const PublicHubDashboard: React.FC = () => {
                 <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[100] flex gap-2.5 p-1.5 bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5),0_0_20px_rgba(0,242,254,0.1)]">
                     {latestSessions.map((s, idx) => {
                         const isActive = idx === sessionIndex;
+                        const buttonClass = isActive 
+                            ? 'bg-[#00F2FE]/10 border-[#00F2FE]/40 shadow-[0_0_10px_rgba(0,242,254,0.2)]' 
+                            : 'bg-white/5 border border-white/5 hover:bg-white/10 opacity-60';
+                        
+                        const sessionPrefix = s.sessionName ? s.sessionName.split(' ')[0] : 'SESSION';
+
                         return (
                             <button
                                 key={s.id}
@@ -628,10 +634,10 @@ export const PublicHubDashboard: React.FC = () => {
                                     setSessionIndex(idx);
                                     setExpandedMatchId(null);
                                 }}
-                                className={`relative px-5 py-1.5 rounded-xl transition-all duration-500 overflow-hidden ${isActive ? 'bg-[#00F2FE]/10 border-[#00F2FE]/40 shadow-[0_0_10px_rgba(0,242,254,0.2)]' : 'bg-white/5 border border-white/5 hover:bg-white/10 opacity-60'}`}
+                                className={`relative px-5 py-1.5 rounded-xl transition-all duration-500 overflow-hidden ${buttonClass}`}
                             >
                                 <span className={`text-[10px] font-black uppercase tracking-[0.15em] transition-colors ${isActive ? 'text-[#00F2FE]' : 'text-white/40'}`}>
-                                    {s.sessionName.split(' ')[0]} {idx + 1}
+                                    {`${sessionPrefix} ${idx + 1}`}
                                 </span>
                                 {isActive && (
                                     <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#00F2FE] animate-pulse"></div>
