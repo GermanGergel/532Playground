@@ -485,9 +485,9 @@ export const PublicHubDashboard: React.FC = () => {
     const tdBase = "py-1.5 text-center text-[10px] font-bold transition-colors";
 
     return (
-        <div className="min-h-full flex flex-col animate-in fade-in duration-700 w-full relative p-2 md:p-3">
-            <div key={session.id} className="grid grid-cols-12 gap-4 items-stretch relative z-10">
-                <div className="col-span-12 md:col-span-9 flex flex-col gap-4 h-full min-h-[600px]">
+        <div className="h-full flex flex-col animate-in fade-in duration-700 w-full relative p-2 md:p-3 overflow-hidden">
+            <div key={session.id} className="flex-grow grid grid-cols-12 gap-4 min-h-0 items-stretch relative z-10 overflow-hidden animate-in fade-in duration-500">
+                <div className="col-span-12 md:col-span-9 flex flex-col gap-4 h-full min-h-[600px] overflow-hidden">
                     <div className="flex-[4] min-h-0 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200 flex gap-3">
                          <HubCard title={t.hubSessionLeaders} align="right" icon={<AwardIcon />} accent="#FFD700" variant="elite" className="flex-[2] h-full min-h-[350px]" bodyClassName="flex flex-col bg-transparent">
                             <div className="flex-grow relative z-10"><SessionPodium players={top3PodiumPlayers} t={t} /></div>
@@ -509,7 +509,7 @@ export const PublicHubDashboard: React.FC = () => {
                         </HubCard>
                     </div>
                 </div>
-                <div className="col-span-12 md:col-span-3 flex flex-col gap-4 h-full min-h-[600px]">
+                <div className="col-span-12 md:col-span-3 flex flex-col gap-4 h-full min-h-[600px] overflow-hidden">
                     <HubCard title={t.teamStandings} icon={<TrophyIcon />} variant="standings" className="shrink-0" bodyClassName="flex flex-col">
                         <div className="p-1">
                             <table className="w-full table-fixed border-collapse">
@@ -619,24 +619,22 @@ export const PublicHubDashboard: React.FC = () => {
 
             {/* --- SESSION SELECTOR (BOTTOM CAPSULES) --- */}
             {sessionsOfCurrentDate.length >= 1 && (
-                <div className="mt-10 mb-6 flex justify-center animate-in slide-in-from-bottom-4 duration-500">
-                    <div className="flex items-center gap-3 px-4 py-2 bg-black/60 backdrop-blur-md rounded-full border border-white/10 shadow-2xl">
-                        {sessionsOfCurrentDate.map((s, idx) => {
-                            const isActive = selectedSessionIdx === idx;
-                            return (
-                                <button
-                                    key={s.id}
-                                    onClick={() => setSelectedSessionIdx(idx)}
-                                    className={`relative h-2 rounded-full transition-all duration-500 ${isActive ? 'w-10 bg-[#00F2FE] shadow-[0_0_12px_#00F2FE]' : 'w-6 bg-white/20 hover:bg-white/40'}`}
-                                    title={s.sessionName}
-                                >
-                                    {isActive && (
-                                        <div className="absolute inset-0 bg-[#00F2FE] blur-[4px] opacity-60 rounded-full animate-pulse"></div>
-                                    )}
-                                </button>
-                            );
-                        })}
-                    </div>
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2 bg-black/60 backdrop-blur-md rounded-full border border-white/10 shadow-2xl animate-in slide-in-from-bottom-4 duration-500">
+                    {sessionsOfCurrentDate.map((s, idx) => {
+                        const isActive = selectedSessionIdx === idx;
+                        return (
+                            <button
+                                key={s.id}
+                                onClick={() => setSelectedSessionIdx(idx)}
+                                className={`relative h-2 rounded-full transition-all duration-500 ${isActive ? 'w-10 bg-[#00F2FE] shadow-[0_0_12px_#00F2FE]' : 'w-6 bg-white/20 hover:bg-white/40'}`}
+                                title={s.sessionName}
+                            >
+                                {isActive && (
+                                    <div className="absolute inset-0 bg-[#00F2FE] blur-[4px] opacity-60 rounded-full animate-pulse"></div>
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
             )}
         </div>
