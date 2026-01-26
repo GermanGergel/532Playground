@@ -38,32 +38,6 @@ const StaticSoccerBall: React.FC = () => {
     );
 };
 
-const NoLeadersPlaceholder: React.FC = () => {
-    const t = useTranslation();
-    return (
-        <div className="w-full max-w-2xl mx-auto py-20 flex flex-col items-center justify-center relative">
-            <div className="absolute inset-0 bg-[#00F2FE]/5 blur-[60px] rounded-full animate-pulse"></div>
-            <div className="relative z-10 flex flex-col items-center gap-6 opacity-30">
-                <div className="w-20 h-20 rounded-full border-2 border-dashed border-[#00F2FE] animate-spin-slow flex items-center justify-center">
-                    <TrophyIcon className="w-10 h-10 text-[#00F2FE]" />
-                </div>
-                <div className="text-center">
-                    <h3 className="font-orbitron text-lg font-black text-white tracking-[0.4em] uppercase">
-                        {t.hubAwaitingStats}
-                    </h3>
-                    <p className="font-chakra text-[10px] text-white/50 tracking-[0.2em] mt-2 uppercase">
-                        {t.hubAnalyzingPerformance}
-                    </p>
-                </div>
-            </div>
-            <style dangerouslySetInnerHTML={{ __html: `
-                @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-                .animate-spin-slow { animation: spin-slow 15s linear infinite; }
-            `}} />
-        </div>
-    );
-};
-
 const MotivationalTicker: React.FC = () => {
     const phrases = [
         "DATA BUILDS LEGENDS •",
@@ -177,7 +151,6 @@ const HubNav: React.FC<{
             
             <div className="flex items-center gap-4 shrink-0 h-full">
                 <div className="flex items-center">
-                    {/* NEW COMPACT UNIT LOGO */}
                     <span 
                         className="font-blackops text-2xl md:text-3xl text-[#00F2FE] tracking-tighter leading-none" 
                         style={{ 
@@ -258,11 +231,6 @@ const HubNav: React.FC<{
                     </div>
                 )}
                 <div className="flex items-center gap-2 group h-full relative" ref={dropdownRef}>
-                    {!isDashboardOpen && (
-                        <div className="hidden md:flex flex-col items-end justify-center h-full animate-in fade-in duration-500 pr-2">
-                            <span className="text-[8px] font-black tracking-[0.2em] text-white/30 uppercase group-hover:text-white transition-colors cursor-default leading-none">Language</span>
-                        </div>
-                    )}
                     <div className="relative h-full flex items-center justify-center">
                         {isDashboardOpen ? (
                             <button onClick={() => setIsLangOpen(!isLangOpen)} className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 h-full min-w-[50px] group cursor-pointer hover:scale-110`}>
@@ -355,34 +323,23 @@ const CinematicStatCard: React.FC<{ value: string | number; label: string; }> = 
     </div>
 );
 
-// Define allowed view types to match Club Intelligence Dashboard and avoid TS2322
 type DashboardViewType = 'info' | 'dashboard' | 'roster' | 'archive' | 'duel' | 'tournaments' | 'league';
 
 export const PublicHubScreen: React.FC = () => {
-    const navigate = useNavigate();
     const { allPlayers, history } = useApp();
     const [isDashboardOpen, setIsDashboardOpen] = useState(false);
-    
-    // -- NEW: State for Team of the Month Modal --
     const [isTotmOpen, setIsTotmOpen] = useState(false);
-    
     const [dashboardView, setDashboardView] = useState<DashboardViewType>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
 
-    // --- SESSION SELECTOR LOGIC (MOVED FROM DASHBOARD FOR STABILITY) ---
+    // --- SESSION SELECTOR LOGIC ---
     const [selectedSessionIdx, setSelectedSessionIdx] = useState(0);
 
     const sessionsOfCurrentDate = useMemo(() => {
         if (!history || history.length === 0) return [];
-        // Group by today's date if possible, otherwise use the date of the latest session
         const baseDate = new Date(history[0].date).toISOString().split('T')[0];
         return history.filter(s => s.date.split('T')[0] === baseDate);
     }, [history]);
-
-    // DETERMINING ENVIRONMENT
-    const isDev = useMemo(() => {
-        return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    }, []);
 
     useEffect(() => {
         if (isDashboardOpen) {
@@ -434,7 +391,6 @@ export const PublicHubScreen: React.FC = () => {
         setDashboardView(tab as DashboardViewType);
     };
 
-    // ОПРЕДЕЛЕНИЕ ЦВЕТА ПОДЛОЖКИ - УНИФИЦИРОВАНО НА САМЫЙ ТЕМНЫЙ
     const getBottomPatchColor = () => {
         if (dashboardView === 'archive' || dashboardView === 'dashboard' || dashboardView === 'roster' || dashboardView === 'info') return '#01040a';
         return '#0a0c10';
@@ -442,12 +398,8 @@ export const PublicHubScreen: React.FC = () => {
 
     return (
         <div className="min-h-screen text-white relative selection:bg-[#00F2FE] selection:text-black bg-[#0a0c10] pt-px overscroll-none">
-            
-            {/* -- MODAL: Team of the Month -- */}
             <TeamOfTheMonthModal isOpen={isTotmOpen} onClose={() => setIsTotmOpen(false)} />
-
             <style dangerouslySetInnerHTML={{__html: `html, body { background-color: #0a0c10; overscroll-behavior-y: none; }`}} />
-            
             <div className={`fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50 z-[110]`}></div>
             
             <HubNav 
@@ -479,7 +431,6 @@ export const PublicHubScreen: React.FC = () => {
                     />
                 </div>
 
-                {/* ГЛОБАЛЬНАЯ НАКЛАДКА ДЛЯ БЕСШОВНОГО ПЕРЕХОДА (ПОДЛОЖКА) */}
                 <div 
                     className="fixed bottom-0 left-0 right-0 h-16 z-[110] pointer-events-none opacity-0 transition-all duration-700 delay-300" 
                     style={{ 
@@ -488,50 +439,40 @@ export const PublicHubScreen: React.FC = () => {
                     }}
                 ></div>
 
-                {/* --- FIXED SESSION SELECTOR (STAYS AT THE BOTTOM OF THE SCREEN) --- */}
-                {isDashboardOpen && dashboardView === 'dashboard' && sessionsOfCurrentDate.length >= 1 && (
-                    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[160] flex items-center gap-3 px-6 py-3 bg-black/80 backdrop-blur-xl rounded-full border border-white/15 shadow-[0_15px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(0,242,254,0.15)] animate-in slide-in-from-bottom-6 duration-700">
-                        {sessionsOfCurrentDate.map((s, idx) => {
-                            const isActive = selectedSessionIdx === idx;
-                            return (
-                                <button
-                                    key={s.id}
-                                    onClick={() => setSelectedSessionIdx(idx)}
-                                    className={`relative h-2.5 rounded-full transition-all duration-500 ${isActive ? 'w-12 bg-[#00F2FE] shadow-[0_0_15px_#00F2FE]' : 'w-7 bg-white/15 hover:bg-white/30'}`}
-                                    title={s.sessionName}
-                                >
-                                    {isActive && (
-                                        <div className="absolute inset-0 bg-[#00F2FE] blur-[5px] opacity-70 rounded-full animate-pulse"></div>
-                                    )}
-                                </button>
-                            );
-                        })}
-                        {/* --- TEST DUMMY CAPSULE (Removable later) --- */}
-                        {(() => {
-                            const isActive = selectedSessionIdx === 1;
-                            return (
-                                <button
-                                    key="dummy-capsule"
-                                    onClick={() => setSelectedSessionIdx(1)}
-                                    className={`relative h-2.5 rounded-full transition-all duration-500 ${isActive ? 'w-12 bg-[#00F2FE] shadow-[0_0_15px_#00F2FE]' : 'w-7 bg-white/15 hover:bg-white/30'}`}
-                                    title="DUMMY TEST"
-                                >
-                                    {isActive && <div className="absolute inset-0 bg-[#00F2FE] blur-[5px] opacity-70 rounded-full animate-pulse"></div>}
-                                </button>
-                            );
-                        })()}
+                {/* --- STYLISH FIXED SESSION SELECTOR (AT THE VERY BOTTOM) --- */}
+                {isDashboardOpen && dashboardView === 'dashboard' && (
+                    <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-[160] flex items-center gap-4 px-6 py-2 bg-black/40 backdrop-blur-xl rounded-full border border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.8)] animate-in slide-in-from-bottom-2 duration-700">
+                        {/* Session 1 (Real) */}
+                        <button
+                            onClick={() => setSelectedSessionIdx(0)}
+                            className={`relative h-[3px] rounded-full transition-all duration-700 ${selectedSessionIdx === 0 ? 'w-14 bg-[#00F2FE] shadow-[0_0_15px_#00F2FE]' : 'w-8 bg-white/10 hover:bg-white/30'}`}
+                            title="Primary Session"
+                        >
+                            {selectedSessionIdx === 0 && (
+                                <div className="absolute inset-0 bg-[#00F2FE] blur-[6px] opacity-80 rounded-full animate-pulse"></div>
+                            )}
+                        </button>
+                        
+                        {/* Session 2 (Dummy Test) */}
+                        <button
+                            onClick={() => setSelectedSessionIdx(1)}
+                            className={`relative h-[3px] rounded-full transition-all duration-700 ${selectedSessionIdx === 1 ? 'w-14 bg-[#00F2FE] shadow-[0_0_15px_#00F2FE]' : 'w-8 bg-white/10 hover:bg-white/30'}`}
+                            title="Dummy Test Case"
+                        >
+                            {selectedSessionIdx === 1 && (
+                                <div className="absolute inset-0 bg-[#00F2FE] blur-[6px] opacity-80 rounded-full animate-pulse"></div>
+                            )}
+                        </button>
                     </div>
                 )}
             </div>
 
             <div className={`relative z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}>
                 <HeroTitle />
-                
                 <div className="text-center mb-12 md:mb-20">
                     <TrophyIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-4 text-[#00F2FE]" style={{ filter: 'drop-shadow(0 0 10px rgba(0, 242, 254, 0.7))' }} />
                     <h2 className="font-orbitron text-xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubLeadersTitle}</h2>
                 </div>
-
                 {displayData.top.length > 0 ? (
                     <div className="flex flex-wrap items-end justify-center gap-4 md:gap-8 w-full">
                         <div className="order-2 md:order-1">{displayData.top[1] && <CinematicCard player={displayData.top[1]} rank={2} />}</div>
@@ -539,9 +480,8 @@ export const PublicHubScreen: React.FC = () => {
                         <div className="order-3 md:order-3">{displayData.top[2] && <CinematicCard player={displayData.top[2]} rank={3} />}</div>
                     </div>
                 ) : (
-                    <NoLeadersPlaceholder />
+                    <div className="w-full text-center py-20 opacity-20"><TrophyIcon className="w-10 h-10 mx-auto mb-4" /><p className="uppercase font-black">Awaiting Data</p></div>
                 )}
-
                 <div className="mt-24 md:mt-32 pb-12">
                     <div className="text-center mb-12 md:mb-20">
                         <h2 className="font-orbitron text-lg md:text-2xl font-black uppercase tracking-[0.15em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubVitalsTitle}</h2>
@@ -552,20 +492,14 @@ export const PublicHubScreen: React.FC = () => {
                         <CinematicStatCard value={clubStats.avgRating} label={t.hubAvgRating} />
                     </div>
                 </div>
-                
                 <div className="relative z-10 bg-transparent pb-8">
                     <footer className="relative pb-8 pt-0 bg-transparent">
                         <div className="text-center px-4">
-                            
                             {!isDashboardOpen && (
                                 <div className="flex justify-center mb-6 -mt-4 relative z-20 animate-in fade-in zoom-in duration-700">
-                                    <SquadOfTheMonthBadge 
-                                        onClick={() => setIsTotmOpen(true)} 
-                                        className="cursor-pointer"
-                                    />
+                                    <SquadOfTheMonthBadge onClick={() => setIsTotmOpen(true)} className="cursor-pointer" />
                                 </div>
                             )}
-
                             <div className="mt-10 mb-24">
                                 <button 
                                     onClick={() => setIsDashboardOpen(true)} 
@@ -574,15 +508,12 @@ export const PublicHubScreen: React.FC = () => {
                                     <span className="font-chakra font-black text-xl uppercase tracking-[0.25em] group-hover:text-white transition-colors">{t.hubDashboardBtn}</span>
                                 </button>
                             </div>
-
                             <h2 className="font-orbitron text-2xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/90" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubJoinSquad}</h2>
                             <p className="font-chakra text-xs text-white/50 mt-2 mb-6">Connect with us on WhatsApp to book your slot.</p>
-                            
                             <a href={SOCIAL_LINKS.whatsapp} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-3 bg-transparent text-[#25D366] font-bold text-lg py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(37,211,102,0.4)] hover:shadow-[0_0_25px_rgba(37,211,102,0.6)] hover:bg-[#25D366]/10 transition-all transform hover:scale-[1.02] active:scale-95 mb-8">
                                 <WhatsApp className="w-5 h-5 fill-current" />
                                 WhatsApp
                             </a>
-
                             <div className="flex justify-center gap-10">
                                 <a href={SOCIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><YouTubeIcon className="w-7 h-7" /></a>
                                 <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><InstagramIcon className="w-7 h-7" /></a>

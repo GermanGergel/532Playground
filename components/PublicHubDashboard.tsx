@@ -88,22 +88,26 @@ const SoccerTacticsBackground: React.FC = () => (
 const StandbyScreen: React.FC = () => {
     const t = useTranslation();
     return (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black overflow-hidden rounded-[2.5rem]">
-            <div className="absolute w-[600px] h-[600px] border border-[#00F2FE]/20 rounded-full animate-ping-slow"></div>
-            <div className="absolute w-[400px] h-[400px] border border-[#00F2FE]/10 rounded-full animate-ping-slower"></div>
-            <div className="relative z-10 flex flex-col items-center gap-6">
-                <div className="text-center space-y-4">
-                    <h2 className="font-orbitron text-3xl md:text-5xl font-black text-white tracking-[0.3em] uppercase opacity-90">STANDBY</h2>
-                    <div className="flex items-center justify-center gap-3">
-                        <div className="h-px w-8 bg-[#00F2FE]/40"></div>
-                        <span className="font-chakra text-sm font-bold text-[#00F2FE] tracking-[0.5em] animate-pulse">SEARCHING FOR BROADCAST</span>
-                        <div className="h-px w-8 bg-[#00F2FE]/40"></div>
+        <div className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-[#01040a] overflow-hidden rounded-[2.5rem] animate-in fade-in duration-1000">
+            <div className="absolute w-[500px] h-[500px] border border-[#00F2FE]/10 rounded-full animate-ping-slow"></div>
+            <div className="relative z-10 flex flex-col items-center gap-4">
+                <div className="text-center space-y-2">
+                    <h2 className="font-orbitron text-3xl font-black text-white tracking-[0.4em] uppercase opacity-70">STANDBY</h2>
+                    <div className="flex items-center justify-center gap-2">
+                        <div className="h-px w-6 bg-[#00F2FE]/20"></div>
+                        <span className="font-chakra text-[10px] font-bold text-[#00F2FE] tracking-[0.5em] animate-pulse">SEARCHING FOR BROADCAST</span>
+                        <div className="h-px w-6 bg-[#00F2FE]/20"></div>
                     </div>
                 </div>
-                <p className="max-w-xs text-center text-[10px] font-mono text-white/30 uppercase tracking-[0.2em] mt-8">
-                    {t.hubAwaitingStats}<br/>SYSTEM IDLE. AWAITING UPLINK SIGNAL...
-                </p>
             </div>
+            <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes ping-slow {
+                    0% { transform: scale(0.8); opacity: 0; }
+                    50% { opacity: 0.2; }
+                    100% { transform: scale(1.5); opacity: 0; }
+                }
+                .animate-ping-slow { animation: ping-slow 4s cubic-bezier(0, 0, 0.2, 1) infinite; }
+            `}} />
         </div>
     );
 };
@@ -240,7 +244,6 @@ const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any
 
 interface TopPlayerStats { player: Player; score: number; rank: 1 | 2 | 3; }
 
-// FIX: Added missing getImpactScore helper function.
 const getImpactScore = (stats: PlayerStats): number => {
     let score = 0;
     const nonCleanSheetWins = stats.wins - (stats.cleanSheetWins || 0);
@@ -288,9 +291,7 @@ const SessionPodium = React.memo(({ players, t }: { players: TopPlayerStats[], t
                         </div>
                     </div>
                 </div>
-            ) : (
-                <div className="mb-12 opacity-10"><div className="w-12 h-16 rounded border-2 border-dashed border-white/30"></div></div>
-            )}
+            ) : null}
             <div className="w-full relative overflow-hidden backdrop-blur-md rounded-t-xl flex flex-col items-center justify-center pt-2 pb-1.5 z-10" style={{ height: height, background: `linear-gradient(to bottom, ${color}35, ${color}08, transparent)`, borderTop: `2px solid ${color}` }}>
                 {p && (
                     <div className="relative z-10 flex flex-col items-center">
@@ -418,7 +419,8 @@ export const PublicHubDashboard: React.FC<{ forcedSessionIdx?: number }> = ({ fo
         return history.filter(s => s.date.split('T')[0] === baseDate);
     }, [history]);
 
-    const session = sessionsOfCurrentDate[forcedSessionIdx] || sessionsOfCurrentDate[0];
+    // CRITICAL: Handle Dummy Switch (If index 1 is requested but not present)
+    const session = sessionsOfCurrentDate[forcedSessionIdx];
 
     useEffect(() => {
         if (!isAutoSwitching || !session) return;
