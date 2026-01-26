@@ -1,9 +1,9 @@
 
-import React, { useMemo, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useMemo, useState, useEffect } from 'react';
+import React from 'react';
 import { useApp } from '../context';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
-import { NewsItem, Player, Team, WeatherCondition, Session } from '../types';
+import { NewsItem, Player, Team, WeatherCondition } from '../types';
 import { TrophyIcon, Zap, History as HistoryIcon, Users, AwardIcon, Target, YouTubeIcon } from '../icons';
 import { useTranslation } from '../ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
@@ -41,7 +41,6 @@ const SoccerTacticsBackground: React.FC = () => (
                     <feGaussianBlur in="SourceGraphic" stdDeviation="0.6" />
                 </filter>
             </defs>
-            
             <g stroke="white" strokeWidth="2" fill="none" filter="url(#chalkEffect)" strokeOpacity="0.5">
                 <line x1="400" y1="0" x2="400" y2="450" />
                 <circle cx="400" cy="225" r="55" />
@@ -49,11 +48,10 @@ const SoccerTacticsBackground: React.FC = () => (
                 <rect x="0" y="145" width="70" height="160" />
                 <rect x="0" y="195" width="25" height="60" />
                 <path d="M 70 185 Q 95 225 70 265" />
-                <rect x="0" y="145" width="70" height="160" />
-                <rect x="0" y="195" width="25" height="60" />
+                <rect x="730" y="145" width="70" height="160" />
+                <rect x="775" y="195" width="25" height="60" />
                 <path d="M 730 185 Q 705 225 730 265" />
             </g>
-
             <g fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" filter="url(#chalkEffect)" strokeOpacity="0.6">
                 <circle cx="230" cy="80" r="10" />
                 <path d="M 245 85 Q 310 95 340 120" markerEnd="url(#arrowhead-chalk)" />
@@ -110,7 +108,6 @@ const StandbyScreen: React.FC = () => {
 };
 
 // --- DASHBOARD UI HELPERS ---
-
 const SubtleDashboardAvatar: React.FC<{ team: any; size?: string; isLight?: boolean }> = ({ team }) => {
     const color = team?.color || '#A9B1BD';
     return (
@@ -361,7 +358,6 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
                     ) : ( <span className="font-chakra font-bold text-sm text-slate-200 uppercase tracking-wide truncate max-w-[180px] md:max-w-[220px]">PITCH DATA UNAVAILABLE</span> )}
                 </div>
             </div>
-
             <div className="flex items-center gap-3 border-b border-white/5 py-2 mb-1">
                 <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0">
                     <ClockIcon className="w-4 h-4" />
@@ -371,7 +367,6 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
                     <span className="font-mono font-bold text-lg text-slate-200 tracking-widest">{session.timeString || "19:30 - 21:00"}</span>
                 </div>
             </div>
-
             <div 
                 className={`flex items-center gap-3 border-b border-white/5 py-2 mb-1 rounded-lg px-2 -mx-2 transition-colors ${videoLink ? 'group cursor-pointer hover:bg-white/5' : 'opacity-50 cursor-default'}`}
                 onClick={() => videoLink ? window.open(videoLink, '_blank') : null}
@@ -386,7 +381,6 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
                     </span>
                 </div>
             </div>
-
             <div className="flex-grow flex flex-col justify-end pt-2">
                 <div className="relative rounded-2xl bg-gradient-to-br from-indigo-900/40 to-black border border-indigo-500/20 p-4 flex items-center justify-between overflow-hidden">
                     <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
@@ -403,7 +397,6 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
 };
 
 // --- MAIN DASHBOARD EXPORT ---
-
 export const PublicHubDashboard: React.FC = () => {
     const { history, newsFeed, allPlayers } = useApp();
     const t = useTranslation();
@@ -469,13 +462,14 @@ export const PublicHubDashboard: React.FC = () => {
         });
     }, [rawPlayersStats, allPlayers]);
 
-    const sortedForPodium = useMemo(() => [...allPlayersStats].sort((a, b) => getImpactScore(b) - getImpactScore(a)), [allPlayersStats]);
     const sortedForTable = useMemo(() => [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists)), [allPlayersStats]);
-    
-    const top3PodiumPlayers: TopPlayerStats[] = useMemo(() => sortedForPodium
-        .filter(p => p.gamesPlayed > 0)
-        .slice(0, 3)
-        .map((p, i) => ({ player: p.player, score: getImpactScore(p), rank: (i + 1) as 1 | 2 | 3 })), [sortedForPodium]);
+    const top3PodiumPlayers: TopPlayerStats[] = useMemo(() => {
+        return [...allPlayersStats]
+            .sort((a, b) => getImpactScore(b) - getImpactScore(a))
+            .filter(p => p.gamesPlayed > 0)
+            .slice(0, 3)
+            .map((p, i) => ({ player: p.player, score: getImpactScore(p), rank: (i + 1) as 1 | 2 | 3 }));
+    }, [allPlayersStats]);
 
     if (!session) return <StandbyScreen />;
 
@@ -616,35 +610,23 @@ export const PublicHubDashboard: React.FC = () => {
                 </div>
             </div>
 
-            {/* --- NEW: SESSION SWITCHER --- */}
+            {/* --- SESSION SWITCHER --- */}
             {latestSessions.length > 1 && (
                 <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[100] flex gap-2.5 p-1.5 bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5),0_0_20px_rgba(0,242,254,0.1)]">
-                    {latestSessions.map((s, idx) => {
-                        const isActive = idx === sessionIndex;
-                        const buttonClass = isActive 
-                            ? 'bg-[#00F2FE]/10 border-[#00F2FE]/40 shadow-[0_0_10px_rgba(0,242,254,0.2)]' 
-                            : 'bg-white/5 border border-white/5 hover:bg-white/10 opacity-60';
-                        
-                        const sessionPrefix = s.sessionName ? s.sessionName.split(' ')[0] : 'SESSION';
-
-                        return (
-                            <button
-                                key={s.id}
-                                onClick={() => {
-                                    setSessionIndex(idx);
-                                    setExpandedMatchId(null);
-                                }}
-                                className={`relative px-5 py-1.5 rounded-xl transition-all duration-500 overflow-hidden ${buttonClass}`}
-                            >
-                                <span className={`text-[10px] font-black uppercase tracking-[0.15em] transition-colors ${isActive ? 'text-[#00F2FE]' : 'text-white/40'}`}>
-                                    {`${sessionPrefix} ${idx + 1}`}
-                                </span>
-                                {isActive && (
-                                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#00F2FE] animate-pulse"></div>
-                                )}
-                            </button>
-                        );
-                    })}
+                    {latestSessions.map((s, idx) => (
+                        <button
+                            key={s.id}
+                            onClick={() => { setSessionIndex(idx); setExpandedMatchId(null); }}
+                            className={`relative px-5 py-1.5 rounded-xl transition-all duration-500 overflow-hidden ${idx === sessionIndex ? 'bg-[#00F2FE]/10 border-[#00F2FE]/40 shadow-[0_0_10px_rgba(0,242,254,0.2)]' : 'bg-white/5 border border-white/5 hover:bg-white/10 opacity-60'}`}
+                        >
+                            <span className={`text-[10px] font-black uppercase tracking-[0.15em] transition-colors ${idx === sessionIndex ? 'text-[#00F2FE]' : 'text-white/40'}`}>
+                                {(s.sessionName ? s.sessionName.split(' ')[0] : 'SESSION') + ' ' + (idx + 1)}
+                            </span>
+                            {idx === sessionIndex && (
+                                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#00F2FE] animate-pulse"></div>
+                            )}
+                        </button>
+                    ))}
                 </div>
             )}
         </div>
