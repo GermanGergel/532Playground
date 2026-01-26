@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { HubRoster } from './HubRoster';
 import { HubArchive } from './HubArchive';
@@ -10,9 +9,10 @@ interface ClubIntelligenceDashboardProps {
     currentView: 'dashboard' | 'roster' | 'archive' | 'tournaments' | 'league' | 'info' | 'duel';
     setView: (view: any) => void;
     onArchiveViewChange?: (date: string | null) => void;
+    selectedSessionIdx?: number;
 }
 
-export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps> = ({ currentView, setView, onArchiveViewChange }) => {
+export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps> = ({ currentView, setView, onArchiveViewChange, selectedSessionIdx = 0 }) => {
     const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
     const [hubSortBy, setHubSortBy] = useState<'name' | 'rating' | 'date'>('rating');
     const [hubSearch, setHubSearch] = useState('');
@@ -31,7 +31,7 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
         <div className="w-full h-full animate-in fade-in duration-700 relative">
             {/* Main Content Area - Removed overflow-hidden to allow bottom capsule to hang */}
             <div className="w-full h-full relative">
-                {currentView === 'dashboard' && <PublicHubDashboard />}
+                {currentView === 'dashboard' && <PublicHubDashboard forcedSessionIdx={selectedSessionIdx} />}
                 
                 {(currentView === 'roster' || currentView === 'duel') && (
                     <HubRoster 

@@ -369,6 +369,16 @@ export const PublicHubScreen: React.FC = () => {
     const [dashboardView, setDashboardView] = useState<DashboardViewType>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
 
+    // --- SESSION SELECTOR LOGIC (MOVED FROM DASHBOARD FOR STABILITY) ---
+    const [selectedSessionIdx, setSelectedSessionIdx] = useState(0);
+
+    const sessionsOfCurrentDate = useMemo(() => {
+        if (!history || history.length === 0) return [];
+        // Group by today's date if possible, otherwise use the date of the latest session
+        const baseDate = new Date(history[0].date).toISOString().split('T')[0];
+        return history.filter(s => s.date.split('T')[0] === baseDate);
+    }, [history]);
+
     // DETERMINING ENVIRONMENT
     const isDev = useMemo(() => {
         return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -415,7 +425,6 @@ export const PublicHubScreen: React.FC = () => {
 
     const SOCIAL_LINKS = {
         whatsapp: "https://chat.whatsapp.com/CAJnChuM4lQFf3s2YUnhQr",
-        // Facebook removed
         youtube: "https://www.youtube.com/@UnitFootball",
         instagram: "https://www.instagram.com/unit.club.dn?igsh=MTdzdHpwMjY3aHN4cg%3D%3D&utm_source=qr",
         tiktok: "https://www.tiktok.com/@532club?_r=1",
@@ -462,10 +471,15 @@ export const PublicHubScreen: React.FC = () => {
                 style={{ backgroundColor: getBottomPatchColor() }}
             >
                 <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10">
-                    <ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} />
+                    <ClubIntelligenceDashboard 
+                        currentView={dashboardView} 
+                        setView={setDashboardView} 
+                        onArchiveViewChange={setArchiveViewDate}
+                        selectedSessionIdx={selectedSessionIdx}
+                    />
                 </div>
 
-                {/* ГЛОБАЛЬНАЯ НАКЛАДКА ДЛЯ БЕСШОВНОГО ПЕРЕХОДА (ПОДЛОЖКА) - ОПУЩЕНА НИЖЕ */}
+                {/* ГЛОБАЛЬНАЯ НАКЛАДКА ДЛЯ БЕСШОВНОГО ПЕРЕХОДА (ПОДЛОЖКА) */}
                 <div 
                     className="fixed bottom-0 left-0 right-0 h-16 z-[110] pointer-events-none opacity-0 transition-all duration-700 delay-300" 
                     style={{ 
@@ -473,6 +487,41 @@ export const PublicHubScreen: React.FC = () => {
                         background: `linear-gradient(to top, ${getBottomPatchColor()} 50%, ${getBottomPatchColor()}cc 80%, transparent 100%)`
                     }}
                 ></div>
+
+                {/* --- FIXED SESSION SELECTOR (STAYS AT THE BOTTOM OF THE SCREEN) --- */}
+                {isDashboardOpen && dashboardView === 'dashboard' && sessionsOfCurrentDate.length >= 1 && (
+                    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[160] flex items-center gap-3 px-6 py-3 bg-black/80 backdrop-blur-xl rounded-full border border-white/15 shadow-[0_15px_40px_rgba(0,0,0,0.8),0_0_20px_rgba(0,242,254,0.15)] animate-in slide-in-from-bottom-6 duration-700">
+                        {sessionsOfCurrentDate.map((s, idx) => {
+                            const isActive = selectedSessionIdx === idx;
+                            return (
+                                <button
+                                    key={s.id}
+                                    onClick={() => setSelectedSessionIdx(idx)}
+                                    className={`relative h-2.5 rounded-full transition-all duration-500 ${isActive ? 'w-12 bg-[#00F2FE] shadow-[0_0_15px_#00F2FE]' : 'w-7 bg-white/15 hover:bg-white/30'}`}
+                                    title={s.sessionName}
+                                >
+                                    {isActive && (
+                                        <div className="absolute inset-0 bg-[#00F2FE] blur-[5px] opacity-70 rounded-full animate-pulse"></div>
+                                    )}
+                                </button>
+                            );
+                        })}
+                        {/* --- TEST DUMMY CAPSULE (Removable later) --- */}
+                        {(() => {
+                            const isActive = selectedSessionIdx === 1;
+                            return (
+                                <button
+                                    key="dummy-capsule"
+                                    onClick={() => setSelectedSessionIdx(1)}
+                                    className={`relative h-2.5 rounded-full transition-all duration-500 ${isActive ? 'w-12 bg-[#00F2FE] shadow-[0_0_15px_#00F2FE]' : 'w-7 bg-white/15 hover:bg-white/30'}`}
+                                    title="DUMMY TEST"
+                                >
+                                    {isActive && <div className="absolute inset-0 bg-[#00F2FE] blur-[5px] opacity-70 rounded-full animate-pulse"></div>}
+                                </button>
+                            );
+                        })()}
+                    </div>
+                )}
             </div>
 
             <div className={`relative z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}>

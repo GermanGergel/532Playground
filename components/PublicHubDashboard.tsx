@@ -240,6 +240,19 @@ const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any
 
 interface TopPlayerStats { player: Player; score: number; rank: 1 | 2 | 3; }
 
+// FIX: Added missing getImpactScore helper function.
+const getImpactScore = (stats: PlayerStats): number => {
+    let score = 0;
+    const nonCleanSheetWins = stats.wins - (stats.cleanSheetWins || 0);
+    score += nonCleanSheetWins * 2.0;
+    score += (stats.cleanSheetWins || 0) * 2.5;
+    score += stats.draws * 0.5;
+    score += stats.goals * 1.0;
+    score += stats.assists * 1.0;
+    score += stats.ownGoals * -1.0;
+    return score;
+};
+
 // --- MEMOIZED SESSION PODIUM ---
 const SessionPodium = React.memo(({ players, t }: { players: TopPlayerStats[], t: any }) => {
     const p1 = players.find(p => p.rank === 1);
@@ -322,26 +335,7 @@ const NewsVanguardCard: React.FC<{ item: NewsItem }> = ({ item }) => {
     );
 };
 
-const getImpactScore = (stats: PlayerStats): number => {
-    let score = 0;
-    const nonCleanSheetWins = stats.wins - (stats.cleanSheetWins || 0);
-    score += nonCleanSheetWins * 2.0;
-    score += (stats.cleanSheetWins || 0) * 2.5;
-    score += stats.draws * 0.5;
-    score += stats.goals * 1.0;
-    score += stats.assists * 1.0;
-    score -= stats.ownGoals * 1.0;
-    return score;
-};
-
 const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t }) => {
-    const data = {
-        location: session.location || "PITCH DATA UNAVAILABLE",
-        time: session.timeString || "19:30 - 21:00",
-        temp: session.weather ? `${session.weather.temperature}°C` : "26°C",
-        condition: session.weather?.condition ? session.weather.condition.toUpperCase() : "CLEAR"
-    };
-
     const getWeatherIcon = (cond: WeatherCondition | string = 'clear') => {
         const c = cond.toLowerCase();
         if (c.includes('rain') || c.includes('storm')) return <CloudRainIcon className="w-16 h-16 text-slate-200/90" />;
@@ -410,7 +404,7 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
 
 // --- MAIN DASHBOARD EXPORT ---
 
-export const PublicHubDashboard: React.FC = () => {
+export const PublicHubDashboard: React.FC<{ forcedSessionIdx?: number }> = ({ forcedSessionIdx = 0 }) => {
     const { history, newsFeed, allPlayers } = useApp();
     const t = useTranslation();
     const [activeRightTab, setActiveRightTab] = useState<'players' | 'games'>('players');
@@ -418,20 +412,13 @@ export const PublicHubDashboard: React.FC = () => {
     const [isAutoSwitching, setIsAutoSwitching] = useState(true);
     const [autoSwitchProgress, setAutoSwitchProgress] = useState(0);
 
-    // --- SESSION SELECTOR LOGIC ---
-    const [selectedSessionIdx, setSelectedSessionIdx] = useState(0);
-
     const sessionsOfCurrentDate = useMemo(() => {
         if (!history || history.length === 0) return [];
         const baseDate = new Date(history[0].date).toISOString().split('T')[0];
         return history.filter(s => s.date.split('T')[0] === baseDate);
     }, [history]);
 
-    const session = sessionsOfCurrentDate[selectedSessionIdx];
-
-    useEffect(() => {
-        setSelectedSessionIdx(0);
-    }, [history.length]);
+    const session = sessionsOfCurrentDate[forcedSessionIdx] || sessionsOfCurrentDate[0];
 
     useEffect(() => {
         if (!isAutoSwitching || !session) return;
@@ -474,7 +461,6 @@ export const PublicHubDashboard: React.FC = () => {
     }, [rawPlayersStats, allPlayers]);
 
     const sortedForPodium = useMemo(() => [...allPlayersStats].sort((a, b) => getImpactScore(b) - getImpactScore(a)), [allPlayersStats]);
-    // FIX: Renamed `sortedForTable` to `sortedByStats`
     const sortedByStats = useMemo(() => [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists)), [allPlayersStats]);
     
     const top3PodiumPlayers: TopPlayerStats[] = useMemo(() => sortedForPodium
@@ -485,8 +471,6 @@ export const PublicHubDashboard: React.FC = () => {
     if (!session) return <StandbyScreen />;
 
     const finishedGames = [...session.games].filter(g => g.status === 'finished').sort((a, b) => a.gameNumber - b.gameNumber);
-    const thStandings = "py-2 text-white/40 uppercase tracking-tighter text-[8px] font-black text-center sticky top-0 bg-[#01040a] backdrop-blur-sm z-10 border-b border-white/5";
-    // FIX: Defined `thClass` for player and game tables
     const thClass = "py-2 text-white/40 uppercase tracking-tighter text-[9px] font-black text-center sticky top-0 bg-[#12161b] backdrop-blur-md z-10 border-b border-white/5";
     const tdBase = "py-1.5 text-center text-[10px] font-bold transition-colors";
 
@@ -521,16 +505,16 @@ export const PublicHubDashboard: React.FC = () => {
                             <table className="w-full table-fixed border-collapse">
                                 <thead>
                                     <tr className="bg-white/5 border-b border-white/10">
-                                        <th className={`${thStandings} w-[6%]`}>#</th>
-                                        <th className={`${thStandings} w-[26%] text-center`}>{t.team.toUpperCase()}</th>
-                                        <th className={`${thStandings} w-[7%]`}>{t.thP}</th>
-                                        <th className={`${thStandings} w-[7%]`}>{t.thW}</th>
-                                        <th className={`${thStandings} w-[7%]`}>{t.thD}</th>
-                                        <th className={`${thStandings} w-[7%]`}>{t.thL}</th>
-                                        <th className={`${thStandings} w-[10%]`}>{t.thGF}</th>
-                                        <th className={`${thStandings} w-[10%]`}>{t.thGA}</th>
-                                        <th className={`${thStandings} w-[10%]`}>{t.thGD}</th>
-                                        <th className={`${thStandings} w-[10%] text-white bg-white/[0.03]`}>PTS</th>
+                                        <th className={`${thClass} w-[6%]`}>#</th>
+                                        <th className={`${thClass} w-[26%] text-center`}>{t.team.toUpperCase()}</th>
+                                        <th className={`${thClass} w-[7%]`}>{t.thP}</th>
+                                        <th className={`${thClass} w-[7%]`}>{t.thW}</th>
+                                        <th className={`${thClass} w-[7%]`}>{t.thD}</th>
+                                        <th className={`${thClass} w-[7%]`}>{t.thL}</th>
+                                        <th className={`${thClass} w-[10%]`}>{t.thGF}</th>
+                                        <th className={`${thClass} w-[10%]`}>{t.thGA}</th>
+                                        <th className={`${thClass} w-[10%]`}>{t.thGD}</th>
+                                        <th className={`${thClass} w-[10%] text-white bg-white/[0.03]`}>PTS</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -574,42 +558,6 @@ export const PublicHubDashboard: React.FC = () => {
                     </HubCard>
                 </div>
             </div>
-
-            {/* --- SESSION SELECTOR (BOTTOM CAPSULES) --- */}
-            {sessionsOfCurrentDate.length >= 1 && (
-                <div className="absolute -bottom-8 md:-bottom-12 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2 bg-black/60 backdrop-blur-md rounded-full border border-white/10 shadow-2xl animate-in slide-in-from-bottom-4 duration-500">
-                    {sessionsOfCurrentDate.map((s, idx) => {
-                        const isActive = selectedSessionIdx === idx;
-                        return (
-                            <button
-                                key={s.id}
-                                onClick={() => setSelectedSessionIdx(idx)}
-                                className={`relative h-2 rounded-full transition-all duration-500 ${isActive ? 'w-10 bg-[#00F2FE] shadow-[0_0_12px_#00F2FE]' : 'w-6 bg-white/20 hover:bg-white/40'}`}
-                                title={s.sessionName}
-                            >
-                                {isActive && ( <div className="absolute inset-0 bg-[#00F2FE] blur-[4px] opacity-60 rounded-full animate-pulse"></div> )}
-                            </button>
-                        );
-                    })}
-                    {/* --- TEMPORARY DUMMY CAPSULE FOR TESTING --- */}
-                    {(() => {
-                        const isActive = selectedSessionIdx === 1;
-                        return (
-                            <button
-                                key="dummy-session-capsule"
-                                onClick={() => setSelectedSessionIdx(1)}
-                                className={`relative h-2 rounded-full transition-all duration-500 ${isActive ? 'w-10 bg-[#00F2FE] shadow-[0_0_12px_#00F2FE]' : 'w-6 bg-white/20 hover:bg-white/40'}`}
-                                title="Dummy Session for Testing"
-                            >
-                                {isActive && (
-                                    <div className="absolute inset-0 bg-[#00F2FE] blur-[4px] opacity-60 rounded-full animate-pulse"></div>
-                                )}
-                            </button>
-                        );
-                    })()}
-                    {/* --- END TEMPORARY DUMMY CAPSULE --- */}
-                </div>
-            )}
         </div>
     );
 };
