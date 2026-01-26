@@ -439,28 +439,28 @@ export const PublicHubScreen: React.FC = () => {
                     }}
                 ></div>
 
-                {/* --- STYLISH FIXED SESSION SELECTOR (AT THE VERY BOTTOM) --- */}
+                {/* --- STYLISH FIXED SESSION SELECTOR (LIFTED HIGHER - bottom-12) --- */}
                 {isDashboardOpen && dashboardView === 'dashboard' && (
-                    <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-[160] flex items-center gap-4 px-6 py-2 bg-black/40 backdrop-blur-xl rounded-full border border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.8)] animate-in slide-in-from-bottom-2 duration-700">
+                    <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[160] flex items-center gap-5 px-7 py-2.5 bg-black/50 backdrop-blur-2xl rounded-full border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.05)] animate-in slide-in-from-bottom-2 duration-700">
                         {/* Session 1 (Real) */}
                         <button
                             onClick={() => setSelectedSessionIdx(0)}
-                            className={`relative h-[3px] rounded-full transition-all duration-700 ${selectedSessionIdx === 0 ? 'w-14 bg-[#00F2FE] shadow-[0_0_15px_#00F2FE]' : 'w-8 bg-white/10 hover:bg-white/30'}`}
+                            className={`relative h-[4px] rounded-full transition-all duration-700 ${selectedSessionIdx === 0 ? 'w-16 bg-[#00F2FE] shadow-[0_0_15px_#00F2FE]' : 'w-10 bg-white/10 hover:bg-white/20'}`}
                             title="Primary Session"
                         >
                             {selectedSessionIdx === 0 && (
-                                <div className="absolute inset-0 bg-[#00F2FE] blur-[6px] opacity-80 rounded-full animate-pulse"></div>
+                                <div className="absolute inset-0 bg-[#00F2FE] blur-[7px] opacity-80 rounded-full animate-pulse"></div>
                             )}
                         </button>
                         
-                        {/* Session 2 (Dummy Test) */}
+                        {/* Session 2 (Dummy Test Case) */}
                         <button
                             onClick={() => setSelectedSessionIdx(1)}
-                            className={`relative h-[3px] rounded-full transition-all duration-700 ${selectedSessionIdx === 1 ? 'w-14 bg-[#00F2FE] shadow-[0_0_15px_#00F2FE]' : 'w-8 bg-white/10 hover:bg-white/30'}`}
-                            title="Dummy Test Case"
+                            className={`relative h-[4px] rounded-full transition-all duration-700 ${selectedSessionIdx === 1 ? 'w-16 bg-[#00F2FE] shadow-[0_0_15px_#00F2FE]' : 'w-10 bg-white/10 hover:bg-white/20'}`}
+                            title="Simulation Mode"
                         >
                             {selectedSessionIdx === 1 && (
-                                <div className="absolute inset-0 bg-[#00F2FE] blur-[6px] opacity-80 rounded-full animate-pulse"></div>
+                                <div className="absolute inset-0 bg-[#00F2FE] blur-[7px] opacity-80 rounded-full animate-pulse"></div>
                             )}
                         </button>
                     </div>
