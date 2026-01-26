@@ -618,7 +618,7 @@ export const PublicHubDashboard: React.FC = () => {
             </div>
 
             {/* --- SESSION SELECTOR (BOTTOM CAPSULES) --- */}
-            {sessionsOfCurrentDate.length > 1 && (
+            {sessionsOfCurrentDate.length >= 1 && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2 bg-black/60 backdrop-blur-md rounded-full border border-white/10 shadow-2xl animate-in slide-in-from-bottom-4 duration-500">
                     {sessionsOfCurrentDate.map((s, idx) => {
                         const isActive = selectedSessionIdx === idx;
