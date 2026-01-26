@@ -409,12 +409,9 @@ export const PublicHubDashboard: React.FC = () => {
     const t = useTranslation();
     
     // --- MULTI-SESSION LOGIC ---
-    // 1. Identify "Latest Date" sessions
     const latestSessions = useMemo(() => {
         if (!history || history.length === 0) return [];
         const latestDate = history[0].date;
-        // Find all sessions with the same date (up to a small threshold for time differences if any, 
-        // but since we save by day, exact match is usually fine)
         const dateStr = (d: string) => new Date(d).toISOString().split('T')[0];
         const targetDate = dateStr(latestDate);
         return history.filter(s => dateStr(s.date) === targetDate);
@@ -423,7 +420,6 @@ export const PublicHubDashboard: React.FC = () => {
     const [sessionIndex, setSessionIndex] = useState(0);
     const session = latestSessions[sessionIndex] || history[0];
 
-    // Reset index if history changes
     useEffect(() => {
         setSessionIndex(0);
     }, [history.length]);
@@ -632,13 +628,7 @@ export const PublicHubDashboard: React.FC = () => {
                                     setSessionIndex(idx);
                                     setExpandedMatchId(null);
                                 }}
-                                className={`
-                                    relative px-5 py-1.5 rounded-xl transition-all duration-500 overflow-hidden
-                                    ${isActive 
-                                        ? 'bg-[#00F2FE]/10 border border-[#00F2FE]/40 shadow-[0_0_10px_rgba(0,242,254,0.2)]' 
-                                        : 'bg-white/5 border border-white/5 hover:bg-white/10 opacity-60'
-                                    }
-                                `}
+                                className={`relative px-5 py-1.5 rounded-xl transition-all duration-500 overflow-hidden ${isActive ? 'bg-[#00F2FE]/10 border-[#00F2FE]/40 shadow-[0_0_10px_rgba(0,242,254,0.2)]' : 'bg-white/5 border border-white/5 hover:bg-white/10 opacity-60'}`}
                             >
                                 <span className={`text-[10px] font-black uppercase tracking-[0.15em] transition-colors ${isActive ? 'text-[#00F2FE]' : 'text-white/40'}`}>
                                     {s.sessionName.split(' ')[0]} {idx + 1}
