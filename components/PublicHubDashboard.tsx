@@ -1,9 +1,9 @@
 
-import { useMemo, useState, useEffect } from 'react';
-import React from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
-import { NewsItem, Player, Team, WeatherCondition } from '../types';
+import { NewsItem, Player, Team, WeatherCondition, Session } from '../types';
 import { TrophyIcon, Zap, History as HistoryIcon, Users, AwardIcon, Target, YouTubeIcon } from '../icons';
 import { useTranslation } from '../ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
@@ -41,6 +41,7 @@ const SoccerTacticsBackground: React.FC = () => (
                     <feGaussianBlur in="SourceGraphic" stdDeviation="0.6" />
                 </filter>
             </defs>
+            
             <g stroke="white" strokeWidth="2" fill="none" filter="url(#chalkEffect)" strokeOpacity="0.5">
                 <line x1="400" y1="0" x2="400" y2="450" />
                 <circle cx="400" cy="225" r="55" />
@@ -52,6 +53,7 @@ const SoccerTacticsBackground: React.FC = () => (
                 <rect x="775" y="195" width="25" height="60" />
                 <path d="M 730 185 Q 705 225 730 265" />
             </g>
+
             <g fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" filter="url(#chalkEffect)" strokeOpacity="0.6">
                 <circle cx="230" cy="80" r="10" />
                 <path d="M 245 85 Q 310 95 340 120" markerEnd="url(#arrowhead-chalk)" />
@@ -108,6 +110,7 @@ const StandbyScreen: React.FC = () => {
 };
 
 // --- DASHBOARD UI HELPERS ---
+
 const SubtleDashboardAvatar: React.FC<{ team: any; size?: string; isLight?: boolean }> = ({ team }) => {
     const color = team?.color || '#A9B1BD';
     return (
@@ -358,6 +361,7 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
                     ) : ( <span className="font-chakra font-bold text-sm text-slate-200 uppercase tracking-wide truncate max-w-[180px] md:max-w-[220px]">PITCH DATA UNAVAILABLE</span> )}
                 </div>
             </div>
+
             <div className="flex items-center gap-3 border-b border-white/5 py-2 mb-1">
                 <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/50 shrink-0">
                     <ClockIcon className="w-4 h-4" />
@@ -367,6 +371,7 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
                     <span className="font-mono font-bold text-lg text-slate-200 tracking-widest">{session.timeString || "19:30 - 21:00"}</span>
                 </div>
             </div>
+
             <div 
                 className={`flex items-center gap-3 border-b border-white/5 py-2 mb-1 rounded-lg px-2 -mx-2 transition-colors ${videoLink ? 'group cursor-pointer hover:bg-white/5' : 'opacity-50 cursor-default'}`}
                 onClick={() => videoLink ? window.open(videoLink, '_blank') : null}
@@ -381,6 +386,7 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
                     </span>
                 </div>
             </div>
+
             <div className="flex-grow flex flex-col justify-end pt-2">
                 <div className="relative rounded-2xl bg-gradient-to-br from-indigo-900/40 to-black border border-indigo-500/20 p-4 flex items-center justify-between overflow-hidden">
                     <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
@@ -397,30 +403,32 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
 };
 
 // --- MAIN DASHBOARD EXPORT ---
+
 export const PublicHubDashboard: React.FC = () => {
     const { history, newsFeed, allPlayers } = useApp();
     const t = useTranslation();
-    
-    // --- MULTI-SESSION LOGIC ---
-    const latestSessions = useMemo(() => {
-        if (!history || history.length === 0) return [];
-        const latestDate = history[0].date;
-        const dateStr = (d: string) => new Date(d).toISOString().split('T')[0];
-        const targetDate = dateStr(latestDate);
-        return history.filter(s => dateStr(s.date) === targetDate);
-    }, [history]);
-
-    const [sessionIndex, setSessionIndex] = useState(0);
-    const session = latestSessions[sessionIndex] || history[0];
-
-    useEffect(() => {
-        setSessionIndex(0);
-    }, [history.length]);
-
     const [activeRightTab, setActiveRightTab] = useState<'players' | 'games'>('players');
     const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
     const [isAutoSwitching, setIsAutoSwitching] = useState(true);
     const [autoSwitchProgress, setAutoSwitchProgress] = useState(0);
+
+    // --- SESSION SELECTOR LOGIC ---
+    const [selectedSessionIdx, setSelectedSessionIdx] = useState(0);
+
+    // Find all sessions from the same date as the latest session
+    const sessionsOfCurrentDate = useMemo(() => {
+        if (!history || history.length === 0) return [];
+        const baseDate = new Date(history[0].date).toISOString().split('T')[0];
+        // Filter history for all completed sessions with the same date
+        return history.filter(s => s.date.split('T')[0] === baseDate);
+    }, [history]);
+
+    const session = sessionsOfCurrentDate[selectedSessionIdx] || history[0];
+
+    useEffect(() => {
+        // Reset to first session if history changes significantly
+        setSelectedSessionIdx(0);
+    }, [history.length]);
 
     useEffect(() => {
         if (!isAutoSwitching || !session) return;
@@ -462,14 +470,13 @@ export const PublicHubDashboard: React.FC = () => {
         });
     }, [rawPlayersStats, allPlayers]);
 
+    const sortedForPodium = useMemo(() => [...allPlayersStats].sort((a, b) => getImpactScore(b) - getImpactScore(a)), [allPlayersStats]);
     const sortedForTable = useMemo(() => [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists)), [allPlayersStats]);
-    const top3PodiumPlayers: TopPlayerStats[] = useMemo(() => {
-        return [...allPlayersStats]
-            .sort((a, b) => getImpactScore(b) - getImpactScore(a))
-            .filter(p => p.gamesPlayed > 0)
-            .slice(0, 3)
-            .map((p, i) => ({ player: p.player, score: getImpactScore(p), rank: (i + 1) as 1 | 2 | 3 }));
-    }, [allPlayersStats]);
+    
+    const top3PodiumPlayers: TopPlayerStats[] = useMemo(() => sortedForPodium
+        .filter(p => p.gamesPlayed > 0)
+        .slice(0, 3)
+        .map((p, i) => ({ player: p.player, score: getImpactScore(p), rank: (i + 1) as 1 | 2 | 3 })), [sortedForPodium]);
 
     if (!session) return <StandbyScreen />;
 
@@ -479,7 +486,7 @@ export const PublicHubDashboard: React.FC = () => {
 
     return (
         <div className="h-full flex flex-col animate-in fade-in duration-700 w-full relative p-2 md:p-3 overflow-hidden">
-            <div className="flex-grow grid grid-cols-12 gap-4 min-h-0 items-stretch relative z-10 overflow-hidden">
+            <div key={session.id} className="flex-grow grid grid-cols-12 gap-4 min-h-0 items-stretch relative z-10 overflow-hidden animate-in fade-in duration-500">
                 <div className="col-span-12 md:col-span-9 flex flex-col gap-4 h-full min-h-[600px] overflow-hidden">
                     <div className="flex-[4] min-h-0 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200 flex gap-3">
                          <HubCard title={t.hubSessionLeaders} align="right" icon={<AwardIcon />} accent="#FFD700" variant="elite" className="flex-[2] h-full min-h-[350px]" bodyClassName="flex flex-col bg-transparent">
@@ -514,9 +521,9 @@ export const PublicHubDashboard: React.FC = () => {
                                         <th className={`${thStandings} w-[7%]`}>{t.thW}</th>
                                         <th className={`${thStandings} w-[7%]`}>{t.thD}</th>
                                         <th className={`${thStandings} w-[7%]`}>{t.thL}</th>
-                                        <th className={`${thStandings} w-[10%]`}>{t.thGF}</th>
-                                        <th className={`${thStandings} w-[10%]`}>{t.thGA}</th>
-                                        <th className={`${thStandings} w-[10%]`}>{t.thGD}</th>
+                                        <th className={`${thStandings} w-[9%]`}>{t.thGF}</th>
+                                        <th className={`${thStandings} w-[9%]`}>{t.thGA}</th>
+                                        <th className={`${thStandings} w-[9%]`}>{t.thGD}</th>
                                         <th className={`${thStandings} w-[10%] text-white bg-white/[0.03]`}>PTS</th>
                                     </tr>
                                 </thead>
@@ -551,7 +558,7 @@ export const PublicHubDashboard: React.FC = () => {
                                 {activeRightTab === 'players' ? (
                                     <div className="animate-in fade-in duration-500">
                                         <table className="w-full table-fixed border-collapse">
-                                            <thead><tr><th className={`${thStandings} w-[10%]`}>#</th><th className={`${thStandings} text-left pl-3 w-[50%]`}>{t.players}</th><th className={`${thStandings} w-[12%]`}>{t.thG}</th><th className={`${thStandings} w-[12%]`}>{t.thA}</th><th className={`${thStandings} w-[16%] text-white bg-white/[0.03]`}>TOT</th></tr></thead>
+                                            <thead><tr><th className={`${thStandings} w-[10%]`}>#</th><th className={`${thStandings} text-left pl-3 w-[50%]`}>{t.players}</th><th className={`${thStandings} w-[15%]`}>{t.thG}</th><th className={`${thStandings} w-[15%]`}>{t.thA}</th><th className={`${thStandings} w-[10%] text-white bg-white/[0.03]`}>TOT</th></tr></thead>
                                             <tbody>{sortedForTable.map((ps, idx) => (
                                                 <tr key={ps.player.id} className="group border-b border-white/5 last:border-0 transition-all duration-300">
                                                     <td className="py-2 text-center text-[9px] font-bold text-white/30 bg-white/[0.02] relative overflow-hidden">{idx + 1}</td>
@@ -602,31 +609,32 @@ export const PublicHubDashboard: React.FC = () => {
                                                 </React.Fragment>
                                             )})}</tbody>
                                         </table>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </HubCard>
                 </div>
             </div>
 
-            {/* --- SESSION SWITCHER --- */}
-            {latestSessions.length > 1 && (
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-[100] flex gap-2.5 p-1.5 bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5),0_0_20px_rgba(0,242,254,0.1)]">
-                    {latestSessions.map((s, idx) => (
-                        <button
-                            key={s.id}
-                            onClick={() => { setSessionIndex(idx); setExpandedMatchId(null); }}
-                            className={`relative px-5 py-1.5 rounded-xl transition-all duration-500 overflow-hidden ${idx === sessionIndex ? 'bg-[#00F2FE]/10 border-[#00F2FE]/40 shadow-[0_0_10px_rgba(0,242,254,0.2)]' : 'bg-white/5 border border-white/5 hover:bg-white/10 opacity-60'}`}
-                        >
-                            <span className={`text-[10px] font-black uppercase tracking-[0.15em] transition-colors ${idx === sessionIndex ? 'text-[#00F2FE]' : 'text-white/40'}`}>
-                                {(s.sessionName ? s.sessionName.split(' ')[0] : 'SESSION') + ' ' + (idx + 1)}
-                            </span>
-                            {idx === sessionIndex && (
-                                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#00F2FE] animate-pulse"></div>
-                            )}
-                        </button>
-                    ))}
+            {/* --- SESSION SELECTOR (BOTTOM CAPSULES) --- */}
+            {sessionsOfCurrentDate.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2 bg-black/60 backdrop-blur-md rounded-full border border-white/10 shadow-2xl animate-in slide-in-from-bottom-4 duration-500">
+                    {sessionsOfCurrentDate.map((s, idx) => {
+                        const isActive = selectedSessionIdx === idx;
+                        return (
+                            <button
+                                key={s.id}
+                                onClick={() => setSelectedSessionIdx(idx)}
+                                className={`relative h-2 rounded-full transition-all duration-500 ${isActive ? 'w-10 bg-[#00F2FE] shadow-[0_0_12px_#00F2FE]' : 'w-6 bg-white/20 hover:bg-white/40'}`}
+                                title={s.sessionName}
+                            >
+                                {isActive && (
+                                    <div className="absolute inset-0 bg-[#00F2FE] blur-[4px] opacity-60 rounded-full animate-pulse"></div>
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
             )}
         </div>
