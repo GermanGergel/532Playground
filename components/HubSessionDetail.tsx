@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import { Session, WeatherCondition } from '../types';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
@@ -225,7 +224,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
     const sortedByStats = useMemo(() => [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists)), [allPlayersStats]);
     const finishedGames = session.games.filter(g => g.status === 'finished');
     
-    const thClass = "py-2 text-white/40 uppercase tracking-tighter text-[9px] font-black text-center sticky top-0 bg-[#12161b] backdrop-blur-md z-10 border-b border-white/5";
+    const thClass = "py-2 text-white/40 uppercase tracking-tighter text-[9px] font-black text-center sticky top-0 bg-transparent z-10 border-b border-white/5";
     const tdBase = "py-2 text-center text-[11px] font-bold transition-colors";
 
     return (
@@ -254,8 +253,8 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                             <HubCard title={t.teamStandings} icon={<TrophyIcon />} accent="#FFD700" className="shrink-0 max-h-[45%] flex flex-col">
                                 <div className="p-1 overflow-y-auto custom-hub-scrollbar">
                                     <table className="w-full table-fixed border-collapse">
-                                        <thead>
-                                            <tr>
+                                        <thead className="bg-transparent">
+                                            <tr className="bg-transparent">
                                                 <th className={`${thClass} w-[6%]`}>#</th>
                                                 <th className={`${thClass} w-[26%] text-center`}>{t.team.toUpperCase()}</th>
                                                 <th className={`${thClass} w-[7%]`}>{t.thP}</th>
@@ -304,7 +303,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                 <div className="flex-grow overflow-y-auto custom-hub-scrollbar p-1 pb-10">
                                     {activeTab === 'players' ? (
                                         <table className="w-full table-fixed border-collapse">
-                                            <thead>
+                                            <thead className="bg-transparent">
                                                 <tr>
                                                     <th className={`${thClass} w-[10%]`}>#</th>
                                                     <th className={`${thClass} w-[50%] text-left pl-4`}>{t.players.toUpperCase()}</th>
@@ -336,7 +335,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                         </table>
                                     ) : (
                                         <table className="w-full table-fixed border-collapse">
-                                            <thead>
+                                            <thead className="bg-transparent">
                                                 <tr>
                                                     <th className={`${thClass} w-[15%]`}>#</th>
                                                     <th className={`${thClass} w-[25%] text-center`}>{t.hubHome}</th>
