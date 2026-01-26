@@ -31,7 +31,11 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
         <div className="w-full h-full animate-in fade-in duration-700 relative">
             {/* Main Content Area - Removed overflow-hidden to allow bottom capsule to hang */}
             <div className="w-full h-full relative">
-                {currentView === 'dashboard' && <PublicHubDashboard forcedSessionIdx={selectedSessionIdx} />}
+                {currentView === 'dashboard' && (
+                    <div className="h-full w-full animate-in fade-in zoom-in duration-500" key={`dashboard-${selectedSessionIdx}`}>
+                        <PublicHubDashboard forcedSessionIdx={selectedSessionIdx} />
+                    </div>
+                )}
                 
                 {(currentView === 'roster' || currentView === 'duel') && (
                     <HubRoster 
