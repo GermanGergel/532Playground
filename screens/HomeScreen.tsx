@@ -69,7 +69,6 @@ export const HomeScreen: React.FC = () => {
           url: hubUrl,
       };
       try {
-          // Robust check for share capability
           const canShare = navigator.share && typeof navigator.canShare === 'function' && navigator.canShare(shareData);
           if (canShare) {
               await navigator.share(shareData);
@@ -78,7 +77,6 @@ export const HomeScreen: React.FC = () => {
               alert("UNIT Hub link copied to clipboard!");
           }
       } catch (error: any) {
-          // Ignore cancellation errors
           if (error.name !== 'AbortError') {
               console.error("Error sharing hub link:", error);
           }
@@ -137,7 +135,7 @@ export const HomeScreen: React.FC = () => {
 
   return (
     <div 
-        className="w-full h-[100dvh] overflow-hidden relative flex flex-col justify-between"
+        className="fixed inset-0 w-full h-[100dvh] overflow-hidden relative flex flex-col"
         style={{ 
             backgroundImage: `url("${homeScreenBackground}")`, 
             backgroundSize: 'cover', 
@@ -214,7 +212,8 @@ export const HomeScreen: React.FC = () => {
         </Modal>
         
         {/* --- TOP SECTION (HEADER + CONTROLS) --- */}
-        <div className="flex-none pt-4 px-4 pb-2 z-10">
+        {/* Increased top padding (pt-16) to move header down as requested */}
+        <div className="flex-none pt-16 px-6 pb-2 z-10">
              <div className="flex flex-row justify-between items-start w-full">
                  <div className="flex flex-col items-start relative select-none pointer-events-none">
                     <div className="absolute -inset-4 bg-black/10 rounded-full blur-[40px] pointer-events-none"></div>
@@ -267,12 +266,12 @@ export const HomeScreen: React.FC = () => {
              </div>
         </div>
 
-        {/* --- SPACER (Pushes content to edges) --- */}
+        {/* --- SPACER (Pushes buttons to center/bottom) --- */}
         <div className="flex-grow"></div>
         
         {/* --- BOTTOM SECTION (BUTTONS) --- */}
-        {/* Fixed padding at bottom to clear the Nav Bar (h-16 + spacing) */}
-        <div className="flex-none px-4 pb-24 w-full max-w-md mx-auto z-10 flex flex-col gap-3">
+        {/* Adjusted padding (pb-28) to ensure the last button sits perfectly above BottomNav (h-16) */}
+        <div className="flex-none px-6 pb-28 w-full max-w-md mx-auto z-10 flex flex-col gap-4">
              <Button 
                 variant="secondary" 
                 onClick={() => navigate('/hub')} 
@@ -291,7 +290,6 @@ export const HomeScreen: React.FC = () => {
                 </Button>
              )}
              
-             {/* Updated: Buttons now stacked vertically with full width and matching style */}
              <Button variant="secondary" onClick={() => navigate('/player-hub')} className="w-full font-chakra font-bold text-xl tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5">
                 {t.playerHub}
              </Button>
