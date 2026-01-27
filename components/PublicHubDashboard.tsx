@@ -494,7 +494,7 @@ export const PublicHubDashboard: React.FC = () => {
                 </div>
                 <div className="col-span-12 md:col-span-3 flex flex-col gap-4 h-full min-h-[600px] overflow-hidden">
                     <HubCard title={t.teamStandings} icon={<TrophyIcon />} variant="standings" className="shrink-0" bodyClassName="flex flex-col">
-                        <div className="p-1 overflow-y-auto custom-hub-scrollbar max-h-[150px]">
+                        <div className="p-1 overflow-y-auto custom-hub-scrollbar h-[140px] overscroll-contain touch-pan-y">
                             <table className="w-full table-fixed border-collapse">
                                 <thead>
                                     <tr className="bg-white/5 border-b border-white/10">

@@ -251,8 +251,8 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                 <div className="max-w-6xl mx-auto w-full h-full flex flex-col gap-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch w-full h-full min-h-0">
                         <div className="flex flex-col gap-4 w-full h-full min-h-0">
-                            <HubCard title={t.teamStandings} icon={<TrophyIcon />} accent="#FFD700" className="shrink-0 max-h-[45%] flex flex-col">
-                                <div className="p-1 overflow-y-auto custom-hub-scrollbar">
+                            <HubCard title={t.teamStandings} icon={<TrophyIcon />} accent="#FFD700" className="shrink-0 flex flex-col">
+                                <div className="p-1 overflow-y-auto custom-hub-scrollbar h-[140px] overscroll-contain touch-pan-y">
                                     <table className="w-full table-fixed border-collapse">
                                         <thead>
                                             <tr>
