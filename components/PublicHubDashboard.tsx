@@ -464,7 +464,9 @@ export const PublicHubDashboard: React.FC = () => {
     if (!session) return <StandbyScreen />;
 
     const finishedGames = [...session.games].filter(g => g.status === 'finished').sort((a, b) => a.gameNumber - b.gameNumber);
-    const thStandings = "py-2 text-white/40 uppercase tracking-tighter text-[8px] font-black text-center sticky top-0 bg-[#01040a] backdrop-blur-sm z-10 border-b border-white/5";
+    
+    // Updated header style: Z-index adjusted, sticky behavior preserved
+    const thStandings = "py-2 text-white/40 uppercase tracking-tighter text-[8px] font-black text-center sticky top-0 bg-[#01040a] z-20 border-b border-white/5";
     const tdBase = "py-1.5 text-center text-[10px] font-bold transition-colors";
 
     return (
@@ -494,7 +496,8 @@ export const PublicHubDashboard: React.FC = () => {
                 </div>
                 <div className="col-span-12 md:col-span-3 flex flex-col gap-4 h-full min-h-[600px] overflow-hidden">
                     <HubCard title={t.teamStandings} icon={<TrophyIcon />} variant="standings" className="shrink-0" bodyClassName="flex flex-col">
-                        <div className="p-1 overflow-y-auto custom-hub-scrollbar h-[140px] overscroll-contain touch-pan-y">
+                        {/* UPDATE: Conditional overflow to lock scroll if <= 3 teams */}
+                        <div className={`p-1 h-[140px] overscroll-contain touch-pan-y ${teamStats.length > 3 ? 'overflow-y-auto custom-hub-scrollbar' : 'overflow-hidden'}`}>
                             <table className="w-full table-fixed border-collapse">
                                 <thead>
                                     <tr className="bg-white/5 border-b border-white/10">
