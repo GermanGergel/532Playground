@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Page, Button, Card, Modal, useTranslation } from '../ui';
 import { Trash2, Cloud } from '../icons';
@@ -11,6 +11,7 @@ import { retrySyncPendingSessions, deleteSession, forceSyncSession } from '../db
 export const HistoryScreen: React.FC = () => {
     const { history, setHistory, fetchHistory } = useApp();
     const t = useTranslation();
+    const navigate = useNavigate();
     const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
     const [sessionToDelete, setSessionToDelete] = React.useState<Session | null>(null);
     const [isLoadingMore, setIsLoadingMore] = React.useState(false);
@@ -40,6 +41,7 @@ export const HistoryScreen: React.FC = () => {
     };
 
     const handleManualSync = async (e: React.MouseEvent, session: Session) => {
+        // Critical: Stop the click from bubbling up to the card navigation
         e.preventDefault();
         e.stopPropagation();
         
@@ -47,21 +49,25 @@ export const HistoryScreen: React.FC = () => {
         setIsSyncing(true);
         
         try {
-            // Attempt 1: Try straightforward sync (which now includes auto-stripping rotationQueue)
+            // Attempt 1: Try straightforward sync (which now includes auto-stripping rotationQueue inside db.ts)
             const result = await forceSyncSession(session);
             
             if (result.success) {
                 setHistory(prev => prev.map(s => s.id === session.id ? { ...s, syncStatus: 'synced' as const } : s));
-                alert("Session synced successfully!");
+                alert("Session synced successfully! \n\nData structure auto-corrected for cloud.");
             } else {
                 alert(`Sync Failed: ${result.error}\n\nThis likely means the database schema is outdated.`);
             }
         } catch (err) {
             console.error(err);
-            alert("Sync Error: Unknown");
+            alert("Sync Error: Unknown exception");
         } finally {
             setIsSyncing(false);
         }
+    };
+
+    const handleCardClick = (sessionId: string) => {
+        navigate(`/report/${sessionId}`);
     };
 
     return (
@@ -76,22 +82,29 @@ export const HistoryScreen: React.FC = () => {
                     <ul className="space-y-4">
                         {history.map(session => (
                             <li key={session.id} className="group flex items-center gap-2">
-                                <Link to={`/report/${session.id}`} className="flex-grow">
+                                {/* Replaced Link with div + onClick to allow nested buttons to work properly */}
+                                <div 
+                                    onClick={() => handleCardClick(session.id)}
+                                    className="flex-grow cursor-pointer"
+                                >
                                     <Card className={`hover:bg-white/10 transition-colors duration-300 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 !p-3 ${session.syncStatus === 'pending' ? 'border-yellow-500/50' : ''}`}>
                                         <div className="flex justify-between items-center">
                                             <div className="overflow-hidden">
-                                                <h3 className="font-bold text-base truncate flex items-center gap-2">
-                                                    {session.sessionName}
+                                                <div className="flex items-center gap-2">
+                                                    <h3 className="font-bold text-base truncate">
+                                                        {session.sessionName}
+                                                    </h3>
+                                                    {/* SYNC BUTTON - Now correctly isolated from navigation */}
                                                     {session.syncStatus === 'pending' && (
                                                         <button 
                                                             onClick={(e) => handleManualSync(e, session)}
-                                                            className="hover:scale-110 transition-transform active:scale-95"
-                                                            title="Click to retry sync"
+                                                            className="p-1.5 hover:bg-white/10 rounded-full transition-all active:scale-95 z-20 relative"
+                                                            title="Click to retry sync & fix schema"
                                                         >
-                                                            <Cloud className={`w-4 h-4 text-yellow-400 ${isSyncing ? 'animate-spin' : 'animate-pulse'}`} />
+                                                            <Cloud className={`w-5 h-5 text-yellow-400 ${isSyncing ? 'animate-spin' : 'animate-pulse'}`} />
                                                         </button>
                                                     )}
-                                                </h3>
+                                                </div>
                                                 <p className="text-xs text-dark-text-secondary">{new Date(session.date).toLocaleDateString()}</p>
                                             </div>
                                             <div className="flex items-center gap-2">
@@ -100,7 +113,7 @@ export const HistoryScreen: React.FC = () => {
                                             </div>
                                         </div>
                                     </Card>
-                                </Link>
+                                </div>
                                 
                                 {session.syncStatus !== 'synced' && (
                                     <div className="flex flex-col gap-2">
