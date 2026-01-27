@@ -12,16 +12,8 @@ export const NewGameSetupScreen: React.FC = () => {
     const navigate = useNavigate();
     const t = useTranslation();
 
-    // Logic to generate default name with current date using dots instead of slashes
-    const getDefaultSessionName = () => {
-        const now = new Date();
-        const day = String(now.getDate()).padStart(2, '0');
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const year = String(now.getFullYear()).slice(-2);
-        return `UNIT GAME ${day}.${month}.${year}`;
-    };
-
-    const [sessionName, setSessionName] = React.useState(getDefaultSessionName());
+    // Updated: Removed date from default name as requested (History screen already shows date)
+    const [sessionName, setSessionName] = React.useState('UNIT GAME');
     const [numTeams, setNumTeams] = React.useState(3);
     const [playersPerTeam, setPlayersPerTeam] = React.useState(5);
     const [matchDuration, setMatchDuration] = React.useState(7);

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-import { Page, Button, useTranslation, Modal } from '../ui';
+import { Button, useTranslation, Modal } from '../ui';
 import { homeScreenBackground } from '../assets';
 import { Globe, Upload, XCircle, QrCode } from '../icons'; 
 import html2canvas from 'html2canvas';
@@ -136,7 +136,14 @@ export const HomeScreen: React.FC = () => {
   const controlButtonClass = "w-11 h-11 flex items-center justify-center bg-white/[0.03] backdrop-blur-md rounded-full border border-white/10 shadow-lg active:scale-95 transition-all hover:bg-white/10 hover:border-white/20";
 
   return (
-    <Page style={{ backgroundImage: `url("${homeScreenBackground}")`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+    <div 
+        className="w-full h-[100dvh] overflow-hidden relative flex flex-col justify-between"
+        style={{ 
+            backgroundImage: `url("${homeScreenBackground}")`, 
+            backgroundSize: 'cover', 
+            backgroundPosition: 'center' 
+        }}
+    >
         
         <Modal
             isOpen={isQrModalOpen}
@@ -206,18 +213,15 @@ export const HomeScreen: React.FC = () => {
             </div>
         </Modal>
         
-        <div className="flex flex-col min-h-[calc(100vh-8rem)] justify-between relative">
-             {/* TOP BAR: UNIT LOGO + CONTROLS */}
-             <div className="flex flex-row justify-between items-center w-full pt-4 mb-16 px-1">
+        {/* --- TOP SECTION (HEADER + CONTROLS) --- */}
+        <div className="flex-none pt-4 px-4 pb-2 z-10">
+             <div className="flex flex-row justify-between items-start w-full">
                  <div className="flex flex-col items-start relative select-none pointer-events-none">
-                    {/* Статичная подложка без свечения */}
                     <div className="absolute -inset-4 bg-black/10 rounded-full blur-[40px] pointer-events-none"></div>
-                    
                     <div className="flex flex-col relative z-10">
                         <h1 
                             className="text-7xl font-black uppercase leading-[0.8] font-russo tracking-[0.15em]" 
                             style={{ 
-                                // UPDATED: Muted turquoise metallic gradient
                                 background: 'linear-gradient(180deg, #48CFCB 0%, #083344 100%)',
                                 WebkitBackgroundClip: 'text',
                                 WebkitTextFillColor: 'transparent',
@@ -239,7 +243,7 @@ export const HomeScreen: React.FC = () => {
                     </div>
                  </div>
                  
-                 <div className="flex flex-row gap-3 pointer-events-auto">
+                 <div className="flex flex-row gap-3 pointer-events-auto pt-2">
                     <button 
                         onClick={handleShareHub}
                         disabled={isSharing}
@@ -261,35 +265,40 @@ export const HomeScreen: React.FC = () => {
                     </button>
                  </div>
              </div>
+        </div>
 
-            <div className="flex-grow"></div>
-            
-            <main className="flex flex-col items-center gap-4 w-full mt-auto">
-                 <Button 
-                    variant="secondary" 
-                    onClick={() => navigate('/hub')} 
-                    className="w-full font-chakra font-bold text-xl tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5 active:scale-[0.98] transition-all"
-                 >
-                    {t.hubTitle}
-                 </Button>
+        {/* --- SPACER (Pushes content to edges) --- */}
+        <div className="flex-grow"></div>
+        
+        {/* --- BOTTOM SECTION (BUTTONS) --- */}
+        {/* Fixed padding at bottom to clear the Nav Bar (h-16 + spacing) */}
+        <div className="flex-none px-4 pb-24 w-full max-w-md mx-auto z-10 flex flex-col gap-3">
+             <Button 
+                variant="secondary" 
+                onClick={() => navigate('/hub')} 
+                className="w-full font-chakra font-bold text-xl tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5 active:scale-[0.98] transition-all"
+             >
+                {t.hubTitle}
+             </Button>
 
-                 {activeSession ? (
-                    <Button variant="secondary" onClick={handleContinue} className="w-full font-chakra font-bold text-xl tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5">
-                        {t.continueSession}
-                    </Button>
-                 ) : (
-                    <Button variant="secondary" onClick={handleStartNewSession} className="w-full font-chakra font-bold text-xl tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5">
-                        {t.newSession}
-                    </Button>
-                 )}
-                 <Button variant="secondary" onClick={() => navigate('/player-hub')} className="w-full font-chakra font-bold text-xl tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5">
+             {activeSession ? (
+                <Button variant="secondary" onClick={handleContinue} className="w-full font-chakra font-bold text-xl tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5">
+                    {t.continueSession}
+                </Button>
+             ) : (
+                <Button variant="secondary" onClick={handleStartNewSession} className="w-full font-chakra font-bold text-xl tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5">
+                    {t.newSession}
+                </Button>
+             )}
+             <div className="grid grid-cols-2 gap-3 w-full">
+                 <Button variant="secondary" onClick={() => navigate('/player-hub')} className="w-full font-chakra font-bold text-lg tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5">
                     {t.playerHub}
                  </Button>
-                 <Button variant="secondary" onClick={() => navigate('/announcement')} className="w-full font-chakra font-bold text-xl tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5">
+                 <Button variant="secondary" onClick={() => navigate('/announcement')} className="w-full font-chakra font-bold text-lg tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5">
                     {t.createAnnouncement}
                  </Button>
-            </main>
+             </div>
         </div>
-    </Page>
+    </div>
   );
 };
