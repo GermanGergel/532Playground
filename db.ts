@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import { Player, Session, NewsItem, PromoData } from './types';
 import { Language } from './translations/index';
@@ -236,15 +237,13 @@ export const saveHistoryLocalOnly = async (h: Session[]) => {
 };
 
 export const saveHistoryToDB = async (history: Session[]) => {
-    // SECURITY GUARD: Filter out preview sessions (IDs starting with 'preview_')
-    const real = history.filter(s => !s.id.startsWith('preview_'));
-    
-    // Save everything locally (including previews, so the user sees them)
+    // Standard saving without filters
     await saveHistoryLocalOnly(history); 
     
     if (isSupabaseConfigured()) {
         try {
-            const toSync = real.filter(s => s.status === 'completed' && s.syncStatus !== 'synced');
+            // Sync completed sessions that aren't synced yet
+            const toSync = history.filter(s => s.status === 'completed' && s.syncStatus !== 'synced');
             if (toSync.length > 0) {
                 const dbReady = toSync.map(s => sanitizeObject(s));
                 const { error } = await supabase!.from('sessions').upsert(dbReady, { onConflict: 'id' });
@@ -277,14 +276,17 @@ export const loadHistoryFromDB = async (limit?: number) => {
                 const merged = [
                     ...data.map(s => ({...s, syncStatus: 'synced' as const})), 
                     ...local.filter(l => {
-                        // Keep local previews even if they aren't in cloud
-                        if (l.id.startsWith('preview_')) return true; 
-                        
+                        // Avoid duplicates from cloud
                         if (cloudIds.has(l.id)) return false;
+                        
+                        // If it's pending sync locally, keep it regardless of date logic to ensure eventual consistency
                         if (l.syncStatus !== 'synced') return true;
+                        
+                        // Otherwise check date bounds to avoid overwriting newer local data with old limits
                         const localTime = new Date(l.createdAt).getTime();
                         if (data.length > 0 && localTime >= minCloudTime && localTime <= maxCloudTime) return false;
                         if (isExhaustive && (data.length === 0 || localTime > maxCloudTime)) return false;
+                        
                         return true;
                     })
                 ];
