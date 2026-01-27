@@ -290,14 +290,15 @@ export const HomeScreen: React.FC = () => {
                     {t.newSession}
                 </Button>
              )}
-             <div className="grid grid-cols-2 gap-3 w-full">
-                 <Button variant="secondary" onClick={() => navigate('/player-hub')} className="w-full font-chakra font-bold text-lg tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5">
-                    {t.playerHub}
-                 </Button>
-                 <Button variant="secondary" onClick={() => navigate('/announcement')} className="w-full font-chakra font-bold text-lg tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5">
-                    {t.createAnnouncement}
-                 </Button>
-             </div>
+             
+             {/* Updated: Buttons now stacked vertically with full width and matching style */}
+             <Button variant="secondary" onClick={() => navigate('/player-hub')} className="w-full font-chakra font-bold text-xl tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5">
+                {t.playerHub}
+             </Button>
+             
+             <Button variant="secondary" onClick={() => navigate('/announcement')} className="w-full font-chakra font-bold text-xl tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5">
+                {t.createAnnouncement}
+             </Button>
         </div>
     </div>
   );
