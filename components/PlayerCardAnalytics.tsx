@@ -285,15 +285,27 @@ export const BestSessionCard: React.FC<{ player: Player; usePromoStyle?: boolean
 
 type ChartMetric = 'rating' | 'winRate' | 'goals';
 
-export const PlayerProgressChart: React.FC<{ history: PlayerHistoryEntry[], usePromoStyle?: boolean }> = ({ history, usePromoStyle = false }) => {
+export const PlayerProgressChart: React.FC<{ history: PlayerHistoryEntry[], usePromoStyle?: boolean, initialRating?: number }> = ({ history, usePromoStyle = false, initialRating = 68 }) => {
     const [activeMetric, setActiveMetric] = useState<ChartMetric>('rating');
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
     const chartData = useMemo(() => {
         if (!history || history.length === 0) return [];
-        if (history.length === 1) return [history[0], history[0]];
+        
+        // FIX: If only 1 entry (new player), generate a synthetic 'Start' point using initialRating
+        if (history.length === 1) {
+            const current = history[0];
+            const startPoint: PlayerHistoryEntry = {
+                date: 'Start',
+                rating: initialRating,
+                winRate: 0,
+                goals: 0,
+                assists: 0
+            };
+            return [startPoint, current];
+        }
         return history;
-    }, [history]);
+    }, [history, initialRating]);
 
     // Enhanced scroll logic: ensure we see the pulsing dot immediately
     useEffect(() => {

@@ -239,10 +239,18 @@ const StatsView: React.FC<{ player: Player; onBack: () => void; isPromo?: boolea
                 {/* 1. Progress Chart */}
                 {isPromo ? (
                     <PromoStatsContainer>
-                        <PlayerProgressChart history={player.historyData || []} usePromoStyle={true} />
+                        {/* Pass initialRating for correct slope calculation */}
+                        <PlayerProgressChart 
+                            history={player.historyData || []} 
+                            usePromoStyle={true} 
+                            initialRating={player.initialRating || 68}
+                        />
                     </PromoStatsContainer>
                 ) : (
-                    <PlayerProgressChart history={player.historyData || []} />
+                    <PlayerProgressChart 
+                        history={player.historyData || []} 
+                        initialRating={player.initialRating || 68}
+                    />
                 )}
 
                 {/* 2. Last Session Breakdown */}

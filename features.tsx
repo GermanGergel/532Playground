@@ -4,7 +4,7 @@ import { Team, Player, PlayerTier, PlayerStatus, BadgeType, PlayerForm, SkillTyp
 import { getPlayerKeyStats, calculatePlayerMonthlyStats } from './services/statistics';
 import { convertCountryCodeAlpha3ToAlpha2 } from './utils/countries';
 import { Button, Modal, Card, useTranslation } from './ui';
-import { LastSessionBreakdown, ClubRankings, BestSessionCard } from './components/PlayerCardAnalytics';
+import { LastSessionBreakdown, ClubRankings, BestSessionCard, PlayerProgressChart } from './components/PlayerCardAnalytics';
 import { 
     StarIcon,
     GoleadorBadgeIcon, PerfectFinishBadgeIcon, DynastyBadgeIcon, SniperBadgeIcon,
@@ -495,6 +495,12 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onEdit, onDelete
             </div>
             
             <div className="space-y-3 pt-4">
+                 {/* PASS INITIAL RATING HERE TO FIX FLAT LINE BUG */}
+                 <PlayerProgressChart 
+                    history={player.historyData || []} 
+                    initialRating={player.initialRating || 68} 
+                 />
+
                  {player.lastRatingChange && player.status === PlayerStatus.Confirmed && <LastSessionBreakdown player={player} />}
                  <BestSessionCard player={player} />
                  {player.status === PlayerStatus.Confirmed && (

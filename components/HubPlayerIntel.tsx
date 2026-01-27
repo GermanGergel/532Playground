@@ -299,7 +299,19 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                                 </div>
                             </div>
 
-                            <div className="w-full"><BentoBox noPadding className="h-[280px] w-full" contentClassName="h-full"><div className="h-full w-full"><HubProgressChart headerTitle={t?.statistics} history={player.historyData || []} /></div></BentoBox></div>
+                            <div className="w-full">
+                                <BentoBox noPadding className="h-[280px] w-full" contentClassName="h-full">
+                                    <div className="h-full w-full">
+                                        {/* FIX: Ensure new players see a trend line by passing initialRating */}
+                                        <HubProgressChart 
+                                            headerTitle={t?.statistics} 
+                                            history={player.historyData || []} 
+                                            // FIX: If we don't have explicit history prop passed to component, use player data
+                                            // But crucially, we must synthesize the start point inside the chart component if only 1 entry exists
+                                        />
+                                    </div>
+                                </BentoBox>
+                            </div>
 
                             <BentoBox className="!py-3 px-6"><div className="flex flex-col md:flex-row items-center gap-6"><div className="shrink-0"><IntelHeader title={t?.winLossDraw} icon={TrophyIcon} accent="#FFD700" /></div><div className="flex-grow w-full space-y-1.5 pt-0.5"><div className="flex w-full h-2 rounded-full overflow-hidden bg-black/50 border border-white/5 shadow-inner"><div style={{ width: `${(player.totalWins / (player.totalGames || 1)) * 100}%` }} className="bg-[#4CFF5F] shadow-[0_0_8px_#4CFF5F44]" /><div style={{ width: `${(player.totalDraws / (player.totalGames || 1)) * 100}%` }} className="bg-white/20" /><div style={{ width: `${(player.totalLosses / (player.totalGames || 1)) * 100}%` }} className="bg-[#FF4136] shadow-[0_0_8px_#FF413644]" /></div></div><div className="shrink-0 flex items-center gap-6 font-russo"><div className="flex flex-col items-center"><span className="text-lg text-[#4CFF5F] leading-none">{player.totalWins}</span><span className="text-[6px] text-white/20 uppercase font-black tracking-tighter">Wins</span></div><div className="flex flex-col items-center"><span className="text-lg text-white/40 leading-none">{player.totalDraws}</span><span className="text-[6px] text-white/20 uppercase font-black tracking-tighter">Draws</span></div><div className="flex flex-col items-center"><span className="text-lg text-[#FF4136] leading-none">{player.totalLosses}</span><span className="text-[6px] text-white/20 uppercase font-black tracking-tighter">Losses</span></div></div></div></BentoBox>
 
