@@ -225,8 +225,8 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
     const sortedByStats = useMemo(() => [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists)), [allPlayersStats]);
     const finishedGames = session.games.filter(g => g.status === 'finished');
     
-    const thClass = "py-2 text-white/40 uppercase tracking-tighter text-[9px] font-black text-center sticky top-0 bg-[#12161b] backdrop-blur-md z-10 border-b border-white/5";
-    const tdBase = "py-2 text-center text-[11px] font-bold transition-colors";
+    const thClass = "py-2 text-white/40 uppercase tracking-tighter text-[8px] font-black text-center border-b border-white/5";
+    const tdBase = "py-1.5 text-center text-[10px] font-bold transition-colors";
 
     return (
         <div className={`${isEmbedded ? 'relative h-full w-full' : 'absolute inset-0 z-30'} flex flex-col animate-in slide-in-from-right duration-500 overflow-hidden ${!isEmbedded ? 'rounded-[2.5rem]' : ''}`}>
@@ -252,41 +252,47 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch w-full h-full min-h-0">
                         <div className="flex flex-col gap-4 w-full h-full min-h-0">
                             <HubCard title={t.teamStandings} icon={<TrophyIcon />} accent="#FFD700" className="shrink-0 flex flex-col">
-                                <div className="p-1 overflow-y-auto custom-hub-scrollbar h-[140px] overscroll-contain touch-pan-y">
-                                    <table className="w-full table-fixed border-collapse">
-                                        <thead>
-                                            <tr>
-                                                <th className={`${thClass} w-[6%]`}>#</th>
-                                                <th className={`${thClass} w-[26%] text-center`}>{t.team.toUpperCase()}</th>
-                                                <th className={`${thClass} w-[7%]`}>{t.thP}</th>
-                                                <th className={`${thClass} w-[7%]`}>{t.thW}</th>
-                                                <th className={`${thClass} w-[7%]`}>{t.thD}</th>
-                                                <th className={`${thClass} w-[7%]`}>{t.thL}</th>
-                                                <th className={`${thClass} w-[10%]`}>{t.thGF}</th>
-                                                <th className={`${thClass} w-[10%]`}>{t.thGA}</th>
-                                                <th className={`${thClass} w-[10%]`}>{t.thGD}</th>
-                                                <th className={`${thClass} w-[10%] text-white bg-white/[0.03]`}>PTS</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {teamStats.map((stat, idx) => (
-                                                <tr key={stat.team.id} className="group border-b border-white/5 last:border-0 transition-all duration-300">
-                                                    <td className={`${tdBase} text-white/30 bg-white/[0.02]`}>{idx + 1}</td>
-                                                    <td className="py-2 flex justify-center">
-                                                        <SubtleDashboardAvatar team={stat.team} size="xxs" isLight={true} />
-                                                    </td>
-                                                    <td className={`${tdBase} text-slate-300`}>{stat.gamesPlayed}</td>
-                                                    <td className={`${tdBase} text-slate-300`}>{stat.wins}</td>
-                                                    <td className={`${tdBase} text-slate-300`}>{stat.draws}</td>
-                                                    <td className={`${tdBase} text-slate-300`}>{stat.losses}</td>
-                                                    <td className={`${tdBase} text-slate-300`}>{stat.goalsFor}</td>
-                                                    <td className={`${tdBase} text-slate-300`}>{stat.goalsAgainst}</td>
-                                                    <td className={`${tdBase} text-white/40`}>{stat.goalDifference > 0 ? `+${stat.goalDifference}` : stat.goalDifference}</td>
-                                                    <td className={`${tdBase} text-[12px] font-black text-white bg-white/[0.03]`}>{stat.points}</td>
+                                <div className="flex flex-col h-[140px]">
+                                    <div>
+                                        <table className="w-full table-fixed border-collapse">
+                                            <thead>
+                                                <tr>
+                                                    <th className={`${thClass} w-[6%]`}>#</th>
+                                                    <th className={`${thClass} w-[26%] text-center`}>{t.team.toUpperCase()}</th>
+                                                    <th className={`${thClass} w-[7%]`}>{t.thP}</th>
+                                                    <th className={`${thClass} w-[7%]`}>{t.thW}</th>
+                                                    <th className={`${thClass} w-[7%]`}>{t.thD}</th>
+                                                    <th className={`${thClass} w-[7%]`}>{t.thL}</th>
+                                                    <th className={`${thClass} w-[10%]`}>{t.thGF}</th>
+                                                    <th className={`${thClass} w-[10%]`}>{t.thGA}</th>
+                                                    <th className={`${thClass} w-[10%]`}>{t.thGD}</th>
+                                                    <th className={`${thClass} w-[10%] text-white bg-white/[0.03]`}>PTS</th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                        </table>
+                                    </div>
+                                    <div className={`flex-grow ${teamStats.length > 3 ? 'overflow-y-auto custom-hub-scrollbar' : 'overflow-hidden'} touch-pan-y`}>
+                                        <table className="w-full table-fixed border-collapse">
+                                            <tbody>
+                                                {teamStats.map((stat, idx) => (
+                                                    <tr key={stat.team.id} className="group border-b border-white/5 last:border-0 transition-all duration-300">
+                                                        <td className={`${tdBase} w-[6%] text-white/30 bg-white/[0.02]`}>{idx + 1}</td>
+                                                        <td className="w-[26%] py-1.5 flex justify-center">
+                                                            <SubtleDashboardAvatar team={stat.team} size="xxs" isLight={true} />
+                                                        </td>
+                                                        <td className={`${tdBase} w-[7%] text-slate-300`}>{stat.gamesPlayed}</td>
+                                                        <td className={`${tdBase} w-[7%] text-slate-300`}>{stat.wins}</td>
+                                                        <td className={`${tdBase} w-[7%] text-slate-300`}>{stat.draws}</td>
+                                                        <td className={`${tdBase} w-[7%] text-slate-300`}>{stat.losses}</td>
+                                                        <td className={`${tdBase} w-[10%] text-slate-300`}>{stat.goalsFor}</td>
+                                                        <td className={`${tdBase} w-[10%] text-slate-300`}>{stat.goalsAgainst}</td>
+                                                        <td className={`${tdBase} w-[10%] text-white/40`}>{stat.goalDifference > 0 ? `+${stat.goalDifference}` : stat.goalDifference}</td>
+                                                        <td className={`${tdBase} w-[10%] text-[12px] font-black text-white bg-white/[0.03]`}>{stat.points}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </HubCard>
                             <HubCard title={t.hubMatchReport} icon={<Target />} accent="#00F2FE" className="w-full flex-grow min-h-0" bodyClassName="p-4">
