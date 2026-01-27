@@ -1,19 +1,33 @@
+
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { PlayerHistoryEntry } from '../types';
 import { History as HistoryIcon } from '../icons';
 
 type ChartMetric = 'rating' | 'winRate' | 'goals';
 
-export const HubProgressChart: React.FC<{ history: PlayerHistoryEntry[], headerTitle?: string }> = ({ history, headerTitle }) => {
+export const HubProgressChart: React.FC<{ history: PlayerHistoryEntry[], headerTitle?: string, initialRating?: number }> = ({ history, headerTitle, initialRating = 68 }) => {
     const [activeMetric, setActiveMetric] = useState<ChartMetric>('rating');
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
     const chartData = useMemo(() => {
         if (!history || history.length === 0) return [];
-        if (history.length === 1) return [history[0], history[0]];
+        
+        // FIX: If only 1 entry (new player), generate a synthetic 'Start' point using initialRating
+        // instead of duplicating the current point (which causes a flat line)
+        if (history.length === 1) {
+            const current = history[0];
+            const startPoint: PlayerHistoryEntry = {
+                date: 'Start',
+                rating: initialRating,
+                winRate: 0,
+                goals: 0,
+                assists: 0
+            };
+            return [startPoint, current];
+        }
         return history;
-    }, [history]);
+    }, [history, initialRating]);
 
     const theme = useMemo(() => {
         switch (activeMetric) {

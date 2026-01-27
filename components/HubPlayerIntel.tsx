@@ -306,8 +306,7 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                                         <HubProgressChart 
                                             headerTitle={t?.statistics} 
                                             history={player.historyData || []} 
-                                            // FIX: If we don't have explicit history prop passed to component, use player data
-                                            // But crucially, we must synthesize the start point inside the chart component if only 1 entry exists
+                                            initialRating={player.initialRating || 68}
                                         />
                                     </div>
                                 </BentoBox>
