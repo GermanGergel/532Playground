@@ -255,21 +255,13 @@ export const saveHistoryToDB = async (history: Session[]) => {
 };
 
 // DEBUG UTILITY: Force sync a single session and return the specific error
-// AUTO-FIX: Automatically strips 'rotationQueue' and 'legionnaireMoves' if they fail
 export const forceSyncSession = async (session: Session): Promise<{ success: boolean; error?: string }> => {
     if (!isSupabaseConfigured()) return { success: false, error: 'Supabase not configured' };
     
     try {
-        // 1. Try syncing as-is first (but sanitized)
-        let dbReady = sanitizeObject(session);
+        // FULL SYNC: We assume the DB has all necessary columns now.
+        const dbReady = sanitizeObject(session);
         
-        // AUTO-FIX: We suspect 'rotationQueue' is the issue because the DB column might not exist yet.
-        // We delete it from the payload to allow the rest of the session to sync.
-        if ('rotationQueue' in dbReady) delete dbReady.rotationQueue;
-        
-        // Also remove 'videoUrl' just in case if it's undefined
-        if ('videoUrl' in dbReady && dbReady.videoUrl === undefined) delete dbReady.videoUrl;
-
         const { error } = await supabase!.from('sessions').upsert(dbReady, { onConflict: 'id' });
         
         if (error) {
