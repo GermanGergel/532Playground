@@ -188,7 +188,7 @@ const HubCard: React.FC<{
 };
 
 const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any, teamStats: any[], t: any }> = ({ teams, players, session, teamStats, t }) => (
-    <div className="flex h-full w-full divide-x divide-white/10 bg-black/20">
+    <div className="flex h-full w-full overflow-x-auto custom-hub-scrollbar bg-black/20">
         {teams.map((team) => {
             const teamPlayers = team.playerIds.map(pid => players.find(p => p.id === pid)).filter(Boolean) as Player[];
             const avgOvr = teamPlayers.length > 0 ? Math.round(teamPlayers.reduce((sum, p) => sum + p.rating, 0) / teamPlayers.length) : 0;
@@ -202,7 +202,7 @@ const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any
             const synergy = gf > 0 ? Math.round((assistedGoals / gf) * 100) : 0;
             const synergyColor = synergy >= 60 ? 'text-[#4CFF5F]' : synergy <= 30 ? 'text-orange-400' : 'text-[#00F2FE]';
             return (
-                <div key={team.id} className="flex-1 flex flex-col min-w-0">
+                <div key={team.id} className="flex-1 flex flex-col min-w-[33.33%] border-r border-white/10 last:border-r-0">
                     <div className="h-10 border-b border-white/5 flex items-end justify-center pb-2 relative overflow-hidden" style={{ background: `linear-gradient(to bottom, ${team.color}25, transparent)` }}>
                          <div className="flex items-center gap-1 bg-black/40 px-2 py-0.5 rounded text-[8px] font-black tracking-widest border border-white/10 text-white/60">
                             <span>OVR</span> <span className="text-white">{avgOvr}</span>
@@ -494,7 +494,7 @@ export const PublicHubDashboard: React.FC = () => {
                 </div>
                 <div className="col-span-12 md:col-span-3 flex flex-col gap-4 h-full min-h-[600px] overflow-hidden">
                     <HubCard title={t.teamStandings} icon={<TrophyIcon />} variant="standings" className="shrink-0" bodyClassName="flex flex-col">
-                        <div className="p-1">
+                        <div className="p-1 overflow-y-auto custom-hub-scrollbar max-h-[150px]">
                             <table className="w-full table-fixed border-collapse">
                                 <thead>
                                     <tr className="bg-white/5 border-b border-white/10">

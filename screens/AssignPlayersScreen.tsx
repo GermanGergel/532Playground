@@ -36,7 +36,8 @@ export const AssignPlayersScreen: React.FC = () => {
     if (!activeSession) return null;
 
     const inputClasses = "w-full p-3 bg-dark-bg rounded-lg border border-white/20 focus:ring-2 focus:ring-dark-accent-start focus:outline-none";
-    const gridColsClass = activeSession.numTeams === 2 ? 'grid-cols-2' : 'grid-cols-3';
+    // Для 2 и 4 команд используем grid-cols-2 (4 команды станут 2х2)
+    const gridColsClass = activeSession.numTeams === 3 ? 'grid-cols-3' : 'grid-cols-2';
     const cardNeonClasses = "shadow-lg shadow-dark-accent-start/20 border border-dark-accent-start/40";
 
     return (
@@ -115,7 +116,7 @@ export const AssignPlayersScreen: React.FC = () => {
             </div>
 
             <div className="flex-grow overflow-y-auto px-4"> 
-                <div className={`grid ${gridColsClass} gap-x-2 items-start mt-4`}>
+                <div className={`grid ${gridColsClass} gap-y-8 gap-x-2 items-start mt-4`}>
                     {activeSession.teams.map(team => (
                         <div key={team.id} className="flex flex-col items-center gap-4">
                             <TeamAvatar 

@@ -137,6 +137,100 @@ export const generateSingleDemoSession = (name: string, dateOffsetDays: number):
     return session;
 };
 
+// --- NEW 4-TEAM GENERATOR FOR PREVIEW ---
+export const generate4TeamPreviewSession = (): Session => {
+    const date = new Date();
+    const sessionId = `preview_${newId()}`; // Special ID prefix to block sync
+
+    // 1. Generate 20 Players
+    const players: Player[] = Array.from({ length: 20 }, (_, i) => {
+        const r = 70 + Math.floor(Math.random() * 20);
+        return {
+            id: `preview_p_${i}`,
+            nickname: `UNIT ${i + 1}`,
+            surname: `TESTER`,
+            createdAt: date.toISOString(),
+            countryCode: ['VN', 'UA', 'BR', 'AR'][Math.floor(Math.random() * 4)],
+            status: PlayerStatus.Confirmed,
+            totalGoals: 0, totalAssists: 0, totalGames: 0, totalWins: 0, totalDraws: 0, totalLosses: 0,
+            totalSessionsPlayed: 5,
+            rating: r,
+            initialRating: 68,
+            tier: getTierForRating(r),
+            monthlyGoals: 0, monthlyAssists: 0, monthlyGames: 0, monthlyWins: 0, monthlySessionsPlayed: 0,
+            form: 'stable', badges: {}, skills: [], lastPlayedAt: date.toISOString(),
+            sessionHistory: [], records: { bestGoalsInSession: { value: 0, sessionId: '' }, bestAssistsInSession: { value: 0, sessionId: '' }, bestWinRateInSession: { value: 0, sessionId: '' } }
+        };
+    });
+
+    // 2. Generate 4 Teams
+    const teamColors = ['#FF4136', '#0074D9', '#2ECC40', '#FFDC00']; // Red, Blue, Green, Yellow
+    const teams: Team[] = teamColors.map((color, i) => ({
+        id: `preview_t_${i}`,
+        color,
+        name: `TEAM ${String.fromCharCode(65 + i)}`, // Team A, B, C, D
+        playerIds: players.slice(i * 5, (i + 1) * 5).map(p => p.id),
+        consecutiveGames: 0,
+        bigStars: 0,
+    }));
+
+    const session: Session = {
+        id: sessionId,
+        sessionName: "4-TEAM HUB PREVIEW",
+        date: date.toISOString(),
+        numTeams: 4,
+        playersPerTeam: 5,
+        status: SessionStatus.Completed,
+        createdAt: date.toISOString(),
+        teams,
+        games: [],
+        playerPool: players,
+        eventLog: [],
+        rotationMode: RotationMode.AutoRotate,
+        location: "Virtual Stadium",
+        timeString: "20:00 - 22:00",
+        weather: { temperature: 24, condition: "clear" }
+    };
+
+    // 3. Simulate 12 Matches (2 at a time Logic simplified to sequential for data generation)
+    // For simplicity in generating stats, we just pick 2 random teams to play 12 times
+    // In a real 4-team game, it's 2 matches parallel or alternating, but for Hub stats, sequential logs are fine.
+    
+    for (let i = 1; i <= 12; i++) {
+        // Randomly pick 2 teams
+        const shuffledTeams = [...teams].sort(() => 0.5 - Math.random());
+        const t1 = shuffledTeams[0];
+        const t2 = shuffledTeams[1];
+
+        const t1Score = Math.floor(Math.random() * 4);
+        const t2Score = Math.floor(Math.random() * 4);
+        const winnerId = t1Score > t2Score ? t1.id : (t2Score > t1Score ? t2.id : undefined);
+
+        const game: Game = {
+            id: `preview_g_${i}`,
+            gameNumber: i,
+            team1Id: t1.id,
+            team2Id: t2.id,
+            team1Score: t1Score,
+            team2Score: t2Score,
+            winnerTeamId: winnerId,
+            isDraw: !winnerId,
+            elapsedSeconds: 600,
+            elapsedSecondsOnPause: 0,
+            goals: [],
+            status: GameStatus.Finished,
+            endedAt: date.toISOString()
+        };
+
+        for (let g = 0; g < t1Score; g++) game.goals.push(generateGoal(game.id, t1.id, t1.playerIds));
+        for (let g = 0; g < t2Score; g++) game.goals.push(generateGoal(game.id, t2.id, t2.playerIds));
+
+        session.games.push(game);
+    }
+
+    return session;
+};
+
 export const generateDiverseDemoPlayers = (count: number = 10): Player[] => {
     const today = new Date().toISOString();
     return Array.from({ length: count }, (_, i) => {

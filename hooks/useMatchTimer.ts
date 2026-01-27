@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Session, GameStatus } from '../types';
 import { playAnnouncement } from '../lib';
@@ -12,7 +13,8 @@ export const useMatchTimer = (
     const lastAnnouncedSecondRef = React.useRef<number | null>(null);
 
     const currentGame = activeSession?.games[activeSession.games.length - 1];
-    const isTimerBasedGame = activeSession?.numTeams === 3;
+    // FIX: Работаем с таймером для всех режимов, где есть ротация (3 и 4 команды)
+    const isTimerBasedGame = activeSession?.numTeams && activeSession.numTeams >= 3;
 
     // --- TIMER LOGIC ---
     React.useEffect(() => {

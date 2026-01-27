@@ -59,7 +59,7 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
             </div>
             
             <style dangerouslySetInnerHTML={{ __html: `
-                .custom-hub-scrollbar::-webkit-scrollbar { width: 4px; }
+                .custom-hub-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
                 .custom-hub-scrollbar::-webkit-scrollbar-track { background: transparent; }
                 .custom-hub-scrollbar::-webkit-scrollbar-thumb { background: rgba(0, 242, 254, 0.1); border-radius: 10px; }
             `}} />

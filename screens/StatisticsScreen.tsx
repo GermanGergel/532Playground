@@ -232,7 +232,7 @@ export const StatisticsScreen: React.FC = () => {
 
     const team1 = tempEditingGame ? activeSession.teams.find(t => t.id === tempEditingGame.team1Id) : null;
     const team2 = tempEditingGame ? activeSession.teams.find(t => t.id === tempEditingGame.team2Id) : null;
-    const restingTeam = tempEditingGame ? activeSession.teams.find(t => t.id !== tempEditingGame.team1Id && t.id !== tempEditingGame.team2Id) : null;
+    const restingTeams = tempEditingGame ? activeSession.teams.filter(t => t.id !== tempEditingGame.team1Id && t.id !== tempEditingGame.team2Id) : [];
 
     const handleOpenGoalModal = (teamId: string) => { setGoalModalState({ isOpen: true, teamId }); };
     const handleAddGoalToTemp = (goalData: any, payload: any) => {
@@ -358,8 +358,8 @@ export const StatisticsScreen: React.FC = () => {
                     </div>
                 )}
             </Modal>
-            {legionnaireModalState.isOpen && restingTeam && (
-                <LegionnaireModal isOpen={legionnaireModalState.isOpen} onClose={() => setLegionnaireModalState({ isOpen: false })} onSelect={handleLegionnaireSwapInTemp} restingTeam={restingTeam} session={activeSession} playerOut={activeSession.playerPool.find(p => p.id === legionnaireModalState.playerOutId)!} />
+            {legionnaireModalState.isOpen && restingTeams.length > 0 && (
+                <LegionnaireModal isOpen={legionnaireModalState.isOpen} onClose={() => setLegionnaireModalState({ isOpen: false })} onSelect={handleLegionnaireSwapInTemp} restingTeams={restingTeams} session={activeSession} playerOut={activeSession.playerPool.find(p => p.id === legionnaireModalState.playerOutId)!} />
             )}
             <GoalModal isOpen={goalModalState.isOpen} onClose={() => setGoalModalState({ isOpen: false, teamId: null })} onSave={handleAddGoalToTemp} game={tempEditingGame || activeSession.games[0]} session={activeSession} scoringTeamId={goalModalState.teamId} />
             <EditGoalModal isOpen={!!goalToEdit} onClose={() => setGoalToEdit(null)} onSave={handleGoalUpdate} goal={goalToEdit} game={activeSession.games.find(g => g.id === goalToEdit?.gameId) || activeSession.games[0]} session={activeSession} />

@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Card, Button, useTranslation } from '../ui';
 import { isSupabaseConfigured, getCloudPlayerCount } from '../db';
-import { Wand, Activity } from '../icons';
+import { Wand, Activity, LayoutDashboard } from '../icons';
+import { generate4TeamPreviewSession } from '../services/demo';
 
 const WalletIcon = ({ className }: { className?: string }) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -16,7 +18,7 @@ const WalletIcon = ({ className }: { className?: string }) => (
 export const SettingsScreen: React.FC = () => {
     const t = useTranslation();
     const navigate = useNavigate();
-    const { language, setLanguage, allPlayers } = useApp();
+    const { language, setLanguage, allPlayers, setHistory } = useApp();
     const [cloudStatus, setCloudStatus] = React.useState<{ connected: boolean, count: number } | null>(null);
     const [isRefreshing, setIsRefreshing] = React.useState(false);
     
@@ -42,6 +44,14 @@ export const SettingsScreen: React.FC = () => {
     useEffect(() => {
         checkCloud();
     }, []);
+
+    const handlePreview4Team = () => {
+        if(window.confirm("Launch a local 4-Team preview session? This will not be saved to the cloud.")) {
+            const previewSession = generate4TeamPreviewSession();
+            setHistory(prev => [previewSession, ...prev]);
+            navigate('/hub');
+        }
+    };
 
     const langClasses = (lang: string) => `px-3 py-1 rounded-full font-bold transition-colors text-base ${language === lang ? 'gradient-bg text-dark-bg' : 'bg-dark-surface hover:bg-white/10'}`;
 
@@ -182,13 +192,22 @@ export const SettingsScreen: React.FC = () => {
             </div>
 
             <div className="p-4 shrink-0 space-y-4">
-                <Button 
-                    variant="ghost" 
-                    onClick={() => navigate('/settings/promo-admin')}
-                    className="w-full !py-3 border border-white/5 bg-black/20 hover:bg-white/5 text-dark-text-secondary text-xs tracking-widest uppercase flex items-center justify-center gap-2"
-                >
-                    <Wand className="w-4 h-4 opacity-50" /> Configure Promo Page
-                </Button>
+                <div className="grid grid-cols-2 gap-2">
+                    <Button 
+                        variant="ghost" 
+                        onClick={() => navigate('/settings/promo-admin')}
+                        className="w-full !py-3 border border-white/5 bg-black/20 hover:bg-white/5 text-dark-text-secondary text-[10px] tracking-widest uppercase flex items-center justify-center gap-2"
+                    >
+                        <Wand className="w-3 h-3 opacity-50" /> Config Promo
+                    </Button>
+                    <Button 
+                        variant="ghost" 
+                        onClick={handlePreview4Team}
+                        className="w-full !py-3 border border-purple-500/20 bg-purple-900/10 hover:bg-purple-900/20 text-purple-300 text-[10px] tracking-widest uppercase flex items-center justify-center gap-2"
+                    >
+                        <LayoutDashboard className="w-3 h-3" /> Preview 4-Teams
+                    </Button>
+                </div>
 
                 <NetworkHud />
                 

@@ -225,6 +225,7 @@ export interface Session {
         condition: WeatherCondition;
     };
     videoUrl?: string; // YouTube Link for Hub
+    rotationQueue?: string[]; // Очередь ID команд для ротации (особенно для 4 команд)
 }
 
 export type NewsType = 'tier_up' | 'badge' | 'milestone' | 'hot_streak' | 'penalty';

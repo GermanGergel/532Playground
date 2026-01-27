@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -432,12 +433,22 @@ export const PublicHubScreen: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen text-white relative selection:bg-[#00F2FE] selection:text-black bg-[#0a0c10] pt-px overscroll-none">
+        <div className="fixed inset-0 w-full h-full bg-[#0a0c10] text-white selection:bg-[#00F2FE] selection:text-black overflow-hidden overscroll-none">
             
             {/* -- MODAL: Team of the Month -- */}
             <TeamOfTheMonthModal isOpen={isTotmOpen} onClose={() => setIsTotmOpen(false)} />
 
-            <style dangerouslySetInnerHTML={{__html: `html, body { background-color: #0a0c10; overscroll-behavior-y: none; }`}} />
+            {/* FORCE GLOBAL LOCK FOR THIS SCREEN */}
+            <style dangerouslySetInnerHTML={{__html: `
+                html, body, #root { 
+                    height: 100%; 
+                    overflow: hidden; 
+                    position: fixed; 
+                    width: 100%; 
+                    overscroll-behavior: none;
+                    touch-action: none;
+                }
+            `}} />
             
             <div className={`fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50 z-[110]`}></div>
             
@@ -450,13 +461,12 @@ export const PublicHubScreen: React.FC = () => {
                 onHomeClick={() => {
                     setIsDashboardOpen(false);
                     setDashboardView('dashboard');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
                 onOpenTotm={() => setIsTotmOpen(true)}
             />
 
             <div 
-                className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none 
+                className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none touch-pan-y
                 ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}
                 `}
                 style={{ backgroundColor: getBottomPatchColor() }}
@@ -475,7 +485,8 @@ export const PublicHubScreen: React.FC = () => {
                 ></div>
             </div>
 
-            <div className={`relative z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}>
+            {/* HERO CONTENT - WRAPPED IN SCROLLABLE CONTAINER */}
+            <div className={`absolute inset-0 overflow-y-auto overscroll-none touch-pan-y z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}>
                 <HeroTitle />
                 
                 <div className="text-center mb-12 md:mb-20">

@@ -1,8 +1,56 @@
+
 import React from 'react';
 import { Button, Modal, useTranslation } from '../ui';
 import { Goal, GoalPayload, Game, Session, Team, Player } from '../types';
 import { Edit3, XCircle } from '../icons';
 import { TeamAvatar } from '../components/avatars';
+
+// --- TEAM SWAP MODAL (Manual selection) ---
+export const TeamSwapModal: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    onSelect: (teamId: string) => void;
+    restingTeams: Team[];
+    side: 'left' | 'right';
+}> = ({ isOpen, onClose, onSelect, restingTeams, side }) => {
+    const t = useTranslation();
+    if (!isOpen) return null;
+
+    return (
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            size="xs"
+            containerClassName="!bg-[#0a0c10] border border-white/10 shadow-2xl !p-0 overflow-hidden"
+            hideCloseButton
+        >
+            <div className="p-4 border-b border-white/5 bg-[#12161b]">
+                <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-black text-[#00F2FE] tracking-[0.2em] uppercase">
+                        Manual Selection: {side.toUpperCase()}
+                    </span>
+                    <button onClick={onClose} className="text-gray-500 hover:text-white"><XCircle className="w-5 h-5" /></button>
+                </div>
+                <h3 className="font-bold text-white uppercase text-sm mt-1">Select Active Team</h3>
+            </div>
+            <div className="p-4 flex flex-col gap-3">
+                {restingTeams.map(team => (
+                    <button
+                        key={team.id}
+                        onClick={() => onSelect(team.id)}
+                        className="w-full p-3 rounded-xl bg-white/5 border border-white/10 flex items-center gap-4 hover:bg-[#00F2FE]/10 hover:border-[#00F2FE]/30 transition-all group"
+                    >
+                        <TeamAvatar team={team} size="xs" hollow />
+                        <span className="font-bold text-white group-hover:text-[#00F2FE] transition-colors uppercase">{team.name}</span>
+                    </button>
+                ))}
+                {restingTeams.length === 0 && (
+                    <p className="text-center text-white/20 text-xs py-4">No other teams available</p>
+                )}
+            </div>
+        </Modal>
+    );
+};
 
 // --- GOAL MODAL ---
 interface GoalModalProps {
@@ -62,7 +110,7 @@ export const GoalModal: React.FC<GoalModalProps> = ({ isOpen, onClose, onSave, g
         };
         onSave({ 
             teamId: defendingTeam.id, 
-            scorerId: undefined, // No scorer for own goal in the game data
+            scorerId: undefined, 
             isOwnGoal: true,
         }, payload);
         onClose();
@@ -219,16 +267,13 @@ export interface LegionnaireModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSelect: (playerInId: string) => void;
-    restingTeam?: Team;
+    restingTeams: Team[]; // Изменено на массив для поддержки 4 команд
     session: Session;
     playerOut: Player;
 }
 
-export const LegionnaireModal: React.FC<LegionnaireModalProps> = ({ isOpen, onClose, onSelect, restingTeam, session, playerOut }) => {
+export const LegionnaireModal: React.FC<LegionnaireModalProps> = ({ isOpen, onClose, onSelect, restingTeams, session, playerOut }) => {
     const t = useTranslation();
-    const candidates = restingTeam 
-        ? restingTeam.playerIds.map(id => session.playerPool.find(p => p.id === id)).filter(Boolean) as Player[]
-        : [];
 
     if (!isOpen) return null;
 
@@ -253,18 +298,32 @@ export const LegionnaireModal: React.FC<LegionnaireModalProps> = ({ isOpen, onCl
                 <button onClick={onClose} className="text-gray-500 hover:text-white"><XCircle className="w-6 h-6" /></button>
             </div>
 
-            <div className="flex-1 overflow-y-auto max-h-[50vh] bg-[#0a0c10] p-2 relative z-10">
-                <div className="flex flex-col gap-1">
-                    {candidates.length > 0 ? candidates.map(p => (
-                        <button 
-                            key={p.id}
-                            onClick={() => onSelect(p.id)}
-                            className="w-full p-3 rounded-xl bg-transparent hover:bg-[#FFD700]/10 border border-transparent hover:border-[#FFD700]/30 flex items-center justify-between group transition-all"
-                        >
-                            <span className="font-bold text-lg text-white group-hover:text-[#FFD700]">{p.nickname}</span>
-                            <span className="text-[10px] font-bold text-gray-500 font-mono group-hover:text-[#FFD700] border border-gray-700 group-hover:border-[#FFD700] px-2 py-0.5 rounded">{t.legionnaire_select}</span>
-                        </button>
-                    )) : (
+            <div className="flex-1 overflow-y-auto max-h-[50vh] bg-[#0a0c10] p-2 relative z-10 custom-hub-scrollbar">
+                <div className="flex flex-col gap-4">
+                    {restingTeams.map(team => {
+                        const candidates = team.playerIds.map(id => session.playerPool.find(p => p.id === id)).filter(Boolean) as Player[];
+                        if (candidates.length === 0) return null;
+
+                        return (
+                            <div key={team.id} className="space-y-1">
+                                <div className="flex items-center gap-2 px-2 mb-1">
+                                    <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: team.color, boxShadow: `0 0 6px ${team.color}` }}></div>
+                                    <span className="text-[8px] font-black text-white/40 uppercase tracking-widest">{team.name}</span>
+                                </div>
+                                {candidates.map(p => (
+                                    <button 
+                                        key={p.id}
+                                        onClick={() => onSelect(p.id)}
+                                        className="w-full p-2.5 rounded-xl bg-white/[0.02] hover:bg-[#FFD700]/10 border border-white/5 hover:border-[#FFD700]/30 flex items-center justify-between group transition-all"
+                                    >
+                                        <span className="font-bold text-sm text-white/80 group-hover:text-[#FFD700]">{p.nickname}</span>
+                                        <span className="text-[8px] font-bold text-gray-500 font-mono group-hover:text-[#FFD700] border border-gray-800 group-hover:border-[#FFD700] px-1.5 py-0.5 rounded uppercase">Pick</span>
+                                    </button>
+                                ))}
+                            </div>
+                        );
+                    })}
+                    {restingTeams.length === 0 && (
                         <p className="text-center text-dark-text-secondary py-4 text-xs">{t.legionnaire_no_players}</p>
                     )}
                 </div>

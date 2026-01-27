@@ -29,15 +29,16 @@ export const NewGameSetupScreen: React.FC = () => {
     const [rotationMode, setRotationMode] = React.useState<RotationMode>(RotationMode.AutoRotate);
     
     const handleSubmit = () => {
+        const isRotationApplicable = numTeams >= 3;
         const newSession: Session = {
             id: newId(),
             sessionName,
             date: formatDate(new Date()),
             numTeams,
             playersPerTeam,
-            matchDurationMinutes: numTeams === 3 ? matchDuration : undefined,
-            goalsToWin: numTeams === 3 && goalsToWin > 0 ? goalsToWin : undefined,
-            rotationMode: numTeams === 3 ? rotationMode : undefined,
+            matchDurationMinutes: isRotationApplicable ? matchDuration : undefined,
+            goalsToWin: isRotationApplicable && goalsToWin > 0 ? goalsToWin : undefined,
+            rotationMode: isRotationApplicable ? rotationMode : undefined,
             status: SessionStatus.Active,
             createdAt: new Date().toISOString(),
             teams: [],
@@ -79,6 +80,7 @@ export const NewGameSetupScreen: React.FC = () => {
                                 <div className="flex items-center gap-2">
                                     <button onClick={() => setNumTeams(2)} className={numTeamClasses(2)}>2</button>
                                     <button onClick={() => setNumTeams(3)} className={numTeamClasses(3)}>3</button>
+                                    <button onClick={() => setNumTeams(4)} className={numTeamClasses(4)}>4</button>
                                 </div>
                             </div>
                             <div className="flex items-center justify-between">
@@ -107,7 +109,7 @@ export const NewGameSetupScreen: React.FC = () => {
                                     disabled={numTeams === 2}
                                 />
                             </div>
-                            {numTeams === 3 && (
+                            {numTeams >= 3 && (
                                 <div className="flex items-center justify-between pt-4">
                                     <div className="pr-4 flex-1">
                                         <label className="font-bold">{t.autoRotate}</label>

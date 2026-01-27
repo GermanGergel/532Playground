@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -6,6 +7,7 @@ import { Team, Player, Game, GameStatus, EventLogEntry, EventType, StartRoundPay
 import { newId } from '../screens/utils';
 import { getTierForRating } from '../services/rating';
 import { saveSinglePlayerToDB } from '../db';
+import { initializeQueue4 } from '../services/rotationEngine4';
 
 const COLORS = [
   '#FF5733', '#33FF57', '#3357FF', '#FF33A1', '#A133FF', '#33FFA1',
@@ -26,7 +28,7 @@ export const useTeamAssignment = () => {
     React.useEffect(() => {
         if (activeSession) {
             if (activeSession.teams.length === 0 && activeSession.numTeams > 0) {
-                const defaultColors = ['#0074D9', '#FFDC00', '#FF851B'].slice(0, activeSession.numTeams);
+                const defaultColors = ['#0074D9', '#FFDC00', '#FF851B', '#2ECC40'].slice(0, activeSession.numTeams);
                 const newTeams = Array.from({ length: activeSession.numTeams }, (_, i) => ({
                     id: newId(),
                     color: defaultColors[i] || COLORS[i % COLORS.length],
@@ -203,8 +205,15 @@ export const useTeamAssignment = () => {
             name: `${t.team} ${index + 1}`
         }));
 
+        let rotationQueue: string[] | undefined;
         let teamsForFirstGame = [...updatedTeams];
-        if (activeSession.numTeams === 3) {
+
+        if (activeSession.numTeams === 4) {
+            rotationQueue = initializeQueue4(updatedTeams);
+            const t1 = updatedTeams.find(t => t.id === rotationQueue![0])!;
+            const t2 = updatedTeams.find(t => t.id === rotationQueue![1])!;
+            teamsForFirstGame = [t1, t2];
+        } else if (activeSession.numTeams === 3) {
             teamsForFirstGame.sort(() => Math.random() - 0.5);
         }
 
@@ -238,7 +247,7 @@ export const useTeamAssignment = () => {
             } as StartRoundPayload,
         };
         
-        setActiveSession(s => s ? { ...s, teams: updatedTeams, games: [firstGame], eventLog: [startRoundEvent] } : null);
+        setActiveSession(s => s ? { ...s, teams: updatedTeams, games: [firstGame], eventLog: [startRoundEvent], rotationQueue } : null);
         navigate('/match');
     };
     
