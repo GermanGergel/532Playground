@@ -2,7 +2,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { Player, Session, NewsItem, PromoData } from './types';
 import { Language } from './translations/index';
-import { get, set, del } from 'idb-keyval';
+import { get, set, del, keys } from 'idb-keyval';
 
 // --- SUPABASE CONFIGURATION ---
 const getEnvVar = (key: string) => {
@@ -383,6 +383,17 @@ export const saveCustomAudio = async (key: string, base64: string, pack: number)
 export const loadCustomAudio = async (key: string, pack: number) => {
     const cached = await get<CachedAudio>(`audio_pack${pack}_${key}`);
     return cached?.data;
+};
+
+// OPTIMIZED CHECK: Checks for key existence without loading value
+export const hasCustomAudio = async (key: string, pack: number): Promise<boolean> => {
+    try {
+        const allKeys = await keys();
+        const targetKey = `audio_pack${pack}_${key}`;
+        return allKeys.includes(targetKey);
+    } catch (e) {
+        return false;
+    }
 };
 
 export const deleteCustomAudio = async (key: string, pack: number) => {

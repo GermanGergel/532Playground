@@ -4,7 +4,7 @@ import { Page, PageHeader, Card, Button, useTranslation, ToggleSwitch } from '..
 import { 
     loadCustomAudio, saveCustomAudio, deleteCustomAudio, isSupabaseConfigured,
     uploadSessionAnthem, deleteSessionAnthem, getSessionAnthemUrl,
-    syncAndCacheAudioAssets
+    syncAndCacheAudioAssets, hasCustomAudio
 } from '../db';
 import { audioManager, playAnnouncement, initAudioContext } from '../lib';
 import { Upload, Trash2, Play, Pause } from '../icons';
@@ -207,8 +207,9 @@ export const VoiceSettingsScreen: React.FC = () => {
             setIsLoading(true);
             const statusMap: Record<string, boolean> = {};
             for (const announcement of ANNOUNCEMENTS) {
-                const customAudio = await loadCustomAudio(announcement.key, activeVoicePack);
-                statusMap[announcement.key] = !!customAudio;
+                // OPTIMIZATION: Check for existence without loading the entire Base64 string into memory
+                const exists = await hasCustomAudio(announcement.key, activeVoicePack);
+                statusMap[announcement.key] = exists;
             }
             setCustomAudioStatus(statusMap);
             setIsLoading(false);
@@ -270,6 +271,7 @@ export const VoiceSettingsScreen: React.FC = () => {
     const handlePreview = async (key: AnnouncementKey, fallbackText: string) => {
         // ПРИНУДИТЕЛЬНОЕ ПРОБУЖДЕНИЕ ПЕРЕД ПРЕВЬЮ
         await audioManager.unlockAudio();
+        // This will load the full audio on demand
         playAnnouncement(key, fallbackText, activeVoicePack);
     };
 
