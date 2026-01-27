@@ -225,7 +225,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
     const sortedByStats = useMemo(() => [...allPlayersStats].sort((a, b) => (b.goals + b.assists) - (a.goals + a.assists)), [allPlayersStats]);
     const finishedGames = session.games.filter(g => g.status === 'finished');
     
-    const thClass = "py-2 text-white/40 uppercase tracking-tighter text-[8px] font-black text-center sticky top-0 bg-[#12161b] backdrop-blur-md z-10 border-b border-white/5";
+    const thClass = "py-2 text-white/40 uppercase tracking-tighter text-[8px] font-black text-center sticky top-0 bg-[#12161b] backdrop-blur-md z-20 border-b border-white/5";
     const tdBase = "py-1.5 text-center text-[10px] font-bold transition-colors";
 
     return (
@@ -252,7 +252,8 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch w-full h-full min-h-0">
                         <div className="flex flex-col gap-4 w-full h-full min-h-0">
                             <HubCard title={t.teamStandings} icon={<TrophyIcon />} accent="#FFD700" className="shrink-0 flex flex-col">
-                                <div className="p-1 overflow-y-auto custom-hub-scrollbar h-[140px] overscroll-contain touch-pan-y">
+                                {/* UPDATE: Conditional overflow to lock scroll if <= 3 teams */}
+                                <div className={`p-1 h-[140px] overscroll-contain touch-pan-y ${teamStats.length > 3 ? 'overflow-y-auto custom-hub-scrollbar' : 'overflow-hidden'}`}>
                                     <table className="w-full table-fixed border-collapse">
                                         <thead>
                                             <tr>
