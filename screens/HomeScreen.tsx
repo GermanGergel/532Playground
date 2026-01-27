@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Button, useTranslation, Modal } from '../ui';
 import { homeScreenBackground } from '../assets';
-import { Globe, Upload, XCircle, QrCode } from '../icons'; 
+import { Globe, QrCode } from '../icons'; 
 import html2canvas from 'html2canvas';
 
 export const HomeScreen: React.FC = () => {
@@ -69,7 +69,6 @@ export const HomeScreen: React.FC = () => {
           url: hubUrl,
       };
       try {
-          // Robust check for share capability
           const canShare = navigator.share && typeof navigator.canShare === 'function' && navigator.canShare(shareData);
           if (canShare) {
               await navigator.share(shareData);
@@ -78,7 +77,6 @@ export const HomeScreen: React.FC = () => {
               alert("UNIT Hub link copied to clipboard!");
           }
       } catch (error: any) {
-          // Ignore cancellation errors
           if (error.name !== 'AbortError') {
               console.error("Error sharing hub link:", error);
           }
@@ -137,14 +135,13 @@ export const HomeScreen: React.FC = () => {
 
   return (
     <div 
-        className="w-full h-[100dvh] overflow-hidden relative flex flex-col justify-between"
+        className="w-full h-full flex flex-col justify-between overflow-hidden"
         style={{ 
             backgroundImage: `url("${homeScreenBackground}")`, 
             backgroundSize: 'cover', 
             backgroundPosition: 'center' 
         }}
     >
-        
         <Modal
             isOpen={isQrModalOpen}
             onClose={() => setIsQrModalOpen(false)}
@@ -214,7 +211,8 @@ export const HomeScreen: React.FC = () => {
         </Modal>
         
         {/* --- TOP SECTION (HEADER + CONTROLS) --- */}
-        <div className="flex-none pt-4 px-4 pb-2 z-10">
+        {/* Increased padding-top to ensure logo is below the notch */}
+        <div className="flex-none pt-14 px-4 z-10">
              <div className="flex flex-row justify-between items-start w-full">
                  <div className="flex flex-col items-start relative select-none pointer-events-none">
                     <div className="absolute -inset-4 bg-black/10 rounded-full blur-[40px] pointer-events-none"></div>
@@ -271,8 +269,8 @@ export const HomeScreen: React.FC = () => {
         <div className="flex-grow"></div>
         
         {/* --- BOTTOM SECTION (BUTTONS) --- */}
-        {/* Fixed padding at bottom to clear the Nav Bar (h-16 + spacing) */}
-        <div className="flex-none px-4 pb-24 w-full max-w-md mx-auto z-10 flex flex-col gap-3">
+        {/* Increased padding-bottom to 28 (7rem) to float above the Nav Bar clearly */}
+        <div className="flex-none px-4 pb-28 w-full max-w-md mx-auto z-10 flex flex-col gap-3">
              <Button 
                 variant="secondary" 
                 onClick={() => navigate('/hub')} 
@@ -291,11 +289,12 @@ export const HomeScreen: React.FC = () => {
                 </Button>
              )}
              
-             {/* Updated: Buttons now stacked vertically with full width and matching style */}
+             {/* Player Hub Button - Full Width */}
              <Button variant="secondary" onClick={() => navigate('/player-hub')} className="w-full font-chakra font-bold text-xl tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5">
                 {t.playerHub}
              </Button>
              
+             {/* Create Poster Button - Full Width */}
              <Button variant="secondary" onClick={() => navigate('/announcement')} className="w-full font-chakra font-bold text-xl tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5">
                 {t.createAnnouncement}
              </Button>
