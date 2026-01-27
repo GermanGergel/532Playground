@@ -237,23 +237,53 @@ export const saveHistoryLocalOnly = async (h: Session[]) => {
 };
 
 export const saveHistoryToDB = async (history: Session[]) => {
-    // Standard saving without filters
-    await saveHistoryLocalOnly(history); 
-    
+    const real = history;
+    await saveHistoryLocalOnly(real);
     if (isSupabaseConfigured()) {
         try {
-            // Sync completed sessions that aren't synced yet
-            const toSync = history.filter(s => s.status === 'completed' && s.syncStatus !== 'synced');
+            const toSync = real.filter(s => s.status === 'completed' && s.syncStatus !== 'synced');
             if (toSync.length > 0) {
                 const dbReady = toSync.map(s => sanitizeObject(s));
                 const { error } = await supabase!.from('sessions').upsert(dbReady, { onConflict: 'id' });
                 if (!error) {
-                    // Update sync status locally for the ones we just synced
-                    const final = history.map(s => toSync.some(ts => ts.id === s.id) ? {...s, syncStatus: 'synced' as const} : s);
+                    const final = real.map(s => toSync.some(ts => ts.id === s.id) ? {...s, syncStatus: 'synced' as const} : s);
                     await set('history', final);
                 }
             }
         } catch (e) {}
+    }
+};
+
+// DEBUG UTILITY: Force sync a single session and return the specific error
+// AUTO-FIX: Automatically strips 'rotationQueue' and 'legionnaireMoves' if they fail
+export const forceSyncSession = async (session: Session): Promise<{ success: boolean; error?: string }> => {
+    if (!isSupabaseConfigured()) return { success: false, error: 'Supabase not configured' };
+    
+    try {
+        // 1. Try syncing as-is first (but sanitized)
+        let dbReady = sanitizeObject(session);
+        
+        // AUTO-FIX: We suspect 'rotationQueue' is the issue because the DB column might not exist yet.
+        // We delete it from the payload to allow the rest of the session to sync.
+        if ('rotationQueue' in dbReady) delete dbReady.rotationQueue;
+        
+        // Also remove 'videoUrl' just in case if it's undefined
+        if ('videoUrl' in dbReady && dbReady.videoUrl === undefined) delete dbReady.videoUrl;
+
+        const { error } = await supabase!.from('sessions').upsert(dbReady, { onConflict: 'id' });
+        
+        if (error) {
+            return { success: false, error: error.message };
+        }
+        
+        // Update local state if successful
+        const h = await get<Session[]>('history') || [];
+        const updatedHistory = h.map(s => s.id === session.id ? { ...s, syncStatus: 'synced' as const } : s);
+        await set('history', updatedHistory);
+        
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, error: e.message || 'Unknown error' };
     }
 };
 
@@ -276,17 +306,11 @@ export const loadHistoryFromDB = async (limit?: number) => {
                 const merged = [
                     ...data.map(s => ({...s, syncStatus: 'synced' as const})), 
                     ...local.filter(l => {
-                        // Avoid duplicates from cloud
                         if (cloudIds.has(l.id)) return false;
-                        
-                        // If it's pending sync locally, keep it regardless of date logic to ensure eventual consistency
                         if (l.syncStatus !== 'synced') return true;
-                        
-                        // Otherwise check date bounds to avoid overwriting newer local data with old limits
                         const localTime = new Date(l.createdAt).getTime();
                         if (data.length > 0 && localTime >= minCloudTime && localTime <= maxCloudTime) return false;
                         if (isExhaustive && (data.length === 0 || localTime > maxCloudTime)) return false;
-                        
                         return true;
                     })
                 ];

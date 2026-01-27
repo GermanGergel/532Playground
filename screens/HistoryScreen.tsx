@@ -6,7 +6,7 @@ import { Page, Button, Card, Modal, useTranslation } from '../ui';
 import { Trash2, Cloud } from '../icons';
 import { Session } from '../types';
 import { BrandedHeader } from './utils';
-import { retrySyncPendingSessions, deleteSession } from '../db';
+import { retrySyncPendingSessions, deleteSession, forceSyncSession } from '../db';
 
 export const HistoryScreen: React.FC = () => {
     const { history, setHistory, fetchHistory } = useApp();
@@ -14,6 +14,7 @@ export const HistoryScreen: React.FC = () => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
     const [sessionToDelete, setSessionToDelete] = React.useState<Session | null>(null);
     const [isLoadingMore, setIsLoadingMore] = React.useState(false);
+    const [isSyncing, setIsSyncing] = React.useState(false);
 
     useEffect(() => {
         const syncAndRefresh = async () => {
@@ -38,6 +39,31 @@ export const HistoryScreen: React.FC = () => {
         setSessionToDelete(null);
     };
 
+    const handleManualSync = async (e: React.MouseEvent, session: Session) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (isSyncing) return;
+        setIsSyncing(true);
+        
+        try {
+            // Attempt 1: Try straightforward sync (which now includes auto-stripping rotationQueue)
+            const result = await forceSyncSession(session);
+            
+            if (result.success) {
+                setHistory(prev => prev.map(s => s.id === session.id ? { ...s, syncStatus: 'synced' as const } : s));
+                alert("Session synced successfully!");
+            } else {
+                alert(`Sync Failed: ${result.error}\n\nThis likely means the database schema is outdated.`);
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Sync Error: Unknown");
+        } finally {
+            setIsSyncing(false);
+        }
+    };
+
     return (
         <Page>
             {/* UPDATED: Added 'short' prop to only show "UNIT" as requested */}
@@ -56,7 +82,15 @@ export const HistoryScreen: React.FC = () => {
                                             <div className="overflow-hidden">
                                                 <h3 className="font-bold text-base truncate flex items-center gap-2">
                                                     {session.sessionName}
-                                                    {session.syncStatus === 'pending' && <Cloud className="w-4 h-4 text-yellow-400 animate-pulse" />}
+                                                    {session.syncStatus === 'pending' && (
+                                                        <button 
+                                                            onClick={(e) => handleManualSync(e, session)}
+                                                            className="hover:scale-110 transition-transform active:scale-95"
+                                                            title="Click to retry sync"
+                                                        >
+                                                            <Cloud className={`w-4 h-4 text-yellow-400 ${isSyncing ? 'animate-spin' : 'animate-pulse'}`} />
+                                                        </button>
+                                                    )}
                                                 </h3>
                                                 <p className="text-xs text-dark-text-secondary">{new Date(session.date).toLocaleDateString()}</p>
                                             </div>
