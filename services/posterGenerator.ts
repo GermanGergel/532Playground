@@ -47,6 +47,7 @@ export const generateAndSharePoster = async (options: PosterData) => {
         document.fonts.load(`bold ${S * 36}px "Teko"`),
         document.fonts.load(`400 ${S * 20}px "Teko"`),
         document.fonts.load(`900 ${S * 14}px "Chakra Petch"`),
+        document.fonts.load(`900 ${S * 24}px "Russo One"`), // New Brand Font
     ]);
 
     // Draw Background
@@ -58,24 +59,25 @@ export const generateAndSharePoster = async (options: PosterData) => {
     const headerX = P + S * 10;
     const logoY = headerY + S * 17;
     
-    // --- Logo with background plank ---
+    // --- BRAND LOGO: UNIT CLUB ---
     ctx.textAlign = 'left';
-    ctx.shadowColor = 'rgba(0, 242, 254, 0.4)';
-    ctx.shadowBlur = 8;
+    ctx.shadowColor = 'rgba(0, 242, 254, 0.6)';
+    ctx.shadowBlur = S * 4;
     
-    // 532 Text
-    ctx.font = `700 ${S * 14}px "Orbitron"`;
+    // "UNIT" Text
+    ctx.font = `900 ${S * 24}px "Russo One"`;
     ctx.fillStyle = '#00F2FE';
-    ctx.fillText("532", headerX, logoY + S * 13.5);
-    const text532Metrics = ctx.measureText("532");
+    ctx.fillText("UNIT", headerX, logoY + S * 14);
+    const unitMetrics = ctx.measureText("UNIT");
 
-    const gap = S * 2; // Closer gap
-    const playgroundX = headerX + text532Metrics.width + gap;
-    const playgroundY = logoY + S * 14; // Lowered slightly
-    ctx.font = `400 ${S * 7}px "Orbitron"`;
-    ctx.fillStyle = '#FFF';
-    ctx.fillText("PLAYGROUND", playgroundX, playgroundY);
+    // "CLUB" Text
+    ctx.shadowBlur = 0; // Remove heavy glow for small text to keep it crisp
+    ctx.font = `700 ${S * 8}px "Orbitron"`;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.letterSpacing = '0.2em';
+    ctx.fillText("CLUB", headerX + unitMetrics.width + (S * 3), logoY + S * 14);
     
+    ctx.letterSpacing = '0px'; // Reset
     ctx.shadowBlur = 0; // Reset shadow for other elements
 
 
@@ -197,7 +199,7 @@ export const generateAndSharePoster = async (options: PosterData) => {
     const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png', 0.95));
     if (!blob) throw new Error('Failed to create blob from canvas.');
 
-    const filename = `532_Playground_Announcement.png`;
+    const filename = `UNIT_Announcement.png`;
     const file = new File([blob], filename, { type: 'image/png' });
 
     if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
