@@ -8,7 +8,6 @@ import { Session, Game, Goal, Team, Player } from '../types';
 import { calculateAllStats } from '../services/statistics';
 import { shareOrDownloadImages } from '../services/export';
 import { BrandedHeader, newId } from './utils';
-import { homeScreenBackground } from '../assets';
 import { Edit3, Trash2, PlusCircle, XCircle, TransferIcon } from '../icons';
 import { useGameManager } from '../hooks/useGameManager';
 import { GoalModal, EditGoalModal, LegionnaireModal } from '../modals';
@@ -23,11 +22,7 @@ const BrandedShareableReport: React.FC<{
     const defaultPadding = 40;
     const containerStyle: React.CSSProperties = {
         padding: `${defaultPadding}px`,
-        backgroundColor: '#1A1D24',
-        backgroundImage: `url("${homeScreenBackground}")`,
-        backgroundSize: '100% 100%',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
+        backgroundColor: '#1A1D24', // Solid dark background for clean export
         boxSizing: 'border-box',
         ...style
     };

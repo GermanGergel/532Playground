@@ -141,10 +141,11 @@ export const shareOrDownloadImages = async (elementId: string, sessionName: stri
         const filename = `532_${sessionName.replace(/\s/g, '_')}_${sessionDate}_${sectionName}.png`;
         const file = new File([blob], filename, { type: 'image/png' });
 
+        // CLEANUP: Removed title and text to avoid extra captions in messengers
         const shareData = {
             files: [file],
-            title: `UNIT CLUB`,
-            text: ``, // Removed caption to keep only the image
+            title: "",
+            text: "", 
         };
 
         const canShare = navigator.share && typeof navigator.canShare === 'function' && navigator.canShare(shareData);

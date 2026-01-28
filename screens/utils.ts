@@ -10,16 +10,17 @@ export const hexToRgba = (hex: string, alpha: number) => {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
-// UPDATED: Standardized "UNIT" style matched with Home Screen Logo
+// UPDATED: High-fidelity "UNIT" logo style exactly matching the Home Screen
 export const BrandedHeader: React.FC<{className?: string; isExport?: boolean; short?: boolean}> = ({ className, isExport }) => (
-    React.createElement('header', { className: `text-center ${className} ${isExport ? 'mb-4' : ''}` },
+    React.createElement('header', { className: `text-center ${className || ''} ${isExport ? 'mb-4' : ''}` },
         React.createElement('h1', { 
-            className: `text-6xl font-black uppercase leading-none font-russo tracking-[0.15em]`, 
+            className: `text-6xl font-black uppercase leading-none font-russo tracking-[0.15em] inline-block`, 
             style: { 
-                // Matches Home Screen style exactly
+                // Turquoise gradient matching Home screen logo
                 background: 'linear-gradient(180deg, #48CFCB 0%, #083344 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
+                // Multi-layered shadow for that 3D/depth look
                 filter: `
                     drop-shadow(1px 1px 0px #0E7490) 
                     drop-shadow(2px 2px 0px #000000) 

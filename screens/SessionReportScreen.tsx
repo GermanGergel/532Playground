@@ -9,7 +9,6 @@ import { ShareableReport } from './StatisticsScreen';
 import { YouTubeIcon } from '../icons';
 import { saveHistoryToDB } from '../db';
 
-// Re-defining BrandedShareableReport locally to avoid import issues
 const BrandedShareableReport: React.FC<{
     session: any;
     children: React.ReactNode;
@@ -18,16 +17,10 @@ const BrandedShareableReport: React.FC<{
     [key: string]: any;
 }> = ({ session, children, className, style, ...props }) => {
     const PADDING = 40;
-    const homeScreenBackground = `data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 1200'%3e%3cdefs%3e%3cradialGradient id='g' cx='50%25' cy='50%25' r='50%25'%3e%3cstop offset='0%25' stop-color='%2300F2FE' stop-opacity='0.1' /%3e%3cstop offset='100%25' stop-color='%2300F2FE' stop-opacity='0' /%3e%3c/radialGradient%3e%3cfilter id='f'%3e%3cfeTurbulence type='fractalNoise' baseFrequency='0.02 0.05' numOctaves='3' /%3e%3c/filter%3e%3c/defs%3e%3crect width='100%25' height='100%25' fill='%231A1D24' /%3e%3crect x='0' y='0' width='100%25' height='100%25' fill='url(%23g)' /%3e%3crect x='0' y='0' width='100%25' height='100%25' filter='url(%23f)' opacity='0.03' /%3e%3c/svg%3e`;
-
-
     const containerStyle: React.CSSProperties = {
         padding: `${PADDING}px`,
-        // Fix: Added extra padding at bottom to prevent edge clipping
         paddingBottom: `${PADDING + 40}px`,
-        backgroundImage: `url("${homeScreenBackground}")`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        backgroundColor: '#1A1D24', // Unified solid background
         boxSizing: 'border-box',
         ...style,
     };
@@ -96,20 +89,12 @@ export const SessionReportScreen: React.FC = () => {
 
     const handleVideoLink = async () => {
         const savedLink = session.videoUrl || '';
-        
         let newLink = prompt("YouTube Video Link:", savedLink);
-        
         if (newLink !== null) {
-            // FIX: Explicitly set syncStatus to 'pending' to force the DB sync logic to pick this up
             const updatedSession = { ...session, videoUrl: newLink, syncStatus: 'pending' as const };
-            
-            // Optimistic update
             setHistory(prev => prev.map(s => s.id === session.id ? updatedSession : s));
-            
-            // Sync to Cloud
             try {
                 await saveHistoryToDB([updatedSession]);
-                // Optional: Alert user it's saving
             } catch (error) {
                 console.error("Failed to save video link to DB", error);
                 alert("Failed to save link to cloud. Check connection.");
@@ -119,8 +104,6 @@ export const SessionReportScreen: React.FC = () => {
     
     const displayDate = new Date(session.date).toLocaleString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
     
-    const combinedExportBackground = `data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 1200'%3e%3cdefs%3e%3cradialGradient id='g' cx='50%25' cy='50%25' r='50%25'%3e%3cstop offset='0%25' stop-color='%2300F2FE' stop-opacity='0.1' /%3e%3cstop offset='100%25' stop-color='%2300F2FE' stop-opacity='0' /%3e%3c/radialGradient%3e%3cfilter id='f'%3e%3cfeTurbulence type='fractalNoise' baseFrequency='0.02 0.05' numOctaves='3' /%3e%3c/filter%3e%3c/defs%3e%3crect width='100%25' height='100%25' fill='%231A1D24' /%3e%3crect x='0' y='0' width='100%25' height='100%25' fill='url(%23g)' /%3e%3crect x='0' y='0' width='100%25' height='100%25' filter='url(%23f)' opacity='0.03' /%3e%3c/svg%3e`;
-
     return (
         <Page>
              <Modal 
@@ -171,13 +154,9 @@ export const SessionReportScreen: React.FC = () => {
                 <BrandedShareableReport 
                     session={session} 
                     data-export-section="players"
-                    style={{ 
-                        width: '900px',
-                        backgroundImage: `url("${combinedExportBackground}")`
-                    }}
+                    style={{ width: '900px' }}
                 >
                     <div className="mb-2 w-full"><BrandedHeader isExport={true} /></div>
-                    {/* FIX: Using items-stretch to align bottom edges of both tables */}
                     <div className="flex w-full items-stretch gap-4">
                         <div className="w-[60%] flex flex-col items-center">
                             <ShareableReport session={session} visibleSection="players" isExport={true} />
