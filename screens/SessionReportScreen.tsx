@@ -159,14 +159,12 @@ export const SessionReportScreen: React.FC = () => {
 
             {/* Hidden elements for branded export */}
             <div 
-                style={{ position: 'absolute', top: 0, left: 0, zIndex: -1, opacity: 0, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '2rem', alignItems: 'flex-start' }} 
+                style={{ position: 'absolute', top: 0, left: 0, zIndex: -1, opacity: 0, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }} 
                 ref={exportContainerRef}
             >
                 <BrandedShareableReport session={session} data-export-section="standings" style={{ width: '600px' }}>
-                    <div className="mb-4 text-left w-full">
-                        <BrandedHeader isExport={true} short />
-                        <p className="font-chakra text-dark-text mt-8 text-xl font-medium tracking-wider uppercase">{displayDate}</p>
-                    </div>
+                    <div className="mb-2 w-full"><BrandedHeader isExport={true} /></div>
+                    <p className="font-chakra text-dark-text mb-4 text-xl font-medium tracking-wider uppercase">{displayDate}</p>
                     <ShareableReport session={session} visibleSection="standings" isExport={true} />
                 </BrandedShareableReport>
 
@@ -178,6 +176,7 @@ export const SessionReportScreen: React.FC = () => {
                         backgroundImage: `url("${combinedExportBackground}")`
                     }}
                 >
+                    <div className="mb-2 w-full"><BrandedHeader isExport={true} /></div>
                     {/* FIX: Using items-stretch to align bottom edges of both tables */}
                     <div className="flex w-full items-stretch gap-4">
                         <div className="w-[60%] flex flex-col items-center">

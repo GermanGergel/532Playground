@@ -94,7 +94,6 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                                     <td className={`${cellPadding} text-left`}>{index + 1}</td>
                                     <td className={`${cellPadding}`}>
                                         <div className="flex justify-center items-center w-full h-full">
-                                            {/* Увеличено смещение до 3px для точного выравнивания */}
                                             <div style={isExport ? { transform: 'translateY(3px)' } : {}}>
                                                 <TeamAvatar team={team} size="xxs" hollow={true} />
                                             </div>
@@ -136,7 +135,6 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                                     <td className={playerNameClass} title={stats.player.nickname}>{stats.player.nickname}</td>
                                     <td className={cellPadding}>
                                         <div className="flex justify-center items-center w-full h-full">
-                                            {/* Увеличено смещение до 3px для точного выравнивания */}
                                             <div style={isExport ? { transform: 'translateY(3px)' } : {}}>
                                                 <TeamAvatar team={stats.team} size="xxs" hollow={true} />
                                             </div>
@@ -369,13 +367,20 @@ export const StatisticsScreen: React.FC = () => {
                 <Button variant="secondary" onClick={() => setIsEditMode(!isEditMode)} className={`w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg transition-all duration-300 ${isEditMode ? 'shadow-[#00F2FE]/40 border-[#00F2FE] text-[#00F2FE] bg-[#00F2FE]/10' : 'shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40'}`}>GAME CORRECTION MODE</Button>
                 <Button variant="secondary" onClick={() => setIsDownloadModalOpen(true)} className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.saveTable}</Button>
             </div>
-            <div style={{ position: 'fixed', left: '-9999px', top: 0, zIndex: -1, opacity: 0, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '2rem', alignItems: 'flex-start' }} ref={exportContainerRef}>
+            <div style={{ position: 'fixed', left: '-9999px', top: 0, zIndex: -1, opacity: 0, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }} ref={exportContainerRef}>
                 <BrandedShareableReport session={activeSession} data-export-section="standings" style={{ width: '600px' }}>
-                    <div className="mb-4 text-left w-full"><BrandedHeader isExport={true} /><p className="font-chakra text-dark-text mt-8 text-xl font-medium tracking-wider uppercase">{displayDate}</p></div>
-                    <div className="p-4 w-full"><ShareableReport session={activeSession} visibleSection="standings" isExport={true} /></div>
+                    <div className="mb-2 w-full"><BrandedHeader isExport={true} /></div>
+                    <p className="font-chakra text-dark-text mb-4 text-xl font-medium tracking-wider uppercase">{displayDate}</p>
+                    <div className="w-full"><ShareableReport session={activeSession} visibleSection="standings" isExport={true} /></div>
                 </BrandedShareableReport>
-                <BrandedShareableReport session={activeSession} data-export-section="players" style={{ width: '650px', padding: '20px' }}><ShareableReport session={activeSession} visibleSection="players" isExport={true} /></BrandedShareableReport>
-                <BrandedShareableReport session={activeSession} data-export-section="rounds" style={{ width: '500px', padding: '20px' }}><ShareableReport session={activeSession} visibleSection="rounds" isExport={true} /></BrandedShareableReport>
+                <BrandedShareableReport session={activeSession} data-export-section="players" style={{ width: '650px', padding: '20px' }}>
+                    <div className="mb-2 w-full"><BrandedHeader isExport={true} /></div>
+                    <ShareableReport session={activeSession} visibleSection="players" isExport={true} />
+                </BrandedShareableReport>
+                <BrandedShareableReport session={activeSession} data-export-section="rounds" style={{ width: '500px', padding: '20px' }}>
+                    <div className="mb-2 w-full"><BrandedHeader isExport={true} /></div>
+                    <ShareableReport session={activeSession} visibleSection="rounds" isExport={true} />
+                </BrandedShareableReport>
             </div>
         </Page>
     );
