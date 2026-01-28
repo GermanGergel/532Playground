@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -23,7 +24,10 @@ const BrandedShareableReport: React.FC<{
     const containerStyle: React.CSSProperties = {
         padding: `${defaultPadding}px`,
         backgroundColor: '#1A1D24',
-        backgroundImage: `none`, // Clean background for export to avoid stripes
+        backgroundImage: `url("${homeScreenBackground}")`,
+        backgroundSize: '100% 100%',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
         boxSizing: 'border-box',
         ...style
     };
@@ -49,7 +53,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
     
     const getCardClasses = (section: 'standings' | 'players' | 'rounds') => {
         const bgClass = isExport ? 'bg-transparent' : 'bg-dark-bg';
-        const paddingClass = isExport ? 'p-4' : 'p-4';
+        const paddingClass = isExport ? 'p-4 pb-12' : 'p-4';
         const overflowClass = isExport ? '' : 'overflow-hidden';
         const heightClass = isExport ? 'h-full flex flex-col' : '';
         return `rounded-2xl ${paddingClass} border border-dark-accent-start/30 ${bgClass} w-full ${overflowClass} ${heightClass}`;
@@ -61,6 +65,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
     const roundsToDisplay = itemLimit ? finishedGames.slice(0, itemLimit) : finishedGames;
     const tableTextClass = "text-[10px] sm:text-xs text-center table-fixed border-collapse"; 
     
+    // СТРОГОЕ ВЫРАВНИВАНИЕ ДЛЯ ЭКСПОРТА
     const cellPadding = isExport ? "py-3 px-0.5 align-middle" : "py-2 px-0.5 align-middle";
     const playerNameClass = isExport ? `${cellPadding} text-left font-semibold truncate max-w-[200px] pr-2` : `${cellPadding} text-left font-semibold truncate pr-2 max-w-[80px] sm:max-w-[100px]`;
 
@@ -69,7 +74,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
             {(!visibleSection || visibleSection === 'standings') && (
             <div className={getCardClasses('standings')} style={{ boxShadow: isExport ? 'none' : '0 8px 25px -5px rgba(0, 242, 254, 0.1), 0 5px 10px -6px rgba(0, 242, 254, 0.1)' }}>
                 <h3 className={cardTitleClasses}>{t.teamStandings}</h3>
-                <div className="w-full overflow-x-auto">
+                <div className="w-full overflow-x-auto touch-pan-y overscroll-x-contain">
                     <table className={`w-full ${tableTextClass} min-w-[280px]`}>
                         <thead>
                             <tr className="text-dark-text-secondary border-b border-white/5">
@@ -89,6 +94,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                                     <td className={`${cellPadding} text-left`}>{index + 1}</td>
                                     <td className={`${cellPadding}`}>
                                         <div className="flex justify-center items-center w-full h-full">
+                                            {/* Увеличено смещение до 3px для точного выравнивания */}
                                             <div style={isExport ? { transform: 'translateY(3px)' } : {}}>
                                                 <TeamAvatar team={team} size="xxs" hollow={true} />
                                             </div>
@@ -110,7 +116,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
             {(!visibleSection || visibleSection === 'players') && (
              <div className={getCardClasses('players')} style={{ boxShadow: isExport ? 'none' : '0 8px 25px -5px rgba(0, 242, 254, 0.1), 0 5px 10px -6px rgba(0, 242, 254, 0.1)' }}>
                 <h3 className={cardTitleClasses}>{t.playerStatistics}</h3>
-                <div className="w-full overflow-x-auto">
+                <div className="w-full overflow-x-auto touch-pan-y overscroll-x-contain">
                     <table className={`w-full ${tableTextClass} min-w-[280px]`}>
                     <thead>
                             <tr className="text-dark-text-secondary border-b border-white/5">
@@ -130,6 +136,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
                                     <td className={playerNameClass} title={stats.player.nickname}>{stats.player.nickname}</td>
                                     <td className={cellPadding}>
                                         <div className="flex justify-center items-center w-full h-full">
+                                            {/* Увеличено смещение до 3px для точного выравнивания */}
                                             <div style={isExport ? { transform: 'translateY(3px)' } : {}}>
                                                 <TeamAvatar team={stats.team} size="xxs" hollow={true} />
                                             </div>
@@ -200,7 +207,7 @@ export const StatisticsScreen: React.FC = () => {
     const handleExport = async (section: 'standings' | 'players' | 'rounds') => {
         if (isExporting || !exportContainerRef.current) return;
         setIsExporting(true);
-        await new Promise(res => setTimeout(res, 100));
+        await new Promise(res => setTimeout(res, 50));
         const targetElement = exportContainerRef.current.querySelector(`[data-export-section="${section}"]`) as HTMLElement | null;
         const exportId = `export-target-${section}-${newId()}`;
         if (targetElement) {
@@ -362,20 +369,13 @@ export const StatisticsScreen: React.FC = () => {
                 <Button variant="secondary" onClick={() => setIsEditMode(!isEditMode)} className={`w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg transition-all duration-300 ${isEditMode ? 'shadow-[#00F2FE]/40 border-[#00F2FE] text-[#00F2FE] bg-[#00F2FE]/10' : 'shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40'}`}>GAME CORRECTION MODE</Button>
                 <Button variant="secondary" onClick={() => setIsDownloadModalOpen(true)} className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.saveTable}</Button>
             </div>
-            <div style={{ position: 'fixed', left: '-9999px', top: 0, zIndex: -1, opacity: 0, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }} ref={exportContainerRef}>
+            <div style={{ position: 'fixed', left: '-9999px', top: 0, zIndex: -1, opacity: 0, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '2rem', alignItems: 'flex-start' }} ref={exportContainerRef}>
                 <BrandedShareableReport session={activeSession} data-export-section="standings" style={{ width: '600px' }}>
-                    <div className="mb-2 w-full"><BrandedHeader isExport={true} /></div>
-                    <p className="font-chakra text-dark-text mb-4 text-xl font-medium tracking-wider uppercase">{displayDate}</p>
-                    <div className="w-full"><ShareableReport session={activeSession} visibleSection="standings" isExport={true} /></div>
+                    <div className="mb-4 text-left w-full"><BrandedHeader isExport={true} /><p className="font-chakra text-dark-text mt-8 text-xl font-medium tracking-wider uppercase">{displayDate}</p></div>
+                    <div className="p-4 w-full"><ShareableReport session={activeSession} visibleSection="standings" isExport={true} /></div>
                 </BrandedShareableReport>
-                <BrandedShareableReport session={activeSession} data-export-section="players" style={{ width: '650px', padding: '20px' }}>
-                    <div className="mb-2 w-full"><BrandedHeader isExport={true} /></div>
-                    <ShareableReport session={activeSession} visibleSection="players" isExport={true} />
-                </BrandedShareableReport>
-                <BrandedShareableReport session={activeSession} data-export-section="rounds" style={{ width: '500px', padding: '20px' }}>
-                    <div className="mb-2 w-full"><BrandedHeader isExport={true} /></div>
-                    <ShareableReport session={activeSession} visibleSection="rounds" isExport={true} />
-                </BrandedShareableReport>
+                <BrandedShareableReport session={activeSession} data-export-section="players" style={{ width: '650px', padding: '20px' }}><ShareableReport session={activeSession} visibleSection="players" isExport={true} /></BrandedShareableReport>
+                <BrandedShareableReport session={activeSession} data-export-section="rounds" style={{ width: '500px', padding: '20px' }}><ShareableReport session={activeSession} visibleSection="rounds" isExport={true} /></BrandedShareableReport>
             </div>
         </Page>
     );

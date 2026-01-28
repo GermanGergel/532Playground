@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export const newId = () => Math.random().toString(36).slice(2, 9);
@@ -9,18 +10,19 @@ export const hexToRgba = (hex: string, alpha: number) => {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
-// UPDATED: Clean UNIT style for export to avoid artifacts (stripes)
+// UPDATED: Standardized "UNIT" style with white-to-faded gradient as per Club Hub "Define Your" style
 export const BrandedHeader: React.FC<{className?: string; isExport?: boolean; short?: boolean}> = ({ className, isExport }) => (
-    React.createElement('header', { className: `text-center ${className} ${isExport ? 'mb-2' : ''}` },
+    React.createElement('header', { className: `text-center ${className} ${isExport ? '-mt-4' : ''}` },
         React.createElement('h1', { 
-            className: `text-6xl font-black uppercase leading-none font-russo tracking-[0.15em]`, 
+            className: `text-5xl font-black uppercase leading-none font-russo tracking-[0.2em]`, 
             style: { 
-                background: 'linear-gradient(180deg, #00F2FE 0%, #0E7490 100%)',
+                // Unified Style: White to White/20 Gradient
+                background: 'linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.2) 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                // Removed complex filters that cause artifacts in html2canvas
-                textShadow: isExport ? '0 2px 4px rgba(0,0,0,0.3)' : '0 0 20px rgba(0, 242, 254, 0.3)',
-                filter: isExport ? 'none' : 'drop-shadow(2px 2px 0px #000000)',
+                filter: `
+                    drop-shadow(4px 10px 15px rgba(0, 0, 0, 0.8))
+                `,
             } 
         }, "UNIT")
     )

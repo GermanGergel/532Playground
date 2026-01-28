@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -17,11 +18,16 @@ const BrandedShareableReport: React.FC<{
     [key: string]: any;
 }> = ({ session, children, className, style, ...props }) => {
     const PADDING = 40;
+    const homeScreenBackground = `data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 1200'%3e%3cdefs%3e%3cradialGradient id='g' cx='50%25' cy='50%25' r='50%25'%3e%3cstop offset='0%25' stop-color='%2300F2FE' stop-opacity='0.1' /%3e%3cstop offset='100%25' stop-color='%2300F2FE' stop-opacity='0' /%3e%3c/radialGradient%3e%3cfilter id='f'%3e%3cfeTurbulence type='fractalNoise' baseFrequency='0.02 0.05' numOctaves='3' /%3e%3c/filter%3e%3c/defs%3e%3crect width='100%25' height='100%25' fill='%231A1D24' /%3e%3crect x='0' y='0' width='100%25' height='100%25' fill='url(%23g)' /%3e%3crect x='0' y='0' width='100%25' height='100%25' filter='url(%23f)' opacity='0.03' /%3e%3c/svg%3e`;
+
+
     const containerStyle: React.CSSProperties = {
         padding: `${PADDING}px`,
-        paddingBottom: `${PADDING}px`,
-        backgroundColor: '#1A1D24',
-        backgroundImage: `none`, // Clean background for export to avoid stripes
+        // Fix: Added extra padding at bottom to prevent edge clipping
+        paddingBottom: `${PADDING + 40}px`,
+        backgroundImage: `url("${homeScreenBackground}")`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
         boxSizing: 'border-box',
         ...style,
     };
@@ -68,7 +74,7 @@ export const SessionReportScreen: React.FC = () => {
         if (isExporting || !exportContainerRef.current || !session) return;
         setIsExporting(true);
 
-        await new Promise(res => setTimeout(res, 100));
+        await new Promise(res => setTimeout(res, 50));
 
         const targetElement = exportContainerRef.current.querySelector(`[data-export-section="${section}"]`) as HTMLElement | null;
         const exportId = `export-target-${section}-${newId()}`;
@@ -94,10 +100,16 @@ export const SessionReportScreen: React.FC = () => {
         let newLink = prompt("YouTube Video Link:", savedLink);
         
         if (newLink !== null) {
+            // FIX: Explicitly set syncStatus to 'pending' to force the DB sync logic to pick this up
             const updatedSession = { ...session, videoUrl: newLink, syncStatus: 'pending' as const };
+            
+            // Optimistic update
             setHistory(prev => prev.map(s => s.id === session.id ? updatedSession : s));
+            
+            // Sync to Cloud
             try {
                 await saveHistoryToDB([updatedSession]);
+                // Optional: Alert user it's saving
             } catch (error) {
                 console.error("Failed to save video link to DB", error);
                 alert("Failed to save link to cloud. Check connection.");
@@ -107,6 +119,8 @@ export const SessionReportScreen: React.FC = () => {
     
     const displayDate = new Date(session.date).toLocaleString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' });
     
+    const combinedExportBackground = `data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 1200'%3e%3cdefs%3e%3cradialGradient id='g' cx='50%25' cy='50%25' r='50%25'%3e%3cstop offset='0%25' stop-color='%2300F2FE' stop-opacity='0.1' /%3e%3cstop offset='100%25' stop-color='%2300F2FE' stop-opacity='0' /%3e%3c/radialGradient%3e%3cfilter id='f'%3e%3cfeTurbulence type='fractalNoise' baseFrequency='0.02 0.05' numOctaves='3' /%3e%3c/filter%3e%3c/defs%3e%3crect width='100%25' height='100%25' fill='%231A1D24' /%3e%3crect x='0' y='0' width='100%25' height='100%25' fill='url(%23g)' /%3e%3crect x='0' y='0' width='100%25' height='100%25' filter='url(%23f)' opacity='0.03' /%3e%3c/svg%3e`;
+
     return (
         <Page>
              <Modal 
@@ -143,25 +157,34 @@ export const SessionReportScreen: React.FC = () => {
                 </div>
             </div>
 
+            {/* Hidden elements for branded export */}
             <div 
-                style={{ position: 'absolute', top: 0, left: 0, zIndex: -1, opacity: 0, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }} 
+                style={{ position: 'absolute', top: 0, left: 0, zIndex: -1, opacity: 0, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '2rem', alignItems: 'flex-start' }} 
                 ref={exportContainerRef}
             >
                 <BrandedShareableReport session={session} data-export-section="standings" style={{ width: '600px' }}>
-                    <div className="mb-2 w-full"><BrandedHeader isExport={true} /></div>
-                    <p className="font-chakra text-dark-text mb-4 text-xl font-medium tracking-wider uppercase">{displayDate}</p>
+                    <div className="mb-4 text-left w-full">
+                        <BrandedHeader isExport={true} short />
+                        <p className="font-chakra text-dark-text mt-8 text-xl font-medium tracking-wider uppercase">{displayDate}</p>
+                    </div>
                     <ShareableReport session={session} visibleSection="standings" isExport={true} />
                 </BrandedShareableReport>
 
                 <BrandedShareableReport 
                     session={session} 
                     data-export-section="players"
-                    style={{ width: '900px' }}
+                    style={{ 
+                        width: '900px',
+                        backgroundImage: `url("${combinedExportBackground}")`
+                    }}
                 >
-                    <div className="mb-2 w-full"><BrandedHeader isExport={true} /></div>
+                    {/* FIX: Using items-stretch to align bottom edges of both tables */}
                     <div className="flex w-full items-stretch gap-4">
                         <div className="w-[60%] flex flex-col items-center">
                             <ShareableReport session={session} visibleSection="players" isExport={true} />
+                            <div className="mt-8 font-bold text-lg text-white shrink-0">
+                                #532Playground #SessionReport
+                            </div>
                         </div>
                         <div className="w-[40%]">
                             <ShareableReport session={session} visibleSection="rounds" isExport={true} />

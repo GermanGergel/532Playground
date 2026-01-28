@@ -143,8 +143,8 @@ export const shareOrDownloadImages = async (elementId: string, sessionName: stri
 
         const shareData = {
             files: [file],
-            title: `UNIT CLUB`,
-            text: ``, // Removed caption to keep only the image
+            title: `532 Playground - ${sectionName}`,
+            text: `Session: ${sessionName} (${sessionDate})`,
         };
 
         const canShare = navigator.share && typeof navigator.canShare === 'function' && navigator.canShare(shareData);
