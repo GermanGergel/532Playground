@@ -265,14 +265,14 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
             const blob = await new Promise<Blob|null>(resolve => canvas.toBlob(resolve, 'image/png'));
             if (!blob) throw new Error("Blob creation failed");
     
-            const filename = `Access_Card_${player.nickname}.png`;
+            const filename = `UNIT_Access_Card_${player.nickname}.png`;
             const file = new File([blob], filename, { type: 'image/png' });
 
             // Формируем пакет данных для шеринга (Файл + Текст)
             // Это заставляет мессенджеры отправлять это как "Фото с подписью"
             const shareData = {
                 files: [file],
-                title: `Official Access: ${player.nickname}`,
+                title: `UNIT Access: ${player.nickname}`,
                 text: `Official Club Member Profile: ${profileUrl}`
             };
 
@@ -306,9 +306,9 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
                     className="w-full bg-[#1A1D24] rounded-[2rem] p-6 flex flex-col items-center gap-6 border border-[#00F2FE]/30 shadow-[0_0_30px_rgba(0,242,254,0.15)]"
                 >
                     <div className="text-center">
-                        <h1 className="font-russo text-3xl flex items-baseline justify-center">
-                            <span className="text-[#00F2FE]">532</span>
-                            <span className="text-white ml-2 text-lg tracking-widest">PLAYGROUND</span>
+                        <h1 className="font-russo text-4xl flex items-baseline justify-center">
+                            <span className="text-[#00F2FE]">UNIT</span>
+                            <span className="text-white ml-2 text-xl tracking-widest">CLUB</span>
                         </h1>
                         <p className="text-[9px] font-black tracking-[0.4em] text-white/40 mt-2 uppercase">
                             OFFICIAL ACCESS CARD

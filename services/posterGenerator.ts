@@ -106,28 +106,8 @@ export const generateAndSharePoster = async (options: PosterData) => {
         }
     }
 
-    // --- MAIN TITLE: "GAME DAY" (Stacked & Centered) ---
-    const titleBlockY = H * 0.53; // Vertical center point
-    ctx.fillStyle = '#FFFFFF';
-    ctx.shadowColor = 'rgba(0,0,0,0.7)';
-    ctx.shadowBlur = S * 6;
-    ctx.textAlign = 'center';
-
-    // Font Configuration (Huge Orbitron)
-    ctx.font = `700 ${S * 100}px "Orbitron"`; 
+    // --- MAIN TITLE: "GAME DAY" REMOVED ---
     
-    // Line 1: GAME
-    ctx.letterSpacing = `${S * 5}px`;
-    ctx.fillText("GAME", W / 2, titleBlockY);
-
-    // Line 2: DAY (Same size, directly below)
-    ctx.fillText("DAY", W / 2, titleBlockY + S * 105);
-    
-    ctx.shadowBlur = 0;
-    ctx.letterSpacing = '0px';
-    ctx.textAlign = 'left'; // Reset alignment
-
-
     // Footer
     const footerY = H - P - S * 108;
     const offsetX = S * 10;
