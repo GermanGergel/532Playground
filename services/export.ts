@@ -141,10 +141,9 @@ export const shareOrDownloadImages = async (elementId: string, sessionName: stri
         const filename = `532_${sessionName.replace(/\s/g, '_')}_${sessionDate}_${sectionName}.png`;
         const file = new File([blob], filename, { type: 'image/png' });
 
+        // Clean share data: Only the file, no text caption.
         const shareData = {
             files: [file],
-            title: `532 Playground - ${sectionName}`,
-            text: `Session: ${sessionName} (${sessionDate})`,
         };
 
         const canShare = navigator.share && typeof navigator.canShare === 'function' && navigator.canShare(shareData);
