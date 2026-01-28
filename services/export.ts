@@ -77,7 +77,7 @@ export const exportSessionAsJson = async (session: Session) => {
 
     // Метаданные всей сессии для титров
     const exportData = {
-        version: "532_PRO_VIDEO_V1",
+        version: "UNIT_PRO_VIDEO_V1",
         session_info: {
             id: session.id,
             name: session.sessionName,
@@ -97,7 +97,7 @@ export const exportSessionAsJson = async (session: Session) => {
             const handle = await (window as any).showSaveFilePicker({
                 suggestedName: filename,
                 types: [{
-                    description: '532 Video Intel JSON',
+                    description: 'UNIT Video Intel JSON',
                     accept: { 'application/json': ['.json'] },
                 }],
             });
@@ -138,7 +138,7 @@ export const shareOrDownloadImages = async (elementId: string, sessionName: stri
         const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
         if (!blob) throw new Error('Canvas to Blob conversion failed');
 
-        const filename = `532_${sessionName.replace(/\s/g, '_')}_${sessionDate}_${sectionName}.png`;
+        const filename = `UNIT_${sessionName.replace(/\s/g, '_')}_${sessionDate}_${sectionName}.png`;
         const file = new File([blob], filename, { type: 'image/png' });
 
         // Clean share data: Only the file, no text caption.
