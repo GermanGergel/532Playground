@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -8,6 +7,7 @@ import { Session, Game, Goal, Team, Player } from '../types';
 import { calculateAllStats } from '../services/statistics';
 import { shareOrDownloadImages } from '../services/export';
 import { BrandedHeader, newId } from './utils';
+import { homeScreenBackground } from '../assets';
 import { Edit3, Trash2, PlusCircle, XCircle, TransferIcon } from '../icons';
 import { useGameManager } from '../hooks/useGameManager';
 import { GoalModal, EditGoalModal, LegionnaireModal } from '../modals';
@@ -22,7 +22,8 @@ const BrandedShareableReport: React.FC<{
     const defaultPadding = 40;
     const containerStyle: React.CSSProperties = {
         padding: `${defaultPadding}px`,
-        backgroundColor: '#1A1D24', // Solid dark background for clean export
+        backgroundColor: '#1A1D24',
+        backgroundImage: `none`, // Clean background for export to avoid stripes
         boxSizing: 'border-box',
         ...style
     };
@@ -48,7 +49,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
     
     const getCardClasses = (section: 'standings' | 'players' | 'rounds') => {
         const bgClass = isExport ? 'bg-transparent' : 'bg-dark-bg';
-        const paddingClass = isExport ? 'p-4 pb-12' : 'p-4';
+        const paddingClass = isExport ? 'p-4' : 'p-4';
         const overflowClass = isExport ? '' : 'overflow-hidden';
         const heightClass = isExport ? 'h-full flex flex-col' : '';
         return `rounded-2xl ${paddingClass} border border-dark-accent-start/30 ${bgClass} w-full ${overflowClass} ${heightClass}`;
@@ -60,7 +61,6 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
     const roundsToDisplay = itemLimit ? finishedGames.slice(0, itemLimit) : finishedGames;
     const tableTextClass = "text-[10px] sm:text-xs text-center table-fixed border-collapse"; 
     
-    // СТРОГОЕ ВЫРАВНИВАНИЕ ДЛЯ ЭКСПОРТА
     const cellPadding = isExport ? "py-3 px-0.5 align-middle" : "py-2 px-0.5 align-middle";
     const playerNameClass = isExport ? `${cellPadding} text-left font-semibold truncate max-w-[200px] pr-2` : `${cellPadding} text-left font-semibold truncate pr-2 max-w-[80px] sm:max-w-[100px]`;
 
@@ -69,7 +69,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
             {(!visibleSection || visibleSection === 'standings') && (
             <div className={getCardClasses('standings')} style={{ boxShadow: isExport ? 'none' : '0 8px 25px -5px rgba(0, 242, 254, 0.1), 0 5px 10px -6px rgba(0, 242, 254, 0.1)' }}>
                 <h3 className={cardTitleClasses}>{t.teamStandings}</h3>
-                <div className="w-full overflow-x-auto touch-pan-y overscroll-x-contain">
+                <div className="w-full overflow-x-auto">
                     <table className={`w-full ${tableTextClass} min-w-[280px]`}>
                         <thead>
                             <tr className="text-dark-text-secondary border-b border-white/5">
@@ -110,7 +110,7 @@ export const ShareableReport: React.FC<ShareableReportProps> = ({ session, visib
             {(!visibleSection || visibleSection === 'players') && (
              <div className={getCardClasses('players')} style={{ boxShadow: isExport ? 'none' : '0 8px 25px -5px rgba(0, 242, 254, 0.1), 0 5px 10px -6px rgba(0, 242, 254, 0.1)' }}>
                 <h3 className={cardTitleClasses}>{t.playerStatistics}</h3>
-                <div className="w-full overflow-x-auto touch-pan-y overscroll-x-contain">
+                <div className="w-full overflow-x-auto">
                     <table className={`w-full ${tableTextClass} min-w-[280px]`}>
                     <thead>
                             <tr className="text-dark-text-secondary border-b border-white/5">
@@ -200,7 +200,7 @@ export const StatisticsScreen: React.FC = () => {
     const handleExport = async (section: 'standings' | 'players' | 'rounds') => {
         if (isExporting || !exportContainerRef.current) return;
         setIsExporting(true);
-        await new Promise(res => setTimeout(res, 50));
+        await new Promise(res => setTimeout(res, 100));
         const targetElement = exportContainerRef.current.querySelector(`[data-export-section="${section}"]`) as HTMLElement | null;
         const exportId = `export-target-${section}-${newId()}`;
         if (targetElement) {

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -9,6 +8,7 @@ import { ShareableReport } from './StatisticsScreen';
 import { YouTubeIcon } from '../icons';
 import { saveHistoryToDB } from '../db';
 
+// Re-defining BrandedShareableReport locally to avoid import issues
 const BrandedShareableReport: React.FC<{
     session: any;
     children: React.ReactNode;
@@ -19,8 +19,9 @@ const BrandedShareableReport: React.FC<{
     const PADDING = 40;
     const containerStyle: React.CSSProperties = {
         padding: `${PADDING}px`,
-        paddingBottom: `${PADDING + 40}px`,
-        backgroundColor: '#1A1D24', // Unified solid background
+        paddingBottom: `${PADDING}px`,
+        backgroundColor: '#1A1D24',
+        backgroundImage: `none`, // Clean background for export to avoid stripes
         boxSizing: 'border-box',
         ...style,
     };
@@ -67,7 +68,7 @@ export const SessionReportScreen: React.FC = () => {
         if (isExporting || !exportContainerRef.current || !session) return;
         setIsExporting(true);
 
-        await new Promise(res => setTimeout(res, 50));
+        await new Promise(res => setTimeout(res, 100));
 
         const targetElement = exportContainerRef.current.querySelector(`[data-export-section="${section}"]`) as HTMLElement | null;
         const exportId = `export-target-${section}-${newId()}`;
@@ -89,7 +90,9 @@ export const SessionReportScreen: React.FC = () => {
 
     const handleVideoLink = async () => {
         const savedLink = session.videoUrl || '';
+        
         let newLink = prompt("YouTube Video Link:", savedLink);
+        
         if (newLink !== null) {
             const updatedSession = { ...session, videoUrl: newLink, syncStatus: 'pending' as const };
             setHistory(prev => prev.map(s => s.id === session.id ? updatedSession : s));
@@ -140,7 +143,6 @@ export const SessionReportScreen: React.FC = () => {
                 </div>
             </div>
 
-            {/* Hidden elements for branded export */}
             <div 
                 style={{ position: 'absolute', top: 0, left: 0, zIndex: -1, opacity: 0, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }} 
                 ref={exportContainerRef}
@@ -160,9 +162,6 @@ export const SessionReportScreen: React.FC = () => {
                     <div className="flex w-full items-stretch gap-4">
                         <div className="w-[60%] flex flex-col items-center">
                             <ShareableReport session={session} visibleSection="players" isExport={true} />
-                            <div className="mt-8 font-bold text-lg text-white shrink-0">
-                                #532Playground #SessionReport
-                            </div>
                         </div>
                         <div className="w-[40%]">
                             <ShareableReport session={session} visibleSection="rounds" isExport={true} />
