@@ -1,7 +1,7 @@
 
 import React, { useRef, useState } from 'react';
 import { Button, Modal, useTranslation, ToggleSwitch } from '../ui';
-import { Player, SkillType, PlayerStatus, PlayerTier } from '../types';
+import { Player, SkillType, PlayerStatus, PlayerTier, PlayerHistoryEntry } from '../types';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import html2canvas from 'html2canvas';
 import { PlayerAvatar } from '../components/avatars';
@@ -83,7 +83,8 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
     const [countryCode, setCountryCode] = React.useState('');
     const [rating, setRating] = React.useState<number | string>('');
     const [currentSkills, setCurrentSkills] = React.useState<SkillType[]>([]);
-    const [activeTab, setActiveTab] = React.useState<'info' | 'skills'>('info');
+    const [historyData, setHistoryData] = React.useState<PlayerHistoryEntry[]>([]);
+    const [activeTab, setActiveTab] = React.useState<'info' | 'skills' | 'history'>('info');
     
     const getTierForRating = (rating: number): PlayerTier => {
         if (rating >= 89) return PlayerTier.Legend;
@@ -99,6 +100,8 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
             setCountryCode(playerToEdit.countryCode || '');
             setRating(playerToEdit.rating > 0 ? playerToEdit.rating : '');
             setCurrentSkills(playerToEdit.skills || []);
+            // Clone history to avoid direct mutation
+            setHistoryData(playerToEdit.historyData ? [...playerToEdit.historyData] : []);
             setActiveTab('info'); 
         }
     }, [isOpen, playerToEdit]);
@@ -119,6 +122,17 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
                 setRating(num);
             }
         }
+    };
+
+    const handleHistoryChange = (index: number, field: keyof PlayerHistoryEntry, value: string) => {
+        const newData = [...historyData];
+        if (field === 'rating') {
+            const num = parseInt(value, 10);
+            if (!isNaN(num)) newData[index].rating = num;
+        } else if (field === 'date') {
+            newData[index].date = value;
+        }
+        setHistoryData(newData);
     };
 
     const handleSave = () => {
@@ -148,9 +162,12 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
             };
         }
 
-        let updatedHistory = [...(playerToEdit.historyData || [])];
+        // Если мы меняли историю вручную, убедимся, что последняя точка истории совпадает с текущим рейтингом
+        let updatedHistory = [...historyData];
         if (updatedHistory.length > 0) {
-            updatedHistory[updatedHistory.length - 1].rating = finalRating;
+            // Optional: Force sync last history entry to current rating?
+            // For now, we trust the manual edit. 
+            // If user manually changed history, we use that.
         }
 
         const player: Player = { 
@@ -172,39 +189,90 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
 
     const neonCardClasses = "border border-dark-accent-start/40 shadow-[0_0_20px_rgba(0,242,254,0.3)]";
     const inputClasses = "w-full p-2 bg-dark-bg rounded-lg border border-dark-accent-start/40 focus:ring-2 focus:ring-dark-accent-start focus:outline-none";
-    const tabButtonClass = (isActive: boolean) => `flex-1 py-2 text-sm font-bold rounded-t-lg ${isActive ? 'bg-dark-surface' : 'bg-dark-bg/50 text-dark-text-secondary'}`;
+    const tabButtonClass = (isActive: boolean) => `flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-t-lg transition-colors ${isActive ? 'bg-dark-surface text-white' : 'bg-dark-bg/50 text-dark-text-secondary hover:text-white'}`;
 
     return (
         <Modal isOpen={isOpen} onClose={onClose} size="sm" hideCloseButton={true} containerClassName={`${neonCardClasses} !p-0`}>
-            <div className="flex">
+            <div className="flex border-b border-white/10">
                 <button onClick={() => setActiveTab('info')} className={tabButtonClass(activeTab === 'info')}>Info</button>
                 <button onClick={() => setActiveTab('skills')} className={tabButtonClass(activeTab === 'skills')}>Skills</button>
+                <button onClick={() => setActiveTab('history')} className={tabButtonClass(activeTab === 'history')}>History</button>
             </div>
             <div className="p-4 bg-dark-surface rounded-b-2xl">
                 {activeTab === 'info' && (
                      <div className="space-y-3">
-                        <input type="text" value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder={t.nickname} className={inputClasses} />
-                        <input type="text" value={surname} onChange={(e) => setSurname(e.target.value)} placeholder={t.surname} className={inputClasses} />
-                        <input type="text" value={countryCode} onChange={(e) => setCountryCode(e.target.value)} placeholder="Country (e.g., UA, BR, US)" className={inputClasses} />
-                        <input type="number" value={rating} onChange={handleRatingChange} placeholder="Overall Rating (0-100)" className={inputClasses} />
+                        <div>
+                            <label className="text-[10px] uppercase font-bold text-dark-text-secondary block mb-1">Nickname</label>
+                            <input type="text" value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder={t.nickname} className={inputClasses} />
+                        </div>
+                        <div>
+                            <label className="text-[10px] uppercase font-bold text-dark-text-secondary block mb-1">Surname</label>
+                            <input type="text" value={surname} onChange={(e) => setSurname(e.target.value)} placeholder={t.surname} className={inputClasses} />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="text-[10px] uppercase font-bold text-dark-text-secondary block mb-1">Country</label>
+                                <input type="text" value={countryCode} onChange={(e) => setCountryCode(e.target.value)} placeholder="Code (e.g. UA)" className={inputClasses} />
+                            </div>
+                            <div>
+                                <label className="text-[10px] uppercase font-bold text-dark-text-secondary block mb-1">Current OVR</label>
+                                <input type="number" value={rating} onChange={handleRatingChange} placeholder="0-100" className={inputClasses} />
+                            </div>
+                        </div>
                     </div>
                 )}
                 {activeTab === 'skills' && (
-                     <div className="grid grid-cols-2 gap-2">
+                     <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-1">
                         {ALL_SKILLS.map(skill => (
-                             <div key={skill} className="flex items-center gap-2 p-2 rounded-lg bg-dark-bg/50">
+                             <div key={skill} className="flex items-center gap-2 p-2 rounded-lg bg-dark-bg/50 border border-white/5">
                                 <ToggleSwitch 
                                     isOn={currentSkills.includes(skill)}
                                     onToggle={() => handleSkillToggle(skill)}
                                 />
-                                <span className="text-sm font-semibold">{t[`skill_${skill}` as keyof typeof t]}</span>
+                                <span className="text-[10px] font-bold uppercase">{t[`skill_${skill}` as keyof typeof t]}</span>
                             </div>
                         ))}
                     </div>
                 )}
-                <div className="flex justify-end gap-3 mt-6">
-                    <Button variant="secondary" onClick={onClose}>{t.cancel}</Button>
-                    <Button variant="primary" onClick={handleSave}>{t.saveChanges}</Button>
+                {activeTab === 'history' && (
+                    <div className="space-y-2">
+                        <div className="flex justify-between px-2 mb-1 text-[10px] uppercase font-bold text-dark-text-secondary">
+                            <span>Date</span>
+                            <span>Rating (OVR)</span>
+                        </div>
+                        <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2">
+                            {historyData.length === 0 ? (
+                                <p className="text-center text-xs text-white/30 py-4">No history data available</p>
+                            ) : (
+                                historyData.slice().reverse().map((entry, reverseIdx) => {
+                                    const actualIndex = historyData.length - 1 - reverseIdx;
+                                    return (
+                                        <div key={actualIndex} className="flex gap-3 items-center">
+                                            <input 
+                                                type="text" 
+                                                value={entry.date} 
+                                                disabled
+                                                className="w-1/2 p-2 bg-white/5 rounded border border-white/10 text-xs text-center font-mono opacity-70"
+                                            />
+                                            <input 
+                                                type="number" 
+                                                value={entry.rating} 
+                                                onChange={(e) => handleHistoryChange(actualIndex, 'rating', e.target.value)}
+                                                className="w-1/2 p-2 bg-dark-bg rounded border border-dark-accent-start/40 text-center font-bold text-[#00F2FE] focus:outline-none focus:border-[#00F2FE]"
+                                            />
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+                        <p className="text-[9px] text-white/30 text-center mt-2">
+                            Edit values to correct graph glitches.
+                        </p>
+                    </div>
+                )}
+                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-white/10">
+                    <Button variant="ghost" onClick={onClose} className="text-xs">{t.cancel}</Button>
+                    <Button variant="primary" onClick={handleSave} className="!py-2 !px-6 text-xs">{t.saveChanges}</Button>
                 </div>
             </div>
         </Modal>

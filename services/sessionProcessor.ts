@@ -128,6 +128,24 @@ export const processFinishedSession = ({
                     statsSnapshot: { rating: Math.round(newRating), tier: getTierForRating(Math.round(newRating)) },
                     priority: 5
                 });
+
+                // --- CRITICAL FIX FOR CHART ---
+                // Add a history entry for the penalty so the graph shows the drop
+                const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
+                const currentWinRate = player.totalGames > 0 ? Math.round((player.totalWins / player.totalGames) * 100) : 0;
+                
+                const penaltyHistoryEntry: PlayerHistoryEntry = {
+                    date: dateStr,
+                    rating: Math.round(newRating),
+                    winRate: currentWinRate,
+                    goals: 0,
+                    assists: 0
+                };
+                
+                const historyData = [...(player.historyData || [])];
+                historyData.push(penaltyHistoryEntry);
+                if (historyData.length > 12) historyData.shift();
+                updatedPlayer.historyData = historyData;
             }
 
             return updatedPlayer;

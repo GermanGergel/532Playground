@@ -1,3 +1,4 @@
+
 import { Session, Player, NewsItem, BadgeType, PlayerRecords, PlayerHistoryEntry } from '../types';
 import { Language } from '../translations/index';
 import {
@@ -46,20 +47,8 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
         }
 
         // 3. СИНХРОНИЗАЦИЯ ГРАФИКА И АНАЛИЗА
-        // Если рейтинг изменился (штрафом или вручную), но анализ или график отстают — лечим
-        if (migratedPlayer.lastRatingChange && migratedPlayer.lastRatingChange.newRating !== migratedPlayer.rating) {
-            migratedPlayer.lastRatingChange.newRating = migratedPlayer.rating;
-            migratedPlayer.lastRatingChange.finalChange = migratedPlayer.rating - migratedPlayer.lastRatingChange.previousRating;
-            dataRepaired = true;
-        }
-
-        if (migratedPlayer.historyData && migratedPlayer.historyData.length > 0) {
-            const lastEntry = migratedPlayer.historyData[migratedPlayer.historyData.length - 1];
-            if (lastEntry.rating !== migratedPlayer.rating) {
-                lastEntry.rating = migratedPlayer.rating;
-                dataRepaired = true;
-            }
-        }
+        // REMOVED: Aggressive history overwrite logic caused chart flattening bugs during penalties.
+        // We now trust the historyData as the "truth" of the past, even if it differs from current rating.
 
         // Стандартные миграции
         if (typeof migratedPlayer.rating === 'number' && !Number.isInteger(migratedPlayer.rating)) {
