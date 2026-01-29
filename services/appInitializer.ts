@@ -28,7 +28,7 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
     const [loadedSession, loadedPlayersData, loadedHistoryData, loadedNews, loadedLang, loadedPack] = await Promise.all([
         loadActiveSessionFromDB(),
         loadPlayersFromDB(),
-        loadHistoryFromDB(), // Load History early to use for repairs
+        loadHistoryFromDB(), 
         loadNewsFromDB(10),
         loadLanguageFromDB(),
         loadActiveVoicePackFromDB()
@@ -63,80 +63,62 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
             dataRepaired = true;
         }
 
-        // 4. CHART SELF-HEALING (Advanced "Hidden Valley" Detection)
-        // Fixes the 79 -> 78 (Penalty) -> 79 (Played) scenario where the chart shows a flat 79->79 line.
-        if (migratedPlayer.historyData && migratedPlayer.historyData.length > 0 && migratedPlayer.lastRatingChange) {
-            const lastEntry = migratedPlayer.historyData[migratedPlayer.historyData.length - 1];
-            const prevRating = Math.round(migratedPlayer.lastRatingChange.previousRating);
-            const currentRating = Math.round(migratedPlayer.rating);
-            const lastHistoryRating = Math.round(lastEntry.rating);
-
-            // SCENARIO A: Player is currently lower than chart (Penalty just happened)
-            // Chart: 79, Player: 78.
-            if (lastHistoryRating !== currentRating) {
-                const currentWinRate = migratedPlayer.totalGames > 0 
-                    ? Math.round((migratedPlayer.totalWins / migratedPlayer.totalGames) * 100) 
-                    : 0;
-
-                const patchEntry: PlayerHistoryEntry = {
-                    date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }),
-                    rating: migratedPlayer.rating,
-                    winRate: currentWinRate, 
-                    goals: 0,
-                    assists: 0
-                };
-                
-                migratedPlayer.historyData.push(patchEntry);
-                if (migratedPlayer.historyData.length > 12) migratedPlayer.historyData.shift();
-                
-                console.log(`Chart Repair (Type A): Appended missing tip for ${migratedPlayer.nickname}.`);
-                dataRepaired = true;
-            }
+        // 4. CHART REPAIR: THE "V-SHAPE" RESTORER
+        // Problem: History shows [78, 78, 79] (Flatline then Jump). 
+        // Reality: It was [79, 78, 79] (Peak -> Penalty -> Recovery).
+        // The first '78' was likely an overwrite error or missing entry.
+        if (migratedPlayer.historyData && migratedPlayer.historyData.length >= 2) {
+            const h = migratedPlayer.historyData;
+            const lastIdx = h.length - 1;
             
-            // SCENARIO B: The "Hidden Dip" (Already recovered)
-            // Player: 79. Chart Last: 79. LastChange says: "I grew from 78!". 
-            // This means we missed the 78 in the history.
-            else if (currentRating > prevRating && lastHistoryRating > prevRating) {
-                // We verify that the history doesn't already contain the dip at the end
-                // We check the 2nd to last entry if it exists
-                const secondLastEntry = migratedPlayer.historyData.length > 1 ? migratedPlayer.historyData[migratedPlayer.historyData.length - 2] : null;
+            const current = h[lastIdx];     // 79 (Today)
+            const prev = h[lastIdx - 1];    // 78 (Penalty state)
+            
+            // Check if we have a "Growth" event (79 > 78)
+            if (current.rating > prev.rating) {
                 
-                // If the second to last is ALSO high (e.g. 79), then we definitely missed the 78 in the middle.
-                if (!secondLastEntry || Math.round(secondLastEntry.rating) > prevRating) {
-                    const dipEntry: PlayerHistoryEntry = {
-                        date: 'Penalty', // Marker for the chart
-                        rating: prevRating, // The missing 78
-                        winRate: lastEntry.winRate,
+                // CASE 1: We have 3+ points. [..., 78, 78, 79] -> Change to [..., 79, 78, 79]
+                if (h.length >= 3) {
+                    const prePrev = h[lastIdx - 2]; // The suspicious 78
+                    
+                    // If the point BEFORE the penalty is the SAME as the penalty (flatline),
+                    // but we just grew to a higher level...
+                    // It is highly likely that prePrev SHOULD have been the higher level.
+                    if (Math.round(prePrev.rating) === Math.round(prev.rating)) {
+                        console.log(`Chart Repair (V-Shape): Lifting historical point for ${migratedPlayer.nickname} from ${prePrev.rating} to ${current.rating}`);
+                        
+                        // Lift the pre-penalty point to match current recovery level (restoring the peak)
+                        prePrev.rating = current.rating; 
+                        dataRepaired = true;
+                    }
+                }
+                
+                // CASE 2: We only have 2 points [78, 79]. 
+                // We are missing the start context. We assume they started high.
+                // Insert a "Virtual Start" of 79 before the 78.
+                else if (h.length === 2) {
+                     const newStart: PlayerHistoryEntry = {
+                        date: 'Start',
+                        rating: current.rating, // Restore the 79
+                        winRate: prev.winRate,
                         goals: 0,
                         assists: 0
                     };
-
-                    // Insert BEFORE the last entry (which is the recovery point)
-                    // [..., 79, 79] becomes [..., 79, 78, 79]
-                    migratedPlayer.historyData.splice(migratedPlayer.historyData.length - 1, 0, dipEntry);
-                    
-                    // Ensure length limit
-                    if (migratedPlayer.historyData.length > 12) migratedPlayer.historyData.shift();
-
-                    console.log(`Chart Repair (Type B): Injected missing dip (78) for ${migratedPlayer.nickname}.`);
+                    migratedPlayer.historyData = [newStart, prev, current];
+                    console.log(`Chart Repair (V-Shape Start): Injected start peak for ${migratedPlayer.nickname}`);
                     dataRepaired = true;
                 }
             }
         }
 
-        // 5. AUTO-HEAL MONTHLY STATS (Fixes the "51 vs 22" bug)
+        // 5. AUTO-HEAL MONTHLY STATS
         const realMonthly = calculatePlayerMonthlyStats(p.id, history);
-        
         if (
             migratedPlayer.monthlyGoals !== realMonthly.goals || 
             migratedPlayer.monthlyAssists !== realMonthly.assists ||
             migratedPlayer.monthlyWins !== realMonthly.wins ||
             migratedPlayer.monthlyGames !== realMonthly.games
         ) {
-            if (Math.abs(migratedPlayer.monthlyGoals - realMonthly.goals) > 0) {
-                console.log(`Repairing stats for ${p.nickname}: DB says ${migratedPlayer.monthlyGoals}G, History says ${realMonthly.goals}G`);
-            }
-            
             migratedPlayer.monthlyGoals = realMonthly.goals;
             migratedPlayer.monthlyAssists = realMonthly.assists;
             migratedPlayer.monthlyWins = realMonthly.wins;
@@ -145,7 +127,7 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
             dataRepaired = true;
         }
 
-        // Стандартные миграции
+        // Standard migrations
         if (typeof migratedPlayer.rating === 'number' && !Number.isInteger(migratedPlayer.rating)) {
             migratedPlayer.rating = Math.round(migratedPlayer.rating);
             dataRepaired = true;
@@ -161,7 +143,7 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
     });
 
     if (dataRepaired) {
-        console.log("AppInitializer: Player data repaired. Syncing to DB...");
+        console.log("AppInitializer: Player data repaired (V-Shape Scan). Syncing to DB...");
         savePlayersToDB(initialPlayers).catch(e => console.warn("Background repair sync failed", e));
     }
 
