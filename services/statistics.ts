@@ -193,31 +193,49 @@ export const calculatePlayerMonthlyStats = (playerId: string, history: Session[]
         const sDate = new Date(session.date);
         // Strict check: Must be same Month AND Year, and session must be completed
         if (sDate.getMonth() === currentMonth && sDate.getFullYear() === currentYear && session.status === 'completed') {
-            // Check if player participated in this session
-            const team = session.teams.find(t => t.playerIds.includes(playerId));
             
-            if (team) {
+            // Check if player exists in the pool (participated in session)
+            const playerInSession = session.playerPool.some(p => p.id === playerId);
+            
+            if (playerInSession) {
                 stats.sessions++;
+                
+                // Identify default team (if any) - used as fallback
+                const defaultTeam = session.teams.find(t => t.playerIds.includes(playerId));
                 
                 // Iterate through finished games in this session
                 session.games.forEach(game => {
                     if (game.status === 'finished') {
-                        // Check if player's team was part of this game
-                        const isTeam1 = game.team1Id === team.id;
-                        const isTeam2 = game.team2Id === team.id;
                         
-                        if (isTeam1 || isTeam2) {
+                        // 1. COUNT INDIVIDUAL STATS (Independent of team association)
+                        // This fixes the "Missing Assist" bug when playing as Legionnaire
+                        game.goals.forEach(g => {
+                            if (g.scorerId === playerId && !g.isOwnGoal) stats.goals++;
+                            if (g.assistantId === playerId) stats.assists++;
+                        });
+
+                        // 2. DETERMINE IF PLAYER PLAYED THIS MATCH (For Wins/Games)
+                        let playedForTeamId: string | undefined;
+
+                        // Priority A: Explicit Legionnaire Move
+                        const legionnaireMove = game.legionnaireMoves?.find(m => 
+                            m.playerId === playerId && (m.toTeamId === game.team1Id || m.toTeamId === game.team2Id)
+                        );
+
+                        if (legionnaireMove) {
+                            playedForTeamId = legionnaireMove.toTeamId;
+                        } else if (defaultTeam) {
+                            // Priority B: Default Team (only if that team played)
+                            if (game.team1Id === defaultTeam.id) playedForTeamId = defaultTeam.id;
+                            else if (game.team2Id === defaultTeam.id) playedForTeamId = defaultTeam.id;
+                        }
+                        
+                        // If we identified a team they played for, count game/win
+                        if (playedForTeamId) {
                             stats.games++;
-                            
-                            if (game.winnerTeamId === team.id) {
+                            if (game.winnerTeamId === playedForTeamId) {
                                 stats.wins++;
                             }
-
-                            // Sum Goals & Assists
-                            game.goals.forEach(g => {
-                                if (g.scorerId === playerId && !g.isOwnGoal) stats.goals++;
-                                if (g.assistantId === playerId) stats.assists++;
-                            });
                         }
                     }
                 });
