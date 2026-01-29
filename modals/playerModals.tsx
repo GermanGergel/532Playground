@@ -187,10 +187,35 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
             };
         }
 
-        // Если мы меняли историю вручную, убедимся, что последняя точка истории совпадает с текущим рейтингом
         let updatedHistory = [...historyData];
         
-        // Optional: Sort history by date if needed, but manual order gives user control
+        // --- SMART SORTING ALGORITHM ---
+        // Automatically sorts dates chronologically to fix "22nd appearing after 29th" bug.
+        // Also handles year rollover (Dec -> Jan).
+        updatedHistory.sort((a, b) => {
+            const getTimestamp = (dStr: string) => {
+                const parts = dStr.split('/');
+                if (parts.length !== 2) return 0;
+                const d = parseInt(parts[0], 10);
+                const m = parseInt(parts[1], 10);
+                if (isNaN(d) || isNaN(m)) return 0;
+                
+                const now = new Date();
+                const currentMonth = now.getMonth() + 1;
+                const currentYear = now.getFullYear();
+                
+                // Heuristic for year rollover (e.g. Dec -> Jan)
+                // If entry month is significantly ahead of current month (e.g. > +6), it's likely from late last year.
+                // E.g. Now is Jan (1). Date is Dec (12). 12 > 1 + 6. Assume last year.
+                let year = currentYear;
+                if (m > currentMonth + 6) {
+                    year = year - 1;
+                }
+                
+                return new Date(year, m - 1, d).getTime();
+            };
+            return getTimestamp(a.date) - getTimestamp(b.date);
+        });
         
         const player: Player = { 
             ...playerToEdit, 
