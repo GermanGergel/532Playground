@@ -63,15 +63,17 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
             dataRepaired = true;
         }
 
-        // 4. CHART SELF-HEALING (Fixing the "Missing Dip" Bug)
-        if (migratedPlayer.historyData && migratedPlayer.historyData.length > 0) {
+        // 4. CHART SELF-HEALING (Advanced "Hidden Valley" Detection)
+        // Fixes the 79 -> 78 (Penalty) -> 79 (Played) scenario where the chart shows a flat 79->79 line.
+        if (migratedPlayer.historyData && migratedPlayer.historyData.length > 0 && migratedPlayer.lastRatingChange) {
             const lastEntry = migratedPlayer.historyData[migratedPlayer.historyData.length - 1];
-            
-            // If the rating on the chart (lastEntry) doesn't match the actual player rating
-            // (e.g., chart says 79, but player is 78 due to a penalty that wasn't logged)
-            if (Math.round(lastEntry.rating) !== Math.round(migratedPlayer.rating)) {
-                
-                // Calculate current win rate to prevent the line from crashing to 0 on the second axis
+            const prevRating = Math.round(migratedPlayer.lastRatingChange.previousRating);
+            const currentRating = Math.round(migratedPlayer.rating);
+            const lastHistoryRating = Math.round(lastEntry.rating);
+
+            // SCENARIO A: Player is currently lower than chart (Penalty just happened)
+            // Chart: 79, Player: 78.
+            if (lastHistoryRating !== currentRating) {
                 const currentWinRate = migratedPlayer.totalGames > 0 
                     ? Math.round((migratedPlayer.totalWins / migratedPlayer.totalGames) * 100) 
                     : 0;
@@ -79,7 +81,7 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
                 const patchEntry: PlayerHistoryEntry = {
                     date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }),
                     rating: migratedPlayer.rating,
-                    winRate: currentWinRate, // Use career average to keep visual consistency
+                    winRate: currentWinRate, 
                     goals: 0,
                     assists: 0
                 };
@@ -87,13 +89,42 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
                 migratedPlayer.historyData.push(patchEntry);
                 if (migratedPlayer.historyData.length > 12) migratedPlayer.historyData.shift();
                 
-                console.log(`Chart Self-Healing: Patched history for ${migratedPlayer.nickname}. Chart synced to ${migratedPlayer.rating}.`);
+                console.log(`Chart Repair (Type A): Appended missing tip for ${migratedPlayer.nickname}.`);
                 dataRepaired = true;
+            }
+            
+            // SCENARIO B: The "Hidden Dip" (Already recovered)
+            // Player: 79. Chart Last: 79. LastChange says: "I grew from 78!". 
+            // This means we missed the 78 in the history.
+            else if (currentRating > prevRating && lastHistoryRating > prevRating) {
+                // We verify that the history doesn't already contain the dip at the end
+                // We check the 2nd to last entry if it exists
+                const secondLastEntry = migratedPlayer.historyData.length > 1 ? migratedPlayer.historyData[migratedPlayer.historyData.length - 2] : null;
+                
+                // If the second to last is ALSO high (e.g. 79), then we definitely missed the 78 in the middle.
+                if (!secondLastEntry || Math.round(secondLastEntry.rating) > prevRating) {
+                    const dipEntry: PlayerHistoryEntry = {
+                        date: 'Penalty', // Marker for the chart
+                        rating: prevRating, // The missing 78
+                        winRate: lastEntry.winRate,
+                        goals: 0,
+                        assists: 0
+                    };
+
+                    // Insert BEFORE the last entry (which is the recovery point)
+                    // [..., 79, 79] becomes [..., 79, 78, 79]
+                    migratedPlayer.historyData.splice(migratedPlayer.historyData.length - 1, 0, dipEntry);
+                    
+                    // Ensure length limit
+                    if (migratedPlayer.historyData.length > 12) migratedPlayer.historyData.shift();
+
+                    console.log(`Chart Repair (Type B): Injected missing dip (78) for ${migratedPlayer.nickname}.`);
+                    dataRepaired = true;
+                }
             }
         }
 
         // 5. AUTO-HEAL MONTHLY STATS (Fixes the "51 vs 22" bug)
-        // We recalculate true monthly stats from history and overwrite the "dirty" DB value.
         const realMonthly = calculatePlayerMonthlyStats(p.id, history);
         
         if (
@@ -102,7 +133,6 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
             migratedPlayer.monthlyWins !== realMonthly.wins ||
             migratedPlayer.monthlyGames !== realMonthly.games
         ) {
-            // Only log if the difference is significant to avoid console spam
             if (Math.abs(migratedPlayer.monthlyGoals - realMonthly.goals) > 0) {
                 console.log(`Repairing stats for ${p.nickname}: DB says ${migratedPlayer.monthlyGoals}G, History says ${realMonthly.goals}G`);
             }
@@ -132,7 +162,6 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
 
     if (dataRepaired) {
         console.log("AppInitializer: Player data repaired. Syncing to DB...");
-        // This acts as the "Self-Healing" mechanism
         savePlayersToDB(initialPlayers).catch(e => console.warn("Background repair sync failed", e));
     }
 
