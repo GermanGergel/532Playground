@@ -116,6 +116,23 @@ export const processFinishedSession = ({
                     badgesEarned: []
                 };
 
+                // --- CRITICAL FIX: LOG PENALTY TO HISTORY ---
+                // This ensures the chart shows the dip immediately, even if they don't play.
+                const penaltyHistoryEntry: PlayerHistoryEntry = {
+                    date: new Date(session.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }),
+                    rating: Math.round(newRating),
+                    // Use 0 for session stats since they didn't play
+                    winRate: 0, 
+                    goals: 0,
+                    assists: 0
+                };
+                
+                const historyData = [...(updatedPlayer.historyData || [])];
+                historyData.push(penaltyHistoryEntry);
+                if (historyData.length > 12) historyData.shift();
+                updatedPlayer.historyData = historyData;
+                // --------------------------------------------
+
                 penaltyNews.push({
                     id: newId(),
                     playerId: player.id,
