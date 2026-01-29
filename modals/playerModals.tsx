@@ -5,7 +5,6 @@ import { Player, SkillType, PlayerStatus, PlayerTier, PlayerHistoryEntry } from 
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import html2canvas from 'html2canvas';
 import { PlayerAvatar } from '../components/avatars';
-import { Trash2, Plus } from '../icons';
 
 // --- PLAYER ADD MODAL ---
 export interface PlayerAddModalProps {
@@ -84,8 +83,7 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
     const [countryCode, setCountryCode] = React.useState('');
     const [rating, setRating] = React.useState<number | string>('');
     const [currentSkills, setCurrentSkills] = React.useState<SkillType[]>([]);
-    const [historyData, setHistoryData] = React.useState<PlayerHistoryEntry[]>([]);
-    const [activeTab, setActiveTab] = React.useState<'info' | 'skills' | 'history'>('info');
+    const [activeTab, setActiveTab] = React.useState<'info' | 'skills'>('info');
     
     const getTierForRating = (rating: number): PlayerTier => {
         if (rating >= 89) return PlayerTier.Legend;
@@ -101,8 +99,6 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
             setCountryCode(playerToEdit.countryCode || '');
             setRating(playerToEdit.rating > 0 ? playerToEdit.rating : '');
             setCurrentSkills(playerToEdit.skills || []);
-            // Clone history to avoid direct mutation
-            setHistoryData(playerToEdit.historyData ? [...playerToEdit.historyData] : []);
             setActiveTab('info'); 
         }
     }, [isOpen, playerToEdit]);
@@ -123,41 +119,6 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
                 setRating(num);
             }
         }
-    };
-
-    const handleHistoryChange = (index: number, field: keyof PlayerHistoryEntry, value: string) => {
-        const newData = [...historyData];
-        if (field === 'rating') {
-            const num = parseInt(value, 10);
-            if (!isNaN(num)) newData[index].rating = num;
-        } else if (field === 'date') {
-            newData[index].date = value;
-        }
-        setHistoryData(newData);
-    };
-
-    const handleAddHistoryEntry = () => {
-        const today = new Date();
-        const dateStr = today.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }); // e.g. 22/01
-        
-        // Use current rating as default for new entry
-        const currentRating = typeof rating === 'number' ? rating : 0;
-        
-        const newEntry: PlayerHistoryEntry = {
-            date: dateStr,
-            rating: currentRating,
-            winRate: 0,
-            goals: 0,
-            assists: 0
-        };
-        
-        setHistoryData([...historyData, newEntry]);
-    };
-
-    const handleRemoveHistoryEntry = (index: number) => {
-        const newData = [...historyData];
-        newData.splice(index, 1);
-        setHistoryData(newData);
     };
 
     const handleSave = () => {
@@ -187,36 +148,6 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
             };
         }
 
-        let updatedHistory = [...historyData];
-        
-        // --- SMART SORTING ALGORITHM ---
-        // Automatically sorts dates chronologically to fix "22nd appearing after 29th" bug.
-        // Also handles year rollover (Dec -> Jan).
-        updatedHistory.sort((a, b) => {
-            const getTimestamp = (dStr: string) => {
-                const parts = dStr.split('/');
-                if (parts.length !== 2) return 0;
-                const d = parseInt(parts[0], 10);
-                const m = parseInt(parts[1], 10);
-                if (isNaN(d) || isNaN(m)) return 0;
-                
-                const now = new Date();
-                const currentMonth = now.getMonth() + 1;
-                const currentYear = now.getFullYear();
-                
-                // Heuristic for year rollover (e.g. Dec -> Jan)
-                // If entry month is significantly ahead of current month (e.g. > +6), it's likely from late last year.
-                // E.g. Now is Jan (1). Date is Dec (12). 12 > 1 + 6. Assume last year.
-                let year = currentYear;
-                if (m > currentMonth + 6) {
-                    year = year - 1;
-                }
-                
-                return new Date(year, m - 1, d).getTime();
-            };
-            return getTimestamp(a.date) - getTimestamp(b.date);
-        });
-        
         const player: Player = { 
             ...playerToEdit, 
             nickname, 
@@ -228,7 +159,8 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
             skills: currentSkills,
             status: newStatus,
             lastRatingChange: updatedLastRatingChange,
-            historyData: updatedHistory
+            // Preserve history exactly as it is in the database
+            historyData: playerToEdit.historyData 
         };
         onSave(player);
         onClose();
@@ -243,7 +175,6 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
             <div className="flex border-b border-white/10">
                 <button onClick={() => setActiveTab('info')} className={tabButtonClass(activeTab === 'info')}>Info</button>
                 <button onClick={() => setActiveTab('skills')} className={tabButtonClass(activeTab === 'skills')}>Skills</button>
-                <button onClick={() => setActiveTab('history')} className={tabButtonClass(activeTab === 'history')}>History</button>
             </div>
             <div className="p-4 bg-dark-surface rounded-b-2xl">
                 {activeTab === 'info' && (
@@ -279,63 +210,6 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
                                 <span className="text-[10px] font-bold uppercase">{t[`skill_${skill}` as keyof typeof t]}</span>
                             </div>
                         ))}
-                    </div>
-                )}
-                {activeTab === 'history' && (
-                    <div className="space-y-2">
-                        <div className="flex justify-between px-2 mb-1 text-[10px] uppercase font-bold text-dark-text-secondary">
-                            <span>Date</span>
-                            <span>Rating (OVR)</span>
-                            <span className="w-6"></span>
-                        </div>
-                        <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 custom-hub-scrollbar">
-                            {historyData.length === 0 ? (
-                                <p className="text-center text-xs text-white/30 py-4">No history data available</p>
-                            ) : (
-                                // Map in reverse for display (newest first usually), but we need correct index for deletion
-                                historyData.slice().reverse().map((entry, reverseIdx) => {
-                                    const actualIndex = historyData.length - 1 - reverseIdx;
-                                    return (
-                                        <div key={actualIndex} className="flex gap-2 items-center animate-in slide-in-from-right-4 fade-in duration-300">
-                                            <input 
-                                                type="text" 
-                                                value={entry.date} 
-                                                onChange={(e) => handleHistoryChange(actualIndex, 'date', e.target.value)}
-                                                className="w-1/2 p-2 bg-white/5 rounded border border-white/10 text-xs text-center font-mono focus:border-[#00F2FE] focus:outline-none"
-                                                placeholder="DD/MM"
-                                            />
-                                            <input 
-                                                type="number" 
-                                                value={entry.rating} 
-                                                onChange={(e) => handleHistoryChange(actualIndex, 'rating', e.target.value)}
-                                                className="w-1/2 p-2 bg-dark-bg rounded border border-dark-accent-start/40 text-center font-bold text-[#00F2FE] focus:outline-none focus:border-[#00F2FE]"
-                                            />
-                                            <button 
-                                                onClick={() => handleRemoveHistoryEntry(actualIndex)}
-                                                className="p-2 text-white/20 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    );
-                                })
-                            )}
-                        </div>
-                        
-                        <div className="pt-2 mt-2 border-t border-white/10">
-                            <Button 
-                                variant="secondary" 
-                                onClick={handleAddHistoryEntry}
-                                className="w-full flex items-center justify-center gap-2 !py-2 !text-xs font-bold shadow-none border-dashed border-white/20 hover:border-[#00F2FE] hover:text-[#00F2FE] bg-transparent"
-                            >
-                                <Plus className="w-4 h-4" />
-                                ADD ENTRY
-                            </Button>
-                        </div>
-
-                        <p className="text-[9px] text-white/30 text-center mt-2">
-                            Add missing dates (e.g. penalties) to fix graph gaps.
-                        </p>
                     </div>
                 )}
                 <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-white/10">
