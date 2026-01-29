@@ -10,16 +10,49 @@ export const formatDate = (date: Date) => {
 };
 
 /**
- * Расширенный экспорт для видео-продакшена.
- * Включает real_timestamp и полные объекты игроков.
+ * Расширенный экспорт для видео-продакшена (Broadcast Ready).
+ * Генерирует JSON, который можно скормить в Remotion или Adobe After Effects scripts.
  */
 export const exportSessionAsJson = async (session: Session) => {
-    const { eventLog, playerPool } = session;
+    const { eventLog, playerPool, teams, games } = session;
+
+    // 1. Подготовка метаданных команд для оверлея
+    const teamsMeta = teams.map(t => ({
+        id: t.id,
+        name: t.name,
+        color: t.color,
+        logo: t.logo || null,
+        roster_ids: t.playerIds
+    }));
+
+    // 2. Подготовка базы игроков для титров (Lineups / Goal Cards)
+    const playersMeta = playerPool.map(p => ({
+        id: p.id,
+        nickname: p.nickname,
+        surname: p.surname,
+        number: 0, // В будущем можно добавить игровые номера
+        avatar_url: p.photo || p.playerCard || null,
+        country: p.countryCode,
+        stats: {
+            rating: p.rating,
+            tier: p.tier
+        }
+    }));
+
+    // 3. Синхронизация таймлайна
+    // Находим первое событие начала игры, чтобы считать relative_time (секунды от начала матча)
+    const firstGameStart = eventLog.find(e => e.type === EventType.TIMER_START || e.type === EventType.START_ROUND);
+    const sessionStartTime = firstGameStart ? new Date(firstGameStart.timestamp).getTime() : new Date(session.createdAt).getTime();
 
     const formattedLog = eventLog.map(log => {
+        const logTime = new Date(log.timestamp).getTime();
+        const relativeSeconds = (logTime - sessionStartTime) / 1000;
+
         const base = {
-            timestamp: log.timestamp, // ISO string
-            real_timestamp: new Date(log.timestamp).getTime(), // Unix ms для точной синхронизации
+            id: `evt_${logTime}`,
+            timestamp_iso: log.timestamp, 
+            timestamp_unix: logTime,
+            relative_time_sec: relativeSeconds, // Ключевое поле для синхронизации с видео
             round: log.round,
             type: log.type,
         };
@@ -33,22 +66,23 @@ export const exportSessionAsJson = async (session: Session) => {
             return {
                 id: p.id,
                 nickname: p.nickname,
-                surname: p.surname,
-                rating: p.rating,
-                tier: p.tier,
                 photo: p.photo,
-                skills: p.skills
+                tier: p.tier
             };
         };
 
         switch (log.type) {
             case EventType.GOAL:
                 const goalPayload = log.payload as GoalPayload;
+                // Находим текущий счет на момент этого лога
+                // (Это сложно вычислить "на лету" в видео-редакторе, лучше дать готовым)
                 payload = {
                     team_color: goalPayload.team,
                     is_own_goal: goalPayload.isOwnGoal || false,
                     scorer: getPlayerData(goalPayload.scorer),
                     assist: getPlayerData(goalPayload.assist),
+                    // Добавляем ID команды для связи с teamMeta
+                    team_id: teams.find(t => t.color === goalPayload.team)?.id
                 };
                 break;
             case EventType.SUBSTITUTION:
@@ -62,42 +96,57 @@ export const exportSessionAsJson = async (session: Session) => {
             case EventType.START_ROUND:
                 const startPayload = log.payload as StartRoundPayload;
                 payload = {
-                    left_team: startPayload.leftTeam,
-                    right_team: startPayload.rightTeam,
-                    left_players: startPayload.leftPlayers.map(n => getPlayerData(n)),
-                    right_players: startPayload.rightPlayers.map(n => getPlayerData(n)),
+                    left_team_color: startPayload.leftTeam,
+                    right_team_color: startPayload.rightTeam,
+                    left_team_id: teams.find(t => t.color === startPayload.leftTeam)?.id,
+                    right_team_id: teams.find(t => t.color === startPayload.rightTeam)?.id,
                 };
                 break;
             default:
                 payload = log.payload;
         }
 
-        return { ...base, payload };
+        return { ...base, data: payload };
     });
 
-    // Метаданные всей сессии для титров
+    // Метаданные всей сессии
     const exportData = {
-        version: "UNIT_PRO_VIDEO_V1",
+        version: "UNIT_BROADCAST_V2",
+        generated_at: new Date().toISOString(),
         session_info: {
             id: session.id,
             name: session.sessionName,
             date: session.date,
-            location: session.location,
+            location: session.location || "Unit Stadium",
             weather: session.weather
         },
-        events: formattedLog.sort((a, b) => a.real_timestamp - b.real_timestamp)
+        assets: {
+            teams: teamsMeta,
+            players: playersMeta
+        },
+        // Сгруппированные матчи для удобства нарезки
+        matches: games.map(g => ({
+            game_number: g.gameNumber,
+            team_1_id: g.team1Id,
+            team_2_id: g.team2Id,
+            final_score: `${g.team1Score} - ${g.team2Score}`,
+            winner_id: g.winnerTeamId,
+            duration_sec: g.durationSeconds
+        })),
+        // Полный лог событий для наложения
+        timeline: formattedLog.sort((a, b) => a.timestamp_unix - b.timestamp_unix)
     };
 
     const dataStr = JSON.stringify(exportData, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const filename = `PRO_VIDEO_${session.sessionName.replace(/\s/g, '_')}_${session.date}.json`;
+    const filename = `UNIT_BROADCAST_${session.sessionName.replace(/\s/g, '_')}_${session.date}.json`;
 
     if ('showSaveFilePicker' in window) {
         try {
             const handle = await (window as any).showSaveFilePicker({
                 suggestedName: filename,
                 types: [{
-                    description: 'UNIT Video Intel JSON',
+                    description: 'UNIT Broadcast JSON',
                     accept: { 'application/json': ['.json'] },
                 }],
             });
@@ -141,7 +190,6 @@ export const shareOrDownloadImages = async (elementId: string, sessionName: stri
         const filename = `UNIT_${sessionName.replace(/\s/g, '_')}_${sessionDate}_${sectionName}.png`;
         const file = new File([blob], filename, { type: 'image/png' });
 
-        // Clean share data: Only the file, no text caption.
         const shareData = {
             files: [file],
         };
