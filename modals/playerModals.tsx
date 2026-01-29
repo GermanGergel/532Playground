@@ -5,6 +5,7 @@ import { Player, SkillType, PlayerStatus, PlayerTier, PlayerHistoryEntry } from 
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import html2canvas from 'html2canvas';
 import { PlayerAvatar } from '../components/avatars';
+import { Trash2, Plus } from '../icons';
 
 // --- PLAYER ADD MODAL ---
 export interface PlayerAddModalProps {
@@ -135,6 +136,30 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
         setHistoryData(newData);
     };
 
+    const handleAddHistoryEntry = () => {
+        const today = new Date();
+        const dateStr = today.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }); // e.g. 22/01
+        
+        // Use current rating as default for new entry
+        const currentRating = typeof rating === 'number' ? rating : 0;
+        
+        const newEntry: PlayerHistoryEntry = {
+            date: dateStr,
+            rating: currentRating,
+            winRate: 0,
+            goals: 0,
+            assists: 0
+        };
+        
+        setHistoryData([...historyData, newEntry]);
+    };
+
+    const handleRemoveHistoryEntry = (index: number) => {
+        const newData = [...historyData];
+        newData.splice(index, 1);
+        setHistoryData(newData);
+    };
+
     const handleSave = () => {
         if (!playerToEdit) return;
         
@@ -164,12 +189,9 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
 
         // Если мы меняли историю вручную, убедимся, что последняя точка истории совпадает с текущим рейтингом
         let updatedHistory = [...historyData];
-        if (updatedHistory.length > 0) {
-            // Optional: Force sync last history entry to current rating?
-            // For now, we trust the manual edit. 
-            // If user manually changed history, we use that.
-        }
-
+        
+        // Optional: Sort history by date if needed, but manual order gives user control
+        
         const player: Player = { 
             ...playerToEdit, 
             nickname, 
@@ -239,20 +261,23 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
                         <div className="flex justify-between px-2 mb-1 text-[10px] uppercase font-bold text-dark-text-secondary">
                             <span>Date</span>
                             <span>Rating (OVR)</span>
+                            <span className="w-6"></span>
                         </div>
-                        <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2">
+                        <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2 custom-hub-scrollbar">
                             {historyData.length === 0 ? (
                                 <p className="text-center text-xs text-white/30 py-4">No history data available</p>
                             ) : (
+                                // Map in reverse for display (newest first usually), but we need correct index for deletion
                                 historyData.slice().reverse().map((entry, reverseIdx) => {
                                     const actualIndex = historyData.length - 1 - reverseIdx;
                                     return (
-                                        <div key={actualIndex} className="flex gap-3 items-center">
+                                        <div key={actualIndex} className="flex gap-2 items-center animate-in slide-in-from-right-4 fade-in duration-300">
                                             <input 
                                                 type="text" 
                                                 value={entry.date} 
-                                                disabled
-                                                className="w-1/2 p-2 bg-white/5 rounded border border-white/10 text-xs text-center font-mono opacity-70"
+                                                onChange={(e) => handleHistoryChange(actualIndex, 'date', e.target.value)}
+                                                className="w-1/2 p-2 bg-white/5 rounded border border-white/10 text-xs text-center font-mono focus:border-[#00F2FE] focus:outline-none"
+                                                placeholder="DD/MM"
                                             />
                                             <input 
                                                 type="number" 
@@ -260,13 +285,31 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
                                                 onChange={(e) => handleHistoryChange(actualIndex, 'rating', e.target.value)}
                                                 className="w-1/2 p-2 bg-dark-bg rounded border border-dark-accent-start/40 text-center font-bold text-[#00F2FE] focus:outline-none focus:border-[#00F2FE]"
                                             />
+                                            <button 
+                                                onClick={() => handleRemoveHistoryEntry(actualIndex)}
+                                                className="p-2 text-white/20 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
                                         </div>
                                     );
                                 })
                             )}
                         </div>
+                        
+                        <div className="pt-2 mt-2 border-t border-white/10">
+                            <Button 
+                                variant="secondary" 
+                                onClick={handleAddHistoryEntry}
+                                className="w-full flex items-center justify-center gap-2 !py-2 !text-xs font-bold shadow-none border-dashed border-white/20 hover:border-[#00F2FE] hover:text-[#00F2FE] bg-transparent"
+                            >
+                                <Plus className="w-4 h-4" />
+                                ADD ENTRY
+                            </Button>
+                        </div>
+
                         <p className="text-[9px] text-white/30 text-center mt-2">
-                            Edit values to correct graph glitches.
+                            Add missing dates (e.g. penalties) to fix graph gaps.
                         </p>
                     </div>
                 )}
