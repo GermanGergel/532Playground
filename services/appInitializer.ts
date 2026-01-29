@@ -1,4 +1,3 @@
-
 import { Session, Player, NewsItem, BadgeType, PlayerRecords, PlayerHistoryEntry } from '../types';
 import { Language } from '../translations/index';
 import {
@@ -12,7 +11,6 @@ import {
     savePlayersToDB
 } from '../db';
 import { getTierForRating } from './rating';
-import { calculatePlayerMonthlyStats } from './statistics';
 
 interface InitialAppState {
     session: Session | null;
@@ -24,18 +22,9 @@ interface InitialAppState {
 }
 
 export const initializeAppState = async (): Promise<InitialAppState> => {
-    // 1. LOAD DATA IN PARALLEL (Optimized)
-    const [loadedSession, loadedPlayersData, loadedHistoryData, loadedNews, loadedLang, loadedPack] = await Promise.all([
-        loadActiveSessionFromDB(),
-        loadPlayersFromDB(),
-        loadHistoryFromDB(), 
-        loadNewsFromDB(10),
-        loadLanguageFromDB(),
-        loadActiveVoicePackFromDB()
-    ]);
-
+    const loadedSession = await loadActiveSessionFromDB() || null;
+    const loadedPlayersData = await loadPlayersFromDB();
     let initialPlayers: Player[] = Array.isArray(loadedPlayersData) ? loadedPlayersData : [];
-    const history: Session[] = Array.isArray(loadedHistoryData) ? loadedHistoryData : [];
     
     let dataRepaired = false;
 
@@ -57,77 +46,22 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
         }
 
         // 3. СИНХРОНИЗАЦИЯ ГРАФИКА И АНАЛИЗА
+        // Если рейтинг изменился (штрафом или вручную), но анализ или график отстают — лечим
         if (migratedPlayer.lastRatingChange && migratedPlayer.lastRatingChange.newRating !== migratedPlayer.rating) {
             migratedPlayer.lastRatingChange.newRating = migratedPlayer.rating;
             migratedPlayer.lastRatingChange.finalChange = migratedPlayer.rating - migratedPlayer.lastRatingChange.previousRating;
             dataRepaired = true;
         }
 
-        // 4. CHART REPAIR: THE "V-SHAPE" RESTORER
-        // Problem: History shows [78, 78, 79] (Flatline then Jump). 
-        // Reality: It was [79, 78, 79] (Peak -> Penalty -> Recovery).
-        // The first '78' was likely an overwrite error or missing entry.
-        if (migratedPlayer.historyData && migratedPlayer.historyData.length >= 2) {
-            const h = migratedPlayer.historyData;
-            const lastIdx = h.length - 1;
-            
-            const current = h[lastIdx];     // 79 (Today)
-            const prev = h[lastIdx - 1];    // 78 (Penalty state)
-            
-            // Check if we have a "Growth" event (79 > 78)
-            if (current.rating > prev.rating) {
-                
-                // CASE 1: We have 3+ points. [..., 78, 78, 79] -> Change to [..., 79, 78, 79]
-                if (h.length >= 3) {
-                    const prePrev = h[lastIdx - 2]; // The suspicious 78
-                    
-                    // If the point BEFORE the penalty is the SAME as the penalty (flatline),
-                    // but we just grew to a higher level...
-                    // It is highly likely that prePrev SHOULD have been the higher level.
-                    if (Math.round(prePrev.rating) === Math.round(prev.rating)) {
-                        console.log(`Chart Repair (V-Shape): Lifting historical point for ${migratedPlayer.nickname} from ${prePrev.rating} to ${current.rating}`);
-                        
-                        // Lift the pre-penalty point to match current recovery level (restoring the peak)
-                        prePrev.rating = current.rating; 
-                        dataRepaired = true;
-                    }
-                }
-                
-                // CASE 2: We only have 2 points [78, 79]. 
-                // We are missing the start context. We assume they started high.
-                // Insert a "Virtual Start" of 79 before the 78.
-                else if (h.length === 2) {
-                     const newStart: PlayerHistoryEntry = {
-                        date: 'Start',
-                        rating: current.rating, // Restore the 79
-                        winRate: prev.winRate,
-                        goals: 0,
-                        assists: 0
-                    };
-                    migratedPlayer.historyData = [newStart, prev, current];
-                    console.log(`Chart Repair (V-Shape Start): Injected start peak for ${migratedPlayer.nickname}`);
-                    dataRepaired = true;
-                }
+        if (migratedPlayer.historyData && migratedPlayer.historyData.length > 0) {
+            const lastEntry = migratedPlayer.historyData[migratedPlayer.historyData.length - 1];
+            if (lastEntry.rating !== migratedPlayer.rating) {
+                lastEntry.rating = migratedPlayer.rating;
+                dataRepaired = true;
             }
         }
 
-        // 5. AUTO-HEAL MONTHLY STATS
-        const realMonthly = calculatePlayerMonthlyStats(p.id, history);
-        if (
-            migratedPlayer.monthlyGoals !== realMonthly.goals || 
-            migratedPlayer.monthlyAssists !== realMonthly.assists ||
-            migratedPlayer.monthlyWins !== realMonthly.wins ||
-            migratedPlayer.monthlyGames !== realMonthly.games
-        ) {
-            migratedPlayer.monthlyGoals = realMonthly.goals;
-            migratedPlayer.monthlyAssists = realMonthly.assists;
-            migratedPlayer.monthlyWins = realMonthly.wins;
-            migratedPlayer.monthlyGames = realMonthly.games;
-            migratedPlayer.monthlySessionsPlayed = realMonthly.sessions;
-            dataRepaired = true;
-        }
-
-        // Standard migrations
+        // Стандартные миграции
         if (typeof migratedPlayer.rating === 'number' && !Number.isInteger(migratedPlayer.rating)) {
             migratedPlayer.rating = Math.round(migratedPlayer.rating);
             dataRepaired = true;
@@ -143,16 +77,20 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
     });
 
     if (dataRepaired) {
-        console.log("AppInitializer: Player data repaired (V-Shape Scan). Syncing to DB...");
         savePlayersToDB(initialPlayers).catch(e => console.warn("Background repair sync failed", e));
     }
 
+    const loadedHistoryData = await loadHistoryFromDB();
+    const loadedNews = await loadNewsFromDB(10);
+    const loadedLang = await loadLanguageFromDB() || 'en';
+    const loadedPack = await loadActiveVoicePackFromDB() || 1;
+
     return {
-        session: loadedSession || null,
+        session: loadedSession,
         players: initialPlayers,
-        history: history,
+        history: Array.isArray(loadedHistoryData) ? loadedHistoryData : [],
         newsFeed: Array.isArray(loadedNews) ? loadedNews : [],
-        language: loadedLang || 'en',
-        activeVoicePack: loadedPack || 1,
+        language: loadedLang,
+        activeVoicePack: loadedPack,
     };
 };

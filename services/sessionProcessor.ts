@@ -96,6 +96,8 @@ export const processFinishedSession = ({
                 }
             }
 
+            // Note: We do NOT reset monthly stats here. They are reset visually in UI if date is old,
+            // or reset permanently when they play their next game in a new month.
             const updatedPlayer = {
                 ...player,
                 consecutiveMissedSessions: currentMissed,
@@ -113,22 +115,6 @@ export const processFinishedSession = ({
                     newRating: Math.round(newRating),
                     badgesEarned: []
                 };
-
-                // --- CRITICAL FIX: LOG PENALTY TO HISTORY IMMEDIATELY ---
-                // This prevents the "flat line" bug for future sessions.
-                const penaltyHistoryEntry: PlayerHistoryEntry = {
-                    date: new Date(session.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }),
-                    rating: Math.round(newRating),
-                    winRate: 0, // No win rate change
-                    goals: 0,
-                    assists: 0
-                };
-                
-                const historyData = [...(updatedPlayer.historyData || [])];
-                historyData.push(penaltyHistoryEntry);
-                if (historyData.length > 12) historyData.shift();
-                updatedPlayer.historyData = historyData;
-                // -------------------------------------------------------
 
                 penaltyNews.push({
                     id: newId(),
