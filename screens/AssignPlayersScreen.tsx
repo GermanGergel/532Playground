@@ -94,12 +94,7 @@ const DraftSetupModal: React.FC<{
             version: 1
         };
 
-        const result = await createDraftSession(draftState);
-        
-        if (result.mode === 'local' && isSupabaseConfigured()) {
-            alert("⚠️ WARNING: Draft saved LOCALLY only.\n\nCould not connect to Cloud. Other phones will NOT see this draft.");
-        }
-
+        await createDraftSession(draftState);
         navigate(`/draft/${draftId}`);
     };
 
