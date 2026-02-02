@@ -3,9 +3,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { DraftState, Game, GameStatus, EventLogEntry, EventType, StartRoundPayload, Player, SessionStatus } from '../types';
-import { getDraftSession, updateDraftState, subscribeToDraft, saveRemoteActiveSession } from '../db';
+import { getDraftSession, updateDraftState, subscribeToDraft, saveRemoteActiveSession, isSupabaseConfigured } from '../db';
 import { PlayerAvatar } from '../components/avatars';
-import { Users, CheckCircle, Wand, Share2, Play } from '../icons'; 
+import { Users, CheckCircle, Wand, Share2, Play, Cloud } from '../icons'; 
 import { newId, BrandedHeader } from './utils';
 import { Modal, Button } from '../ui';
 import html2canvas from 'html2canvas';
@@ -19,10 +19,6 @@ const brandTextStyle: React.CSSProperties = {
 };
 
 // ... (Existing CaptainDraftCard, MiniDraftCard, RecapPlayerCard, RecapView components remain unchanged) ...
-// To save space in this response, I'm focusing on the logic change in DraftScreen component below.
-// Assume the sub-components are present here as they were in the original file.
-
-// --- REAL PLAYER CARD STYLE FOR CAPTAINS ---
 const CaptainDraftCard: React.FC<{ 
     player: Player; 
     teamColor: string; 
@@ -320,6 +316,7 @@ export const DraftScreen: React.FC = () => {
     const [isPinModalOpen, setIsPinModalOpen] = useState(false);
     const [teamToAuth, setTeamToAuth] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isError, setIsError] = useState(false);
     
     const [isAdminMode, setIsAdminMode] = useState(true);
     const [isManualMode, setIsManualMode] = useState(false);
@@ -341,15 +338,33 @@ export const DraftScreen: React.FC = () => {
 
     useEffect(() => {
         if (!draftId) return;
+        
+        let isMounted = true;
         const load = async () => {
+            // Set a timeout to show error if not loaded quickly
+            const timeout = setTimeout(() => {
+                if (isMounted && !draft) {
+                    setIsError(true);
+                }
+            }, 8000); // 8 seconds timeout
+
             const data = await getDraftSession(draftId);
-            if (data) setDraft(data);
+            if (isMounted) {
+                if (data) {
+                    setDraft(data);
+                    clearTimeout(timeout);
+                }
+            }
         };
         load();
         const subscription = subscribeToDraft(draftId, (newState) => {
-            setDraft(newState);
+            if (isMounted) {
+                setDraft(newState);
+                setIsError(false); // recover if update comes in
+            }
         });
         return () => {
+            isMounted = false;
             // @ts-ignore
             if (subscription && typeof subscription.unsubscribe === 'function') subscription.unsubscribe();
         };
@@ -541,11 +556,32 @@ export const DraftScreen: React.FC = () => {
         else { copyToClipboard(window.location.href, "LINK COPIED"); }
     };
 
+    if (isError) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-[#0a0c10] text-white p-6 text-center">
+                <Cloud className="w-16 h-16 text-red-500 mb-6 opacity-80" />
+                <h2 className="font-russo text-2xl uppercase mb-2">Connection Failed</h2>
+                <p className="text-white/50 text-sm max-w-xs mb-8">
+                    Could not retrieve Draft Session data from Cloud.
+                </p>
+                <div className="bg-white/5 p-4 rounded-xl border border-white/10 text-xs text-left w-full max-w-xs space-y-2">
+                    <p><span className="text-[#00F2FE] font-bold">POSSIBLE CAUSES:</span></p>
+                    <ul className="list-disc pl-4 space-y-1 text-white/60">
+                        <li>Admin device failed to sync to cloud.</li>
+                        <li>Database Realtime is disabled.</li>
+                        <li>Incorrect URL/ID.</li>
+                    </ul>
+                </div>
+                <Button variant="secondary" className="mt-8" onClick={() => window.location.reload()}>Retry Connection</Button>
+            </div>
+        );
+    }
+
     if (!draft) return (
         <div className="flex items-center justify-center min-h-screen bg-[#0a0c10] text-white">
             <div className="flex flex-col items-center gap-4">
                 <div className="w-12 h-12 border-4 border-[#00F2FE] border-t-transparent rounded-full animate-spin"></div>
-                <p className="font-chakra font-bold tracking-widest uppercase text-center">Connecting to Unit Server...</p>
+                <p className="font-chakra font-bold tracking-widest uppercase text-center animate-pulse">Connecting to Unit Server...</p>
             </div>
         </div>
     );

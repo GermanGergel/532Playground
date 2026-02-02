@@ -565,13 +565,13 @@ export const getAnalyticsSummary = async (): Promise<{ total: Record<string, num
 
 // --- DRAFT DB LOGIC (LOCAL & CLOUD) ---
 
-export const createDraftSession = async (draft: DraftState): Promise<boolean> => {
+export const createDraftSession = async (draft: DraftState): Promise<{ success: boolean; mode: 'cloud' | 'local' }> => {
     // 1. Always save locally first for quick access / offline mode
     await set(`draft_${draft.id}`, draft);
     
     if (!isSupabaseConfigured()) {
         console.log("Draft created locally (Offline Mode)");
-        return true; 
+        return { success: true, mode: 'local' };
     }
 
     try {
@@ -582,11 +582,16 @@ export const createDraftSession = async (draft: DraftState): Promise<boolean> =>
                 pin: draft.pin,
                 state: draft 
             }, { onConflict: 'id' });
-        if (error) throw error;
-        return true;
+        
+        if (error) {
+            console.error("Supabase Error:", error);
+            throw error;
+        }
+        return { success: true, mode: 'cloud' };
     } catch (error) {
         console.error("Draft cloud create error (falling back to local):", error);
-        return true; // Return true to allow navigation even if cloud fails
+        // Important: Return success=true but mode=local so UI can warn user
+        return { success: true, mode: 'local' }; 
     }
 };
 
@@ -610,10 +615,13 @@ export const updateDraftState = async (draft: DraftState): Promise<boolean> => {
 };
 
 export const getDraftSession = async (draftId: string): Promise<DraftState | null> => {
-    // 1. Try local first
+    // 1. Try local first (Fastest for Admin)
     const local = await get<DraftState>(`draft_${draftId}`);
     
-    if (!isSupabaseConfigured()) return local || null;
+    if (local) return local;
+
+    // 2. If not local (Captain Phone), try Cloud
+    if (!isSupabaseConfigured()) return null;
 
     try {
         const { data, error } = await supabase!
@@ -621,11 +629,16 @@ export const getDraftSession = async (draftId: string): Promise<DraftState | nul
             .select('state')
             .eq('id', draftId)
             .maybeSingle();
-        if (error) throw error;
-        // Merge strategy: Server wins if available, else local
-        return data?.state || local || null;
+        
+        if (error) {
+            console.error("Supabase Fetch Error:", error);
+            return null;
+        }
+        
+        return data?.state || null;
     } catch (error) {
-        return local || null;
+        console.error("Critical Fetch Error:", error);
+        return null;
     }
 };
 
