@@ -248,7 +248,7 @@ export interface NewsItem {
 export interface DraftState {
     id: string; // Draft ID (UUID)
     pin: string; // PIN for captains
-    status: 'waiting' | 'active' | 'completed';
+    status: 'waiting' | 'active' | 'completed' | 'finished_view'; // Added finished_view for splash screen
     teams: DraftTeam[];
     availablePlayerIds: string[];
     currentTurnIndex: number; // Index in the snake order

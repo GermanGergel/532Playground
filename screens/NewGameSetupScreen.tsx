@@ -6,7 +6,7 @@ import { Page, Button, Card, ToggleSwitch, useTranslation } from '../ui';
 import { Session, RotationMode, SessionStatus } from '../types';
 import { formatDate } from '../services/export';
 import { newId } from './utils';
-import { getRemoteActiveSession, isSupabaseConfigured } from '../db';
+import { getRemoteActiveSession, isSupabaseConfigured, saveActiveSessionToDB } from '../db';
 import { Cloud } from '../icons';
 
 export const NewGameSetupScreen: React.FC = () => {
@@ -47,6 +47,7 @@ export const NewGameSetupScreen: React.FC = () => {
     };
     
     // --- LOAD FROM CLOUD (Admin feature for Draft Handoff) ---
+    // HARD FETCH IMPLEMENTATION: Clears local before fetching to prevent zombie sessions
     const handleLoadFromCloud = async () => {
         if (!isSupabaseConfigured()) {
             alert("Cloud database not configured.");
@@ -55,14 +56,22 @@ export const NewGameSetupScreen: React.FC = () => {
         
         setIsLoadingCloud(true);
         try {
+            // 1. Force Clear Local State First
+            setActiveSession(null);
+            await saveActiveSessionToDB(null);
+
+            // 2. Fetch fresh from Cloud
             const remoteSession = await getRemoteActiveSession();
+            
             if (remoteSession) {
-                // Confirm overwrite implicitly by action
+                // 3. Set new session (overwriting any potential ghosts)
                 setActiveSession(remoteSession);
-                alert("Session loaded from cloud successfully!");
-                navigate('/match'); // Jump straight to match assuming it's ready from Draft
+                await saveActiveSessionToDB(remoteSession);
+                
+                alert("Cloud Sync Successful: Local cache overwritten.");
+                navigate('/match'); 
             } else {
-                alert("No active session found in cloud storage.");
+                alert("Cloud Storage is Empty. Local session cleared.");
             }
         } catch (error) {
             console.error("Cloud load failed", error);
@@ -167,7 +176,7 @@ export const NewGameSetupScreen: React.FC = () => {
                             <Cloud className="w-4 h-4 group-hover:scale-110 transition-transform" />
                         )}
                         <span className="text-[10px] font-black uppercase tracking-widest">
-                            {isLoadingCloud ? "DOWNLOADING..." : "LOAD CLOUD SESSION"}
+                            {isLoadingCloud ? "SYNCING..." : "LOAD CLOUD SESSION"}
                         </span>
                     </button>
                 </div>

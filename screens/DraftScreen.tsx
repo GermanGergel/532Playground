@@ -5,7 +5,7 @@ import { useApp } from '../context';
 import { DraftState, Game, GameStatus, EventLogEntry, EventType, StartRoundPayload, Player, SessionStatus } from '../types';
 import { getDraftSession, updateDraftState, subscribeToDraft, saveRemoteActiveSession } from '../db';
 import { PlayerAvatar } from '../components/avatars';
-import { Users, CheckCircle, Wand, Share2, Play, Key } from '../icons'; 
+import { Users, CheckCircle, Wand, Share2, Play, Key, RefreshCw } from '../icons'; 
 import { newId, BrandedHeader } from './utils';
 import { Modal, Button } from '../ui';
 import html2canvas from 'html2canvas';
@@ -17,6 +17,25 @@ const brandTextStyle: React.CSSProperties = {
     WebkitTextFillColor: 'transparent',
     filter: 'drop-shadow(1px 1px 0px #0E7490) drop-shadow(2px 2px 0px #000000)',
 };
+
+// --- SPLASH SCREEN FOR PLAYERS ---
+const FinalSplashScreen: React.FC = () => (
+    <div className="fixed inset-0 z-[200] bg-[#0a0c10] flex flex-col items-center justify-center animate-in fade-in duration-1000">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#00F2FE]/10 via-[#0a0c10] to-black pointer-events-none"></div>
+        <div className="relative z-10 flex flex-col items-center">
+            <h1 className="font-blackops text-6xl md:text-8xl text-[#00F2FE] tracking-tighter drop-shadow-[0_0_20px_rgba(0,242,254,0.6)] animate-pulse">
+                UNIT
+            </h1>
+            <div className="h-px w-32 bg-white/20 my-6"></div>
+            <h2 className="font-russo text-2xl md:text-4xl text-white uppercase tracking-widest text-center leading-relaxed">
+                SEE YOU<br/>ON THE PITCH
+            </h2>
+            <p className="mt-8 font-mono text-xs text-white/30 uppercase tracking-[0.3em]">
+                SESSION INITIALIZED
+            </p>
+        </div>
+    </div>
+);
 
 // --- REAL PLAYER CARD STYLE FOR CAPTAINS ---
 const CaptainDraftCard: React.FC<{ 
@@ -335,6 +354,7 @@ export const DraftScreen: React.FC = () => {
     const [isPinModalOpen, setIsPinModalOpen] = useState(false);
     const [teamToAuth, setTeamToAuth] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [isSyncing, setIsSyncing] = useState(false);
     
     // --- AUTH LOGIC (LOCALSTORAGE) ---
     // Only the device that created the draft is "Admin"
@@ -363,21 +383,60 @@ export const DraftScreen: React.FC = () => {
         setIsAdminMode(localStorage.getItem(`draft_admin_${draftId}`) === 'true');
     }, [draftId]);
 
+    // --- FORCE SYNC POLLING ---
+    // Poll every 3 seconds to keep clients in sync and prevent "frozen captain"
     useEffect(() => {
         if (!draftId) return;
-        const load = async () => {
-            const data = await getDraftSession(draftId);
-            if (data) setDraft(data);
+
+        const syncDraft = async () => {
+            // Only poll if draft is not finished (to save resources) or if we are actively drafting
+            if (draft?.status === 'finished_view') return; 
+            
+            const remoteData = await getDraftSession(draftId);
+            if (remoteData) {
+                // Determine if we need to update state
+                setDraft(prev => {
+                    // Simple check: if version differs or if turn index differs
+                    // But for now, just always updating is safer for the "Frozen" issue
+                    // We can optimize deep comparison later if needed.
+                    if (JSON.stringify(prev) !== JSON.stringify(remoteData)) {
+                        return remoteData;
+                    }
+                    return prev;
+                });
+            }
         };
-        load();
+
+        // Initial Load
+        syncDraft();
+
+        // Polling Interval
+        const intervalId = setInterval(syncDraft, 3000); 
+
+        // Realtime Subscription (Keep this as primary, polling as backup)
         const subscription = subscribeToDraft(draftId, (newState) => {
             setDraft(newState);
         });
+
         return () => {
+            clearInterval(intervalId);
             // @ts-ignore
             if (subscription && typeof subscription.unsubscribe === 'function') subscription.unsubscribe();
         };
-    }, [draftId]);
+    }, [draftId, draft?.status]); // Re-run effect if status changes to finished to stop polling? Actually keeping it running is safer until unmount.
+
+    const handleForceRefresh = async () => {
+        if (!draftId || isSyncing) return;
+        setIsSyncing(true);
+        const data = await getDraftSession(draftId);
+        if (data) {
+            setDraft(data);
+            notify("SYNCED");
+        } else {
+            notify("SYNC FAILED");
+        }
+        setIsSyncing(false);
+    };
 
     const handleCaptainAuth = async () => {
         if (draft && teamToAuth && pinInput === draft.pin) {
@@ -462,6 +521,11 @@ export const DraftScreen: React.FC = () => {
 
     const handleConfirmAndPlay = async () => {
         if (!draft || !activeSession) return;
+        
+        // 1. First, set draft status to 'finished_view' so captains see splash screen
+        const finishingDraft = { ...draft, status: 'finished_view' as const };
+        await updateDraftState(finishingDraft);
+
         const finalTeams = draft.teams.map(dt => ({ id: dt.id, color: dt.color, name: dt.name, playerIds: dt.playerIds, consecutiveGames: 0, bigStars: 0 }));
         let rotationQueue: string[] | undefined;
         let teamsForFirstGame = [...finalTeams];
@@ -493,10 +557,10 @@ export const DraftScreen: React.FC = () => {
 
         const newSession = { ...activeSession, teams: finalTeams, games: [firstGame], eventLog: [startRoundEvent], rotationQueue, status: SessionStatus.Active };
         
-        // 1. SET LOCAL SESSION
+        // 2. SET LOCAL SESSION
         setActiveSession(newSession);
         
-        // 2. SAVE TO CLOUD (HANDOFF)
+        // 3. SAVE TO CLOUD (HANDOFF)
         await saveRemoteActiveSession(newSession);
         
         navigate('/match');
@@ -588,6 +652,22 @@ export const DraftScreen: React.FC = () => {
         </div>
     );
 
+    // --- PHASE B: FINISHED SCREEN ---
+    if (draft.status === 'finished_view' && !isAdminMode) {
+        return <FinalSplashScreen />;
+    }
+
+    // --- PHASE A: COMPLETED (RECAP) VIEW ---
+    if (draft.status === 'completed' && !isAdminMode) {
+        return (
+            <div className="min-h-screen bg-[#0a0c10] overflow-y-auto">
+                <div className="p-4 md:p-8">
+                    <RecapView draft={draft} allPlayers={allPlayers} isExport={false} />
+                </div>
+            </div>
+        );
+    }
+
     const currentTeamId = draft.status === 'active' ? draft.pickOrder[draft.currentTurnIndex] : null;
     const activeTeamColor = draft.teams.find(t => t.id === currentTeamId)?.color;
     const poolPlayers = allPlayers.filter(p => draft.availablePlayerIds.includes(p.id)).sort((a,b) => b.rating - a.rating);
@@ -615,6 +695,12 @@ export const DraftScreen: React.FC = () => {
                                 <button onClick={() => setIsManualMode(!isManualMode)} className={headerBtnStyle(isManualMode, '#FFD700')}>MANUAL</button>
                                 <button onClick={() => { setIsAdminMode(!isAdminMode); setIsManualMode(false); }} className={headerBtnStyle(isAdminMode, '#00F2FE')}>ADMIN</button>
                             </>
+                        )}
+                        {!isCreator && (
+                            // Refresh Button for Captains
+                            <button onClick={handleForceRefresh} disabled={isSyncing} className={`w-8 h-8 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-white/50 hover:text-white transition-all ${isSyncing ? 'animate-spin text-[#00F2FE]' : ''}`}>
+                                <RefreshCw className="w-4 h-4" />
+                            </button>
                         )}
                     </div>
 
