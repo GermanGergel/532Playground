@@ -263,6 +263,19 @@ export const getRemoteActiveSession = async (): Promise<Session | null> => {
     }
 };
 
+// ** NEW FUNCTION: Fix for zombie sessions **
+export const clearRemoteActiveSession = async (): Promise<boolean> => {
+    if (!isSupabaseConfigured()) return false;
+    try {
+        const { error } = await supabase!.from('settings').delete().eq('key', 'remote_active_session');
+        if (error) throw error;
+        return true;
+    } catch (e) {
+        console.error("Failed to clear remote session", e);
+        return false;
+    }
+};
+
 export const saveHistoryLocalOnly = async (h: Session[]) => {
     const sorted = [...h].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     await set('history', sorted);

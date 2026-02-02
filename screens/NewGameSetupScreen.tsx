@@ -2,12 +2,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-import { Page, Button, Card, ToggleSwitch, useTranslation } from '../ui';
+import { Page, Button, Card, ToggleSwitch, useTranslation, Modal } from '../ui';
 import { Session, RotationMode, SessionStatus } from '../types';
 import { formatDate } from '../services/export';
 import { newId } from './utils';
-import { getRemoteActiveSession, isSupabaseConfigured, saveActiveSessionToDB } from '../db';
-import { Cloud } from '../icons';
+import { getRemoteActiveSession, isSupabaseConfigured, saveActiveSessionToDB, clearRemoteActiveSession } from '../db';
+import { Cloud, Trash2, CheckCircle } from '../icons';
 
 export const NewGameSetupScreen: React.FC = () => {
     const { setActiveSession } = useApp();
@@ -23,7 +23,9 @@ export const NewGameSetupScreen: React.FC = () => {
     
     // State for Cloud Sync Feature
     const [isLoadingCloud, setIsLoadingCloud] = useState(false);
-    
+    const [foundRemoteSession, setFoundRemoteSession] = useState<Session | null>(null);
+    const [isConflictModalOpen, setIsConflictModalOpen] = useState(false);
+
     const handleSubmit = () => {
         const isRotationApplicable = numTeams >= 3;
         const newSession: Session = {
@@ -47,7 +49,7 @@ export const NewGameSetupScreen: React.FC = () => {
     };
     
     // --- LOAD FROM CLOUD (Admin feature for Draft Handoff) ---
-    // HARD FETCH IMPLEMENTATION: Clears local before fetching to prevent zombie sessions
+    // STEP 1: Fetch and check. Do not load automatically to prevent zombie overwrites.
     const handleLoadFromCloud = async () => {
         if (!isSupabaseConfigured()) {
             alert("Cloud database not configured.");
@@ -56,28 +58,50 @@ export const NewGameSetupScreen: React.FC = () => {
         
         setIsLoadingCloud(true);
         try {
-            // 1. Force Clear Local State First
-            setActiveSession(null);
-            await saveActiveSessionToDB(null);
-
-            // 2. Fetch fresh from Cloud
+            // Fetch fresh from Cloud Settings
             const remoteSession = await getRemoteActiveSession();
             
             if (remoteSession) {
-                // 3. Set new session (overwriting any potential ghosts)
-                setActiveSession(remoteSession);
-                await saveActiveSessionToDB(remoteSession);
-                
-                alert("Cloud Sync Successful: Local cache overwritten.");
-                navigate('/match'); 
+                setFoundRemoteSession(remoteSession);
+                setIsConflictModalOpen(true);
             } else {
-                alert("Cloud Storage is Empty. Local session cleared.");
+                alert("Cloud Storage is Empty.");
+                // Ensure local is clear just in case
+                setActiveSession(null);
+                await saveActiveSessionToDB(null);
             }
         } catch (error) {
             console.error("Cloud load failed", error);
-            alert("Failed to load session from cloud.");
+            alert("Failed to connect to cloud.");
         } finally {
             setIsLoadingCloud(false);
+        }
+    };
+
+    // STEP 2A: User Confirms Load
+    const handleConfirmLoad = async () => {
+        if (foundRemoteSession) {
+            setActiveSession(foundRemoteSession);
+            await saveActiveSessionToDB(foundRemoteSession);
+            setIsConflictModalOpen(false);
+            navigate('/match');
+        }
+    };
+
+    // STEP 2B: User Deletes Zombie Session
+    const handleClearCloud = async () => {
+        if (window.confirm("Are you sure? This will delete the session data from the cloud so it stops appearing.")) {
+            setIsLoadingCloud(true);
+            try {
+                await clearRemoteActiveSession();
+                setFoundRemoteSession(null);
+                setIsConflictModalOpen(false);
+                alert("Cloud cache cleared.");
+            } catch (e) {
+                alert("Failed to clear cloud.");
+            } finally {
+                setIsLoadingCloud(false);
+            }
         }
     };
 
@@ -181,6 +205,65 @@ export const NewGameSetupScreen: React.FC = () => {
                     </button>
                 </div>
             </div>
+
+            {/* --- CONFLICT RESOLUTION MODAL --- */}
+            <Modal 
+                isOpen={isConflictModalOpen} 
+                onClose={() => setIsConflictModalOpen(false)} 
+                size="sm" 
+                hideCloseButton
+                containerClassName="!bg-[#1A1D24] border border-[#00F2FE]/40 shadow-[0_0_40px_rgba(0,242,254,0.15)]"
+            >
+                <div className="flex flex-col gap-4 text-center">
+                    <div className="flex justify-center mb-2">
+                        <div className="w-12 h-12 rounded-full bg-[#00F2FE]/10 flex items-center justify-center border border-[#00F2FE]/30">
+                            <Cloud className="w-6 h-6 text-[#00F2FE]" />
+                        </div>
+                    </div>
+                    
+                    <h2 className="text-xl font-black text-white uppercase tracking-wider">Session Found</h2>
+                    
+                    <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                        <p className="text-sm font-bold text-[#00F2FE] uppercase">{foundRemoteSession?.sessionName || 'Unnamed Session'}</p>
+                        <p className="text-[10px] text-white/50 font-mono mt-1 uppercase tracking-wider">
+                            {foundRemoteSession?.date} • {foundRemoteSession?.numTeams} Teams
+                        </p>
+                    </div>
+                    
+                    <p className="text-xs text-white/60 leading-relaxed px-2">
+                        A session handoff data was found in the cloud. Do you want to load it to start the match, or delete it?
+                    </p>
+
+                    <div className="flex flex-col gap-3 mt-2">
+                        <Button 
+                            variant="primary" 
+                            onClick={handleConfirmLoad}
+                            className="w-full !py-3 shadow-[0_0_15px_rgba(0,242,254,0.3)]"
+                        >
+                            LOAD SESSION
+                        </Button>
+                        
+                        <div className="flex gap-3">
+                            <Button 
+                                variant="secondary" 
+                                onClick={handleClearCloud}
+                                className="flex-1 !py-3 border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50"
+                            >
+                                <div className="flex items-center justify-center gap-2">
+                                    <Trash2 className="w-4 h-4" /> <span>DELETE</span>
+                                </div>
+                            </Button>
+                            <Button 
+                                variant="secondary" 
+                                onClick={() => setIsConflictModalOpen(false)}
+                                className="flex-1 !py-3"
+                            >
+                                CANCEL
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </Modal>
         </Page>
     );
 };
