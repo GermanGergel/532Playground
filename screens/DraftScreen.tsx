@@ -23,15 +23,15 @@ const FinalSplashScreen: React.FC = () => (
     <div className="fixed inset-0 z-[200] bg-[#0a0c10] flex flex-col items-center justify-center animate-in fade-in duration-1000">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#00F2FE]/10 via-[#0a0c10] to-black pointer-events-none"></div>
         <div className="relative z-10 flex flex-col items-center">
-            <h1 className="font-blackops text-6xl md:text-8xl text-[#00F2FE] tracking-tighter drop-shadow-[0_0_20px_rgba(0,242,254,0.6)] animate-pulse">
+            <h1 className="font-blackops text-6xl md:text-8xl text-[#00F2FE] tracking-tighter drop-shadow-[0_0_20px_rgba(0,242,254,0.6)]">
                 UNIT
             </h1>
             <div className="h-px w-32 bg-white/20 my-6"></div>
             <h2 className="font-russo text-2xl md:text-4xl text-white uppercase tracking-widest text-center leading-relaxed">
-                SEE YOU<br/>ON THE PITCH
+                DEPLOYMENT<br/>CONFIRMED
             </h2>
             <p className="mt-8 font-mono text-xs text-white/30 uppercase tracking-[0.3em]">
-                SESSION INITIALIZED
+                PREPARE FOR BATTLE
             </p>
         </div>
     </div>
@@ -354,7 +354,6 @@ export const DraftScreen: React.FC = () => {
     const [isPinModalOpen, setIsPinModalOpen] = useState(false);
     const [teamToAuth, setTeamToAuth] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
-    const [isSyncing, setIsSyncing] = useState(false);
     
     // --- AUTH LOGIC (LOCALSTORAGE) ---
     // Only the device that created the draft is "Admin"
@@ -424,19 +423,6 @@ export const DraftScreen: React.FC = () => {
             if (subscription && typeof subscription.unsubscribe === 'function') subscription.unsubscribe();
         };
     }, [draftId, draft?.status]); // Re-run effect if status changes to finished to stop polling? Actually keeping it running is safer until unmount.
-
-    const handleForceRefresh = async () => {
-        if (!draftId || isSyncing) return;
-        setIsSyncing(true);
-        const data = await getDraftSession(draftId);
-        if (data) {
-            setDraft(data);
-            notify("SYNCED");
-        } else {
-            notify("SYNC FAILED");
-        }
-        setIsSyncing(false);
-    };
 
     const handleCaptainAuth = async () => {
         if (draft && teamToAuth && pinInput === draft.pin) {
@@ -695,12 +681,6 @@ export const DraftScreen: React.FC = () => {
                                 <button onClick={() => setIsManualMode(!isManualMode)} className={headerBtnStyle(isManualMode, '#FFD700')}>MANUAL</button>
                                 <button onClick={() => { setIsAdminMode(!isAdminMode); setIsManualMode(false); }} className={headerBtnStyle(isAdminMode, '#00F2FE')}>ADMIN</button>
                             </>
-                        )}
-                        {!isCreator && (
-                            // Refresh Button for Captains
-                            <button onClick={handleForceRefresh} disabled={isSyncing} className={`w-8 h-8 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-white/50 hover:text-white transition-all ${isSyncing ? 'animate-spin text-[#00F2FE]' : ''}`}>
-                                <RefreshCw className="w-4 h-4" />
-                            </button>
                         )}
                     </div>
 
