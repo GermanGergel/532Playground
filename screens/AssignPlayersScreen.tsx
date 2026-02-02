@@ -95,6 +95,10 @@ const DraftSetupModal: React.FC<{
         };
 
         await createDraftSession(draftState);
+        
+        // MARK THIS DEVICE AS ADMIN
+        localStorage.setItem(`draft_admin_${draftId}`, 'true');
+        
         navigate(`/draft/${draftId}`);
     };
 

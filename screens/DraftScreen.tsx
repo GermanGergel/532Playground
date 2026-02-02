@@ -18,10 +18,6 @@ const brandTextStyle: React.CSSProperties = {
     filter: 'drop-shadow(1px 1px 0px #0E7490) drop-shadow(2px 2px 0px #000000)',
 };
 
-// ... (Existing CaptainDraftCard, MiniDraftCard, RecapPlayerCard, RecapView components remain unchanged) ...
-// To save space in this response, I'm focusing on the logic change in DraftScreen component below.
-// Assume the sub-components are present here as they were in the original file.
-
 // --- REAL PLAYER CARD STYLE FOR CAPTAINS ---
 const CaptainDraftCard: React.FC<{ 
     player: Player; 
@@ -321,7 +317,11 @@ export const DraftScreen: React.FC = () => {
     const [teamToAuth, setTeamToAuth] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     
-    const [isAdminMode, setIsAdminMode] = useState(true);
+    // --- AUTH LOGIC (LOCALSTORAGE) ---
+    // Only the device that created the draft is "Admin"
+    const isCreator = localStorage.getItem(`draft_admin_${draftId}`) === 'true';
+    
+    const [isAdminMode, setIsAdminMode] = useState(isCreator);
     const [isManualMode, setIsManualMode] = useState(false);
     const [manualAssignPlayer, setManualAssignPlayer] = useState<Player | null>(null);
 
@@ -338,6 +338,11 @@ export const DraftScreen: React.FC = () => {
         setShowToast(true);
         setTimeout(() => setShowToast(false), 2500);
     };
+
+    useEffect(() => {
+        // Ensure admin mode is strictly bound to creator status on mount
+        setIsAdminMode(localStorage.getItem(`draft_admin_${draftId}`) === 'true');
+    }, [draftId]);
 
     useEffect(() => {
         if (!draftId) return;
@@ -458,7 +463,6 @@ export const DraftScreen: React.FC = () => {
         setActiveSession(newSession);
         
         // 2. SAVE TO CLOUD (HANDOFF)
-        // This ensures the exact state (teams, game IDs, rotation) is available for other devices
         await saveRemoteActiveSession(newSession);
         
         navigate('/match');
@@ -570,33 +574,42 @@ export const DraftScreen: React.FC = () => {
             {/* HEADER */}
             <div className="relative z-10 p-6 pt-8 border-b border-white/5 bg-[#0a0c10] flex flex-col gap-4">
                 <div className="flex justify-between items-start relative w-full">
-                    <div className="w-36 flex flex-col gap-2 items-stretch">
-                        {isAdminMode ? (
+                    {/* LEFT CONTROLS (ADMIN ONLY) */}
+                    <div className="w-36 flex flex-col gap-2 items-stretch min-h-[60px]">
+                        {isCreator && (
                             <>
                                 <button onClick={() => setIsManualMode(!isManualMode)} className={headerBtnStyle(isManualMode, '#FFD700')}>MANUAL</button>
-                                <button onClick={() => { setIsAdminMode(false); setIsManualMode(false); }} className={headerBtnStyle(true, '#00F2FE')}>ADMIN</button>
+                                <button onClick={() => { setIsAdminMode(!isAdminMode); setIsManualMode(false); }} className={headerBtnStyle(isAdminMode, '#00F2FE')}>ADMIN</button>
                             </>
-                        ) : (
-                            <button onClick={() => setIsAdminMode(true)} className={headerBtnStyle(false, '#00F2FE')}>UNIT</button>
                         )}
                     </div>
+
+                    {/* CENTER TITLE & START */}
                     <div className="flex flex-col items-center">
                         <h1 className="font-blackops text-5xl md:text-7xl uppercase leading-[0.8] tracking-[0.1em]" style={brandTextStyle}>UNIT DRAFT</h1>
-                        {isAdminMode && (
-                            <div className="mt-4 flex flex-col items-center gap-1">
+                        <div className="mt-4 flex flex-col items-center gap-1">
+                            {/* START BUTTON (ADMIN ONLY) */}
+                            {isAdminMode && (
                                 <div className="flex justify-center h-8">
                                     {draft.status === 'waiting' && (
                                         <button onClick={handleStartDraft} className="px-6 py-1 rounded-full text-white font-black text-xs tracking-[0.2em] uppercase shadow-[0_0_20px_rgba(0,242,254,0.3)] hover:scale-105 transition-all border border-[#48CFCB]/50" style={brandTextStyle}>START DRAFT</button>
                                     )}
                                     <button onClick={handleOpenSummary} className={`px-8 py-2 rounded-full bg-emerald-600/30 border border-emerald-500 text-emerald-100 font-bold text-xs tracking-[0.2em] uppercase shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:bg-emerald-600/50 hover:scale-105 transition-all ${draft.status === 'waiting' ? 'hidden' : ''}`}>FINISH & START MATCH</button>
                                 </div>
-                                {isManualMode ? <span className="text-[9px] font-bold text-[#FFD700] uppercase tracking-wider animate-pulse">MANUAL ASSIGNMENT ACTIVE</span> : draft.status === 'active' && <span className="text-[9px] font-mono text-[#00F2FE] animate-pulse uppercase tracking-widest">DRAFT IN PROGRESS</span>}
-                            </div>
-                        )}
+                            )}
+                            {/* STATUS TEXT (EVERYONE) */}
+                            {isManualMode ? <span className="text-[9px] font-bold text-[#FFD700] uppercase tracking-wider animate-pulse">MANUAL ASSIGNMENT ACTIVE</span> : draft.status === 'active' && <span className="text-[9px] font-mono text-[#00F2FE] animate-pulse uppercase tracking-widest">DRAFT IN PROGRESS</span>}
+                        </div>
                     </div>
-                    <div className="w-36 flex flex-col gap-2 items-stretch">
-                        <button onClick={shareCaptainLink} className={headerBtnStyle(false)}>CPT LINK</button>
-                        <button onClick={shareSpectatorLink} className={headerBtnStyle(false)}>PUB LINK</button>
+
+                    {/* RIGHT CONTROLS (ADMIN ONLY) */}
+                    <div className="w-36 flex flex-col gap-2 items-stretch min-h-[60px]">
+                        {isCreator && (
+                            <>
+                                <button onClick={shareCaptainLink} className={headerBtnStyle(false)}>CPT LINK</button>
+                                <button onClick={shareSpectatorLink} className={headerBtnStyle(false)}>PUB LINK</button>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
@@ -616,7 +629,9 @@ export const DraftScreen: React.FC = () => {
                         return (
                             <div key={team.id} className="flex flex-col items-center">
                                 <div className="flex flex-col gap-8 w-full max-w-[260px]">
+                                    {/* Captain Card handles authentication if user is not yet logged in */}
                                     {captain && <CaptainDraftCard player={captain} teamColor={team.color} isCaptain isMyTeam={isMyTeam} isActive={isCurrentTurn} onClick={() => { if (!currentUserTeamId && !isAdminMode) { setTeamToAuth(team.id); setIsPinModalOpen(true); }}} />}
+                                    
                                     <div className="flex justify-center w-full mb-3 mt-4">
                                         <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 flex items-center gap-2 shadow-sm">
                                             <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em]">MEMBERS</span>
