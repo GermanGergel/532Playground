@@ -267,7 +267,8 @@ export const getRemoteActiveSession = async (): Promise<Session | null> => {
 export const clearRemoteActiveSession = async (): Promise<boolean> => {
     if (!isSupabaseConfigured()) return false;
     try {
-        const { error } = await supabase!.from('settings').delete().eq('key', 'remote_active_session');
+        // FIX: Instead of DELETE (which is blocked by RLS), we UPDATE to null
+        const { error } = await supabase!.from('settings').update({ value: null }).eq('key', 'remote_active_session');
         if (error) throw error;
         return true;
     } catch (e) {
