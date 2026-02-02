@@ -5,7 +5,7 @@ import { useApp } from '../context';
 import { DraftState, Game, GameStatus, EventLogEntry, EventType, StartRoundPayload, Player, SessionStatus } from '../types';
 import { getDraftSession, updateDraftState, subscribeToDraft, saveRemoteActiveSession } from '../db';
 import { PlayerAvatar } from '../components/avatars';
-import { Users, CheckCircle, Wand, Share2, Play, Key, RefreshCw } from '../icons'; 
+import { Users, CheckCircle, Wand, Share2, Play, Key, RefreshCw, XCircle, Link } from '../icons'; 
 import { newId, BrandedHeader } from './utils';
 import { Modal, Button } from '../ui';
 import html2canvas from 'html2canvas';
@@ -34,6 +34,23 @@ const FinalSplashScreen: React.FC = () => (
                 PREPARE FOR BATTLE
             </p>
         </div>
+    </div>
+);
+
+// --- DEAD END SCREEN (INVALID LINK) ---
+const InvalidLinkScreen: React.FC = () => (
+    <div className="fixed inset-0 z-[9999] bg-[#05070a] flex flex-col items-center justify-center p-6 text-center select-none">
+        <div className="w-24 h-24 rounded-full bg-red-900/10 border border-red-500/20 flex items-center justify-center mb-6 animate-pulse">
+            <Link className="w-10 h-10 text-red-500 opacity-50" />
+        </div>
+        <h1 className="font-blackops text-3xl md:text-5xl text-red-500/80 tracking-widest uppercase mb-2">
+            ACCESS DENIED
+        </h1>
+        <div className="h-px w-16 bg-red-500/30 my-4"></div>
+        <p className="font-mono text-xs text-white/40 uppercase tracking-[0.2em] leading-loose max-w-md">
+            The draft session you are looking for<br/>
+            does not exist or has expired.
+        </p>
     </div>
 );
 
@@ -349,6 +366,8 @@ export const DraftScreen: React.FC = () => {
     const { activeSession, setActiveSession, allPlayers } = useApp();
     
     const [draft, setDraft] = useState<DraftState | null>(null);
+    const [isNotFound, setIsNotFound] = useState(false);
+    
     const [currentUserTeamId, setCurrentUserTeamId] = useState<string | null>(null);
     const [pinInput, setPinInput] = useState('');
     const [isPinModalOpen, setIsPinModalOpen] = useState(false);
@@ -395,14 +414,16 @@ export const DraftScreen: React.FC = () => {
             if (remoteData) {
                 // Determine if we need to update state
                 setDraft(prev => {
-                    // Simple check: if version differs or if turn index differs
-                    // But for now, just always updating is safer for the "Frozen" issue
-                    // We can optimize deep comparison later if needed.
                     if (JSON.stringify(prev) !== JSON.stringify(remoteData)) {
                         return remoteData;
                     }
                     return prev;
                 });
+                setIsNotFound(false);
+            } else {
+                // Only mark as not found if we don't have a draft state yet (initial load failure)
+                // or if it explicitly returns null (deleted).
+                if (!draft) setIsNotFound(true);
             }
         };
 
@@ -415,6 +436,7 @@ export const DraftScreen: React.FC = () => {
         // Realtime Subscription (Keep this as primary, polling as backup)
         const subscription = subscribeToDraft(draftId, (newState) => {
             setDraft(newState);
+            setIsNotFound(false);
         });
 
         return () => {
@@ -422,7 +444,7 @@ export const DraftScreen: React.FC = () => {
             // @ts-ignore
             if (subscription && typeof subscription.unsubscribe === 'function') subscription.unsubscribe();
         };
-    }, [draftId, draft?.status]); // Re-run effect if status changes to finished to stop polling? Actually keeping it running is safer until unmount.
+    }, [draftId, draft]); // Depend on draft to avoid flickering
 
     // --- SORT TEAMS BY PICK ORDER ---
     // This creates a linear visual layout where the 1st picker is always on the left.
@@ -647,6 +669,11 @@ export const DraftScreen: React.FC = () => {
         else { copyToClipboard(window.location.href, "LINK COPIED"); }
     };
 
+    // --- PHASE 0: NOT FOUND ---
+    if (isNotFound) {
+        return <InvalidLinkScreen />;
+    }
+
     if (!draft) return (
         <div className="flex items-center justify-center min-h-screen bg-[#0a0c10] text-white">
             <div className="flex flex-col items-center gap-4">
@@ -666,6 +693,11 @@ export const DraftScreen: React.FC = () => {
         return (
             <div className="min-h-screen bg-[#0a0c10] overflow-y-auto">
                 <div className="p-4 md:p-8">
+                     <div className="text-center mb-6">
+                        <div className="inline-block border border-white/20 bg-white/5 px-4 py-1.5 rounded-full backdrop-blur-md">
+                            <span className="text-[10px] font-black text-[#00F2FE] tracking-[0.2em] uppercase">DRAFT COMPLETED</span>
+                        </div>
+                    </div>
                     <RecapView draft={draft} allPlayers={allPlayers} isExport={false} />
                 </div>
             </div>
