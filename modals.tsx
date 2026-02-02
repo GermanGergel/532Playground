@@ -5,3 +5,4 @@ export * from './modals/playerModals';
 export * from './modals/mediaModals';
 export * from './modals/teamModals';
 export * from './modals/SessionSummaryModal';
+export * from './modals/RosterEditModal';

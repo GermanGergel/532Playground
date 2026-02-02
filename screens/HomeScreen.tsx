@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Button, useTranslation, Modal } from '../ui';
 import { homeScreenBackground } from '../assets';
-import { Globe, Upload, XCircle, QrCode } from '../icons'; 
+import { Globe, QrCode } from '../icons'; 
 import html2canvas from 'html2canvas';
 
 export const HomeScreen: React.FC = () => {
@@ -212,7 +212,6 @@ export const HomeScreen: React.FC = () => {
         </Modal>
         
         {/* --- TOP SECTION (HEADER + CONTROLS) --- */}
-        {/* Increased top padding (pt-16) to move header down as requested */}
         <div className="flex-none pt-16 px-6 pb-2 z-10">
              <div className="flex flex-row justify-between items-start w-full">
                  <div className="flex flex-col items-start relative select-none pointer-events-none">
@@ -270,7 +269,6 @@ export const HomeScreen: React.FC = () => {
         <div className="flex-grow"></div>
         
         {/* --- BOTTOM SECTION (BUTTONS) --- */}
-        {/* Adjusted padding (pb-28) to ensure the last button sits perfectly above BottomNav (h-16) */}
         <div className="flex-none px-6 pb-28 w-full max-w-md mx-auto z-10 flex flex-col gap-4">
              <Button 
                 variant="secondary" 
@@ -285,9 +283,11 @@ export const HomeScreen: React.FC = () => {
                     {t.continueSession}
                 </Button>
              ) : (
-                <Button variant="secondary" onClick={handleStartNewSession} className="w-full font-chakra font-bold text-xl tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5">
-                    {t.newSession}
-                </Button>
+                <div className="w-full flex flex-col gap-2">
+                    <Button variant="secondary" onClick={handleStartNewSession} className="w-full font-chakra font-bold text-xl tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5">
+                        {t.newSession}
+                    </Button>
+                </div>
              )}
              
              <Button variant="secondary" onClick={() => navigate('/player-hub')} className="w-full font-chakra font-bold text-xl tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5">

@@ -2,14 +2,190 @@
 import React from 'react';
 import { Button, Card, useTranslation, Modal, SessionModeIndicator } from '../ui';
 import { TeamAvatar, PlayerAvatar } from '../components/avatars';
-import { Wand, XCircle } from '../icons';
+import { Wand, XCircle, Users, TrophyIcon, Plus, CheckCircle } from '../icons';
 import { TeamColorPickerModal } from '../modals';
-import { hexToRgba } from './utils';
+import { hexToRgba, newId } from './utils';
 import { useTeamAssignment } from '../hooks/useTeamAssignment';
+import { createDraftSession, isSupabaseConfigured } from '../db';
+import { DraftState, DraftTeam } from '../types';
+import { useNavigate } from 'react-router-dom';
 
+const DraftSetupModal: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    playerPool: any[];
+    numTeams: number;
+    teamColors: string[];
+}> = ({ isOpen, onClose, playerPool, numTeams, teamColors }) => {
+    const navigate = useNavigate();
+    const [selectedCaptainIds, setSelectedCaptainIds] = React.useState<string[]>([]);
+    const [isCreating, setIsCreating] = React.useState(false);
+
+    // Reset selection when modal opens
+    React.useEffect(() => {
+        if (isOpen) setSelectedCaptainIds([]);
+    }, [isOpen]);
+
+    const toggleCaptain = (playerId: string) => {
+        if (selectedCaptainIds.includes(playerId)) {
+            setSelectedCaptainIds(prev => prev.filter(id => id !== playerId));
+        } else {
+            if (selectedCaptainIds.length < numTeams) {
+                setSelectedCaptainIds(prev => [...prev, playerId]);
+            }
+        }
+    };
+
+    const handleCreateDraft = async () => {
+        if (selectedCaptainIds.length !== numTeams) return;
+        setIsCreating(true);
+
+        const draftId = newId();
+        const pin = Math.floor(1000 + Math.random() * 9000).toString();
+
+        // Assign selected captains to teams (order doesn't strictly matter here as pick order is shuffled later)
+        const teams: DraftTeam[] = selectedCaptainIds.map((captainId, idx) => ({
+            id: `team_${idx}_${newId()}`,
+            name: `TEAM ${idx + 1}`,
+            color: teamColors[idx],
+            captainId: captainId,
+            playerIds: [captainId] // Captain is first player
+        }));
+
+        // Players NOT selected as captains
+        const availablePlayerIds = playerPool
+            .filter(p => !selectedCaptainIds.includes(p.id))
+            .map(p => p.id);
+
+        // --- TRUE RANDOMIZATION LOGIC (Fisher-Yates) ---
+        let initialTeamOrder = teams.map(t => t.id);
+        
+        for (let i = initialTeamOrder.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [initialTeamOrder[i], initialTeamOrder[j]] = [initialTeamOrder[j], initialTeamOrder[i]];
+        }
+
+        // Build Snake Draft Order
+        const pickOrder: string[] = [];
+        const totalPicksNeeded = availablePlayerIds.length;
+        let round = 0;
+        
+        while (pickOrder.length < totalPicksNeeded) {
+            const roundOrder = [...initialTeamOrder];
+            if (round % 2 !== 0) roundOrder.reverse();
+            pickOrder.push(...roundOrder);
+            round++;
+        }
+        
+        const finalPickOrder = pickOrder.slice(0, totalPicksNeeded);
+
+        const draftState: DraftState = {
+            id: draftId,
+            pin,
+            status: 'waiting',
+            teams,
+            availablePlayerIds,
+            currentTurnIndex: 0,
+            pickOrder: finalPickOrder,
+            sessionConfig: {
+                numTeams,
+                playersPerTeam: Math.ceil(playerPool.length / numTeams)
+            },
+            version: 1
+        };
+
+        await createDraftSession(draftState);
+        navigate(`/draft/${draftId}`);
+    };
+
+    if (!isOpen) return null;
+
+    const isReady = selectedCaptainIds.length === numTeams;
+
+    return (
+        <Modal 
+            isOpen={isOpen} 
+            onClose={onClose} 
+            size="sm" 
+            hideCloseButton
+            containerClassName="!bg-[#1A1D24] border border-white/10 shadow-2xl !p-0 overflow-hidden rounded-3xl"
+        >
+            {/* Minimal Header */}
+            <div className="p-4 border-b border-white/5 bg-[#15171C] flex justify-between items-center">
+                <div className="flex flex-col">
+                    <h2 className="text-white font-bold text-sm uppercase tracking-wider">Select Captains</h2>
+                    <span className={`text-[10px] font-bold ${isReady ? 'text-[#4CFF5F]' : 'text-white/40'}`}>
+                        {selectedCaptainIds.length} / {numTeams} SELECTED
+                    </span>
+                </div>
+                <button onClick={onClose} className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors">
+                    <XCircle className="w-5 h-5 text-white/40" />
+                </button>
+            </div>
+
+            {/* Compact Grid List */}
+            <div className="p-2 max-h-[60vh] overflow-y-auto bg-[#0a0c10]">
+                <div className="grid grid-cols-1 gap-2">
+                    {playerPool.map(player => {
+                        const isSelected = selectedCaptainIds.includes(player.id);
+                        const isDisabled = !isSelected && selectedCaptainIds.length >= numTeams;
+
+                        return (
+                            <button
+                                key={player.id}
+                                onClick={() => toggleCaptain(player.id)}
+                                disabled={isDisabled}
+                                className={`
+                                    relative w-full p-2 rounded-xl flex items-center justify-between transition-all duration-200 border
+                                    ${isSelected 
+                                        ? 'bg-[#FFD700]/10 border-[#FFD700] shadow-[0_0_15px_rgba(255,215,0,0.2)]' 
+                                        : isDisabled 
+                                            ? 'opacity-30 grayscale border-transparent'
+                                            : 'bg-[#1A1D24] border-white/5 hover:bg-white/5'
+                                    }
+                                `}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <PlayerAvatar player={player} size="sm" className={isSelected ? 'ring-2 ring-[#FFD700]' : ''} />
+                                    <span className={`font-bold text-sm uppercase ${isSelected ? 'text-[#FFD700]' : 'text-white'}`}>
+                                        {player.nickname}
+                                    </span>
+                                </div>
+                                
+                                {isSelected && (
+                                    <div className="bg-[#FFD700] text-black p-1 rounded-full">
+                                        <CheckCircle className="w-4 h-4" />
+                                    </div>
+                                )}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-[#15171C] border-t border-white/5">
+                <Button 
+                    variant="primary" 
+                    className={`w-full !py-3 font-black text-sm tracking-[0.2em] uppercase transition-all
+                        ${isReady 
+                            ? 'bg-[#FFD700] text-black hover:bg-[#FFD700]/90 shadow-[0_0_20px_rgba(255,215,0,0.4)]' 
+                            : 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed'
+                        }
+                    `}
+                    disabled={!isReady || isCreating}
+                    onClick={handleCreateDraft}
+                >
+                    {isCreating ? "INITIALIZING..." : "CONFIRM & START"}
+                </Button>
+            </div>
+        </Modal>
+    );
+};
 
 export const AssignPlayersScreen: React.FC = () => {
     const t = useTranslation();
+    const [isDraftModalOpen, setIsDraftModalOpen] = React.useState(false);
     
     const {
         activeSession,
@@ -36,12 +212,21 @@ export const AssignPlayersScreen: React.FC = () => {
     if (!activeSession) return null;
 
     const inputClasses = "w-full p-3 bg-dark-bg rounded-lg border border-white/20 focus:ring-2 focus:ring-dark-accent-start focus:outline-none";
-    // Для 2 и 4 команд используем grid-cols-2 (4 команды станут 2х2)
     const gridColsClass = activeSession.numTeams === 3 ? 'grid-cols-3' : 'grid-cols-2';
     const cardNeonClasses = "shadow-lg shadow-dark-accent-start/20 border border-dark-accent-start/40";
 
+    const canStartDraft = activeSession.playerPool.length >= (activeSession.numTeams * activeSession.playersPerTeam);
+
     return (
         <div className="flex flex-col min-h-screen bg-dark-bg pb-24">
+            <DraftSetupModal 
+                isOpen={isDraftModalOpen} 
+                onClose={() => setIsDraftModalOpen(false)}
+                playerPool={activeSession.playerPool}
+                numTeams={activeSession.numTeams}
+                teamColors={activeSession.teams.map(t => t.color)}
+            />
+
             {selectedTeam && (
                 <TeamColorPickerModal
                     isOpen={isColorPickerOpen}
@@ -190,14 +375,40 @@ export const AssignPlayersScreen: React.FC = () => {
 
             <div className="shrink-0 mt-auto p-4 bg-dark-bg/30 backdrop-blur-md z-10 border-t border-white/10">
                 <div className="max-w-md mx-auto flex flex-col gap-3">
-                    <Button variant="secondary" onClick={() => setIsAutoBalanceModalOpen(true)} disabled={isManualAssignmentStarted} className="!bg-dark-surface !backdrop-blur-none w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 flex items-center justify-center gap-2">
+                    <Button 
+                        variant="secondary" 
+                        onClick={() => setIsAutoBalanceModalOpen(true)} 
+                        disabled={isManualAssignmentStarted} 
+                        className="!bg-dark-surface !backdrop-blur-none w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 flex items-center justify-center gap-2"
+                    >
                         <Wand className="w-5 h-5" /> {t.autoBalanceTeams}
                     </Button>
-                    <Button variant="secondary" onClick={handleStartSession} disabled={!canStart} className="!bg-dark-surface !backdrop-blur-none w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">
+                    
+                    <Button 
+                        variant="secondary" 
+                        onClick={handleStartSession} 
+                        disabled={!canStart} 
+                        className="!bg-dark-surface !backdrop-blur-none w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
+                    >
                         {t.startSession}
                     </Button>
-                    <Button variant="secondary" onClick={() => setIsCancelModalOpen(true)} className="!bg-dark-surface !backdrop-blur-none w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">
+
+                    <Button 
+                        variant="secondary" 
+                        onClick={() => setIsCancelModalOpen(true)} 
+                        className="!bg-dark-surface !backdrop-blur-none w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40"
+                    >
                         {t.cancelSetup}
+                    </Button>
+
+                    <Button 
+                        variant="secondary" 
+                        onClick={() => setIsDraftModalOpen(true)}
+                        disabled={isManualAssignmentStarted || !canStartDraft}
+                        className="!bg-gradient-to-r !from-[#FFD700] !to-[#FFA500] !text-black !border-none w-full font-black text-xl tracking-wider !py-3 shadow-[0_0_15px_rgba(255,215,0,0.4)] flex items-center justify-center gap-2"
+                        title={isManualAssignmentStarted ? "Draft is disabled if players are already assigned manually." : ""}
+                    >
+                        <Users className="w-5 h-5" /> DRAFT
                     </Button>
                 </div>
             </div>

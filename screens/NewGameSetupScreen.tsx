@@ -1,24 +1,28 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Page, Button, Card, ToggleSwitch, useTranslation } from '../ui';
 import { Session, RotationMode, SessionStatus } from '../types';
 import { formatDate } from '../services/export';
 import { newId } from './utils';
+import { getRemoteActiveSession, isSupabaseConfigured } from '../db';
+import { Cloud } from '../icons';
 
 export const NewGameSetupScreen: React.FC = () => {
     const { setActiveSession } = useApp();
     const navigate = useNavigate();
     const t = useTranslation();
 
-    // Updated: Removed date from default name as requested (History screen already shows date)
     const [sessionName, setSessionName] = React.useState('UNIT GAME');
     const [numTeams, setNumTeams] = React.useState(3);
     const [playersPerTeam, setPlayersPerTeam] = React.useState(5);
     const [matchDuration, setMatchDuration] = React.useState(7);
     const [goalsToWin, setGoalsToWin] = React.useState(2);
     const [rotationMode, setRotationMode] = React.useState<RotationMode>(RotationMode.AutoRotate);
+    
+    // State for Cloud Sync Feature
+    const [isLoadingCloud, setIsLoadingCloud] = useState(false);
     
     const handleSubmit = () => {
         const isRotationApplicable = numTeams >= 3;
@@ -40,6 +44,32 @@ export const NewGameSetupScreen: React.FC = () => {
         };
         setActiveSession(newSession);
         navigate('/assign');
+    };
+    
+    // --- LOAD FROM CLOUD (Admin feature for Draft Handoff) ---
+    const handleLoadFromCloud = async () => {
+        if (!isSupabaseConfigured()) {
+            alert("Cloud database not configured.");
+            return;
+        }
+        
+        setIsLoadingCloud(true);
+        try {
+            const remoteSession = await getRemoteActiveSession();
+            if (remoteSession) {
+                // Confirm overwrite implicitly by action
+                setActiveSession(remoteSession);
+                alert("Session loaded from cloud successfully!");
+                navigate('/match'); // Jump straight to match assuming it's ready from Draft
+            } else {
+                alert("No active session found in cloud storage.");
+            }
+        } catch (error) {
+            console.error("Cloud load failed", error);
+            alert("Failed to load session from cloud.");
+        } finally {
+            setIsLoadingCloud(false);
+        }
     };
 
     const numberInputClasses = `w-20 p-2 text-center bg-dark-bg rounded-lg border border-white/20 focus:ring-2 focus:ring-dark-accent-start focus:outline-none disabled:opacity-50`;
@@ -120,6 +150,27 @@ export const NewGameSetupScreen: React.FC = () => {
                 </div>
                 
                 <Button variant="secondary" onClick={handleSubmit} className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40">{t.addPlayers}</Button>
+
+                {/* --- CLOUD LOAD SECTION (For Draft Handoff) --- */}
+                <div className="mt-6 pt-6 border-t border-white/10 flex flex-col items-center gap-3 opacity-60 hover:opacity-100 transition-opacity">
+                    <p className="text-[10px] text-white/40 uppercase tracking-widest text-center font-mono">
+                        Already drafted on PC?
+                    </p>
+                    <button 
+                        onClick={handleLoadFromCloud} 
+                        disabled={isLoadingCloud}
+                        className="w-full py-2.5 flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-[#00F2FE]/30 text-white/60 hover:text-[#00F2FE] transition-all active:scale-95 group"
+                    >
+                        {isLoadingCloud ? (
+                            <div className="w-4 h-4 border-2 border-[#00F2FE] border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                            <Cloud className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        )}
+                        <span className="text-[10px] font-black uppercase tracking-widest">
+                            {isLoadingCloud ? "DOWNLOADING..." : "LOAD CLOUD SESSION"}
+                        </span>
+                    </button>
+                </div>
             </div>
         </Page>
     );

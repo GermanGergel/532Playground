@@ -31,10 +31,154 @@ export const useGameManager = () => {
     const [legionnaireModalState, setLegionnaireModalState] = React.useState<{
         isOpen: boolean;
         teamId?: string;
+        playerOutId?: string;
     }>({ isOpen: false });
 
     const currentGame = activeSession?.games[activeSession.games.length - 1];
     const isTimerBasedGame = activeSession?.numTeams && activeSession.numTeams >= 3;
+
+    // --- ROSTER MANAGEMENT LOGIC ---
+
+    // 1. Remove Player (Ghost Slot)
+    const removePlayerFromSession = (teamId: string, playerId: string) => {
+        setActiveSession(session => {
+            if (!session) return null;
+            // Remove from Team Roster
+            const updatedTeams = session.teams.map(team => {
+                if (team.id === teamId) {
+                    return { ...team, playerIds: team.playerIds.filter(id => id !== playerId) };
+                }
+                return team;
+            });
+            
+            // Note: We deliberately KEEP them in playerPool so historical logs (goals/assists) don't break.
+            // If they truly never played, they just won't have stats at the end.
+            
+            return { ...session, teams: updatedTeams };
+        });
+    };
+
+    // 2. Replace Player (Full Substitution)
+    const replacePlayerInSession = (teamId: string, oldPlayerId: string, newPlayer: Player) => {
+        // First ensure new player is in global state (if new)
+        setAllPlayers(prev => {
+            if (prev.some(p => p.id === newPlayer.id)) return prev;
+            return [...prev, newPlayer];
+        });
+
+        setActiveSession(session => {
+            if (!session) return null;
+
+            // 1. Update Player Pool
+            let updatedPool = [...session.playerPool];
+            if (!updatedPool.some(p => p.id === newPlayer.id)) {
+                updatedPool.push(newPlayer);
+            }
+            // We can optionally remove oldPlayer from pool if they have 0 stats, but safer to keep for now.
+
+            // 2. Update Team Roster
+            const updatedTeams = session.teams.map(team => {
+                if (team.id === teamId) {
+                    return { 
+                        ...team, 
+                        playerIds: team.playerIds.map(id => id === oldPlayerId ? newPlayer.id : id) 
+                    };
+                }
+                return team;
+            });
+
+            // 3. Update History (Retroactive Fix)
+            // This is the "Replace" magic: we assume the old player wasn't there.
+            const updatedGames = session.games.map(game => {
+                const updatedGoals = game.goals.map(goal => ({
+                    ...goal,
+                    scorerId: goal.scorerId === oldPlayerId ? newPlayer.id : goal.scorerId,
+                    assistantId: goal.assistantId === oldPlayerId ? newPlayer.id : goal.assistantId
+                }));
+                
+                // Also check legionnaire moves history
+                const updatedMoves = game.legionnaireMoves?.map(move => ({
+                    ...move,
+                    playerId: move.playerId === oldPlayerId ? newPlayer.id : move.playerId
+                }));
+
+                return { ...game, goals: updatedGoals, legionnaireMoves: updatedMoves };
+            });
+
+            return { 
+                ...session, 
+                playerPool: updatedPool, 
+                teams: updatedTeams, 
+                games: updatedGames 
+            };
+        });
+    };
+
+    // 3. Swap Teams (Rebalance)
+    const swapPlayerTeam = (playerId: string, sourceTeamId: string, targetTeamId: string, swapWithPlayerId?: string) => {
+        setActiveSession(session => {
+            if (!session) return null;
+
+            const updatedTeams = session.teams.map(team => {
+                // Source Team: Remove Player A, (optionally Add Player B)
+                if (team.id === sourceTeamId) {
+                    let newIds = team.playerIds.filter(id => id !== playerId);
+                    if (swapWithPlayerId) newIds.push(swapWithPlayerId);
+                    return { ...team, playerIds: newIds };
+                }
+                
+                // Target Team: Add Player A, (optionally Remove Player B)
+                if (team.id === targetTeamId) {
+                    let newIds = team.playerIds;
+                    if (swapWithPlayerId) newIds = newIds.filter(id => id !== swapWithPlayerId);
+                    newIds.push(playerId);
+                    return { ...team, playerIds: newIds };
+                }
+                
+                return team;
+            });
+
+            return { ...session, teams: updatedTeams };
+        });
+    };
+
+    // 4. Add Player (Mid-session join)
+    const addPlayerToSession = (teamId: string, newPlayer: Player) => {
+        // Ensure global consistency
+        setAllPlayers(prev => {
+            if (prev.some(p => p.id === newPlayer.id)) return prev;
+            return [...prev, newPlayer];
+        });
+
+        setActiveSession(session => {
+            if (!session) return null;
+
+            // 1. Add to Player Pool if needed
+            let updatedPool = [...session.playerPool];
+            if (!updatedPool.some(p => p.id === newPlayer.id)) {
+                updatedPool.push(newPlayer);
+            }
+
+            // 2. Add to Team Roster
+            const updatedTeams = session.teams.map(team => {
+                if (team.id === teamId) {
+                    return { 
+                        ...team, 
+                        playerIds: [...team.playerIds, newPlayer.id] 
+                    };
+                }
+                return team;
+            });
+
+            return { 
+                ...session, 
+                playerPool: updatedPool, 
+                teams: updatedTeams 
+            };
+        });
+    };
+
+    // ---------------------------------
 
     const handleManualTeamSwap = (side: 'left' | 'right', newTeamId: string) => {
         setActiveSession(session => {
@@ -98,22 +242,33 @@ export const useGameManager = () => {
             const fromTeam = session.teams.find(t => t.playerIds.includes(playerInId));
             if (!fromTeam) return session;
             const newMove: LegionnaireMove = { playerId: playerInId, fromTeamId: fromTeam.id, toTeamId: teamId };
-            const reverseMove: LegionnaireMove = { playerId: playerOutId, fromTeamId: teamId, toTeamId: fromTeam.id };
-            game.legionnaireMoves = [...(game.legionnaireMoves || []), newMove, reverseMove];
-            games[games.length - 1] = game;
-            const teams = session.teams.map(team => {
-                if (team.id === teamId) return { ...team, playerIds: team.playerIds.map(id => id === playerOutId ? playerInId : id) };
-                if (team.id === fromTeam.id) return { ...team, playerIds: team.playerIds.map(id => id === playerInId ? playerOutId : id) };
-                return team;
-            });
-            const getPlayerName = (id: string) => session.playerPool.find(p => p.id === id)?.nickname || 'Unknown';
-            const logEntry: EventLogEntry = {
-                timestamp: new Date().toISOString(),
-                round: game.gameNumber,
-                type: EventType.LEGIONNAIRE_SIGN,
-                payload: { player: getPlayerName(playerInId), toTeam: teams.find(t => t.id === teamId)?.name || 'Team' } as LegionnairePayload
-            };
-            return { ...session, teams, games, eventLog: [...session.eventLog, logEntry] };
+            
+            const isGhostFill = !session.teams.find(t => t.id === teamId)?.playerIds.includes(playerOutId);
+            
+            if (isGhostFill) {
+                 game.legionnaireMoves = [...(game.legionnaireMoves || []), newMove];
+            } else {
+                const reverseMove: LegionnaireMove = { playerId: playerOutId, fromTeamId: teamId, toTeamId: fromTeam.id };
+                game.legionnaireMoves = [...(game.legionnaireMoves || []), newMove, reverseMove];
+                
+                const teams = session.teams.map(team => {
+                    if (team.id === teamId) return { ...team, playerIds: team.playerIds.map(id => id === playerOutId ? playerInId : id) };
+                    if (team.id === fromTeam.id) return { ...team, playerIds: team.playerIds.map(id => id === playerInId ? playerOutId : id) };
+                    return team;
+                });
+                
+                const getPlayerName = (id: string) => session.playerPool.find(p => p.id === id)?.nickname || 'Unknown';
+                const logEntry: EventLogEntry = {
+                    timestamp: new Date().toISOString(),
+                    round: game.gameNumber,
+                    type: EventType.LEGIONNAIRE_SIGN,
+                    payload: { player: getPlayerName(playerInId), toTeam: session.teams.find(t => t.id === teamId)?.name || 'Team' } as LegionnairePayload
+                };
+                
+                return { ...session, teams, games: [...games.slice(0, -1), game], eventLog: [...session.eventLog, logEntry] };
+            }
+            
+            return { ...session, games: [...games.slice(0, -1), game] };
         });
         setLegionnaireModalState({ isOpen: false });
     };
@@ -158,17 +313,23 @@ export const useGameManager = () => {
             }
 
             let currentTeams = [...session.teams];
+            
+            // REVERT LEGIONNAIRE SWAPS (Restore original rosters)
             if (finishedGame.legionnaireMoves && finishedGame.legionnaireMoves.length > 0) {
                 const movesToRevert = [...finishedGame.legionnaireMoves].reverse();
                 movesToRevert.forEach(move => {
                     const hostIdx = currentTeams.findIndex(t => t.id === move.toTeamId);
                     const benchIdx = currentTeams.findIndex(t => t.id === move.fromTeamId);
+                    
                     if (hostIdx > -1 && benchIdx > -1) {
                         const host = { ...currentTeams[hostIdx] };
                         const bench = { ...currentTeams[benchIdx] };
+                        
                         if (host.playerIds.includes(move.playerId)) {
                             host.playerIds = host.playerIds.filter(id => id !== move.playerId);
-                            bench.playerIds = [...bench.playerIds, move.playerId];
+                            if (!bench.playerIds.includes(move.playerId)) {
+                                bench.playerIds = [...bench.playerIds, move.playerId];
+                            }
                             currentTeams[hostIdx] = host;
                             currentTeams[benchIdx] = bench;
                         }
@@ -266,8 +427,6 @@ export const useGameManager = () => {
             let nextTeam2Id: string;
 
             if (staysOnItsSide) {
-                // Победитель остался на поле. 
-                // Если он был Left (1) -> он остается Left. Challenger заходит на Right (2).
                 if (winnerOriginalSide === 1) {
                     nextTeam1Id = teamThatStays.id;
                     nextTeam2Id = challengerTeam.id;
@@ -276,8 +435,6 @@ export const useGameManager = () => {
                     nextTeam2Id = teamThatStays.id;
                 }
             } else {
-                // Победитель ушел (авторотация), проигравший остался.
-                // Проигравший остается на своей стороне.
                 const loserOriginalSide = teamThatLeaves.id === game.team1Id ? 1 : 2;
                 if (loserOriginalSide === 1) {
                     nextTeam1Id = teamThatLeaves.id;
@@ -443,6 +600,20 @@ export const useGameManager = () => {
     
     const handleFinishSession = async (summaryData?: SessionSummaryData) => {
         if (!activeSession || isSavingSession) return;
+
+        // --- CHECK IF ANY GAMES WERE PLAYED ---
+        const finishedGamesCount = activeSession.games.filter(g => g.status === GameStatus.Finished).length;
+
+        if (finishedGamesCount === 0) {
+            // ZERO GAMES PLAYED: DISCARD SESSION
+            // Reset active session, close modal, go to Home
+            setActiveSession(null);
+            setIsEndSessionModalOpen(false);
+            navigate('/');
+            return;
+        }
+
+        // --- PROCEED WITH SAVING ---
         setIsSavingSession(true); 
         const sessionToProcess = { ...activeSession };
         if (summaryData) {
@@ -481,6 +652,8 @@ export const useGameManager = () => {
         scoringTeamForModal, isEndSessionModalOpen, isSelectWinnerModalOpen, goalToEdit, subModalState, legionnaireModalState, 
         currentGame, isTimerBasedGame, setScoringTeamForModal, setIsEndSessionModalOpen, setGoalToEdit, setSubModalState, setLegionnaireModalState, 
         finishCurrentGameAndSetupNext, handleStartGame, handleTogglePause, handleGoalSave, handleGoalUpdate, handleSubstitution, handleFinishSession, handleLegionnaireSwap,
-        resetSession, replaceGame, deleteGoal, swapTeams
+        resetSession, replaceGame, deleteGoal, swapTeams,
+        // New methods for Roster Edit
+        removePlayerFromSession, replacePlayerInSession, swapPlayerTeam, addPlayerToSession
     };
 };

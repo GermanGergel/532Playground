@@ -1,56 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button, Modal, useTranslation } from '../ui';
 import { Goal, GoalPayload, Game, Session, Team, Player } from '../types';
 import { Edit3, XCircle } from '../icons';
 import { TeamAvatar } from '../components/avatars';
-
-// --- TEAM SWAP MODAL (Manual selection) ---
-export const TeamSwapModal: React.FC<{
-    isOpen: boolean;
-    onClose: () => void;
-    onSelect: (teamId: string) => void;
-    restingTeams: Team[];
-    side: 'left' | 'right';
-}> = ({ isOpen, onClose, onSelect, restingTeams, side }) => {
-    const t = useTranslation();
-    if (!isOpen) return null;
-
-    return (
-        <Modal
-            isOpen={isOpen}
-            onClose={onClose}
-            size="xs"
-            containerClassName="!bg-[#0a0c10] border border-white/10 shadow-2xl !p-0 overflow-hidden"
-            hideCloseButton
-        >
-            <div className="p-4 border-b border-white/5 bg-[#12161b]">
-                <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-black text-[#00F2FE] tracking-[0.2em] uppercase">
-                        Manual Selection: {side.toUpperCase()}
-                    </span>
-                    <button onClick={onClose} className="text-gray-500 hover:text-white"><XCircle className="w-5 h-5" /></button>
-                </div>
-                <h3 className="font-bold text-white uppercase text-sm mt-1">Select Active Team</h3>
-            </div>
-            <div className="p-4 flex flex-col gap-3">
-                {restingTeams.map(team => (
-                    <button
-                        key={team.id}
-                        onClick={() => onSelect(team.id)}
-                        className="w-full p-3 rounded-xl bg-white/5 border border-white/10 flex items-center gap-4 hover:bg-[#00F2FE]/10 hover:border-[#00F2FE]/30 transition-all group"
-                    >
-                        <TeamAvatar team={team} size="xs" hollow />
-                        <span className="font-bold text-white group-hover:text-[#00F2FE] transition-colors uppercase">{team.name}</span>
-                    </button>
-                ))}
-                {restingTeams.length === 0 && (
-                    <p className="text-center text-white/20 text-xs py-4">No other teams available</p>
-                )}
-            </div>
-        </Modal>
-    );
-};
 
 // --- GOAL MODAL ---
 interface GoalModalProps {
@@ -267,9 +220,9 @@ export interface LegionnaireModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSelect: (playerInId: string) => void;
-    restingTeams: Team[]; // Изменено на массив для поддержки 4 команд
+    restingTeams: Team[];
     session: Session;
-    playerOut: Player;
+    playerOut: Player | undefined; 
 }
 
 export const LegionnaireModal: React.FC<LegionnaireModalProps> = ({ isOpen, onClose, onSelect, restingTeams, session, playerOut }) => {
@@ -292,7 +245,11 @@ export const LegionnaireModal: React.FC<LegionnaireModalProps> = ({ isOpen, onCl
                 <div className="flex flex-col">
                     <span className="text-[9px] font-black text-[#FFD700] tracking-[0.2em] uppercase">LEGIONNAIRE</span>
                     <h3 className="font-bold text-white uppercase tracking-wide">
-                        {t.legionnaire_replace} <span className="text-[#FFD700]">{playerOut.nickname}</span>
+                        {playerOut ? (
+                            <>{t.legionnaire_replace} <span className="text-[#FFD700]">{playerOut.nickname}</span></>
+                        ) : (
+                            <>{t.legionnaire_select}</>
+                        )}
                     </h3>
                 </div>
                 <button onClick={onClose} className="text-gray-500 hover:text-white"><XCircle className="w-6 h-6" /></button>
@@ -420,6 +377,53 @@ export const EditGoalModal: React.FC<{
                 </div>
                  <Button onClick={handleSetOwnGoal} variant="secondary" className="w-full mt-2 !border-dark-accent-start/60 !shadow-[0_0_8px_rgba(0,242,254,0.5)] !py-1.5 !text-sm">{t.ownGoal}</Button>
                  <Button onClick={handleSave} variant="secondary" className="w-full mt-2 !border-dark-accent-start/60 !shadow-[0_0_8px_rgba(0,242,254,0.5)] !py-1.5 !text-sm">{t.saveChanges}</Button>
+            </div>
+        </Modal>
+    );
+};
+
+// --- TEAM SWAP MODAL ---
+export const TeamSwapModal: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    onSelect: (teamId: string) => void;
+    restingTeams: Team[];
+    side: 'left' | 'right';
+}> = ({ isOpen, onClose, onSelect, restingTeams, side }) => {
+    const t = useTranslation();
+    if (!isOpen) return null;
+
+    return (
+        <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            size="xs"
+            containerClassName="!bg-[#0a0c10] border border-white/10 shadow-2xl !p-0 overflow-hidden"
+            hideCloseButton
+        >
+            <div className="p-4 border-b border-white/5 bg-[#12161b]">
+                <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-black text-[#00F2FE] tracking-[0.2em] uppercase">
+                        Manual Selection: {side.toUpperCase()}
+                    </span>
+                    <button onClick={onClose} className="text-gray-500 hover:text-white"><XCircle className="w-5 h-5" /></button>
+                </div>
+                <h3 className="font-bold text-white uppercase text-sm mt-1">Select Active Team</h3>
+            </div>
+            <div className="p-4 flex flex-col gap-3">
+                {restingTeams.map(team => (
+                    <button
+                        key={team.id}
+                        onClick={() => onSelect(team.id)}
+                        className="w-full p-3 rounded-xl bg-white/5 border border-white/10 flex items-center gap-4 hover:bg-[#00F2FE]/10 hover:border-[#00F2FE]/30 transition-all group"
+                    >
+                        <TeamAvatar team={team} size="xs" hollow />
+                        <span className="font-bold text-white group-hover:text-[#00F2FE] transition-colors uppercase">{team.name}</span>
+                    </button>
+                ))}
+                {restingTeams.length === 0 && (
+                    <p className="text-center text-white/20 text-xs py-4">No other teams available</p>
+                )}
             </div>
         </Modal>
     );

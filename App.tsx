@@ -8,7 +8,7 @@ import {
     PlayerHubScreen, PlayerDatabaseScreen, PlayerProfileScreen,
     NewsFeedScreen, VoiceSettingsScreen, AnnouncementScreen, PublicProfileScreen,
     PromoScreen, PromoAdminScreen, LedgerScreen, PublicHubScreen,
-    HubAnalyticsScreen
+    HubAnalyticsScreen, DraftScreen
 } from './screens';
 import { useApp } from './context';
 
@@ -48,11 +48,12 @@ const App: React.FC = () => {
   const pathsWithoutNav = [
     '/public-profile/:id',
     '/promo',
-    '/hub'
+    '/hub',
+    '/draft/:id'
   ];
 
   const showNav = !pathsWithoutNav.some(path => matchPath(path, location.pathname));
-  const isHub = !!matchPath('/hub', location.pathname);
+  const isHub = !!matchPath('/hub', location.pathname) || !!matchPath('/draft/:id', location.pathname);
 
   return (
     <div className="min-h-screen bg-dark-bg text-dark-text font-sans selection:bg-dark-accent-start selection:text-dark-bg">
@@ -78,6 +79,7 @@ const App: React.FC = () => {
           <Route path="/announcement" element={<AnnouncementScreen />} />
           <Route path="/promo" element={<PromoScreen />} />
           <Route path="/hub" element={<PublicHubScreen />} />
+          <Route path="/draft/:id" element={<DraftScreen />} />
           {/* Fallback for web routing */}
           <Route path="*" element={<NotFound />} />
         </Routes>

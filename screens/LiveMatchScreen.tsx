@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Button, Page, useTranslation, SessionModeIndicator } from '../ui';
 import { TeamAvatar } from '../components/avatars';
-import { StarIcon, Plus, Pause, Play, Edit3, TransferIcon } from '../icons';
+import { StarIcon, Plus, Pause, Play, Edit3, TransferIcon, Users, UserMinus } from '../icons';
 import { Session, GameStatus, Team, Player } from '../types';
-import { audioManager } from '../lib';
-import { GoalModal, EditGoalModal, SelectWinnerModal, SubstitutionModal, LegionnaireModal, SessionSummaryModal, TeamSwapModal } from '../modals';
+import { audioManager, playAnnouncement, initAudioContext } from '../lib';
+import { GoalModal, EditGoalModal, SelectWinnerModal, SubstitutionModal, LegionnaireModal, SessionSummaryModal, TeamSwapModal, RosterEditModal } from '../modals';
 import { hexToRgba } from './utils';
 import { useGameManager } from '../hooks/useGameManager';
 
@@ -47,7 +47,8 @@ const SimpleWaitingIndicator: React.FC<{ session: Session }> = ({ session }) => 
                 <span className="text-[8px] font-black text-[#00F2FE] tracking-[0.2em] uppercase opacity-70">NEXT UP</span>
                 <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: teamNext.color, boxShadow: `0 0 8px ${teamNext.color}` }}></div>
-                    <span className="text-[10px] font-bold text-white uppercase tracking-wider">{teamNext.name}</span>
+                    {/* UPDATED: Removed teamNext.name (which includes number) and replaced with generic 'Team' label */}
+                    <span className="text-[10px] font-bold text-white uppercase tracking-wider">{t.team}</span>
                 </div>
             </div>
         </div>
@@ -61,35 +62,63 @@ const TeamRoster: React.FC<{
     onTransferToggle?: (teamId: string) => void;
     isTransferMode?: boolean;
     activeLegionnaireIds?: string[];
-}> = React.memo(({ team, session, onPlayerClick, onTransferToggle, isTransferMode, activeLegionnaireIds = [] }) => {
+    onGhostSlotClick?: (teamId: string) => void; // New prop for ghost slots
+}> = React.memo(({ team, session, onPlayerClick, onTransferToggle, isTransferMode, activeLegionnaireIds = [], onGhostSlotClick }) => {
     const t = useTranslation();
     const players = team.playerIds.map(id => session.playerPool.find(p => p.id === id)).filter(Boolean) as Player[];
-    const activePlayers = players.slice(0, session.playersPerTeam);
-    const subs = players.slice(session.playersPerTeam);
+    
+    // Slicing happens here, but we also need to account for missing players (holes)
+    const renderList = [];
+    const maxSlots = session.playersPerTeam;
+    
+    for (let i = 0; i < maxSlots; i++) {
+        if (i < team.playerIds.length) {
+            renderList.push({ type: 'player', data: players[i] });
+        } else {
+            renderList.push({ type: 'ghost' });
+        }
+    }
+    
+    const subs = players.slice(maxSlots);
     
     const blueNeonColor = '#00F2FE';
     const blueNeonStyle = { boxShadow: `0 0 8px ${hexToRgba(blueNeonColor, 0.4)}`, border: `1px solid ${hexToRgba(blueNeonColor, 0.6)}` };
-    const yellowNeonColor = '#FFD700';
-    const yellowNeonStyle = { boxShadow: `0 0 8px ${hexToRgba(yellowNeonColor, 0.6)}`, border: `1px solid ${hexToRgba(yellowNeonColor, 0.8)}`, color: '#FFD700' };
+    const yellowNeonStyle = { boxShadow: `0 0 8px ${hexToRgba('#FFD700', 0.6)}`, border: `1px solid ${hexToRgba('#FFD700', 0.8)}`, color: '#FFD700' };
+    const ghostStyle = { border: '1px dashed rgba(255, 255, 255, 0.2)', color: 'rgba(255, 255, 255, 0.3)', background: 'rgba(0,0,0,0.2)' };
 
     const showTransferBtn = session.numTeams >= 3;
 
     return (
          <div className="text-sm">
             <ul className="space-y-1">
-                {activePlayers.map(p => {
-                    const isLegionnaire = activeLegionnaireIds.includes(p.id);
-                    const useYellow = isTransferMode || isLegionnaire;
-                    return (
-                        <li 
-                            key={p.id} 
-                            onClick={() => onPlayerClick(team.id, p.id)} 
-                            className={`bg-dark-surface/50 p-2 rounded-full text-center truncate transition-all duration-300 cursor-pointer hover:bg-dark-surface/80`}
-                            style={useYellow ? yellowNeonStyle : blueNeonStyle}
-                        >
-                            {p.nickname}
-                        </li>
-                    );
+                {renderList.map((item, idx) => {
+                    if (item.type === 'player' && item.data) {
+                        const p = item.data as Player;
+                        const isLegionnaire = activeLegionnaireIds.includes(p.id);
+                        const useYellow = isTransferMode || isLegionnaire;
+                        return (
+                            <li 
+                                key={p.id} 
+                                onClick={() => onPlayerClick(team.id, p.id)} 
+                                className={`bg-dark-surface/50 p-2 rounded-full text-center truncate transition-all duration-300 cursor-pointer hover:bg-dark-surface/80`}
+                                style={useYellow ? yellowNeonStyle : blueNeonStyle}
+                            >
+                                {p.nickname}
+                            </li>
+                        );
+                    } else {
+                        return (
+                            <li 
+                                key={`ghost-${idx}`}
+                                onClick={() => onGhostSlotClick && onGhostSlotClick(team.id)}
+                                className="p-2 rounded-full text-center truncate transition-all duration-300 cursor-pointer hover:bg-white/5 flex items-center justify-center gap-2 animate-pulse"
+                                style={ghostStyle}
+                            >
+                                <Users className="w-3 h-3 opacity-50" />
+                                <span className="text-[10px] font-bold uppercase tracking-wider">SELECT LEGIONNAIRE</span>
+                            </li>
+                        );
+                    }
                 })}
             </ul>
             {showTransferBtn && onTransferToggle && (
@@ -118,7 +147,7 @@ const formatTime = (totalSeconds: number) => {
 };
 
 export const LiveMatchScreen: React.FC = () => {
-    const { activeSession, activeVoicePack, displayTime } = useApp();
+    const { activeSession, activeVoicePack, displayTime, allPlayers } = useApp();
     const navigate = useNavigate();
     const t = useTranslation();
     const gameManager = useGameManager();
@@ -128,12 +157,13 @@ export const LiveMatchScreen: React.FC = () => {
         setScoringTeamForModal, setIsEndSessionModalOpen, setGoalToEdit, setSubModalState, setLegionnaireModalState,
         finishCurrentGameAndSetupNext, handleStartGame, handleTogglePause,
         handleGoalSave, handleGoalUpdate, handleSubstitution, handleFinishSession, handleLegionnaireSwap,
-        swapTeams
+        swapTeams, removePlayerFromSession, replacePlayerInSession, swapPlayerTeam, addPlayerToSession
     } = gameManager;
     
     const [transferModeTeamId, setTransferModeTeamId] = React.useState<string | null>(null);
     const [transferPlayerOutId, setTransferPlayerOutId] = React.useState<string | null>(null);
     const [teamSwapState, setTeamSwapState] = React.useState<{ isOpen: boolean; side?: 'left' | 'right' }>({ isOpen: false });
+    const [isRosterEditOpen, setIsRosterEditOpen] = React.useState(false);
 
     React.useEffect(() => {
         if (activeSession?.numTeams && activeSession.numTeams >= 3) audioManager.preloadPack(activeVoicePack);
@@ -163,7 +193,10 @@ export const LiveMatchScreen: React.FC = () => {
     const teamForSub = subModalState.teamId ? activeSession.teams.find(t => t.id === subModalState.teamId) : undefined;
     const playerOutForSub = subModalState.playerOutId ? activeSession.playerPool.find(p => p.id === subModalState.playerOutId) : undefined;
     const teamForLegionnaire = legionnaireModalState.teamId ? activeSession.teams.find(t => t.id === legionnaireModalState.teamId) : undefined;
+    
+    // PlayerOut can be undefined if it's a Ghost Slot fill
     const playerOutForLegionnaire = transferPlayerOutId ? activeSession.playerPool.find(p => p.id === transferPlayerOutId) : undefined;
+    
     const activeLegionnaireIds = currentGame.legionnaireMoves?.map(move => move.playerId) || [];
 
     const handleTransferToggle = (teamId: string) => setTransferModeTeamId(prev => prev === teamId ? null : teamId);
@@ -180,6 +213,11 @@ export const LiveMatchScreen: React.FC = () => {
         }
     };
 
+    const handleGhostSlotClick = (teamId: string) => {
+        setTransferPlayerOutId(null); // No specific player out
+        setLegionnaireModalState({ isOpen: true, teamId });
+    };
+
     const handleAvatarClick = (side: 'left' | 'right') => { if (isGamePending && activeSession.numTeams >= 3) setTeamSwapState({ isOpen: true, side }); };
     const performTeamSwap = (newTeamId: string) => { if (teamSwapState.side) swapTeams(teamSwapState.side, newTeamId); setTeamSwapState({ isOpen: false }); };
 
@@ -190,8 +228,28 @@ export const LiveMatchScreen: React.FC = () => {
             <SessionSummaryModal isOpen={isEndSessionModalOpen} onClose={() => setIsEndSessionModalOpen(false)} onConfirm={handleFinishSession} />
             <SelectWinnerModal isOpen={isSelectWinnerModalOpen} onClose={() => {}} onSelect={finishCurrentGameAndSetupNext} team1={team1} team2={team2}/>
             {subModalState.isOpen && teamForSub && playerOutForSub && <SubstitutionModal isOpen={subModalState.isOpen} onClose={() => setSubModalState({isOpen: false})} onSelect={handleSubstitution} team={teamForSub} session={activeSession} playerOut={playerOutForSub} />}
-            {legionnaireModalState.isOpen && teamForLegionnaire && playerOutForLegionnaire && <LegionnaireModal isOpen={legionnaireModalState.isOpen} onClose={() => setLegionnaireModalState({ isOpen: false })} onSelect={(playerInId) => handleLegionnaireSwap(teamForLegionnaire.id, playerOutForLegionnaire.id, playerInId)} restingTeams={restingTeams} session={activeSession} playerOut={playerOutForLegionnaire} />}
+            {legionnaireModalState.isOpen && teamForLegionnaire && (
+                <LegionnaireModal 
+                    isOpen={legionnaireModalState.isOpen} 
+                    onClose={() => setLegionnaireModalState({ isOpen: false })} 
+                    onSelect={(playerInId) => handleLegionnaireSwap(teamForLegionnaire.id, transferPlayerOutId || '', playerInId)} 
+                    restingTeams={restingTeams} 
+                    session={activeSession} 
+                    playerOut={playerOutForLegionnaire} 
+                />
+            )}
             {teamSwapState.isOpen && <TeamSwapModal isOpen={teamSwapState.isOpen} onClose={() => setTeamSwapState({ isOpen: false })} onSelect={performTeamSwap} restingTeams={restingTeams} side={teamSwapState.side!} />}
+            
+            <RosterEditModal 
+                isOpen={isRosterEditOpen} 
+                onClose={() => setIsRosterEditOpen(false)} 
+                session={activeSession} 
+                allPlayers={allPlayers}
+                onRemove={removePlayerFromSession}
+                onReplace={replacePlayerInSession}
+                onSwap={swapPlayerTeam}
+                onAdd={addPlayerToSession}
+            />
 
             <header className="text-center shrink-0 pt-4">
                 <div className="flex items-center justify-center gap-3">
@@ -208,7 +266,6 @@ export const LiveMatchScreen: React.FC = () => {
                         <div className="grid grid-cols-3 items-start gap-4">
                             <div className="relative flex flex-col items-center gap-2 pt-4">
                                 {showStars && <GameIndicators count={team1.consecutiveGames} color={team1.color} />}
-                                {/* UPDATED: Pulses with its own color, no blue ring */}
                                 <TeamAvatar team={team1} size="lg" hollow={true} onClick={() => handleAvatarClick('left')} className={isGamePending ? 'animate-pulse' : ''} />
                                 <div className="flex justify-center items-center h-6 mt-2 gap-1">{(team1.bigStars ?? 0) > 0 && Array.from({ length: team1.bigStars ?? 0 }).map((_, i) => (<StarIcon key={i} className="w-6 h-6" style={{ color: '#FFD700', filter: 'drop-shadow(0 0 5px #FFD700)' }} />))}</div>
                                 <div className="text-6xl font-black tabular-nums text-center" style={{ color: team1.color, textShadow: `0 0 10px ${team1.color}`}}>{currentGame.team1Score}</div>
@@ -216,7 +273,6 @@ export const LiveMatchScreen: React.FC = () => {
                             <div className="text-center pt-8"><div className="text-4xl font-bold tabular-nums text-dark-text accent-text-glow">{formatTime(displayTime)}</div></div>
                             <div className="relative flex flex-col items-center gap-2 pt-4">
                                 {showStars && <GameIndicators count={team2.consecutiveGames} color={team2.color} />}
-                                {/* UPDATED: Pulses with its own color, no blue ring */}
                                 <TeamAvatar team={team2} size="lg" hollow={true} onClick={() => handleAvatarClick('right')} className={isGamePending ? 'animate-pulse' : ''} />
                                 <div className="flex justify-center items-center h-6 mt-2 gap-1">{(team2.bigStars ?? 0) > 0 && Array.from({ length: team2.bigStars ?? 0 }).map((_, i) => (<StarIcon key={i} className="w-6 h-6" style={{ color: '#FFD700', filter: 'drop-shadow(0 0 5px #FFD700)' }} />))}</div>
                                 <div className="text-6xl font-black tabular-nums text-center" style={{ color: team2.color, textShadow: `0 0 10px ${team2.color}`}}>{currentGame.team2Score}</div>
@@ -248,10 +304,41 @@ export const LiveMatchScreen: React.FC = () => {
                     </div>
                 )}
 
-                <div className="max-w-xl mx-auto w-full"><div className="grid grid-cols-2 gap-4"><TeamRoster team={team1} session={activeSession} onPlayerClick={handlePlayerClick} onTransferToggle={handleTransferToggle} isTransferMode={transferModeTeamId === team1.id} activeLegionnaireIds={activeLegionnaireIds} /><TeamRoster team={team2} session={activeSession} onPlayerClick={handlePlayerClick} onTransferToggle={handleTransferToggle} isTransferMode={transferModeTeamId === team2.id} activeLegionnaireIds={activeLegionnaireIds} /></div></div>
+                <div className="max-w-xl mx-auto w-full">
+                    <div className="grid grid-cols-2 gap-4">
+                        <TeamRoster 
+                            team={team1} 
+                            session={activeSession} 
+                            onPlayerClick={handlePlayerClick} 
+                            onTransferToggle={handleTransferToggle} 
+                            isTransferMode={transferModeTeamId === team1.id} 
+                            activeLegionnaireIds={activeLegionnaireIds}
+                            onGhostSlotClick={handleGhostSlotClick}
+                        />
+                        <TeamRoster 
+                            team={team2} 
+                            session={activeSession} 
+                            onPlayerClick={handlePlayerClick} 
+                            onTransferToggle={handleTransferToggle} 
+                            isTransferMode={transferModeTeamId === team2.id} 
+                            activeLegionnaireIds={activeLegionnaireIds} 
+                            onGhostSlotClick={handleGhostSlotClick}
+                        />
+                    </div>
+                </div>
             </div>
 
-            <div className="mt-auto shrink-0 py-4 px-4 max-w-xl mx-auto w-full"><Button variant="secondary" className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40" onClick={() => setIsEndSessionModalOpen(true)}>{t.endSession}</Button></div>
+            <div className="mt-auto shrink-0 py-4 px-4 max-w-xl mx-auto w-full flex flex-col gap-3">
+                <Button variant="secondary" className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40" onClick={() => setIsEndSessionModalOpen(true)}>{t.endSession}</Button>
+                {/* UPDATED ROSTER EDIT BUTTON STYLE TO MATCH END SESSION */}
+                <Button 
+                    variant="secondary" 
+                    className="w-full font-chakra font-bold text-xl tracking-wider !py-3 shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40" 
+                    onClick={() => setIsRosterEditOpen(true)}
+                >
+                    ROSTER EDIT
+                </Button>
+            </div>
         </div>
     );
 };

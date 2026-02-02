@@ -243,3 +243,27 @@ export interface NewsItem {
     statsSnapshot?: { rating: number; tier: PlayerTier };
     priority?: number;
 }
+
+// --- DRAFT MODE TYPES ---
+export interface DraftState {
+    id: string; // Draft ID (UUID)
+    pin: string; // PIN for captains
+    status: 'waiting' | 'active' | 'completed';
+    teams: DraftTeam[];
+    availablePlayerIds: string[];
+    currentTurnIndex: number; // Index in the snake order
+    pickOrder: string[]; // Array of teamIds in pick order
+    sessionConfig: {
+        numTeams: number;
+        playersPerTeam: number;
+    };
+    version: number; // For sync logic
+}
+
+export interface DraftTeam {
+    id: string; // Team ID from session
+    name: string;
+    color: string;
+    captainId: string;
+    playerIds: string[]; // Including captain
+}
