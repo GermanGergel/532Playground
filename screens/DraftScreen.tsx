@@ -5,7 +5,7 @@ import { useApp } from '../context';
 import { DraftState, Game, GameStatus, EventLogEntry, EventType, StartRoundPayload, Player, SessionStatus } from '../types';
 import { getDraftSession, updateDraftState, subscribeToDraft, saveRemoteActiveSession } from '../db';
 import { PlayerAvatar } from '../components/avatars';
-import { Users, CheckCircle, Wand, Share2, Play } from '../icons'; 
+import { Users, CheckCircle, Wand, Share2, Play, Key } from '../icons'; 
 import { newId, BrandedHeader } from './utils';
 import { Modal, Button } from '../ui';
 import html2canvas from 'html2canvas';
@@ -25,8 +25,9 @@ const CaptainDraftCard: React.FC<{
     isCaptain?: boolean;
     isMyTeam?: boolean;
     isActive?: boolean;
+    isReady?: boolean; // Prop to indicate if captain is logged in (colorful) or not (gray)
     onClick?: () => void;
-}> = ({ player, teamColor, isCaptain, isMyTeam, isActive, onClick }) => {
+}> = ({ player, teamColor, isCaptain, isMyTeam, isActive, isReady = false, onClick }) => {
     
     // UPDATED: Font sizes reduced slightly to look less bulky
     const getNicknameSize = (name: string) => {
@@ -45,17 +46,27 @@ const CaptainDraftCard: React.FC<{
     const nicknameSize = getNicknameSize(player.nickname);
     const surnameSize = getSurnameSize(player.surname);
 
+    // Dynamic styles based on readiness
+    // If NOT ready: Grayscale, reduced opacity
+    // If Ready: Full color, glow
+    const filterStyle = isReady ? 'none' : 'grayscale(100%) brightness(0.6)';
+    const containerShadow = isReady 
+        ? (isActive ? `0 0 30px ${teamColor}` : `0 15px 25px -10px ${teamColor}80`)
+        : '0 0 0 transparent'; // No glow if not ready
+
     return (
         <div 
             onClick={onClick}
             className={`
                 relative w-full aspect-[0.75] rounded-3xl overflow-hidden cursor-pointer transition-all duration-500
-                ${isActive ? 'scale-[1.02] z-10' : 'opacity-90 hover:opacity-100 hover:scale-[1.01]'}
+                ${isActive ? 'scale-[1.02] z-10' : 'hover:scale-[1.01]'}
             `}
             style={{ 
-                boxShadow: isActive ? `0 0 30px ${teamColor}` : `0 15px 25px -10px ${teamColor}80`, 
+                boxShadow: containerShadow, 
                 backgroundColor: '#1A1D24',
                 border: isActive ? 'none' : 'none',
+                filter: filterStyle,
+                opacity: isReady ? (isActive ? 1 : 0.9) : 0.7
             }}
         >
             {player.playerCard ? (
@@ -70,6 +81,14 @@ const CaptainDraftCard: React.FC<{
             )}
 
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+
+            {!isReady && (
+                <div className="absolute inset-0 flex items-center justify-center z-20">
+                    <div className="bg-black/50 p-2 rounded-full border border-white/20 backdrop-blur-sm animate-pulse">
+                        <Key className="w-6 h-6 text-white/50" />
+                    </div>
+                </div>
+            )}
 
             <div className="absolute inset-0 p-5 flex flex-col justify-between z-10 pointer-events-none">
                 <div className="flex justify-between items-start">
@@ -102,7 +121,7 @@ const CaptainDraftCard: React.FC<{
                 </div>
             </div>
             
-            {isActive && (
+            {isActive && isReady && (
                 <div className="absolute inset-0 bg-[#00F2FE]/10 animate-pulse pointer-events-none mix-blend-overlay rounded-3xl"></div>
             )}
         </div>
@@ -360,11 +379,26 @@ export const DraftScreen: React.FC = () => {
         };
     }, [draftId]);
 
-    const handleCaptainAuth = () => {
+    const handleCaptainAuth = async () => {
         if (draft && teamToAuth && pinInput === draft.pin) {
             setCurrentUserTeamId(teamToAuth);
             setIsPinModalOpen(false);
             setPinInput('');
+            
+            // --- UPDATE SERVER STATE: MARK CAPTAIN AS READY ---
+            // This triggers the visual update for Admin and other clients
+            const updatedTeams = draft.teams.map(t => 
+                t.id === teamToAuth ? { ...t, isCaptainReady: true } : t
+            );
+            
+            const updatedDraft = { ...draft, teams: updatedTeams };
+            
+            // Optimistic update locally
+            setDraft(updatedDraft);
+            
+            // Push to cloud
+            await updateDraftState(updatedDraft);
+            
         } else {
             notify("INCORRECT PIN");
         }
@@ -614,7 +648,7 @@ export const DraftScreen: React.FC = () => {
                 </div>
             </div>
 
-            {/* TEAMS GRID (Same as previous) */}
+            {/* TEAMS GRID */}
             <div className="relative z-10 p-4 pt-12 w-full overflow-y-auto">
                 <div className={`grid ${gridCols} gap-6 w-full max-w-[1600px] mx-auto`}>
                     {draft.teams.map((team) => {
@@ -625,12 +659,34 @@ export const DraftScreen: React.FC = () => {
                         const slotsTotal = draft.sessionConfig.playersPerTeam - 1;
                         const currentCount = team.playerIds.length;
                         const avgRating = team.playerIds.length > 0 ? Math.round(team.playerIds.reduce((sum, pid) => sum + (allPlayers.find(p=>p.id===pid)?.rating||0), 0) / team.playerIds.length) : 0;
+                        
+                        // LOBBY LOGIC:
+                        // Card is READY (colored) if:
+                        // 1. The draft has started (status === active or completed) OR
+                        // 2. The specific captain has successfully logged in (isCaptainReady === true)
+                        const isCardReady = draft.status !== 'waiting' || !!team.isCaptainReady;
 
                         return (
                             <div key={team.id} className="flex flex-col items-center">
                                 <div className="flex flex-col gap-8 w-full max-w-[260px]">
-                                    {/* Captain Card handles authentication if user is not yet logged in */}
-                                    {captain && <CaptainDraftCard player={captain} teamColor={team.color} isCaptain isMyTeam={isMyTeam} isActive={isCurrentTurn} onClick={() => { if (!currentUserTeamId && !isAdminMode) { setTeamToAuth(team.id); setIsPinModalOpen(true); }}} />}
+                                    {/* Captain Card with Lobby Logic */}
+                                    {captain && (
+                                        <CaptainDraftCard 
+                                            player={captain} 
+                                            teamColor={team.color} 
+                                            isCaptain 
+                                            isMyTeam={isMyTeam} 
+                                            isActive={isCurrentTurn} 
+                                            isReady={isCardReady}
+                                            onClick={() => { 
+                                                // Only prompt for login if not already logged in/ready
+                                                if (!currentUserTeamId && !isAdminMode && !team.isCaptainReady) { 
+                                                    setTeamToAuth(team.id); 
+                                                    setIsPinModalOpen(true); 
+                                                }
+                                            }} 
+                                        />
+                                    )}
                                     
                                     <div className="flex justify-center w-full mb-3 mt-4">
                                         <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10 flex items-center gap-2 shadow-sm">

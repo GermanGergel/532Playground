@@ -43,13 +43,14 @@ const DraftSetupModal: React.FC<{
         const draftId = newId();
         const pin = Math.floor(1000 + Math.random() * 9000).toString();
 
-        // Assign selected captains to teams (order doesn't strictly matter here as pick order is shuffled later)
+        // Assign selected captains to teams
         const teams: DraftTeam[] = selectedCaptainIds.map((captainId, idx) => ({
             id: `team_${idx}_${newId()}`,
             name: `TEAM ${idx + 1}`,
             color: teamColors[idx],
             captainId: captainId,
-            playerIds: [captainId] // Captain is first player
+            playerIds: [captainId], // Captain is first player
+            isCaptainReady: false // Initially false, will become true when they log in
         }));
 
         // Players NOT selected as captains

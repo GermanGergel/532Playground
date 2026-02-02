@@ -266,4 +266,5 @@ export interface DraftTeam {
     color: string;
     captainId: string;
     playerIds: string[]; // Including captain
+    isCaptainReady?: boolean; // New Flag: Shows if captain has logged in
 }
