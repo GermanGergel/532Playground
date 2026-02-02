@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { DraftState, Game, GameStatus, EventLogEntry, EventType, StartRoundPayload, Player, SessionStatus } from '../types';
@@ -424,6 +424,24 @@ export const DraftScreen: React.FC = () => {
         };
     }, [draftId, draft?.status]); // Re-run effect if status changes to finished to stop polling? Actually keeping it running is safer until unmount.
 
+    // --- SORT TEAMS BY PICK ORDER ---
+    // This creates a linear visual layout where the 1st picker is always on the left.
+    const sortedTeams = useMemo(() => {
+        if (!draft) return [];
+        // Get unique team IDs in order of their first appearance in pickOrder
+        const initialOrder = Array.from(new Set(draft.pickOrder));
+        
+        // Sort draft.teams based on their position in initialOrder
+        return [...draft.teams].sort((a, b) => {
+            const indexA = initialOrder.indexOf(a.id);
+            const indexB = initialOrder.indexOf(b.id);
+            // Handle edge cases where team ID might not be in pickOrder (shouldn't happen)
+            if (indexA === -1) return 1;
+            if (indexB === -1) return -1;
+            return indexA - indexB;
+        });
+    }, [draft?.teams, draft?.pickOrder]);
+
     const handleCaptainAuth = async () => {
         if (draft && teamToAuth && pinInput === draft.pin) {
             setCurrentUserTeamId(teamToAuth);
@@ -717,7 +735,7 @@ export const DraftScreen: React.FC = () => {
             {/* TEAMS GRID */}
             <div className="relative z-10 p-4 pt-12 w-full overflow-y-auto">
                 <div className={`grid ${gridCols} gap-6 w-full max-w-[1600px] mx-auto`}>
-                    {draft.teams.map((team) => {
+                    {sortedTeams.map((team, index) => {
                         const isCurrentTurn = team.id === currentTeamId;
                         const isMyTeam = team.id === currentUserTeamId;
                         const captain = allPlayers.find(p => p.id === team.captainId);
