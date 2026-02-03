@@ -378,10 +378,7 @@ export const DraftScreen: React.FC = () => {
     // Only the device that created the draft is "Admin"
     const isCreator = localStorage.getItem(`draft_admin_${draftId}`) === 'true';
     
-    // FIXED: Default to FALSE even for creator. Creator must explicitly toggle ADMIN mode.
-    // This prevents "I clicked the link and saw buttons" panic.
-    const [isAdminMode, setIsAdminMode] = useState(false);
-    
+    const [isAdminMode, setIsAdminMode] = useState(isCreator);
     const [isManualMode, setIsManualMode] = useState(false);
     const [manualAssignPlayer, setManualAssignPlayer] = useState<Player | null>(null);
 
@@ -398,6 +395,11 @@ export const DraftScreen: React.FC = () => {
         setShowToast(true);
         setTimeout(() => setShowToast(false), 2500);
     };
+
+    useEffect(() => {
+        // Ensure admin mode is strictly bound to creator status on mount
+        setIsAdminMode(localStorage.getItem(`draft_admin_${draftId}`) === 'true');
+    }, [draftId]);
 
     // --- FORCE SYNC POLLING ---
     // Poll every 3 seconds to keep clients in sync and prevent "frozen captain"
@@ -682,14 +684,12 @@ export const DraftScreen: React.FC = () => {
     );
 
     // --- PHASE B: FINISHED SCREEN ---
-    // Universal "Finished" screen for everyone, regardless of Admin status
-    if (draft.status === 'finished_view') {
+    if (draft.status === 'finished_view' && !isAdminMode) {
         return <FinalSplashScreen />;
     }
 
     // --- PHASE A: COMPLETED (RECAP) VIEW ---
-    // Universal "Completed" screen for everyone. Admin sees a simple "Exit" button.
-    if (draft.status === 'completed') {
+    if (draft.status === 'completed' && !isAdminMode) {
         return (
             <div className="min-h-screen bg-[#0a0c10] overflow-y-auto">
                 <div className="p-4 md:p-8">
@@ -699,18 +699,6 @@ export const DraftScreen: React.FC = () => {
                         </div>
                     </div>
                     <RecapView draft={draft} allPlayers={allPlayers} isExport={false} />
-                    
-                    {isCreator && (
-                        <div className="fixed bottom-6 left-0 right-0 flex justify-center z-50 pointer-events-none">
-                            <Button 
-                                variant="secondary" 
-                                className="!py-2 !px-6 !text-[10px] font-black tracking-widest uppercase shadow-2xl bg-[#0a0c10]/90 border border-white/20 hover:border-white/50 hover:text-white pointer-events-auto"
-                                onClick={() => navigate('/')}
-                            >
-                                EXIT TO HUB
-                            </Button>
-                        </div>
-                    )}
                 </div>
             </div>
         );
