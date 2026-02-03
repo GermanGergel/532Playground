@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { DraftState, Game, GameStatus, EventLogEntry, EventType, StartRoundPayload, Player, SessionStatus } from '../types';
 import { getDraftSession, updateDraftState, subscribeToDraft, saveRemoteActiveSession } from '../db';
 import { PlayerAvatar } from '../components/avatars';
-import { Users, CheckCircle, Wand, Share2, Play, Key, RefreshCw, XCircle, Link } from '../icons'; 
+import { Users, CheckCircle, Wand, Share2, Play, Key, RefreshCw, XCircle, Link, Settings } from '../icons'; 
 import { newId, BrandedHeader } from './utils';
 import { Modal, Button } from '../ui';
 import html2canvas from 'html2canvas';
@@ -19,7 +18,7 @@ const brandTextStyle: React.CSSProperties = {
 };
 
 // --- SPLASH SCREEN FOR PLAYERS ---
-const FinalSplashScreen: React.FC = () => (
+const FinalSplashScreen: React.FC<{ isCreator?: boolean; onAdminReentry?: () => void }> = ({ isCreator, onAdminReentry }) => (
     <div className="fixed inset-0 z-[200] bg-[#0a0c10] flex flex-col items-center justify-center animate-in fade-in duration-1000">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#00F2FE]/10 via-[#0a0c10] to-black pointer-events-none"></div>
         <div className="relative z-10 flex flex-col items-center">
@@ -34,6 +33,15 @@ const FinalSplashScreen: React.FC = () => (
                 PREPARE FOR BATTLE
             </p>
         </div>
+        
+        {isCreator && onAdminReentry && (
+            <button 
+                onClick={onAdminReentry}
+                className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[210] px-6 py-2 rounded-full border border-white/10 bg-white/5 text-[9px] font-black text-white/30 uppercase tracking-[0.3em] hover:text-[#00F2FE] hover:border-[#00F2FE]/30 transition-all active:scale-95"
+            >
+                Re-enter Command Center
+            </button>
+        )}
     </div>
 );
 
@@ -376,14 +384,14 @@ export const DraftScreen: React.FC = () => {
     
     // --- AUTH LOGIC (LOCALSTORAGE) ---
     // Only the device that created the draft is "Admin"
-    const isCreator = localStorage.getItem(`draft_admin_${draftId}`) === 'true';
+    const isCreator = useMemo(() => localStorage.getItem(`draft_admin_${draftId}`) === 'true', [draftId]);
     
     const [isAdminMode, setIsAdminMode] = useState(isCreator);
     const [isManualMode, setIsManualMode] = useState(false);
     const [manualAssignPlayer, setManualAssignPlayer] = useState<Player | null>(null);
 
     const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
-    const [isExporting, setIsExporting] = useState(false);
+    const [isExporting, setIsExporting] = React.useState(false);
     
     const exportRef = useRef<HTMLDivElement>(null);
 
@@ -685,13 +693,24 @@ export const DraftScreen: React.FC = () => {
 
     // --- PHASE B: FINISHED SCREEN ---
     if (draft.status === 'finished_view' && !isAdminMode) {
-        return <FinalSplashScreen />;
+        return <FinalSplashScreen isCreator={isCreator} onAdminReentry={() => setIsAdminMode(true)} />;
     }
 
     // --- PHASE A: COMPLETED (RECAP) VIEW ---
     if (draft.status === 'completed' && !isAdminMode) {
         return (
-            <div className="min-h-screen bg-[#0a0c10] overflow-y-auto">
+            <div className="min-h-screen bg-[#0a0c10] overflow-y-auto relative">
+                {isCreator && (
+                    <button 
+                        onClick={() => setIsAdminMode(true)}
+                        className="fixed top-6 right-6 z-[300] px-4 py-2 rounded-full border border-[#00F2FE]/30 bg-[#00F2FE]/10 text-[9px] font-black text-[#00F2FE] uppercase tracking-[0.2em] shadow-[0_0_15px_rgba(0,242,254,0.3)] backdrop-blur-md active:scale-95 transition-all"
+                    >
+                        <div className="flex items-center gap-2">
+                            <Settings className="w-3 h-3" />
+                            <span>Admin Panel</span>
+                        </div>
+                    </button>
+                )}
                 <div className="p-4 md:p-8">
                      <div className="text-center mb-6">
                         <div className="inline-block border border-white/20 bg-white/5 px-4 py-1.5 rounded-full backdrop-blur-md">
