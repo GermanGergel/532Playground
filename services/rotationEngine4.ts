@@ -13,7 +13,10 @@ const countGamesPlayed = (session: Session, teamId: string): number => {
 /**
  * Расчитывает следующую очередь и состав матча для 4 команд.
  * Сохраняет привязку команды к стороне поля (Home/Away).
- * Включает логику "Справедливости" (Fairness Logic): приоритет команде с меньшим числом игр.
+ * 
+ * ОБНОВЛЕННАЯ ЛОГИКА «Порог значимости»:
+ * Приоритет отдается живой очереди (FIFO). Команда с позиции 4 может 
+ * перепрыгнуть команду с позиции 3 ТОЛЬКО если разница в сыгранных матчах составляет 2 и более.
  */
 export const calculateNextQueue4 = (
     session: Session,
@@ -23,24 +26,26 @@ export const calculateNextQueue4 = (
         ? session.rotationQueue 
         : session.teams.map(t => t.id);
         
-    // Deconstruct current state: [Home, Away, Bench1, Bench2]
+    // Deconstruct current state: [Home, Away, Bench1 (Pos 3), Bench2 (Pos 4)]
     const [team1Id, team2Id, wait1Id, wait2Id] = currentQueue;
     
-    // --- FAIRNESS LOGIC ---
-    // Check who has played fewer games among the bench players.
-    // If the 2nd team on bench has fewer games than the 1st, they jump the queue.
+    // --- HYBRID FAIRNESS LOGIC (Significance Threshold) ---
     const gamesWait1 = countGamesPlayed(session, wait1Id);
     const gamesWait2 = countGamesPlayed(session, wait2Id);
 
     let challengerId = wait1Id;
     let remainingBenchId = wait2Id;
 
-    if (gamesWait2 < gamesWait1) {
-        // Swap priority because Wait2 played fewer games
+    /**
+     * ПРАВИЛО: Перепрыгнуть очередь можно только если разница >= 2 игр.
+     * Если разница 0 или 1 — соблюдаем порядок, в котором команды пришли на скамейку.
+     */
+    if ((gamesWait1 - gamesWait2) >= 2) {
+        // Команда на Pos 4 (wait2) засиделась гораздо сильнее (на 2+ игры меньше сыграно)
         challengerId = wait2Id;
         remainingBenchId = wait1Id;
     }
-    // ----------------------
+    // ------------------------------------------------------
 
     const isDraw = finishedGame.isDraw;
     const winnerId = finishedGame.winnerTeamId;
@@ -49,10 +54,8 @@ export const calculateNextQueue4 = (
     let nextQueue: string[] = [];
 
     if (isDraw) {
-        // НИЧЬЯ: Оба на выход.
-        // На поле выходят оба со скамейки.
-        // Порядок выхода (Home/Away) сохраняем согласно их приоритету (challenger идет первым).
-        // Очередь: [New_Home, New_Away, Old_Home, Old_Away]
+        // НИЧЬЯ: Обе команды уходят.
+        // На поле выходят обе отдыхавшие команды согласно определенному приоритету.
         nextQueue = [challengerId, remainingBenchId, team1Id, team2Id];
     } else {
         const winnerIdActual = winnerId!;
@@ -61,24 +64,17 @@ export const calculateNextQueue4 = (
         const mustWinnerRotate = rotationMode === RotationMode.AutoRotate && (winnerGamesCount + 1) >= 3;
 
         if (mustWinnerRotate) {
-            // Победитель выиграл 3-ю игру: оба на выход.
-            // Победитель уходит в самый конец (Pos 4), проигравший перед ним (Pos 3).
-            // На поле выходят оба со скамейки.
+            // Победитель выиграл 3-ю игру (Auto-Rotate): оба на выход.
             const loserId = (winnerIdActual === team1Id) ? team2Id : team1Id;
             nextQueue = [challengerId, remainingBenchId, loserId, winnerIdActual];
         } else {
             // СТАНДАРТ: Победитель остается НА СВОЕМ фланге.
-            // Challenger заходит на место проигравшего.
-            // RemainingBench остается ждать (но теперь он стал первым в очереди на скамейке).
-            // Проигравший уходит в самый конец.
-            
+            // Претендент (Challenger) заходит на место проигравшего.
             if (winnerIdActual === team1Id) {
-                // Победитель слева (Pos 1).
-                // Next Queue: [Winner, Challenger, Bench_Next, Loser]
+                // Победитель был Home (Pos 1)
                 nextQueue = [team1Id, challengerId, remainingBenchId, team2Id];
             } else {
-                // Победитель справа (Pos 2).
-                // Next Queue: [Challenger, Winner, Bench_Next, Loser]
+                // Победитель был Away (Pos 2)
                 nextQueue = [challengerId, team2Id, remainingBenchId, team1Id];
             }
         }
