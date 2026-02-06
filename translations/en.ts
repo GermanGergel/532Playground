@@ -1,3 +1,4 @@
+
 export const en = {
   // Navigation
   navHome: "Home",
@@ -56,11 +57,12 @@ export const en = {
   selectWinnerDesc: "Select the winning team to proceed",
   onBench: "On Bench",
 
-  // Legionnaire
+  // FIX: Added missing Legionnaire keys for English translation
   legionnaire_replace: "REPLACE",
   legionnaire_select: "SELECT",
   legionnaire_no_players: "No resting players available",
 
+  // FIX: Added missing Session Summary keys for English translation
   // Session Summary
   summary_title: "SESSION SUMMARY",
   summary_location: "LOCATION",
@@ -84,6 +86,7 @@ export const en = {
   thW: "W",
   thD: "D",
   thL: "L",
+  // Added missing thGF and thGA keys for standings table headers
   thGF: "GF",
   thGA: "GA",
   thGD: "GD",
@@ -160,6 +163,8 @@ export const en = {
   shareViaApp: "Share Link",
   scanToOpen: "SCAN TO OPEN PROFILE",
   clickToEnter: "CLICK TO ENTER",
+  ratingProtection: "Rating Protection",
+  ratingProtectionDesc: "Prevents penalty drop",
 
   // Analytics & Info
   lastSessionAnalysis: "Last Session Analysis",
@@ -256,13 +261,13 @@ export const en = {
   hubVitalsTitle: "CLUB VITALS",
   hubStatsMembers: "MEMBERS",
   hubSessionsPlayed: "SESSIONS",
-  hubAvgRating: "AVG OVR",
+  hubAvgRating: "AVG RATING",
   hubLocation: "LOCATION",
   hubTimeFrame: "TIME FRAME",
   hubWeather: "WEATHER",
   hubImpact: "IMPACT",
-  hubWelcomeText: "Welcome to the official UNIT Hub. Track your stats, compare with others, and rise to the top.",
-  hubLeadersTitle: "SEASON LEADERS",
+  hubWelcomeText: "Welcome to the official 532 Playground Hub. Track your stats, compare with others, and rise to the top.",
+  hubLeadersTitle: "Session Leaders",
   hubJoinSquad: "Join the Squad",
 
   // Duel

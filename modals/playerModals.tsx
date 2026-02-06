@@ -83,6 +83,7 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
     const [countryCode, setCountryCode] = React.useState('');
     const [rating, setRating] = React.useState<number | string>('');
     const [currentSkills, setCurrentSkills] = React.useState<SkillType[]>([]);
+    const [isImmune, setIsImmune] = React.useState(false);
     const [activeTab, setActiveTab] = React.useState<'info' | 'skills'>('info');
     
     const getTierForRating = (rating: number): PlayerTier => {
@@ -99,6 +100,7 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
             setCountryCode(playerToEdit.countryCode || '');
             setRating(playerToEdit.rating > 0 ? playerToEdit.rating : '');
             setCurrentSkills(playerToEdit.skills || []);
+            setIsImmune(playerToEdit.isImmuneToPenalty || false);
             setActiveTab('info'); 
         }
     }, [isOpen, playerToEdit]);
@@ -159,6 +161,7 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
             skills: currentSkills,
             status: newStatus,
             lastRatingChange: updatedLastRatingChange,
+            isImmuneToPenalty: isImmune,
             // Preserve history exactly as it is in the database
             historyData: playerToEdit.historyData 
         };
@@ -196,6 +199,17 @@ export const PlayerEditModal: React.FC<PlayerEditModalProps> = ({ isOpen, onClos
                                 <label className="text-[10px] uppercase font-bold text-dark-text-secondary block mb-1">Current OVR</label>
                                 <input type="number" value={rating} onChange={handleRatingChange} placeholder="0-100" className={inputClasses} />
                             </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between p-2 rounded-lg bg-dark-bg/50 border border-white/5 mt-2">
+                            <div>
+                                <span className="text-[10px] font-bold text-white uppercase block">{t.ratingProtection}</span>
+                                <span className="text-[8px] text-dark-text-secondary">{t.ratingProtectionDesc}</span>
+                            </div>
+                            <ToggleSwitch 
+                                isOn={isImmune}
+                                onToggle={() => setIsImmune(!isImmune)}
+                            />
                         </div>
                     </div>
                 )}

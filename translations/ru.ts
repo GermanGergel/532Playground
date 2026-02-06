@@ -1,3 +1,4 @@
+
 export const ru = {
   // Navigation
   navHome: "Главная",
@@ -56,10 +57,12 @@ export const ru = {
   selectWinnerDesc: "Выберите победителя, чтобы продолжить",
   onBench: "На скамейке",
 
+  // FIX: Added missing Legionnaire keys for Russian translation
   legionnaire_replace: "ЗАМЕНИТЬ",
   legionnaire_select: "ВЫБРАТЬ",
   legionnaire_no_players: "Нет свободных игроков",
 
+  // FIX: Added missing Session Summary keys for Russian translation
   // Session Summary
   summary_title: "ИТОГИ СЕССИИ",
   summary_location: "ЛОКАЦИЯ",
@@ -159,6 +162,8 @@ export const ru = {
   shareViaApp: "Отправить Ссылку",
   scanToOpen: "СКАНИРУЙ, ЧТОБЫ ОТКРЫТЬ",
   clickToEnter: "НАЖМИ, ЧТОБЫ ВОЙТИ",
+  ratingProtection: "Защита Рейтинга",
+  ratingProtectionDesc: "Рейтинг не падает при пропусках",
 
   // Analytics & Info
   lastSessionAnalysis: "Анализ Последней Сессии",
@@ -199,7 +204,7 @@ export const ru = {
 
   // Info Content
   ratingCalculationTitle: "Система Рейтинга",
-  ratingCalculationDesc: "Рейтинг меняется на основе результатов матча, командной игры и личного вклада.",
+  ratingCalculationDesc: "Рейтинг меняется на основе результатов матчу, командной игры и личного вклада.",
   ratingCalculationExamplesTitle: "Примеры Начисления",
   ratingExampleWinStrong: "Уверенная победа (+2GD): +1.3 очка",
   ratingExampleWinClose: "Обычная победа: +1.0 очко",

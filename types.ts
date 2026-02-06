@@ -88,6 +88,7 @@ export interface Player {
     historyData?: PlayerHistoryEntry[];
     lastRatingChange?: RatingBreakdown;
     consecutiveMissedSessions?: number;
+    isImmuneToPenalty?: boolean; // Protects against inactivity drops
 }
 
 export interface Team {

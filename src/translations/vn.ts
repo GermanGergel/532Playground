@@ -162,6 +162,8 @@ export const vn = {
   shareViaApp: "Gửi Link",
   scanToOpen: "QUÉT ĐỂ MỞ",
   clickToEnter: "NHẤN ĐỂ VÀO",
+  ratingProtection: "Bảo Vệ Rating",
+  ratingProtectionDesc: "Ngăn rating giảm khi vắng mặt",
 
   // Analytics & Info
   lastSessionAnalysis: "Phân Tích Gần Nhất",
@@ -195,6 +197,10 @@ export const vn = {
   session: "Buổi Tập",
   information: "Thông Tin",
   statistics: "Thống Kê",
+
+  // Penalty
+  penalty_title: "TRẠNG THÁI: PHẠT VẮNG MẶT",
+  penalty_message: "Giảm -{n} OVR do vắng mặt {m} buổi liên tiếp.",
 
   // Info Content
   ratingCalculationTitle: "Hệ Thống Rating",
@@ -259,7 +265,7 @@ export const vn = {
   hubTimeFrame: "THỜI GIAN",
   hubWeather: "THỜI TIẾT",
   hubImpact: "TÁC ĐỘNG",
-  hubWelcomeText: "Chào mừng đến với Hub 532 Playground chính thức. Theo dõi chỉ số, so sánh với người khác và leo lên đỉnh vinh quang.",
+  hubWelcomeText: "Chào mừng đến với Hub 532 Playground chính thức. Theo dõi chỉ số, so sánh kết quả và vươn tới đỉnh cao.",
   hubLeadersTitle: "Dẫn Đầu Buổi Tập",
   hubJoinSquad: "Tham Gia Đội Hình",
   
@@ -384,7 +390,7 @@ export const vn = {
   badge_undefeated: "Bất Bại",
   badge_undefeated_desc: "Không thua (tối thiểu 6 trận)",
   badge_dominant_participant: "Đá 10+ trận",
-  badge_dominant_participant_desc: "10+ Games played",
+  badge_dominant_participant_desc: "Đã đá trên 10 trận",
   badge_career_100_wins: "Trăm Trận Thắng",
   badge_career_100_wins_desc: "100 Trận Thắng Sự Nghiệp",
   badge_career_150_influence: "Biểu Tượng",

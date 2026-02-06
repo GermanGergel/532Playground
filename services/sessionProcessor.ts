@@ -86,9 +86,10 @@ export const processFinishedSession = ({
             const currentMissed = (player.consecutiveMissedSessions || 0) + 1;
             let newRating = player.rating;
             let actualPenaltyDelta = 0;
+            const isImmune = !!player.isImmuneToPenalty;
 
-            // Apply penalty every 3rd missed session
-            if (currentMissed > 0 && currentMissed % 3 === 0) {
+            // Apply penalty every 3rd missed session IF not immune
+            if (!isImmune && currentMissed > 0 && currentMissed % 3 === 0) {
                 if (newRating > floor) {
                     const targetRating = Math.max(floor, newRating - 1);
                     actualPenaltyDelta = targetRating - newRating;

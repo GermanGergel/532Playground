@@ -132,7 +132,7 @@ export const ua = {
 
   // Player Hub
   newPlayerManagement: "Новий Рекрут",
-  playerDatabase: "Base Даних",
+  playerDatabase: "База Даних",
   clubNews: "Новости Клубу",
   searchPlayers: "Пошук гравців...",
   sortBy: "Сортування:",
@@ -162,6 +162,8 @@ export const ua = {
   shareViaApp: "Надіслати Посилання",
   scanToOpen: "СКАНУЙ, ЩОБ ВІДКРИТИ",
   clickToEnter: "НАТИСНИ, ЩОБ УВІЙТИ",
+  ratingProtection: "Захист Рейтингу",
+  ratingProtectionDesc: "Рейтинг не падає при пропусках",
 
   // Analytics & Info
   lastSessionAnalysis: "Аналіз Останньої Сесії",
@@ -229,7 +231,7 @@ export const ua = {
   ruleLatePenalty: "ШТРАФ 20K",
   ruleRespectTitle: "Повага",
   ruleRespectDesc: "Неспортивна поведінка або агресія.",
-  ruleRespectPenalty: "БАН НА СЕССІЮ",
+  ruleRespectPenalty: "БАН НА СЕСІЮ",
   badgeBonusTitle: "Бонуси Значків",
   badgeBonusDesc: "Заробляйте значки, щоб підвищити рейтинг матчу.",
   badgeBonusMvp: "MVP: +0.4 очка",
@@ -259,13 +261,22 @@ export const ua = {
   hubStatsMembers: "УЧАСНИКИ",
   hubSessionsPlayed: "СЕССІЇ",
   hubAvgRating: "СЕРЕДНІЙ OVR",
-  hubLocation: "ЛОКАЦИЯ",
+  hubLocation: "ЛОКАЦІЯ",
   hubTimeFrame: "ЧАС",
   hubWeather: "ПОГОДА",
   hubImpact: "ІМПАКТ",
-  hubWelcomeText: "Ласкаво просимо до офіційного хабу 532 Playground. Слідкуй за статистикою, порівнюй результати та прагни до вершини.",
+  hubWelcomeText: "Ласкаво просимо до офіційного хабу UNIT CLUB. Слідкуй за статистикою, порівнюй результати та прагни до вершини.",
   hubLeadersTitle: "Лідери Сесії",
-  hubJoinSquad: "Вступить в Загін",
+  hubJoinSquad: "Вступити в Загін",
+  
+  // Duel
+  duel_title: "Вибір Дуелі",
+  duel_id_unit: "ОПОЗНАННЯ ЮНІТА...",
+  duel_initiate: "ЗАПУСТИТИ ПОСЛІДОВНІСТЬ",
+  duel_sector_empty: "Сектор порожній",
+  duel_complete: "ПОСЛІДОВНІСТЬ ЗАВЕРШЕНА",
+  duel_score: "РАХУНОК",
+  duel_verified: "Індекс ефективності підтверджено",
   
   // Promo
   hero_title: "ГРАЙ ЯК ПРОФІ",
@@ -275,7 +286,7 @@ export const ua = {
   feature_live: "Live Оновлення Рейтингу",
   feature_live_desc: "Дивись, як гра впливає на твій рейтинг.",
   feature_stats: "Детальна Статистика",
-  feature_stats_desc: "Ми рахуємо все: голи, ассисти, перемоги та багато іншого.",
+  feature_stats_desc: "Ми рахуємо все: голи, асисти, перемоги та багато іншого.",
   feature_fair: "Розумний Баланс",
   feature_fair_desc: "Команди балансуються алгоритмом.",
   roadmap_title: "МАЙБУТНЄ",
@@ -369,7 +380,7 @@ export const ua = {
   badge_ten_influence_desc: "10+ Голів та Асистів",
   badge_mastery_balance: "Баланс",
   badge_mastery_balance_desc: "3+ Голи та 3+ Асисти",
-  badge_key_player: "Ключовий Гравець",
+  badge_key_player: "Ключевий Гравець",
   badge_key_player_desc: "Вклад у 3 перемогах поспіль",
   badge_win_leader: "Лідер Перемог",
   badge_win_leader_desc: "Найбільше перемог",
@@ -390,18 +401,18 @@ export const ua = {
   badge_double_agent: "Подвійний Агент",
   badge_double_agent_desc: "3 Перемоги за кожну команду",
   badge_joker: "Джокер",
-  badge_joker_desc: "Г/А будучи Легионером",
+  badge_joker_desc: "Г/А будучи Легіонером",
   badge_crisis_manager: "Кризовий Менеджер",
-  badge_crisis_manager_desc: "2+ Г/А будучи Легионером",
+  badge_crisis_manager_desc: "2+ Г/А будучи Легіонером",
   badge_iron_lung: "Залізні Легені",
   badge_iron_lung_desc: "Серія Перемога-Перемога-Перемога",
-
+  
   // Announcements
   announcement_start_match: "Початок Матчу",
   announcement_three_minutes: "3 Хвилини",
   announcement_one_minute: "1 Хвилина",
   announcement_thirty_seconds: "30 Секунд",
-  announcement_five: "P'ять",
+  announcement_five: "П'ять",
   announcement_four: "Чотири",
   announcement_three: "Три",
   announcement_two: "Два",
