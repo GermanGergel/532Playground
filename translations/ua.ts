@@ -1,3 +1,4 @@
+
 export const ua = {
   // Navigation
   navHome: "Головна",
@@ -84,6 +85,7 @@ export const ua = {
   thW: "В",
   thD: "Н",
   thL: "П",
+  // Added missing thGF and thGA keys for standings table headers
   thGF: "З",
   thGA: "П",
   thGD: "РМ",
@@ -103,7 +105,7 @@ export const ua = {
   noSessionsFound: "Історія сесій порожня.",
   finished: "Завершено",
   confirmDeletion: "Підтвердіть видалення",
-  delete: "Вилучити",
+  delete: "Видалити",
 
   // Settings
   settingsTitle: "Налаштування",
@@ -131,13 +133,13 @@ export const ua = {
   // Player Hub
   newPlayerManagement: "Новий Рекрут",
   playerDatabase: "База Даних",
-  clubNews: "Новини Клубу",
+  clubNews: "Новости Клубу",
   searchPlayers: "Пошук гравців...",
   sortBy: "Сортування:",
   sortByRating: "Рейтинг",
   sortByName: "Ім'я",
   sortByDate: "Дата",
-  unconfirmedBadge: "НОВИЙ",
+  unconfirmedBadge: "НОВЫЙ",
   noPlayersFound: "Гравців не знайдено.",
   addPlayerManually: "Додати Вручну",
   nickname: "Нікнейм",
@@ -160,6 +162,8 @@ export const ua = {
   shareViaApp: "Надіслати Посилання",
   scanToOpen: "СКАНУЙ, ЩОБ ВІДКРИТИ",
   clickToEnter: "НАТИСНИ, ЩОБ УВІЙТИ",
+  ratingProtection: "Захист Рейтингу",
+  ratingProtectionDesc: "Рейтинг не падає при пропусках",
 
   // Analytics & Info
   lastSessionAnalysis: "Аналіз Останньої Сесії",
@@ -239,10 +243,10 @@ export const ua = {
 
   // Hub
   hubTicker1: "ЕЛІТНИЙ ТРЕКІНГ",
-  hubTicker2: "LIVE ДАНІ СЕСІЇ",
+  hubTicker2: "LIVE ДАНІ СЕССИИ",
   hubTicker3: "ГЛОБАЛЬНИЙ РЕЙТИНГ",
   hubTicker4: "АНАЛІТИКА ГРАВЦІВ",
-  hubTicker5: "АРХІВ МАТЧІВ",
+  hubTicker5: "АРХИВ МАТЧІВ",
   hubAwaitingStats: "ОЧІКУВАННЯ ДАНИХ",
   hubAnalyzingPerformance: "АНАЛІЗ ЕФЕКТИВНОСТІ...",
   hubDashboardBtn: "ДАШБОРД",
@@ -252,7 +256,7 @@ export const ua = {
   hubSessionSquads: "СКЛАДИ",
   hubTeamStandings: "ТАБЛИЦЯ",
   hubPlayers: "ГРАВЦІ",
-  hubGames: "МАТЧІ",
+  hubGames: "МАТЧИ",
   hubVitalsTitle: "ПОКАЗНИКИ КЛУБУ",
   hubStatsMembers: "УЧАСНИКИ",
   hubSessionsPlayed: "СЕССІЇ",
@@ -265,6 +269,15 @@ export const ua = {
   hubLeadersTitle: "Лідери Сесії",
   hubJoinSquad: "Вступити в Загін",
   
+  // Duel
+  duel_title: "Вибір Дуелі",
+  duel_id_unit: "ОПОЗНАННЯ ЮНІТА...",
+  duel_initiate: "ЗАПУСТИТИ ПОСЛІДОВНІСТЬ",
+  duel_sector_empty: "Сектор порожній",
+  duel_complete: "ПОСЛІДОВНІСТЬ ЗАВЕРШЕНА",
+  duel_score: "РАХУНОК",
+  duel_verified: "Індекс ефективності підтверджено",
+  
   // Promo
   hero_title: "ГРАЙ ЯК ПРОФІ",
   hero_subtitle: "Найтехнологічніша футбольна спільнота.",
@@ -273,7 +286,7 @@ export const ua = {
   feature_live: "Live Оновлення Рейтингу",
   feature_live_desc: "Дивись, як гра впливає на твій рейтинг.",
   feature_stats: "Детальна Статистика",
-  feature_stats_desc: "Ми рахуємо все: голи, ассисти, перемоги та багато іншого.",
+  feature_stats_desc: "Ми рахуємо все: голи, асисти, перемоги та багато іншого.",
   feature_fair: "Розумний Баланс",
   feature_fair_desc: "Команди балансуються алгоритмом.",
   roadmap_title: "МАЙБУТНЄ",
@@ -294,7 +307,7 @@ export const ua = {
 
   // Poster
   announcementGeneratorTitle: "Генератор Афіш",
-  posterDate: "Date",
+  posterDate: "Дата",
   posterTime: "Початок",
   posterEndTime: "Кінець",
   uploadBackground: "Завантажити Фон",
@@ -367,7 +380,7 @@ export const ua = {
   badge_ten_influence_desc: "10+ Голів та Асистів",
   badge_mastery_balance: "Баланс",
   badge_mastery_balance_desc: "3+ Голи та 3+ Асисти",
-  badge_key_player: "Ключовий Гравець",
+  badge_key_player: "Ключевий Гравець",
   badge_key_player_desc: "Вклад у 3 перемогах поспіль",
   badge_win_leader: "Лідер Перемог",
   badge_win_leader_desc: "Найбільше перемог",
@@ -393,15 +406,6 @@ export const ua = {
   badge_crisis_manager_desc: "2+ Г/А будучи Легіонером",
   badge_iron_lung: "Залізні Легені",
   badge_iron_lung_desc: "Серія Перемога-Перемога-Перемога",
-
-  // Duel
-  duel_title: "Вибір Дуелі",
-  duel_id_unit: "ОПОЗНАННЯ ЮНІТА...",
-  duel_initiate: "ЗАПУСТИТИ ПОСЛІДОВНІСТЬ",
-  duel_sector_empty: "Сектор порожній",
-  duel_complete: "ПОСЛІДОВНІСТЬ ЗАВЕРШЕНА",
-  duel_score: "РАХУНОК",
-  duel_verified: "Індекс ефективності підтверджено",
   
   // Announcements
   announcement_start_match: "Початок Матчу",

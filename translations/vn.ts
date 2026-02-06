@@ -1,3 +1,4 @@
+
 export const vn = {
   // Navigation
   navHome: "Trang Chủ",
@@ -56,10 +57,12 @@ export const vn = {
   selectWinnerDesc: "Chọn đội thắng để tiếp tục",
   onBench: "Dự Bị",
 
+  // FIX: Added missing Legionnaire keys for Vietnamese translation
   legionnaire_replace: "THAY THẾ",
   legionnaire_select: "CHỌN",
   legionnaire_no_players: "Không có cầu thủ dự bị",
 
+  // FIX: Added missing Session Summary keys for Vietnamese translation
   // Session Summary
   summary_title: "TỔNG KẾT BUỔI TẬP",
   summary_location: "ĐỊA ĐIỂM",
@@ -159,6 +162,8 @@ export const vn = {
   shareViaApp: "Gửi Link",
   scanToOpen: "QUÉT ĐỂ MỞ",
   clickToEnter: "NHẤN ĐỂ VÀO",
+  ratingProtection: "Bảo Vệ Rating",
+  ratingProtectionDesc: "Ngăn rating giảm khi vắng mặt",
 
   // Analytics & Info
   lastSessionAnalysis: "Phân Tích Gần Nhất",
@@ -260,10 +265,11 @@ export const vn = {
   hubTimeFrame: "THỜI GIAN",
   hubWeather: "THỜI TIẾT",
   hubImpact: "TÁC ĐỘNG",
-  hubWelcomeText: "Chào mừng đến với Hub UNIT CLUB chính thức. Theo dõi chỉ số, so sánh kết quả và vươn tới đỉnh cao.",
+  hubWelcomeText: "Chào mừng đến với Hub 532 Playground chính thức. Theo dõi chỉ số, so sánh kết quả và vươn tới đỉnh cao.",
   hubLeadersTitle: "Dẫn Đầu Buổi Tập",
   hubJoinSquad: "Tham Gia Đội Hình",
   
+  // FIX: Added missing Duel keys for Vietnamese translation
   // Duel
   duel_title: "Chọn Đối Thủ",
   duel_id_unit: "XÁC MINH CẦU THỦ...",
