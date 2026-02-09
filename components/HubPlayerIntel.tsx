@@ -310,8 +310,7 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                                                     )}
                                                     {isPrime && (
                                                         <div className="mt-2 flex items-center justify-end animate-in fade-in slide-in-from-right-2 duration-700">
-                                                            <div className="px-2 py-0.5 border border-[#FFD700]/30 bg-[#FFD700]/10 rounded-full flex items-center gap-1 shadow-[0_0_10px_rgba(255,215,0,0.15)]">
-                                                                <Zap className="w-2 h-2 text-[#FFD700]" fill="currentColor" />
+                                                            <div className="px-2 py-0.5 border border-[#FFD700]/30 bg-[#FFD700]/10 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(255,215,0,0.15)]">
                                                                 <span className="text-[7px] font-black text-[#FFD700] uppercase tracking-wide leading-none">PRIME</span>
                                                             </div>
                                                         </div>
