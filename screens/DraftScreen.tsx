@@ -63,37 +63,57 @@ const InvalidLinkScreen: React.FC = () => (
     </div>
 );
 
-// --- CARD BACK (LOTTERY MODE) ---
-const DraftCardBack: React.FC<{ isRevealing: boolean; pickIndex: number }> = ({ isRevealing, pickIndex }) => {
+// --- CARD BACK (PREMIUM TEXTURE STYLE) ---
+const DraftCardBack: React.FC<{ isRevealing: boolean; pickIndex: number }> = ({ isRevealing }) => {
     return (
         <div 
-            className="relative w-full aspect-[0.75] rounded-3xl overflow-hidden bg-[#0F1115] border border-white/10 flex flex-col items-center justify-center transition-all duration-500 shadow-2xl"
+            className={`
+                relative w-full aspect-[0.75] rounded-3xl overflow-hidden 
+                flex flex-col items-center justify-center transition-all duration-700
+                ${isRevealing ? 'scale-[1.03] shadow-[0_0_50px_rgba(0,242,254,0.4)] border-[#00F2FE]' : 'shadow-2xl border-white/5'}
+            `}
             style={{
-                boxShadow: isRevealing ? '0 0 40px rgba(0, 242, 254, 0.4)' : 'none',
-                borderColor: isRevealing ? '#00F2FE' : 'rgba(255,255,255,0.1)'
+                backgroundColor: '#15171C',
+                borderWidth: '1px',
+                borderStyle: 'solid'
             }}
         >
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(0,242,254,0.1),_transparent)] opacity-50"></div>
+            {/* 1. Base Convex Gradient (Creates depth/bulge effect) */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_#2A2E35_0%,_#0F1115_100%)]"></div>
             
-            {/* Pattern */}
-            <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`, backgroundSize: '4px 4px' }}></div>
+            {/* 2. Tactical Mesh Pattern (The "Roughness") */}
+            <div 
+                className="absolute inset-0 opacity-[0.07]" 
+                style={{ 
+                    backgroundImage: `linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000), linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000)`,
+                    backgroundPosition: '0 0, 4px 4px',
+                    backgroundSize: '8px 8px'
+                }}
+            ></div>
 
-            <div className={`relative z-10 flex flex-col items-center gap-4 ${isRevealing ? 'animate-pulse' : ''}`}>
-                <div className="w-16 h-16 rounded-full border-2 border-white/10 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                    <span className="font-blackops text-2xl text-white/30 tracking-tighter">
-                        ?
-                    </span>
-                </div>
-                
-                <div className="flex flex-col items-center gap-1">
-                    <span className="text-[9px] font-mono text-[#00F2FE] tracking-[0.2em] uppercase">
-                        PICK #{pickIndex + 1}
-                    </span>
-                    <span className="text-[8px] font-black text-white/20 uppercase tracking-widest">
-                        RANDOMIZING...
+            {/* 3. Subtle Gloss overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none"></div>
+
+            {/* 4. Center Logo */}
+            <div className={`relative z-10 flex flex-col items-center ${isRevealing ? 'animate-pulse' : ''}`}>
+                <div className="transform scale-110">
+                    <span 
+                        className="font-blackops text-6xl tracking-widest uppercase" 
+                        style={{
+                            ...brandTextStyle,
+                            // Adding extra glow to the back logo
+                            filter: 'drop-shadow(0 0 15px rgba(0,0,0,0.8)) drop-shadow(0 0 5px rgba(72, 207, 203, 0.3))'
+                        }}
+                    >
+                        UNIT
                     </span>
                 </div>
             </div>
+
+            {/* 5. Reveal Effect (Flash) */}
+            {isRevealing && (
+                <div className="absolute inset-0 bg-white/10 animate-pulse mix-blend-overlay pointer-events-none"></div>
+            )}
         </div>
     );
 };
