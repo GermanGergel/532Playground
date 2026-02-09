@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-import { DraftState, Game, GameStatus, EventLogEntry, EventType, StartRoundPayload, Player, SessionStatus } from '../types';
+import { DraftState, Game, GameStatus, EventLogEntry, EventType, StartRoundPayload, Player, SessionStatus, DraftTeam } from '../types';
 import { getDraftSession, updateDraftState, subscribeToDraft, saveRemoteActiveSession } from '../db';
 import { PlayerAvatar } from '../components/avatars';
 import { Users, CheckCircle, Wand, Share2, Play, Key, RefreshCw, XCircle, Link, Settings } from '../icons'; 
@@ -71,9 +72,9 @@ const CaptainDraftCard: React.FC<{
     isActive?: boolean;
     isReady?: boolean; // Prop to indicate if captain is logged in (colorful) or not (gray)
     onClick?: () => void;
-}> = ({ player, teamColor, isCaptain, isMyTeam, isActive, isReady = false, onClick }) => {
+    slotIndex?: number; // Added to display picking order 1, 2, 3
+}> = ({ player, teamColor, isCaptain, isMyTeam, isActive, isReady = false, onClick, slotIndex }) => {
     
-    // UPDATED: Font sizes reduced slightly to look less bulky
     const getNicknameSize = (name: string) => {
         const n = name || '';
         if (n.length > 14) return 'text-base'; 
@@ -90,13 +91,10 @@ const CaptainDraftCard: React.FC<{
     const nicknameSize = getNicknameSize(player.nickname);
     const surnameSize = getSurnameSize(player.surname);
 
-    // Dynamic styles based on readiness
-    // If NOT ready: Grayscale, reduced opacity
-    // If Ready: Full color, glow
     const filterStyle = isReady ? 'none' : 'grayscale(100%) brightness(0.6)';
     const containerShadow = isReady 
         ? (isActive ? `0 0 30px ${teamColor}` : `0 15px 25px -10px ${teamColor}80`)
-        : '0 0 0 transparent'; // No glow if not ready
+        : '0 0 0 transparent'; 
 
     return (
         <div 
@@ -113,6 +111,15 @@ const CaptainDraftCard: React.FC<{
                 opacity: isReady ? (isActive ? 1 : 0.9) : 0.7
             }}
         >
+            {/* PICK ORDER BADGE - Shows during Lottery and Active Draft */}
+            {slotIndex !== undefined && (
+                <div className="absolute top-0 left-0 z-30 bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-br-2xl border-b border-r border-white/10 shadow-xl">
+                    <span className="text-white font-black text-xs tracking-widest font-russo">
+                        PICK <span className="text-[#00F2FE] text-lg ml-1">#{slotIndex + 1}</span>
+                    </span>
+                </div>
+            )}
+
             {player.playerCard ? (
                 <div 
                     className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-110"
@@ -135,7 +142,7 @@ const CaptainDraftCard: React.FC<{
             )}
 
             <div className="absolute inset-0 p-5 flex flex-col justify-between z-10 pointer-events-none">
-                <div className="flex justify-between items-start">
+                <div className="flex justify-between items-start pt-6"> {/* Added pt-6 to clear the PICK badge */}
                     <div className="flex flex-col pt-2">
                         <span className="font-russo text-2xl leading-none tracking-tighter" style={brandTextStyle}>
                             UNIT
@@ -287,6 +294,28 @@ const RecapPlayerCard: React.FC<{
 
 const RecapView: React.FC<{ draft: DraftState, allPlayers: Player[], isExport?: boolean }> = ({ draft, allPlayers, isExport = false }) => {
     
+    // --- RANDOMIZATION LOGIC FOR HIDING PICK ORDER ---
+    // We shuffle the players (excluding captain) only ONCE to prevent jitter on re-renders.
+    const randomizedTeams = useMemo(() => {
+        return draft.teams.map(team => {
+            const captainId = team.captainId;
+            const pickedPlayers = team.playerIds.filter(id => id !== captainId);
+            
+            // Fisher-Yates shuffle for picked players
+            const shuffledPicked = [...pickedPlayers];
+            for (let i = shuffledPicked.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffledPicked[i], shuffledPicked[j]] = [shuffledPicked[j], shuffledPicked[i]];
+            }
+            
+            return {
+                ...team,
+                // Captain ALWAYS first, then random order
+                displayOrderIds: [captainId, ...shuffledPicked]
+            };
+        });
+    }, [draft.teams]);
+
     const containerStyle: React.CSSProperties = isExport ? {
         backgroundColor: '#0a0c10',
         padding: '40px', 
@@ -327,8 +356,8 @@ const RecapView: React.FC<{ draft: DraftState, allPlayers: Player[], isExport?: 
             </div>
 
             <div className="flex flex-col gap-12 w-full">
-                {draft.teams.map((team, idx) => {
-                    const allTeamPlayers = team.playerIds.map(pid => allPlayers.find(p => p.id === pid)).filter(Boolean) as Player[];
+                {randomizedTeams.map((team, idx) => {
+                    const allTeamPlayers = team.displayOrderIds.map(pid => allPlayers.find(p => p.id === pid)).filter(Boolean) as Player[];
                     
                     return (
                         <div key={team.id} className="w-full">
@@ -382,6 +411,11 @@ export const DraftScreen: React.FC = () => {
     const [teamToAuth, setTeamToAuth] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     
+    // --- ANIMATION STATE ---
+    // Used for the "Slot Machine" visual
+    // Note: DraftTeam is complicated to fake, so we might just store random Captain Players for display
+    const [lotteryDisplayTeams, setLotteryDisplayTeams] = useState<DraftTeam[]>([]);
+    
     // --- AUTH LOGIC (LOCALSTORAGE) ---
     // Only the device that created the draft is "Admin"
     const isCreator = useMemo(() => localStorage.getItem(`draft_admin_${draftId}`) === 'true', [draftId]);
@@ -410,17 +444,14 @@ export const DraftScreen: React.FC = () => {
     }, [draftId]);
 
     // --- FORCE SYNC POLLING ---
-    // Poll every 3 seconds to keep clients in sync and prevent "frozen captain"
     useEffect(() => {
         if (!draftId) return;
 
         const syncDraft = async () => {
-            // Only poll if draft is not finished (to save resources) or if we are actively drafting
             if (draft?.status === 'finished_view') return; 
             
             const remoteData = await getDraftSession(draftId);
             if (remoteData) {
-                // Determine if we need to update state
                 setDraft(prev => {
                     if (JSON.stringify(prev) !== JSON.stringify(remoteData)) {
                         return remoteData;
@@ -429,19 +460,13 @@ export const DraftScreen: React.FC = () => {
                 });
                 setIsNotFound(false);
             } else {
-                // Only mark as not found if we don't have a draft state yet (initial load failure)
-                // or if it explicitly returns null (deleted).
                 if (!draft) setIsNotFound(true);
             }
         };
 
-        // Initial Load
         syncDraft();
-
-        // Polling Interval
         const intervalId = setInterval(syncDraft, 3000); 
 
-        // Realtime Subscription (Keep this as primary, polling as backup)
         const subscription = subscribeToDraft(draftId, (newState) => {
             setDraft(newState);
             setIsNotFound(false);
@@ -452,25 +477,82 @@ export const DraftScreen: React.FC = () => {
             // @ts-ignore
             if (subscription && typeof subscription.unsubscribe === 'function') subscription.unsubscribe();
         };
-    }, [draftId, draft]); // Depend on draft to avoid flickering
+    }, [draftId, draft]);
 
-    // --- SORT TEAMS BY PICK ORDER ---
-    // This creates a linear visual layout where the 1st picker is always on the left.
+    // --- SLOT MACHINE VISUAL LOGIC (SEQUENTIAL STOP) ---
+    useEffect(() => {
+        if (draft && draft.status === 'lottery') {
+            const startTime = Date.now();
+            const allDraftTeams = draft.teams; // These are the teams we want to shuffle visually
+            const pickOrderIds = draft.pickOrder; // This is the PRE-DETERMINED Result
+            const numberOfSlots = draft.sessionConfig.numTeams;
+
+            // Helper to get a random team (that is not yet picked if we wanted perfect unique, but for spin it's just visual)
+            const getRandomTeam = () => allDraftTeams[Math.floor(Math.random() * allDraftTeams.length)];
+
+            const interval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                
+                const newDisplayState: DraftTeam[] = [];
+
+                for (let i = 0; i < numberOfSlots; i++) {
+                    // Logic:
+                    // Slot 1 (i=0) stops after 2000ms
+                    // Slot 2 (i=1) stops after 3500ms
+                    // Slot 3 (i=2) stops after 5000ms
+                    const stopTime = 2000 + (i * 1500);
+                    
+                    if (elapsed > stopTime) {
+                        // THIS SLOT HAS STOPPED -> SHOW THE REAL WINNER
+                        const winningTeamId = pickOrderIds[i];
+                        const winner = allDraftTeams.find(t => t.id === winningTeamId);
+                        if (winner) {
+                            newDisplayState.push(winner);
+                        } else {
+                            newDisplayState.push(getRandomTeam()); // Fallback
+                        }
+                    } else {
+                        // THIS SLOT IS SPINNING -> SHOW RANDOM
+                        newDisplayState.push(getRandomTeam());
+                    }
+                }
+                
+                setLotteryDisplayTeams(newDisplayState);
+
+            }, 80); // 80ms for fast spin effect
+
+            return () => clearInterval(interval);
+        }
+    }, [draft?.status, draft?.teams, draft?.pickOrder, draft?.sessionConfig.numTeams]);
+
+    // --- SORT TEAMS (DISPLAY LOGIC) ---
     const sortedTeams = useMemo(() => {
         if (!draft) return [];
-        // Get unique team IDs in order of their first appearance in pickOrder
-        const initialOrder = Array.from(new Set(draft.pickOrder));
         
-        // Sort draft.teams based on their position in initialOrder
-        return [...draft.teams].sort((a, b) => {
-            const indexA = initialOrder.indexOf(a.id);
-            const indexB = initialOrder.indexOf(b.id);
-            // Handle edge cases where team ID might not be in pickOrder (shouldn't happen)
-            if (indexA === -1) return 1;
-            if (indexB === -1) return -1;
-            return indexA - indexB;
-        });
-    }, [draft?.teams, draft?.pickOrder]);
+        // 1. LOTTERY MODE: Use the sequential slot machine state
+        if (draft.status === 'lottery') {
+            // While spinning, we might have fewer teams in state than slots, or just use what we have
+            if (lotteryDisplayTeams.length === draft.sessionConfig.numTeams) {
+                return lotteryDisplayTeams;
+            }
+            return draft.teams; // Fallback to initial if logic hasn't ticked yet
+        }
+
+        // 2. ACTIVE/COMPLETED: Use the fixed pickOrder from DB
+        // This ensures the order 1, 2, 3 stays left-to-right
+        if (draft.status === 'active' || draft.status === 'completed' || draft.status === 'finished_view') {
+            const initialOrder = Array.from(new Set(draft.pickOrder));
+            const ordered = [];
+            for (const id of initialOrder) {
+                const t = draft.teams.find(tm => tm.id === id);
+                if (t) ordered.push(t);
+            }
+            return ordered;
+        }
+
+        // 3. WAITING: Use DB order (sequential creation)
+        return draft.teams;
+    }, [draft?.teams, draft?.pickOrder, draft?.status, lotteryDisplayTeams, draft?.sessionConfig.numTeams]);
 
     const handleCaptainAuth = async () => {
         if (draft && teamToAuth && pinInput === draft.pin) {
@@ -478,18 +560,11 @@ export const DraftScreen: React.FC = () => {
             setIsPinModalOpen(false);
             setPinInput('');
             
-            // --- UPDATE SERVER STATE: MARK CAPTAIN AS READY ---
-            // This triggers the visual update for Admin and other clients
             const updatedTeams = draft.teams.map(t => 
                 t.id === teamToAuth ? { ...t, isCaptainReady: true } : t
             );
-            
             const updatedDraft = { ...draft, teams: updatedTeams };
-            
-            // Optimistic update locally
             setDraft(updatedDraft);
-            
-            // Push to cloud
             await updateDraftState(updatedDraft);
             
         } else {
@@ -497,10 +572,63 @@ export const DraftScreen: React.FC = () => {
         }
     };
 
+    // --- MAIN START LOGIC (LOTTERY TRIGGER) ---
     const handleStartDraft = async () => {
         if (!draft) return;
-        const updatedDraft = { ...draft, status: 'active' as const };
-        await updateDraftState(updatedDraft);
+        
+        // 1. CALCULATE REAL ORDER IMMEDIATELY (FISHER-YATES)
+        const teamIds = draft.teams.map(t => t.id);
+        for (let i = teamIds.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [teamIds[i], teamIds[j]] = [teamIds[j], teamIds[i]];
+        }
+
+        // 2. GENERATE SNAKE DRAFT PICK ORDER
+        const pickOrder: string[] = [];
+        const totalPicksNeeded = draft.availablePlayerIds.length;
+        let round = 0;
+        
+        while (pickOrder.length < totalPicksNeeded) {
+            const roundOrder = [...teamIds];
+            if (round % 2 !== 0) roundOrder.reverse(); // Snake turn
+            pickOrder.push(...roundOrder);
+            round++;
+        }
+        const finalPickOrder = pickOrder.slice(0, totalPicksNeeded);
+
+        // 3. SAVE ORDER & TRIGGER LOTTERY ANIMATION
+        // We save the 'pickOrder' now so all clients know the "Answer" to the puzzle.
+        // Status 'lottery' tells them to start the visual spin.
+        const lotteryDraft = { 
+            ...draft, 
+            status: 'lottery' as const,
+            pickOrder: finalPickOrder 
+        };
+        await updateDraftState(lotteryDraft);
+        setDraft(lotteryDraft);
+
+        // 4. WAIT FOR ANIMATION TO FINISH
+        // Max animation time is ~ 2000 + (3 * 1500) = 6500ms for 4 teams. 
+        // Let's give it 7 seconds to be safe.
+        setTimeout(async () => {
+            if (!draft) return;
+
+            // 5. START DRAFT (ACTIVE)
+            // This locks the UI to the final result
+            const activeDraft = { 
+                ...lotteryDraft, // Keep the same order!
+                status: 'active' as const, 
+            };
+            
+            await updateDraftState(activeDraft);
+            setDraft(activeDraft);
+
+        }, 7000);
+    };
+
+    // Add handleOpenSummary function to fix the error
+    const handleOpenSummary = () => {
+        setIsSummaryModalOpen(true);
     };
 
     const handleManualAssign = async (targetTeamId: string) => {
@@ -549,10 +677,6 @@ export const DraftScreen: React.FC = () => {
         setIsProcessing(false);
     };
 
-    const handleOpenSummary = () => {
-        setIsSummaryModalOpen(true);
-    };
-
     const handleConfirmAndPlay = async () => {
         if (!draft || !activeSession) return;
         
@@ -591,12 +715,8 @@ export const DraftScreen: React.FC = () => {
 
         const newSession = { ...activeSession, teams: finalTeams, games: [firstGame], eventLog: [startRoundEvent], rotationQueue, status: SessionStatus.Active };
         
-        // 2. SET LOCAL SESSION
         setActiveSession(newSession);
-        
-        // 3. SAVE TO CLOUD (HANDOFF)
         await saveRemoteActiveSession(newSession);
-        
         navigate('/match');
     };
 
@@ -766,8 +886,15 @@ export const DraftScreen: React.FC = () => {
                                     <button onClick={handleOpenSummary} className={`px-8 py-2 rounded-full bg-emerald-600/30 border border-emerald-500 text-emerald-100 font-bold text-xs tracking-[0.2em] uppercase shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:bg-emerald-600/50 hover:scale-105 transition-all ${draft.status === 'waiting' ? 'hidden' : ''}`}>FINISH & START MATCH</button>
                                 </div>
                             )}
+                            
                             {/* STATUS TEXT (EVERYONE) */}
-                            {isManualMode ? <span className="text-[9px] font-bold text-[#FFD700] uppercase tracking-wider animate-pulse">MANUAL ASSIGNMENT ACTIVE</span> : draft.status === 'active' && <span className="text-[9px] font-mono text-[#00F2FE] animate-pulse uppercase tracking-widest">DRAFT IN PROGRESS</span>}
+                            {isManualMode ? (
+                                <span className="text-[9px] font-bold text-[#FFD700] uppercase tracking-wider animate-pulse">MANUAL ASSIGNMENT ACTIVE</span>
+                            ) : draft.status === 'active' ? (
+                                <span className="text-[9px] font-mono text-[#00F2FE] animate-pulse uppercase tracking-widest">DRAFT IN PROGRESS</span>
+                            ) : draft.status === 'lottery' ? (
+                                <span className="text-[9px] font-mono text-[#00F2FE] animate-pulse uppercase tracking-widest">DETERMINING PRIORITY...</span>
+                            ) : null}
                         </div>
                     </div>
 
@@ -794,17 +921,15 @@ export const DraftScreen: React.FC = () => {
                         const slotsTotal = draft.sessionConfig.playersPerTeam - 1;
                         const currentCount = team.playerIds.length;
                         const avgRating = team.playerIds.length > 0 ? Math.round(team.playerIds.reduce((sum, pid) => sum + (allPlayers.find(p=>p.id===pid)?.rating||0), 0) / team.playerIds.length) : 0;
-                        
-                        // LOBBY LOGIC:
-                        // Card is READY (colored) if:
-                        // 1. The draft has started (status === active or completed) OR
-                        // 2. The specific captain has successfully logged in (isCaptainReady === true)
                         const isCardReady = draft.status !== 'waiting' || !!team.isCaptainReady;
+                        
+                        // Show "Pick Order Badge" if draft is active/lottery
+                        const showPickOrder = draft.status === 'active' || draft.status === 'lottery';
 
                         return (
                             <div key={team.id} className="flex flex-col items-center">
                                 <div className="flex flex-col gap-8 w-full max-w-[260px]">
-                                    {/* Captain Card with Lobby Logic */}
+                                    {/* Captain Card */}
                                     {captain && (
                                         <CaptainDraftCard 
                                             player={captain} 
@@ -813,8 +938,8 @@ export const DraftScreen: React.FC = () => {
                                             isMyTeam={isMyTeam} 
                                             isActive={isCurrentTurn} 
                                             isReady={isCardReady}
+                                            slotIndex={showPickOrder ? index : undefined}
                                             onClick={() => { 
-                                                // Only prompt for login if not already logged in/ready
                                                 if (!currentUserTeamId && !isAdminMode && !team.isCaptainReady) { 
                                                     setTeamToAuth(team.id); 
                                                     setIsPinModalOpen(true); 

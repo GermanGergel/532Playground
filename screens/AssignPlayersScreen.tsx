@@ -58,15 +58,13 @@ const DraftSetupModal: React.FC<{
             .filter(p => !selectedCaptainIds.includes(p.id))
             .map(p => p.id);
 
-        // --- TRUE RANDOMIZATION LOGIC (Fisher-Yates) ---
+        // --- REMOVED RANDOMIZATION HERE ---
+        // We now create a simple sequential order (1, 2, 3).
+        // Real randomization will happen when Admin clicks "START DRAFT" (Lottery Phase).
+        
         let initialTeamOrder = teams.map(t => t.id);
         
-        for (let i = initialTeamOrder.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [initialTeamOrder[i], initialTeamOrder[j]] = [initialTeamOrder[j], initialTeamOrder[i]];
-        }
-
-        // Build Snake Draft Order
+        // Build Snake Draft Order (Sequential for now, will be randomized later)
         const pickOrder: string[] = [];
         const totalPicksNeeded = availablePlayerIds.length;
         let round = 0;
