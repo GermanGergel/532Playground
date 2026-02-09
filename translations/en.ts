@@ -1,4 +1,5 @@
 
+
 export const en = {
   // Navigation
   navHome: "Home",
@@ -216,7 +217,7 @@ export const en = {
   ratingExampleAssist: "Assist: +0.7 pts (Playmaker +1.0)",
   ratingExampleCleanSheet: "Clean Sheet: +1.0 pts (Def +2.0)",
   infoInactivityTitle: "Inactivity",
-  infoInactivityDesc: "-1 OVR for every 3 missed sessions.",
+  infoInactivityDesc: "-1 OVR for every 5 missed sessions.",
   infoRatingProtection: "Rating cannot fall below initial 68 OVR.",
   infoLegionnaireTitle: "Legionnaire Protocol",
   infoLegionnaireDesc: "Players transferred to another team for balance earn special badges.",

@@ -215,7 +215,7 @@ export const ru = {
   ratingExampleAssist: "Ассист: +0.7 очков (Плеймейкер +1.0)",
   ratingExampleCleanSheet: "Сухой матч: +1.0 очко (Защитник +2.0)",
   infoInactivityTitle: "Инактив",
-  infoInactivityDesc: "-1 OVR за каждые 3 пропущенные сессии.",
+  infoInactivityDesc: "-1 OVR за каждые 5 пропущенных сессий.",
   infoRatingProtection: "Рейтинг не может упасть ниже начального 68 OVR.",
   infoLegionnaireTitle: "Протокол Легіонера",
   infoLegionnaireDesc: "Игроки, перешедшие в другую команду для баланса, получают особые значки.",

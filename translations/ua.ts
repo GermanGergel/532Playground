@@ -1,4 +1,5 @@
 
+
 export const ua = {
   // Navigation
   navHome: "Головна",
@@ -215,7 +216,7 @@ export const ua = {
   ratingExampleAssist: "Асист: +0.7 очок (Плеймейкер +1.0)",
   ratingExampleCleanSheet: "Сухий матч: +1.0 очко (Захисник +2.0)",
   infoInactivityTitle: "Інактив",
-  infoInactivityDesc: "-1 OVR за кожні 3 пропущенні сесії.",
+  infoInactivityDesc: "-1 OVR за кожні 5 пропущенних сесій.",
   infoRatingProtection: "Рейтинг не може впасти нижче початкового 68 OVR.",
   infoLegionnaireTitle: "Протокол Легіонера",
   infoLegionnaireDesc: "Гравці, які перейшли в іншу команду для балансу, отримують особливі значки.",
