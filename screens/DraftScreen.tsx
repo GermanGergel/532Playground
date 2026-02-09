@@ -63,46 +63,46 @@ const InvalidLinkScreen: React.FC = () => (
     </div>
 );
 
-// --- CARD BACK (PREMIUM TEXTURE STYLE) ---
+// --- CARD BACK (PREMIUM OBSIDIAN STYLE) ---
 const DraftCardBack: React.FC<{ isRevealing: boolean; pickIndex: number }> = ({ isRevealing }) => {
     return (
         <div 
             className={`
                 relative w-full aspect-[0.75] rounded-3xl overflow-hidden 
                 flex flex-col items-center justify-center transition-all duration-700
-                ${isRevealing ? 'scale-[1.03] shadow-[0_0_50px_rgba(0,242,254,0.4)] border-[#00F2FE]' : 'shadow-2xl border-white/5'}
+                ${isRevealing ? 'scale-[1.03] shadow-[0_0_50px_rgba(0,242,254,0.4)] border-[#00F2FE]' : 'shadow-2xl'}
             `}
             style={{
-                backgroundColor: '#15171C',
-                borderWidth: '1px',
-                borderStyle: 'solid'
+                // Obsidian Gradient: Dark Grey top-left to Deep Black bottom-right
+                background: 'linear-gradient(145deg, #1c1f26, #050608)',
+                boxShadow: isRevealing 
+                    ? '0 0 50px rgba(0,242,254,0.4)' 
+                    : 'inset 0 1px 1px rgba(255,255,255,0.05), 0 20px 40px -10px rgba(0,0,0,0.8)',
+                border: isRevealing ? '1px solid #00F2FE' : '1px solid #2A2E35'
             }}
         >
-            {/* 1. Base Convex Gradient (Creates depth/bulge effect) */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_#2A2E35_0%,_#0F1115_100%)]"></div>
-            
-            {/* 2. Tactical Mesh Pattern (The "Roughness") */}
+            {/* 1. Tactical Mesh Pattern (Subtle) */}
             <div 
-                className="absolute inset-0 opacity-[0.07]" 
+                className="absolute inset-0 opacity-[0.03] pointer-events-none" 
                 style={{ 
-                    backgroundImage: `linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000), linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000)`,
+                    backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 75%, #fff 75%, #fff), linear-gradient(45deg, #fff 25%, transparent 25%, transparent 75%, #fff 75%, #fff)`,
                     backgroundPosition: '0 0, 4px 4px',
                     backgroundSize: '8px 8px'
                 }}
             ></div>
 
-            {/* 3. Subtle Gloss overlay */}
-            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none"></div>
+            {/* 2. Top-Left Shine (Glass effect) */}
+            <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none"></div>
 
-            {/* 4. Center Logo */}
+            {/* 3. Center Logo */}
             <div className={`relative z-10 flex flex-col items-center ${isRevealing ? 'animate-pulse' : ''}`}>
                 <div className="transform scale-110">
                     <span 
                         className="font-blackops text-6xl tracking-widest uppercase" 
                         style={{
                             ...brandTextStyle,
-                            // Adding extra glow to the back logo
-                            filter: 'drop-shadow(0 0 15px rgba(0,0,0,0.8)) drop-shadow(0 0 5px rgba(72, 207, 203, 0.3))'
+                            // Deep shadow for engraved look
+                            filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.8)) drop-shadow(0 1px 2px rgba(0,242,254,0.3))'
                         }}
                     >
                         UNIT
@@ -110,9 +110,9 @@ const DraftCardBack: React.FC<{ isRevealing: boolean; pickIndex: number }> = ({ 
                 </div>
             </div>
 
-            {/* 5. Reveal Effect (Flash) */}
+            {/* 4. Reveal Effect (Flash) */}
             {isRevealing && (
-                <div className="absolute inset-0 bg-white/10 animate-pulse mix-blend-overlay pointer-events-none"></div>
+                <div className="absolute inset-0 bg-white/20 animate-ping duration-500 pointer-events-none mix-blend-overlay"></div>
             )}
         </div>
     );
@@ -384,12 +384,25 @@ const RecapView: React.FC<{ draft: DraftState, allPlayers: Player[], isExport?: 
 
             <div className="flex flex-col gap-12 w-full">
                 {draft.teams.map((team, idx) => {
-                    const allTeamPlayers = team.playerIds.map(pid => allPlayers.find(p => p.id === pid)).filter(Boolean) as Player[];
+                    // --- SHUFFLE LOGIC TO HIDE PICK ORDER ---
+                    const captain = allPlayers.find(p => p.id === team.captainId);
+                    
+                    // Filter out captain, map to objects, then shuffle the REST using ID sort (Stable Random)
+                    // We use ID sort to be deterministic (no visual jitter) but hide pick order (time based).
+                    const others = team.playerIds
+                        .filter(pid => pid !== team.captainId)
+                        .map(pid => allPlayers.find(p => p.id === pid))
+                        .filter(Boolean) as Player[];
+
+                    // Sort by ID to randomize relative to pick order, but keep stable
+                    others.sort((a, b) => a.id.localeCompare(b.id));
+
+                    const teamDisplayList = captain ? [captain, ...others] : others;
                     
                     return (
                         <div key={team.id} className="w-full">
                             <div className="flex flex-row justify-between items-center gap-4 w-full">
-                                {allTeamPlayers.map(p => (
+                                {teamDisplayList.map(p => (
                                     <div key={p.id} className="flex-1 min-w-0">
                                         <RecapPlayerCard 
                                             player={p} 
