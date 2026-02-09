@@ -156,6 +156,22 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
     // Check if player is in Team of the Month
     const isTotm = useMemo(() => totmPlayerIds.has(playerId), [totmPlayerIds, playerId]);
 
+    // --- PEAK FORM LOGIC ---
+    const { peakRating, isPrime, ratingDiff } = useMemo(() => {
+        if (!player) return { peakRating: 0, isPrime: false, ratingDiff: 0 };
+        
+        // Extract all historical ratings
+        const historyRatings = player.historyData?.map(h => h.rating) || [];
+        
+        // Peak is max of history OR current rating (if manually adjusted higher)
+        const peak = Math.max(player.rating, ...historyRatings);
+        const diff = player.rating - peak;
+        const prime = player.rating >= peak;
+
+        return { peakRating: peak, isPrime: prime, ratingDiff: diff };
+    }, [player]);
+
+
     const rankings = useMemo(() => {
         const confirmedPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
         if (confirmedPlayers.length === 0 || !player) return { goals: '-', assists: '-', rating: '-', total: 0 };
@@ -284,6 +300,22 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                                                 <div className="flex flex-col items-end">
                                                     <div className="text-3xl font-black text-[#00F2FE] leading-none">{player.rating}</div>
                                                     <p className="font-black text-[8px] tracking-[0.2em] text-white mt-1">OVR</p>
+                                                    
+                                                    {/* PEAK FORM LOGIC - DISPLAY */}
+                                                    {!isPrime && (
+                                                        <div className="mt-2 flex items-center gap-1 opacity-80 animate-in fade-in slide-in-from-right-2 duration-700">
+                                                            <span className="text-[7px] font-mono text-white/40 uppercase tracking-wider">PEAK {peakRating}</span>
+                                                            <span className="text-[7px] font-bold text-red-500 font-mono">{ratingDiff}</span>
+                                                        </div>
+                                                    )}
+                                                    {isPrime && (
+                                                        <div className="mt-2 flex items-center justify-center animate-in fade-in slide-in-from-right-2 duration-700">
+                                                            <div className="px-1.5 py-0.5 border border-[#FFD700]/30 bg-[#FFD700]/10 rounded flex items-center justify-center shadow-[0_0_10px_rgba(255,215,0,0.1)]">
+                                                                <span className="text-[7px] font-black text-[#FFD700] uppercase tracking-widest leading-none">PRIME FORM</span>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
                                                 </div>
                                             </div>
                                             <div className="text-center"><h1 className="font-russo text-2xl uppercase tracking-tighter text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] truncate w-full px-1">{player.nickname}</h1><p className="text-[7px] font-black text-white/40 uppercase tracking-[0.4em] mt-1">{player.tier}</p></div>
