@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Player, PlayerStatus, PlayerForm, SkillType, PlayerTier } from '../types';
-import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, InstagramIcon, TikTokIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon } from '../icons';
+import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, TikTokIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon } from '../icons';
 import { PlayerAvatar, TeamAvatar } from '../components/avatars';
 import { Language } from '../translations/index';
 import { BadgeIcon, sortBadgesByPriority } from '../features';
@@ -416,9 +415,7 @@ export const PublicHubScreen: React.FC = () => {
 
     const SOCIAL_LINKS = {
         whatsapp: "https://chat.whatsapp.com/CAJnChuM4lQFf3s2YUnhQr",
-        // Facebook removed
         youtube: "https://www.youtube.com/@UnitFootball",
-        instagram: "https://www.instagram.com/unit.club.dn?igsh=MTdzdHpwMjY3aHN4cg%3D%3D&utm_source=qr",
         tiktok: "https://www.tiktok.com/@532club?_r=1",
     };
 
@@ -547,7 +544,6 @@ export const PublicHubScreen: React.FC = () => {
 
                             <div className="flex justify-center gap-10">
                                 <a href={SOCIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><YouTubeIcon className="w-7 h-7" /></a>
-                                <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><InstagramIcon className="w-7 h-7" /></a>
                                 <a href={SOCIAL_LINKS.tiktok} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><TikTokIcon className="w-7 h-7" /></a>
                             </div>
                         </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { PublicPlayerCard } from '../components/PublicPlayerCard';
 import { LastSessionBreakdown } from '../components/PlayerCardAnalytics';
 import { Player, PlayerStatus, PlayerTier } from '../types';
-import { WhatsApp, TrophyIcon, VideoCamera, BarChartDynamic, ZaloIcon, YouTubeIcon, InstagramIcon, TikTokIcon, LayoutDashboard, Target, Zap, Cloud, MapPinIcon, History } from '../icons'; 
+import { WhatsApp, TrophyIcon, VideoCamera, BarChartDynamic, ZaloIcon, YouTubeIcon, TikTokIcon, LayoutDashboard, Target, Zap, Cloud, MapPinIcon, History } from '../icons'; 
 import { BrandedHeader } from './utils';
 import { loadPromoData, getSessionAnthemUrl } from '../db';
 import { useApp } from '../context';
@@ -12,7 +12,6 @@ import { Language } from '../translations/index';
 const SOCIAL_LINKS = {
     whatsapp: "https://chat.whatsapp.com/CAJnChuM4lQFf3s2YUnhQr",
     zalo: "https://zalo.me/g/pjdfxl571", // Updated to Group Link
-    instagram: "https://www.instagram.com/unit.club.dn?igsh=MTdzdHpwMjY3aHN4cg%3D%3D&utm_source=qr",
     youtube: "https://www.youtube.com/@UnitFootball",
     tiktok: "https://www.tiktok.com/@532club?_r=1",
 };
@@ -285,7 +284,7 @@ const HubPromoSection: React.FC<{ t: any }> = ({ t }) => {
                             <h2 className="font-russo text-lg uppercase text-white tracking-wider leading-none">
                                 {t.hub_section_title}
                             </h2>
-                            <p className="font-chakra text-[9px] text-white/50 leading-tight mt-1 max-w-[200px] text-left">
+                            <p className="font-chakra text-[9px] text-white/50 mt-1 max-w-[200px] text-left">
                                 {t.hub_section_desc}
                             </p>
                         </div>
@@ -527,9 +526,8 @@ export const PromoScreen: React.FC = () => {
                         </a>
 
                         <div className="flex justify-center gap-8 opacity-70">
-                            <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noreferrer" className="hover:text-[#E1306C] transition-colors"><InstagramIcon className="w-6 h-6" /></a>
-                            <a href={SOCIAL_LINKS.youtube} target="_blank" rel="noreferrer" className="hover:text-[#FF0000] transition-colors"><YouTubeIcon className="w-6 h-6" /></a>
-                            <a href={SOCIAL_LINKS.tiktok} target="_blank" rel="noreferrer" className="hover:text-white transition-colors"><TikTokIcon className="w-6 h-6" /></a>
+                            <a href={SOCIAL_LINKS.youtube} target="_blank" rel="noreferrer" className="hover:text-[#FF0000] transition-colors"><YouTubeIcon className="w-7 h-7" /></a>
+                            <a href={SOCIAL_LINKS.tiktok} target="_blank" rel="noreferrer" className="hover:text-white transition-colors"><TikTokIcon className="w-7 h-7" /></a>
                         </div>
                     </div>
                 </div>
