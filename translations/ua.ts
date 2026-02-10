@@ -1,5 +1,3 @@
-
-
 export const ua = {
   // Navigation
   navHome: "Головна",
@@ -18,7 +16,7 @@ export const ua = {
   sessionName: "Назва Сесії",
   gameParameters: "Параметри Гри",
   numTeams: "Кількість Команд",
-  playersPerTeam: "Гравців у команді",
+  playersPerTeam: "Gравців у команді",
   matchDuration: "Тривалість (хв)",
   goalsToWin: "Голи для перемоги",
   autoRotate: "Auto-ротація",
@@ -46,7 +44,7 @@ export const ua = {
   paused: "ПАУЗА",
   round: "Раунд",
   startGame: "Почати Гру",
-  finishGame: "Завершити Гру",
+  finishGame: "Завершить Гру",
   endSession: "Завершити Сесію",
   goal: "Гол",
   assistant: "Асист",
@@ -106,7 +104,7 @@ export const ua = {
   noSessionsFound: "Історія сесій порожня.",
   finished: "Завершено",
   confirmDeletion: "Підтвердіть видалення",
-  delete: "Видалити",
+  delete: "Вилучити",
 
   // Settings
   settingsTitle: "Налаштування",
@@ -191,8 +189,8 @@ export const ua = {
   goalsPerSession: "Гол/Сесія",
   assistsPerSession: "Ас/Сесія",
   monthlyStatsTitle: "Статистика Місяця",
-  monthlyGoals: "Голи",
-  monthlyAssists: "Асисти",
+  monthlyGoals: "Голы",
+  monthlyAssists: "Ассисты",
   monthlyWins: "Перемоги",
   careerStats: "Середні Показники",
   session: "Сесії",
@@ -232,7 +230,7 @@ export const ua = {
   ruleLatePenalty: "ШТРАФ 20K",
   ruleRespectTitle: "Повага",
   ruleRespectDesc: "Неспортивна поведінка або агресія.",
-  ruleRespectPenalty: "БАН НА СЕСІЮ",
+  ruleRespectPenalty: "БАН НА СЕССІЮ",
   badgeBonusTitle: "Бонуси Значків",
   badgeBonusDesc: "Заробляйте значки, щоб підвищити рейтинг матчу.",
   badgeBonusMvp: "MVP: +0.4 очка",
@@ -267,7 +265,7 @@ export const ua = {
   hubWeather: "ПОГОДА",
   hubImpact: "ІМПАКТ",
   hubWelcomeText: "Ласкаво просимо до офіційного хабу UNIT CLUB. Слідкуй за статистикою, порівнюй результати та прагни до вершини.",
-  hubLeadersTitle: "Лідери Сесії",
+  hubLeadersTitle: "Лідери Сезону",
   hubJoinSquad: "Вступити в Загін",
   
   // Duel
@@ -289,7 +287,7 @@ export const ua = {
   feature_stats: "Детальна Статистика",
   feature_stats_desc: "Ми рахуємо все: голи, асисти, перемоги та багато іншого.",
   feature_fair: "Розумний Баланс",
-  feature_fair_desc: "Команди балансуються алгоритмом.",
+  feature_fair_desc: "Команди балансуруются алгоритмом.",
   roadmap_title: "МАЙБУТНЄ",
   roadmap_video: "Відео Хайлайти",
   roadmap_video_desc: "AI нарізки твоїх голів.",
@@ -398,13 +396,13 @@ export const ua = {
   badge_career_super_veteran: "Супер Ветеран",
   badge_career_super_veteran_desc: "100 Сесій",
   badge_mercenary: "Найманець",
-  badge_mercenary_desc: "4+ Ігри Легіонером",
+  badge_mercenary_desc: "4+ Ігри Легионером",
   badge_double_agent: "Подвійний Агент",
   badge_double_agent_desc: "3 Перемоги за кожну команду",
   badge_joker: "Джокер",
-  badge_joker_desc: "Г/А будучи Легіонером",
+  badge_joker_desc: "Г/А будучи Легионером",
   badge_crisis_manager: "Кризовий Менеджер",
-  badge_crisis_manager_desc: "2+ Г/А будучи Легіонером",
+  badge_crisis_manager_desc: "2+ Г/А будучи Легионером",
   badge_iron_lung: "Залізні Легені",
   badge_iron_lung_desc: "Серія Перемога-Перемога-Перемога",
   

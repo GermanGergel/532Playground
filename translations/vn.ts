@@ -214,7 +214,7 @@ export const vn = {
   ratingExampleAssist: "Kiến Tạo: +0.7 đ (Tiền vệ +1.0)",
   ratingExampleCleanSheet: "Sạch Lưới: +1.0 đ (Hậu vệ +2.0)",
   infoInactivityTitle: "Không Hoạt Động",
-  infoInactivityDesc: "-1 OVR cho mỗi 5 buổi vắng mặt.",
+  infoInactivityDesc: "-1 OVR cho mỗi 3 buổi vắng mặt.",
   infoRatingProtection: "Rating không giảm dưới mức khởi điểm 68 OVR.",
   infoLegionnaireTitle: "Giao Thức Lính Lê Dương",
   infoLegionnaireDesc: "Cầu thủ chuyển sang đội khác để cân bằng sẽ nhận huy hiệu đặc biệt.",
@@ -265,7 +265,7 @@ export const vn = {
   hubWeather: "THỜI TIẾT",
   hubImpact: "TÁC ĐỘNG",
   hubWelcomeText: "Chào mừng đến với Hub UNIT CLUB chính thức. Theo dõi chỉ số, so sánh kết quả và vươn tới đỉnh cao.",
-  hubLeadersTitle: "Dẫn Đầu Buổi Tập",
+  hubLeadersTitle: "Dẫn Đầu Mùa Giải",
   hubJoinSquad: "Tham Gia Đội Hình",
   
   // FIX: Added missing Duel keys for Vietnamese translation

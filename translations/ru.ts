@@ -267,7 +267,7 @@ export const ru = {
   hubWeather: "ПОГОДА",
   hubImpact: "ИМПАКТ",
   hubWelcomeText: "Добро пожаловать в официальный хаб UNIT CLUB. Следи за статистикой, сравнивай результаты и стремись к вершине.",
-  hubLeadersTitle: "Лидеры Сессии",
+  hubLeadersTitle: "Лидеры Сезона",
   hubJoinSquad: "Вступить в Отряд",
 
   // Duel
