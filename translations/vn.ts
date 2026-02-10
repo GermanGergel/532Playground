@@ -1,5 +1,3 @@
-
-
 export const vn = {
   // Navigation
   navHome: "Trang Chủ",
@@ -266,7 +264,7 @@ export const vn = {
   hubTimeFrame: "THỜI GIAN",
   hubWeather: "THỜI TIẾT",
   hubImpact: "TÁC ĐỘNG",
-  hubWelcomeText: "Chào mừng đến với Hub 532 Playground chính thức. Theo dõi chỉ số, so sánh kết quả và vươn tới đỉnh cao.",
+  hubWelcomeText: "Chào mừng đến với Hub UNIT CLUB chính thức. Theo dõi chỉ số, so sánh kết quả và vươn tới đỉnh cao.",
   hubLeadersTitle: "Dẫn Đầu Buổi Tập",
   hubJoinSquad: "Tham Gia Đội Hình",
   

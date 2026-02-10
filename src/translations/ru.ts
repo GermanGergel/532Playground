@@ -10,11 +10,11 @@ export const ru = {
   hubTitle: "Клубный Хаб",
   continueSession: "Продолжить",
   newSession: "Новая Сессия",
-  playerHub: "Хаб Игроков",
+  playerHub: "Хаб Гравців",
   createAnnouncement: "Создать Афишу",
   setupTitle: "Настройка Сессии",
   sessionName: "Название Сессии",
-  gameParameters: "Параметры Игры",
+  gameParameters: "Параметри Игры",
   numTeams: "Количество Команд",
   playersPerTeam: "Игроков в команде",
   matchDuration: "Длительность (мин)",
@@ -85,6 +85,9 @@ export const ru = {
   thW: "В",
   thD: "Н",
   thL: "П",
+  // FIX: Added missing thGF and thGA keys for standings table headers
+  thGF: "ЗБ",
+  thGA: "Пр",
   thGD: "РМ",
   thPts: "Очки",
   players: "Игрок",
@@ -159,6 +162,9 @@ export const ru = {
   shareViaApp: "Отправить Ссылку",
   scanToOpen: "СКАНИРУЙ, ЧТОБЫ ОТКРЫТЬ",
   clickToEnter: "НАЖМИ, ЧТОБЫ ВОЙТИ",
+  // FIX: Added missing ratingProtection keys for playerModals
+  ratingProtection: "Защита Рейтинга",
+  ratingProtectionDesc: "Рейтинг не падает при пропусках",
 
   // Analytics & Info
   lastSessionAnalysis: "Анализ Последней Сессии",
@@ -188,9 +194,14 @@ export const ru = {
   monthlyGoals: "Голы",
   monthlyAssists: "Ассисты",
   monthlyWins: "Победы",
+  careerStats: "Средние Показатели",
   session: "Сессии",
   information: "Информация",
   statistics: "Статистика",
+
+  // Penalty
+  penalty_title: "СТАТУС: ШТРАФ ЗА НЕЯВКУ",
+  penalty_message: "Рейтинг снижен на -{n} OVR из-за пропуска {m} сессий подряд.",
 
   // Info Content
   ratingCalculationTitle: "Система Рейтинга",
@@ -248,7 +259,7 @@ export const ru = {
   hubPlayers: "ИГРОКИ",
   hubGames: "МАТЧИ",
   hubVitalsTitle: "ПОКАЗАТЕЛИ КЛУБА",
-  hubStatsMembers: "УЧАСТНИКИ",
+  hubStatsMembers: "УЧАСНИКИ",
   hubSessionsPlayed: "СЕССИИ",
   hubAvgRating: "СРЕДНИЙ OVR",
   hubLocation: "ЛОКАЦИЯ",
@@ -259,7 +270,6 @@ export const ru = {
   hubLeadersTitle: "Лидеры Сессии",
   hubJoinSquad: "Вступить в Отряд",
 
-  // FIX: Added missing Duel keys for Russian translation (with corrected language)
   // Duel
   duel_title: "Выбор дуэли",
   duel_id_unit: "ОПОЗНАНИЕ ЮНИТА...",
@@ -279,7 +289,7 @@ export const ru = {
   feature_stats: "Детальная Статистика",
   feature_stats_desc: "Мы считаем голы, ассисты, перемоги та багато іншого.",
   feature_fair: "Розумний Баланс",
-  feature_fair_desc: "Команди балансуються алгоритмом.",
+  feature_fair_desc: "Команди балансуруются алгоритмом.",
   roadmap_title: "МАЙБУТНЄ",
   roadmap_video: "Відео Хайлайти",
   roadmap_video_desc: "AI нарізки твоїх голів.",
@@ -353,7 +363,7 @@ export const ru = {
   badge_club_legend_goals_desc: "Достигнут рубеж голов",
   badge_club_legend_assists: "Легенда Клуба (А)",
   badge_club_legend_assists_desc: "Достигнут рубеж ассистов",
-  badge_veteran: "Ветеран",
+  badge_veteran: "Vетеран",
   badge_veteran_desc: "Достигнут рубеж сессий",
   badge_session_top_scorer: "Золотая Бутса",
   badge_session_top_scorer_desc: "Больше всех голов",

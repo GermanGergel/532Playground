@@ -1,5 +1,3 @@
-
-
 export const en = {
   // Navigation
   navHome: "Home",
@@ -267,7 +265,7 @@ export const en = {
   hubTimeFrame: "TIME FRAME",
   hubWeather: "WEATHER",
   hubImpact: "IMPACT",
-  hubWelcomeText: "Welcome to the official 532 Playground Hub. Track your stats, compare with others, and rise to the top.",
+  hubWelcomeText: "Welcome to the official UNIT CLUB Hub. Track your stats, compare with others, and rise to the top.",
   hubLeadersTitle: "Session Leaders",
   hubJoinSquad: "Join the Squad",
 

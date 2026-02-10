@@ -1,4 +1,3 @@
-
 export const en = {
   // Navigation
   navHome: "Home",
@@ -163,6 +162,9 @@ export const en = {
   shareViaApp: "Share Link",
   scanToOpen: "SCAN TO OPEN PROFILE",
   clickToEnter: "CLICK TO ENTER",
+  // FIX: Added missing ratingProtection keys for playerModals
+  ratingProtection: "Rating Protection",
+  ratingProtectionDesc: "Prevents penalty drop",
 
   // Analytics & Info
   lastSessionAnalysis: "Last Session Analysis",
