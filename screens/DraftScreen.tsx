@@ -68,7 +68,7 @@ const InvalidLinkScreen: React.FC = () => (
             ACCESS DENIED
         </h1>
         <div className="h-px w-16 bg-red-500/30 my-4"></div>
-        <p className="font-mono text-xs text-white/40 uppercase tracking-[0.2em] leading-loose max-w-md">
+        <p className="font-mono text-xs text-white/40 uppercase tracking-[0.2em] font-light leading-loose max-w-md">
             The draft session you are looking for<br/>
             does not exist or has expired.
         </p>
@@ -301,13 +301,16 @@ const MiniDraftCard: React.FC<{
                 </div>
             )}
 
-            {/* SKILLS - MINI DISPLAY */}
+            {/* SKILLS - MINI DISPLAY (Draft Mode Special - Turquoise Star + Text) */}
             {!disabled && (
-                <div className="absolute top-7 left-2 flex flex-col gap-1 z-20">
+                <div className="absolute top-7 left-2 flex flex-col gap-1.5 z-20">
                     {(player.skills || []).slice(0, 2).map(skill => (
-                        <span key={skill} className="text-[7px] font-black text-[#00F2FE] bg-black/60 px-1 py-0.5 rounded-[2px] leading-none uppercase tracking-tighter">
-                            {skillAbbreviations[skill]}
-                        </span>
+                        <div key={skill} className="flex items-center gap-1 bg-black/50 px-1 py-0.5 rounded-[2px] backdrop-blur-[2px]">
+                            <StarIcon className="w-2 h-2 text-[#00F2FE]" />
+                            <span className="text-[7px] font-black text-[#00F2FE] leading-none uppercase tracking-tighter">
+                                {skillAbbreviations[skill]}
+                            </span>
+                        </div>
                     ))}
                 </div>
             )}
