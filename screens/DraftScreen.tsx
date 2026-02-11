@@ -1,14 +1,26 @@
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-import { DraftState, Game, GameStatus, EventLogEntry, EventType, StartRoundPayload, Player, SessionStatus } from '../types';
+import { DraftState, Game, GameStatus, EventLogEntry, EventType, StartRoundPayload, Player, SessionStatus, SkillType } from '../types';
 import { getDraftSession, updateDraftState, subscribeToDraft, saveRemoteActiveSession } from '../db';
 import { PlayerAvatar } from '../components/avatars';
-import { Users, CheckCircle, Wand, Share2, Play, Key, RefreshCw, XCircle, Link, Settings } from '../icons'; 
+import { Users, CheckCircle, Wand, Share2, Play, Key, RefreshCw, XCircle, Link, Settings, StarIcon } from '../icons'; 
 import { newId, BrandedHeader } from './utils';
 import { Modal, Button } from '../ui';
 import html2canvas from 'html2canvas';
+
+// --- SKILL ABBREVIATIONS ---
+const skillAbbreviations: Record<SkillType, string> = {
+    goalkeeper: 'GK',
+    power_shot: 'PS',
+    technique: 'TQ',
+    defender: 'DF',
+    playmaker: 'PM',
+    finisher: 'FN',
+    versatile: 'VS',
+    tireless_motor: 'TM',
+    leader: 'LD',
+};
 
 // --- SHARED BRAND STYLE (Teal/Dark Blue Gradient) ---
 const brandTextStyle: React.CSSProperties = {
@@ -211,6 +223,18 @@ const CaptainDraftCard: React.FC<{
                     </div>
                 </div>
 
+                {/* SKILLS - CENTER LEFT (Draft Mode Special) */}
+                <div className="absolute top-24 left-5 flex flex-col gap-2.5">
+                    {(player.skills || []).slice(0, 4).map(skill => (
+                        <div key={skill} className="flex items-center gap-1.5 animate-in fade-in slide-in-from-left-2 duration-700">
+                            <StarIcon className="w-3 h-3 text-[#00F2FE]" style={{ filter: 'drop-shadow(0 0 3px #00F2FE)' }} />
+                            <span className="font-black text-[9px] text-white tracking-widest drop-shadow-md">
+                                {skillAbbreviations[skill]}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+
                 <div className="flex flex-col items-center pb-2 w-full px-1">
                     <span className={`font-russo ${nicknameSize} uppercase leading-none tracking-tight text-center w-full whitespace-nowrap overflow-visible`} style={brandTextStyle}>
                         {player.nickname}
@@ -274,6 +298,17 @@ const MiniDraftCard: React.FC<{
             {isManualMode && !disabled && (
                 <div className="absolute top-1 right-1 z-20">
                     <div className="w-4 h-4 bg-[#FFD700] rounded-full flex items-center justify-center shadow-lg"><Wand className="w-2.5 h-2.5 text-black" /></div>
+                </div>
+            )}
+
+            {/* SKILLS - MINI DISPLAY */}
+            {!disabled && (
+                <div className="absolute top-7 left-2 flex flex-col gap-1 z-20">
+                    {(player.skills || []).slice(0, 2).map(skill => (
+                        <span key={skill} className="text-[7px] font-black text-[#00F2FE] bg-black/60 px-1 py-0.5 rounded-[2px] leading-none uppercase tracking-tighter">
+                            {skillAbbreviations[skill]}
+                        </span>
+                    ))}
                 </div>
             )}
 
@@ -865,7 +900,7 @@ export const DraftScreen: React.FC = () => {
                                 <div className="flex justify-center h-8">
                                     {draft.status === 'waiting' && (
                                         <button 
-                                            onClick={handleStartLottery} // Updated to Lottery Trigger
+                                            onClick={handleStartLottery} 
                                             className="px-6 py-1 rounded-full text-white font-black text-xs tracking-[0.2em] uppercase shadow-[0_0_20px_rgba(0,242,254,0.3)] hover:scale-105 transition-all border border-[#48CFCB]/50 flex items-center gap-2" 
                                             style={brandTextStyle}
                                         >
@@ -908,7 +943,6 @@ export const DraftScreen: React.FC = () => {
                         const isCardReady = draft.status !== 'waiting' || !!team.isCaptainReady;
 
                         // LOTTERY HIDE LOGIC
-                        // Hide card if in lottery mode AND index hasn't been revealed yet
                         const isHiddenInLottery = draft.status === 'lottery' && index >= revealedCount;
 
                         return (
@@ -916,10 +950,8 @@ export const DraftScreen: React.FC = () => {
                                 <div className="flex flex-col gap-8 w-full max-w-[260px]">
                                     
                                     {isHiddenInLottery ? (
-                                        // Show Generic Card Back during Lottery
                                         <DraftCardBack isRevealing={true} pickIndex={index} />
                                     ) : (
-                                        // Show Real Captain Card
                                         captain && (
                                             <CaptainDraftCard 
                                                 player={captain} 
