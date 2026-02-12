@@ -30,44 +30,49 @@ const brandTextStyle: React.CSSProperties = {
     filter: 'drop-shadow(1px 1px 0px #0E7490) drop-shadow(2px 2px 0px #000000)',
 };
 
-// --- TACTICAL BACKGROUND FOR CARD BACK (Rough Chalk style) ---
+// --- TACTICAL BACKGROUND FOR CARD BACK (Identical to Dashboard Elite Style) ---
 const DraftTacticalBackground: React.FC = () => (
-    <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.2]">
-        <svg width="100%" height="100%" viewBox="0 0 300 400" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.25]">
+        <svg width="100%" height="100%" viewBox="0 0 300 400" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-                <marker id="arrowhead-draft" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-                    <polygon points="0 0, 10 3.5, 0 7" fill="rgba(255,255,255,0.6)" />
+                <marker id="arrowhead-draft-chalk" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="rgba(255,255,255,0.8)" />
                 </marker>
-                {/* ROUGH CHALK FILTER (Turbulence + Displacement for that "рыхлая" texture) */}
-                <filter id="chalkRough">
-                    <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" result="noise" />
-                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" />
+                <filter id="chalkRoughEffect">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" result="noise" />
+                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" xChannelSelector="R" yChannelSelector="G" />
                     <feGaussianBlur stdDeviation="0.4" />
                 </filter>
             </defs>
             
-            <g stroke="white" strokeWidth="1.8" fill="none" filter="url(#chalkRough)" strokeOpacity="0.5">
-                {/* Center Circle */}
-                <circle cx="150" cy="200" r="45" />
-                <line x1="0" y1="200" x2="300" y2="200" />
+            {/* Field Structure */}
+            <g stroke="white" strokeWidth="1.5" fill="none" filter="url(#chalkRoughEffect)" strokeOpacity="0.4">
+                <line x1="150" y1="0" x2="150" y2="400" />
+                <circle cx="150" cy="200" r="50" />
+                <circle cx="150" cy="200" r="2" fill="white" fillOpacity="0.4" />
                 
                 {/* Penalty Boxes */}
-                <rect x="65" y="0" width="170" height="60" />
-                <rect x="100" y="0" width="100" height="25" />
-                
-                <rect x="65" y="340" width="170" height="60" />
-                <rect x="100" y="375" width="100" height="25" />
-                
-                {/* Tactics: X and O positions */}
-                <circle cx="60" cy="110" r="7" />
-                <path d="M 230 100 L 250 120 M 250 100 L 230 120" />
-                
-                <circle cx="240" cy="290" r="7" />
-                <path d="M 50 280 L 70 300 M 70 280 L 50 300" />
+                <rect x="0" y="120" width="50" height="160" />
+                <rect x="250" y="120" width="50" height="160" />
+                <rect x="0" y="170" width="15" height="60" />
+                <rect x="285" y="170" width="15" height="60" />
+            </g>
 
-                {/* Tactical Arrows */}
-                <path d="M 70 110 Q 130 120 150 160" markerEnd="url(#arrowhead-draft)" strokeDasharray="5 5" />
-                <path d="M 230 290 Q 170 280 150 240" markerEnd="url(#arrowhead-draft)" strokeDasharray="5 5" />
+            {/* Tactical Moves (Identical to Leader Board) */}
+            <g fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" filter="url(#chalkRoughEffect)" strokeOpacity="0.5">
+                {/* Positions */}
+                <circle cx="80" cy="80" r="8" />
+                <circle cx="220" cy="320" r="8" />
+                <g transform="translate(150, 100) rotate(45)">
+                    <line x1="-8" y1="0" x2="8" y2="0" /><line x1="0" y1="-8" x2="0" y2="8" />
+                </g>
+                <g transform="translate(40, 200) rotate(45)">
+                    <line x1="-8" y1="0" x2="8" y2="0" /><line x1="0" y1="-8" x2="0" y2="8" />
+                </g>
+
+                {/* Arrows */}
+                <path d="M 95 85 Q 140 95 160 130" markerEnd="url(#arrowhead-draft-chalk)" />
+                <path d="M 200 310 Q 150 300 130 260" strokeDasharray="5 5" markerEnd="url(#arrowhead-draft-chalk)" />
             </g>
         </svg>
     </div>
@@ -118,7 +123,7 @@ const InvalidLinkScreen: React.FC = () => (
     </div>
 );
 
-// --- CARD BACK (TACTICAL OBSIDIAN STYLE) ---
+// --- CARD BACK (TERMINAL OBSIDIAN STYLE) ---
 const DraftCardBack: React.FC<{ isRevealing: boolean; pickIndex: number }> = ({ isRevealing }) => {
     return (
         <div 
@@ -128,24 +133,25 @@ const DraftCardBack: React.FC<{ isRevealing: boolean; pickIndex: number }> = ({ 
                 ${isRevealing ? 'scale-[1.03] shadow-[0_0_50px_rgba(0,242,254,0.4)] border-[#00F2FE]' : 'shadow-2xl'}
             `}
             style={{
-                background: 'linear-gradient(145deg, #1c1f26, #050608)',
+                // Changed background to deep black obsidian to match Leaders block
+                background: 'linear-gradient(145deg, #0a0c10, #000000)',
                 boxShadow: isRevealing 
                     ? '0 0 50px rgba(0,242,254,0.4)' 
                     : 'inset 0 1px 1px rgba(255,255,255,0.05), 0 20px 40px -10px rgba(0,0,0,0.8)',
                 border: isRevealing ? '1px solid #00F2FE' : '1px solid #2A2E35'
             }}
         >
-            {/* 1. Tactical Chalk Background (Requested Rough Style) */}
+            {/* 1. Full Tactical Background (Identical to Dashboard) */}
             <DraftTacticalBackground />
 
             {/* 2. Top-Left Shine (Glass effect) */}
             <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none"></div>
 
-            {/* 3. Center Logo (Reduced size as requested) */}
+            {/* 3. Center Logo (Reduced size as requested: text-4xl) */}
             <div className={`relative z-10 flex flex-col items-center ${isRevealing ? 'animate-pulse' : ''}`}>
                 <div className="transform">
                     <span 
-                        className="font-blackops text-5xl tracking-widest uppercase" 
+                        className="font-blackops text-4xl tracking-[0.2em] uppercase" 
                         style={{
                             ...brandTextStyle,
                             filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.8)) drop-shadow(0 1px 2px rgba(0,242,254,0.3))'
