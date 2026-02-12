@@ -30,38 +30,44 @@ const brandTextStyle: React.CSSProperties = {
     filter: 'drop-shadow(1px 1px 0px #0E7490) drop-shadow(2px 2px 0px #000000)',
 };
 
-// --- TACTICAL BACKGROUND FOR CARD BACK (Chalk style) ---
+// --- TACTICAL BACKGROUND FOR CARD BACK (Rough Chalk style) ---
 const DraftTacticalBackground: React.FC = () => (
-    <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.15]">
+    <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.2]">
         <svg width="100%" height="100%" viewBox="0 0 300 400" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
             <defs>
                 <marker id="arrowhead-draft" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
                     <polygon points="0 0, 10 3.5, 0 7" fill="rgba(255,255,255,0.6)" />
                 </marker>
-                <filter id="chalkDraft">
-                    <feGaussianBlur in="SourceGraphic" stdDeviation="0.8" />
+                {/* ROUGH CHALK FILTER (Turbulence + Displacement for that "рыхлая" texture) */}
+                <filter id="chalkRough">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" result="noise" />
+                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" />
+                    <feGaussianBlur stdDeviation="0.4" />
                 </filter>
             </defs>
             
-            <g stroke="white" strokeWidth="1.5" fill="none" filter="url(#chalkDraft)" strokeOpacity="0.4">
+            <g stroke="white" strokeWidth="1.8" fill="none" filter="url(#chalkRough)" strokeOpacity="0.5">
                 {/* Center Circle */}
-                <circle cx="150" cy="200" r="40" />
+                <circle cx="150" cy="200" r="45" />
                 <line x1="0" y1="200" x2="300" y2="200" />
                 
                 {/* Penalty Boxes */}
-                <rect x="75" y="0" width="150" height="50" />
-                <rect x="75" y="350" width="150" height="50" />
+                <rect x="65" y="0" width="170" height="60" />
+                <rect x="100" y="0" width="100" height="25" />
+                
+                <rect x="65" y="340" width="170" height="60" />
+                <rect x="100" y="375" width="100" height="25" />
                 
                 {/* Tactics: X and O positions */}
-                <circle cx="50" cy="120" r="6" />
-                <path d="M 240 110 L 260 130 M 260 110 L 240 130" />
+                <circle cx="60" cy="110" r="7" />
+                <path d="M 230 100 L 250 120 M 250 100 L 230 120" />
                 
-                <circle cx="250" cy="280" r="6" />
-                <path d="M 40 270 L 60 290 M 60 270 L 40 290" />
+                <circle cx="240" cy="290" r="7" />
+                <path d="M 50 280 L 70 300 M 70 280 L 50 300" />
 
                 {/* Tactical Arrows */}
-                <path d="M 60 120 Q 120 130 140 170" markerEnd="url(#arrowhead-draft)" strokeDasharray="4 4" />
-                <path d="M 240 280 Q 180 270 160 230" markerEnd="url(#arrowhead-draft)" strokeDasharray="4 4" />
+                <path d="M 70 110 Q 130 120 150 160" markerEnd="url(#arrowhead-draft)" strokeDasharray="5 5" />
+                <path d="M 230 290 Q 170 280 150 240" markerEnd="url(#arrowhead-draft)" strokeDasharray="5 5" />
             </g>
         </svg>
     </div>
@@ -129,17 +135,17 @@ const DraftCardBack: React.FC<{ isRevealing: boolean; pickIndex: number }> = ({ 
                 border: isRevealing ? '1px solid #00F2FE' : '1px solid #2A2E35'
             }}
         >
-            {/* 1. Tactical Chalk Background (Requested Style) */}
+            {/* 1. Tactical Chalk Background (Requested Rough Style) */}
             <DraftTacticalBackground />
 
             {/* 2. Top-Left Shine (Glass effect) */}
             <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none"></div>
 
-            {/* 3. Center Logo */}
+            {/* 3. Center Logo (Reduced size as requested) */}
             <div className={`relative z-10 flex flex-col items-center ${isRevealing ? 'animate-pulse' : ''}`}>
-                <div className="transform scale-110">
+                <div className="transform">
                     <span 
-                        className="font-blackops text-6xl tracking-widest uppercase" 
+                        className="font-blackops text-5xl tracking-widest uppercase" 
                         style={{
                             ...brandTextStyle,
                             filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.8)) drop-shadow(0 1px 2px rgba(0,242,254,0.3))'
@@ -935,7 +941,7 @@ export const DraftScreen: React.FC = () => {
                                             className="px-6 py-1 rounded-full text-white font-black text-xs tracking-[0.2em] uppercase shadow-[0_0_20px_rgba(0,242,254,0.3)] hover:scale-105 transition-all border border-[#48CFCB]/50 flex items-center gap-2" 
                                             style={brandTextStyle}
                                         >
-                                            < Wand className="w-3 h-3" /> START LOTTERY
+                                            <Wand className="w-3 h-3" /> START LOTTERY
                                         </button>
                                     )}
                                     <button onClick={handleOpenSummary} className={`px-8 py-2 rounded-full bg-emerald-600/30 border border-emerald-500 text-emerald-100 font-bold text-xs tracking-[0.2em] uppercase shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:bg-emerald-600/50 hover:scale-105 transition-all ${draft.status !== 'completed' ? 'hidden' : ''}`}>FINISH & START MATCH</button>
@@ -1023,7 +1029,7 @@ export const DraftScreen: React.FC = () => {
             </div>
 
             {/* PLAYER POOL */}
-            <div className="flex-grow relative z-10 bg-[#05070a] p-4 overflow-y-auto border-t border-white/5 shadow-[0_-10px_40px_rgba(0,242,254,0.5)]">
+            <div className="flex-grow relative z-10 bg-[#05070a] p-4 overflow-y-auto border-t border-white/5 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
                 <div className="sticky top-0 bg-[#05070a]/95 backdrop-blur-md z-20 py-3 mb-4 border-b border-white/5 flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         <div className="p-1.5 bg-white/5 rounded-lg"><Users className="w-4 h-4 text-white/60" /></div>
