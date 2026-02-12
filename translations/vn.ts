@@ -187,7 +187,6 @@ export const vn = {
   thSessions: "Buổi",
   winRate: "Thắng %",
   goalsPerSession: "Bàn/Buổi",
-  // Fixed a duplicate and updated translation
   assistsPerSession: "KT/Buổi",
   monthlyStatsTitle: "Thống Kê Tháng",
   monthlyGoals: "Bàn Thắng",
@@ -215,7 +214,7 @@ export const vn = {
   ratingExampleAssist: "Kiến Tạo: +0.7 đ (Tiền vệ +1.0)",
   ratingExampleCleanSheet: "Sạch Lưới: +1.0 đ (Hậu vệ +2.0)",
   infoInactivityTitle: "Không Hoạt Động",
-  infoInactivityDesc: "-1 OVR cho mỗi 5 buổi vắng mặt.",
+  infoInactivityDesc: "-1 OVR cho mỗi 3 buổi vắng mặt.",
   infoRatingProtection: "Rating không giảm dưới mức khởi điểm 68 OVR.",
   infoLegionnaireTitle: "Giao Thức Lính Lê Dương",
   infoLegionnaireDesc: "Cầu thủ chuyển sang đội khác để cân bằng sẽ nhận huy hiệu đặc biệt.",
@@ -265,17 +264,17 @@ export const vn = {
   hubTimeFrame: "THỜI GIAN",
   hubWeather: "THỜI TIẾT",
   hubImpact: "TÁC ĐỘNG",
-  hubWelcomeText: "Chào mừng đến với Hub 532 Playground chính thức. Theo dõi chỉ số, so sánh kết quả và vươn tới đỉnh cao.",
-  hubLeadersTitle: "Dẫn Đầu Buổi Tập",
+  hubWelcomeText: "Chào mừng đến với Hub UNIT CLUB chính thức. Theo dõi chỉ số, so sánh kết quả và vươn tới đỉnh cao.",
+  hubLeadersTitle: "Dẫn Đầu Mùa Giải",
   hubJoinSquad: "Tham Gia Đội Hình",
   
   // FIX: Added missing Duel keys for Vietnamese translation
   // Duel
   duel_title: "Chọn Đối Thủ",
   duel_id_unit: "XÁC MINH CẦU THỦ...",
-  duel_initiate: "BẮT ĐẦU ĐỐИ ĐẦU",
+  duel_initiate: "BẮT ĐẦU ĐỐI ĐẦU",
   duel_sector_empty: "Không có cầu thủ",
-  duel_complete: "KẾT THÚC ĐỐИ ĐẦU",
+  duel_complete: "KẾT THÚC ĐỐI ĐẦU",
   duel_score: "TỈ SỐ",
   duel_verified: "Chỉ số hiệu quả đã xác minh",
   
