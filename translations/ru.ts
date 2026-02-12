@@ -64,11 +64,11 @@ export const ru = {
   // FIX: Added missing Session Summary keys for Russian translation
   // Session Summary
   summary_title: "ИТОГИ СЕССИИ",
-  summary_location: "ЛОКАЦІЯ",
-  summary_time: "ЧАС",
+  summary_location: "ЛОКАЦИЯ",
+  summary_time: "ВРЕМЯ",
   summary_weather: "ОТЧЕТ О ПОГОДЕ",
   summary_temp: "ТЕМП",
-  summary_condition: "УМОВИ",
+  summary_condition: "УСЛОВИЯ",
 
   // Stats
   teamStandings: "Турнирная Таблица",
@@ -216,7 +216,7 @@ export const ru = {
   ratingExampleAssist: "Ассист: +0.7 очков (Плеймейкер +1.0)",
   ratingExampleCleanSheet: "Сухой матч: +1.0 очко (Защитник +2.0)",
   infoInactivityTitle: "Инактив",
-  infoInactivityDesc: "-1 OVR за каждые 3 пропущенные сессии.",
+  infoInactivityDesc: "-1 OVR за каждые 5 пропущенных сессий.",
   infoRatingProtection: "Рейтинг не может упасть ниже начального 68 OVR.",
   infoLegionnaireTitle: "Протокол Легионера",
   infoLegionnaireDesc: "Игроки, перешедшие в другую команду для баланса, получают особые значки.",
@@ -267,7 +267,7 @@ export const ru = {
   hubWeather: "ПОГОДА",
   hubImpact: "ИМПАКТ",
   hubWelcomeText: "Добро пожаловать в официальный хаб UNIT CLUB. Следи за статистикой, сравнивай результаты и стремись к вершине.",
-  hubLeadersTitle: "Лидеры Сезона",
+  hubLeadersTitle: "Лидеры Сессии",
   hubJoinSquad: "Вступить в Отряд",
 
   // Duel
@@ -275,7 +275,7 @@ export const ru = {
   duel_id_unit: "ОПОЗНАНИЕ ЮНИТА...",
   duel_initiate: "ЗАПУСТИТЬ ПОСЛЕДОВАТЕЛЬНОСТЬ",
   duel_sector_empty: "Сектор пуст",
-  duel_complete: "ПОСЛІДОВНІСТЬ ЗАВЕРШЕНА",
+  duel_complete: "ПОСЛЕДОВАТЕЛЬНОСТЬ ЗАВЕРШЕНА",
   duel_score: "СЧЕТ",
   duel_verified: "Индекс эффективности подтвержден",
   
@@ -354,7 +354,7 @@ export const ru = {
   badge_duplet: "Duplet",
   badge_duplet_desc: "2x Дубля в победах",
   badge_maestro: "Маэстро",
-  badge_maestro_desc: "2x Дубля ассистов в победах",
+  badge_maestro_desc: "2x Дубля ассистов in wins",
   badge_comeback_kings: "Король Камбэков",
   badge_comeback_kings_desc: "3x Волевые победы",
   badge_fortress: "Крепость",
@@ -363,7 +363,7 @@ export const ru = {
   badge_club_legend_goals_desc: "Достигнут рубеж голов",
   badge_club_legend_assists: "Легенда Клуба (А)",
   badge_club_legend_assists_desc: "Достигнут рубеж ассистов",
-  badge_veteran: "Ветеран",
+  badge_veteran: "Vетеран",
   badge_veteran_desc: "Достигнут рубеж сессий",
   badge_session_top_scorer: "Золотая Бутса",
   badge_session_top_scorer_desc: "Больше всех голов",
@@ -414,7 +414,7 @@ export const ru = {
   announcement_one_minute: "1 Минута",
   announcement_thirty_seconds: "30 Секунд",
   announcement_five: "Пять",
-  announcement_four: "Четыре",
+  announcement_four: "Чотири",
   announcement_three: "Три",
   announcement_two: "Два",
   announcement_one: "Один",
