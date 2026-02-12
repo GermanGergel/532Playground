@@ -251,7 +251,7 @@ export const ru = {
   hubAwaitingStats: "ОЖИДАНИЕ ДАННЫХ",
   hubAnalyzingPerformance: "АНАЛИЗ ЭФФЕКТИВНОСТИ...",
   hubDashboardBtn: "ДАШБОРД",
-  hubSessionLeaders: "ЛИДЕРЫ СЕССИИ",
+  hubSessionLeaders: "ЛИДЕРЫ СЕЗОНА",
   hubMatchReport: "ОТЧЕТ О МАТЧЕ",
   hubSessionNews: "РАЗВЕДДАННЫЕ",
   hubSessionSquads: "СОСТАВЫ",
@@ -267,7 +267,7 @@ export const ru = {
   hubWeather: "ПОГОДА",
   hubImpact: "ИМПАКТ",
   hubWelcomeText: "Добро пожаловать в официальный хаб UNIT CLUB. Следи за статистикой, сравнивай результаты и стремись к вершине.",
-  hubLeadersTitle: "Лидеры Сессии",
+  hubLeadersTitle: "Лидеры Сезона",
   hubJoinSquad: "Вступить в Отряд",
 
   // Duel
