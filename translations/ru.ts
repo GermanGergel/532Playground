@@ -376,7 +376,7 @@ export const ru = {
   badge_passing_streak: "Серия Пасов",
   badge_passing_streak_desc: "Серия ассистов 3 матча",
   badge_team_conductor: "Дирижер",
-  badge_team_conductor_desc: "Ассисты в 3 победах",
+  badge_team_conductor_desc: "Ассисты in 3 победах",
   badge_ten_influence: "Влияние 10",
   badge_ten_influence_desc: "10+ Голов и Ассистов",
   badge_mastery_balance: "Баланс",
