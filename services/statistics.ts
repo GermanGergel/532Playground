@@ -1,4 +1,3 @@
-
 import { Session, Player, Team } from '../types';
 
 // Statistics Calculation Utilities
@@ -251,18 +250,19 @@ export const calculatePlayerMonthlyStats = (playerId: string, history: Session[]
 export const getTotmPlayerIds = (history: Session[], allPlayers: Player[]): Set<string> => {
     if (!history || history.length === 0 || allPlayers.length < 5) return new Set();
 
-    // 1. Determine "Previous Month"
+    // 1. Determine "Previous Full Month"
     const today = new Date();
-    // Move to 1st of current month, then subtract 1 second to go to last month
-    const targetDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-    const tMonth = targetDate.getMonth();
-    const tYear = targetDate.getFullYear();
+    // Go to first day of current month, then subtract 1 day to get to the very end of previous month
+    const lastDayOfPrevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+    const tMonth = lastDayOfPrevMonth.getMonth();
+    const tYear = lastDayOfPrevMonth.getFullYear();
 
-    // 2. Filter Sessions
+    // 2. Filter Sessions (STRICTLY within that month)
     const targetSessions = history.filter(s => {
         if (!s || !s.date) return false;
         try {
             const d = new Date(s.date);
+            // Ignore any sessions from CURRENT month (if today is Feb, only take Jan)
             return d.getMonth() === tMonth && d.getFullYear() === tYear;
         } catch { return false; }
     });
@@ -287,7 +287,6 @@ export const getTotmPlayerIds = (history: Session[], allPlayers: Player[]): Set<
             const t1 = teams.find(t => t.id === game.team1Id);
             const t2 = teams.find(t => t.id === game.team2Id);
             
-            // Stats aggregation logic mirrors TeamOfTheMonthModal
             t1?.playerIds?.forEach(pid => { if(stats[pid]) stats[pid].games++ });
             t2?.playerIds?.forEach(pid => { if(stats[pid]) stats[pid].games++ });
 

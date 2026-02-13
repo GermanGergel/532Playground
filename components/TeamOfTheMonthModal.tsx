@@ -1,4 +1,3 @@
-
 import React, { useEffect, useMemo, useState } from 'react';
 import { useApp } from '../context';
 import { Player, PlayerStatus, PlayerTier } from '../types';
@@ -148,12 +147,50 @@ const getDemoDreamTeam = (): { team: DisplayPlayer[], monthName: string } => {
 
 export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen, onClose }) => {
     const { allPlayers, history } = useApp();
+    
+    // --- 1. DETERMINE AVAILABLE MONTHS ---
+    const availableMonths = useMemo(() => {
+        const uniqueMonths = new Map<string, { date: Date, label: string }>();
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        history.forEach(session => {
+            if (!session.date) return;
+            const d = new Date(session.date);
+            const sMonth = d.getMonth();
+            const sYear = d.getFullYear();
+
+            // EXCLUDE CURRENT MONTH: We only want completed months
+            if (sYear < currentYear || (sYear === currentYear && sMonth < currentMonth)) {
+                const key = `${sYear}-${sMonth}`; 
+                if (!uniqueMonths.has(key)) {
+                    uniqueMonths.set(key, {
+                        date: new Date(sYear, sMonth, 1),
+                        label: d.toLocaleString('en-US', { month: 'long', year: 'numeric' })
+                    });
+                }
+            }
+        });
+        return Array.from(uniqueMonths.values()).sort((a, b) => b.date.getTime() - a.date.getTime());
+    }, [history]);
+
+    // --- 2. SELECT DEFAULT DATE (Latest finished month from history) ---
     const [selectedDate, setSelectedDate] = useState<Date>(() => {
+        if (availableMonths.length > 0) return availableMonths[0].date;
         const d = new Date();
         d.setMonth(d.getMonth() - 1);
         return d;
     });
+
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+    // Sync selectedDate if history changes and current selection is null/empty
+    useEffect(() => {
+        if (availableMonths.length > 0 && (!selectedDate || selectedDate.getTime() > new Date().getTime())) {
+            setSelectedDate(availableMonths[0].date);
+        }
+    }, [availableMonths]);
 
     useEffect(() => {
         if (isOpen) {
@@ -165,39 +202,16 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
         return () => { document.body.style.overflow = ''; };
     }, [isOpen]);
 
-    const availableMonths = useMemo(() => {
-        const uniqueMonths = new Set<string>();
-        const monthsData: { date: Date, label: string }[] = [];
-        const now = new Date();
-        const currentMonth = now.getMonth();
-        const currentYear = now.getFullYear();
-        history.forEach(session => {
-            if (!session.date) return;
-            const d = new Date(session.date);
-            const sMonth = d.getMonth();
-            const sYear = d.getFullYear();
-            if (sYear < currentYear || (sYear === currentYear && sMonth < currentMonth)) {
-                const key = `${sYear}-${sMonth}`; 
-                if (!uniqueMonths.has(key)) {
-                    uniqueMonths.add(key);
-                    monthsData.push({
-                        date: d,
-                        label: d.toLocaleString('en-US', { month: 'long', year: 'numeric' })
-                    });
-                }
-            }
-        });
-        return monthsData.sort((a, b) => b.date.getTime() - a.date.getTime());
-    }, [history]);
-
     const { team: dreamTeam, monthName: displayMonthName } = useMemo(() => {
         if (!allPlayers || allPlayers.length < 5 || !history || history.length === 0) {
             return getDemoDreamTeam();
         }
+        
         const targetMonth = selectedDate.getMonth();
         const targetYear = selectedDate.getFullYear();
         
         const calculateForMonth = (tMonth: number, tYear: number) => {
+            // STRICT FILTERING: Only sessions from selected month
             const targetSessions = history.filter(s => {
                 if (!s || !s.date) return false;
                 try {
@@ -205,8 +219,11 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
                     return d.getMonth() === tMonth && d.getFullYear() === tYear;
                 } catch { return false; }
             });
+
             if (targetSessions.length === 0) return null;
+
             const playerStats: Record<string, { goals: number, assists: number, wins: number, games: number, cleanSheets: number }> = {};
+            
             targetSessions.forEach(session => {
                 const teams = session.teams || [];
                 const games = session.games || [];
@@ -234,10 +251,13 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
                     });
                 });
             });
+
             const candidates = allPlayers.filter(p => playerStats[p.id] && playerStats[p.id].games >= 2);
             if (candidates.length < 3) return null; 
+
             const corePool = candidates.filter(p => playerStats[p.id].games >= 4);
             const reservePool = candidates.filter(p => playerStats[p.id].games < 4);
+
             const pickBest = (
                 criteriaFn: (pid: string) => number, 
                 tieBreakerFn: (pid: string) => number,
@@ -253,6 +273,7 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
                     return tieBreakerFn(b.id) - tieBreakerFn(a.id);
                 })[0] || null;
             };
+
             const selectedIds = new Set<string>();
             const teamResult: DisplayPlayer[] = [];
             const getRating = (pid: string) => allPlayers.find(p => p.id === pid)?.rating || 0;
@@ -261,14 +282,19 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
             const getW = (pid: string) => playerStats[pid].wins;
             const getCS = (pid: string) => playerStats[pid].cleanSheets;
             const getGP = (pid: string) => playerStats[pid].games;
+
             const mvp = pickBest(getRating, pid => getG(pid) + getA(pid), selectedIds);
             if (mvp) { selectedIds.add(mvp.id); teamResult.push({ player: mvp, role: 'THE MVP', statLabel: 'RATING', statValue: getRating(mvp.id) }); }
+            
             const sniper = pickBest(getG, pid => -getGP(pid), selectedIds);
             if (sniper) { selectedIds.add(sniper.id); teamResult.push({ player: sniper, role: 'THE SNIPER', statLabel: 'GOALS', statValue: getG(sniper.id) }); }
+            
             const architect = pickBest(getA, getG, selectedIds);
             if (architect) { selectedIds.add(architect.id); teamResult.push({ player: architect, role: 'ARCHITECT', statLabel: 'ASSISTS', statValue: getA(architect.id) }); }
+            
             const winner = pickBest(getW, getGP, selectedIds);
             if (winner) { selectedIds.add(winner.id); teamResult.push({ player: winner, role: 'WINNER', statLabel: 'WINS', statValue: getW(winner.id) }); }
+            
             const fortress = pickBest(getCS, getGP, selectedIds);
             if (fortress) {
                 selectedIds.add(fortress.id);
@@ -277,8 +303,10 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
             }
             return teamResult.length >= 3 ? teamResult : null;
         };
+
         let foundTeam = calculateForMonth(targetMonth, targetYear);
         let dateName = selectedDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+        
         if (foundTeam) {
             return { team: foundTeam, monthName: dateName };
         }
@@ -296,7 +324,6 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
                         <div className="w-full h-full bg-[#020408] rounded-[calc(2.5rem-1px)] overflow-hidden relative flex flex-col">
                             <StarrySky />
                             
-                            {/* UPDATED HEADER: UNIT is more compact, Club is white */}
                             <div className="absolute top-[8%] left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center pointer-events-none select-none">
                                 <h2 className="font-blackops text-2xl text-[#00F2FE] leading-none drop-shadow-[0_0_10px_rgba(0,242,254,0.6)] tracking-tighter uppercase">
                                     UNIT
@@ -320,7 +347,7 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
                                         <Calendar className="w-5 h-5" />
                                     </button>
                                     {isCalendarOpen && (
-                                        <div className="absolute top-[calc(100%+10px)] right-0 w-28 bg-[#0a0c10]/98 backdrop-blur-xl border border-white/10 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden animate-in slide-in-from-top-2 fade-in duration-300 z-[110]">
+                                        <div className="absolute top-[calc(100%+10px)] right-0 w-32 bg-[#0a0c10]/98 backdrop-blur-xl border border-white/10 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden animate-in slide-in-from-top-2 fade-in duration-300 z-[110]">
                                             <div className="max-h-60 overflow-y-auto no-scrollbar py-1">
                                                 {availableMonths.length > 0 ? availableMonths.map((m, idx) => {
                                                     const isSelected = m.date.getMonth() === selectedDate.getMonth() && m.date.getFullYear() === selectedDate.getFullYear();
@@ -328,7 +355,7 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
                                                         <button
                                                             key={idx}
                                                             onClick={() => { setSelectedDate(m.date); setIsCalendarOpen(false); }}
-                                                            className={`w-full text-left px-3 py-1.5 text-[8px] font-black uppercase tracking-widest transition-all relative group/item ${isSelected ? 'text-white' : 'text-white/40 hover:text-white hover:bg-white/10'}`}
+                                                            className={`w-full text-left px-3 py-2 text-[9px] font-black uppercase tracking-widest transition-all relative group/item ${isSelected ? 'text-white' : 'text-white/40 hover:text-white hover:bg-white/10'}`}
                                                         >
                                                             {m.label}
                                                         </button>
