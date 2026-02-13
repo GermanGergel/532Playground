@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Player, PlayerStatus, PlayerForm, SkillType, PlayerTier } from '../types';
-import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, TikTokIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon, BootIcon, HandshakeIcon } from '../icons';
+import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, TikTokIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon } from '../icons';
 import { PlayerAvatar, TeamAvatar } from '../components/avatars';
 import { Language } from '../translations/index';
 import { BadgeIcon, sortBadgesByPriority } from '../features';
@@ -388,12 +388,8 @@ export const PublicHubScreen: React.FC = () => {
         return new Date(history[0].date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
     }, [history]);
 
-    const confirmedRealPlayers = useMemo(() => 
-        allPlayers.filter(p => p.status === PlayerStatus.Confirmed), 
-    [allPlayers]);
-
-    // --- SEASON LEADERS (TOP 3 OVR) ---
-    const seasonLeaders = useMemo(() => {
+    const displayData = useMemo(() => {
+        const confirmedRealPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
         const sorted = [...confirmedRealPlayers].sort((a, b) => {
             if (b.rating !== a.rating) return b.rating - a.rating;
             const scoreA = (a.totalGoals || 0) + (a.totalAssists || 0);
@@ -404,44 +400,16 @@ export const PublicHubScreen: React.FC = () => {
             if (wrB !== wrA) return wrB - wrA;
             return (b.totalGames || 0) - (a.totalGames || 0);
         });
-        return sorted.slice(0, 3);
-    }, [confirmedRealPlayers]);
-
-    // --- ALL-TIME LEGENDS ---
-    const allTimeLegends = useMemo(() => {
-        if (confirmedRealPlayers.length < 1) return [];
-        
-        // 1. Top Scorer
-        const topScorer = [...confirmedRealPlayers].sort((a, b) => {
-            if (b.totalGoals !== a.totalGoals) return b.totalGoals - a.totalGoals;
-            return b.rating - a.rating;
-        })[0];
-
-        // 2. Top Assistant
-        const topAssistant = [...confirmedRealPlayers].sort((a, b) => {
-            if (b.totalAssists !== a.totalAssists) return b.totalAssists - a.totalAssists;
-            return b.rating - a.rating;
-        })[0];
-
-        // 3. Loyalty Legend (Sessions)
-        const loyaltyLegend = [...confirmedRealPlayers].sort((a, b) => {
-            if (b.totalSessionsPlayed !== a.totalSessionsPlayed) return b.totalSessionsPlayed - a.totalSessionsPlayed;
-            return b.rating - a.rating;
-        })[0];
-
-        return [
-            { player: topScorer, label: 'ALL-TIME SCORER', icon: BootIcon, value: topScorer.totalGoals, color: '#FFD700' },
-            { player: topAssistant, label: 'MASTER ASSISTANT', icon: HandshakeIcon, value: topAssistant.totalAssists, color: '#00F2FE' },
-            { player: loyaltyLegend, label: 'CLUB LOYALTY', icon: AwardIcon, value: loyaltyLegend.totalSessionsPlayed, color: '#4CFF5F' }
-        ];
-    }, [confirmedRealPlayers]);
+        return { top: sorted.slice(0, 3) };
+    }, [allPlayers]);
     
     const clubStats = useMemo(() => {
-        const totalPlayers = confirmedRealPlayers.length;
+        const confirmedPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
+        const totalPlayers = confirmedPlayers.length;
         const totalSessions = (history.length || 0) + 1;
-        const avgRating = totalPlayers > 0 ? Math.round(confirmedRealPlayers.reduce((sum, p) => sum + p.rating, 0) / totalPlayers) : 0;
+        const avgRating = totalPlayers > 0 ? Math.round(confirmedPlayers.reduce((sum, p) => sum + p.rating, 0) / totalPlayers) : 0;
         return { totalPlayers, totalSessions, avgRating };
-    }, [confirmedRealPlayers, history]);
+    }, [allPlayers, history]);
     
     const t = useTranslation();
 
@@ -518,47 +486,19 @@ export const PublicHubScreen: React.FC = () => {
             <div className={`absolute inset-0 overflow-y-auto overscroll-none touch-pan-y z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}>
                 <HeroTitle />
                 
-                {/* --- SECTION: SEASON LEADERS --- */}
                 <div className="text-center mb-12 md:mb-20">
-                    <TrophyIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-4 text-[#FFD700]" style={{ filter: 'drop-shadow(0 0 10px rgba(255, 215, 0, 0.4))' }} />
+                    <TrophyIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-4 text-[#00F2FE]" style={{ filter: 'drop-shadow(0 0 10px rgba(0, 242, 254, 0.7))' }} />
                     <h2 className="font-orbitron text-xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubLeadersTitle}</h2>
-                    <p className="font-chakra text-[10px] text-white/30 uppercase tracking-[0.3em] mt-2">Active Month Ranking</p>
                 </div>
 
-                {seasonLeaders.length > 0 ? (
-                    <div className="flex flex-wrap items-end justify-center gap-4 md:gap-8 w-full mb-32">
-                        <div className="order-2 md:order-1">{seasonLeaders[1] && <CinematicCard player={seasonLeaders[1]} rank={2} />}</div>
-                        <div className="order-1 md:order-2">{seasonLeaders[0] && <CinematicCard player={seasonLeaders[0]} rank={1} />}</div>
-                        <div className="order-3 md:order-3">{seasonLeaders[2] && <CinematicCard player={seasonLeaders[2]} rank={3} />}</div>
+                {displayData.top.length > 0 ? (
+                    <div className="flex flex-wrap items-end justify-center gap-4 md:gap-8 w-full">
+                        <div className="order-2 md:order-1">{displayData.top[1] && <CinematicCard player={displayData.top[1]} rank={2} />}</div>
+                        <div className="order-1 md:order-2">{displayData.top[0] && <CinematicCard player={displayData.top[0]} rank={1} />}</div>
+                        <div className="order-3 md:order-3">{displayData.top[2] && <CinematicCard player={displayData.top[2]} rank={3} />}</div>
                     </div>
                 ) : (
                     <NoLeadersPlaceholder />
-                )}
-
-                {/* --- SECTION: HALL OF FAME (ALL-TIME) --- */}
-                <div className="text-center mb-12 md:mb-20">
-                    <AwardIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-4 text-[#00F2FE]" style={{ filter: 'drop-shadow(0 0 10px rgba(0, 242, 254, 0.4))' }} />
-                    <h2 className="font-orbitron text-xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>HALL OF FAME</h2>
-                    <p className="font-chakra text-[10px] text-white/30 uppercase tracking-[0.3em] mt-2">All-Time Club Records</p>
-                </div>
-
-                {allTimeLegends.length > 0 && (
-                    <div className="flex flex-wrap items-end justify-center gap-4 md:gap-8 w-full mb-32">
-                        {allTimeLegends.map((nom, i) => (
-                            <div key={nom.player.id} className={`${i === 1 ? 'order-1 md:order-2' : i === 0 ? 'order-2 md:order-1' : 'order-3 md:order-3'}`}>
-                                <CinematicCard 
-                                    player={nom.player} 
-                                    rank={i === 1 ? 1 : 2} 
-                                    nomination={{
-                                        label: nom.label,
-                                        icon: nom.icon,
-                                        value: nom.value,
-                                        color: nom.color
-                                    }}
-                                />
-                            </div>
-                        ))}
-                    </div>
                 )}
 
                 <div className="mt-24 md:mt-32 pb-12">
