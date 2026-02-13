@@ -75,8 +75,8 @@ const LegendCard: React.FC<{
         <div className="relative z-20 p-5 h-full flex flex-col justify-between">
             <div className="flex justify-between items-start">
                 <div className="flex flex-col relative z-20">
-                    <span className="text-[7px] font-black text-[#FFD700] tracking-[0.2em] uppercase mb-0.5 opacity-80">{title}</span>
-                    <h3 className="font-russo text-lg text-white uppercase tracking-tight truncate max-w-[150px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] leading-none">
+                    <span className="text-[6px] font-black text-[#FFD700] tracking-[0.2em] uppercase mb-0.5 opacity-80">{title}</span>
+                    <h3 className="font-russo text-base text-white uppercase tracking-tighter truncate max-w-[130px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] leading-none">
                         {player.nickname}
                     </h3>
                 </div>
@@ -580,12 +580,7 @@ export const PublicHubScreen: React.FC = () => {
                 {legends && (
                     <div className="mt-24 md:mt-32">
                         <div className="text-center mb-12 md:mb-20">
-                            <div className="flex items-center justify-center gap-4">
-                                <div className="h-px w-12 bg-gradient-to-r from-transparent to-[#FFD700]"></div>
-                                <h2 className="font-orbitron text-xl md:text-3xl font-black uppercase tracking-[0.3em] text-[#FFD700]" style={{ textShadow: '0 0 15px rgba(255, 215, 0, 0.4)'}}>ALL-TIME LEGENDS</h2>
-                                <div className="h-px w-12 bg-gradient-to-l from-transparent to-[#FFD700]"></div>
-                            </div>
-                            <p className="font-chakra text-[10px] text-white/30 tracking-[0.5em] mt-3 uppercase">Hall of Fame Records</p>
+                            <p className="font-orbitron text-sm md:text-base font-black text-[#FFD700] tracking-[0.5em] uppercase" style={{ textShadow: '0 0 15px rgba(255, 215, 0, 0.4)'}}>Hall of Fame Records</p>
                         </div>
 
                         <div className="flex flex-col md:flex-row items-center justify-center gap-8 w-full max-w-5xl mx-auto px-4">
