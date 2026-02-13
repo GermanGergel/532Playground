@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Player, SkillType, PlayerForm } from '../types';
 import { useApp } from '../context';
@@ -6,7 +5,7 @@ import { useTranslation } from '../ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { sortBadgesByPriority, BadgeIcon } from '../features';
 import { MiniSquadBadge } from './MiniSquadBadge';
-import { StarIcon } from '../icons';
+import { StarIcon, TrophyIcon, HandshakeIcon, BootIcon, AwardIcon } from '../icons';
 
 const skillAbbreviations: Record<SkillType, string> = {
     goalkeeper: 'GK', power_shot: 'PS', technique: 'TQ', defender: 'DF', 
@@ -29,22 +28,30 @@ const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
     }
 };
 
-export const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, rank }) => {
+export const CinematicCard: React.FC<{ 
+    player: Player, 
+    rank?: number, 
+    nomination?: { label: string; icon: React.FC<any>; value: number | string; color?: string } 
+}> = ({ player, rank, nomination }) => {
     const cardRef = useRef<HTMLDivElement>(null);
     const { totmPlayerIds } = useApp();
     const t = useTranslation();
-    const isFirst = rank === 1;
+    
     const countryCodeAlpha2 = useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
+    
     const podiumGlowStyle = useMemo(() => {
+        if (nomination) {
+            const glowColor = nomination.color || 'rgba(0, 242, 254, 0.4)';
+            return { boxShadow: `0 20px 35px -15px ${glowColor}` };
+        }
         const glows: Record<number, string> = { 1: '0 25px 40px -20px rgba(255, 215, 0, 0.5)', 2: '0 20px 35px -15px rgba(192, 192, 192, 0.5)', 3: '0 20px 35px -15px rgba(205, 127, 50, 0.6)' };
-        return { boxShadow: glows[rank] || 'none' };
-    }, [rank]);
+        return { boxShadow: glows[rank || 1] || 'none' };
+    }, [rank, nomination]);
     
     const topBadges = useMemo(() => sortBadgesByPriority(player.badges || {}).slice(0, 5), [player.badges]);
     const isTotm = totmPlayerIds.has(player.id);
     const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
 
-    // Uniform font size for all cards
     const fullName = `${player.nickname} ${player.surname}`.trim();
 
     useEffect(() => {
@@ -54,12 +61,33 @@ export const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ play
         return () => { card.removeEventListener('mousemove', handleMouseMove); };
     }, []);
 
+    const NominationIcon = nomination?.icon;
+
     return (
-        <div style={podiumGlowStyle} className={`relative group ${isFirst ? 'scale-105 z-20' : 'scale-90 md:scale-100 z-10'} rounded-3xl transition-shadow duration-300`}>
-            <div ref={cardRef} className={`interactive-card relative ${isFirst ? 'w-[280px] h-[390px]' : 'w-[260px] h-[360px]'} rounded-3xl p-4 overflow-hidden text-white bg-dark-surface border border-white/10`}>
+        <div style={podiumGlowStyle} className={`relative group ${rank === 1 ? 'scale-105 z-20' : 'scale-90 md:scale-100 z-10'} rounded-3xl transition-all duration-500`}>
+            <div ref={cardRef} className={`interactive-card relative ${rank === 1 ? 'w-[280px] h-[390px]' : 'w-[260px] h-[360px]'} rounded-3xl p-4 overflow-hidden text-white bg-dark-surface border border-white/10`}>
                 {player.playerCard && (<div className="absolute inset-0 w-full h-full bg-cover bg-no-repeat" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }}/>)}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
                 
+                {/* Nomination Badge / Rank Badge */}
+                <div className="absolute top-4 right-4 z-20">
+                    {nomination ? (
+                         <div className="flex flex-col items-end gap-1">
+                            <div className="bg-black/60 backdrop-blur-md border border-white/10 px-2 py-1 rounded-lg flex items-center gap-2 shadow-xl">
+                                {NominationIcon && <NominationIcon className="w-3 h-3" style={{ color: nomination.color || '#00F2FE' }} />}
+                                <span className="font-russo text-[10px] text-white tracking-widest leading-none">{nomination.value}</span>
+                            </div>
+                         </div>
+                    ) : rank && (
+                        <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center font-russo text-lg shadow-2xl backdrop-blur-md
+                            ${rank === 1 ? 'bg-yellow-500/20 border-yellow-500 text-yellow-500' : 
+                              rank === 2 ? 'bg-slate-300/20 border-slate-300 text-slate-300' : 
+                              'bg-amber-700/20 border-amber-700 text-amber-700'}`}>
+                            {rank}
+                        </div>
+                    )}
+                </div>
+
                 {!isBadgeModalOpen && (
                     <div className="absolute top-24 left-4 z-20 flex flex-col gap-4">
                         <div className="space-y-4">
@@ -78,10 +106,9 @@ export const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ play
                     </div>
                 )}
 
-                <div className="relative z-10 h-full p-1">
+                <div className="relative z-10 h-full p-1 flex flex-col">
                      <div className="flex justify-between items-start">
                         <div className="pt-2">
-                            {/* BRAND REPLACEMENT: DARK TURQUOISE */}
                             <p 
                                 className="font-russo text-xl leading-none tracking-tighter"
                                 style={{ 
@@ -112,16 +139,26 @@ export const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ play
                             )}
                         </div>
                     </div>
-                    {/* UNIFIED ALIGNMENT: Absolute positioning from bottom */}
-                    <div className="absolute bottom-5 left-0 right-0 text-center z-30 px-2">
+                    
+                    <div className="flex-grow"></div>
+
+                    {/* Nomination Label at the bottom */}
+                    {nomination && (
+                        <div className="text-center mb-4">
+                            <span className="font-blackops text-[11px] text-[#00F2FE] tracking-[0.3em] uppercase opacity-90 drop-shadow-[0_0_10px_rgba(0,242,254,0.5)]">
+                                {nomination.label}
+                            </span>
+                        </div>
+                    )}
+
+                    <div className="text-center z-30 px-2 pb-1">
                         <h1 
                             className="text-2xl font-black uppercase tracking-tight leading-tight mb-1"
                             style={{ 
-                                background: 'linear-gradient(180deg, #155e75 0%, #083344 100%)',
+                                background: 'linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.4) 100%)',
                                 WebkitBackgroundClip: 'text',
                                 WebkitTextFillColor: 'transparent',
-                                opacity: 0.9,
-                                filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.6))',
+                                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.8))',
                             }}
                         >
                             {fullName}
