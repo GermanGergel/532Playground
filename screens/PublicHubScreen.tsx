@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -53,34 +54,45 @@ const LegendCard: React.FC<{
             backgroundSize: '8px 8px'
         }}></div>
         
-        {/* Golden Gradient Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#FFD700]/5 via-transparent to-black pointer-events-none"></div>
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#FFD700]/40 to-transparent"></div>
+        {/* Player Image - Right Side (Takes place of icon) */}
+        <div className="absolute top-0 right-0 w-36 h-full z-0 pointer-events-none">
+            {player.playerCard ? (
+                <div 
+                    className="w-full h-full bg-cover bg-top"
+                    style={{ backgroundImage: `url(${player.playerCard})` }}
+                />
+            ) : (
+                <div className="w-full h-full bg-gradient-to-b from-gray-800 to-black"></div>
+            )}
+            {/* Gradient Mask for Smooth Blend */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/30 to-transparent"></div>
+        </div>
 
-        <div className="relative z-10 p-5 h-full flex flex-col justify-between">
+        {/* Golden Gradient Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#FFD700]/5 via-transparent to-transparent pointer-events-none z-10"></div>
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#FFD700]/40 to-transparent z-10"></div>
+
+        <div className="relative z-20 p-5 h-full flex flex-col justify-between">
             <div className="flex justify-between items-start">
                 <div className="flex flex-col">
                     <span className="text-[8px] font-black text-[#FFD700] tracking-[0.3em] uppercase mb-1">{title}</span>
-                    <h3 className="font-russo text-xl text-white uppercase tracking-tighter truncate max-w-[160px]">
+                    <h3 className="font-russo text-xl text-white uppercase tracking-tighter truncate max-w-[160px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                         {player.nickname}
                     </h3>
                 </div>
-                <div className="w-10 h-10 rounded-xl bg-[#FFD700]/10 border border-[#FFD700]/30 flex items-center justify-center text-[#FFD700] shadow-[0_0_15px_rgba(255,215,0,0.2)]">
-                    {/* FIX: Cast icon to React.ReactElement<any> to avoid 'className' prop error on generic ReactElement */}
-                    {React.cloneElement(icon as React.ReactElement<any>, { className: "w-6 h-6" })}
-                </div>
+                {/* Icon removed as requested */}
             </div>
 
             <div className="flex items-end justify-between">
                 <div className="flex flex-col">
-                    <span className="font-russo text-4xl text-white tracking-widest leading-none">
+                    <span className="font-russo text-4xl text-white tracking-widest leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                         {value}
                     </span>
-                    <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.4em] mt-2">{label}</span>
+                    <span className="text-[7px] font-black text-white/50 uppercase tracking-[0.4em] mt-2">{label}</span>
                 </div>
                 <div className="flex flex-col items-end opacity-40 group-hover:opacity-100 transition-opacity">
-                    <span className="text-[9px] font-mono text-[#FFD700] font-bold uppercase">Hall of Fame</span>
-                    <span className="text-[7px] font-mono text-white/40 uppercase">Ecosystem 532</span>
+                    <span className="text-[9px] font-mono text-[#FFD700] font-bold uppercase drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">Hall of Fame</span>
+                    <span className="text-[7px] font-mono text-white/40 uppercase drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">Ecosystem 532</span>
                 </div>
             </div>
         </div>
@@ -569,7 +581,7 @@ export const PublicHubScreen: React.FC = () => {
                     </div>
                 </div>
 
-                {/* --- NEW SECTION: ALL-TIME LEGENDS --- */}
+                {/* --- ALL-TIME LEGENDS --- */}
                 {legends && (
                     <div className="mt-24 md:mt-32">
                         <div className="text-center mb-12 md:mb-20">
