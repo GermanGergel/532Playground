@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Player, PlayerStatus, PlayerForm, SkillType, PlayerTier } from '../types';
-import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, TikTokIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon, GoleadorBadgeIcon, AssistantBadgeIcon, VeteranBadgeIcon } from '../icons';
+import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, TikTokIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon, GoleadorBadgeIcon, AssistantBadgeIcon, VeteranBadgeIcon, MvpBadgeIcon } from '../icons';
 import { PlayerAvatar, TeamAvatar } from '../components/avatars';
 import { Language } from '../translations/index';
 import { BadgeIcon, sortBadgesByPriority } from '../features';
@@ -452,10 +452,20 @@ export const PublicHubScreen: React.FC = () => {
             })[0];
         };
 
+        // NEW: Grand Master Logic (Sum of Goals + Assists)
+        const getGrandMaster = (players: Player[]) => {
+            return [...players].sort((a, b) => {
+                const gaA = (a.totalGoals || 0) + (a.totalAssists || 0);
+                const gaB = (b.totalGoals || 0) + (b.totalAssists || 0);
+                if (gaB !== gaA) return gaB - gaA;
+                return b.rating - a.rating; // Tie-breaker
+            })[0];
+        };
+
         return {
             scorer: getBest(confirmed, 'totalGoals'),
             architect: getBest(confirmed, 'totalAssists'),
-            loyalty: getBest(confirmed, 'totalSessionsPlayed')
+            grandMaster: getGrandMaster(confirmed) // Replaces loyalty
         };
     }, [allPlayers]);
 
@@ -588,11 +598,11 @@ export const PublicHubScreen: React.FC = () => {
                                 label="CAREER ASSISTS"
                             />
                             <LegendCard 
-                                title="IRON GUARD"
-                                player={legends.loyalty}
-                                value={legends.loyalty.totalSessionsPlayed}
-                                icon={<VeteranBadgeIcon />}
-                                label="SESSIONS PLAYED"
+                                title="GRAND MASTER"
+                                player={legends.grandMaster}
+                                value={(legends.grandMaster.totalGoals || 0) + (legends.grandMaster.totalAssists || 0)}
+                                icon={<MvpBadgeIcon />}
+                                label="GOALS + ASSISTS"
                             />
                         </div>
                     </div>
