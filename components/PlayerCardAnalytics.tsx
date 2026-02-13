@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { Player, PlayerStatus, PlayerHistoryEntry } from '../types';
 import { Card, useTranslation } from '../ui';
@@ -35,7 +34,8 @@ export const LastSessionBreakdown: React.FC<{ player: Player; usePromoStyle?: bo
 
     // Detect if we are in the Club Hub
     const isHub = location.pathname.includes('/hub');
-    const isPenalty = player.consecutiveMissedSessions && player.consecutiveMissedSessions >= 3;
+    // UPDATED: Threshold changed from 3 to 5 missed sessions
+    const isPenalty = player.consecutiveMissedSessions && player.consecutiveMissedSessions >= 5;
 
     const badgesEarned = breakdown.badgesEarned || [];
     

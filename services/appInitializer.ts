@@ -29,7 +29,7 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
     let dataRepaired = false;
 
     initialPlayers = initialPlayers.map(p => {
-        const migratedPlayer = { ...p };
+        const migratedPlayer = { ...p } as any;
 
         // 1. УСТАНОВКА ПОЛА (FLOOR)
         if (migratedPlayer.initialRating === undefined || migratedPlayer.initialRating === null) {
@@ -45,40 +45,31 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
             dataRepaired = true;
         }
 
-        // 3. СИНХРОНИЗАЦИЯ ГРАФИКА И АНАЛИЗА
-        // REMOVED: Aggressive history overwrite logic caused chart flattening bugs during penalties.
-        // We now trust the historyData as the "truth" of the past, even if it differs from current rating.
-
-        // 4. RULE MIGRATION: REVERSE PENALTY (3 -> 5)
-        // If player has 3 or 4 misses and has a penalty change of -1, we give it back
-        if (migratedPlayer.consecutiveMissedSessions === 3 || migratedPlayer.consecutiveMissedSessions === 4) {
+        // 3. RULE MIGRATION: REVERSE PENALTY (3 -> 5)
+        // Check if player has 3 or 4 misses and HAS NOT been migrated to v5 rule yet
+        if (!migratedPlayer.migrated_penalty_v5 && (migratedPlayer.consecutiveMissedSessions === 3 || migratedPlayer.consecutiveMissedSessions === 4)) {
             const lastChange = migratedPlayer.lastRatingChange;
-            // Check if last change was a typical penalty (final -1, zero game stats)
-            if (lastChange && 
-                lastChange.finalChange === -1 && 
+            
+            // Check if last change looks like an inactivity penalty (OVR drop with no match stats)
+            const isPenaltyEntry = lastChange && 
+                lastChange.finalChange < 0 && 
                 lastChange.teamPerformance === 0 && 
-                lastChange.individualPerformance === 0 &&
-                lastChange.badgeBonus === 0) {
+                lastChange.individualPerformance === 0;
+
+            if (isPenaltyEntry) {
+                console.log(`Migration v5: Reversing penalty for ${migratedPlayer.nickname}`);
                 
-                console.log(`Migration: Reversing penalty for ${migratedPlayer.nickname}`);
-                
-                // Return point
+                // Return 1 point (standard penalty amount)
                 migratedPlayer.rating += 1;
                 
                 // Reset last change so it doesn't show "Penalty applied" in card analysis
                 migratedPlayer.lastRatingChange = undefined; 
 
-                // Adjust tier
+                // Adjust tier based on new rating
                 migratedPlayer.tier = getTierForRating(migratedPlayer.rating);
 
-                // Clean up history chart entry if the last one was the penalty
-                if (migratedPlayer.historyData && migratedPlayer.historyData.length > 0) {
-                    const lastHist = migratedPlayer.historyData[migratedPlayer.historyData.length - 1];
-                    // If it matches a penalty entry (no goals/assists and low rating)
-                    if (lastHist.goals === 0 && lastHist.assists === 0 && lastHist.rating < migratedPlayer.rating) {
-                        migratedPlayer.historyData.pop();
-                    }
-                }
+                // Mark as migrated so we don't add +1 again on next app start
+                migratedPlayer.migrated_penalty_v5 = true;
                 
                 dataRepaired = true;
             }

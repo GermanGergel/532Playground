@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { useApp } from '../context';
 import { HubProgressChart } from './HubAnalytics';
@@ -92,7 +91,8 @@ const TerminalLastSession = ({ player }: { player: Player }) => {
     const { language } = useApp();
     const t = translations[language] as any;
     if (!b) return <div className="text-center py-6 opacity-10 text-[9px] uppercase font-black">No Data</div>;
-    const isPenalty = player.consecutiveMissedSessions && player.consecutiveMissedSessions >= 3;
+    // UPDATED: Changed from 3 to 5 missed sessions
+    const isPenalty = player.consecutiveMissedSessions && player.consecutiveMissedSessions >= 5;
     const earnedBadges = b.badgesEarned || [];
     return (
         <div className="space-y-2.5 pb-1">
