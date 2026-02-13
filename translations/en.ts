@@ -249,7 +249,7 @@ export const en = {
   hubAwaitingStats: "AWAITING DATA",
   hubAnalyzingPerformance: "ANALYZING PERFORMANCE...",
   hubDashboardBtn: "DASHBOARD",
-  hubSessionLeaders: "SESSION LEADERS",
+  hubSessionLeaders: "SEASON LEADERS",
   hubMatchReport: "MATCH REPORT",
   hubSessionNews: "INTELLIGENCE",
   hubSessionSquads: "SQUADS",
