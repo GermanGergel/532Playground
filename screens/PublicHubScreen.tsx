@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Player, PlayerStatus, PlayerForm, SkillType, PlayerTier } from '../types';
-import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, TikTokIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon } from '../icons';
+import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, TikTokIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon, GoleadorBadgeIcon, AssistantBadgeIcon, VeteranBadgeIcon } from '../icons';
 import { PlayerAvatar, TeamAvatar } from '../components/avatars';
 import { Language } from '../translations/index';
 import { BadgeIcon, sortBadgesByPriority } from '../features';
@@ -37,6 +37,55 @@ const StaticSoccerBall: React.FC = () => {
         </div>
     );
 };
+
+// --- NEW COMPONENT: LEGEND CARD ---
+const LegendCard: React.FC<{ 
+    title: string; 
+    player: Player; 
+    value: number | string; 
+    icon: React.ReactNode;
+    label: string;
+}> = ({ title, player, value, icon, label }) => (
+    <div className="relative group w-full md:w-80 h-44 rounded-3xl overflow-hidden bg-black border border-[#FFD700]/20 shadow-[0_10px_30px_-15px_rgba(0,0,0,1)] transition-all duration-500 hover:border-[#FFD700]/50 hover:shadow-[0_0_30px_rgba(255,215,0,0.15)] active:scale-95">
+        {/* Background Texture */}
+        <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0" style={{ 
+            backgroundImage: `linear-gradient(45deg, #FFD700 25%, transparent 25%, transparent 50%, #FFD700 50%, #FFD700 75%, transparent 75%, transparent)`,
+            backgroundSize: '8px 8px'
+        }}></div>
+        
+        {/* Golden Gradient Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#FFD700]/5 via-transparent to-black pointer-events-none"></div>
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#FFD700]/40 to-transparent"></div>
+
+        <div className="relative z-10 p-5 h-full flex flex-col justify-between">
+            <div className="flex justify-between items-start">
+                <div className="flex flex-col">
+                    <span className="text-[8px] font-black text-[#FFD700] tracking-[0.3em] uppercase mb-1">{title}</span>
+                    <h3 className="font-russo text-xl text-white uppercase tracking-tighter truncate max-w-[160px]">
+                        {player.nickname}
+                    </h3>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-[#FFD700]/10 border border-[#FFD700]/30 flex items-center justify-center text-[#FFD700] shadow-[0_0_15px_rgba(255,215,0,0.2)]">
+                    {/* FIX: Cast icon to React.ReactElement<any> to avoid 'className' prop error on generic ReactElement */}
+                    {React.cloneElement(icon as React.ReactElement<any>, { className: "w-6 h-6" })}
+                </div>
+            </div>
+
+            <div className="flex items-end justify-between">
+                <div className="flex flex-col">
+                    <span className="font-russo text-4xl text-white tracking-widest leading-none">
+                        {value}
+                    </span>
+                    <span className="text-[7px] font-black text-white/30 uppercase tracking-[0.4em] mt-2">{label}</span>
+                </div>
+                <div className="flex flex-col items-end opacity-40 group-hover:opacity-100 transition-opacity">
+                    <span className="text-[9px] font-mono text-[#FFD700] font-bold uppercase">Hall of Fame</span>
+                    <span className="text-[7px] font-mono text-white/40 uppercase">Ecosystem 532</span>
+                </div>
+            </div>
+        </div>
+    </div>
+);
 
 const NoLeadersPlaceholder: React.FC = () => {
     const t = useTranslation();
@@ -177,7 +226,6 @@ const HubNav: React.FC<{
             
             <div className="flex items-center gap-4 shrink-0 h-full">
                 <div className="flex items-center">
-                    {/* NEW COMPACT UNIT LOGO */}
                     <span 
                         className="font-blackops text-2xl md:text-3xl text-[#00F2FE] tracking-tighter leading-none" 
                         style={{ 
@@ -362,17 +410,11 @@ export const PublicHubScreen: React.FC = () => {
     const navigate = useNavigate();
     const { allPlayers, history } = useApp();
     const [isDashboardOpen, setIsDashboardOpen] = useState(false);
-    
-    // -- NEW: State for Team of the Month Modal --
     const [isTotmOpen, setIsTotmOpen] = useState(false);
-    
     const [dashboardView, setDashboardView] = useState<DashboardViewType>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
 
-    // DETERMINING ENVIRONMENT
-    const isDev = useMemo(() => {
-        return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    }, []);
+    const t = useTranslation();
 
     useEffect(() => {
         if (isDashboardOpen) {
@@ -387,6 +429,28 @@ export const PublicHubScreen: React.FC = () => {
         if (!history || history.length === 0) return '';
         return new Date(history[0].date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
     }, [history]);
+
+    // --- LOGIC: CALCULATE ALL-TIME LEGENDS ---
+    const legends = useMemo(() => {
+        const confirmed = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
+        if (confirmed.length === 0) return null;
+
+        // Helper for ties
+        const getBest = (players: Player[], criteria: keyof Player) => {
+            return [...players].sort((a, b) => {
+                const valA = (a[criteria] as number) || 0;
+                const valB = (b[criteria] as number) || 0;
+                if (valB !== valA) return valB - valA;
+                return b.rating - a.rating; // Tie breaker: OVR
+            })[0];
+        };
+
+        return {
+            scorer: getBest(confirmed, 'totalGoals'),
+            architect: getBest(confirmed, 'totalAssists'),
+            loyalty: getBest(confirmed, 'totalSessionsPlayed')
+        };
+    }, [allPlayers]);
 
     const displayData = useMemo(() => {
         const confirmedRealPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
@@ -406,13 +470,11 @@ export const PublicHubScreen: React.FC = () => {
     const clubStats = useMemo(() => {
         const confirmedPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
         const totalPlayers = confirmedPlayers.length;
-        const totalSessions = (history.length || 0) + 1;
+        const totalSessions = (history.length || 0);
         const avgRating = totalPlayers > 0 ? Math.round(confirmedPlayers.reduce((sum, p) => sum + p.rating, 0) / totalPlayers) : 0;
         return { totalPlayers, totalSessions, avgRating };
     }, [allPlayers, history]);
     
-    const t = useTranslation();
-
     const SOCIAL_LINKS = {
         whatsapp: "https://chat.whatsapp.com/CAJnChuM4lQFf3s2YUnhQr",
         youtube: "https://www.youtube.com/@UnitFootball",
@@ -423,7 +485,6 @@ export const PublicHubScreen: React.FC = () => {
         setDashboardView(tab as DashboardViewType);
     };
 
-    // ОПРЕДЕЛЕНИЕ ЦВЕТА ПОДЛОЖКИ - УНИФИЦИРОВАНО НА САМЫЙ ТЕМНЫЙ
     const getBottomPatchColor = () => {
         if (dashboardView === 'archive' || dashboardView === 'dashboard' || dashboardView === 'roster' || dashboardView === 'info') return '#01040a';
         return '#0a0c10';
@@ -432,10 +493,8 @@ export const PublicHubScreen: React.FC = () => {
     return (
         <div className="fixed inset-0 w-full h-full bg-[#0a0c10] text-white selection:bg-[#00F2FE] selection:text-black overflow-hidden overscroll-none">
             
-            {/* -- MODAL: Team of the Month -- */}
             <TeamOfTheMonthModal isOpen={isTotmOpen} onClose={() => setIsTotmOpen(false)} />
 
-            {/* FORCE GLOBAL LOCK FOR THIS SCREEN */}
             <style dangerouslySetInnerHTML={{__html: `
                 html, body, #root { 
                     height: 100%; 
@@ -472,7 +531,6 @@ export const PublicHubScreen: React.FC = () => {
                     <ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} />
                 </div>
 
-                {/* ГЛОБАЛЬНАЯ НАКЛАДКА ДЛЯ БЕСШОВНОГО ПЕРЕХОДА (ПОДЛОЖКА) - ОПУЩЕНА НИЖЕ */}
                 <div 
                     className="fixed bottom-0 left-0 right-0 h-16 z-[110] pointer-events-none opacity-0 transition-all duration-700 delay-300" 
                     style={{ 
@@ -482,7 +540,6 @@ export const PublicHubScreen: React.FC = () => {
                 ></div>
             </div>
 
-            {/* HERO CONTENT - WRAPPED IN SCROLLABLE CONTAINER */}
             <div className={`absolute inset-0 overflow-y-auto overscroll-none touch-pan-y z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}>
                 <HeroTitle />
                 
@@ -501,7 +558,7 @@ export const PublicHubScreen: React.FC = () => {
                     <NoLeadersPlaceholder />
                 )}
 
-                <div className="mt-24 md:mt-32 pb-12">
+                <div className="mt-24 md:mt-32">
                     <div className="text-center mb-12 md:mb-20">
                         <h2 className="font-orbitron text-lg md:text-2xl font-black uppercase tracking-[0.15em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubVitalsTitle}</h2>
                     </div>
@@ -511,8 +568,46 @@ export const PublicHubScreen: React.FC = () => {
                         <CinematicStatCard value={clubStats.avgRating} label={t.hubAvgRating} />
                     </div>
                 </div>
+
+                {/* --- NEW SECTION: ALL-TIME LEGENDS --- */}
+                {legends && (
+                    <div className="mt-24 md:mt-32">
+                        <div className="text-center mb-12 md:mb-20">
+                            <div className="flex items-center justify-center gap-4">
+                                <div className="h-px w-12 bg-gradient-to-r from-transparent to-[#FFD700]"></div>
+                                <h2 className="font-orbitron text-xl md:text-3xl font-black uppercase tracking-[0.3em] text-[#FFD700]" style={{ textShadow: '0 0 15px rgba(255, 215, 0, 0.4)'}}>ALL-TIME LEGENDS</h2>
+                                <div className="h-px w-12 bg-gradient-to-l from-transparent to-[#FFD700]"></div>
+                            </div>
+                            <p className="font-chakra text-[10px] text-white/30 tracking-[0.5em] mt-3 uppercase">Hall of Fame Records</p>
+                        </div>
+
+                        <div className="flex flex-col md:flex-row items-center justify-center gap-8 w-full max-w-5xl mx-auto px-4">
+                            <LegendCard 
+                                title="ETERNAL GOLDEN BOOT"
+                                player={legends.scorer}
+                                value={legends.scorer.totalGoals}
+                                icon={<GoleadorBadgeIcon />}
+                                label="CAREER GOALS"
+                            />
+                            <LegendCard 
+                                title="LEGACY ARCHITECT"
+                                player={legends.architect}
+                                value={legends.architect.totalAssists}
+                                icon={<AssistantBadgeIcon />}
+                                label="CAREER ASSISTS"
+                            />
+                            <LegendCard 
+                                title="IRON GUARD"
+                                player={legends.loyalty}
+                                value={legends.loyalty.totalSessionsPlayed}
+                                icon={<VeteranBadgeIcon />}
+                                label="SESSIONS PLAYED"
+                            />
+                        </div>
+                    </div>
+                )}
                 
-                <div className="relative z-10 bg-transparent pb-8">
+                <div className="relative z-10 bg-transparent pb-8 mt-20">
                     <footer className="relative pb-8 pt-0 bg-transparent">
                         <div className="text-center px-4">
                             
