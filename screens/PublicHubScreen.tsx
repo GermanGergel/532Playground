@@ -55,7 +55,7 @@ const LegendCard: React.FC<{
         }}></div>
         
         {/* Player Image - Right Side (Takes place of icon) */}
-        <div className="absolute top-0 right-0 w-36 h-full z-0 pointer-events-none">
+        <div className="absolute top-0 right-0 w-40 h-full z-0 pointer-events-none">
             {player.playerCard ? (
                 <div 
                     className="w-full h-full bg-cover bg-top"
@@ -65,7 +65,7 @@ const LegendCard: React.FC<{
                 <div className="w-full h-full bg-gradient-to-b from-gray-800 to-black"></div>
             )}
             {/* Gradient Mask for Smooth Blend */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/30 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-transparent"></div>
         </div>
 
         {/* Golden Gradient Overlays */}
@@ -74,13 +74,12 @@ const LegendCard: React.FC<{
 
         <div className="relative z-20 p-5 h-full flex flex-col justify-between">
             <div className="flex justify-between items-start">
-                <div className="flex flex-col">
-                    <span className="text-[8px] font-black text-[#FFD700] tracking-[0.3em] uppercase mb-1">{title}</span>
-                    <h3 className="font-russo text-xl text-white uppercase tracking-tighter truncate max-w-[160px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                <div className="flex flex-col relative z-20">
+                    <span className="text-[7px] font-black text-[#FFD700] tracking-[0.2em] uppercase mb-0.5 opacity-80">{title}</span>
+                    <h3 className="font-russo text-lg text-white uppercase tracking-tight truncate max-w-[150px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] leading-none">
                         {player.nickname}
                     </h3>
                 </div>
-                {/* Icon removed as requested */}
             </div>
 
             <div className="flex items-end justify-between">
@@ -88,11 +87,7 @@ const LegendCard: React.FC<{
                     <span className="font-russo text-4xl text-white tracking-widest leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                         {value}
                     </span>
-                    <span className="text-[7px] font-black text-white/50 uppercase tracking-[0.4em] mt-2">{label}</span>
-                </div>
-                <div className="flex flex-col items-end opacity-40 group-hover:opacity-100 transition-opacity">
-                    <span className="text-[9px] font-mono text-[#FFD700] font-bold uppercase drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">Hall of Fame</span>
-                    <span className="text-[7px] font-mono text-white/40 uppercase drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">Ecosystem 532</span>
+                    <span className="text-[7px] font-black text-white/50 uppercase tracking-[0.4em] mt-1">{label}</span>
                 </div>
             </div>
         </div>
