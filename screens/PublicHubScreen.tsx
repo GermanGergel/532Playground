@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Player, PlayerStatus, PlayerForm, SkillType, PlayerTier } from '../types';
-import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, TikTokIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon, GoleadorBadgeIcon, AssistantBadgeIcon, VeteranBadgeIcon, MvpBadgeIcon, CrownIcon } from '../icons';
+import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, TikTokIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon, GoleadorBadgeIcon, AssistantBadgeIcon, VeteranBadgeIcon, MvpBadgeIcon } from '../icons';
 import { PlayerAvatar, TeamAvatar } from '../components/avatars';
 import { Language } from '../translations/index';
 import { BadgeIcon, sortBadgesByPriority } from '../features';
@@ -39,7 +39,7 @@ const StaticSoccerBall: React.FC = () => {
     );
 };
 
-// --- LEGEND CARD (Standard) ---
+// --- NEW COMPONENT: LEGEND CARD ---
 const LegendCard: React.FC<{ 
     title: string; 
     player: Player; 
@@ -48,15 +48,27 @@ const LegendCard: React.FC<{
     label: string;
 }> = ({ title, player, value, icon, label }) => (
     <div className="relative group w-full md:w-80 h-44 rounded-3xl overflow-hidden bg-black border border-[#FFD700]/20 shadow-[0_10px_30px_-15px_rgba(0,0,0,1)] transition-all duration-500 hover:border-[#FFD700]/50 hover:shadow-[0_0_30px_rgba(255,215,0,0.15)] active:scale-95">
-        <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0" style={{ backgroundImage: `linear-gradient(45deg, #FFD700 25%, transparent 25%, transparent 50%, #FFD700 50%, #FFD700 75%, transparent 75%, transparent)`, backgroundSize: '8px 8px' }}></div>
+        {/* Background Texture */}
+        <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0" style={{ 
+            backgroundImage: `linear-gradient(45deg, #FFD700 25%, transparent 25%, transparent 50%, #FFD700 50%, #FFD700 75%, transparent 75%, transparent)`,
+            backgroundSize: '8px 8px'
+        }}></div>
+        
+        {/* Player Image - Right Side (Takes place of icon) */}
         <div className="absolute top-0 right-0 w-40 h-full z-0 pointer-events-none">
             {player.playerCard ? (
-                <div className="w-full h-full bg-cover bg-top" style={{ backgroundImage: `url(${player.playerCard})` }} />
+                <div 
+                    className="w-full h-full bg-cover bg-top"
+                    style={{ backgroundImage: `url(${player.playerCard})` }}
+                />
             ) : (
                 <div className="w-full h-full bg-gradient-to-b from-gray-800 to-black"></div>
             )}
+            {/* Gradient Mask for Smooth Blend */}
             <div className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-transparent"></div>
         </div>
+
+        {/* Golden Gradient Overlays */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#FFD700]/5 via-transparent to-transparent pointer-events-none z-10"></div>
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#FFD700]/40 to-transparent z-10"></div>
 
@@ -81,90 +93,6 @@ const LegendCard: React.FC<{
         </div>
     </div>
 );
-
-// --- DIAMOND CONQUEROR CARD (New Feature) ---
-const DiamondConquerorCard: React.FC<{ player: Player }> = ({ player }) => {
-    const winRate = player.totalGames > 0 ? Math.round((player.totalWins / player.totalGames) * 100) : 0;
-    
-    return (
-        <div className="relative flex flex-col items-center mt-12 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-            {/* The Diamond Container */}
-            <div className="relative w-48 h-48 md:w-56 md:h-56">
-                {/* Rotating Borders */}
-                <div className="absolute inset-0 border border-[#FFD700]/30 rotate-45 animate-spin-slow duration-[20s]" style={{ animationDuration: '30s' }}></div>
-                <div className="absolute inset-4 border border-[#FFD700]/10 rotate-45"></div>
-                
-                {/* Main Diamond Mask */}
-                <div 
-                    className="absolute inset-0 bg-black overflow-hidden shadow-[0_0_50px_rgba(255,215,0,0.15)] group transition-all duration-500 hover:scale-105"
-                    style={{ 
-                        clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
-                        background: 'linear-gradient(135deg, #1a1a1a 0%, #000 100%)'
-                    }}
-                >
-                    {/* Player Image */}
-                    {player.playerCard ? (
-                        <div 
-                            className="absolute inset-0 bg-cover bg-top scale-[1.4] transition-transform duration-700 group-hover:scale-[1.5]"
-                            style={{ backgroundImage: `url(${player.playerCard})` }}
-                        />
-                    ) : (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
-                            <TrophyIcon className="w-12 h-12 text-[#FFD700]/20" />
-                        </div>
-                    )}
-                    
-                    {/* Overlays */}
-                    <div className="absolute inset-0 bg-[#FFD700]/10 mix-blend-overlay"></div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
-                </div>
-
-                {/* Decorative Frame */}
-                <div className="absolute inset-0 pointer-events-none" style={{ filter: 'drop-shadow(0 0 10px #FFD700)' }}>
-                    <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
-                        <path d="M50 0 L100 50 L50 100 L0 50 Z" fill="none" stroke="#FFD700" strokeWidth="0.5" strokeOpacity="0.8" />
-                        <circle cx="50" cy="0" r="1.5" fill="#FFD700" />
-                        <circle cx="100" cy="50" r="1.5" fill="#FFD700" />
-                        <circle cx="50" cy="100" r="1.5" fill="#FFD700" />
-                        <circle cx="0" cy="50" r="1.5" fill="#FFD700" />
-                    </svg>
-                </div>
-            </div>
-
-            {/* Content Below Diamond */}
-            <div className="relative -mt-10 z-20 flex flex-col items-center">
-                <div className="bg-black/90 backdrop-blur-md border border-[#FFD700]/30 px-6 py-2 rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.8)] flex flex-col items-center min-w-[200px]">
-                    <div className="flex items-center gap-2 mb-1">
-                        <CrownIcon className="w-4 h-4 text-[#FFD700]" />
-                        <span className="text-[10px] font-black text-[#FFD700] tracking-[0.3em] uppercase">THE CONQUEROR</span>
-                        <CrownIcon className="w-4 h-4 text-[#FFD700]" />
-                    </div>
-                    <h2 className="font-russo text-2xl text-white uppercase tracking-tight leading-none mb-2 text-center drop-shadow-md">
-                        {player.nickname}
-                    </h2>
-                    <div className="flex items-center gap-3 w-full justify-center border-t border-white/10 pt-2">
-                        <div className="flex flex-col items-center">
-                            <span className="font-mono text-3xl font-black text-white leading-none tracking-tighter" style={{ textShadow: '0 0 15px rgba(255,215,0,0.5)' }}>
-                                {winRate}%
-                            </span>
-                            <span className="text-[6px] font-bold text-white/40 uppercase tracking-[0.2em] mt-0.5">WIN RATE</span>
-                        </div>
-                        <div className="w-px h-6 bg-white/10"></div>
-                        <div className="flex flex-col items-center">
-                            <span className="font-mono text-xl font-bold text-white/60 leading-none">
-                                {player.totalGames}
-                            </span>
-                            <span className="text-[6px] font-bold text-white/40 uppercase tracking-[0.2em] mt-0.5">MATCHES</span>
-                        </div>
-                    </div>
-                </div>
-                
-                {/* Glow under the card */}
-                <div className="absolute top-10 left-1/2 -translate-x-1/2 w-40 h-20 bg-[#FFD700] blur-[60px] opacity-20 pointer-events-none z-[-1]"></div>
-            </div>
-        </div>
-    );
-};
 
 const NoLeadersPlaceholder: React.FC = () => {
     const t = useTranslation();
@@ -524,7 +452,7 @@ export const PublicHubScreen: React.FC = () => {
             })[0];
         };
 
-        // Grand Master Logic (Sum of Goals + Assists)
+        // NEW: Grand Master Logic (Sum of Goals + Assists)
         const getGrandMaster = (players: Player[]) => {
             return [...players].sort((a, b) => {
                 const gaA = (a.totalGoals || 0) + (a.totalAssists || 0);
@@ -534,27 +462,10 @@ export const PublicHubScreen: React.FC = () => {
             })[0];
         };
 
-        // NEW: THE CONQUEROR (Win Rate, Min 10 Sessions)
-        const getConqueror = (players: Player[]) => {
-            // Filter: Min 10 sessions played
-            const eligible = players.filter(p => (p.totalSessionsPlayed || 0) >= 10);
-            
-            if (eligible.length === 0) return null; // Fallback if no one meets criteria
-            
-            return [...eligible].sort((a, b) => {
-                const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0;
-                const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0;
-                
-                if (wrB !== wrA) return wrB - wrA; // Highest Win Rate
-                return b.totalGames - a.totalGames; // Tie-breaker: More games played
-            })[0];
-        };
-
         return {
             scorer: getBest(confirmed, 'totalGoals'),
             architect: getBest(confirmed, 'totalAssists'),
-            grandMaster: getGrandMaster(confirmed),
-            conqueror: getConqueror(confirmed) // The new Boss
+            grandMaster: getGrandMaster(confirmed) // Replaces loyalty
         };
     }, [allPlayers]);
 
@@ -664,45 +575,35 @@ export const PublicHubScreen: React.FC = () => {
                     <NoLeadersPlaceholder />
                 )}
 
-                {/* --- ALL-TIME LEGENDS SECTION --- */}
+                {/* --- ALL-TIME LEGENDS (MOVED HERE) --- */}
                 {legends && (
                     <div className="mt-24 md:mt-32">
                         <div className="text-center mb-12 md:mb-20">
                             <p className="font-orbitron text-sm md:text-base font-black text-[#FFD700] tracking-[0.5em] uppercase" style={{ textShadow: '0 0 15px rgba(255, 215, 0, 0.4)'}}>Hall of Fame Records</p>
                         </div>
 
-                        <div className="flex flex-col items-center gap-8 w-full max-w-5xl mx-auto px-4">
-                            {/* Standard Legends Row */}
-                            <div className="flex flex-col md:flex-row items-center justify-center gap-8 w-full">
-                                <LegendCard 
-                                    title="ETERNAL GOLDEN BOOT"
-                                    player={legends.scorer}
-                                    value={legends.scorer.totalGoals}
-                                    icon={<GoleadorBadgeIcon />}
-                                    label="CAREER GOALS"
-                                />
-                                <LegendCard 
-                                    title="LEGACY ARCHITECT"
-                                    player={legends.architect}
-                                    value={legends.architect.totalAssists}
-                                    icon={<AssistantBadgeIcon />}
-                                    label="CAREER ASSISTS"
-                                />
-                                <LegendCard 
-                                    title="GRAND MASTER"
-                                    player={legends.grandMaster}
-                                    value={(legends.grandMaster.totalGoals || 0) + (legends.grandMaster.totalAssists || 0)}
-                                    icon={<MvpBadgeIcon />}
-                                    label="GOALS + ASSISTS"
-                                />
-                            </div>
-
-                            {/* THE CONQUEROR - BIG BOSS CARD */}
-                            {legends.conqueror && (
-                                <div className="mt-6 transform scale-110 md:scale-125 z-10">
-                                    <DiamondConquerorCard player={legends.conqueror} />
-                                </div>
-                            )}
+                        <div className="flex flex-col md:flex-row items-center justify-center gap-8 w-full max-w-5xl mx-auto px-4">
+                            <LegendCard 
+                                title="ETERNAL GOLDEN BOOT"
+                                player={legends.scorer}
+                                value={legends.scorer.totalGoals}
+                                icon={<GoleadorBadgeIcon />}
+                                label="CAREER GOALS"
+                            />
+                            <LegendCard 
+                                title="LEGACY ARCHITECT"
+                                player={legends.architect}
+                                value={legends.architect.totalAssists}
+                                icon={<AssistantBadgeIcon />}
+                                label="CAREER ASSISTS"
+                            />
+                            <LegendCard 
+                                title="GRAND MASTER"
+                                player={legends.grandMaster}
+                                value={(legends.grandMaster.totalGoals || 0) + (legends.grandMaster.totalAssists || 0)}
+                                icon={<MvpBadgeIcon />}
+                                label="GOALS + ASSISTS"
+                            />
                         </div>
                     </div>
                 )}
