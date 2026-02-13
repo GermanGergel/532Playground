@@ -252,32 +252,32 @@ export const getTotmPlayerIds = (history: Session[], allPlayers: Player[]): Set<
 
     // 1. Determine "Previous Full Month"
     const today = new Date();
-    // Go to first day of current month, then subtract 1 day to get to the very end of previous month
     const lastDayOfPrevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
     const tMonth = lastDayOfPrevMonth.getMonth();
     const tYear = lastDayOfPrevMonth.getFullYear();
 
-    // 2. Filter Sessions (STRICTLY within that month)
+    // 2. Filter Sessions
     const targetSessions = history.filter(s => {
         if (!s || !s.date) return false;
         try {
             const d = new Date(s.date);
-            // Ignore any sessions from CURRENT month (if today is Feb, only take Jan)
             return d.getMonth() === tMonth && d.getFullYear() === tYear;
         } catch { return false; }
-    });
+    }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     if (targetSessions.length === 0) return new Set();
 
-    // 3. Aggregate Stats
-    const stats: Record<string, { goals: number, assists: number, wins: number, games: number, cleanSheets: number }> = {};
+    // 3. Aggregate Stats & Capture Historical Rating
+    const stats: Record<string, { goals: number, assists: number, wins: number, games: number, cleanSheets: number, lastOvr: number }> = {};
 
     targetSessions.forEach(session => {
         const teams = session.teams || [];
         const games = session.games || [];
         
         session.playerPool.forEach(p => {
-            if (!stats[p.id]) stats[p.id] = { goals: 0, assists: 0, wins: 0, games: 0, cleanSheets: 0 };
+            if (!stats[p.id]) stats[p.id] = { goals: 0, assists: 0, wins: 0, games: 0, cleanSheets: 0, lastOvr: 0 };
+            // Capture the OVR from this session. Since we sort sessions by date, the latest session's OVR will stick.
+            stats[p.id].lastOvr = p.rating;
         });
 
         games.forEach(game => {
@@ -305,7 +305,7 @@ export const getTotmPlayerIds = (history: Session[], allPlayers: Player[]): Set<
         });
     });
 
-    // 4. Select Winners (MVP, Sniper, Architect, Winner, Fortress)
+    // 4. Select Winners using Historical Stats
     const candidates = allPlayers.filter(p => stats[p.id] && stats[p.id].games >= 2);
     if (candidates.length < 3) return new Set();
 
@@ -327,15 +327,15 @@ export const getTotmPlayerIds = (history: Session[], allPlayers: Player[]): Set<
 
     const winners = new Set<string>();
     
-    // Getters
-    const getRating = (pid: string) => allPlayers.find(p => p.id === pid)?.rating || 0;
+    // Getters now use the captured monthly stats including OVR
+    const getHistOvr = (pid: string) => stats[pid].lastOvr;
     const getG = (pid: string) => stats[pid].goals;
     const getA = (pid: string) => stats[pid].assists;
     const getW = (pid: string) => stats[pid].wins;
     const getCS = (pid: string) => stats[pid].cleanSheets;
     const getGP = (pid: string) => stats[pid].games;
 
-    const mvpId = pickBest(getRating, pid => getG(pid) + getA(pid), winners);
+    const mvpId = pickBest(getHistOvr, pid => getG(pid) + getA(pid), winners);
     if (mvpId) winners.add(mvpId);
 
     const sniperId = pickBest(getG, pid => -getGP(pid), winners);

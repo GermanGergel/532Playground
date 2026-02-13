@@ -161,7 +161,7 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
             const sMonth = d.getMonth();
             const sYear = d.getFullYear();
 
-            // EXCLUDE CURRENT MONTH: We only want completed months
+            // EXCLUDE CURRENT MONTH
             if (sYear < currentYear || (sYear === currentYear && sMonth < currentMonth)) {
                 const key = `${sYear}-${sMonth}`; 
                 if (!uniqueMonths.has(key)) {
@@ -175,7 +175,6 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
         return Array.from(uniqueMonths.values()).sort((a, b) => b.date.getTime() - a.date.getTime());
     }, [history]);
 
-    // --- 2. SELECT DEFAULT DATE (Latest finished month from history) ---
     const [selectedDate, setSelectedDate] = useState<Date>(() => {
         if (availableMonths.length > 0) return availableMonths[0].date;
         const d = new Date();
@@ -185,7 +184,6 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
 
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
-    // Sync selectedDate if history changes and current selection is null/empty
     useEffect(() => {
         if (availableMonths.length > 0 && (!selectedDate || selectedDate.getTime() > new Date().getTime())) {
             setSelectedDate(availableMonths[0].date);
@@ -211,24 +209,25 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
         const targetYear = selectedDate.getFullYear();
         
         const calculateForMonth = (tMonth: number, tYear: number) => {
-            // STRICT FILTERING: Only sessions from selected month
             const targetSessions = history.filter(s => {
                 if (!s || !s.date) return false;
                 try {
                     const d = new Date(s.date);
                     return d.getMonth() === tMonth && d.getFullYear() === tYear;
                 } catch { return false; }
-            });
+            }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
             if (targetSessions.length === 0) return null;
 
-            const playerStats: Record<string, { goals: number, assists: number, wins: number, games: number, cleanSheets: number }> = {};
+            const playerStats: Record<string, { goals: number, assists: number, wins: number, games: number, cleanSheets: number, lastOvr: number }> = {};
             
             targetSessions.forEach(session => {
                 const teams = session.teams || [];
                 const games = session.games || [];
                 session.playerPool.forEach(p => {
-                    if (!playerStats[p.id]) playerStats[p.id] = { goals: 0, assists: 0, wins: 0, games: 0, cleanSheets: 0 };
+                    if (!playerStats[p.id]) playerStats[p.id] = { goals: 0, assists: 0, wins: 0, games: 0, cleanSheets: 0, lastOvr: 0 };
+                    // Historical capture of OVR
+                    playerStats[p.id].lastOvr = p.rating;
                 });
                 games.forEach(game => {
                     if (game.status !== 'finished') return;
@@ -266,25 +265,31 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
                 let pool = corePool.filter(p => !excludeIds.has(p.id));
                 if (pool.length === 0) pool = reservePool.filter(p => !excludeIds.has(p.id));
                 if (pool.length === 0) return null;
-                return pool.sort((a, b) => {
+                const winner = pool.sort((a, b) => {
                     const valA = criteriaFn(a.id);
                     const valB = criteriaFn(b.id);
                     if (valB !== valA) return valB - valA; 
                     return tieBreakerFn(b.id) - tieBreakerFn(a.id);
-                })[0] || null;
+                })[0];
+                
+                if (!winner) return null;
+                
+                // RETURN CLONE WITH HISTORICAL RATING
+                return { ...winner, rating: playerStats[winner.id].lastOvr };
             };
 
             const selectedIds = new Set<string>();
             const teamResult: DisplayPlayer[] = [];
-            const getRating = (pid: string) => allPlayers.find(p => p.id === pid)?.rating || 0;
+            
+            const getHistOvr = (pid: string) => playerStats[pid].lastOvr;
             const getG = (pid: string) => playerStats[pid].goals;
             const getA = (pid: string) => playerStats[pid].assists;
             const getW = (pid: string) => playerStats[pid].wins;
             const getCS = (pid: string) => playerStats[pid].cleanSheets;
             const getGP = (pid: string) => playerStats[pid].games;
 
-            const mvp = pickBest(getRating, pid => getG(pid) + getA(pid), selectedIds);
-            if (mvp) { selectedIds.add(mvp.id); teamResult.push({ player: mvp, role: 'THE MVP', statLabel: 'RATING', statValue: getRating(mvp.id) }); }
+            const mvp = pickBest(getHistOvr, pid => getG(pid) + getA(pid), selectedIds);
+            if (mvp) { selectedIds.add(mvp.id); teamResult.push({ player: mvp, role: 'THE MVP', statLabel: 'RATING', statValue: getHistOvr(mvp.id) }); }
             
             const sniper = pickBest(getG, pid => -getGP(pid), selectedIds);
             if (sniper) { selectedIds.add(sniper.id); teamResult.push({ player: sniper, role: 'THE SNIPER', statLabel: 'GOALS', statValue: getG(sniper.id) }); }
