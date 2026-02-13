@@ -565,18 +565,7 @@ export const PublicHubScreen: React.FC = () => {
                     <NoLeadersPlaceholder />
                 )}
 
-                <div className="mt-24 md:mt-32">
-                    <div className="text-center mb-12 md:mb-20">
-                        <h2 className="font-orbitron text-lg md:text-2xl font-black uppercase tracking-[0.15em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubVitalsTitle}</h2>
-                    </div>
-                     <div className="flex flex-col md:flex-row items-center justify-center gap-6 w-full max-w-4xl mx-auto">
-                        <CinematicStatCard value={clubStats.totalPlayers} label={t.hubStatsMembers} />
-                        <CinematicStatCard value={clubStats.totalSessions} label={t.hubSessionsPlayed} />
-                        <CinematicStatCard value={clubStats.avgRating} label={t.hubAvgRating} />
-                    </div>
-                </div>
-
-                {/* --- ALL-TIME LEGENDS --- */}
+                {/* --- ALL-TIME LEGENDS (MOVED HERE) --- */}
                 {legends && (
                     <div className="mt-24 md:mt-32">
                         <div className="text-center mb-12 md:mb-20">
@@ -608,6 +597,17 @@ export const PublicHubScreen: React.FC = () => {
                         </div>
                     </div>
                 )}
+
+                <div className="mt-24 md:mt-32">
+                    <div className="text-center mb-12 md:mb-20">
+                        <h2 className="font-orbitron text-lg md:text-2xl font-black uppercase tracking-[0.15em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubVitalsTitle}</h2>
+                    </div>
+                     <div className="flex flex-col md:flex-row items-center justify-center gap-6 w-full max-w-4xl mx-auto">
+                        <CinematicStatCard value={clubStats.totalPlayers} label={t.hubStatsMembers} />
+                        <CinematicStatCard value={clubStats.totalSessions} label={t.hubSessionsPlayed} />
+                        <CinematicStatCard value={clubStats.avgRating} label={t.hubAvgRating} />
+                    </div>
+                </div>
                 
                 <div className="relative z-10 bg-transparent pb-8 mt-20">
                     <footer className="relative pb-8 pt-0 bg-transparent">
