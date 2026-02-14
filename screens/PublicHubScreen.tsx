@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -52,6 +53,10 @@ const ChaseList: React.FC<{
     accentColor: string; 
 }> = ({ players, valueKey, accentColor }) => {
     
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const [showTopFade, setShowTopFade] = useState(false);
+    const [showBottomFade, setShowBottomFade] = useState(players.length > 4);
+
     const getValue = (p: Player) => {
         if (valueKey === 'grandMaster') return (p.totalGoals || 0) + (p.totalAssists || 0);
         if (valueKey === 'winRate') return p.totalGames > 0 ? `${Math.round((p.totalWins / p.totalGames) * 100)}%` : '0%';
@@ -60,13 +65,40 @@ const ChaseList: React.FC<{
         return 0;
     };
 
+    const handleScroll = () => {
+        if (scrollRef.current) {
+            const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+            // Show top fade if we scrolled down at least 10px
+            setShowTopFade(scrollTop > 10);
+            // Hide bottom fade if we are near the end (within 10px)
+            setShowBottomFade(scrollHeight - scrollTop - clientHeight > 10);
+        }
+    };
+
+    // Re-check bottom fade when players change
+    useEffect(() => {
+        if (scrollRef.current) {
+            const { scrollHeight, clientHeight } = scrollRef.current;
+            setShowBottomFade(scrollHeight > clientHeight);
+        }
+    }, [players]);
+
     return (
         <div 
             className="w-full bg-[#0a0c10]/95 backdrop-blur-md rounded-b-2xl border-l border-r border-b overflow-hidden relative group/list"
             style={{ borderColor: `${accentColor}33` }}
         >
+            {/* Top Fade Gradient */}
+            <div 
+                className={`absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-[#0a0c10] to-transparent z-20 pointer-events-none transition-opacity duration-300 ${showTopFade ? 'opacity-100' : 'opacity-0'}`}
+            ></div>
+
             {/* Scrollable container with fixed max height */}
-            <div className="max-h-[160px] overflow-y-auto touch-pan-y pb-2 no-scrollbar relative z-10">
+            <div 
+                ref={scrollRef}
+                onScroll={handleScroll}
+                className="max-h-[160px] overflow-y-auto touch-pan-y pb-2 no-scrollbar relative z-10"
+            >
                 {players.map((p, index) => (
                     <div 
                         key={p.id} 
@@ -99,10 +131,10 @@ const ChaseList: React.FC<{
                 )}
             </div>
 
-            {/* Fade effect at the bottom to hint at scrolling */}
-            {players.length > 4 && (
-                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#0a0c10] to-transparent z-20 pointer-events-none"></div>
-            )}
+            {/* Bottom Fade Gradient */}
+            <div 
+                className={`absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#0a0c10] to-transparent z-20 pointer-events-none transition-opacity duration-300 ${showBottomFade ? 'opacity-100' : 'opacity-0'}`}
+            ></div>
         </div>
     );
 };
