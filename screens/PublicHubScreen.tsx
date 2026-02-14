@@ -40,6 +40,7 @@ const StaticSoccerBall: React.FC = () => {
 };
 
 // --- NEW COMPONENT: LEGEND CARD ---
+// UPDATED: More compact design to fit 4 in a row
 const LegendCard: React.FC<{ 
     title: string; 
     player: Player; 
@@ -48,15 +49,15 @@ const LegendCard: React.FC<{
     label: string;
     accentColor?: string;
 }> = ({ title, player, value, icon, label, accentColor = "#FFD700" }) => (
-    <div className={`relative group w-full md:w-72 h-44 rounded-3xl overflow-hidden bg-black border transition-all duration-500 active:scale-95`} style={{ borderColor: `${accentColor}33`, boxShadow: `0 10px 30px -15px rgba(0,0,0,1)` }}>
+    <div className={`relative group w-full h-36 md:h-40 rounded-2xl overflow-hidden bg-black border transition-all duration-500 active:scale-95`} style={{ borderColor: `${accentColor}33`, boxShadow: `0 10px 30px -15px rgba(0,0,0,1)` }}>
         {/* Background Texture */}
         <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0" style={{ 
             backgroundImage: `linear-gradient(45deg, ${accentColor} 25%, transparent 25%, transparent 50%, ${accentColor} 50%, ${accentColor} 75%, transparent 75%, transparent)`,
             backgroundSize: '8px 8px'
         }}></div>
         
-        {/* Player Image - Right Side (Takes place of icon) */}
-        <div className="absolute top-0 right-0 w-40 h-full z-0 pointer-events-none">
+        {/* Player Image - Right Side (Adjusted width for row layout) */}
+        <div className="absolute top-0 right-0 w-28 md:w-36 h-full z-0 pointer-events-none">
             {player.playerCard ? (
                 <div 
                     className="w-full h-full bg-cover bg-top"
@@ -66,18 +67,18 @@ const LegendCard: React.FC<{
                 <div className="w-full h-full bg-gradient-to-b from-gray-800 to-black"></div>
             )}
             {/* Gradient Mask for Smooth Blend */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/50 to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent"></div>
         </div>
 
         {/* Golden Gradient Overlays */}
         <div className="absolute inset-0 pointer-events-none z-10" style={{ background: `linear-gradient(to bottom right, ${accentColor}10, transparent)` }}></div>
         <div className="absolute top-0 left-0 right-0 h-px z-10" style={{ background: `linear-gradient(to right, transparent, ${accentColor}66, transparent)` }}></div>
 
-        <div className="relative z-20 p-5 h-full flex flex-col justify-between">
+        <div className="relative z-20 p-4 h-full flex flex-col justify-between">
             <div className="flex justify-between items-start">
-                <div className="flex flex-col relative z-20">
-                    <span className="text-[6px] font-black tracking-[0.2em] uppercase mb-0.5 opacity-90" style={{ color: accentColor }}>{title}</span>
-                    <h3 className="font-russo text-base text-white uppercase tracking-tighter truncate max-w-[130px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] leading-none">
+                <div className="flex flex-col relative z-20 max-w-[70%]">
+                    <span className="text-[5px] md:text-[6px] font-black tracking-[0.2em] uppercase mb-0.5 opacity-90 truncate" style={{ color: accentColor }}>{title}</span>
+                    <h3 className="font-russo text-sm md:text-base text-white uppercase tracking-tighter truncate drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] leading-none">
                         {player.nickname}
                     </h3>
                 </div>
@@ -85,15 +86,15 @@ const LegendCard: React.FC<{
 
             <div className="flex items-end justify-between">
                 <div className="flex flex-col">
-                    <span className="font-russo text-4xl text-white tracking-widest leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                    <span className="font-russo text-2xl md:text-3xl text-white tracking-widest leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                         {value}
                     </span>
-                    <span className="text-[7px] font-black text-white/50 uppercase tracking-[0.4em] mt-1">{label}</span>
+                    <span className="text-[6px] md:text-[7px] font-black text-white/50 uppercase tracking-[0.3em] mt-1">{label}</span>
                 </div>
             </div>
             
             {/* Icon Watermark */}
-            <div className="absolute bottom-3 right-3 opacity-10 scale-150 text-white z-10">
+            <div className="absolute bottom-2 right-2 opacity-10 scale-125 text-white z-10">
                 {icon}
             </div>
         </div>
@@ -599,14 +600,15 @@ export const PublicHubScreen: React.FC = () => {
                     <NoLeadersPlaceholder />
                 )}
 
-                {/* --- ALL-TIME LEGENDS (MOVED HERE) --- */}
+                {/* --- ALL-TIME LEGENDS (GRID REFACTOR) --- */}
                 {legends && (
                     <div className="mt-24 md:mt-32">
                         <div className="text-center mb-12 md:mb-20">
                             <p className="font-orbitron text-sm md:text-base font-black text-[#FFD700] tracking-[0.5em] uppercase" style={{ textShadow: '0 0 15px rgba(255, 215, 0, 0.4)'}}>Hall of Fame Records</p>
                         </div>
 
-                        <div className="flex flex-wrap items-center justify-center gap-8 w-full max-w-6xl mx-auto px-4">
+                        {/* GRID LAYOUT FOR LEGEND CARDS: 2 columns on mobile, 4 on desktop */}
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 w-full max-w-[1400px] mx-auto px-2 md:px-4">
                             <LegendCard 
                                 title="ETERNAL GOLDEN BOOT"
                                 player={legends.scorer}
