@@ -1,3 +1,4 @@
+
 export const ru = {
   // Navigation
   navHome: "Главная",
@@ -205,7 +206,7 @@ export const ru = {
 
   // Info Content
   ratingCalculationTitle: "Система Рейтинга",
-  ratingCalculationDesc: "Рейтинг меняется на основе результатов матча, командной игры и личного вклада.",
+  ratingCalculationDesc: "Рейтинг меняется на основе результатов матчу, командной игры и личного вклада.",
   ratingCalculationExamplesTitle: "Примеры Начисления",
   ratingExampleWinStrong: "Уверенная победа (+2GD): +1.3 очка",
   ratingExampleWinClose: "Обычная победа: +1.0 очко",
@@ -251,7 +252,7 @@ export const ru = {
   hubAwaitingStats: "ОЖИДАНИЕ ДАННЫХ",
   hubAnalyzingPerformance: "АНАЛИЗ ЭФФЕКТИВНОСТИ...",
   hubDashboardBtn: "ДАШБОРД",
-  hubSessionLeaders: "ЛИДЕРЫ СЕЗОНА",
+  hubSessionLeaders: "ЛИДЕРЫ СЕССИИ",
   hubMatchReport: "ОТЧЕТ О МАТЧЕ",
   hubSessionNews: "РАЗВЕДДАННЫЕ",
   hubSessionSquads: "СОСТАВЫ",
@@ -295,7 +296,7 @@ export const ru = {
   roadmap_video_desc: "AI нарізки твоїх голів.",
   roadmap_leagues: "Ліги",
   roadmap_leagues_desc: "Сезонні кубки та призи.",
-  cta_join: "ВСТУПИТИ",
+  cta_join: "ВСТУПИТЬ",
   cta_desc: "Напиши нам, щоб записатися.",
   tap_to_enter: "НАТИСНИ, ЩОБ УВІЙТИ",
   hub_section_title: "ЕКОСИСТЕМА КЛУБУ",

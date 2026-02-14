@@ -1,3 +1,4 @@
+
 export const vn = {
   // Navigation
   navHome: "Trang Chủ",
@@ -249,7 +250,7 @@ export const vn = {
   hubAwaitingStats: "ĐANG CHỜ DỮ LIỆU",
   hubAnalyzingPerformance: "ĐANG PHÂN TÍCH...",
   hubDashboardBtn: "DASHBOARD",
-  hubSessionLeaders: "DẪN ĐẦU MÙA GIẢI",
+  hubSessionLeaders: "DẪN ĐẦU BUỔI TẬP",
   hubMatchReport: "BÁO CÁO TRẬN ĐẤU",
   hubSessionNews: "TIN TỨC",
   hubSessionSquads: "ĐỘI HÌNH",

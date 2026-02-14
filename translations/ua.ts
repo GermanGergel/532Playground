@@ -1,3 +1,4 @@
+
 export const ua = {
   // Navigation
   navHome: "Головна",
@@ -230,7 +231,7 @@ export const ua = {
   ruleLatePenalty: "ШТРАФ 20K",
   ruleRespectTitle: "Повага",
   ruleRespectDesc: "Неспортивна поведінка або агресія.",
-  ruleRespectPenalty: "БАН НА СЕССІЮ",
+  ruleRespectPenalty: "БАН НА СЕССИЮ",
   badgeBonusTitle: "Бонуси Значків",
   badgeBonusDesc: "Заробляйте значки, щоб підвищити рейтинг матчу.",
   badgeBonusMvp: "MVP: +0.4 очка",
@@ -265,8 +266,8 @@ export const ua = {
   hubWeather: "ПОГОДА",
   hubImpact: "ІМПАКТ",
   hubWelcomeText: "Ласкаво просимо до офіційного хабу UNIT CLUB. Слідкуй за статистикою, порівнюй результати та прагни до вершини.",
-  hubLeadersTitle: "Лідери Сесії",
-  hubJoinSquad: "Вступити в Загін",
+  hubLeadersTitle: "Лідери Сезону",
+  hubJoinSquad: "Вступить в Загін",
   
   // Duel
   duel_title: "Вибір Дуелі",
