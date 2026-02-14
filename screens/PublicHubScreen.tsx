@@ -70,8 +70,8 @@ const LegendCard: React.FC<{
         </div>
 
         {/* Golden Gradient Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-br via-transparent to-transparent pointer-events-none z-10" style={{ from: `${accentColor}10` }}></div>
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r via-transparent to-transparent z-10" style={{ from: 'transparent', via: `${accentColor}66` }}></div>
+        <div className="absolute inset-0 pointer-events-none z-10" style={{ background: `linear-gradient(to bottom right, ${accentColor}10, transparent)` }}></div>
+        <div className="absolute top-0 left-0 right-0 h-px z-10" style={{ background: `linear-gradient(to right, transparent, ${accentColor}66, transparent)` }}></div>
 
         <div className="relative z-20 p-5 h-full flex flex-col justify-between">
             <div className="flex justify-between items-start">
