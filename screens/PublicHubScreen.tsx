@@ -512,47 +512,40 @@ export const PublicHubScreen: React.FC = () => {
         const confirmed = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
         if (confirmed.length === 0) return null;
 
-        // UPDATED: Sort by Goals for the Chase List
+        // 1. SCORERS (Goals)
         const sortedScorers = [...confirmed].sort((a, b) => {
             if (b.totalGoals !== a.totalGoals) return b.totalGoals - a.totalGoals;
             return b.rating - a.rating;
         });
 
-        // Helper for other ties (unchanged)
-        const getBest = (players: Player[], criteria: keyof Player) => {
-            return [...players].sort((a, b) => {
-                const valA = (a[criteria] as number) || 0;
-                const valB = (b[criteria] as number) || 0;
-                if (valB !== valA) return valB - valA;
-                return b.rating - a.rating; // Tie breaker: OVR
-            })[0];
-        };
+        // 2. ARCHITECTS (Assists)
+        const sortedArchitects = [...confirmed].sort((a, b) => {
+            if (b.totalAssists !== a.totalAssists) return b.totalAssists - a.totalAssists;
+            return b.rating - a.rating;
+        });
 
-        const getGrandMaster = (players: Player[]) => {
-            return [...players].sort((a, b) => {
-                const gaA = (a.totalGoals || 0) + (a.totalAssists || 0);
-                const gaB = (b.totalGoals || 0) + (b.totalAssists || 0);
-                if (gaB !== gaA) return gaB - gaA;
-                return b.rating - a.rating; // Tie-breaker
-            })[0];
-        };
+        // 3. GRAND MASTERS (Goals + Assists)
+        const sortedGrandMasters = [...confirmed].sort((a, b) => {
+            const gaA = (a.totalGoals || 0) + (a.totalAssists || 0);
+            const gaB = (b.totalGoals || 0) + (b.totalAssists || 0);
+            if (gaB !== gaA) return gaB - gaA;
+            return b.rating - a.rating;
+        });
 
-        const getBestWinRate = (players: Player[]) => {
-            const eligible = players.filter(p => (p.totalSessionsPlayed || 0) >= 10);
-            if (eligible.length === 0) return null;
-            return [...eligible].sort((a, b) => {
-                const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0;
-                const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0;
-                if (wrB !== wrA) return wrB - wrA; 
-                return b.totalGames - a.totalGames;
-            })[0];
-        };
+        // 4. CONQUERORS (Win Rate > 10 games)
+        const eligibleWinRate = confirmed.filter(p => (p.totalSessionsPlayed || 0) >= 10);
+        const sortedConquerors = [...eligibleWinRate].sort((a, b) => {
+            const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0;
+            const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0;
+            if (wrB !== wrA) return wrB - wrA; 
+            return b.totalGames - a.totalGames;
+        });
 
         return {
-            scorers: sortedScorers, // List for Goals
-            architect: getBest(confirmed, 'totalAssists'),
-            grandMaster: getGrandMaster(confirmed), 
-            conqueror: getBestWinRate(confirmed) 
+            scorers: sortedScorers,
+            architects: sortedArchitects,
+            grandMasters: sortedGrandMasters,
+            conquerors: sortedConquerors
         };
     }, [allPlayers]);
 
@@ -669,54 +662,95 @@ export const PublicHubScreen: React.FC = () => {
                             <p className="font-orbitron text-sm md:text-base font-black text-[#FFD700] tracking-[0.5em] uppercase" style={{ textShadow: '0 0 15px rgba(255, 215, 0, 0.4)'}}>Hall of Fame Records</p>
                         </div>
 
-                        {/* GRID LAYOUT FOR LEGEND CARDS: 2 columns on mobile, 4 on desktop */}
-                        {/* Note: items-start to allow the Goal card to be taller */}
+                        {/* GRID LAYOUT: Using ChaseList for ALL cards now */}
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 w-full max-w-[1400px] mx-auto px-2 md:px-4 items-start">
                             
-                            {/* GOAL CARD WITH CHASE LIST */}
+                            {/* GOALS */}
                             <div className="flex flex-col w-full">
-                                <LegendCard 
-                                    title="ETERNAL GOLDEN BOOT"
-                                    player={legends.scorers[0]}
-                                    value={legends.scorers[0].totalGoals}
-                                    icon={<GoleadorBadgeIcon />}
-                                    label="CAREER GOALS"
-                                    accentColor="#FFD700" 
-                                    className="rounded-b-none border-b-0"
-                                />
+                                {legends.scorers[0] && (
+                                    <LegendCard 
+                                        title="ETERNAL GOLDEN BOOT"
+                                        player={legends.scorers[0]}
+                                        value={legends.scorers[0].totalGoals}
+                                        icon={<GoleadorBadgeIcon />}
+                                        label="CAREER GOALS"
+                                        accentColor="#FFD700" 
+                                        className="rounded-b-none border-b-0"
+                                    />
+                                )}
                                 <ChaseList 
-                                    players={legends.scorers.slice(1, 5)} // UPDATED: 2nd to 5th place
+                                    players={legends.scorers.slice(1, 5)} 
                                     valueKey="totalGoals"
                                     accentColor="#FFD700"
                                 />
                             </div>
 
-                            <LegendCard 
-                                title="LEGACY ARCHITECT"
-                                player={legends.architect}
-                                value={legends.architect.totalAssists}
-                                icon={<AssistantBadgeIcon />}
-                                label="CAREER ASSISTS"
-                                accentColor="#00BFFF" 
-                            />
-                            <LegendCard 
-                                title="GRAND MASTER"
-                                player={legends.grandMaster}
-                                value={(legends.grandMaster.totalGoals || 0) + (legends.grandMaster.totalAssists || 0)}
-                                icon={<MvpBadgeIcon />}
-                                label="GOALS + ASSISTS"
-                                accentColor="#D946EF" 
-                            />
-                            {legends.conqueror && (
-                                <LegendCard 
-                                    title="THE CONQUEROR"
-                                    player={legends.conqueror}
-                                    value={`${Math.round((legends.conqueror.totalWins / legends.conqueror.totalGames) * 100)}%`}
-                                    icon={<WinLeaderBadgeIcon />}
-                                    label="HIGHEST WIN RATE"
-                                    accentColor="#4CFF5F" 
+                            {/* ASSISTS */}
+                            <div className="flex flex-col w-full">
+                                {legends.architects[0] && (
+                                    <LegendCard 
+                                        title="LEGACY ARCHITECT"
+                                        player={legends.architects[0]}
+                                        value={legends.architects[0].totalAssists}
+                                        icon={<AssistantBadgeIcon />}
+                                        label="CAREER ASSISTS"
+                                        accentColor="#00BFFF" 
+                                        className="rounded-b-none border-b-0"
+                                    />
+                                )}
+                                <ChaseList 
+                                    players={legends.architects.slice(1, 5)} 
+                                    valueKey="totalAssists"
+                                    accentColor="#00BFFF"
                                 />
-                            )}
+                            </div>
+
+                            {/* GRAND MASTER */}
+                            <div className="flex flex-col w-full">
+                                {legends.grandMasters[0] && (
+                                    <LegendCard 
+                                        title="GRAND MASTER"
+                                        player={legends.grandMasters[0]}
+                                        value={(legends.grandMasters[0].totalGoals || 0) + (legends.grandMasters[0].totalAssists || 0)}
+                                        icon={<MvpBadgeIcon />}
+                                        label="GOALS + ASSISTS"
+                                        accentColor="#D946EF" 
+                                        className="rounded-b-none border-b-0"
+                                    />
+                                )}
+                                <ChaseList 
+                                    players={legends.grandMasters.slice(1, 5)} 
+                                    valueKey="grandMaster"
+                                    accentColor="#D946EF"
+                                />
+                            </div>
+
+                            {/* CONQUEROR */}
+                            <div className="flex flex-col w-full">
+                                {legends.conquerors[0] ? (
+                                    <LegendCard 
+                                        title="THE CONQUEROR"
+                                        player={legends.conquerors[0]}
+                                        value={`${Math.round((legends.conquerors[0].totalWins / legends.conquerors[0].totalGames) * 100)}%`}
+                                        icon={<WinLeaderBadgeIcon />}
+                                        label="HIGHEST WIN RATE"
+                                        accentColor="#4CFF5F" 
+                                        className="rounded-b-none border-b-0"
+                                    />
+                                ) : (
+                                    // Fallback if no conqueror (not enough games)
+                                    <div className="h-40 bg-black/50 rounded-2xl border border-white/5 flex items-center justify-center">
+                                        <span className="text-[10px] text-white/30 uppercase tracking-widest">NO DATA</span>
+                                    </div>
+                                )}
+                                {legends.conquerors.length > 1 && (
+                                    <ChaseList 
+                                        players={legends.conquerors.slice(1, 5)} 
+                                        valueKey="winRate"
+                                        accentColor="#4CFF5F"
+                                    />
+                                )}
+                            </div>
                         </div>
                     </div>
                 )}
