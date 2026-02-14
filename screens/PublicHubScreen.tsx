@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Player, PlayerStatus, PlayerForm, SkillType, PlayerTier } from '../types';
-import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, TikTokIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon, GoleadorBadgeIcon, AssistantBadgeIcon, VeteranBadgeIcon, MvpBadgeIcon } from '../icons';
+import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, TikTokIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon, GoleadorBadgeIcon, AssistantBadgeIcon, VeteranBadgeIcon, MvpBadgeIcon, WinLeaderBadgeIcon } from '../icons';
 import { PlayerAvatar, TeamAvatar } from '../components/avatars';
 import { Language } from '../translations/index';
 import { BadgeIcon, sortBadgesByPriority } from '../features';
@@ -46,11 +46,12 @@ const LegendCard: React.FC<{
     value: number | string; 
     icon: React.ReactNode;
     label: string;
-}> = ({ title, player, value, icon, label }) => (
-    <div className="relative group w-full md:w-80 h-44 rounded-3xl overflow-hidden bg-black border border-[#FFD700]/20 shadow-[0_10px_30px_-15px_rgba(0,0,0,1)] transition-all duration-500 hover:border-[#FFD700]/50 hover:shadow-[0_0_30px_rgba(255,215,0,0.15)] active:scale-95">
+    accentColor?: string;
+}> = ({ title, player, value, icon, label, accentColor = "#FFD700" }) => (
+    <div className={`relative group w-full md:w-72 h-44 rounded-3xl overflow-hidden bg-black border transition-all duration-500 active:scale-95`} style={{ borderColor: `${accentColor}33`, boxShadow: `0 10px 30px -15px rgba(0,0,0,1)` }}>
         {/* Background Texture */}
         <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0" style={{ 
-            backgroundImage: `linear-gradient(45deg, #FFD700 25%, transparent 25%, transparent 50%, #FFD700 50%, #FFD700 75%, transparent 75%, transparent)`,
+            backgroundImage: `linear-gradient(45deg, ${accentColor} 25%, transparent 25%, transparent 50%, ${accentColor} 50%, ${accentColor} 75%, transparent 75%, transparent)`,
             backgroundSize: '8px 8px'
         }}></div>
         
@@ -69,13 +70,13 @@ const LegendCard: React.FC<{
         </div>
 
         {/* Golden Gradient Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#FFD700]/5 via-transparent to-transparent pointer-events-none z-10"></div>
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#FFD700]/40 to-transparent z-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-br via-transparent to-transparent pointer-events-none z-10" style={{ from: `${accentColor}10` }}></div>
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r via-transparent to-transparent z-10" style={{ from: 'transparent', via: `${accentColor}66` }}></div>
 
         <div className="relative z-20 p-5 h-full flex flex-col justify-between">
             <div className="flex justify-between items-start">
                 <div className="flex flex-col relative z-20">
-                    <span className="text-[6px] font-black text-[#FFD700] tracking-[0.2em] uppercase mb-0.5 opacity-80">{title}</span>
+                    <span className="text-[6px] font-black tracking-[0.2em] uppercase mb-0.5 opacity-90" style={{ color: accentColor }}>{title}</span>
                     <h3 className="font-russo text-base text-white uppercase tracking-tighter truncate max-w-[130px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] leading-none">
                         {player.nickname}
                     </h3>
@@ -89,6 +90,11 @@ const LegendCard: React.FC<{
                     </span>
                     <span className="text-[7px] font-black text-white/50 uppercase tracking-[0.4em] mt-1">{label}</span>
                 </div>
+            </div>
+            
+            {/* Icon Watermark */}
+            <div className="absolute bottom-3 right-3 opacity-10 scale-150 text-white z-10">
+                {icon}
             </div>
         </div>
     </div>
@@ -462,10 +468,28 @@ export const PublicHubScreen: React.FC = () => {
             })[0];
         };
 
+        // NEW: The Conqueror (Best Win Rate)
+        const getBestWinRate = (players: Player[]) => {
+            // Filter: Minimum 10 sessions required
+            const eligible = players.filter(p => (p.totalSessionsPlayed || 0) >= 10);
+            
+            if (eligible.length === 0) return null;
+
+            return [...eligible].sort((a, b) => {
+                const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0;
+                const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0;
+                
+                if (wrB !== wrA) return wrB - wrA; // Higher WR wins
+                if (b.totalGames !== a.totalGames) return b.totalGames - a.totalGames; // More games played wins tie
+                return b.rating - a.rating; 
+            })[0];
+        };
+
         return {
             scorer: getBest(confirmed, 'totalGoals'),
             architect: getBest(confirmed, 'totalAssists'),
-            grandMaster: getGrandMaster(confirmed) // Replaces loyalty
+            grandMaster: getGrandMaster(confirmed), 
+            conqueror: getBestWinRate(confirmed) // New Win Rate Leader
         };
     }, [allPlayers]);
 
@@ -582,7 +606,7 @@ export const PublicHubScreen: React.FC = () => {
                             <p className="font-orbitron text-sm md:text-base font-black text-[#FFD700] tracking-[0.5em] uppercase" style={{ textShadow: '0 0 15px rgba(255, 215, 0, 0.4)'}}>Hall of Fame Records</p>
                         </div>
 
-                        <div className="flex flex-col md:flex-row items-center justify-center gap-8 w-full max-w-5xl mx-auto px-4">
+                        <div className="flex flex-wrap items-center justify-center gap-8 w-full max-w-6xl mx-auto px-4">
                             <LegendCard 
                                 title="ETERNAL GOLDEN BOOT"
                                 player={legends.scorer}
@@ -603,7 +627,18 @@ export const PublicHubScreen: React.FC = () => {
                                 value={(legends.grandMaster.totalGoals || 0) + (legends.grandMaster.totalAssists || 0)}
                                 icon={<MvpBadgeIcon />}
                                 label="GOALS + ASSISTS"
+                                accentColor="#9333ea"
                             />
+                            {legends.conqueror && (
+                                <LegendCard 
+                                    title="THE CONQUEROR"
+                                    player={legends.conqueror}
+                                    value={`${Math.round((legends.conqueror.totalWins / legends.conqueror.totalGames) * 100)}%`}
+                                    icon={<WinLeaderBadgeIcon />}
+                                    label="HIGHEST WIN RATE"
+                                    accentColor="#FFD700"
+                                />
+                            )}
                         </div>
                     </div>
                 )}
