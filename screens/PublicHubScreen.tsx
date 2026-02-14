@@ -615,6 +615,7 @@ export const PublicHubScreen: React.FC = () => {
                                 value={legends.scorer.totalGoals}
                                 icon={<GoleadorBadgeIcon />}
                                 label="CAREER GOALS"
+                                accentColor="#FFD700" 
                             />
                             <LegendCard 
                                 title="LEGACY ARCHITECT"
@@ -622,6 +623,7 @@ export const PublicHubScreen: React.FC = () => {
                                 value={legends.architect.totalAssists}
                                 icon={<AssistantBadgeIcon />}
                                 label="CAREER ASSISTS"
+                                accentColor="#00BFFF" 
                             />
                             <LegendCard 
                                 title="GRAND MASTER"
@@ -629,7 +631,7 @@ export const PublicHubScreen: React.FC = () => {
                                 value={(legends.grandMaster.totalGoals || 0) + (legends.grandMaster.totalAssists || 0)}
                                 icon={<MvpBadgeIcon />}
                                 label="GOALS + ASSISTS"
-                                accentColor="#9333ea"
+                                accentColor="#D946EF" 
                             />
                             {legends.conqueror && (
                                 <LegendCard 
@@ -638,7 +640,7 @@ export const PublicHubScreen: React.FC = () => {
                                     value={`${Math.round((legends.conqueror.totalWins / legends.conqueror.totalGames) * 100)}%`}
                                     icon={<WinLeaderBadgeIcon />}
                                     label="HIGHEST WIN RATE"
-                                    accentColor="#FFD700"
+                                    accentColor="#4CFF5F" 
                                 />
                             )}
                         </div>
