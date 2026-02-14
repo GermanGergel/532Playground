@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { Player, Session, NewsItem, PromoData, DraftState } from './types';
 import { Language } from './translations/index';
@@ -535,7 +534,7 @@ export const getSessionAnthemUrl = async (): Promise<string | null> => {
     return null;
 };
 
-// --- ANALYTICS SAFEMODE ---
+// --- ANALYTICS SAFEMODE (Robust Version) ---
 export const logAnalyticsEvent = async (eventType: string, eventData?: string) => {
     if (!isSupabaseConfigured()) return;
     try {
@@ -543,7 +542,9 @@ export const logAnalyticsEvent = async (eventType: string, eventData?: string) =
             event_type: eventType,
             event_data: eventData
         });
-    } catch (e) { }
+    } catch (e) { 
+        // Silent fail
+    }
 };
 
 export const getAnalyticsSummary = async (): Promise<{ total: Record<string, number>, recent: Record<string, number> }> => {
@@ -559,10 +560,14 @@ export const getAnalyticsSummary = async (): Promise<{ total: Record<string, num
 
         data.forEach((row: any) => {
             const isRecent = (now - new Date(row.created_at).getTime()) < oneDayMs;
+            
+            // 1. Generic type count
             summaryTotal[row.event_type] = (summaryTotal[row.event_type] || 0) + 1;
             if (isRecent) {
                 summaryRecent[row.event_type] = (summaryRecent[row.event_type] || 0) + 1;
             }
+
+            // 2. Specific data count (e.g., "view_tab:dashboard")
             if (row.event_data) {
                 const specificKey = `${row.event_type}:${row.event_data}`;
                 summaryTotal[specificKey] = (summaryTotal[specificKey] || 0) + 1;

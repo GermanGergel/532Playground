@@ -12,23 +12,23 @@ const StatCard: React.FC<{
     color: string;
     percent?: number;
 }> = ({ title, value, recent, icon: Icon, color, percent }) => (
-    <div className="relative overflow-hidden rounded-2xl bg-[#12161b] border border-white/5 p-4 flex flex-col justify-between h-32 group hover:border-white/10 transition-all">
-        <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
-            <Icon className="w-12 h-12" style={{ color }} />
+    <div className="relative overflow-hidden rounded-2xl bg-[#12161b] border border-white/5 p-4 flex flex-col justify-between h-32 group hover:border-white/10 transition-all shadow-lg">
+        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-30 transition-opacity">
+            <Icon className="w-16 h-16" style={{ color }} />
         </div>
         
         <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-white/5 border border-white/5">
-                    <Icon className="w-3.5 h-3.5" style={{ color }} />
+            <div className="flex items-center gap-2 mb-3">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-white/5 border border-white/5 shadow-inner">
+                    <Icon className="w-4 h-4" style={{ color }} />
                 </div>
-                <span className="text-[10px] font-bold text-white/60 uppercase tracking-wider">{title}</span>
+                <span className="text-[9px] font-black text-white/50 uppercase tracking-[0.2em]">{title}</span>
             </div>
             
             <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-white font-mono">{value}</span>
+                <span className="text-3xl font-black text-white font-mono tracking-tighter">{value}</span>
                 {recent > 0 && (
-                    <span className="text-[10px] font-bold text-[#4CFF5F] bg-[#4CFF5F]/10 px-1.5 py-0.5 rounded flex items-center">
+                    <span className="text-[10px] font-bold text-[#4CFF5F] bg-[#4CFF5F]/10 px-1.5 py-0.5 rounded border border-[#4CFF5F]/20 flex items-center shadow-[0_0_10px_rgba(76,255,95,0.2)]">
                         +{recent}
                     </span>
                 )}
@@ -38,7 +38,7 @@ const StatCard: React.FC<{
         {percent !== undefined && (
             <div className="w-full h-1 bg-white/5 rounded-full mt-auto overflow-hidden">
                 <div 
-                    className="h-full rounded-full" 
+                    className="h-full rounded-full transition-all duration-1000 ease-out" 
                     style={{ width: `${percent}%`, backgroundColor: color, boxShadow: `0 0 10px ${color}` }}
                 ></div>
             </div>
@@ -65,11 +65,9 @@ export const HubAnalyticsScreen: React.FC = () => {
     const getVal = (key: string, mode: 'total' | 'recent' = 'total'): number => {
         const section = data[mode];
         if (!section) return 0;
-        
         // Exact match
         if (section[key] !== undefined) return section[key];
-        
-        // Wildcard match for categories (e.g., click_social:*)
+        // Wildcard match for categories
         return Object.keys(section).reduce((acc, k) => {
             if (k.startsWith(key)) return acc + section[k];
             return acc;
@@ -100,41 +98,27 @@ export const HubAnalyticsScreen: React.FC = () => {
     const calcPercent = (val: number) => grandTotal > 0 ? Math.round((val / grandTotal) * 100) : 0;
 
     return (
-        <Page>
+        <Page className="!pb-32">
             <PageHeader title={t.hubAnalytics}>
                 <Button variant="ghost" onClick={fetchData} disabled={isLoading} className="!p-2 -mr-2 text-white hover:bg-white/10">
                     <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
                 </Button>
             </PageHeader>
             
-            <div className="px-1 pb-24">
-                {/* GLOBAL TRAFFIC MONITOR */}
-                <div className="mb-6 p-6 rounded-3xl bg-gradient-to-r from-[#00F2FE]/10 to-transparent border border-[#00F2FE]/20 shadow-[0_0_30px_rgba(0,242,254,0.1)] flex items-center justify-between">
-                    <div className="flex flex-col">
-                        <span className="text-xs font-black text-[#00F2FE] uppercase tracking-[0.2em] mb-1">Total Interactions</span>
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-5xl font-black text-white font-mono tracking-tighter drop-shadow-lg">{grandTotal}</span>
-                            {recentTotal > 0 && <span className="text-sm font-bold text-[#4CFF5F] bg-black/40 px-2 py-0.5 rounded border border-[#4CFF5F]/30">+{recentTotal}</span>}
-                        </div>
-                    </div>
-                    <div className="w-16 h-16 rounded-full border-4 border-[#00F2FE]/20 flex items-center justify-center animate-pulse">
-                        <Activity className="w-8 h-8 text-[#00F2FE]" />
-                    </div>
-                </div>
-
-                <h3 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-4 px-2">Sector Breakdown</h3>
-
-                <div className="grid grid-cols-2 gap-3">
-                    {/* 1. CLUB HUB (MAIN) */}
+            <div className="px-1">
+                {/* 1. CLUB HUB (MAIN) - HERO CARD */}
+                <div className="mb-4">
                     <StatCard 
-                        title="Club Hub" 
+                        title="Main Entrance (Hub)" 
                         value={stats.hub.total} 
                         recent={stats.hub.recent} 
                         icon={Globe} 
                         color="#ffffff"
                         percent={calcPercent(stats.hub.total)}
                     />
+                </div>
 
+                <div className="grid grid-cols-2 gap-3 mb-4">
                     {/* 2. DASHBOARD */}
                     <StatCard 
                         title="Dashboard" 
@@ -145,14 +129,14 @@ export const HubAnalyticsScreen: React.FC = () => {
                         percent={calcPercent(stats.dashboard.total)}
                     />
 
-                    {/* 3. ARCHIVE */}
+                    {/* 3. PLAYER HUB (Intel) */}
                     <StatCard 
-                        title="Archive" 
-                        value={stats.archive.total} 
-                        recent={stats.archive.recent} 
-                        icon={History} 
-                        color="#A9B1BD"
-                        percent={calcPercent(stats.archive.total)}
+                        title="Player Intel" 
+                        value={stats.playerHub.total} 
+                        recent={stats.playerHub.recent} 
+                        icon={Users} 
+                        color="#FF00D6"
+                        percent={calcPercent(stats.playerHub.total)}
                     />
 
                     {/* 4. DUEL */}
@@ -165,19 +149,19 @@ export const HubAnalyticsScreen: React.FC = () => {
                         percent={calcPercent(stats.duel.total)}
                     />
 
-                    {/* 5. PLAYER HUB (Intel) */}
+                    {/* 5. ARCHIVE */}
                     <StatCard 
-                        title="Player Intel" 
-                        value={stats.playerHub.total} 
-                        recent={stats.playerHub.recent} 
-                        icon={Users} 
-                        color="#FF00D6"
-                        percent={calcPercent(stats.playerHub.total)}
+                        title="Archive" 
+                        value={stats.archive.total} 
+                        recent={stats.archive.recent} 
+                        icon={History} 
+                        color="#A9B1BD"
+                        percent={calcPercent(stats.archive.total)}
                     />
 
-                    {/* 6. TEAM OF THE MONTH */}
+                    {/* 6. TOTM */}
                     <StatCard 
-                        title="TOTM" 
+                        title="Team of Month" 
                         value={stats.totm.total} 
                         recent={stats.totm.recent} 
                         icon={StarIcon} 
@@ -194,10 +178,12 @@ export const HubAnalyticsScreen: React.FC = () => {
                         color="#F472B6"
                         percent={calcPercent(stats.radio.total)}
                     />
+                </div>
 
-                    {/* 8. SOCIAL LINKS */}
+                {/* 8. SOCIAL LINKS - FULL WIDTH */}
+                <div className="mb-6">
                     <StatCard 
-                        title="Socials" 
+                        title="Social Links Clicks" 
                         value={stats.social.total} 
                         recent={stats.social.recent} 
                         icon={BarChartDynamic} 
@@ -205,9 +191,23 @@ export const HubAnalyticsScreen: React.FC = () => {
                         percent={calcPercent(stats.social.total)}
                     />
                 </div>
+
+                {/* GRAND TOTAL FOOTER */}
+                <div className="p-6 rounded-3xl bg-gradient-to-r from-[#00F2FE]/10 to-transparent border border-[#00F2FE]/20 shadow-[0_0_30px_rgba(0,242,254,0.1)] flex items-center justify-between">
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-black text-[#00F2FE] uppercase tracking-[0.2em] mb-1">Total System Traffic</span>
+                        <div className="flex items-baseline gap-2">
+                            <span className="text-5xl font-black text-white font-mono tracking-tighter drop-shadow-lg">{grandTotal}</span>
+                            {recentTotal > 0 && <span className="text-sm font-bold text-[#4CFF5F] bg-black/40 px-2 py-0.5 rounded border border-[#4CFF5F]/30">+{recentTotal}</span>}
+                        </div>
+                    </div>
+                    <div className="w-16 h-16 rounded-full border-4 border-[#00F2FE]/20 flex items-center justify-center animate-pulse">
+                        <Activity className="w-8 h-8 text-[#00F2FE]" />
+                    </div>
+                </div>
                 
                 <div className="mt-8 text-center opacity-30">
-                    <p className="text-[10px] font-mono uppercase tracking-widest">Analytics Protocol v2.0</p>
+                    <p className="text-[10px] font-mono uppercase tracking-widest">Analytics Protocol v3.0</p>
                 </div>
             </div>
         </Page>
