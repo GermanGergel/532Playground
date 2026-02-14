@@ -56,7 +56,9 @@ const ChaseList: React.FC<{
     const getValue = (p: Player) => {
         if (valueKey === 'grandMaster') return (p.totalGoals || 0) + (p.totalAssists || 0);
         if (valueKey === 'winRate') return p.totalGames > 0 ? `${Math.round((p.totalWins / p.totalGames) * 100)}%` : '0%';
-        return p[valueKey as keyof Player];
+        const val = p[valueKey as keyof Player];
+        if (typeof val === 'number' || typeof val === 'string') return val;
+        return 0;
     };
 
     return (
