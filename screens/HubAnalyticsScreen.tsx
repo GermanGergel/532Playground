@@ -1,50 +1,7 @@
-
 import React, { useEffect, useState } from 'react';
 import { Page, PageHeader, Card, useTranslation, Button } from '../ui';
-import { Activity, RefreshCw, TrophyIcon, History, InfoIcon, LayoutDashboard, Users, Zap, Globe, StarIcon, BarChartDynamic } from '../icons';
+import { Activity, RefreshCw, TrophyIcon, History, InfoIcon, LayoutDashboard, Users } from '../icons';
 import { getAnalyticsSummary } from '../db';
-
-const StatCard: React.FC<{ 
-    title: string; 
-    value: number; 
-    recent: number; 
-    icon: any; 
-    color: string;
-    percent?: number;
-}> = ({ title, value, recent, icon: Icon, color, percent }) => (
-    <div className="relative overflow-hidden rounded-2xl bg-[#12161b] border border-white/5 p-4 flex flex-col justify-between h-32 group hover:border-white/10 transition-all shadow-lg">
-        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-30 transition-opacity">
-            <Icon className="w-16 h-16" style={{ color }} />
-        </div>
-        
-        <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-3">
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-white/5 border border-white/5 shadow-inner">
-                    <Icon className="w-4 h-4" style={{ color }} />
-                </div>
-                <span className="text-[9px] font-black text-white/50 uppercase tracking-[0.2em]">{title}</span>
-            </div>
-            
-            <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-white font-mono tracking-tighter">{value}</span>
-                {recent > 0 && (
-                    <span className="text-[10px] font-bold text-[#4CFF5F] bg-[#4CFF5F]/10 px-1.5 py-0.5 rounded border border-[#4CFF5F]/20 flex items-center shadow-[0_0_10px_rgba(76,255,95,0.2)]">
-                        +{recent}
-                    </span>
-                )}
-            </div>
-        </div>
-
-        {percent !== undefined && (
-            <div className="w-full h-1 bg-white/5 rounded-full mt-auto overflow-hidden">
-                <div 
-                    className="h-full rounded-full transition-all duration-1000 ease-out" 
-                    style={{ width: `${percent}%`, backgroundColor: color, boxShadow: `0 0 10px ${color}` }}
-                ></div>
-            </div>
-        )}
-    </div>
-);
 
 export const HubAnalyticsScreen: React.FC = () => {
     const t = useTranslation();
@@ -64,150 +21,133 @@ export const HubAnalyticsScreen: React.FC = () => {
 
     const getVal = (key: string, mode: 'total' | 'recent' = 'total'): number => {
         const section = data[mode];
-        if (!section) return 0;
-        // Exact match
-        if (section[key] !== undefined) return section[key];
-        // Wildcard match for categories
-        return Object.keys(section).reduce((acc, k) => {
-            if (k.startsWith(key)) return acc + section[k];
-            return acc;
-        }, 0);
+        return section ? (section[key] || 0) : 0;
     };
 
-    // --- AGGREGATION LOGIC ---
-    const stats = {
-        hub: { total: getVal('view_hub_screen', 'total'), recent: getVal('view_hub_screen', 'recent') },
-        dashboard: { total: getVal('view_tab:dashboard', 'total'), recent: getVal('view_tab:dashboard', 'recent') },
-        archive: { total: getVal('view_tab:archive', 'total'), recent: getVal('view_tab:archive', 'recent') },
-        duel: { 
-            total: getVal('view_tab:duel', 'total') + getVal('start_duel', 'total'), 
-            recent: getVal('view_tab:duel', 'recent') + getVal('start_duel', 'recent') 
-        },
-        playerHub: {
-            total: getVal('view_tab:roster', 'total') + getVal('view_player', 'total'),
-            recent: getVal('view_tab:roster', 'recent') + getVal('view_player', 'recent')
-        },
-        totm: { total: getVal('open_totm', 'total'), recent: getVal('open_totm', 'recent') },
-        radio: { total: getVal('play_radio', 'total'), recent: getVal('play_radio', 'recent') },
-        social: { total: getVal('click_social', 'total'), recent: getVal('click_social', 'recent') }
+    const totalInteractions: number = 
+        getVal('view_tab') + 
+        getVal('start_duel') + 
+        getVal('play_radio') + 
+        getVal('view_player');
+        
+    const recentInteractions: number = 
+        getVal('view_tab', 'recent') + 
+        getVal('start_duel', 'recent') + 
+        getVal('play_radio', 'recent') + 
+        getVal('view_player', 'recent');
+    
+    const calcPercent = (val: number) => totalInteractions > 0 ? Math.round((val / totalInteractions) * 100) : 0;
+
+    const StatBar = ({ label, metricKey, color, icon: Icon }: { label: string, metricKey: string, color: string, icon: any }) => {
+        const valueTotal = getVal(metricKey, 'total');
+        const valueRecent = getVal(metricKey, 'recent');
+        
+        return (
+            <div className="mb-4">
+                <div className="flex justify-between items-end mb-1">
+                    <div className="flex items-center gap-2">
+                        <Icon className="w-3 h-3" style={{ color: color }} />
+                        <span className="text-[10px] font-bold text-white uppercase tracking-wider">{label}</span>
+                    </div>
+                    <div className="flex items-baseline gap-1.5">
+                        <span className="text-lg font-black leading-none font-mono text-white">{valueTotal}</span>
+                        {valueRecent > 0 && (
+                            <span className="text-[9px] font-bold text-[#4CFF5F] flex items-center animate-pulse">
+                                +{valueRecent} <span className="text-[7px] ml-0.5">↗</span>
+                            </span>
+                        )}
+                        <span className="text-[9px] text-white/30 font-mono w-8 text-right">({calcPercent(valueTotal)}%)</span>
+                    </div>
+                </div>
+                <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden relative">
+                    <div 
+                        className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out opacity-30"
+                        style={{ width: `${calcPercent(valueTotal)}%`, backgroundColor: color }}
+                    ></div>
+                     <div 
+                        className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out"
+                        style={{ width: `${calcPercent(valueTotal)}%`, backgroundColor: color, boxShadow: `0 0 8px ${color}` }}
+                    ></div>
+                </div>
+            </div>
+        );
     };
 
-    const grandTotal = Object.values(stats).reduce((acc, curr) => acc + curr.total, 0);
-    const recentTotal = Object.values(stats).reduce((acc, curr) => acc + curr.recent, 0);
-
-    const calcPercent = (val: number) => grandTotal > 0 ? Math.round((val / grandTotal) * 100) : 0;
+    const getRosterTotal = () => (getVal('view_tab:roster', 'total') || 0) + (getVal('view_player', 'total') || 0);
+    const getRosterRecent = () => (getVal('view_tab:roster', 'recent') || 0) + (getVal('view_player', 'recent') || 0);
 
     return (
-        <Page className="!pb-32">
+        <Page>
             <PageHeader title={t.hubAnalytics}>
                 <Button variant="ghost" onClick={fetchData} disabled={isLoading} className="!p-2 -mr-2 text-white hover:bg-white/10">
                     <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
                 </Button>
             </PageHeader>
-            
-            <div className="px-1">
-                {/* 1. CLUB HUB (MAIN) - HERO CARD */}
-                <div className="mb-4">
-                    <StatCard 
-                        title="Main Entrance (Hub)" 
-                        value={stats.hub.total} 
-                        recent={stats.hub.recent} 
-                        icon={Globe} 
-                        color="#ffffff"
-                        percent={calcPercent(stats.hub.total)}
-                    />
+            <div className="relative w-full max-w-md mx-auto overflow-hidden rounded-3xl border border-white/10 shadow-2xl">
+                <div className="absolute inset-0 z-0 pointer-events-none">
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#0f172a] via-[#020617] to-black"></div>
+                    <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                    {/* 2. DASHBOARD */}
-                    <StatCard 
-                        title="Dashboard" 
-                        value={stats.dashboard.total} 
-                        recent={stats.dashboard.recent} 
-                        icon={LayoutDashboard} 
-                        color="#00F2FE"
-                        percent={calcPercent(stats.dashboard.total)}
-                    />
-
-                    {/* 3. PLAYER HUB (Intel) */}
-                    <StatCard 
-                        title="Player Intel" 
-                        value={stats.playerHub.total} 
-                        recent={stats.playerHub.recent} 
-                        icon={Users} 
-                        color="#FF00D6"
-                        percent={calcPercent(stats.playerHub.total)}
-                    />
-
-                    {/* 4. DUEL */}
-                    <StatCard 
-                        title="Duel Sim" 
-                        value={stats.duel.total} 
-                        recent={stats.duel.recent} 
-                        icon={TrophyIcon} 
-                        color="#FFD700"
-                        percent={calcPercent(stats.duel.total)}
-                    />
-
-                    {/* 5. ARCHIVE */}
-                    <StatCard 
-                        title="Archive" 
-                        value={stats.archive.total} 
-                        recent={stats.archive.recent} 
-                        icon={History} 
-                        color="#A9B1BD"
-                        percent={calcPercent(stats.archive.total)}
-                    />
-
-                    {/* 6. TOTM */}
-                    <StatCard 
-                        title="Team of Month" 
-                        value={stats.totm.total} 
-                        recent={stats.totm.recent} 
-                        icon={StarIcon} 
-                        color="#F59E0B"
-                        percent={calcPercent(stats.totm.total)}
-                    />
-
-                    {/* 7. RADIO */}
-                    <StatCard 
-                        title="Radio" 
-                        value={stats.radio.total} 
-                        recent={stats.radio.recent} 
-                        icon={Zap} 
-                        color="#F472B6"
-                        percent={calcPercent(stats.radio.total)}
-                    />
-                </div>
-
-                {/* 8. SOCIAL LINKS - FULL WIDTH */}
-                <div className="mb-6">
-                    <StatCard 
-                        title="Social Links Clicks" 
-                        value={stats.social.total} 
-                        recent={stats.social.recent} 
-                        icon={BarChartDynamic} 
-                        color="#10B981"
-                        percent={calcPercent(stats.social.total)}
-                    />
-                </div>
-
-                {/* GRAND TOTAL FOOTER */}
-                <div className="p-6 rounded-3xl bg-gradient-to-r from-[#00F2FE]/10 to-transparent border border-[#00F2FE]/20 shadow-[0_0_30px_rgba(0,242,254,0.1)] flex items-center justify-between">
-                    <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-[#00F2FE] uppercase tracking-[0.2em] mb-1">Total System Traffic</span>
-                        <div className="flex items-baseline gap-2">
-                            <span className="text-5xl font-black text-white font-mono tracking-tighter drop-shadow-lg">{grandTotal}</span>
-                            {recentTotal > 0 && <span className="text-sm font-bold text-[#4CFF5F] bg-black/40 px-2 py-0.5 rounded border border-[#4CFF5F]/30">+{recentTotal}</span>}
+                <div className="relative z-10 p-5 space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                        <Card className="!p-4 bg-gradient-to-br from-[#161b22] to-black border-white/10 flex flex-col items-center justify-center min-h-[120px] bg-opacity-80 backdrop-blur-sm shadow-[0_0_20px_rgba(0,242,254,0.1)]">
+                            <Activity className="w-6 h-6 text-[#00F2FE] mb-2 opacity-80" />
+                            <span className="text-4xl font-black text-white font-russo tracking-tighter">{totalInteractions}</span>
+                            {recentInteractions > 0 ? (
+                                <span className="text-sm font-bold text-[#4CFF5F] tracking-tight mb-1 flex items-center gap-1">+{recentInteractions} <span className="text-[8px] text-[#4CFF5F]/70 font-normal uppercase">24h</span></span>
+                            ) : (
+                                <span className="text-[9px] text-white/20 mt-1 font-mono">NO RECENT ACTIVITY</span>
+                            )}
+                            <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] mt-1">Total Actions</span>
+                        </Card>
+                        <div className="grid grid-rows-2 gap-3">
+                            <Card className="!p-3 bg-white/5 border-white/10 flex items-center justify-between backdrop-blur-sm hover:bg-white/10 transition-colors">
+                                <div className="flex flex-col">
+                                    <span className="text-xl font-black text-white">{getVal('start_duel')}</span>
+                                    {getVal('start_duel', 'recent') > 0 && <span className="text-[9px] font-bold text-[#4CFF5F]">+{getVal('start_duel', 'recent')}</span>}
+                                    <span className="text-[7px] font-bold text-[#FFD700] uppercase tracking-wider">Duels</span>
+                                </div>
+                                <TrophyIcon className="w-5 h-5 text-[#FFD700] opacity-50" />
+                            </Card>
+                            <Card className="!p-3 bg-white/5 border-white/10 flex items-center justify-between backdrop-blur-sm hover:bg-white/10 transition-colors">
+                                <div className="flex flex-col">
+                                    <span className="text-xl font-black text-white">{getVal('play_radio')}</span>
+                                    {getVal('play_radio', 'recent') > 0 && <span className="text-[9px] font-bold text-[#4CFF5F]">+{getVal('play_radio', 'recent')}</span>}
+                                    <span className="text-[7px] font-bold text-[#FF00D6] uppercase tracking-wider">Radio Plays</span>
+                                </div>
+                                <div className="w-5 h-5 rounded-full border border-[#FF00D6] flex items-center justify-center">
+                                    <div className="w-1.5 h-1.5 bg-[#FF00D6] rounded-full animate-pulse"></div>
+                                </div>
+                            </Card>
                         </div>
                     </div>
-                    <div className="w-16 h-16 rounded-full border-4 border-[#00F2FE]/20 flex items-center justify-center animate-pulse">
-                        <Activity className="w-8 h-8 text-[#00F2FE]" />
-                    </div>
-                </div>
-                
-                <div className="mt-8 text-center opacity-30">
-                    <p className="text-[10px] font-mono uppercase tracking-widest">Analytics Protocol v3.0</p>
+                    <Card className="!p-5 bg-black/40 border-white/10 backdrop-blur-md">
+                        <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-2">
+                            <h3 className="text-xs font-black text-white uppercase tracking-widest">Traffic Analysis</h3>
+                            <span className="text-[8px] font-mono text-[#4CFF5F] uppercase">24H Trend</span>
+                        </div>
+                        <div className="mb-4">
+                            <div className="flex justify-between items-end mb-1">
+                                <div className="flex items-center gap-2">
+                                    <Users className="w-3 h-3 text-[#4CFF5F]" />
+                                    <span className="text-[10px] font-bold text-white uppercase tracking-wider">Roster & Profiles</span>
+                                </div>
+                                <div className="flex items-baseline gap-1.5">
+                                    <span className="text-lg font-black leading-none font-mono text-white">{getRosterTotal()}</span>
+                                    {getRosterRecent() > 0 && <span className="text-[9px] font-bold text-[#4CFF5F] animate-pulse">+{getRosterRecent()} ↗</span>}
+                                    <span className="text-[9px] text-white/30 font-mono w-8 text-right">({calcPercent(getRosterTotal())}%)</span>
+                                </div>
+                            </div>
+                            <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden relative">
+                                <div className="absolute top-0 left-0 h-full rounded-full opacity-30" style={{ width: `${calcPercent(getRosterTotal())}%`, backgroundColor: '#4CFF5F' }}></div>
+                                <div className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${calcPercent(getRosterTotal())}%`, backgroundColor: '#4CFF5F', boxShadow: '0 0 8px #4CFF5F' }}></div>
+                            </div>
+                        </div>
+                        <StatBar label="Dashboard Views" metricKey="view_tab:dashboard" color="#ffffff" icon={LayoutDashboard} />
+                        <StatBar label="Archive / History" metricKey="view_tab:archive" color="#00F2FE" icon={History} />
+                        <StatBar label="Info & Rules" metricKey="view_tab:info" color="#A9B1BD" icon={InfoIcon} />
+                        <StatBar label="Duel Simulations" metricKey="start_duel" color="#FFD700" icon={TrophyIcon} />
+                    </Card>
                 </div>
             </div>
         </Page>

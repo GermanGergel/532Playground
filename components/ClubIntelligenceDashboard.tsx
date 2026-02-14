@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { HubRoster } from './HubRoster';
 import { HubArchive } from './HubArchive';
@@ -17,8 +18,7 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
     const [hubSearch, setHubSearch] = useState('');
 
     useEffect(() => {
-        // Enhanced Logging for Analytics Dashboard
-        logAnalyticsEvent(`view_tab:${currentView}`);
+        logAnalyticsEvent('view_tab', currentView);
     }, [currentView]);
 
     useEffect(() => {
