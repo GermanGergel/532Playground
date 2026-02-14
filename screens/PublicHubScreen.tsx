@@ -39,8 +39,68 @@ const StaticSoccerBall: React.FC = () => {
     );
 };
 
-// --- NEW COMPONENT: LEGEND CARD ---
-// UPDATED: More compact design to fit 4 in a row
+// --- TREND INDICATOR ---
+const TrendArrow: React.FC<{ form: PlayerForm }> = ({ form }) => {
+    if (form === 'hot_streak') return <span className="text-[#4CFF5F] text-[10px] drop-shadow-[0_0_5px_rgba(76,255,95,0.8)]">▲</span>;
+    if (form === 'cold_streak') return <span className="text-[#FF4136] text-[10px] drop-shadow-[0_0_5px_rgba(255,65,54,0.8)]">▼</span>;
+    return <span className="text-white/20 text-[10px] font-bold">•</span>;
+};
+
+// --- CHASE LIST COMPONENT (THE 5-PLAYER TAIL) ---
+const ChaseList: React.FC<{ 
+    players: Player[]; 
+    valueKey: keyof Player | 'grandMaster' | 'winRate'; 
+    accentColor: string; 
+}> = ({ players, valueKey, accentColor }) => {
+    
+    const getValue = (p: Player) => {
+        if (valueKey === 'grandMaster') return (p.totalGoals || 0) + (p.totalAssists || 0);
+        if (valueKey === 'winRate') return p.totalGames > 0 ? `${Math.round((p.totalWins / p.totalGames) * 100)}%` : '0%';
+        return p[valueKey as keyof Player];
+    };
+
+    return (
+        <div 
+            className="w-full bg-[#0a0c10]/95 backdrop-blur-md rounded-b-2xl border-l border-r border-b overflow-hidden"
+            style={{ borderColor: `${accentColor}33` }}
+        >
+            {players.map((p, index) => (
+                <div 
+                    key={p.id} 
+                    className="flex items-center justify-between px-4 py-2 border-t border-white/5 hover:bg-white/5 transition-colors"
+                >
+                    <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-[10px] font-mono font-bold text-white/30 w-4">#{index + 2}</span>
+                        <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-[10px] font-bold text-white uppercase truncate tracking-wider">
+                                {p.nickname}
+                            </span>
+                            {/* Shortened surname for compactness if needed */}
+                        </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                        <span className="font-mono text-xs font-bold text-white/90">
+                            {getValue(p)}
+                        </span>
+                        <div className="w-3 flex justify-center">
+                            <TrendArrow form={p.form} />
+                        </div>
+                    </div>
+                </div>
+            ))}
+            
+            {players.length === 0 && (
+                <div className="py-3 text-center">
+                    <span className="text-[8px] text-white/20 uppercase tracking-widest">No Contenders</span>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// --- UPDATED LEGEND CARD ---
+// Added 'className' prop to allow parent to override borders (e.g., rounded-b-none)
 const LegendCard: React.FC<{ 
     title: string; 
     player: Player; 
@@ -48,8 +108,9 @@ const LegendCard: React.FC<{
     icon: React.ReactNode;
     label: string;
     accentColor?: string;
-}> = ({ title, player, value, icon, label, accentColor = "#FFD700" }) => (
-    <div className={`relative group w-full h-36 md:h-40 rounded-2xl overflow-hidden bg-black border transition-all duration-500 active:scale-95`} style={{ borderColor: `${accentColor}33`, boxShadow: `0 10px 30px -15px rgba(0,0,0,1)` }}>
+    className?: string; // New Prop
+}> = ({ title, player, value, icon, label, accentColor = "#FFD700", className = "" }) => (
+    <div className={`relative group w-full h-36 md:h-40 rounded-2xl overflow-hidden bg-black border transition-all duration-500 active:scale-95 ${className}`} style={{ borderColor: `${accentColor}33`, boxShadow: `0 10px 30px -15px rgba(0,0,0,1)` }}>
         {/* Background Texture */}
         <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0" style={{ 
             backgroundImage: `linear-gradient(45deg, ${accentColor} 25%, transparent 25%, transparent 50%, ${accentColor} 50%, ${accentColor} 75%, transparent 75%, transparent)`,
@@ -449,7 +510,13 @@ export const PublicHubScreen: React.FC = () => {
         const confirmed = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
         if (confirmed.length === 0) return null;
 
-        // Helper for ties
+        // UPDATED: Sort by Goals for the Chase List
+        const sortedScorers = [...confirmed].sort((a, b) => {
+            if (b.totalGoals !== a.totalGoals) return b.totalGoals - a.totalGoals;
+            return b.rating - a.rating;
+        });
+
+        // Helper for other ties (unchanged)
         const getBest = (players: Player[], criteria: keyof Player) => {
             return [...players].sort((a, b) => {
                 const valA = (a[criteria] as number) || 0;
@@ -459,7 +526,6 @@ export const PublicHubScreen: React.FC = () => {
             })[0];
         };
 
-        // NEW: Grand Master Logic (Sum of Goals + Assists)
         const getGrandMaster = (players: Player[]) => {
             return [...players].sort((a, b) => {
                 const gaA = (a.totalGoals || 0) + (a.totalAssists || 0);
@@ -469,28 +535,22 @@ export const PublicHubScreen: React.FC = () => {
             })[0];
         };
 
-        // NEW: The Conqueror (Best Win Rate)
         const getBestWinRate = (players: Player[]) => {
-            // Filter: Minimum 10 sessions required
             const eligible = players.filter(p => (p.totalSessionsPlayed || 0) >= 10);
-            
             if (eligible.length === 0) return null;
-
             return [...eligible].sort((a, b) => {
                 const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0;
                 const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0;
-                
-                if (wrB !== wrA) return wrB - wrA; // Higher WR wins
-                if (b.totalGames !== a.totalGames) return b.totalGames - a.totalGames; // More games played wins tie
-                return b.rating - a.rating; 
+                if (wrB !== wrA) return wrB - wrA; 
+                return b.totalGames - a.totalGames;
             })[0];
         };
 
         return {
-            scorer: getBest(confirmed, 'totalGoals'),
+            scorers: sortedScorers, // List for Goals
             architect: getBest(confirmed, 'totalAssists'),
             grandMaster: getGrandMaster(confirmed), 
-            conqueror: getBestWinRate(confirmed) // New Win Rate Leader
+            conqueror: getBestWinRate(confirmed) 
         };
     }, [allPlayers]);
 
@@ -608,15 +668,27 @@ export const PublicHubScreen: React.FC = () => {
                         </div>
 
                         {/* GRID LAYOUT FOR LEGEND CARDS: 2 columns on mobile, 4 on desktop */}
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 w-full max-w-[1400px] mx-auto px-2 md:px-4">
-                            <LegendCard 
-                                title="ETERNAL GOLDEN BOOT"
-                                player={legends.scorer}
-                                value={legends.scorer.totalGoals}
-                                icon={<GoleadorBadgeIcon />}
-                                label="CAREER GOALS"
-                                accentColor="#FFD700" 
-                            />
+                        {/* Note: items-start to allow the Goal card to be taller */}
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 w-full max-w-[1400px] mx-auto px-2 md:px-4 items-start">
+                            
+                            {/* GOAL CARD WITH CHASE LIST */}
+                            <div className="flex flex-col w-full">
+                                <LegendCard 
+                                    title="ETERNAL GOLDEN BOOT"
+                                    player={legends.scorers[0]}
+                                    value={legends.scorers[0].totalGoals}
+                                    icon={<GoleadorBadgeIcon />}
+                                    label="CAREER GOALS"
+                                    accentColor="#FFD700" 
+                                    className="rounded-b-none border-b-0"
+                                />
+                                <ChaseList 
+                                    players={legends.scorers.slice(1, 6)}
+                                    valueKey="totalGoals"
+                                    accentColor="#FFD700"
+                                />
+                            </div>
+
                             <LegendCard 
                                 title="LEGACY ARCHITECT"
                                 player={legends.architect}
