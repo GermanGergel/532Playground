@@ -46,7 +46,7 @@ const TrendArrow: React.FC<{ form: PlayerForm }> = ({ form }) => {
     return <span className="text-white/20 text-[10px] font-bold">•</span>;
 };
 
-// --- CHASE LIST COMPONENT (THE 5-PLAYER TAIL) ---
+// --- CHASE LIST COMPONENT (THE 4-PLAYER TAIL) ---
 const ChaseList: React.FC<{ 
     players: Player[]; 
     valueKey: keyof Player | 'grandMaster' | 'winRate'; 
@@ -72,12 +72,12 @@ const ChaseList: React.FC<{
                     className="flex items-center justify-between px-4 py-2 border-t border-white/5 hover:bg-white/5 transition-colors"
                 >
                     <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-[10px] font-mono font-bold text-white/30 w-4">#{index + 2}</span>
+                        {/* CHANGED: Numbering format from #2 to 2. */}
+                        <span className="text-[10px] font-mono font-bold text-white/30 w-4 text-right pr-1">{index + 2}.</span>
                         <div className="flex items-center gap-2 min-w-0">
                             <span className="text-[10px] font-bold text-white uppercase truncate tracking-wider">
                                 {p.nickname}
                             </span>
-                            {/* Shortened surname for compactness if needed */}
                         </div>
                     </div>
                     
@@ -685,7 +685,7 @@ export const PublicHubScreen: React.FC = () => {
                                     className="rounded-b-none border-b-0"
                                 />
                                 <ChaseList 
-                                    players={legends.scorers.slice(1, 6)}
+                                    players={legends.scorers.slice(1, 5)} // UPDATED: 2nd to 5th place
                                     valueKey="totalGoals"
                                     accentColor="#FFD700"
                                 />
