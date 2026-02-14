@@ -1,3 +1,4 @@
+
 export const en = {
   // Navigation
   navHome: "Home",
@@ -56,12 +57,11 @@ export const en = {
   selectWinnerDesc: "Select the winning team to proceed",
   onBench: "On Bench",
 
-  // FIX: Added missing Legionnaire keys for English translation
+  // Legionnaire
   legionnaire_replace: "REPLACE",
   legionnaire_select: "SELECT",
   legionnaire_no_players: "No resting players available",
 
-  // FIX: Added missing Session Summary keys for English translation
   // Session Summary
   summary_title: "SESSION SUMMARY",
   summary_location: "LOCATION",
@@ -78,7 +78,7 @@ export const en = {
   exportStandings: "Export Table",
   exportPlayers: "Export Stats",
   exportRounds: "Export History",
-  exportCombined: "Full Report",
+  exportCombined: "Export Full Report",
   exportJson: "Export JSON",
   saveTable: "Save Table",
   thP: "P",
@@ -249,7 +249,7 @@ export const en = {
   hubAwaitingStats: "AWAITING DATA",
   hubAnalyzingPerformance: "ANALYZING PERFORMANCE...",
   hubDashboardBtn: "DASHBOARD",
-  hubSessionLeaders: "SEASON LEADERS",
+  hubSessionLeaders: "SESSION LEADERS",
   hubMatchReport: "MATCH REPORT",
   hubSessionNews: "INTELLIGENCE",
   hubSessionSquads: "SQUADS",
