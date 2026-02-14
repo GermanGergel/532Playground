@@ -18,7 +18,8 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
     const [hubSearch, setHubSearch] = useState('');
 
     useEffect(() => {
-        logAnalyticsEvent('view_tab', currentView);
+        // Enhanced Logging for Analytics Dashboard
+        logAnalyticsEvent(`view_tab:${currentView}`);
     }, [currentView]);
 
     useEffect(() => {

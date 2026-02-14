@@ -16,6 +16,7 @@ import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
 import { MiniSquadBadge } from '../components/MiniSquadBadge';
 import { BallDecorations } from '../components/BallDecorations';
 import { CinematicCard } from '../components/PublicHubScreen';
+import { logAnalyticsEvent } from '../db';
 
 // --- SUB-COMPONENTS ---
 
@@ -68,14 +69,11 @@ const ChaseList: React.FC<{
     const handleScroll = () => {
         if (scrollRef.current) {
             const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-            // Show top fade if we scrolled down at least 10px
             setShowTopFade(scrollTop > 10);
-            // Hide bottom fade if we are near the end (within 10px)
             setShowBottomFade(scrollHeight - scrollTop - clientHeight > 10);
         }
     };
 
-    // Re-check bottom fade when players change
     useEffect(() => {
         if (scrollRef.current) {
             const { scrollHeight, clientHeight } = scrollRef.current;
@@ -88,12 +86,7 @@ const ChaseList: React.FC<{
             className="w-full bg-[#0a0c10]/95 backdrop-blur-md rounded-b-2xl border-l border-r border-b overflow-hidden relative group/list"
             style={{ borderColor: `${accentColor}33` }}
         >
-            {/* Top Fade Gradient */}
-            <div 
-                className={`absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-[#0a0c10] to-transparent z-20 pointer-events-none transition-opacity duration-300 ${showTopFade ? 'opacity-100' : 'opacity-0'}`}
-            ></div>
-
-            {/* Scrollable container with fixed max height */}
+            <div className={`absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-[#0a0c10] to-transparent z-20 pointer-events-none transition-opacity duration-300 ${showTopFade ? 'opacity-100' : 'opacity-0'}`}></div>
             <div 
                 ref={scrollRef}
                 onScroll={handleScroll}
@@ -112,7 +105,6 @@ const ChaseList: React.FC<{
                                 </span>
                             </div>
                         </div>
-                        
                         <div className="flex items-center gap-3">
                             <span className="font-mono text-xs font-bold text-white/90">
                                 {getValue(p)}
@@ -123,18 +115,13 @@ const ChaseList: React.FC<{
                         </div>
                     </div>
                 ))}
-                
                 {players.length === 0 && (
                     <div className="py-3 text-center">
                         <span className="text-[8px] text-white/20 uppercase tracking-widest">No Contenders</span>
                     </div>
                 )}
             </div>
-
-            {/* Bottom Fade Gradient */}
-            <div 
-                className={`absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#0a0c10] to-transparent z-20 pointer-events-none transition-opacity duration-300 ${showBottomFade ? 'opacity-100' : 'opacity-0'}`}
-            ></div>
+            <div className={`absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#0a0c10] to-transparent z-20 pointer-events-none transition-opacity duration-300 ${showBottomFade ? 'opacity-100' : 'opacity-0'}`}></div>
         </div>
     );
 };
@@ -154,7 +141,6 @@ const LegendCard: React.FC<{
             backgroundImage: `linear-gradient(45deg, ${accentColor} 25%, transparent 25%, transparent 50%, ${accentColor} 50%, ${accentColor} 75%, transparent 75%, transparent)`,
             backgroundSize: '8px 8px'
         }}></div>
-        
         <div className="absolute top-0 right-0 w-28 md:w-36 h-full z-0 pointer-events-none">
             {player.playerCard ? (
                 <div 
@@ -166,10 +152,8 @@ const LegendCard: React.FC<{
             )}
             <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent"></div>
         </div>
-
         <div className="absolute inset-0 pointer-events-none z-10" style={{ background: `linear-gradient(to bottom right, ${accentColor}10, transparent)` }}></div>
         <div className="absolute top-0 left-0 right-0 h-px z-10" style={{ background: `linear-gradient(to right, transparent, ${accentColor}66, transparent)` }}></div>
-
         <div className="relative z-20 p-4 h-full flex flex-col justify-between">
             <div className="flex justify-between items-start">
                 <div className="flex flex-col relative z-20 max-w-[70%]">
@@ -179,7 +163,6 @@ const LegendCard: React.FC<{
                     </h3>
                 </div>
             </div>
-
             <div className="flex items-end justify-between">
                 <div className="flex flex-col">
                     <span className="font-russo text-2xl md:text-3xl text-white tracking-widest leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
@@ -188,7 +171,6 @@ const LegendCard: React.FC<{
                     <span className="text-[6px] md:text-[7px] font-black text-white/50 uppercase tracking-[0.3em] mt-1">{label}</span>
                 </div>
             </div>
-            
             <div className="absolute bottom-2 right-2 opacity-10 scale-125 text-white z-10">
                 {icon}
             </div>
@@ -218,6 +200,13 @@ export const PublicHubScreen: React.FC = () => {
     const t = useTranslation();
 
     useEffect(() => {
+        // Track Main Hub View
+        if (!isDashboardOpen) {
+            logAnalyticsEvent('view_hub_screen');
+        }
+    }, [isDashboardOpen]);
+
+    useEffect(() => {
         if (isDashboardOpen) {
             document.body.style.overflow = 'hidden';
         } else {
@@ -225,6 +214,16 @@ export const PublicHubScreen: React.FC = () => {
         }
         return () => { document.body.style.overflow = ''; };
     }, [isDashboardOpen]);
+
+    const handleSocialClick = (platform: string, url: string) => {
+        logAnalyticsEvent('click_social', platform);
+        window.open(url, '_blank');
+    };
+    
+    const handleOpenTotm = () => {
+        logAnalyticsEvent('open_totm');
+        setIsTotmOpen(true);
+    };
 
     const latestSessionDate = useMemo(() => {
         if (!history || history.length === 0) return '';
@@ -265,7 +264,7 @@ export const PublicHubScreen: React.FC = () => {
             <TeamOfTheMonthModal isOpen={isTotmOpen} onClose={() => setIsTotmOpen(false)} />
             <style dangerouslySetInnerHTML={{__html: ` html, body, #root { height: 100%; overflow: hidden; position: fixed; width: 100%; overscroll-behavior: none; touch-action: none; } `}} />
             <div className={`fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50 z-[110]`}></div>
-            <HubNav isDashboardOpen={isDashboardOpen} sessionDate={latestSessionDate} activeTab={dashboardView} onTabChange={handleTabChange} archiveViewDate={archiveViewDate} onHomeClick={() => { setIsDashboardOpen(false); setDashboardView('dashboard'); }} onOpenTotm={() => setIsTotmOpen(true)} />
+            <HubNav isDashboardOpen={isDashboardOpen} sessionDate={latestSessionDate} activeTab={dashboardView} onTabChange={handleTabChange} archiveViewDate={archiveViewDate} onHomeClick={() => { setIsDashboardOpen(false); setDashboardView('dashboard'); }} onOpenTotm={handleOpenTotm} />
             <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none touch-pan-y ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'} `} style={{ backgroundColor: getBottomPatchColor() }}>
                 <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10"><ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} /></div>
                 <div className="fixed bottom-0 left-0 right-0 h-16 z-[110] pointer-events-none opacity-0 transition-all duration-700 delay-300" style={{ opacity: isDashboardOpen ? 1 : 0, background: `linear-gradient(to top, ${getBottomPatchColor()} 50%, ${getBottomPatchColor()}cc 80%, transparent 100%)` }}></div>
@@ -304,12 +303,12 @@ export const PublicHubScreen: React.FC = () => {
                 <div className="relative z-10 bg-transparent pb-8 mt-20">
                     <footer className="relative pb-8 pt-0 bg-transparent">
                         <div className="text-center px-4">
-                            {!isDashboardOpen && (<div className="flex justify-center mb-6 -mt-4 relative z-20 animate-in fade-in zoom-in duration-700"><SquadOfTheMonthBadge onClick={() => setIsTotmOpen(true)} className="cursor-pointer" /></div>)}
+                            {!isDashboardOpen && (<div className="flex justify-center mb-6 -mt-4 relative z-20 animate-in fade-in zoom-in duration-700"><SquadOfTheMonthBadge onClick={handleOpenTotm} className="cursor-pointer" /></div>)}
                             <div className="mt-10 mb-24"><button onClick={() => setIsDashboardOpen(true)} className="mx-auto block bg-transparent text-[#00F2FE] font-bold text-lg py-3.5 px-10 rounded-xl shadow-[0_0_20px_rgba(0,242,254,0.4)] hover:shadow-[0_0_30px_rgba(0,242,254,0.6)] hover:bg-[#00F2FE]/10 transition-all transform hover:scale-[1.05] active:scale-95 group border border-[#00F2FE]/20"><span className="font-chakra font-black text-xl uppercase tracking-[0.25em] group-hover:text-white transition-colors">{t.hubDashboardBtn}</span></button></div>
                             <h2 className="font-orbitron text-2xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/90" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubJoinSquad}</h2>
                             <p className="font-chakra text-xs text-white/50 mt-2 mb-6">Connect with us on WhatsApp to book your slot.</p>
-                            <a href={SOCIAL_LINKS.whatsapp} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-3 bg-transparent text-[#25D366] font-bold text-lg py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(37,211,102,0.4)] hover:shadow-[0_0_25px_rgba(37,211,102,0.6)] hover:bg-[#25D366]/10 transition-all transform hover:scale-[1.02] active:scale-95 mb-8"><WhatsApp className="w-5 h-5 fill-current" />WhatsApp</a>
-                            <div className="flex justify-center gap-10"><a href={SOCIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><YouTubeIcon className="w-7 h-7" /></a><a href={SOCIAL_LINKS.tiktok} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><TikTokIcon className="w-7 h-7" /></a></div>
+                            <button onClick={() => handleSocialClick('whatsapp', SOCIAL_LINKS.whatsapp)} className="inline-flex items-center justify-center gap-3 bg-transparent text-[#25D366] font-bold text-lg py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(37,211,102,0.4)] hover:shadow-[0_0_25px_rgba(37,211,102,0.6)] hover:bg-[#25D366]/10 transition-all transform hover:scale-[1.02] active:scale-95 mb-8"><WhatsApp className="w-5 h-5 fill-current" />WhatsApp</button>
+                            <div className="flex justify-center gap-10"><button onClick={() => handleSocialClick('youtube', SOCIAL_LINKS.youtube)} className="text-white/40 hover:text-white transition-colors"><YouTubeIcon className="w-7 h-7" /></button><button onClick={() => handleSocialClick('tiktok', SOCIAL_LINKS.tiktok)} className="text-white/40 hover:text-white transition-colors"><TikTokIcon className="w-7 h-7" /></button></div>
                         </div>
                     </footer>
                 </div>

@@ -34,13 +34,11 @@ export const RadioPlayer: React.FC = () => {
             if (audioRef.current) {
                 const audio = audioRef.current;
                 
-                // If there's an ongoing play attempt, wait for it before pausing
-                // to avoid the "The operation was aborted" error in the console.
                 if (playPromiseRef.current) {
                     try {
                         await playPromiseRef.current;
                     } catch (e) {
-                        // Ignore errors from the play promise when we are stopping
+                        // Ignore errors
                     }
                 }
                 
@@ -53,7 +51,7 @@ export const RadioPlayer: React.FC = () => {
         } else {
             setIsLoading(true);
             
-            // TRACKING: Log that radio was started
+            // TRACKING: Log that radio was started (for Analytics Dashboard)
             logAnalyticsEvent('play_radio');
             
             const audio = new Audio(STREAM_URL);
@@ -66,19 +64,15 @@ export const RadioPlayer: React.FC = () => {
             
             try {
                 await playPromise;
-                // Double check if we are still supposed to be playing
-                // (user might have clicked stop while it was loading)
                 if (audioRef.current === audio) {
                     setIsPlaying(true);
                     setIsLoading(false);
                 } else {
-                    // We stopped while loading
                     audio.pause();
                     audio.src = "";
                     audio.load();
                 }
             } catch (e: any) {
-                // Only log real errors, not user-initiated aborts
                 if (e.name !== 'AbortError') {
                     console.error("Radio playback failed:", e);
                 }
@@ -126,7 +120,6 @@ export const RadioPlayer: React.FC = () => {
                 {isLoading ? (
                     <div className="w-4 h-4 border-2 border-[#00F2FE] border-t-transparent rounded-full animate-spin"></div>
                 ) : isPlaying ? (
-                    // Equalizer Visual
                     <div className="flex items-end gap-[2px] h-4 w-5 pb-1">
                         <div className="eq-bar" style={{ animationDuration: '0.6s' }}></div>
                         <div className="eq-bar" style={{ animationDuration: '0.8s' }}></div>
@@ -134,14 +127,12 @@ export const RadioPlayer: React.FC = () => {
                         <div className="eq-bar" style={{ animationDuration: '0.7s' }}></div>
                     </div>
                 ) : (
-                    // Play / Radio Icon
                     <svg className="w-4 h-4 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <polygon points="5 3 19 12 5 21 5 3"></polygon>
                     </svg>
                 )}
             </div>
 
-            {/* Label underneath */}
             <span className={`text-[6px] font-black tracking-widest uppercase transition-colors ${isPlaying ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>
                 RADIO
             </span>
