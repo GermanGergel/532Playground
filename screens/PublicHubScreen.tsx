@@ -14,7 +14,7 @@ import { SquadOfTheMonthBadge } from '../components/SquadOfTheMonthBadge';
 import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
 import { MiniSquadBadge } from '../components/MiniSquadBadge';
 import { BallDecorations } from '../components/BallDecorations';
-import { CinematicCard } from '../components/PublicHubScreen';
+import { CinematicCard, HeaderAtmosphere } from '../components/PublicHubScreen';
 
 // --- SUB-COMPONENTS ---
 
@@ -23,18 +23,8 @@ const CinematicBackground: React.FC = () => (
         {/* 1. Base Layer - Deep Obsidian */}
         <div className="absolute inset-0 bg-[#0a0c10]"></div>
         
-        {/* 2. Digital LED Screen Texture (Dots) - Brighter & Strictly Top */}
-        <div className="absolute top-0 left-0 right-0 h-[50%] opacity-40"
-             style={{
-                 backgroundImage: 'radial-gradient(rgba(255, 255, 255, 0.3) 1px, transparent 1px)',
-                 backgroundSize: '4px 4px',
-                 maskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)',
-                 WebkitMaskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)'
-             }}
-        ></div>
-
-        {/* 4. Slight Film Grain (SVG Noise) */}
-        <div className="absolute inset-0 opacity-[0.05] mix-blend-overlay pointer-events-none">
+        {/* 2. Static Noise for texture (stays fixed) */}
+        <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none">
             <svg className='w-full h-full'>
                 <filter id='hubNoise'>
                     <feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch' />
@@ -42,9 +32,6 @@ const CinematicBackground: React.FC = () => (
                 <rect width='100%' height='100%' filter='url(#hubNoise)' />
             </svg>
         </div>
-        
-        {/* 5. Smooth Transition to Bottom (Fade Out) */}
-        <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-[#0a0c10] via-[#0a0c10] to-transparent"></div>
     </div>
 );
 
@@ -415,47 +402,52 @@ export const PublicHubScreen: React.FC = () => {
                 <div className="fixed bottom-0 left-0 right-0 h-16 z-[110] pointer-events-none opacity-0 transition-all duration-700 delay-300" style={{ opacity: isDashboardOpen ? 1 : 0, background: `linear-gradient(to top, ${getBottomPatchColor()} 50%, ${getBottomPatchColor()}cc 80%, transparent 100%)` }}></div>
             </div>
             <div className={`absolute inset-0 overflow-y-auto overscroll-none touch-pan-y z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}>
-                <HeroTitle />
-                <div className="text-center mb-12 md:mb-20"><TrophyIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-4 text-[#00F2FE]" /><h2 className="font-orbitron text-xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubLeadersTitle}</h2></div>
-                {displayData.top.length > 0 ? (<div className="flex flex-wrap items-end justify-center gap-4 md:gap-8 w-full"><div className="order-2 md:order-1">{displayData.top[1] && <CinematicCard player={displayData.top[1]} rank={2} />}</div><div className="order-1 md:order-2">{displayData.top[0] && <CinematicCard player={displayData.top[0]} rank={1} />}</div><div className="order-3 md:order-3">{displayData.top[2] && <CinematicCard player={displayData.top[2]} rank={3} />}</div></div>) : (<NoLeadersPlaceholder />)}
-                {legends && (
+                {/* Эффект атмосферы теперь здесь - он будет скроллиться вместе с заголовком */}
+                <HeaderAtmosphere />
+                
+                <div className="relative z-10">
+                    <HeroTitle />
+                    <div className="text-center mb-12 md:mb-20"><TrophyIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-4 text-[#00F2FE]" /><h2 className="font-orbitron text-xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubLeadersTitle}</h2></div>
+                    {displayData.top.length > 0 ? (<div className="flex flex-wrap items-end justify-center gap-4 md:gap-8 w-full"><div className="order-2 md:order-1">{displayData.top[1] && <CinematicCard player={displayData.top[1]} rank={2} />}</div><div className="order-1 md:order-2">{displayData.top[0] && <CinematicCard player={displayData.top[0]} rank={1} />}</div><div className="order-3 md:order-3">{displayData.top[2] && <CinematicCard player={displayData.top[2]} rank={3} />}</div></div>) : (<NoLeadersPlaceholder />)}
+                    {legends && (
+                        <div className="mt-24 md:mt-32">
+                            <div className="text-center mb-12 md:mb-20"><p className="font-orbitron text-sm md:text-base font-black text-[#FFD700] tracking-[0.5em] uppercase" style={{ textShadow: '0 0 15px rgba(255, 215, 0, 0.4)'}}>Hall of Fame Records</p></div>
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 w-full max-w-[1400px] mx-auto px-2 md:px-4 items-start">
+                                <div className="flex flex-col w-full">
+                                    {legends.scorers[0] && (<LegendCard title="ETERNAL GOLDEN BOOT" player={legends.scorers[0]} value={legends.scorers[0].totalGoals} icon={<GoleadorBadgeIcon />} label="CAREER GOALS" accentColor="#FFD700" className="rounded-b-none border-b-0" />)}
+                                    <ChaseList players={legends.scorers.slice(1, 10)} valueKey="totalGoals" accentColor="#FFD700" />
+                                </div>
+                                <div className="flex flex-col w-full">
+                                    {legends.architects[0] && (<LegendCard title="LEGACY ARCHITECT" player={legends.architects[0]} value={legends.architects[0].totalAssists} icon={<AssistantBadgeIcon />} label="CAREER ASSISTS" accentColor="#00BFFF" className="rounded-b-none border-b-0" />)}
+                                    <ChaseList players={legends.architects.slice(1, 10)} valueKey="totalAssists" accentColor="#00BFFF" />
+                                </div>
+                                <div className="flex flex-col w-full">
+                                    {legends.grandMasters[0] && (<LegendCard title="GRAND MASTER" player={legends.grandMasters[0]} value={(legends.grandMasters[0].totalGoals || 0) + (legends.grandMasters[0].totalAssists || 0)} icon={<MvpBadgeIcon />} label="GOALS + ASSISTS" accentColor="#D946EF" className="rounded-b-none border-b-0" />)}
+                                    <ChaseList players={legends.grandMasters.slice(1, 10)} valueKey="grandMaster" accentColor="#D946EF" />
+                                </div>
+                                <div className="flex flex-col w-full">
+                                    {legends.conquerors[0] ? (<LegendCard title="THE CONQUEROR" player={legends.conquerors[0]} value={`${Math.round((legends.conquerors[0].totalWins / legends.conquerors[0].totalGames) * 100)}%`} icon={<WinLeaderBadgeIcon />} label="HIGHEST WIN RATE" accentColor="#4CFF5F" className="rounded-b-none border-b-0" />) : (<div className="h-40 bg-black/50 rounded-2xl border border-white/5 flex items-center justify-center"><span className="text-[10px] text-white/30 uppercase tracking-widest">NO DATA</span></div>)}
+                                    {legends.conquerors.length > 1 && (<ChaseList players={legends.conquerors.slice(1, 10)} valueKey="winRate" accentColor="#4CFF5F" />)}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     <div className="mt-24 md:mt-32">
-                        <div className="text-center mb-12 md:mb-20"><p className="font-orbitron text-sm md:text-base font-black text-[#FFD700] tracking-[0.5em] uppercase" style={{ textShadow: '0 0 15px rgba(255, 215, 0, 0.4)'}}>Hall of Fame Records</p></div>
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 w-full max-w-[1400px] mx-auto px-2 md:px-4 items-start">
-                            <div className="flex flex-col w-full">
-                                {legends.scorers[0] && (<LegendCard title="ETERNAL GOLDEN BOOT" player={legends.scorers[0]} value={legends.scorers[0].totalGoals} icon={<GoleadorBadgeIcon />} label="CAREER GOALS" accentColor="#FFD700" className="rounded-b-none border-b-0" />)}
-                                <ChaseList players={legends.scorers.slice(1, 10)} valueKey="totalGoals" accentColor="#FFD700" />
-                            </div>
-                            <div className="flex flex-col w-full">
-                                {legends.architects[0] && (<LegendCard title="LEGACY ARCHITECT" player={legends.architects[0]} value={legends.architects[0].totalAssists} icon={<AssistantBadgeIcon />} label="CAREER ASSISTS" accentColor="#00BFFF" className="rounded-b-none border-b-0" />)}
-                                <ChaseList players={legends.architects.slice(1, 10)} valueKey="totalAssists" accentColor="#00BFFF" />
-                            </div>
-                            <div className="flex flex-col w-full">
-                                {legends.grandMasters[0] && (<LegendCard title="GRAND MASTER" player={legends.grandMasters[0]} value={(legends.grandMasters[0].totalGoals || 0) + (legends.grandMasters[0].totalAssists || 0)} icon={<MvpBadgeIcon />} label="GOALS + ASSISTS" accentColor="#D946EF" className="rounded-b-none border-b-0" />)}
-                                <ChaseList players={legends.grandMasters.slice(1, 10)} valueKey="grandMaster" accentColor="#D946EF" />
-                            </div>
-                            <div className="flex flex-col w-full">
-                                {legends.conquerors[0] ? (<LegendCard title="THE CONQUEROR" player={legends.conquerors[0]} value={`${Math.round((legends.conquerors[0].totalWins / legends.conquerors[0].totalGames) * 100)}%`} icon={<WinLeaderBadgeIcon />} label="HIGHEST WIN RATE" accentColor="#4CFF5F" className="rounded-b-none border-b-0" />) : (<div className="h-40 bg-black/50 rounded-2xl border border-white/5 flex items-center justify-center"><span className="text-[10px] text-white/30 uppercase tracking-widest">NO DATA</span></div>)}
-                                {legends.conquerors.length > 1 && (<ChaseList players={legends.conquerors.slice(1, 10)} valueKey="winRate" accentColor="#4CFF5F" />)}
-                            </div>
-                        </div>
+                        <div className="text-center mb-12 md:mb-20"><h2 className="font-orbitron text-lg md:text-2xl font-black uppercase tracking-[0.15em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubVitalsTitle}</h2></div>
+                        <div className="flex flex-col md:flex-row items-center justify-center gap-6 w-full max-w-4xl mx-auto"><CinematicStatCard value={clubStats.totalPlayers} label={t.hubStatsMembers} /><CinematicStatCard value={clubStats.totalSessions} label={t.hubSessionsPlayed} /><CinematicStatCard value={clubStats.avgRating} label={t.hubAvgRating} /></div>
                     </div>
-                )}
-                <div className="mt-24 md:mt-32">
-                    <div className="text-center mb-12 md:mb-20"><h2 className="font-orbitron text-lg md:text-2xl font-black uppercase tracking-[0.15em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubVitalsTitle}</h2></div>
-                     <div className="flex flex-col md:flex-row items-center justify-center gap-6 w-full max-w-4xl mx-auto"><CinematicStatCard value={clubStats.totalPlayers} label={t.hubStatsMembers} /><CinematicStatCard value={clubStats.totalSessions} label={t.hubSessionsPlayed} /><CinematicStatCard value={clubStats.avgRating} label={t.hubAvgRating} /></div>
-                </div>
-                <div className="relative z-10 bg-transparent pb-8 mt-20">
-                    <footer className="relative pb-8 pt-0 bg-transparent">
-                        <div className="text-center px-4">
-                            {!isDashboardOpen && (<div className="flex justify-center mb-6 -mt-4 relative z-20 animate-in fade-in zoom-in duration-700"><SquadOfTheMonthBadge onClick={() => setIsTotmOpen(true)} className="cursor-pointer" /></div>)}
-                            <div className="mt-10 mb-24"><button onClick={() => setIsDashboardOpen(true)} className="mx-auto block bg-transparent text-[#00F2FE] font-bold text-lg py-3.5 px-10 rounded-xl shadow-[0_0_20px_rgba(0,242,254,0.4)] hover:shadow-[0_0_30px_rgba(0,242,254,0.6)] hover:bg-[#00F2FE]/10 transition-all transform hover:scale-[1.05] active:scale-95 group border border-[#00F2FE]/20"><span className="font-chakra font-black text-xl uppercase tracking-[0.25em] group-hover:text-white transition-colors">{t.hubDashboardBtn}</span></button></div>
-                            <h2 className="font-orbitron text-2xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/90" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubJoinSquad}</h2>
-                            <p className="font-chakra text-xs text-white/50 mt-2 mb-6">Connect with us on WhatsApp to book your slot.</p>
-                            <a href={SOCIAL_LINKS.whatsapp} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-3 bg-transparent text-[#25D366] font-bold text-lg py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(37,211,102,0.4)] hover:shadow-[0_0_25px_rgba(37,211,102,0.6)] hover:bg-[#25D366]/10 transition-all transform hover:scale-[1.02] active:scale-95 mb-8"><WhatsApp className="w-5 h-5 fill-current" />WhatsApp</a>
-                            <div className="flex justify-center gap-10"><a href={SOCIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><YouTubeIcon className="w-7 h-7" /></a><a href={SOCIAL_LINKS.tiktok} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><TikTokIcon className="w-7 h-7" /></a></div>
-                        </div>
-                    </footer>
+                    <div className="relative z-10 bg-transparent pb-8 mt-20">
+                        <footer className="relative pb-8 pt-0 bg-transparent">
+                            <div className="text-center px-4">
+                                {!isDashboardOpen && (<div className="flex justify-center mb-6 -mt-4 relative z-20 animate-in fade-in zoom-in duration-700"><SquadOfTheMonthBadge onClick={() => setIsTotmOpen(true)} className="cursor-pointer" /></div>)}
+                                <div className="mt-10 mb-24"><button onClick={() => setIsDashboardOpen(true)} className="mx-auto block bg-transparent text-[#00F2FE] font-bold text-lg py-3.5 px-10 rounded-xl shadow-[0_0_20px_rgba(0,242,254,0.4)] hover:shadow-[0_0_30px_rgba(0,242,254,0.6)] hover:bg-[#00F2FE]/10 transition-all transform hover:scale-[1.05] active:scale-95 group border border-[#00F2FE]/20"><span className="font-chakra font-black text-xl uppercase tracking-[0.25em] group-hover:text-white transition-colors">{t.hubDashboardBtn}</span></button></div>
+                                <h2 className="font-orbitron text-2xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/90" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubJoinSquad}</h2>
+                                <p className="font-chakra text-xs text-white/50 mt-2 mb-6">Connect with us on WhatsApp to book your slot.</p>
+                                <a href={SOCIAL_LINKS.whatsapp} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-3 bg-transparent text-[#25D366] font-bold text-lg py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(37,211,102,0.4)] hover:shadow-[0_0_25px_rgba(37,211,102,0.6)] hover:bg-[#25D366]/10 transition-all transform hover:scale-[1.02] active:scale-95 mb-8"><WhatsApp className="w-5 h-5 fill-current" />WhatsApp</a>
+                                <div className="flex justify-center gap-10"><a href={SOCIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><YouTubeIcon className="w-7 h-7" /></a><a href={SOCIAL_LINKS.tiktok} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><TikTokIcon className="w-7 h-7" /></a></div>
+                            </div>
+                        </footer>
+                    </div>
                 </div>
             </div>
         </div>

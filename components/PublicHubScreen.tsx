@@ -28,6 +28,24 @@ const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
     }
 };
 
+// Эффект "атмосферы" хедера, который будет скроллиться вместе с контентом
+export const HeaderAtmosphere: React.FC = () => (
+    <div className="absolute top-0 left-0 right-0 h-[1000px] pointer-events-none z-0 overflow-hidden">
+        {/* 1. Digital LED Screen Texture (Dots) - Now absolute to scroll container */}
+        <div className="absolute top-0 left-0 right-0 h-[600px] opacity-40"
+             style={{
+                 backgroundImage: 'radial-gradient(rgba(255, 255, 255, 0.3) 1px, transparent 1px)',
+                 backgroundSize: '4px 4px',
+                 maskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)',
+                 WebkitMaskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)'
+             }}
+        ></div>
+        
+        {/* 2. Top Glow */}
+        <div className="absolute top-[-100px] left-1/2 -translate-x-1/2 w-full max-w-4xl h-[400px] bg-[#00F2FE]/[0.05] blur-[120px] rounded-full"></div>
+    </div>
+);
+
 export const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, rank }) => {
     const cardRef = useRef<HTMLDivElement>(null);
     const { totmPlayerIds } = useApp();
