@@ -24,28 +24,26 @@ const CinematicBackground: React.FC = () => (
         {/* 1. Base Layer - Deep Obsidian */}
         <div className="absolute inset-0 bg-[#0a0c10]"></div>
         
-        {/* REMOVED: Circular Glows and Vignettes to keep it flat and pixelated */}
-
-        {/* 2. Digital LED Screen Texture (Dots) - Upper Section Only */}
-        <div className="absolute top-0 left-0 right-0 h-[60%] opacity-20"
+        {/* 2. Digital LED Screen Texture (Dots) - Brighter & Strictly Top */}
+        <div className="absolute top-0 left-0 right-0 h-[50%] opacity-40"
              style={{
-                 backgroundImage: 'radial-gradient(rgba(255, 255, 255, 0.2) 1px, transparent 1px)',
+                 backgroundImage: 'radial-gradient(rgba(255, 255, 255, 0.3) 1px, transparent 1px)',
                  backgroundSize: '4px 4px',
                  maskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)',
                  WebkitMaskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)'
              }}
         ></div>
 
-        {/* 3. Subtle Pixel Grid Overlay - Linear fade instead of Radial */}
-        <div className="absolute top-0 left-0 right-0 h-[50%] opacity-10"
+        {/* 3. Subtle Pixel Grid Overlay - Brighter & Strictly Top */}
+        <div className="absolute top-0 left-0 right-0 h-[45%] opacity-25"
              style={{
                  backgroundImage: `
-                    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-                    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px)
+                    linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px)
                  `,
                  backgroundSize: '40px 40px',
-                 maskImage: 'linear-gradient(to bottom, black 30%, transparent 100%)',
-                 WebkitMaskImage: 'linear-gradient(to bottom, black 30%, transparent 100%)'
+                 maskImage: 'linear-gradient(to bottom, black 20%, transparent 100%)',
+                 WebkitMaskImage: 'linear-gradient(to bottom, black 20%, transparent 100%)'
              }}
         ></div>
 
