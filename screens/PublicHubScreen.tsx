@@ -163,9 +163,10 @@ const LegendCard: React.FC<{
     className?: string; 
 }> = ({ title, player, value, icon, label, accentColor = "#FFD700", className = "" }) => (
     <div className={`relative group w-full h-36 md:h-40 rounded-2xl overflow-hidden bg-black border transition-all duration-500 active:scale-95 ${className}`} style={{ borderColor: `${accentColor}33`, boxShadow: `0 10px 30px -15px rgba(0,0,0,1)` }}>
-        <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0" style={{ 
-            backgroundImage: `linear-gradient(45deg, ${accentColor} 25%, transparent 25%, transparent 50%, ${accentColor} 50%, ${accentColor} 75%, transparent 75%, transparent)`,
-            backgroundSize: '8px 8px'
+        {/* PIXEL GRID OVERLAY (Replaces Diagonal Stripes) */}
+        <div className="absolute inset-0 opacity-[0.12] pointer-events-none z-0" style={{ 
+            backgroundImage: `radial-gradient(${accentColor} 0.8px, transparent 0)`,
+            backgroundSize: '3px 3px'
         }}></div>
         
         <div className="absolute top-0 right-0 w-28 md:w-36 h-full z-0 pointer-events-none">
