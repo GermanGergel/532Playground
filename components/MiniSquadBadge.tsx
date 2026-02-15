@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface MiniSquadBadgeProps {
@@ -19,8 +18,8 @@ export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, classNa
             className={`relative flex items-center justify-center ${size} transition-all duration-300 group shrink-0 ${onClick ? 'cursor-pointer hover:scale-105' : 'cursor-default'} ${className}`}
             title="Team of the Month"
         >
-            {/* TEXT RING (Static) */}
-            <div className="absolute inset-0 opacity-100">
+            {/* TEXT RING (Animated Spin) */}
+            <div className="absolute inset-0 opacity-100 animate-spin-slow">
                 <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
                     <defs>
                         <path id="miniCirclePathShared" d={`M 50, 50 m -${radius}, 0 a ${radius},${radius} 0 1,1 ${radius * 2},0 a ${radius},${radius} 0 1,1 -${radius * 2},0`} />
@@ -109,6 +108,19 @@ export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, classNa
                     </g>
                 </svg>
             </div>
+
+            <style dangerouslySetInnerHTML={{ __html: `
+                @keyframes spin-slow {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+                .animate-spin-slow {
+                    animation: spin-slow 15s linear infinite;
+                }
+                .font-blackops {
+                    font-family: 'Black Ops One', cursive;
+                }
+            `}} />
         </button>
     );
 };
