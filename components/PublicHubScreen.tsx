@@ -28,21 +28,20 @@ const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
     }
 };
 
-// Эффект "атмосферы" хедера, который будет скроллиться вместе с контентом
+// Эффект "атмосферы" хедера, теперь без кругов света (Top Glow)
 export const HeaderAtmosphere: React.FC = () => (
     <div className="absolute top-0 left-0 right-0 h-[1000px] pointer-events-none z-0 overflow-hidden">
-        {/* 1. Digital LED Screen Texture (Dots) - Now absolute to scroll container */}
-        <div className="absolute top-0 left-0 right-0 h-[600px] opacity-40"
+        {/* 1. Digital LED Screen Texture (Dots) - Оставляем только сетку */}
+        <div className="absolute top-0 left-0 right-0 h-[600px] opacity-30"
              style={{
-                 backgroundImage: 'radial-gradient(rgba(255, 255, 255, 0.3) 1px, transparent 1px)',
+                 backgroundImage: 'radial-gradient(rgba(255, 255, 255, 0.2) 1px, transparent 1px)',
                  backgroundSize: '4px 4px',
                  maskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)',
                  WebkitMaskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)'
              }}
         ></div>
         
-        {/* 2. Top Glow */}
-        <div className="absolute top-[-100px] left-1/2 -translate-x-1/2 w-full max-w-4xl h-[400px] bg-[#00F2FE]/[0.05] blur-[120px] rounded-full"></div>
+        {/* Top Glow div удален, чтобы убрать эффект фонаря */}
     </div>
 );
 
@@ -61,7 +60,6 @@ export const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ play
     const isTotm = totmPlayerIds.has(player.id);
     const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
 
-    // Uniform font size for all cards
     const fullName = `${player.nickname} ${player.surname}`.trim();
 
     useEffect(() => {
@@ -98,7 +96,6 @@ export const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ play
                 <div className="relative z-10 h-full p-1">
                      <div className="flex justify-between items-start">
                         <div className="pt-2">
-                            {/* BRAND REPLACEMENT: DARK TURQUOISE */}
                             <p 
                                 className="font-russo text-xl leading-none tracking-tighter"
                                 style={{ 
@@ -129,7 +126,6 @@ export const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ play
                             )}
                         </div>
                     </div>
-                    {/* UNIFIED ALIGNMENT: Absolute positioning from bottom */}
                     <div className="absolute bottom-5 left-0 right-0 text-center z-30 px-2">
                         <h1 
                             className="text-2xl font-black uppercase tracking-tight leading-tight mb-1"
