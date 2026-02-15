@@ -16,8 +16,6 @@ import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
 import { MiniSquadBadge } from '../components/MiniSquadBadge';
 import { BallDecorations } from '../components/BallDecorations';
 import { CinematicCard } from '../components/PublicHubScreen';
-// @ts-ignore
-import Lenis from 'lenis';
 
 // --- SUB-COMPONENTS ---
 
@@ -216,51 +214,16 @@ export const PublicHubScreen: React.FC = () => {
     const [isTotmOpen, setIsTotmOpen] = useState(false);
     const [dashboardView, setDashboardView] = useState<DashboardViewType>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
-    const lenisRef = useRef<any>(null);
 
     const t = useTranslation();
 
     useEffect(() => {
         if (isDashboardOpen) {
             document.body.style.overflow = 'hidden';
-            
-            // INITIALIZE LENIS for Smooth Scrolling within the dashboard container
-            if (containerRef.current && !lenisRef.current) {
-                const lenis = new Lenis({
-                    wrapper: containerRef.current,
-                    content: containerRef.current.firstElementChild, // first child is usually the scrollable content wrapper
-                    duration: 1.2,
-                    easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // standard expo easing
-                    orientation: 'vertical',
-                    gestureOrientation: 'vertical',
-                    smoothWheel: true,
-                    touchMultiplier: 2,
-                });
-
-                lenisRef.current = lenis;
-
-                const raf = (time: number) => {
-                    lenis.raf(time);
-                    requestAnimationFrame(raf);
-                };
-                requestAnimationFrame(raf);
-            }
         } else {
             document.body.style.overflow = '';
-            // Destroy lenis when closed
-            if (lenisRef.current) {
-                lenisRef.current.destroy();
-                lenisRef.current = null;
-            }
         }
-        return () => { 
-            document.body.style.overflow = '';
-            if (lenisRef.current) {
-                lenisRef.current.destroy();
-                lenisRef.current = null;
-            }
-        };
+        return () => { document.body.style.overflow = ''; };
     }, [isDashboardOpen]);
 
     const latestSessionDate = useMemo(() => {
@@ -303,19 +266,10 @@ export const PublicHubScreen: React.FC = () => {
             <style dangerouslySetInnerHTML={{__html: ` html, body, #root { height: 100%; overflow: hidden; position: fixed; width: 100%; overscroll-behavior: none; touch-action: none; } `}} />
             <div className={`fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50 z-[110]`}></div>
             <HubNav isDashboardOpen={isDashboardOpen} sessionDate={latestSessionDate} activeTab={dashboardView} onTabChange={handleTabChange} archiveViewDate={archiveViewDate} onHomeClick={() => { setIsDashboardOpen(false); setDashboardView('dashboard'); }} onOpenTotm={() => setIsTotmOpen(true)} />
-            
-            {/* DASHBOARD CONTAINER - Lenis Applied Here */}
-            <div 
-                ref={containerRef}
-                className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none touch-pan-y ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'} `} 
-                style={{ backgroundColor: getBottomPatchColor() }}
-            >
-                <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10">
-                    <ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} />
-                </div>
+            <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none touch-pan-y ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'} `} style={{ backgroundColor: getBottomPatchColor() }}>
+                <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10"><ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} /></div>
                 <div className="fixed bottom-0 left-0 right-0 h-16 z-[110] pointer-events-none opacity-0 transition-all duration-700 delay-300" style={{ opacity: isDashboardOpen ? 1 : 0, background: `linear-gradient(to top, ${getBottomPatchColor()} 50%, ${getBottomPatchColor()}cc 80%, transparent 100%)` }}></div>
             </div>
-
             <div className={`absolute inset-0 overflow-y-auto overscroll-none touch-pan-y z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}>
                 <HeroTitle />
                 <div className="text-center mb-12 md:mb-20"><TrophyIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-4 text-[#00F2FE]" style={{ filter: 'drop-shadow(0 0 10px rgba(0, 242, 254, 0.7))' }} /><h2 className="font-orbitron text-xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubLeadersTitle}</h2></div>
