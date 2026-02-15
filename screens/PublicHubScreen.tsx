@@ -244,10 +244,12 @@ const HubNav: React.FC<{ isDashboardOpen: boolean; sessionDate?: string; activeT
                     </div>
                     <StaticSoccerBall />
                     
-                    {/* Ярлык "Команда Месяца" теперь здесь, рядом с мячом */}
-                    <div className="ml-4 flex items-center animate-in fade-in zoom-in duration-700">
-                        <MiniSquadBadge onClick={onOpenTotm} className="w-[42px] h-[42px] md:w-[50px] md:h-[50px] -my-1" />
-                    </div>
+                    {/* Ярлык "Команда Месяца" теперь здесь, рядом с мячом. Отображаем только если дашборд ЗАКРЫТ. */}
+                    {!isDashboardOpen && (
+                        <div className="ml-4 flex items-center animate-in fade-in zoom-in duration-700">
+                            <MiniSquadBadge onClick={onOpenTotm} className="w-[42px] h-[42px] md:w-[50px] md:h-[50px] -my-1" />
+                        </div>
+                    )}
                 </div>
             </div>
 
