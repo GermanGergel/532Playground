@@ -19,6 +19,42 @@ import { CinematicCard } from '../components/PublicHubScreen';
 
 // --- SUB-COMPONENTS ---
 
+const StadiumMeshBackground: React.FC = () => {
+    return (
+        <div className="fixed inset-0 w-full h-full z-0 pointer-events-none bg-[#08090b] overflow-hidden">
+             {/* 1. Matrix/LED Grid (Upper focus with fade) */}
+            <div className="absolute inset-0 z-0 opacity-[0.08]" 
+                style={{ 
+                    backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.5) 1px, transparent 1px)`, 
+                    backgroundSize: '32px 32px',
+                    maskImage: 'linear-gradient(to bottom, black 0%, transparent 80%)',
+                    WebkitMaskImage: 'linear-gradient(to bottom, black 0%, transparent 80%)'
+                }} 
+            />
+            
+            {/* 2. Fine Pixel Mesh Overlay (LED Texture) */}
+            <div className="absolute inset-0 z-0 opacity-[0.05]" 
+                 style={{ 
+                     backgroundImage: `radial-gradient(#fff 1px, transparent 0)`, 
+                     backgroundSize: '4px 4px',
+                     maskImage: 'linear-gradient(to bottom, black 0%, transparent 60%)',
+                     WebkitMaskImage: 'linear-gradient(to bottom, black 0%, transparent 60%)'
+                 }} 
+            />
+
+            {/* 3. Abstract Stadium Lights (Soft Lighting, Minimal Color) */}
+            <div className="absolute top-[-20%] left-[10%] w-[50%] h-[50%] bg-[#1e293b] opacity-40 blur-[120px] rounded-full mix-blend-screen" />
+            <div className="absolute top-[-10%] right-[5%] w-[60%] h-[60%] bg-[#0f172a] opacity-50 blur-[150px] rounded-full mix-blend-screen" />
+
+            {/* 4. Strong Gaussian Blur & Fade (Lower area) */}
+            <div className="absolute bottom-0 left-0 right-0 h-[70%] bg-gradient-to-t from-[#0a0c10] via-[#0a0c10]/95 to-transparent backdrop-blur-[6px]" />
+            
+            {/* 5. Minimal Cinematic Noise */}
+            <div className="absolute inset-0 opacity-[0.04] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] mix-blend-overlay"></div>
+        </div>
+    );
+};
+
 const StaticSoccerBall: React.FC = () => {
     return (
         <div className="relative w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none ml-3">
@@ -262,6 +298,9 @@ export const PublicHubScreen: React.FC = () => {
 
     return (
         <div className="fixed inset-0 w-full h-full bg-[#0a0c10] text-white selection:bg-[#00F2FE] selection:text-black overflow-hidden overscroll-none">
+            {/* New Background Layer */}
+            <StadiumMeshBackground />
+            
             <TeamOfTheMonthModal isOpen={isTotmOpen} onClose={() => setIsTotmOpen(false)} />
             <style dangerouslySetInnerHTML={{__html: ` html, body, #root { height: 100%; overflow: hidden; position: fixed; width: 100%; overscroll-behavior: none; touch-action: none; } `}} />
             <div className={`fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50 z-[110]`}></div>
@@ -272,7 +311,10 @@ export const PublicHubScreen: React.FC = () => {
             </div>
             <div className={`absolute inset-0 overflow-y-auto overscroll-none touch-pan-y z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}>
                 <HeroTitle />
-                <div className="text-center mb-12 md:mb-20"><TrophyIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-4 text-[#00F2FE]" /><h2 className="font-orbitron text-xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubLeadersTitle}</h2></div>
+                <div className="text-center mb-12 md:mb-20">
+                    <TrophyIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-4 text-[#00F2FE]" />
+                    <h2 className="font-orbitron text-xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubLeadersTitle}</h2>
+                </div>
                 {displayData.top.length > 0 ? (<div className="flex flex-wrap items-end justify-center gap-4 md:gap-8 w-full"><div className="order-2 md:order-1">{displayData.top[1] && <CinematicCard player={displayData.top[1]} rank={2} />}</div><div className="order-1 md:order-2">{displayData.top[0] && <CinematicCard player={displayData.top[0]} rank={1} />}</div><div className="order-3 md:order-3">{displayData.top[2] && <CinematicCard player={displayData.top[2]} rank={3} />}</div></div>) : (<NoLeadersPlaceholder />)}
                 {legends && (
                     <div className="mt-24 md:mt-32">
