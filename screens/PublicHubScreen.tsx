@@ -163,7 +163,7 @@ const LegendCard: React.FC<{
     className?: string; 
 }> = ({ title, player, value, icon, label, accentColor = "#FFD700", className = "" }) => (
     <div className={`relative group w-full h-36 md:h-40 rounded-2xl overflow-hidden bg-black border transition-all duration-500 active:scale-95 ${className}`} style={{ borderColor: `${accentColor}33`, boxShadow: `0 10px 30px -15px rgba(0,0,0,1)` }}>
-        {/* PIXEL GRID OVERLAY (Ultra-fine micro dots) */}
+        {/* PIXEL GRID OVERLAY */}
         <div className="absolute inset-0 opacity-[0.15] pointer-events-none z-0" style={{ 
             backgroundImage: `radial-gradient(${accentColor} 0.5px, transparent 0)`,
             backgroundSize: '2px 2px'
@@ -211,10 +211,30 @@ const LegendCard: React.FC<{
 );
 
 const NoLeadersPlaceholder: React.FC = () => { const t = useTranslation(); return (<div className="w-full max-w-2xl mx-auto py-20 flex flex-col items-center justify-center relative"><div className="absolute inset-0 bg-[#00F2FE]/5 blur-[60px] rounded-full animate-pulse"></div><div className="relative z-10 flex flex-col items-center gap-6 opacity-30"><div className="w-20 h-20 rounded-full border-2 border-dashed border-[#00F2FE] animate-spin-slow flex items-center justify-center"><TrophyIcon className="w-10 h-10 text-[#00F2FE]" /></div><div className="text-center"><h3 className="font-orbitron text-lg font-black text-white tracking-[0.4em] uppercase">{t.hubAwaitingStats}</h3><p className="font-chakra text-[10px] text-white/50 tracking-[0.2em] mt-2 uppercase">{t.hubAnalyzingPerformance}</p></div></div><style dangerouslySetInnerHTML={{ __html: ` @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .animate-spin-slow { animation: spin-slow 15s linear infinite; } `}} /></div>); };
-const MotivationalTicker: React.FC = () => { return null; };
-const NavHubButton: React.FC<{ title: string; icon: React.ReactNode; isActive: boolean; onClick: () => void; isDisabled?: boolean; }> = ({ title, icon, isActive, onClick, isDisabled }) => (<button onClick={isDisabled ? undefined : onClick} className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 h-full min-w-[50px] group ${isDisabled ? 'opacity-10 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-110'}`}><div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isActive ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 shadow-[0_0_15px_rgba(0,242,254,0.5),inset_0_0_6px_rgba(0,242,254,0.2)]' : 'text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.2)] hover:border-white/40 hover:text-white hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]'}`}>{React.cloneElement(icon as React.ReactElement<any>, { className: "w-4 h-4" })}</div><span className={`text-[6px] font-black tracking-widest uppercase transition-colors ${isActive ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>{title}</span></button>);
 
-const HubNav: React.FC<{ isDashboardOpen: boolean; sessionDate?: string; activeTab: string; onTabChange: (tab: any) => void; archiveViewDate: string | null; onHomeClick: () => void; onOpenTotm: () => void; }> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, onOpenTotm }) => { 
+const NavHubButton: React.FC<{ title: string; icon: React.ReactNode; isActive: boolean; onClick: () => void; isDisabled?: boolean; }> = ({ title, icon, isActive, onClick, isDisabled }) => (
+    <button 
+        onClick={isDisabled ? undefined : onClick} 
+        className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 h-full min-w-[54px] group ${isDisabled ? 'opacity-10 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-110'}`}
+    >
+        <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isActive ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 shadow-[0_0_15px_rgba(0,242,254,0.5),inset_0_0_6px_rgba(0,242,254,0.2)]' : 'text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/40 hover:text-white'}`}>
+            {React.cloneElement(icon as React.ReactElement<any>, { className: "w-4 h-4" })}
+        </div>
+        <span className={`text-[6px] font-black tracking-widest uppercase transition-colors ${isActive ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>
+            {title}
+        </span>
+    </button>
+);
+
+const HubNav: React.FC<{ 
+    isDashboardOpen: boolean; 
+    sessionDate?: string; 
+    activeTab: string; 
+    onTabChange: (tab: any) => void; 
+    archiveViewDate: string | null; 
+    onHomeClick: () => void; 
+    onOpenTotm: () => void; 
+}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, onOpenTotm }) => { 
     const { language, setLanguage } = useApp(); 
     const t = useTranslation(); 
     const [isLangOpen, setIsLangOpen] = useState(false); 
@@ -227,17 +247,21 @@ const HubNav: React.FC<{ isDashboardOpen: boolean; sessionDate?: string; activeT
         return () => document.removeEventListener('mousedown', handleClickOutside); 
     }, []); 
 
-    const tabTitles: Record<string, string> = { 'dashboard': t.hubDashboardBtn, 'roster': t.playerHub, 'archive': t.navHistory, 'info': t.information }; 
+    const tabTitles: Record<string, string> = { 
+        'dashboard': t.hubDashboardBtn, 
+        'roster': t.playerHub, 
+        'tournaments': 'TOURNAMENTS',
+        'archive': t.navHistory, 
+        'info': t.information 
+    }; 
     
     const navContainerClass = ` fixed top-3 left-1/2 -translate-x-1/2 z-[150] flex items-center justify-between w-full max-w-[1450px] px-6 py-0 bg-black/85 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.5),0_0_15px_rgba(0,242,254,0.1),inset_0_1px_0_rgba(255,255,255,0.05)] h-[48px] md:h-[64px] transition-all duration-300 `; 
 
     return (
         <nav className={navContainerClass}>
-            <svg className="absolute w-0 h-0 invisible"><filter id="grungeFilter"><feTurbulence type="fractalNoise" baseFrequency="0.25" numOctaves="3" result="noise" /><feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" /><feComponentTransfer><feFuncA type="linear" slope="0.9" /></feComponentTransfer></filter></svg>
-            
             <div className="flex items-center gap-4 shrink-0 h-full">
                 <div className="flex items-center">
-                    <span className="font-blackops text-2xl md:text-3xl text-[#00F2FE] tracking-tighter leading-none" style={{ textShadow: '0 0 10px rgba(0,242,254,0.6)', filter: 'url(#grungeFilter)' }}>UNIT</span>
+                    <span className="font-blackops text-2xl md:text-3xl text-[#00F2FE] tracking-tighter leading-none" style={{ textShadow: '0 0 10px rgba(0,242,254,0.6)' }}>UNIT</span>
                     <div className="h-4 w-px bg-white/15 ml-3 md:ml-4"></div>
                     <div className="flex flex-col space-y-0.5 ml-2">
                         <span className="font-black text-[9px] tracking-[0.15em] text-white uppercase leading-none">Club</span>
@@ -245,7 +269,7 @@ const HubNav: React.FC<{ isDashboardOpen: boolean; sessionDate?: string; activeT
                     </div>
                     <StaticSoccerBall />
                     
-                    {/* Ярлык "Команда Месяца" теперь здесь, рядом с мячом. Отображаем только если дашборд ЗАКРЫТ. */}
+                    {/* Значок Команды Месяца - виден только на главной */}
                     {!isDashboardOpen && (
                         <div className="ml-4 flex items-center animate-in fade-in zoom-in duration-700">
                             <MiniSquadBadge onClick={onOpenTotm} className="w-[42px] h-[42px] md:w-[50px] md:h-[50px] -my-1" />
@@ -255,7 +279,7 @@ const HubNav: React.FC<{ isDashboardOpen: boolean; sessionDate?: string; activeT
             </div>
 
             <div className="flex-grow h-full flex items-center justify-center pl-[20px] pr-[20px] overflow-hidden min-w-0">
-                {isDashboardOpen ? (
+                {isDashboardOpen && (
                     <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center pointer-events-none text-center w-full min-w-0">
                         {activeTab === 'dashboard' ? (
                             <>
@@ -263,61 +287,46 @@ const HubNav: React.FC<{ isDashboardOpen: boolean; sessionDate?: string; activeT
                                 <span className="font-chakra text-sm md:text-lg font-bold text-white tracking-widest leading-none truncate w-full">{sessionDate || 'LIVE'}</span>
                             </>
                         ) : (
-                            <div className="flex flex-col items-center justify-center w-full">
+                            <div className="flex flex-col items-center">
                                 {activeTab === 'archive' && archiveViewDate ? (
-                                    <div className="flex flex-col items-center">
-                                        <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none truncate w-full" style={{ textShadow: '0 0 25px rgba(255, 255, 255, 0.2)' }}>{archiveViewDate}</span>
-                                    </div>
+                                    <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none truncate w-full">{archiveViewDate}</span>
                                 ) : (
-                                    <div className="flex flex-col items-center">
-                                        <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none truncate w-full" style={{ textShadow: '0 0 25px rgba(255, 255, 255, 0.2)' }}>{tabTitles[activeTab] || 'DASHBOARD'}</span>
-                                    </div>
+                                    <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none truncate w-full">{tabTitles[activeTab] || 'DASHBOARD'}</span>
                                 )}
                             </div>
                         )}
                     </div>
-                ) : (
-                    <div className="w-full h-full"><MotivationalTicker /></div>
                 )}
             </div>
 
-            <div className="flex items-center gap-1 md:gap-3 shrink-0 h-full py-1">
-                {isDashboardOpen && (
-                    <div className="flex items-center gap-2 md:gap-4 mr-2 h-full animate-in fade-in slide-in-from-right-3 duration-500">
-                        <div className="mr-3 flex items-center border-r border-white/10 pr-4 gap-3">
+            <div className="flex items-center gap-1 md:gap-2 shrink-0 h-full py-1">
+                {/* Всегда видимые кнопки навигации */}
+                <div className="flex items-center gap-1 md:gap-2 mr-2 h-full">
+                    {isDashboardOpen && (
+                        <div className="mr-2 flex items-center border-r border-white/10 pr-3">
                             <button onClick={onHomeClick} className="flex flex-col items-center justify-center gap-1 transition-all duration-300 group cursor-pointer hover:scale-110" title="Home">
-                                <div className="w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.2)] hover:border-white/40 hover:text-white hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                                <div className="w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/40 hover:text-white">
                                     <Home className="w-4 h-4" />
                                 </div>
                                 <span className="text-[6px] font-black tracking-widest uppercase text-white/30 group-hover:text-white/60 transition-colors">{t.navHome}</span>
                             </button>
-                            <RadioPlayer />
                         </div>
-                        <NavHubButton title={t.hubDashboardBtn} icon={<LayoutDashboard />} isActive={activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} />
-                        <NavHubButton title={t.playerHub} icon={<Users />} isActive={activeTab === 'roster' || activeTab === 'duel'} onClick={() => onTabChange('roster')} />
-                        <NavHubButton title={t.navHistory} icon={<HistoryIcon />} isActive={activeTab === 'archive'} onClick={() => onTabChange('archive')} />
-                        <NavHubButton title={t.information} icon={<InfoIcon />} isActive={activeTab === 'info'} onClick={() => onTabChange('info')} />
-                    </div>
-                )}
+                    )}
+                    
+                    <RadioPlayer />
+                    
+                    <NavHubButton title={t.hubDashboardBtn} icon={<LayoutDashboard />} isActive={isDashboardOpen && activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} />
+                    <NavHubButton title={t.playerHub} icon={<Users />} isActive={isDashboardOpen && (activeTab === 'roster' || activeTab === 'duel')} onClick={() => onTabChange('roster')} />
+                    <NavHubButton title="TOURNEY" icon={<TrophyIcon />} isActive={isDashboardOpen && activeTab === 'tournaments'} onClick={() => onTabChange('tournaments')} />
+                    <NavHubButton title={t.navHistory} icon={<HistoryIcon />} isActive={isDashboardOpen && activeTab === 'archive'} onClick={() => onTabChange('archive')} />
+                    <NavHubButton title={t.information} icon={<InfoIcon />} isActive={isDashboardOpen && activeTab === 'info'} onClick={() => onTabChange('info')} />
+                </div>
                 
                 <div className="flex flex-col items-center justify-center group h-full relative" ref={dropdownRef}>
-                    <div className="relative flex items-center justify-center">
-                        {isDashboardOpen ? (
-                            <button onClick={() => setIsLangOpen(!isLangOpen)} className={`flex flex-col items-center justify-center gap-0.5 transition-all duration-300 min-w-[50px] group cursor-pointer hover:scale-110`}>
-                                <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isLangOpen ? 'text-[#00F2FE] border-[#00F2FE]' : 'text-white/60 border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.1)]' }`}>
-                                    <span className="font-black text-[10px] uppercase leading-none">{language}</span>
-                                </div>
-                            </button>
-                        ) : (
-                            <button onClick={() => setIsLangOpen(!isLangOpen)} className="w-8 h-8 rounded-full border border-white/20 bg-black/60 flex items-center justify-center transition-all shadow-[0_0_10px_rgba(255,255,255,0.15)] hover:border-white/60 hover:bg-white/5 hover:shadow-[0_0_15px_rgba(255,255,255,0.3)] group/lang">
-                                <span className="text-[9px] font-black text-white/80 group-hover/lang:text-white uppercase leading-none transition-colors" style={{ textShadow: '0 0 5px rgba(255,255,255,0.3)' }}>{language}</span>
-                            </button>
-                        )}
-                    </div>
-                    
-                    <span className="text-[7px] font-black tracking-[0.1em] text-white/30 uppercase group-hover:text-white/60 transition-colors cursor-default leading-none mt-0.5">
-                        {isDashboardOpen ? 'LANG' : 'LANGUAGE'}
-                    </span>
+                    <button onClick={() => setIsLangOpen(!isLangOpen)} className="w-8 h-8 rounded-full border border-white/20 bg-black/60 flex items-center justify-center transition-all shadow-[0_0_10px_rgba(255,255,255,0.15)] hover:border-white/60 hover:bg-white/5 group/lang">
+                        <span className="text-[9px] font-black text-white/80 group-hover/lang:text-white uppercase leading-none">{language}</span>
+                    </button>
+                    <span className="text-[7px] font-black tracking-[0.1em] text-white/30 uppercase group-hover:text-white/60 transition-colors cursor-default leading-none mt-0.5">LANG</span>
 
                     {isLangOpen && (
                         <div className="absolute left-1/2 -translate-x-1/2 w-9 bg-[#05070a] border border-white/10 rounded-full shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200 z-[250]" style={{ top: 'calc(100% + 4px)' }}>
@@ -391,7 +400,10 @@ export const PublicHubScreen: React.FC = () => {
     }, [allPlayers, history]);
     
     const SOCIAL_LINKS = { whatsapp: "https://chat.whatsapp.com/CAJnChuM4lQFf3s2YUnhQr", youtube: "https://www.youtube.com/@UnitFootball", tiktok: "https://www.tiktok.com/@532club?_r=1", };
-    const handleTabChange = (tab: any) => { setDashboardView(tab as DashboardViewType); };
+    const handleTabChange = (tab: DashboardViewType) => { 
+        setDashboardView(tab); 
+        setIsDashboardOpen(true);
+    };
     const getBottomPatchColor = () => { if (dashboardView === 'archive' || dashboardView === 'dashboard' || dashboardView === 'roster' || dashboardView === 'info') return '#01040a'; return '#0a0c10'; };
 
     return (
@@ -400,13 +412,23 @@ export const PublicHubScreen: React.FC = () => {
             <TeamOfTheMonthModal isOpen={isTotmOpen} onClose={() => setIsTotmOpen(false)} />
             <style dangerouslySetInnerHTML={{__html: ` html, body, #root { height: 100%; overflow: hidden; position: fixed; width: 100%; overscroll-behavior: none; touch-action: none; } `}} />
             <div className={`fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50 z-[110]`}></div>
-            <HubNav isDashboardOpen={isDashboardOpen} sessionDate={latestSessionDate} activeTab={dashboardView} onTabChange={handleTabChange} archiveViewDate={archiveViewDate} onHomeClick={() => { setIsDashboardOpen(false); setDashboardView('dashboard'); }} onOpenTotm={() => setIsTotmOpen(true)} />
+            
+            <HubNav 
+                isDashboardOpen={isDashboardOpen} 
+                sessionDate={latestSessionDate} 
+                activeTab={dashboardView} 
+                onTabChange={handleTabChange} 
+                archiveViewDate={archiveViewDate} 
+                onHomeClick={() => { setIsDashboardOpen(false); setDashboardView('dashboard'); }} 
+                onOpenTotm={() => setIsTotmOpen(true)} 
+            />
+
             <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none touch-pan-y ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'} `} style={{ backgroundColor: getBottomPatchColor() }}>
                 <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10"><ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} /></div>
                 <div className="fixed bottom-0 left-0 right-0 h-16 z-[110] pointer-events-none opacity-0 transition-all duration-700 delay-300" style={{ opacity: isDashboardOpen ? 1 : 0, background: `linear-gradient(to top, ${getBottomPatchColor()} 50%, ${getBottomPatchColor()}cc 80%, transparent 100%)` }}></div>
             </div>
+
             <div className={`absolute inset-0 overflow-y-auto overscroll-none touch-pan-y z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}>
-                {/* Эффект атмосферы теперь здесь - он будет скроллиться вместе с заголовком */}
                 <HeaderAtmosphere />
                 
                 <div className="relative z-10">
@@ -440,10 +462,10 @@ export const PublicHubScreen: React.FC = () => {
                         <div className="text-center mb-12 md:mb-20"><h2 className="font-orbitron text-lg md:text-2xl font-black uppercase tracking-[0.15em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubVitalsTitle}</h2></div>
                         <div className="flex flex-col md:flex-row items-center justify-center gap-6 w-full max-w-4xl mx-auto"><CinematicStatCard value={clubStats.totalPlayers} label={t.hubStatsMembers} /><CinematicStatCard value={clubStats.totalSessions} label={t.hubSessionsPlayed} /><CinematicStatCard value={clubStats.avgRating} label={t.hubAvgRating} /></div>
                     </div>
+                    
                     <div className="relative z-10 bg-transparent pb-8 mt-20">
                         <footer className="relative pb-8 pt-0 bg-transparent">
                             <div className="text-center px-4">
-                                <div className="mt-10 mb-24"><button onClick={() => setIsDashboardOpen(true)} className="mx-auto block bg-transparent text-[#00F2FE] font-bold text-lg py-3.5 px-10 rounded-xl shadow-[0_0_20px_rgba(0,242,254,0.4)] hover:shadow-[0_0_30px_rgba(0,242,254,0.6)] hover:bg-[#00F2FE]/10 transition-all transform hover:scale-[1.05] active:scale-95 group border border-[#00F2FE]/20"><span className="font-chakra font-black text-xl uppercase tracking-[0.25em] group-hover:text-white transition-colors">{t.hubDashboardBtn}</span></button></div>
                                 <h2 className="font-orbitron text-2xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/90" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubJoinSquad}</h2>
                                 <p className="font-chakra text-xs text-white/50 mt-2 mb-6">Connect with us on WhatsApp to book your slot.</p>
                                 <a href={SOCIAL_LINKS.whatsapp} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-3 bg-transparent text-[#25D366] font-bold text-lg py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(37,211,102,0.4)] hover:shadow-[0_0_25px_rgba(37,211,102,0.6)] hover:bg-[#25D366]/10 transition-all transform hover:scale-[1.02] active:scale-95 mb-8"><WhatsApp className="w-5 h-5 fill-current" />WhatsApp</a>
