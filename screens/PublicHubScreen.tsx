@@ -19,6 +19,55 @@ import { CinematicCard } from '../components/PublicHubScreen';
 
 // --- SUB-COMPONENTS ---
 
+const CinematicBackground: React.FC = () => (
+    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#0a0c10]">
+        {/* 1. Base Layer - Deep Obsidian */}
+        <div className="absolute inset-0 bg-[#0a0c10]"></div>
+        
+        {/* 2. Soft Bokeh Gradient - Top Center (Monochromatic) */}
+        <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[120%] h-[70%] bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.03),_transparent_60%)] blur-[80px]"></div>
+        
+        {/* 3. Shallow Depth Vignette */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_10%,_#0a0c10_100%)] opacity-80"></div>
+
+        {/* 4. Digital LED Screen Texture (Dots) - Upper Section Only */}
+        <div className="absolute top-0 left-0 right-0 h-[60%] opacity-20"
+             style={{
+                 backgroundImage: 'radial-gradient(rgba(255, 255, 255, 0.2) 1px, transparent 1px)',
+                 backgroundSize: '4px 4px',
+                 maskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)',
+                 WebkitMaskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)'
+             }}
+        ></div>
+
+        {/* 5. Subtle Pixel Grid Overlay */}
+        <div className="absolute top-0 left-0 right-0 h-[50%] opacity-10"
+             style={{
+                 backgroundImage: `
+                    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px)
+                 `,
+                 backgroundSize: '40px 40px',
+                 maskImage: 'radial-gradient(ellipse at top, black 40%, transparent 80%)',
+                 WebkitMaskImage: 'radial-gradient(ellipse at top, black 40%, transparent 80%)'
+             }}
+        ></div>
+
+        {/* 6. Slight Film Grain (SVG Noise) */}
+        <div className="absolute inset-0 opacity-[0.05] mix-blend-overlay pointer-events-none">
+            <svg className='w-full h-full'>
+                <filter id='hubNoise'>
+                    <feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch' />
+                </filter>
+                <rect width='100%' height='100%' filter='url(#hubNoise)' />
+            </svg>
+        </div>
+        
+        {/* 7. Smooth Transition to Bottom (Fade Out) */}
+        <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-[#0a0c10] via-[#0a0c10] to-transparent"></div>
+    </div>
+);
+
 const StaticSoccerBall: React.FC = () => {
     return (
         <div className="relative w-9 h-9 md:w-10 md:h-10 shrink-0 z-20 pointer-events-none ml-3">
@@ -262,6 +311,7 @@ export const PublicHubScreen: React.FC = () => {
 
     return (
         <div className="fixed inset-0 w-full h-full bg-[#0a0c10] text-white selection:bg-[#00F2FE] selection:text-black overflow-hidden overscroll-none">
+            <CinematicBackground />
             <TeamOfTheMonthModal isOpen={isTotmOpen} onClose={() => setIsTotmOpen(false)} />
             <style dangerouslySetInnerHTML={{__html: ` html, body, #root { height: 100%; overflow: hidden; position: fixed; width: 100%; overscroll-behavior: none; touch-action: none; } `}} />
             <div className={`fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50 z-[110]`}></div>
