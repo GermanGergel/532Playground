@@ -228,7 +228,6 @@ const HubNav: React.FC<{ isDashboardOpen: boolean; sessionDate?: string; activeT
 
     const tabTitles: Record<string, string> = { 'dashboard': t.hubDashboardBtn, 'roster': t.playerHub, 'archive': t.navHistory, 'info': t.information }; 
     
-    // UPDATED height from 54px to 64px
     const navContainerClass = ` fixed top-3 left-1/2 -translate-x-1/2 z-[150] flex items-center justify-between w-full max-w-[1450px] px-6 py-0 bg-black/85 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.5),0_0_15px_rgba(0,242,254,0.1),inset_0_1px_0_rgba(255,255,255,0.05)] h-[48px] md:h-[64px] transition-all duration-300 `; 
 
     return (
@@ -244,6 +243,11 @@ const HubNav: React.FC<{ isDashboardOpen: boolean; sessionDate?: string; activeT
                         <span className="font-black text-[7px] tracking-[0.15em] text-white/30 uppercase leading-none">Center</span>
                     </div>
                     <StaticSoccerBall />
+                    
+                    {/* Ярлык "Команда Месяца" теперь здесь, рядом с мячом */}
+                    <div className="ml-4 flex items-center animate-in fade-in zoom-in duration-700">
+                        <MiniSquadBadge onClick={onOpenTotm} className="w-[42px] h-[42px] md:w-[50px] md:h-[50px] -my-1" />
+                    </div>
                 </div>
             </div>
 
@@ -278,7 +282,6 @@ const HubNav: React.FC<{ isDashboardOpen: boolean; sessionDate?: string; activeT
                 {isDashboardOpen && (
                     <div className="flex items-center gap-2 md:gap-4 mr-2 h-full animate-in fade-in slide-in-from-right-3 duration-500">
                         <div className="mr-3 flex items-center border-r border-white/10 pr-4 gap-3">
-                            <MiniSquadBadge onClick={onOpenTotm} className="w-[42px] h-[42px] md:w-[54px] md:h-[54px] -my-1 mr-3" />
                             <button onClick={onHomeClick} className="flex flex-col items-center justify-center gap-1 transition-all duration-300 group cursor-pointer hover:scale-110" title="Home">
                                 <div className="w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.2)] hover:border-white/40 hover:text-white hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]">
                                     <Home className="w-4 h-4" />
@@ -294,7 +297,6 @@ const HubNav: React.FC<{ isDashboardOpen: boolean; sessionDate?: string; activeT
                     </div>
                 )}
                 
-                {/* UPDATED LANGUAGE BLOCK: flex-col to place label under button */}
                 <div className="flex flex-col items-center justify-center group h-full relative" ref={dropdownRef}>
                     <div className="relative flex items-center justify-center">
                         {isDashboardOpen ? (
@@ -310,7 +312,6 @@ const HubNav: React.FC<{ isDashboardOpen: boolean; sessionDate?: string; activeT
                         )}
                     </div>
                     
-                    {/* The "Language" label - now strictly below, aligned center */}
                     <span className="text-[7px] font-black tracking-[0.1em] text-white/30 uppercase group-hover:text-white/60 transition-colors cursor-default leading-none mt-0.5">
                         {isDashboardOpen ? 'LANG' : 'LANGUAGE'}
                     </span>
@@ -332,7 +333,7 @@ const HubNav: React.FC<{ isDashboardOpen: boolean; sessionDate?: string; activeT
     ); 
 };
 
-const DispersingWord: React.FC<{ words: string[] }> = ({ words }) => { const [index, setIndex] = useState(0); const [state, setState] = useState<'entering' | 'active' | 'exiting'>('entering'); useEffect(() => { const cycle = async () => { setState('entering'); setTimeout(() => setState('active'), 1200); setTimeout(() => { setState('exiting'); setTimeout(() => { setIndex((prev) => (prev + 1) % words.length); }, 1200); }, 5000); }; cycle(); const interval = setInterval(cycle, 6500); return () => clearInterval(interval); }, [words.length]); const getStyles = () => { switch (state) { case 'entering': return "scale-[0.4] opacity-0 blur-[40px] translate-z-[-200px]"; case 'active': return "scale-[1.1] opacity-100 blur-0 translate-z-0"; case 'exiting': return "scale-[0.8] opacity-0 blur-[30px] translate-z-[-100px]"; default: return ""; } }; return (<span className="relative inline-block h-[1.1em] min-w-[280px] md:min-w-[500px] align-top text-center perspective-1000 px-10"><span className={`block px-4 text-transparent bg-clip-text bg-gradient-to-b from-[#00F2FE] to-[#00F2FE]/30 transition-all duration-[1200ms] ease-[cubic-bezier(0.2,0,0.2,1)] ${getStyles()}`} style={{ textShadow: state === 'active' ? '0 0 30px rgba(0, 242, 254, 0.5)' : 'none' }}>{words[index]}</span>{state === 'active' && (<span className="absolute inset-0 px-4 text-transparent bg-clip-text bg-gradient-to-b from-[#00F2FE] to-transparent pointer-events-none z-0 opacity-20" style={{ filter: 'blur(20px)', WebkitTextFillColor: 'transparent' }}>{words[index]}</span>)}</span>); };
+const DispersingWord: React.FC<{ words: string[] }> = ({ words }) => { const [index, setIndex] = useState(0); const [state, setState] = useState<'entering' | 'active' | 'exiting'>('entering'); useEffect(() => { const cycle = async () => { setState('entering'); setTimeout(() => setState('active'), 1200); setTimeout(() => { setState('exiting'); setTimeout(() => { setIndex((prev) => (prev + 1) % words.length); }, 1200); }, 5000); }; cycle(); const interval = setInterval(cycle, 6500); return () => clearInterval(interval); }, [words.length]); const getStyles = () => { switch (state) { case 'entering': return "scale-[0.4] opacity-0 blur-[40px] translate-z-[-200px]"; case 'active': return "scale-[1.1] opacity-100 blur-0 translate-z-0"; case 'exiting': return "scale-[0.8] opacity-0 blur-[30px] translate-z-[-100px]"; default: return ""; } }; return (<span className="relative inline-block h-[1.1em] min-w-[280px] md:min-w-[500px] align-top text-center perspective-1000 px-10"><span className={`block px-4 text-transparent bg-clip-text bg-gradient-to-b from-[#00F2FE] to-[#00F2FE]/30 transition-all duration-[1200ms] ease-[cubic-bezier(0.2,0,0.2,1)] ${getStyles()}`} style={{ textShadow: state === 'active' ? '0 0 30px rgba(0, 242, 254, 0.5)' : 'none' }}>{words[index]}</span>{state === 'active' && (<span className="absolute inset-0 px-4 text-transparent bg-clip-text bg-gradient-to-b from-[#00F2FE] to-transparent pointer-events-none z-0 opacity-20" style={{ filter: 'blur(20px)', WebkitMaskImage: 'transparent' }}>{words[index]}</span>)}</span>); };
 const HeroTitle: React.FC = () => { const t = useTranslation(); const words = ["GAME", "LEGACY", "VICTORY"]; return (<div className="text-center mt-32 md:mt-44 mb-12 md:mb-16 relative"><div className="inline-block relative"><h1 className="font-russo text-4xl md:text-[9rem] leading-[1.1] uppercase tracking-tighter drop-shadow-2xl"><span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/20">DEFINE YOUR</span> <br /><DispersingWord words={words} /></h1><div className="mt-8 mb-10 max-w-lg mx-auto px-4"><p className="font-chakra text-[10px] md:text-xs text-white/50 font-medium uppercase tracking-[0.3em] lifestyle-relaxed leading-loose">{t.hubWelcomeText}</p></div><div className="mt-6 h-px w-48 md:w-64 bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent mx-auto opacity-60 shadow-[0_0_10px_#00F2FE]"></div></div></div>); };
 const CinematicStatCard: React.FC<{ value: string | number; label: string; }> = ({ value, label }) => (<div className="w-full md:flex-1 max-w-xs md:max-w-none h-40"><div className="relative rounded-3xl overflow-hidden bg-white/[0.03] border border-white/10 shadow-2xl h-full backdrop-blur-md"><div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-40"></div><div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-white/5 to-transparent blur-xl"></div><div className="relative h-full z-10 flex flex-col items-center justify-center gap-2"><span className="font-russo font-black text-6xl md:text-7xl text-white tracking-widest leading-none">{value}</span><span className="font-chakra font-bold text-xs text-white/50 uppercase tracking-[0.2em]">{label}</span></div></div></div>);
 type DashboardViewType = 'info' | 'dashboard' | 'roster' | 'archive' | 'duel' | 'tournaments' | 'league';
@@ -439,7 +440,6 @@ export const PublicHubScreen: React.FC = () => {
                     <div className="relative z-10 bg-transparent pb-8 mt-20">
                         <footer className="relative pb-8 pt-0 bg-transparent">
                             <div className="text-center px-4">
-                                {!isDashboardOpen && (<div className="flex justify-center mb-6 -mt-4 relative z-20 animate-in fade-in zoom-in duration-700"><SquadOfTheMonthBadge onClick={() => setIsTotmOpen(true)} className="cursor-pointer" /></div>)}
                                 <div className="mt-10 mb-24"><button onClick={() => setIsDashboardOpen(true)} className="mx-auto block bg-transparent text-[#00F2FE] font-bold text-lg py-3.5 px-10 rounded-xl shadow-[0_0_20px_rgba(0,242,254,0.4)] hover:shadow-[0_0_30px_rgba(0,242,254,0.6)] hover:bg-[#00F2FE]/10 transition-all transform hover:scale-[1.05] active:scale-95 group border border-[#00F2FE]/20"><span className="font-chakra font-black text-xl uppercase tracking-[0.25em] group-hover:text-white transition-colors">{t.hubDashboardBtn}</span></button></div>
                                 <h2 className="font-orbitron text-2xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/90" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubJoinSquad}</h2>
                                 <p className="font-chakra text-xs text-white/50 mt-2 mb-6">Connect with us on WhatsApp to book your slot.</p>
