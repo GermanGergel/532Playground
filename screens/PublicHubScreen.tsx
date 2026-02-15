@@ -34,18 +34,7 @@ const CinematicBackground: React.FC = () => (
              }}
         ></div>
 
-        {/* 3. Subtle Pixel Grid Overlay - Brighter & Strictly Top */}
-        <div className="absolute top-0 left-0 right-0 h-[45%] opacity-25"
-             style={{
-                 backgroundImage: `
-                    linear-gradient(to right, rgba(255, 255, 255, 0.1) 1px, transparent 1px),
-                    linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 1px, transparent 1px)
-                 `,
-                 backgroundSize: '40px 40px',
-                 maskImage: 'linear-gradient(to bottom, black 20%, transparent 100%)',
-                 WebkitMaskImage: 'linear-gradient(to bottom, black 20%, transparent 100%)'
-             }}
-        ></div>
+        {/* REMOVED: Large Pixel Grid Overlay (40px squares) */}
 
         {/* 4. Slight Film Grain (SVG Noise) */}
         <div className="absolute inset-0 opacity-[0.05] mix-blend-overlay pointer-events-none">
