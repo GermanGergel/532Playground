@@ -24,13 +24,9 @@ const CinematicBackground: React.FC = () => (
         {/* 1. Base Layer - Deep Obsidian */}
         <div className="absolute inset-0 bg-[#0a0c10]"></div>
         
-        {/* 2. Soft Bokeh Gradient - Top Center (Monochromatic) */}
-        <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[120%] h-[70%] bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.03),_transparent_60%)] blur-[80px]"></div>
-        
-        {/* 3. Shallow Depth Vignette */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_10%,_#0a0c10_100%)] opacity-80"></div>
+        {/* REMOVED: Circular Glows and Vignettes to keep it flat and pixelated */}
 
-        {/* 4. Digital LED Screen Texture (Dots) - Upper Section Only */}
+        {/* 2. Digital LED Screen Texture (Dots) - Upper Section Only */}
         <div className="absolute top-0 left-0 right-0 h-[60%] opacity-20"
              style={{
                  backgroundImage: 'radial-gradient(rgba(255, 255, 255, 0.2) 1px, transparent 1px)',
@@ -40,7 +36,7 @@ const CinematicBackground: React.FC = () => (
              }}
         ></div>
 
-        {/* 5. Subtle Pixel Grid Overlay */}
+        {/* 3. Subtle Pixel Grid Overlay - Linear fade instead of Radial */}
         <div className="absolute top-0 left-0 right-0 h-[50%] opacity-10"
              style={{
                  backgroundImage: `
@@ -48,12 +44,12 @@ const CinematicBackground: React.FC = () => (
                     linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px)
                  `,
                  backgroundSize: '40px 40px',
-                 maskImage: 'radial-gradient(ellipse at top, black 40%, transparent 80%)',
-                 WebkitMaskImage: 'radial-gradient(ellipse at top, black 40%, transparent 80%)'
+                 maskImage: 'linear-gradient(to bottom, black 30%, transparent 100%)',
+                 WebkitMaskImage: 'linear-gradient(to bottom, black 30%, transparent 100%)'
              }}
         ></div>
 
-        {/* 6. Slight Film Grain (SVG Noise) */}
+        {/* 4. Slight Film Grain (SVG Noise) */}
         <div className="absolute inset-0 opacity-[0.05] mix-blend-overlay pointer-events-none">
             <svg className='w-full h-full'>
                 <filter id='hubNoise'>
@@ -63,7 +59,7 @@ const CinematicBackground: React.FC = () => (
             </svg>
         </div>
         
-        {/* 7. Smooth Transition to Bottom (Fade Out) */}
+        {/* 5. Smooth Transition to Bottom (Fade Out) */}
         <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-[#0a0c10] via-[#0a0c10] to-transparent"></div>
     </div>
 );
@@ -245,8 +241,6 @@ const LegendCard: React.FC<{
     </div>
 );
 
-// ... (Rest of components: NoLeadersPlaceholder, MotivationalTicker, NavHubButton, HubNav, DispersingWord, HeroTitle, CinematicStatCard) ...
-// (Omitting duplicated helper components for brevity as they are unchanged from the file provided in previous turns)
 const NoLeadersPlaceholder: React.FC = () => { const t = useTranslation(); return (<div className="w-full max-w-2xl mx-auto py-20 flex flex-col items-center justify-center relative"><div className="absolute inset-0 bg-[#00F2FE]/5 blur-[60px] rounded-full animate-pulse"></div><div className="relative z-10 flex flex-col items-center gap-6 opacity-30"><div className="w-20 h-20 rounded-full border-2 border-dashed border-[#00F2FE] animate-spin-slow flex items-center justify-center"><TrophyIcon className="w-10 h-10 text-[#00F2FE]" /></div><div className="text-center"><h3 className="font-orbitron text-lg font-black text-white tracking-[0.4em] uppercase">{t.hubAwaitingStats}</h3><p className="font-chakra text-[10px] text-white/50 tracking-[0.2em] mt-2 uppercase">{t.hubAnalyzingPerformance}</p></div></div><style dangerouslySetInnerHTML={{ __html: ` @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .animate-spin-slow { animation: spin-slow 15s linear infinite; } `}} /></div>); };
 const MotivationalTicker: React.FC = () => { const phrases = ["DATA BUILDS LEGENDS •", "NUMBERS NEVER LIE •", "UNIT — GLOBAL FOOTBALL CHANGE •", "PERFORMANCE OVER HYPE •", "UNIT — THE NEW STANDARD OF FUTSAL •", "PROVEN, NOT PROMISED •"]; return (<div className="relative w-full h-full overflow-hidden flex items-center"><style dangerouslySetInnerHTML={{ __html: ` @keyframes hub-ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } } .animate-hub-ticker { display: flex; width: fit-content; animation: hub-ticker 45s linear infinite; } `}} /><div className="animate-hub-ticker whitespace-nowrap flex gap-16">{[...phrases, ...phrases].map((phrase, i) => (<span key={i} className="text-[14px] md:text-[16px] font-bold tracking-[0.1em] uppercase flex items-center font-inter-tight italic text-transparent bg-clip-text bg-gradient-to-b from-white to-white/20" style={{ textShadow: `0 0 15px rgba(255, 255, 255, 0.05)` }}>{phrase}</span>))}</div></div>); };
 const NavHubButton: React.FC<{ title: string; icon: React.ReactNode; isActive: boolean; onClick: () => void; isDisabled?: boolean; }> = ({ title, icon, isActive, onClick, isDisabled }) => (<button onClick={isDisabled ? undefined : onClick} className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 h-full min-w-[50px] group ${isDisabled ? 'opacity-10 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-110'}`}><div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isActive ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 shadow-[0_0_15px_rgba(0,242,254,0.5),inset_0_0_6px_rgba(0,242,254,0.2)]' : 'text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.2)] hover:border-white/40 hover:text-white hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]'}`}>{React.cloneElement(icon as React.ReactElement<any>, { className: "w-4 h-4" })}</div><span className={`text-[6px] font-black tracking-widest uppercase transition-colors ${isActive ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>{title}</span></button>);
