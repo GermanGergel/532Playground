@@ -6,6 +6,7 @@ export const ua = {
   navStatistics: "Статистика",
   navHistory: "Історія",
   navSettings: "Налаштування",
+  navTournaments: "Турніри",
 
   // Home & Setup
   hubTitle: "Клубний Хаб",
@@ -26,7 +27,7 @@ export const ua = {
   addPlayers: "Додати Гравців",
 
   // Assign
-  assignPlayersTitle: "Формування Складів",
+  assignPlayersTitle: "Формирование Складів",
   searchOrAddPlayer: "Знайти або додати гостя...",
   addPlayer: "Додати",
   playerPool: "Лист Очікування",
@@ -156,7 +157,7 @@ export const ua = {
   takePhoto: "Фото",
   uploading: "Завантаження...",
   loading: "Завантаження...",
-  editData: "Ред. Інфо",
+  editData: "Ред. Инфо",
   downloadCard: "Експорт Карти",
   shareProfile: "Поділитися",
   shareViaApp: "Надіслати Посилання",
@@ -215,7 +216,7 @@ export const ua = {
   ratingExampleAssist: "Асист: +0.7 очок (Плеймейкер +1.0)",
   ratingExampleCleanSheet: "Сухий матч: +1.0 очко (Захисник +2.0)",
   infoInactivityTitle: "Інактив",
-  infoInactivityDesc: "-1 OVR за кожні 5 пропущенних сесій.",
+  infoInactivityDesc: "-1 OVR за кожні 3 пропущенні сесії.",
   infoRatingProtection: "Рейтинг не може впасти нижче початкового 68 OVR.",
   infoLegionnaireTitle: "Протокол Легіонера",
   infoLegionnaireDesc: "Гравці, які перейшли в іншу команду для балансу, отримують особливі значки.",

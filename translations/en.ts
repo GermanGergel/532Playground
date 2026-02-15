@@ -6,6 +6,7 @@ export const en = {
   navStatistics: "Stats",
   navHistory: "History",
   navSettings: "Settings",
+  navTournaments: "Tournaments",
 
   // Home & Setup
   hubTitle: "Club Hub",

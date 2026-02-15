@@ -6,6 +6,7 @@ export const vn = {
   navStatistics: "Thống Kê",
   navHistory: "Lịch Sử",
   navSettings: "Cài Đặt",
+  navTournaments: "Giải Đấu",
 
   // Home & Setup
   hubTitle: "Club Hub",
@@ -269,13 +270,12 @@ export const vn = {
   hubLeadersTitle: "Dẫn Đầu Mùa Giải",
   hubJoinSquad: "Tham Gia Đội Hình",
   
-  // FIX: Added missing Duel keys for Vietnamese translation
   // Duel
   duel_title: "Chọn Đối Thủ",
   duel_id_unit: "XÁC MINH CẦU THỦ...",
   duel_initiate: "BẮT ĐẦU ĐỐI ĐẦU",
   duel_sector_empty: "Không có cầu thủ",
-  duel_complete: "KẾT THÚC ĐỐI ĐẦU",
+  duel_complete: "KẾТ THÚC ĐỐI ĐẦU",
   duel_score: "TỈ SỐ",
   duel_verified: "Chỉ số hiệu quả đã xác minh",
   
@@ -288,7 +288,8 @@ export const vn = {
   feature_live_desc: "Theo dõi tác động lên rating.",
   feature_stats: "Thống Kê Chi Tiết",
   feature_stats_desc: "Ghi lại bàn thắng, kiến tạo, thắng thua.",
-  feature_fair: "Cân bằng thông minh",
+  feature_fair: "Cân Bằng Thông Minh",
+  feature_fair_desc: "Chia đội bằng thuật toán.",
   roadmap_title: "TƯƠNG LAI",
   roadmap_video: "Video Highlights",
   roadmap_video_desc: "Clip AI ghi bàn.",
@@ -296,7 +297,7 @@ export const vn = {
   roadmap_leagues_desc: "Tranh cúp mùa giải.",
   cta_join: "THAM GIA NGAY",
   cta_desc: "Liên hệ để đặt slot.",
-  tap_to_enter: "NHẤN ĐỂ VÀO",
+  tap_to_enter: "NHẤN ĐỂ ВÀO",
   hub_section_title: "HỆ SINH THÁI CLB",
   hub_section_desc: "Hệ thống dữ liệu trung tâm.",
   hub_badge: "DÀNH CHO THÀNH VIÊN",
@@ -405,7 +406,7 @@ export const vn = {
   badge_crisis_manager: "Quản Lý Khủng Hoảng",
   badge_crisis_manager_desc: "2+ G/A khi là Lính Lê Dương",
   badge_iron_lung: "Phổi Sắt",
-  badge_iron_lung_desc: "Chuỗi Thắng-Thắng-Thắng (khi chuyển đội)",
+  badge_iron_lung_desc: "Chuỗi Thắng-Thắng-Thắng (kхи chuyển đội)",
   
   // Announcements
   announcement_start_match: "Bắt Đầu",

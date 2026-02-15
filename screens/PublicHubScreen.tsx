@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -215,7 +216,7 @@ const NoLeadersPlaceholder: React.FC = () => { const t = useTranslation(); retur
 const NavHubButton: React.FC<{ title: string; icon: React.ReactNode; isActive: boolean; onClick: () => void; isDisabled?: boolean; }> = ({ title, icon, isActive, onClick, isDisabled }) => (
     <button 
         onClick={isDisabled ? undefined : onClick} 
-        className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 h-full min-w-[54px] group ${isDisabled ? 'opacity-10 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-110'}`}
+        className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 h-full min-w-[58px] group ${isDisabled ? 'opacity-10 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-110'}`}
     >
         <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isActive ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 shadow-[0_0_15px_rgba(0,242,254,0.5),inset_0_0_6px_rgba(0,242,254,0.2)]' : 'text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/40 hover:text-white'}`}>
             {React.cloneElement(icon as React.ReactElement<any>, { className: "w-4 h-4" })}
@@ -250,7 +251,7 @@ const HubNav: React.FC<{
     const tabTitles: Record<string, string> = { 
         'dashboard': t.hubDashboardBtn, 
         'roster': t.playerHub, 
-        'tournaments': 'TOURNAMENTS',
+        'tournaments': t.navTournaments,
         'archive': t.navHistory, 
         'info': t.information 
     }; 
@@ -299,9 +300,9 @@ const HubNav: React.FC<{
                 )}
             </div>
 
-            <div className="flex items-center gap-1 md:gap-2 shrink-0 h-full py-1">
+            <div className="flex items-center gap-3 md:gap-4 shrink-0 h-full py-1">
                 {/* Всегда видимые кнопки навигации */}
-                <div className="flex items-center gap-1 md:gap-2 mr-2 h-full">
+                <div className="flex items-center gap-2 md:gap-3 mr-2 h-full">
                     {isDashboardOpen && (
                         <div className="mr-2 flex items-center border-r border-white/10 pr-3">
                             <button onClick={onHomeClick} className="flex flex-col items-center justify-center gap-1 transition-all duration-300 group cursor-pointer hover:scale-110" title="Home">
@@ -317,7 +318,7 @@ const HubNav: React.FC<{
                     
                     <NavHubButton title={t.hubDashboardBtn} icon={<LayoutDashboard />} isActive={isDashboardOpen && activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} />
                     <NavHubButton title={t.playerHub} icon={<Users />} isActive={isDashboardOpen && (activeTab === 'roster' || activeTab === 'duel')} onClick={() => onTabChange('roster')} />
-                    <NavHubButton title="TOURNEY" icon={<TrophyIcon />} isActive={isDashboardOpen && activeTab === 'tournaments'} onClick={() => onTabChange('tournaments')} />
+                    <NavHubButton title={t.navTournaments} icon={<TrophyIcon />} isActive={isDashboardOpen && activeTab === 'tournaments'} onClick={() => onTabChange('tournaments')} />
                     <NavHubButton title={t.navHistory} icon={<HistoryIcon />} isActive={isDashboardOpen && activeTab === 'archive'} onClick={() => onTabChange('archive')} />
                     <NavHubButton title={t.information} icon={<InfoIcon />} isActive={isDashboardOpen && activeTab === 'info'} onClick={() => onTabChange('info')} />
                 </div>

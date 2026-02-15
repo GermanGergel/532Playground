@@ -6,6 +6,7 @@ export const ru = {
   navStatistics: "Статистика",
   navHistory: "История",
   navSettings: "Настройки",
+  navTournaments: "Турниры",
 
   // Home & Setup
   hubTitle: "Клубный Хаб",
@@ -57,12 +58,11 @@ export const ru = {
   selectWinnerDesc: "Выберите победителя, чтобы продолжить",
   onBench: "На скамейке",
 
-  // FIX: Added missing Legionnaire keys for Russian translation
+  // Legionnaire
   legionnaire_replace: "ЗАМЕНИТЬ",
   legionnaire_select: "ВЫБРАТЬ",
   legionnaire_no_players: "Нет свободных игроков",
 
-  // FIX: Added missing Session Summary keys for Russian translation
   // Session Summary
   summary_title: "ИТОГИ СЕССИИ",
   summary_location: "ЛОКАЦИЯ",
@@ -86,7 +86,6 @@ export const ru = {
   thW: "В",
   thD: "Н",
   thL: "П",
-  // FIX: Added missing thGF and thGA keys for standings table headers
   thGF: "ЗБ",
   thGA: "Пр",
   thGD: "РМ",
@@ -148,7 +147,7 @@ export const ru = {
 
   // Player Profile
   playerProfile: "Профиль Игрока",
-  deletePlayer: "Delete Player",
+  deletePlayer: "Удалить Игрока",
   deletePlayerConfirm: "Вы уверены, что хотите удалить игрока {playerName}?",
   uploadPhoto: "Загрузить Фото",
   fromCamera: "Сделать Фото",
@@ -163,7 +162,6 @@ export const ru = {
   shareViaApp: "Отправить Ссылку",
   scanToOpen: "СКАНИРУЙ, ЧТОБЫ ОТКРЫТЬ",
   clickToEnter: "НАЖМИ, ЧТОБЫ ВОЙТИ",
-  // FIX: Added missing ratingProtection keys for playerModals
   ratingProtection: "Защита Рейтинга",
   ratingProtectionDesc: "Рейтинг не падает при пропусках",
 
@@ -206,7 +204,7 @@ export const ru = {
 
   // Info Content
   ratingCalculationTitle: "Система Рейтинга",
-  ratingCalculationDesc: "Рейтинг меняется на основе результатов матчу, командной игры и личного вклада.",
+  ratingCalculationDesc: "Рейтинг меняется на основе результатов матча, командной игры и личного вклада.",
   ratingCalculationExamplesTitle: "Примеры Начисления",
   ratingExampleWinStrong: "Уверенная победа (+2GD): +1.3 очка",
   ratingExampleWinClose: "Обычная победа: +1.0 очко",
@@ -355,7 +353,7 @@ export const ru = {
   badge_duplet: "Duplet",
   badge_duplet_desc: "2x Дубля в победах",
   badge_maestro: "Маэстро",
-  badge_maestro_desc: "2x Дубля ассистов in wins",
+  badge_maestro_desc: "2x Дубля ассистов в победах",
   badge_comeback_kings: "Король Камбэков",
   badge_comeback_kings_desc: "3x Волевые победы",
   badge_fortress: "Крепость",
@@ -377,7 +375,7 @@ export const ru = {
   badge_passing_streak: "Серия Пасов",
   badge_passing_streak_desc: "Серия ассистов 3 матча",
   badge_team_conductor: "Дирижер",
-  badge_team_conductor_desc: "Ассисты в 3 победах",
+  badge_team_conductor_desc: "Ассисты in 3 wins",
   badge_ten_influence: "Влияние 10",
   badge_ten_influence_desc: "10+ Голов и Ассистов",
   badge_mastery_balance: "Баланс",
