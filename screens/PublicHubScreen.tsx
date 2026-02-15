@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Player, PlayerStatus, PlayerForm, SkillType, PlayerTier } from '../types';
-import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, TikTokIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon, GoleadorBadgeIcon, AssistantBadgeIcon, VeteranBadgeIcon, MvpBadgeIcon, WinLeaderBadgeIcon, Globe } from '../icons';
+import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, TikTokIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon, GoleadorBadgeIcon, AssistantBadgeIcon, VeteranBadgeIcon, MvpBadgeIcon, WinLeaderBadgeIcon } from '../icons';
 import { PlayerAvatar, TeamAvatar } from '../components/avatars';
 import { Language } from '../translations/index';
 import { BadgeIcon, sortBadgesByPriority } from '../features';
@@ -62,7 +62,7 @@ const TrendArrow: React.FC<{ form: PlayerForm }> = ({ form }) => {
     return <span className="text-white/20 text-[10px] font-bold">•</span>;
 };
 
-// --- CHASE LIST COMPONENT ---
+// --- CHASE LIST COMPONENT (THE 4-PLAYER TAIL) ---
 const ChaseList: React.FC<{ 
     players: Player[]; 
     valueKey: keyof Player | 'grandMaster' | 'winRate'; 
@@ -101,25 +101,53 @@ const ChaseList: React.FC<{
             className="w-full bg-[#0a0c10]/95 backdrop-blur-md rounded-b-2xl border-l border-r border-b overflow-hidden relative group/list"
             style={{ borderColor: `${accentColor}33` }}
         >
-            <div className={`absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-[#0a0c10] to-transparent z-20 pointer-events-none transition-opacity duration-300 ${showTopFade ? 'opacity-100' : 'opacity-0'}`}></div>
-            <div ref={scrollRef} onScroll={handleScroll} className="max-h-[160px] overflow-y-auto touch-pan-y pb-2 no-scrollbar relative z-10">
+            {/* Top Fade Gradient */}
+            <div 
+                className={`absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-[#0a0c10] to-transparent z-20 pointer-events-none transition-opacity duration-300 ${showTopFade ? 'opacity-100' : 'opacity-0'}`}
+            ></div>
+
+            {/* Scrollable container with fixed max height */}
+            <div 
+                ref={scrollRef}
+                onScroll={handleScroll}
+                className="max-h-[160px] overflow-y-auto touch-pan-y pb-2 no-scrollbar relative z-10"
+            >
                 {players.map((p, index) => (
-                    <div key={p.id} className="flex items-center justify-between px-4 py-2 border-t border-white/5 hover:bg-white/5 transition-colors">
+                    <div 
+                        key={p.id} 
+                        className="flex items-center justify-between px-4 py-2 border-t border-white/5 hover:bg-white/5 transition-colors"
+                    >
                         <div className="flex items-center gap-3 min-w-0">
                             <span className="text-[10px] font-mono font-bold text-white/30 w-4 text-right pr-1">{index + 2}.</span>
                             <div className="flex items-center gap-2 min-w-0">
-                                <span className="text-[10px] font-bold text-white uppercase truncate tracking-wider">{p.nickname}</span>
+                                <span className="text-[10px] font-bold text-white uppercase truncate tracking-wider">
+                                    {p.nickname}
+                                </span>
                             </div>
                         </div>
+                        
                         <div className="flex items-center gap-3">
-                            <span className="font-mono text-xs font-bold text-white/90">{getValue(p)}</span>
-                            <div className="w-3 flex justify-center"><TrendArrow form={p.form} /></div>
+                            <span className="font-mono text-xs font-bold text-white/90">
+                                {getValue(p)}
+                            </span>
+                            <div className="w-3 flex justify-center">
+                                <TrendArrow form={p.form} />
+                            </div>
                         </div>
                     </div>
                 ))}
-                {players.length === 0 && (<div className="py-3 text-center"><span className="text-[8px] text-white/20 uppercase tracking-widest">No Contenders</span></div>)}
+                
+                {players.length === 0 && (
+                    <div className="py-3 text-center">
+                        <span className="text-[8px] text-white/20 uppercase tracking-widest">No Contenders</span>
+                    </div>
+                )}
             </div>
-            <div className={`absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#0a0c10] to-transparent z-20 pointer-events-none transition-opacity duration-300 ${showBottomFade ? 'opacity-100' : 'opacity-0'}`}></div>
+
+            {/* Bottom Fade Gradient */}
+            <div 
+                className={`absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#0a0c10] to-transparent z-20 pointer-events-none transition-opacity duration-300 ${showBottomFade ? 'opacity-100' : 'opacity-0'}`}
+            ></div>
         </div>
     );
 };
@@ -135,43 +163,64 @@ const LegendCard: React.FC<{
     className?: string; 
 }> = ({ title, player, value, icon, label, accentColor = "#FFD700", className = "" }) => (
     <div className={`relative group w-full h-36 md:h-40 rounded-2xl overflow-hidden bg-black border transition-all duration-500 active:scale-95 ${className}`} style={{ borderColor: `${accentColor}33`, boxShadow: `0 10px 30px -15px rgba(0,0,0,1)` }}>
-        <div className="absolute inset-0 opacity-[0.15] pointer-events-none z-0" style={{ backgroundImage: `radial-gradient(${accentColor} 0.5px, transparent 0)`, backgroundSize: '2px 2px' }}></div>
+        {/* PIXEL GRID OVERLAY */}
+        <div className="absolute inset-0 opacity-[0.15] pointer-events-none z-0" style={{ 
+            backgroundImage: `radial-gradient(${accentColor} 0.5px, transparent 0)`,
+            backgroundSize: '2px 2px'
+        }}></div>
+        
         <div className="absolute top-0 right-0 w-28 md:w-36 h-full z-0 pointer-events-none">
-            {player.playerCard ? (<div className="w-full h-full bg-cover bg-top" style={{ backgroundImage: `url(${player.playerCard})` }} />) : (<div className="w-full h-full bg-gradient-to-b from-gray-800 to-black"></div>)}
+            {player.playerCard ? (
+                <div 
+                    className="w-full h-full bg-cover bg-top"
+                    style={{ backgroundImage: `url(${player.playerCard})` }}
+                />
+            ) : (
+                <div className="w-full h-full bg-gradient-to-b from-gray-800 to-black"></div>
+            )}
             <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent"></div>
         </div>
+
         <div className="absolute inset-0 pointer-events-none z-10" style={{ background: `linear-gradient(to bottom right, ${accentColor}10, transparent)` }}></div>
         <div className="absolute top-0 left-0 right-0 h-px z-10" style={{ background: `linear-gradient(to right, transparent, ${accentColor}66, transparent)` }}></div>
+
         <div className="relative z-20 p-4 h-full flex flex-col justify-between">
             <div className="flex justify-between items-start">
                 <div className="flex flex-col relative z-20 max-w-[70%]">
                     <span className="text-[5px] md:text-[6px] font-black tracking-[0.2em] uppercase mb-0.5 opacity-90 truncate" style={{ color: accentColor }}>{title}</span>
-                    <h3 className="font-russo text-sm md:text-base text-white uppercase tracking-tighter truncate drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] leading-none">{player.nickname}</h3>
+                    <h3 className="font-russo text-sm md:text-base text-white uppercase tracking-tighter truncate drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] leading-none">
+                        {player.nickname}
+                    </h3>
                 </div>
             </div>
+
             <div className="flex items-end justify-between">
                 <div className="flex flex-col">
-                    <span className="font-russo text-2xl md:text-3xl text-white tracking-widest leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{value}</span>
+                    <span className="font-russo text-2xl md:text-3xl text-white tracking-widest leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                        {value}
+                    </span>
                     <span className="text-[6px] md:text-[7px] font-black text-white/50 uppercase tracking-[0.3em] mt-1">{label}</span>
                 </div>
             </div>
-            <div className="absolute bottom-2 right-2 opacity-10 scale-125 text-white z-10">{icon}</div>
+            
+            <div className="absolute bottom-2 right-2 opacity-10 scale-125 text-white z-10">
+                {icon}
+            </div>
         </div>
     </div>
 );
 
 const NoLeadersPlaceholder: React.FC = () => { const t = useTranslation(); return (<div className="w-full max-w-2xl mx-auto py-20 flex flex-col items-center justify-center relative"><div className="absolute inset-0 bg-[#00F2FE]/5 blur-[60px] rounded-full animate-pulse"></div><div className="relative z-10 flex flex-col items-center gap-6 opacity-30"><div className="w-20 h-20 rounded-full border-2 border-dashed border-[#00F2FE] animate-spin-slow flex items-center justify-center"><TrophyIcon className="w-10 h-10 text-[#00F2FE]" /></div><div className="text-center"><h3 className="font-orbitron text-lg font-black text-white tracking-[0.4em] uppercase">{t.hubAwaitingStats}</h3><p className="font-chakra text-[10px] text-white/50 tracking-[0.2em] mt-2 uppercase">{t.hubAnalyzingPerformance}</p></div></div><style dangerouslySetInnerHTML={{ __html: ` @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .animate-spin-slow { animation: spin-slow 15s linear infinite; } `}} /></div>); };
 
-// --- UPDATED NAV HUB BUTTON (FULL WIDTH SUPPORT) ---
 const NavHubButton: React.FC<{ title: string; icon: React.ReactNode; isActive: boolean; onClick: () => void; isDisabled?: boolean; }> = ({ title, icon, isActive, onClick, isDisabled }) => (
     <button 
         onClick={isDisabled ? undefined : onClick} 
-        className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 h-full flex-1 group ${isDisabled ? 'opacity-10 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-110'}`}
+        className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 h-full min-w-[54px] group ${isDisabled ? 'opacity-10 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-110'}`}
     >
         <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isActive ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 shadow-[0_0_15px_rgba(0,242,254,0.5),inset_0_0_6px_rgba(0,242,254,0.2)]' : 'text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/40 hover:text-white'}`}>
             {React.cloneElement(icon as React.ReactElement<any>, { className: "w-4 h-4" })}
         </div>
-        <span className={`text-[6px] md:text-[7px] font-black tracking-[0.15em] uppercase transition-colors whitespace-nowrap ${isActive ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>
+        <span className={`text-[6px] font-black tracking-widest uppercase transition-colors ${isActive ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>
             {title}
         </span>
     </button>
@@ -206,85 +255,84 @@ const HubNav: React.FC<{
         'info': t.information 
     }; 
     
-    const navContainerClass = ` fixed top-3 left-1/2 -translate-x-1/2 z-[150] flex items-center w-full max-w-[1450px] px-4 md:px-6 bg-black/85 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.5),0_0_15px_rgba(0,242,254,0.1),inset_0_1px_0_rgba(255,255,255,0.05)] h-[48px] md:h-[64px] transition-all duration-300 `; 
+    const navContainerClass = ` fixed top-3 left-1/2 -translate-x-1/2 z-[150] flex items-center justify-between w-full max-w-[1450px] px-6 py-0 bg-black/85 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.5),0_0_15px_rgba(0,242,254,0.1),inset_0_1px_0_rgba(255,255,255,0.05)] h-[48px] md:h-[64px] transition-all duration-300 `; 
 
     return (
         <nav className={navContainerClass}>
-            {/* LEFT LOGO BLOCK (Fixed width anchor) */}
-            <div className="flex items-center gap-2 md:gap-4 shrink-0 h-full border-r border-white/5 pr-4 mr-2">
+            <div className="flex items-center gap-4 shrink-0 h-full">
                 <div className="flex items-center">
-                    <span className="font-blackops text-xl md:text-3xl text-[#00F2FE] tracking-tighter leading-none" style={{ textShadow: '0 0 10px rgba(0,242,254,0.6)' }}>UNIT</span>
-                    <div className="h-4 w-px bg-white/15 ml-3 md:ml-4 hidden sm:block"></div>
-                    <div className="flex-col space-y-0.5 ml-2 hidden sm:flex">
+                    <span className="font-blackops text-2xl md:text-3xl text-[#00F2FE] tracking-tighter leading-none" style={{ textShadow: '0 0 10px rgba(0,242,254,0.6)' }}>UNIT</span>
+                    <div className="h-4 w-px bg-white/15 ml-3 md:ml-4"></div>
+                    <div className="flex flex-col space-y-0.5 ml-2">
                         <span className="font-black text-[9px] tracking-[0.15em] text-white uppercase leading-none">Club</span>
                         <span className="font-black text-[7px] tracking-[0.15em] text-white/30 uppercase leading-none">Center</span>
                     </div>
                     <StaticSoccerBall />
                     
+                    {/* Значок Команды Месяца - виден только на главной */}
                     {!isDashboardOpen && (
-                        <div className="ml-2 md:ml-4 flex items-center animate-in fade-in zoom-in duration-700">
-                            <MiniSquadBadge onClick={onOpenTotm} className="w-[38px] h-[38px] md:w-[46px] md:h-[46px] -my-1" />
+                        <div className="ml-4 flex items-center animate-in fade-in zoom-in duration-700">
+                            <MiniSquadBadge onClick={onOpenTotm} className="w-[42px] h-[42px] md:w-[50px] md:h-[50px] -my-1" />
                         </div>
                     )}
                 </div>
             </div>
 
-            {/* BROADCAST INFO (Only when open, overlays the center area) */}
-            {isDashboardOpen && (
-                <div className="absolute left-[35%] right-[35%] top-0 bottom-0 flex items-center justify-center pointer-events-none z-50">
-                    <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center text-center w-full min-w-0">
+            <div className="flex-grow h-full flex items-center justify-center pl-[20px] pr-[20px] overflow-hidden min-w-0">
+                {isDashboardOpen && (
+                    <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center pointer-events-none text-center w-full min-w-0">
                         {activeTab === 'dashboard' ? (
                             <>
-                                <span className="font-russo text-[6px] text-[#00F2FE] tracking-[0.3em] uppercase leading-none opacity-80 mb-0.5">SESSION BROADCAST</span>
-                                <span className="font-chakra text-[10px] md:text-sm font-bold text-white tracking-widest leading-none truncate w-full">{sessionDate || 'LIVE'}</span>
+                                <span className="font-russo text-[7px] text-[#00F2FE] tracking-[0.3em] uppercase leading-none opacity-80 mb-0.5">SESSION BROADCAST</span>
+                                <span className="font-chakra text-sm md:text-lg font-bold text-white tracking-widest leading-none truncate w-full">{sessionDate || 'LIVE'}</span>
                             </>
                         ) : (
                             <div className="flex flex-col items-center">
                                 {activeTab === 'archive' && archiveViewDate ? (
-                                    <span className="font-russo text-sm md:text-xl text-white tracking-tighter uppercase block leading-none truncate w-full">{archiveViewDate}</span>
+                                    <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none truncate w-full">{archiveViewDate}</span>
                                 ) : (
-                                    <span className="font-russo text-sm md:text-xl text-white tracking-tighter uppercase block leading-none truncate w-full">{tabTitles[activeTab] || 'DASHBOARD'}</span>
+                                    <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none truncate w-full">{tabTitles[activeTab] || 'DASHBOARD'}</span>
                                 )}
                             </div>
                         )}
                     </div>
-                </div>
-            )}
-
-            {/* FULL NAVIGATION ROW */}
-            <div className="flex-grow h-full flex items-center justify-between gap-1 py-1">
-                {isDashboardOpen && (
-                    <div className="flex items-center border-r border-white/10 pr-2 mr-1">
-                        <button onClick={onHomeClick} className="flex flex-col items-center justify-center gap-1 transition-all duration-300 group cursor-pointer hover:scale-110" title="Home">
-                            <div className="w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/40 hover:text-white">
-                                <Home className="w-4 h-4" />
-                            </div>
-                            <span className="text-[6px] font-black tracking-widest uppercase text-white/30 group-hover:text-white/60 transition-colors">{t.navHome}</span>
-                        </button>
-                    </div>
                 )}
-                
-                <RadioPlayer />
-                <NavHubButton title="DASHBOARD" icon={<LayoutDashboard />} isActive={isDashboardOpen && activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} />
-                <NavHubButton title="PLAYER HUB" icon={<Users />} isActive={isDashboardOpen && (activeTab === 'roster' || activeTab === 'duel')} onClick={() => onTabChange('roster')} />
-                <NavHubButton title="TOURNAMENTS" icon={<TrophyIcon />} isActive={isDashboardOpen && activeTab === 'tournaments'} onClick={() => onTabChange('tournaments')} />
-                <NavHubButton title="HISTORY" icon={<HistoryIcon />} isActive={isDashboardOpen && activeTab === 'archive'} onClick={() => onTabChange('archive')} />
-                <NavHubButton title="INFO" icon={<InfoIcon />} isActive={isDashboardOpen && activeTab === 'info'} onClick={() => onTabChange('info')} />
-                
-                {/* UNIFIED LANGUAGE BUTTON */}
-                <div className="flex flex-col items-center justify-center h-full flex-1 relative" ref={dropdownRef}>
-                    <button onClick={() => setIsLangOpen(!isLangOpen)} className="flex flex-col items-center justify-center gap-1 transition-all duration-300 group cursor-pointer hover:scale-110">
-                        <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isLangOpen ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10' : 'text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.1)]' }`}>
-                            <Globe className="w-4 h-4" />
+            </div>
+
+            <div className="flex items-center gap-1 md:gap-2 shrink-0 h-full py-1">
+                {/* Всегда видимые кнопки навигации */}
+                <div className="flex items-center gap-1 md:gap-2 mr-2 h-full">
+                    {isDashboardOpen && (
+                        <div className="mr-2 flex items-center border-r border-white/10 pr-3">
+                            <button onClick={onHomeClick} className="flex flex-col items-center justify-center gap-1 transition-all duration-300 group cursor-pointer hover:scale-110" title="Home">
+                                <div className="w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/40 hover:text-white">
+                                    <Home className="w-4 h-4" />
+                                </div>
+                                <span className="text-[6px] font-black tracking-widest uppercase text-white/30 group-hover:text-white/60 transition-colors">{t.navHome}</span>
+                            </button>
                         </div>
-                        <span className="text-[6px] md:text-[7px] font-black tracking-[0.15em] text-white/30 uppercase group-hover:text-white/60 transition-colors cursor-default leading-none">LANGUAGE</span>
+                    )}
+                    
+                    <RadioPlayer />
+                    
+                    <NavHubButton title={t.hubDashboardBtn} icon={<LayoutDashboard />} isActive={isDashboardOpen && activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} />
+                    <NavHubButton title={t.playerHub} icon={<Users />} isActive={isDashboardOpen && (activeTab === 'roster' || activeTab === 'duel')} onClick={() => onTabChange('roster')} />
+                    <NavHubButton title="TOURNEY" icon={<TrophyIcon />} isActive={isDashboardOpen && activeTab === 'tournaments'} onClick={() => onTabChange('tournaments')} />
+                    <NavHubButton title={t.navHistory} icon={<HistoryIcon />} isActive={isDashboardOpen && activeTab === 'archive'} onClick={() => onTabChange('archive')} />
+                    <NavHubButton title={t.information} icon={<InfoIcon />} isActive={isDashboardOpen && activeTab === 'info'} onClick={() => onTabChange('info')} />
+                </div>
+                
+                <div className="flex flex-col items-center justify-center group h-full relative" ref={dropdownRef}>
+                    <button onClick={() => setIsLangOpen(!isLangOpen)} className="w-8 h-8 rounded-full border border-white/20 bg-black/60 flex items-center justify-center transition-all shadow-[0_0_10px_rgba(255,255,255,0.15)] hover:border-white/60 hover:bg-white/5 group/lang">
+                        <span className="text-[9px] font-black text-white/80 group-hover/lang:text-white uppercase leading-none">{language}</span>
                     </button>
+                    <span className="text-[7px] font-black tracking-[0.1em] text-white/30 uppercase group-hover:text-white/60 transition-colors cursor-default leading-none mt-0.5">LANG</span>
 
                     {isLangOpen && (
-                        <div className="absolute left-1/2 -translate-x-1/2 w-10 bg-[#05070a] border border-white/10 rounded-2xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200 z-[250]" style={{ top: 'calc(100% + 4px)' }}>
-                            <div className="py-1.5 flex flex-col items-center gap-1.5">
+                        <div className="absolute left-1/2 -translate-x-1/2 w-9 bg-[#05070a] border border-white/10 rounded-full shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200 z-[250]" style={{ top: 'calc(100% + 4px)' }}>
+                            <div className="py-1 flex flex-col items-center gap-1">
                                 {languages.map((lang) => (
-                                    <button key={lang.code} onClick={() => { setLanguage(lang.code); setIsLangOpen(false); }} className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${language === lang.code ? 'bg-[#00F2FE]/10 text-[#00F2FE] border border-[#00F2FE]/30 shadow-[0_0_8px_rgba(0,242,254,0.2)]' : 'text-white/40 hover:text-white hover:bg-white/10' }`}>
+                                    <button key={lang.code} onClick={() => { setLanguage(lang.code); setIsLangOpen(false); }} className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 ${language === lang.code ? 'bg-[#00F2FE]/10 text-[#00F2FE] border border-[#00F2FE]/30 shadow-[0_0_8px_rgba(0,242,254,0.2)]' : 'text-white/40 hover:text-white hover:bg-white/10' }`}>
                                         <span className="text-[8px] font-black uppercase leading-none">{lang.label}</span>
                                     </button>
                                 ))}
