@@ -20,7 +20,10 @@ import { CinematicCard } from '../components/PublicHubScreen';
 
 const CinematicBackground: React.FC = () => (
     <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#0a0c10]">
+        {/* 1. Base Layer - Deep Obsidian */}
         <div className="absolute inset-0 bg-[#0a0c10]"></div>
+        
+        {/* 2. Digital LED Screen Texture (Dots) - Brighter & Strictly Top */}
         <div className="absolute top-0 left-0 right-0 h-[50%] opacity-40"
              style={{
                  backgroundImage: 'radial-gradient(rgba(255, 255, 255, 0.3) 1px, transparent 1px)',
@@ -29,6 +32,8 @@ const CinematicBackground: React.FC = () => (
                  WebkitMaskImage: 'linear-gradient(to bottom, black 0%, transparent 100%)'
              }}
         ></div>
+
+        {/* 4. Slight Film Grain (SVG Noise) */}
         <div className="absolute inset-0 opacity-[0.05] mix-blend-overlay pointer-events-none">
             <svg className='w-full h-full'>
                 <filter id='hubNoise'>
@@ -37,6 +42,8 @@ const CinematicBackground: React.FC = () => (
                 <rect width='100%' height='100%' filter='url(#hubNoise)' />
             </svg>
         </div>
+        
+        {/* 5. Smooth Transition to Bottom (Fade Out) */}
         <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-[#0a0c10] via-[#0a0c10] to-transparent"></div>
     </div>
 );
@@ -47,6 +54,7 @@ const StaticSoccerBall: React.FC = () => {
             <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] overflow-visible">
                 <defs>
                     <radialGradient id="ballShading" cx="40%" cy="35%" r="65%"><stop offset="0%" stopColor="#ffffff" /><stop offset="50%" stopColor="#e2e8f0" /><stop offset="85%" stopColor="#94a3b8" /><stop offset="100%" stopColor="#1e293b" /></radialGradient>
+                    <filter id="hatShadow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.5" /><feOffset dx="0" dy="2" result="offsetblur" /><feComponentTransfer><feFuncA type="linear" slope="0.4" /></feComponentTransfer><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                 </defs>
                 <circle cx="50" cy="50" r="48" fill="url(#ballShading)" />
                 <g stroke="#000" strokeWidth="0.8" fill="none" opacity="0.25">
@@ -60,20 +68,24 @@ const StaticSoccerBall: React.FC = () => {
     );
 };
 
+// --- TREND INDICATOR ---
 const TrendArrow: React.FC<{ form: PlayerForm }> = ({ form }) => {
     if (form === 'hot_streak') return <span className="text-[#4CFF5F] text-[10px] drop-shadow-[0_0_5px_rgba(76,255,95,0.8)]">▲</span>;
     if (form === 'cold_streak') return <span className="text-[#FF4136] text-[10px] drop-shadow-[0_0_5px_rgba(255,65,54,0.8)]">▼</span>;
     return <span className="text-white/20 text-[10px] font-bold">•</span>;
 };
 
+// --- CHASE LIST COMPONENT (THE 4-PLAYER TAIL) ---
 const ChaseList: React.FC<{ 
     players: Player[]; 
     valueKey: keyof Player | 'grandMaster' | 'winRate'; 
     accentColor: string; 
 }> = ({ players, valueKey, accentColor }) => {
+    
     const scrollRef = useRef<HTMLDivElement>(null);
     const [showTopFade, setShowTopFade] = useState(false);
     const [showBottomFade, setShowBottomFade] = useState(players.length > 4);
+
     const getValue = (p: Player) => {
         if (valueKey === 'grandMaster') return (p.totalGoals || 0) + (p.totalAssists || 0);
         if (valueKey === 'winRate') return p.totalGames > 0 ? `${Math.round((p.totalWins / p.totalGames) * 100)}%` : '0%';
@@ -81,6 +93,7 @@ const ChaseList: React.FC<{
         if (typeof val === 'number' || typeof val === 'string') return val;
         return 0;
     };
+
     const handleScroll = () => {
         if (scrollRef.current) {
             const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
@@ -88,32 +101,71 @@ const ChaseList: React.FC<{
             setShowBottomFade(scrollHeight - scrollTop - clientHeight > 10);
         }
     };
+
     useEffect(() => {
         if (scrollRef.current) {
             const { scrollHeight, clientHeight } = scrollRef.current;
             setShowBottomFade(scrollHeight > clientHeight);
         }
     }, [players]);
+
     return (
-        <div className="w-full bg-[#0a0c10]/95 backdrop-blur-md rounded-b-2xl border-l border-r border-b overflow-hidden relative group/list" style={{ borderColor: `${accentColor}33` }}>
-            <div className={`absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-[#0a0c10] to-transparent z-20 pointer-events-none transition-opacity duration-300 ${showTopFade ? 'opacity-100' : 'opacity-0'}`}></div>
-            <div ref={scrollRef} onScroll={handleScroll} className="max-h-[160px] overflow-y-auto touch-pan-y pb-2 no-scrollbar relative z-10">
+        <div 
+            className="w-full bg-[#0a0c10]/95 backdrop-blur-md rounded-b-2xl border-l border-r border-b overflow-hidden relative group/list"
+            style={{ borderColor: `${accentColor}33` }}
+        >
+            {/* Top Fade Gradient */}
+            <div 
+                className={`absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-[#0a0c10] to-transparent z-20 pointer-events-none transition-opacity duration-300 ${showTopFade ? 'opacity-100' : 'opacity-0'}`}
+            ></div>
+
+            {/* Scrollable container with fixed max height */}
+            <div 
+                ref={scrollRef}
+                onScroll={handleScroll}
+                className="max-h-[160px] overflow-y-auto touch-pan-y pb-2 no-scrollbar relative z-10"
+            >
                 {players.map((p, index) => (
-                    <div key={p.id} className="flex items-center justify-between px-4 py-2 border-t border-white/5 hover:bg-white/5 transition-colors">
+                    <div 
+                        key={p.id} 
+                        className="flex items-center justify-between px-4 py-2 border-t border-white/5 hover:bg-white/5 transition-colors"
+                    >
                         <div className="flex items-center gap-3 min-w-0">
                             <span className="text-[10px] font-mono font-bold text-white/30 w-4 text-right pr-1">{index + 2}.</span>
-                            <div className="flex items-center gap-2 min-w-0"><span className="text-[10px] font-bold text-white uppercase truncate tracking-wider">{p.nickname}</span></div>
+                            <div className="flex items-center gap-2 min-w-0">
+                                <span className="text-[10px] font-bold text-white uppercase truncate tracking-wider">
+                                    {p.nickname}
+                                </span>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-3"><span className="font-mono text-xs font-bold text-white/90">{getValue(p)}</span><div className="w-3 flex justify-center"><TrendArrow form={p.form} /></div></div>
+                        
+                        <div className="flex items-center gap-3">
+                            <span className="font-mono text-xs font-bold text-white/90">
+                                {getValue(p)}
+                            </span>
+                            <div className="w-3 flex justify-center">
+                                <TrendArrow form={p.form} />
+                            </div>
+                        </div>
                     </div>
                 ))}
-                {players.length === 0 && <div className="py-3 text-center"><span className="text-[8px] text-white/20 uppercase tracking-widest">No Contenders</span></div>}
+                
+                {players.length === 0 && (
+                    <div className="py-3 text-center">
+                        <span className="text-[8px] text-white/20 uppercase tracking-widest">No Contenders</span>
+                    </div>
+                )}
             </div>
-            <div className={`absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#0a0c10] to-transparent z-20 pointer-events-none transition-opacity duration-300 ${showBottomFade ? 'opacity-100' : 'opacity-0'}`}></div>
+
+            {/* Bottom Fade Gradient */}
+            <div 
+                className={`absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#0a0c10] to-transparent z-20 pointer-events-none transition-opacity duration-300 ${showBottomFade ? 'opacity-100' : 'opacity-0'}`}
+            ></div>
         </div>
     );
 };
 
+// --- LEGEND CARD ---
 const LegendCard: React.FC<{ 
     title: string; 
     player: Player; 
@@ -124,47 +176,55 @@ const LegendCard: React.FC<{
     className?: string; 
 }> = ({ title, player, value, icon, label, accentColor = "#FFD700", className = "" }) => (
     <div className={`relative group w-full h-36 md:h-40 rounded-2xl overflow-hidden bg-black border transition-all duration-500 active:scale-95 ${className}`} style={{ borderColor: `${accentColor}33`, boxShadow: `0 10px 30px -15px rgba(0,0,0,1)` }}>
-        <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0" style={{ backgroundImage: `linear-gradient(45deg, ${accentColor} 25%, transparent 25%, transparent 50%, ${accentColor} 50%, ${accentColor} 75%, transparent 75%, transparent)`, backgroundSize: '8px 8px' }}></div>
+        <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0" style={{ 
+            backgroundImage: `linear-gradient(45deg, ${accentColor} 25%, transparent 25%, transparent 50%, ${accentColor} 50%, ${accentColor} 75%, transparent 75%, transparent)`,
+            backgroundSize: '8px 8px'
+        }}></div>
+        
         <div className="absolute top-0 right-0 w-28 md:w-36 h-full z-0 pointer-events-none">
-            {player.playerCard ? <div className="w-full h-full bg-cover bg-top" style={{ backgroundImage: `url(${player.playerCard})` }} /> : <div className="w-full h-full bg-gradient-to-b from-gray-800 to-black"></div>}
+            {player.playerCard ? (
+                <div 
+                    className="w-full h-full bg-cover bg-top"
+                    style={{ backgroundImage: `url(${player.playerCard})` }}
+                />
+            ) : (
+                <div className="w-full h-full bg-gradient-to-b from-gray-800 to-black"></div>
+            )}
             <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent"></div>
         </div>
+
         <div className="absolute inset-0 pointer-events-none z-10" style={{ background: `linear-gradient(to bottom right, ${accentColor}10, transparent)` }}></div>
         <div className="absolute top-0 left-0 right-0 h-px z-10" style={{ background: `linear-gradient(to right, transparent, ${accentColor}66, transparent)` }}></div>
+
         <div className="relative z-20 p-4 h-full flex flex-col justify-between">
             <div className="flex justify-between items-start">
                 <div className="flex flex-col relative z-20 max-w-[70%]">
                     <span className="text-[5px] md:text-[6px] font-black tracking-[0.2em] uppercase mb-0.5 opacity-90 truncate" style={{ color: accentColor }}>{title}</span>
-                    <h3 className="font-russo text-sm md:text-base text-white uppercase tracking-tighter truncate drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] leading-none">{player.nickname}</h3>
+                    <h3 className="font-russo text-sm md:text-base text-white uppercase tracking-tighter truncate drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] leading-none">
+                        {player.nickname}
+                    </h3>
                 </div>
             </div>
+
             <div className="flex items-end justify-between">
                 <div className="flex flex-col">
-                    <span className="font-russo text-2xl md:text-3xl text-white tracking-widest leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{value}</span>
+                    <span className="font-russo text-2xl md:text-3xl text-white tracking-widest leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                        {value}
+                    </span>
                     <span className="text-[6px] md:text-[7px] font-black text-white/50 uppercase tracking-[0.3em] mt-1">{label}</span>
                 </div>
             </div>
-            <div className="absolute bottom-2 right-2 opacity-10 scale-125 text-white z-10">{icon}</div>
+            
+            <div className="absolute bottom-2 right-2 opacity-10 scale-125 text-white z-10">
+                {icon}
+            </div>
         </div>
     </div>
 );
 
 const NoLeadersPlaceholder: React.FC = () => { const t = useTranslation(); return (<div className="w-full max-w-2xl mx-auto py-20 flex flex-col items-center justify-center relative"><div className="absolute inset-0 bg-[#00F2FE]/5 blur-[60px] rounded-full animate-pulse"></div><div className="relative z-10 flex flex-col items-center gap-6 opacity-30"><div className="w-20 h-20 rounded-full border-2 border-dashed border-[#00F2FE] animate-spin-slow flex items-center justify-center"><TrophyIcon className="w-10 h-10 text-[#00F2FE]" /></div><div className="text-center"><h3 className="font-orbitron text-lg font-black text-white tracking-[0.4em] uppercase">{t.hubAwaitingStats}</h3><p className="font-chakra text-[10px] text-white/50 tracking-[0.2em] mt-2 uppercase">{t.hubAnalyzingPerformance}</p></div></div><style dangerouslySetInnerHTML={{ __html: ` @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .animate-spin-slow { animation: spin-slow 15s linear infinite; } `}} /></div>); };
-
-// --- NAV BUTTON (TEXT VERSION) ---
-const NavLinkText: React.FC<{ label: string; isActive: boolean; onClick: () => void; isDisabled?: boolean }> = ({ label, isActive, onClick, isDisabled }) => (
-    <button 
-        onClick={isDisabled ? undefined : onClick}
-        className={`px-3 py-2 transition-all duration-300 relative group flex items-center justify-center h-full min-w-[70px] ${isDisabled ? 'opacity-20 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-105'}`}
-    >
-        <span className={`font-russo text-[10px] md:text-[11px] tracking-[0.15em] uppercase transition-colors whitespace-nowrap ${isActive ? 'text-[#00F2FE]' : 'text-white/40 group-hover:text-white'}`}>
-            {label}
-        </span>
-        {isActive && (
-            <div className="absolute bottom-0 left-3 right-3 h-[2px] bg-[#00F2FE] shadow-[0_0_8px_#00F2FE] rounded-full"></div>
-        )}
-    </button>
-);
+const MotivationalTicker: React.FC = () => { return null; };
+const NavHubButton: React.FC<{ title: string; icon: React.ReactNode; isActive: boolean; onClick: () => void; isDisabled?: boolean; }> = ({ title, icon, isActive, onClick, isDisabled }) => (<button onClick={isDisabled ? undefined : onClick} className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 h-full min-w-[50px] group ${isDisabled ? 'opacity-10 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-110'}`}><div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isActive ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 shadow-[0_0_15px_rgba(0,242,254,0.5),inset_0_0_6px_rgba(0,242,254,0.2)]' : 'text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.2)] hover:border-white/40 hover:text-white hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]'}`}>{React.cloneElement(icon as React.ReactElement<any>, { className: "w-4 h-4" })}</div><span className={`text-[6px] font-black tracking-widest uppercase transition-colors ${isActive ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>{title}</span></button>);
 
 const HubNav: React.FC<{ isDashboardOpen: boolean; sessionDate?: string; activeTab: string; onTabChange: (tab: any) => void; archiveViewDate: string | null; onHomeClick: () => void; onOpenTotm: () => void; }> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, onOpenTotm }) => { 
     const { language, setLanguage } = useApp(); 
@@ -172,66 +232,102 @@ const HubNav: React.FC<{ isDashboardOpen: boolean; sessionDate?: string; activeT
     const [isLangOpen, setIsLangOpen] = useState(false); 
     const dropdownRef = useRef<HTMLDivElement>(null); 
     const languages: { code: Language; label: string }[] = [ { code: 'en', label: 'EN' }, { code: 'ua', label: 'UA' }, { code: 'vn', label: 'VN' }, { code: 'ru', label: 'RU' } ]; 
+
     useEffect(() => { 
         const handleClickOutside = (event: MouseEvent) => { if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) { setIsLangOpen(false); } }; 
         document.addEventListener('mousedown', handleClickOutside); 
         return () => document.removeEventListener('mousedown', handleClickOutside); 
     }, []); 
+
+    const tabTitles: Record<string, string> = { 'dashboard': t.hubDashboardBtn, 'roster': t.playerHub, 'archive': t.navHistory, 'info': t.information }; 
     
-    // UPDATED height to accommodate vertical language and new list
-    const navContainerClass = ` fixed top-3 left-1/2 -translate-x-1/2 z-[150] flex items-center justify-between w-full max-w-[1450px] px-4 md:px-6 py-0 bg-black/85 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.5),0_0_15px_rgba(0,242,254,0.1),inset_0_1px_0_rgba(255,255,255,0.05)] h-[54px] md:h-[72px] transition-all duration-300 `; 
+    // UPDATED height from 54px to 64px
+    const navContainerClass = ` fixed top-3 left-1/2 -translate-x-1/2 z-[150] flex items-center justify-between w-full max-w-[1450px] px-6 py-0 bg-black/85 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.5),0_0_15px_rgba(0,242,254,0.1),inset_0_1px_0_rgba(255,255,255,0.05)] h-[48px] md:h-[64px] transition-all duration-300 `; 
 
     return (
         <nav className={navContainerClass}>
             <svg className="absolute w-0 h-0 invisible"><filter id="grungeFilter"><feTurbulence type="fractalNoise" baseFrequency="0.25" numOctaves="3" result="noise" /><feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" /><feComponentTransfer><feFuncA type="linear" slope="0.9" /></feComponentTransfer></filter></svg>
-            <div className="flex items-center gap-3 shrink-0 h-full">
+            
+            <div className="flex items-center gap-4 shrink-0 h-full">
                 <div className="flex items-center">
                     <span className="font-blackops text-2xl md:text-3xl text-[#00F2FE] tracking-tighter leading-none" style={{ textShadow: '0 0 10px rgba(0,242,254,0.6)', filter: 'url(#grungeFilter)' }}>UNIT</span>
                     <div className="h-4 w-px bg-white/15 ml-3 md:ml-4"></div>
+                    <div className="flex flex-col space-y-0.5 ml-2">
+                        <span className="font-black text-[9px] tracking-[0.15em] text-white uppercase leading-none">Club</span>
+                        <span className="font-black text-[7px] tracking-[0.15em] text-white/30 uppercase leading-none">Center</span>
+                    </div>
                     <StaticSoccerBall />
                 </div>
             </div>
 
-            <div className="flex-grow h-full flex items-center justify-center overflow-x-auto no-scrollbar px-4">
+            <div className="flex-grow h-full flex items-center justify-center pl-[20px] pr-[20px] overflow-hidden min-w-0">
                 {isDashboardOpen ? (
-                    <div className="flex items-center h-full gap-1 md:gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                        {/* THE NEW TEXT-ONLY MENU LIST */}
-                        <NavLinkText label="HOME" isActive={false} onClick={onHomeClick} />
-                        <NavLinkText label="DASHBOARD" isActive={activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} />
-                        <NavLinkText label="TOURNAMENT" isActive={activeTab === 'tournaments'} onClick={() => onTabChange('tournaments')} />
-                        <NavLinkText label="PLAYER HUB" isActive={activeTab === 'roster' || activeTab === 'duel'} onClick={() => onTabChange('roster')} />
-                        <NavLinkText label="HISTORY" isActive={activeTab === 'archive'} onClick={() => onTabChange('archive')} />
-                        <NavLinkText label="INFORMATION" isActive={activeTab === 'info'} onClick={() => onTabChange('info')} />
+                    <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center pointer-events-none text-center w-full min-w-0">
+                        {activeTab === 'dashboard' ? (
+                            <>
+                                <span className="font-russo text-[7px] text-[#00F2FE] tracking-[0.3em] uppercase leading-none opacity-80 mb-0.5">SESSION BROADCAST</span>
+                                <span className="font-chakra text-sm md:text-lg font-bold text-white tracking-widest leading-none truncate w-full">{sessionDate || 'LIVE'}</span>
+                            </>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center w-full">
+                                {activeTab === 'archive' && archiveViewDate ? (
+                                    <div className="flex flex-col items-center">
+                                        <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none truncate w-full" style={{ textShadow: '0 0 25px rgba(255, 255, 255, 0.2)' }}>{archiveViewDate}</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center">
+                                        <span className="font-russo text-lg md:text-3xl text-white tracking-tighter uppercase block leading-none truncate w-full" style={{ textShadow: '0 0 25px rgba(255, 255, 255, 0.2)' }}>{tabTitles[activeTab] || 'DASHBOARD'}</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                         <span className="font-russo text-[10px] text-white/30 tracking-[0.4em] uppercase animate-pulse">SYSTEM READY</span>
-                    </div>
+                    <div className="w-full h-full"><MotivationalTicker /></div>
                 )}
             </div>
 
-            <div className="flex items-center gap-2 md:gap-4 shrink-0 h-full py-1">
+            <div className="flex items-center gap-1 md:gap-3 shrink-0 h-full py-1">
                 {isDashboardOpen && (
-                    <div className="flex items-center gap-2 md:gap-4 mr-2 h-full animate-in fade-in slide-in-from-right-3 duration-500 border-r border-white/10 pr-4">
-                         <MiniSquadBadge onClick={onOpenTotm} className="w-[42px] h-[42px] md:w-[50px] md:h-[50px] -my-1" />
-                         <RadioPlayer />
+                    <div className="flex items-center gap-2 md:gap-4 mr-2 h-full animate-in fade-in slide-in-from-right-3 duration-500">
+                        <div className="mr-3 flex items-center border-r border-white/10 pr-4 gap-3">
+                            <MiniSquadBadge onClick={onOpenTotm} className="w-[42px] h-[42px] md:w-[54px] md:h-[54px] -my-1 mr-3" />
+                            <button onClick={onHomeClick} className="flex flex-col items-center justify-center gap-1 transition-all duration-300 group cursor-pointer hover:scale-110" title="Home">
+                                <div className="w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.2)] hover:border-white/40 hover:text-white hover:shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                                    <Home className="w-4 h-4" />
+                                </div>
+                                <span className="text-[6px] font-black tracking-widest uppercase text-white/30 group-hover:text-white/60 transition-colors">{t.navHome}</span>
+                            </button>
+                            <RadioPlayer />
+                        </div>
+                        <NavHubButton title={t.hubDashboardBtn} icon={<LayoutDashboard />} isActive={activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} />
+                        <NavHubButton title={t.playerHub} icon={<Users />} isActive={activeTab === 'roster' || activeTab === 'duel'} onClick={() => onTabChange('roster')} />
+                        <NavHubButton title={t.navHistory} icon={<HistoryIcon />} isActive={activeTab === 'archive'} onClick={() => onTabChange('archive')} />
+                        <NavHubButton title={t.information} icon={<InfoIcon />} isActive={activeTab === 'info'} onClick={() => onTabChange('info')} />
                     </div>
                 )}
-                <div className="flex flex-col items-center justify-center group h-full relative min-w-[45px]" ref={dropdownRef}>
+                
+                {/* UPDATED LANGUAGE BLOCK: flex-col to place label under button */}
+                <div className="flex flex-col items-center justify-center group h-full relative" ref={dropdownRef}>
                     <div className="relative flex items-center justify-center">
                         {isDashboardOpen ? (
-                            <button onClick={() => setIsLangOpen(!isLangOpen)} className={`w-8 h-8 md:w-10 md:h-10 rounded-full border flex items-center justify-center transition-all duration-300 ${isLangOpen ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10' : 'text-white/60 border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.1)]' }`}>
-                                <span className="font-black text-[10px] md:text-xs uppercase leading-none">{language}</span>
+                            <button onClick={() => setIsLangOpen(!isLangOpen)} className={`flex flex-col items-center justify-center gap-0.5 transition-all duration-300 min-w-[50px] group cursor-pointer hover:scale-110`}>
+                                <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isLangOpen ? 'text-[#00F2FE] border-[#00F2FE]' : 'text-white/60 border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.1)]' }`}>
+                                    <span className="font-black text-[10px] uppercase leading-none">{language}</span>
+                                </div>
                             </button>
                         ) : (
-                            <button onClick={() => setIsLangOpen(!isLangOpen)} className="w-8 h-8 rounded-full border border-white/20 bg-black/60 flex items-center justify-center transition-all shadow-[0_0_10px_rgba(255,255,255,0.15)] hover:border-white/60 hover:bg-white/5 group/lang">
-                                <span className="text-[9px] font-black text-white/80 group-hover/lang:text-white uppercase leading-none">{language}</span>
+                            <button onClick={() => setIsLangOpen(!isLangOpen)} className="w-8 h-8 rounded-full border border-white/20 bg-black/60 flex items-center justify-center transition-all shadow-[0_0_10px_rgba(255,255,255,0.15)] hover:border-white/60 hover:bg-white/5 hover:shadow-[0_0_15px_rgba(255,255,255,0.3)] group/lang">
+                                <span className="text-[9px] font-black text-white/80 group-hover/lang:text-white uppercase leading-none transition-colors" style={{ textShadow: '0 0 5px rgba(255,255,255,0.3)' }}>{language}</span>
                             </button>
                         )}
                     </div>
-                    <span className="text-[7px] md:text-[8px] font-black tracking-[0.1em] text-white/30 uppercase group-hover:text-white/60 transition-colors cursor-default leading-none mt-1">
+                    
+                    {/* The "Language" label - now strictly below, aligned center */}
+                    <span className="text-[7px] font-black tracking-[0.1em] text-white/30 uppercase group-hover:text-white/60 transition-colors cursor-default leading-none mt-0.5">
                         {isDashboardOpen ? 'LANG' : 'LANGUAGE'}
                     </span>
+
                     {isLangOpen && (
                         <div className="absolute left-1/2 -translate-x-1/2 w-9 bg-[#05070a] border border-white/10 rounded-full shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200 z-[250]" style={{ top: 'calc(100% + 4px)' }}>
                             <div className="py-1 flex flex-col items-center gap-1">
@@ -250,11 +346,8 @@ const HubNav: React.FC<{ isDashboardOpen: boolean; sessionDate?: string; activeT
 };
 
 const DispersingWord: React.FC<{ words: string[] }> = ({ words }) => { const [index, setIndex] = useState(0); const [state, setState] = useState<'entering' | 'active' | 'exiting'>('entering'); useEffect(() => { const cycle = async () => { setState('entering'); setTimeout(() => setState('active'), 1200); setTimeout(() => { setState('exiting'); setTimeout(() => { setIndex((prev) => (prev + 1) % words.length); }, 1200); }, 5000); }; cycle(); const interval = setInterval(cycle, 6500); return () => clearInterval(interval); }, [words.length]); const getStyles = () => { switch (state) { case 'entering': return "scale-[0.4] opacity-0 blur-[40px] translate-z-[-200px]"; case 'active': return "scale-[1.1] opacity-100 blur-0 translate-z-0"; case 'exiting': return "scale-[0.8] opacity-0 blur-[30px] translate-z-[-100px]"; default: return ""; } }; return (<span className="relative inline-block h-[1.1em] min-w-[280px] md:min-w-[500px] align-top text-center perspective-1000 px-10"><span className={`block px-4 text-transparent bg-clip-text bg-gradient-to-b from-[#00F2FE] to-[#00F2FE]/30 transition-all duration-[1200ms] ease-[cubic-bezier(0.2,0,0.2,1)] ${getStyles()}`} style={{ textShadow: state === 'active' ? '0 0 30px rgba(0, 242, 254, 0.5)' : 'none' }}>{words[index]}</span>{state === 'active' && (<span className="absolute inset-0 px-4 text-transparent bg-clip-text bg-gradient-to-b from-[#00F2FE] to-transparent pointer-events-none z-0 opacity-20" style={{ filter: 'blur(20px)', WebkitTextFillColor: 'transparent' }}>{words[index]}</span>)}</span>); };
-
 const HeroTitle: React.FC = () => { const t = useTranslation(); const words = ["GAME", "LEGACY", "VICTORY"]; return (<div className="text-center mt-32 md:mt-44 mb-12 md:mb-16 relative"><div className="inline-block relative"><h1 className="font-russo text-4xl md:text-[9rem] leading-[1.1] uppercase tracking-tighter drop-shadow-2xl"><span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/20">DEFINE YOUR</span> <br /><DispersingWord words={words} /></h1><div className="mt-8 mb-10 max-w-lg mx-auto px-4"><p className="font-chakra text-[10px] md:text-xs text-white/50 font-medium uppercase tracking-[0.3em] lifestyle-relaxed leading-loose">{t.hubWelcomeText}</p></div><div className="mt-6 h-px w-48 md:w-64 bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent mx-auto opacity-60 shadow-[0_0_10px_#00F2FE]"></div></div></div>); };
-
 const CinematicStatCard: React.FC<{ value: string | number; label: string; }> = ({ value, label }) => (<div className="w-full md:flex-1 max-w-xs md:max-w-none h-40"><div className="relative rounded-3xl overflow-hidden bg-white/[0.03] border border-white/10 shadow-2xl h-full backdrop-blur-md"><div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-40"></div><div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-white/5 to-transparent blur-xl"></div><div className="relative h-full z-10 flex flex-col items-center justify-center gap-2"><span className="font-russo font-black text-6xl md:text-7xl text-white tracking-widest leading-none">{value}</span><span className="font-chakra font-bold text-xs text-white/50 uppercase tracking-[0.2em]">{label}</span></div></div></div>);
-
 type DashboardViewType = 'info' | 'dashboard' | 'roster' | 'archive' | 'duel' | 'tournaments' | 'league';
 
 export const PublicHubScreen: React.FC = () => {
@@ -264,10 +357,15 @@ export const PublicHubScreen: React.FC = () => {
     const [isTotmOpen, setIsTotmOpen] = useState(false);
     const [dashboardView, setDashboardView] = useState<DashboardViewType>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
+
     const t = useTranslation();
 
     useEffect(() => {
-        if (isDashboardOpen) { document.body.style.overflow = 'hidden'; } else { document.body.style.overflow = ''; }
+        if (isDashboardOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
         return () => { document.body.style.overflow = ''; };
     }, [isDashboardOpen]);
 
@@ -279,28 +377,31 @@ export const PublicHubScreen: React.FC = () => {
     const legends = useMemo(() => {
         const confirmed = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
         if (confirmed.length === 0) return null;
-        const sortedScorers = [...confirmed].sort((a, b) => (b.totalGoals - a.totalGoals) || (b.rating - a.rating));
-        const sortedArchitects = [...confirmed].sort((a, b) => (b.totalAssists - a.totalAssists) || (b.rating - a.rating));
-        const sortedGrandMasters = [...confirmed].sort((a, b) => { const gaA = (a.totalGoals || 0) + (a.totalAssists || 0); const gaB = (b.totalGoals || 0) + (b.totalAssists || 0); return (gaB - gaA) || (b.rating - a.rating); });
+        const sortedScorers = [...confirmed].sort((a, b) => { if (b.totalGoals !== a.totalGoals) return b.totalGoals - a.totalGoals; return b.rating - a.rating; });
+        const sortedArchitects = [...confirmed].sort((a, b) => { if (b.totalAssists !== a.totalAssists) return b.totalAssists - a.totalAssists; return b.rating - a.rating; });
+        const sortedGrandMasters = [...confirmed].sort((a, b) => { const gaA = (a.totalGoals || 0) + (a.totalAssists || 0); const gaB = (b.totalGoals || 0) + (b.totalAssists || 0); if (gaB !== gaA) return gaB - gaA; return b.rating - a.rating; });
         const eligibleWinRate = confirmed.filter(p => (p.totalSessionsPlayed || 0) >= 10);
-        const sortedConquerors = [...eligibleWinRate].sort((a, b) => { const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0; const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0; return (wrB - wrA) || (b.totalGames - a.totalGames); });
+        const sortedConquerors = [...eligibleWinRate].sort((a, b) => { const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0; const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0; if (wrB !== wrA) return wrB - wrA; return b.totalGames - a.totalGames; });
         return { scorers: sortedScorers, architects: sortedArchitects, grandMasters: sortedGrandMasters, conquerors: sortedConquerors };
     }, [allPlayers]);
 
     const displayData = useMemo(() => {
         const confirmedRealPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
-        const sorted = [...confirmedRealPlayers].sort((a, b) => (b.rating - a.rating));
+        const sorted = [...confirmedRealPlayers].sort((a, b) => { if (b.rating !== a.rating) return b.rating - a.rating; const scoreA = (a.totalGoals || 0) + (a.totalAssists || 0); const scoreB = (b.totalGoals || 0) + (b.totalAssists || 0); if (scoreB !== scoreA) return scoreB - scoreA; const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0; const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0; if (wrB !== wrA) return wrB - wrA; return (b.totalGames || 0) - (a.totalGames || 0); });
         return { top: sorted.slice(0, 3) };
     }, [allPlayers]);
     
     const clubStats = useMemo(() => {
         const confirmedPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
-        return { totalPlayers: confirmedPlayers.length, totalSessions: history.length, avgRating: confirmedPlayers.length > 0 ? Math.round(confirmedPlayers.reduce((sum, p) => sum + p.rating, 0) / confirmedPlayers.length) : 0 };
+        const totalPlayers = confirmedPlayers.length;
+        const totalSessions = (history.length || 0);
+        const avgRating = totalPlayers > 0 ? Math.round(confirmedPlayers.reduce((sum, p) => sum + p.rating, 0) / totalPlayers) : 0;
+        return { totalPlayers, totalSessions, avgRating };
     }, [allPlayers, history]);
     
-    const SOCIAL_LINKS = { whatsapp: "https://chat.whatsapp.com/CAJnChuM4lQFf3s2YUnhQr", youtube: "https://www.youtube.com/@UnitFootball", tiktok: "https://www.tiktok.com/@532club?_r=1" };
+    const SOCIAL_LINKS = { whatsapp: "https://chat.whatsapp.com/CAJnChuM4lQFf3s2YUnhQr", youtube: "https://www.youtube.com/@UnitFootball", tiktok: "https://www.tiktok.com/@532club?_r=1", };
     const handleTabChange = (tab: any) => { setDashboardView(tab as DashboardViewType); };
-    const getBottomPatchColor = () => { if (['archive', 'dashboard', 'roster', 'info'].includes(dashboardView)) return '#01040a'; return '#0a0c10'; };
+    const getBottomPatchColor = () => { if (dashboardView === 'archive' || dashboardView === 'dashboard' || dashboardView === 'roster' || dashboardView === 'info') return '#01040a'; return '#0a0c10'; };
 
     return (
         <div className="fixed inset-0 w-full h-full bg-[#0a0c10] text-white selection:bg-[#00F2FE] selection:text-black overflow-hidden overscroll-none">
@@ -309,8 +410,9 @@ export const PublicHubScreen: React.FC = () => {
             <style dangerouslySetInnerHTML={{__html: ` html, body, #root { height: 100%; overflow: hidden; position: fixed; width: 100%; overscroll-behavior: none; touch-action: none; } `}} />
             <div className={`fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-white/10 to-transparent opacity-50 z-[110]`}></div>
             <HubNav isDashboardOpen={isDashboardOpen} sessionDate={latestSessionDate} activeTab={dashboardView} onTabChange={handleTabChange} archiveViewDate={archiveViewDate} onHomeClick={() => { setIsDashboardOpen(false); setDashboardView('dashboard'); }} onOpenTotm={() => setIsTotmOpen(true)} />
-            <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 md:pt-24 pb-8 md:pb-12 overflow-y-auto overscroll-none touch-pan-y ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'} `} style={{ backgroundColor: getBottomPatchColor() }}>
+            <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none touch-pan-y ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'} `} style={{ backgroundColor: getBottomPatchColor() }}>
                 <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10"><ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} /></div>
+                <div className="fixed bottom-0 left-0 right-0 h-16 z-[110] pointer-events-none opacity-0 transition-all duration-700 delay-300" style={{ opacity: isDashboardOpen ? 1 : 0, background: `linear-gradient(to top, ${getBottomPatchColor()} 50%, ${getBottomPatchColor()}cc 80%, transparent 100%)` }}></div>
             </div>
             <div className={`absolute inset-0 overflow-y-auto overscroll-none touch-pan-y z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}>
                 <HeroTitle />
