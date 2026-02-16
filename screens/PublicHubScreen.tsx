@@ -13,7 +13,7 @@ import { ClubIntelligenceDashboard } from '../components/ClubIntelligenceDashboa
 import { RadioPlayer } from '../components/RadioPlayer';
 import { SquadOfTheMonthBadge } from '../components/SquadOfTheMonthBadge';
 import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
-import { MiniSquadBadge } from '../components/MiniSquadBadge';
+import { MiniSquadBadge } from './MiniSquadBadge';
 import { BallDecorations } from '../components/BallDecorations';
 import { CinematicCard, HeaderAtmosphere } from '../components/PublicHubScreen';
 
@@ -269,18 +269,11 @@ const HubNav: React.FC<{
                         <span className="font-black text-[7px] tracking-[0.15em] text-white/30 uppercase leading-none">Center</span>
                     </div>
                     <StaticSoccerBall />
-                    
-                    {/* Значок Команды Месяца - виден только на главной */}
-                    {!isDashboardOpen && (
-                        <div className="ml-4 flex items-center animate-in fade-in zoom-in duration-700">
-                            <MiniSquadBadge onClick={onOpenTotm} className="w-[42px] h-[42px] md:w-[50px] md:h-[50px] -my-1" />
-                        </div>
-                    )}
                 </div>
             </div>
 
             <div className="flex-grow h-full flex items-center justify-center pl-[20px] pr-[20px] overflow-hidden min-w-0">
-                {isDashboardOpen && (
+                {isDashboardOpen ? (
                     <div className="animate-in slide-in-from-bottom-2 fade-in duration-500 flex flex-col items-center justify-center pointer-events-none text-center w-full min-w-0">
                         {activeTab === 'dashboard' ? (
                             <>
@@ -296,6 +289,10 @@ const HubNav: React.FC<{
                                 )}
                             </div>
                         )}
+                    </div>
+                ) : (
+                    <div className="flex items-center justify-center animate-in fade-in zoom-in duration-700">
+                        <MiniSquadBadge onClick={onOpenTotm} className="w-[42px] h-[42px] md:w-[50px] md:h-[50px]" />
                     </div>
                 )}
             </div>
