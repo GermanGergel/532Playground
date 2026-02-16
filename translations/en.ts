@@ -3,7 +3,7 @@ export const en = {
   // Navigation
   navHome: "Home",
   navLive: "Live",
-  navStatistics: "Stats",
+  navStatistics: "Statistics",
   navHistory: "History",
   navSettings: "Settings",
   navTournaments: "Tournaments",
