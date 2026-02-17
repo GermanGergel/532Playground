@@ -34,7 +34,6 @@ const getPlayerById = (id: string, sessionPool: Player[], globalPool: Player[]) 
 };
 
 export const calculateAllStats = (session: Session, globalPlayers: Player[] = []) => {
-    // Safeguard: ensure teams exists (handle corrupted legacy data)
     const teams = session.teams || [];
     const playerPool = session.playerPool || [];
     const games = session.games || [];
@@ -46,8 +45,6 @@ export const calculateAllStats = (session: Session, globalPlayers: Player[] = []
         });
     });
 
-    // FUTURE FIX: Get all unique IDs from teams and find their profile objects
-    // If player is not in session.playerPool, find them in globalPlayers (the backup)
     const allUniqueParticipantIds = Array.from(new Set(teams.flatMap(t => t.playerIds)));
     
     const allPlayersInSession = allUniqueParticipantIds
@@ -94,14 +91,11 @@ export const calculateAllStats = (session: Session, globalPlayers: Player[] = []
         if (team1Stat && team2Stat) {
             team1Stat.gamesPlayed++;
             team2Stat.gamesPlayed++;
-            
             team1Stat.goalsFor += game.team1Score;
             team2Stat.goalsFor += game.team2Score;
-            
             team1Stat.goalsAgainst += game.team2Score;
             team2Stat.goalsAgainst += game.team1Score;
 
-            // Track Clean Sheets (Score against is 0)
             if (game.team2Score === 0) team1Stat.cleanSheets++;
             if (game.team1Score === 0) team2Stat.cleanSheets++;
 
@@ -124,7 +118,6 @@ export const calculateAllStats = (session: Session, globalPlayers: Player[] = []
         game.goals.forEach(goal => {
             const scorerStat = playerStats.find(ps => ps.player.id === goal.scorerId);
             const assistantStat = playerStats.find(ps => ps.player.id === goal.assistantId);
-
             if (goal.isOwnGoal) {
                 if (scorerStat) scorerStat.ownGoals++;
             } else {
@@ -133,30 +126,32 @@ export const calculateAllStats = (session: Session, globalPlayers: Player[] = []
             }
         });
         
-        // Update Individual Stats based on Game Result
-        const team1 = teams.find(t => t.id === game.team1Id);
-        const team2 = teams.find(t => t.id === game.team2Id);
-        if (!team1 || !team2) return;
-        
-        const participatingPlayerIds = new Set([...team1.playerIds, ...team2.playerIds]);
-        
+        // --- UPDATED: Individual Wins/Losses logic with Legionnaire support ---
         playerStats.forEach(ps => {
-            if (participatingPlayerIds.has(ps.player.id)) {
+            // Determine which team the player actually played for in THIS match
+            let playedForTeamId = ps.team.id;
+            const move = game.legionnaireMoves?.find(m => m.playerId === ps.player.id);
+            if (move) {
+                playedForTeamId = move.toTeamId;
+            }
+
+            // Only count if their active team was playing
+            if (game.team1Id === playedForTeamId || game.team2Id === playedForTeamId) {
                 ps.gamesPlayed++;
                 
-                // Add Clean Sheet to individual stats if their team kept a clean sheet in this game
-                const isTeam1 = ps.team.id === game.team1Id;
+                const isTeam1 = playedForTeamId === game.team1Id;
                 const conceded = isTeam1 ? game.team2Score : game.team1Score;
+                
                 if (conceded === 0) ps.cleanSheets++;
 
-                if(game.winnerTeamId === ps.team.id) {
+                if (game.winnerTeamId === playedForTeamId) {
                     ps.wins++;
-                    if (conceded === 0) {
-                        ps.cleanSheetWins++;
-                    }
+                    if (conceded === 0) ps.cleanSheetWins++;
+                } else if (game.isDraw) {
+                    ps.draws++;
+                } else {
+                    ps.losses++;
                 }
-                else if (game.isDraw) ps.draws++;
-                else ps.losses++;
             }
         });
     });
@@ -165,13 +160,12 @@ export const calculateAllStats = (session: Session, globalPlayers: Player[] = []
         ts.goalDifference = ts.goalsFor - ts.goalsAgainst;
     });
 
-    // Sort stats
     teamStats.sort((a, b) => b.points - a.points || b.goalDifference - a.goalDifference || b.goalsFor - a.goalsFor);
     
     return { teamStats, allPlayersStats: playerStats };
 };
 
-// ... (remaining statistics logic kept intact)
+// ... (Other functions getPlayerKeyStats, calculatePlayerMonthlyStats, getTotmPlayerIds remain unchanged)
 export const getPlayerKeyStats = (player: Player): { isTopScorer: boolean; isTopWinner: boolean } => {
     if (player.totalGames < 10) { return { isTopScorer: false, isTopWinner: false }; }
     const avgOffense = (player.totalGoals + player.totalAssists) / player.totalGames;

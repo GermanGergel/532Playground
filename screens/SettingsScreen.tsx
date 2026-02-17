@@ -44,121 +44,97 @@ export const SettingsScreen: React.FC = () => {
 
     const handleRepair1702Stats = async () => {
         if (isRepairing) return;
-        if (!window.confirm("CRITICAL DEEP REPAIR: This will fix Ratings, Arrows (Form), and Trend Bars for 17.02. Proceed?")) return;
+        if (!window.confirm("IDEMPOTENT REPAIR: This will reset any previous 17.02 fixes and apply the correct stats/rating once. Proceed?")) return;
 
         setIsRepairing(true);
         try {
-            // 1. Find session from 17.02
             const targetSession = history.find(s => s.date.includes('2026-02-17') || s.date.includes('17/02/2026'));
             if (!targetSession) {
-                alert("Session from 17.02 not found in history.");
+                alert("Session from 17.02 not found.");
                 setIsRepairing(false);
                 return;
             }
 
-            // 2. Get true stats using global players as fallback
             const { allPlayersStats } = calculateAllStats(targetSession, allPlayers);
             
-            // 3. Process each player
             const updatedPlayers = allPlayers.map(p => {
                 const sessionStats = allPlayersStats.find(s => s.player.id === p.id);
                 if (!sessionStats) return p;
 
-                // Important: We allow re-running this if they have history but the FORM is wrong
-                const hasEntry = p.historyData?.some(h => h.date === '17/02');
-                
-                console.log(`Deep repairing Form & Stats for ${p.nickname}...`);
+                // --- 1. ROLLBACK PREVIOUS ATTEMPTS (Strict Normalization) ---
+                let normalizedPlayer = { ...p };
+                const history1702 = p.historyData?.find(h => h.date === '17/02');
 
-                // A. Calculate Rating Delta & Badges
-                const badgesEarned = calculateEarnedBadges(p, sessionStats, targetSession, allPlayersStats);
-                const { breakdown } = calculateRatingUpdate(p, sessionStats, targetSession, badgesEarned);
-
-                // B. Apply deltas to CAREER totals (only if entry wasn't already there)
-                let totalGames = p.totalGames;
-                let totalGoals = p.totalGoals;
-                let totalAssists = p.totalAssists;
-                let totalWins = p.totalWins;
-                let totalDraws = p.totalDraws;
-                let totalLosses = p.totalLosses;
-                let totalSessionsPlayed = p.totalSessionsPlayed || 0;
-                let monthlyGames = p.monthlyGames;
-                let monthlyGoals = p.monthlyGoals;
-                let monthlyAssists = p.monthlyAssists;
-                let monthlyWins = p.monthlyWins;
-                let monthlySessionsPlayed = p.monthlySessionsPlayed || 0;
-
-                if (!hasEntry) {
-                    totalGames += sessionStats.gamesPlayed;
-                    totalGoals += sessionStats.goals;
-                    totalAssists += sessionStats.assists;
-                    totalWins += sessionStats.wins;
-                    totalDraws += sessionStats.draws;
-                    totalLosses += sessionStats.losses;
-                    totalSessionsPlayed += 1;
-                    monthlyGames += sessionStats.gamesPlayed;
-                    monthlyGoals += sessionStats.goals;
-                    monthlyAssists += sessionStats.assists;
-                    monthlyWins += sessionStats.wins;
-                    monthlySessionsPlayed += 1;
+                // If they already have a 17/02 point, we subtract its contribution before recalculating
+                // This prevents +1 +1 rating bloat.
+                if (history1702 && p.lastRatingChange?.newRating === p.rating) {
+                    console.log(`Normalizing ${p.nickname} before repair...`);
+                    const oldDelta = p.lastRatingChange.finalChange || 0;
+                    normalizedPlayer.rating = Math.max(p.initialRating || 68, p.rating - oldDelta);
+                    normalizedPlayer.totalGames -= sessionStats.gamesPlayed;
+                    normalizedPlayer.totalGoals -= sessionStats.goals;
+                    normalizedPlayer.totalAssists -= sessionStats.assists;
+                    normalizedPlayer.totalWins -= sessionStats.wins;
+                    normalizedPlayer.totalSessionsPlayed -= 1;
+                    normalizedPlayer.monthlySessionsPlayed -= 1;
+                    // Remove the old 17/02 graph point
+                    normalizedPlayer.historyData = (p.historyData || []).filter(h => h.date !== '17/02');
+                    // Remove the last bar from visual history if it was from this attempt
+                    normalizedPlayer.sessionHistory = (p.sessionHistory || []).slice(0, -1);
                 }
 
-                // C. Rating and Tier
-                const newRating = Math.max(p.initialRating || 68, Math.round(breakdown.newRating));
-                const newTier = getTierForRating(newRating);
-                const finalChange = newRating - p.rating;
+                // --- 2. APPLY CORRECT DEEP REPAIR ---
+                console.log(`Re-calculating correct 17.02 data for ${p.nickname}...`);
+                const badgesEarned = calculateEarnedBadges(normalizedPlayer, sessionStats, targetSession, allPlayersStats);
+                const { breakdown } = calculateRatingUpdate(normalizedPlayer, sessionStats, targetSession, badgesEarned);
 
-                // D. FIX FORM (The Arrow)
+                const finalRating = Math.max(p.initialRating || 68, Math.round(breakdown.newRating));
+                const finalChange = finalRating - normalizedPlayer.rating;
+
+                // FIX FORM (Arrow)
                 let newForm: 'hot_streak' | 'stable' | 'cold_streak' = 'stable';
                 if (finalChange >= 0.5) newForm = 'hot_streak';
                 else if (finalChange <= -0.5) newForm = 'cold_streak';
 
-                // E. FIX SESSION HISTORY (The Bars)
+                // FIX BARS (Winrate for 17.02)
                 const sessionWinRate = sessionStats.gamesPlayed > 0 ? Math.round((sessionStats.wins / sessionStats.gamesPlayed) * 100) : 0;
-                const sessionHistory = [...(p.sessionHistory || [])];
-                
-                // Add the new result to bars if not already present
-                if (!hasEntry) {
-                    sessionHistory.push({ winRate: sessionWinRate });
-                    if (sessionHistory.length > 5) sessionHistory.shift();
-                }
+                const sessionHistory = [...(normalizedPlayer.sessionHistory || [])];
+                sessionHistory.push({ winRate: sessionWinRate });
+                if (sessionHistory.length > 5) sessionHistory.shift();
 
-                // F. Update Graph Point
-                const newEntry: PlayerHistoryEntry = {
+                // ADD GRAPH POINT
+                const newHistoryPoint: PlayerHistoryEntry = {
                     date: '17/02',
-                    rating: newRating,
+                    rating: finalRating,
                     winRate: sessionWinRate,
                     goals: sessionStats.goals,
                     assists: sessionStats.assists
                 };
-
-                const historyData = [...(p.historyData || [])];
-                if (!hasEntry) {
-                    historyData.push(newEntry);
-                    if (historyData.length > 12) historyData.shift();
-                } else {
-                    // Update existing entry if date matches
-                    const idx = historyData.findIndex(h => h.date === '17/02');
-                    if (idx !== -1) historyData[idx] = newEntry;
-                }
+                const historyData = [...(normalizedPlayer.historyData || [])];
+                historyData.push(newHistoryPoint);
+                if (historyData.length > 12) historyData.shift();
 
                 return { 
-                    ...p, 
-                    rating: newRating,
-                    tier: newTier,
-                    form: newForm, // FIX: APPLY THE NEW ARROW
-                    sessionHistory, // FIX: APPLY THE NEW BARS
-                    totalGames, totalGoals, totalAssists, totalWins, totalDraws, totalLosses, totalSessionsPlayed,
-                    monthlyGames, monthlyGoals, monthlyAssists, monthlyWins, monthlySessionsPlayed,
+                    ...normalizedPlayer, 
+                    rating: finalRating,
+                    tier: getTierForRating(finalRating),
+                    form: newForm,
+                    sessionHistory,
                     historyData,
-                    lastRatingChange: { ...breakdown, newRating, badgesEarned, finalChange },
-                    consecutiveMissedSessions: 0,
+                    totalGames: normalizedPlayer.totalGames + sessionStats.gamesPlayed,
+                    totalGoals: normalizedPlayer.totalGoals + sessionStats.goals,
+                    totalAssists: normalizedPlayer.totalAssists + sessionStats.assists,
+                    totalWins: normalizedPlayer.totalWins + sessionStats.wins,
+                    totalSessionsPlayed: normalizedPlayer.totalSessionsPlayed + 1,
+                    monthlySessionsPlayed: (normalizedPlayer.monthlySessionsPlayed || 0) + 1,
+                    lastRatingChange: { ...breakdown, newRating: finalRating, badgesEarned, finalChange },
                     lastPlayedAt: targetSession.date
                 };
             });
 
             setAllPlayers(updatedPlayers);
             await savePlayersToDB(updatedPlayers);
-            alert("DEEP REPAIR SUCCESSFUL. Arrows and Bars updated.");
+            alert("STRICT REPAIR COMPLETE. Career data normalized, OVR corrected, and bars are now accurate.");
 
         } catch (e) {
             console.error(e);
@@ -318,7 +294,7 @@ export const SettingsScreen: React.FC = () => {
                     className="w-full !py-3 border border-yellow-500/20 bg-yellow-500/5 hover:bg-yellow-500/10 text-yellow-500 text-[10px] tracking-widest uppercase flex items-center justify-center gap-2"
                 >
                     <RefreshCw className={`w-3 h-3 ${isRepairing ? 'animate-spin' : ''}`} /> 
-                    {isRepairing ? 'REPAIRING...' : 'DEEP FIX 17.02 STATS'}
+                    {isRepairing ? 'CLEANING & FIXING...' : 'STRICT FIX 17.02 STATS'}
                 </Button>
 
                 <Button 
