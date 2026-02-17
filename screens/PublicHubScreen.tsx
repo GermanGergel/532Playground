@@ -13,7 +13,7 @@ import { ClubIntelligenceDashboard } from '../components/ClubIntelligenceDashboa
 import { RadioPlayer } from '../components/RadioPlayer';
 import { SquadOfTheMonthBadge } from '../components/SquadOfTheMonthBadge';
 import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
-import { MiniSquadBadge } from './MiniSquadBadge';
+import { MiniSquadBadge } from '../components/MiniSquadBadge';
 import { BallDecorations } from '../components/BallDecorations';
 import { CinematicCard, HeaderAtmosphere } from '../components/PublicHubScreen';
 
