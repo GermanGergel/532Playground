@@ -43,44 +43,43 @@ export const SettingsScreen: React.FC = () => {
 
     const handleRollback1702 = async () => {
         if (isRepairing) return;
-        if (!window.confirm("NUCLEAR ROLLBACK 17.02: This will aggressively purge all Feb 17th data. Ratings will revert to Feb 16th state and Analysis widgets will be cleared. Continue?")) return;
+        if (!window.confirm("NUCLEAR ROLLBACK 17.02: Это полностью удалит данные за 17 февраля и очистит виджеты анализа. Рейтинги вернутся к состоянию на 16-е число. Продолжить?")) return;
 
         setIsRepairing(true);
         try {
-            // 1. Find the target session
+            // 1. Ищем сессию
             const targetSession = history.find(s => s.date.includes('2026-02-17') || s.date.includes('17/02/2026'));
             if (!targetSession) {
-                alert("Session 17.02 not found in your local history records.");
+                alert("Сессия 17.02 не найдена в истории этого устройства.");
                 setIsRepairing(false);
                 return;
             }
 
-            // 2. Calculate what needs to be subtracted
+            // 2. Считаем статистику этой сессии для вычитания
             const { allPlayersStats } = calculateAllStats(targetSession, allPlayers);
             
-            // 3. Transform all players
+            // 3. Трансформируем игроков
             const rolledBackPlayers = allPlayers.map(p => {
                 const sessionStats = allPlayersStats.find(s => s.player.id === p.id);
                 const historyData = p.historyData || [];
                 const has1702Entry = historyData.some(h => h.date === '17/02');
 
-                // If player wasn't in the session and has no graph point, ignore
+                // Если игрока не было в ту дату, не трогаем
                 if (!sessionStats && !has1702Entry) return p;
 
-                console.log(`Rollback: Processing ${p.nickname}...`);
-
-                // Restore OVR and History Graph
+                // Откатываем график и OVR
                 const targetIdx = historyData.findIndex(h => h.date === '17/02');
                 let restoredRating = p.rating;
                 let newHistory = [...historyData];
 
                 if (targetIdx !== -1) {
                     const prevPoint = historyData[targetIdx - 1];
+                    // Если есть точка ДО 17-го — берем её рейтинг, иначе берем начальный (floor)
                     restoredRating = prevPoint ? prevPoint.rating : (p.initialRating || 68);
                     newHistory = historyData.filter(h => h.date !== '17/02');
                 }
 
-                // Restore Career Totals
+                // Вычитаем голы/пассы/победы за 17-е
                 let totalGames = p.totalGames;
                 let totalGoals = p.totalGoals;
                 let totalAssists = p.totalAssists;
@@ -88,13 +87,8 @@ export const SettingsScreen: React.FC = () => {
                 let totalDraws = p.totalDraws;
                 let totalLosses = p.totalLosses;
                 let totalSessions = p.totalSessionsPlayed;
-                let monthlyGames = p.monthlyGames;
-                let monthlyGoals = p.monthlyGoals;
-                let monthlyAssists = p.monthlyAssists;
-                let monthlyWins = p.monthlyWins;
-                let monthlySessions = p.monthlySessionsPlayed;
 
-                if (sessionStats && has1702Entry) {
+                if (sessionStats) {
                     totalGames = Math.max(0, totalGames - sessionStats.gamesPlayed);
                     totalGoals = Math.max(0, totalGoals - sessionStats.goals);
                     totalAssists = Math.max(0, totalAssists - sessionStats.assists);
@@ -102,40 +96,34 @@ export const SettingsScreen: React.FC = () => {
                     totalDraws = Math.max(0, totalDraws - sessionStats.draws);
                     totalLosses = Math.max(0, totalLosses - sessionStats.losses);
                     totalSessions = Math.max(0, totalSessions - 1);
-                    
-                    monthlyGames = Math.max(0, monthlyGames - sessionStats.gamesPlayed);
-                    monthlyGoals = Math.max(0, monthlyGoals - sessionStats.goals);
-                    monthlyAssists = Math.max(0, monthlyAssists - sessionStats.assists);
-                    monthlyWins = Math.max(0, monthlyWins - sessionStats.wins);
-                    monthlySessions = Math.max(0, monthlySessions - 1);
                 }
 
-                // Clear visual trend bars
+                // Откатываем индикаторы формы
                 const sessionHistory = [...(p.sessionHistory || [])];
                 if (has1702Entry && sessionHistory.length > 0) sessionHistory.pop();
 
+                // ВОЗВРАЩАЕМ ЧИСТОГО ИГРОКА
                 return { 
                     ...p, 
                     rating: restoredRating,
                     totalGames, totalGoals, totalAssists, totalWins, totalDraws, totalLosses,
                     totalSessionsPlayed: totalSessions,
-                    monthlyGames, monthlyGoals, monthlyAssists, monthlyWins,
-                    monthlySessionsPlayed: monthlySessions,
                     historyData: newHistory,
                     sessionHistory,
                     form: 'stable' as const,
-                    lastRatingChange: undefined, // CRITICAL: This wipes the mismatched analysis widget
+                    // КРИТИЧЕСКИЙ МОМЕНТ: Удаляем объект анализа, чтобы убрать цифру 84
+                    lastRatingChange: undefined, 
                     consecutiveMissedSessions: Math.max(0, (p.consecutiveMissedSessions || 0) - 1)
                 };
             });
 
             setAllPlayers(rolledBackPlayers);
             await savePlayersToDB(rolledBackPlayers);
-            alert("FULL ROLLBACK COMPLETE. Check Hub now - ratings should be back to 82/72/etc.");
+            alert("ОТКАТ ЗАВЕРШЕН. Проверьте Хаб - блоки анализа за 17.02 должны исчезнуть.");
 
         } catch (e) {
             console.error(e);
-            alert("Error during rollback sequence.");
+            alert("Ошибка при выполнении отката.");
         } finally {
             setIsRepairing(false);
         }
@@ -150,84 +138,35 @@ export const SettingsScreen: React.FC = () => {
     const NetworkHud = () => {
         const isLoading = cloudStatus === null || isRefreshing;
         const isOnline = cloudStatus?.connected === true;
-
-        const onlineTheme = {
-            color: '#00F2FE',
-            glowColor: 'rgba(0, 242, 254, 0.2)',
-            borderColor: 'border-dark-accent-start',
-            textStyle: { color: '#00F2FE', textShadow: '0 0 10px #00F2FE' }
-        };
-    
-        const offlineTheme = {
-            color: '#A9B1BD',
-            glowColor: 'rgba(169, 177, 189, 0.1)',
-            borderColor: 'border-gray-600',
-            textStyle: { color: '#A9B1BD', textShadow: '0 0 8px rgba(169, 177, 189, 0.5)' }
-        };
-
-        const theme = isOnline ? onlineTheme : offlineTheme;
+        const themeColor = isOnline ? '#00F2FE' : '#A9B1BD';
         
         return (
             <div 
                 onClick={checkCloud}
-                className={`relative overflow-hidden rounded-xl border ${theme.borderColor}/50 bg-black/60 p-5 shadow-[0_0_20px_${theme.glowColor}] transition-all duration-300 cursor-pointer active:scale-95 group select-none`}
+                className={`relative overflow-hidden rounded-xl border ${isOnline ? 'border-dark-accent-start/50' : 'border-gray-600/50'} bg-black/60 p-5 transition-all duration-300 cursor-pointer active:scale-95 group select-none`}
             >
-                <div 
-                    className="absolute inset-0 opacity-10 pointer-events-none"
-                    style={{ 
-                        backgroundImage: `linear-gradient(${theme.color} 1px, transparent 1px), linear-gradient(90deg, ${theme.color} 1px, transparent 1px)`,
-                        backgroundSize: '20px 20px'
-                    }}
-                />
-                
                 <div className="relative z-10 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="relative flex items-center justify-center w-12 h-12">
-                            <span className={`absolute w-full h-full rounded-full opacity-75 ${isOnline ? 'animate-ping' : ''}`} style={{ backgroundColor: theme.color }}></span>
-                            <span className="relative w-4 h-4 rounded-full shadow-[0_0_10px_currentColor]" style={{ backgroundColor: theme.color }}></span>
-                            {isLoading && (
-                                <svg className="absolute w-12 h-12 animate-spin" style={{ animationDuration: '4s' }} viewBox="0 0 50 50">
-                                    <circle cx="25" cy="25" r="23" fill="none" stroke={theme.color} strokeWidth="1" strokeDasharray="30 20" opacity="0.5" />
-                                </svg>
-                            )}
+                            <span className={`absolute w-full h-full rounded-full opacity-20 ${isOnline ? 'animate-ping' : ''}`} style={{ backgroundColor: themeColor }}></span>
+                            <span className="relative w-4 h-4 rounded-full" style={{ backgroundColor: themeColor, boxShadow: `0 0 10px ${themeColor}` }}></span>
                         </div>
 
                         <div className="flex flex-col">
                             <h3 className="text-[10px] font-bold tracking-[0.2em] text-dark-text-secondary uppercase mb-0.5 group-hover:text-white transition-colors">
                                 DATABASE UPLINK
                             </h3>
-                            <div className="flex flex-col">
-                                <span className="text-xl font-black italic tracking-wider leading-none" style={theme.textStyle}>
-                                    {isOnline ? 'SYSTEM ONLINE' : 'LOCAL MODE'}
-                                </span>
-                                {isOnline && (
-                                    <span className="text-[8px] font-mono text-white/30 mt-1 uppercase tracking-widest">
-                                        ID: {dbEndpoint}
-                                    </span>
-                                )}
-                            </div>
+                            <span className="text-xl font-black italic tracking-wider leading-none" style={{ color: themeColor }}>
+                                {isOnline ? 'SYSTEM ONLINE' : 'LOCAL MODE'}
+                            </span>
                         </div>
                     </div>
                     <div className="text-right">
-                        <div className="flex flex-col items-end">
-                            <div className="flex items-center gap-2">
-                                <span className="text-[9px] text-dark-text-secondary font-mono group-hover:text-dark-accent-start transition-colors">
-                                    {isRefreshing ? 'SYNCING...' : 'TAP TO SYNC'}
-                                </span>
-                            </div>
-                            
-                            <div className="flex items-baseline gap-1 mt-1">
-                                {(isLoading && !cloudStatus) ? (
-                                     <span className="text-lg font-bold font-mono" style={{color: theme.color}}>--</span>
-                                ) : (
-                                    <>
-                                        <span className="text-2xl font-bold font-mono text-white">
-                                            {cloudStatus?.count || 0}
-                                        </span>
-                                        <span className="text-[9px] text-dark-text-secondary font-bold">/ {allPlayers.length}</span>
-                                    </>
-                                )}
-                            </div>
+                        <div className="flex flex-baseline gap-1 mt-1">
+                            <span className="text-2xl font-bold font-mono text-white">
+                                {cloudStatus?.count || 0}
+                            </span>
+                            <span className="text-[9px] text-dark-text-secondary font-bold">/ {allPlayers.length}</span>
                         </div>
                     </div>
                 </div>
