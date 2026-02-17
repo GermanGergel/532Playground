@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -13,7 +12,7 @@ import { ClubIntelligenceDashboard } from '../components/ClubIntelligenceDashboa
 import { RadioPlayer } from '../components/RadioPlayer';
 import { SquadOfTheMonthBadge } from '../components/SquadOfTheMonthBadge';
 import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
-import { MiniSquadBadge } from '../components/MiniSquadBadge';
+import { MiniSquadBadge } from './MiniSquadBadge';
 import { BallDecorations } from '../components/BallDecorations';
 import { CinematicCard, HeaderAtmosphere } from '../components/PublicHubScreen';
 
@@ -155,20 +154,18 @@ const ChaseList: React.FC<{
 
 // --- UNIT SIGNATURE TACTICAL OVERLAY ---
 const TacticalShardOverlay = ({ color }: { color: string }) => (
-    <div className="absolute inset-0 z-0 opacity-[0.18] pointer-events-none overflow-hidden">
+    <div className="absolute inset-0 z-0 opacity-[0.25] pointer-events-none overflow-hidden">
         <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-            {/* Chaotic Shards inspired by requested style */}
-            <path d="M-5 15 L35 0 L45 25 Z" fill={color} />
-            <path d="M55 -5 L105 45 L75 5 Z" fill={color} />
-            <path d="M-10 70 L25 95 L-5 105 Z" fill={color} />
-            <path d="M105 75 L65 105 L110 110 Z" fill={color} />
-            {/* Slashed lines */}
-            <rect x="0" y="20" width="100" height="0.5" fill={color} transform="rotate(-35 50 50)" />
-            <rect x="0" y="40" width="100" height="1.5" fill={color} transform="rotate(-35 50 50)" />
-            <rect x="0" y="60" width="100" height="0.8" fill={color} transform="rotate(-35 50 50)" />
-            {/* Rectangular shards */}
-            <rect x="10" y="10" width="40" height="4" fill={color} transform="rotate(15 10 10)" />
-            <rect x="60" y="80" width="30" height="2" fill={color} transform="rotate(-10 60 80)" />
+            {/* LARGE Aggressive Shards matching requested style */}
+            <path d="M-10 40 L40 0 L60 30 L-10 80 Z" fill={color} opacity="0.6" />
+            <path d="M110 20 L70 0 L40 50 L110 90 Z" fill={color} opacity="0.4" />
+            <path d="M-20 100 L30 60 L80 110 Z" fill={color} opacity="0.5" />
+            <path d="M120 100 L70 50 L40 120 Z" fill={color} opacity="0.3" />
+            
+            {/* Slash lines */}
+            <rect x="-20" y="30" width="140" height="2" fill={color} transform="rotate(-40 50 50)" />
+            <rect x="-20" y="55" width="140" height="4" fill={color} transform="rotate(-40 50 50)" />
+            <rect x="-20" y="75" width="140" height="1" fill={color} transform="rotate(-40 50 50)" />
         </svg>
     </div>
 );
@@ -310,7 +307,7 @@ const HubNav: React.FC<{
                     </div>
                 ) : (
                     <div className="flex items-center justify-center animate-in fade-in zoom-in duration-700">
-                        <MiniSquadBadge onClick={onOpenTotm} className="w-[42px] h-[42px] md:w-[50px] md:h-[50px]" />
+                        <MiniSquadBadge onClick={onOpenTotm} className="w-[42px] h-[42px] md:w-[50px] md:h-[50px]" isAnimated />
                     </div>
                 )}
             </div>
@@ -369,12 +366,15 @@ type DashboardViewType = 'info' | 'dashboard' | 'roster' | 'archive' | 'duel' | 
 export const PublicHubScreen: React.FC = () => {
     const navigate = useNavigate();
     const { allPlayers, history } = useApp();
+    // FIX: Added missing useTranslation hook to fix "Cannot find name 't'" errors
+    const t = useTranslation();
     const [isDashboardOpen, setIsDashboardOpen] = useState(false);
     const [isTotmOpen, setIsTotmOpen] = useState(false);
     const [dashboardView, setDashboardView] = useState<DashboardViewType>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
-
-    const t = useTranslation();
+    
+    // Scroll Reset Refs
+    const mainContainerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (isDashboardOpen) {
@@ -416,10 +416,21 @@ export const PublicHubScreen: React.FC = () => {
     }, [allPlayers, history]);
     
     const SOCIAL_LINKS = { whatsapp: "https://chat.whatsapp.com/CAJnChuM4lQFf3s2YUnhQr", youtube: "https://www.youtube.com/@UnitFootball", tiktok: "https://www.tiktok.com/@532club?_r=1", };
+    
     const handleTabChange = (tab: DashboardViewType) => { 
         setDashboardView(tab); 
         setIsDashboardOpen(true);
     };
+
+    const handleHomeClick = () => {
+        setIsDashboardOpen(false);
+        setDashboardView('dashboard');
+        // Reset scroll to top of cinematic screen
+        if (mainContainerRef.current) {
+            mainContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+
     const getBottomPatchColor = () => { if (dashboardView === 'archive' || dashboardView === 'dashboard' || dashboardView === 'roster' || dashboardView === 'info') return '#01040a'; return '#0a0c10'; };
 
     return (
@@ -435,7 +446,7 @@ export const PublicHubScreen: React.FC = () => {
                 activeTab={dashboardView} 
                 onTabChange={handleTabChange} 
                 archiveViewDate={archiveViewDate} 
-                onHomeClick={() => { setIsDashboardOpen(false); setDashboardView('dashboard'); }} 
+                onHomeClick={handleHomeClick} 
                 onOpenTotm={() => setIsTotmOpen(true)} 
             />
 
@@ -444,7 +455,10 @@ export const PublicHubScreen: React.FC = () => {
                 <div className="fixed bottom-0 left-0 right-0 h-16 z-[110] pointer-events-none opacity-0 transition-all duration-700 delay-300" style={{ opacity: isDashboardOpen ? 1 : 0, background: `linear-gradient(to top, ${getBottomPatchColor()} 50%, ${getBottomPatchColor()}cc 80%, transparent 100%)` }}></div>
             </div>
 
-            <div className={`absolute inset-0 overflow-y-auto overscroll-none touch-pan-y z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}>
+            <div 
+                ref={mainContainerRef}
+                className={`absolute inset-0 overflow-y-auto overscroll-none touch-pan-y z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}
+            >
                 <HeaderAtmosphere />
                 
                 <div className="relative z-10">
