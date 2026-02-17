@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
-import { Player, Session, NewsItem, PromoData } from '../types';
-import { Language } from '../translations/index';
-import { get, set, del } from 'idb-keyval';
+import { Player, Session, NewsItem, PromoData, DraftState } from './types';
+import { Language } from './translations/index';
+import { get, set, del, keys } from 'idb-keyval';
 
 // --- SUPABASE CONFIGURATION ---
 const getEnvVar = (key: string) => {
@@ -28,6 +28,8 @@ const supabase = (supabaseUrl && supabaseAnonKey)
     : null;
 
 export const isSupabaseConfigured = () => !!supabase;
+
+export const getSupabase = () => supabase; // Helper for direct access
 
 // --- HELPERS ---
 const base64ToBlob = (base64: string): Blob => {
@@ -58,13 +60,20 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
 };
 
 const sanitizeObject = (obj: any): any => {
-    if (obj === null || obj === undefined) return obj;
+    if (obj === null || obj === undefined) return null; // Изменено: возвращаем null вместо исходного obj
     if (typeof obj === 'number') return isNaN(obj) ? 0 : obj;
     if (Array.isArray(obj)) return obj.map(v => sanitizeObject(v));
     if (typeof obj === 'object') {
         const newObj: any = {};
         for (const key in obj) {
             if (key === 'syncStatus' || key === 'isTestMode' || key === 'isManual') continue;
+            
+            // Специальная обработка для зануления анализа
+            if (key === 'lastRatingChange' && obj[key] === null) {
+                newObj[key] = null;
+                continue;
+            }
+
             const isImageKey = ['photo', 'playerCard', 'logo', 'playerPhoto'].includes(key);
             if (isImageKey && typeof obj[key] === 'string' && obj[key].startsWith('data:')) {
                 newObj[key] = null; 
@@ -203,6 +212,17 @@ export const loadPlayersFromDB = async () => {
     return await get<Player[]>('players');
 };
 
+export const fetchRemotePlayers = async () => {
+    if (isSupabaseConfigured()) {
+        try {
+            const { data } = await supabase!.from('players').select('*');
+            if (data) await set('players', data);
+            return data as Player[];
+        } catch (e) {}
+    }
+    return null;
+};
+
 export const getCloudPlayerCount = async () => {
     if (!isSupabaseConfigured()) return null;
     try {
@@ -218,6 +238,50 @@ export const saveActiveSessionToDB = async (s: Session | null) => {
 };
 
 export const loadActiveSessionFromDB = async () => await get<Session>('activeSession');
+
+// --- REMOTE SESSION HANDOFF (CLOUD SYNC) ---
+// Used to transfer the active session from PC (Draft) to Phone (Live Match)
+export const saveRemoteActiveSession = async (session: Session): Promise<boolean> => {
+    if (!isSupabaseConfigured()) return false;
+    try {
+        const { error } = await supabase!.from('settings').upsert({ 
+            key: 'remote_active_session', 
+            value: sanitizeObject(session) 
+        }, { onConflict: 'key' });
+        
+        if (error) throw error;
+        return true;
+    } catch (e) {
+        console.error("Failed to save remote session", e);
+        return false;
+    }
+};
+
+export const getRemoteActiveSession = async (): Promise<Session | null> => {
+    if (!isSupabaseConfigured()) return null;
+    try {
+        const { data, error } = await supabase!.from('settings').select('value').eq('key', 'remote_active_session').maybeSingle();
+        if (error) throw error;
+        return data?.value as Session;
+    } catch (e) {
+        console.error("Failed to get remote session", e);
+        return null;
+    }
+};
+
+// ** NEW FUNCTION: Fix for zombie sessions **
+export const clearRemoteActiveSession = async (): Promise<boolean> => {
+    if (!isSupabaseConfigured()) return false;
+    try {
+        // FIX: Instead of DELETE (which is blocked by RLS), we UPDATE to null
+        const { error } = await supabase!.from('settings').update({ value: null }).eq('key', 'remote_active_session');
+        if (error) throw error;
+        return true;
+    } catch (e) {
+        console.error("Failed to clear remote session", e);
+        return false;
+    }
+};
 
 export const saveHistoryLocalOnly = async (h: Session[]) => {
     const sorted = [...h].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -239,6 +303,31 @@ export const saveHistoryToDB = async (history: Session[]) => {
                 }
             }
         } catch (e) {}
+    }
+};
+
+// DEBUG UTILITY: Force sync a single session and return the specific error
+export const forceSyncSession = async (session: Session): Promise<{ success: boolean; error?: string }> => {
+    if (!isSupabaseConfigured()) return { success: false, error: 'Supabase not configured' };
+    
+    try {
+        // FULL SYNC: We assume the DB has all necessary columns now.
+        const dbReady = sanitizeObject(session);
+        
+        const { error } = await supabase!.from('sessions').upsert(dbReady, { onConflict: 'id' });
+        
+        if (error) {
+            return { success: false, error: error.message };
+        }
+        
+        // Update local state if successful
+        const h = await get<Session[]>('history') || [];
+        const updatedHistory = h.map(s => s.id === session.id ? { ...s, syncStatus: 'synced' as const } : s);
+        await set('history', updatedHistory);
+        
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, error: e.message || 'Unknown error' };
     }
 };
 
@@ -288,6 +377,63 @@ export const retrySyncPendingSessions = async () => {
     const h = await get<Session[]>('history') || [];
     await saveHistoryToDB(h);
     return h.filter(s => s.syncStatus === 'pending').length;
+};
+
+// --- DRAFT MANAGEMENT ---
+// FIX: Added missing createDraftSession for team assignment handoff
+export const createDraftSession = async (state: DraftState) => {
+    if (!isSupabaseConfigured()) return;
+    try {
+        const { error } = await supabase!.from('drafts').upsert(sanitizeObject(state), { onConflict: 'id' });
+        if (error) throw error;
+    } catch (e) {
+        console.error("Error creating draft", e);
+    }
+};
+
+// FIX: Added missing getDraftSession for real-time draft access
+export const getDraftSession = async (id: string): Promise<DraftState | null> => {
+    if (!isSupabaseConfigured()) return null;
+    try {
+        const { data, error } = await supabase!.from('drafts').select('*').eq('id', id).maybeSingle();
+        if (error) throw error;
+        return data as DraftState;
+    } catch (e) {
+        console.error("Error getting draft", e);
+        return null;
+    }
+};
+
+// FIX: Added missing updateDraftState for synchronization during drafting
+export const updateDraftState = async (state: DraftState) => {
+    if (!isSupabaseConfigured()) return;
+    try {
+        const { error } = await supabase!.from('drafts').upsert(sanitizeObject(state), { onConflict: 'id' });
+        if (error) throw error;
+    } catch (e) {
+        console.error("Error updating draft", e);
+    }
+};
+
+// FIX: Added missing subscribeToDraft for real-time updates between captains
+export const subscribeToDraft = (id: string, callback: (state: DraftState) => void) => {
+    if (!isSupabaseConfigured()) return null;
+
+    return supabase!
+        .channel(`draft_${id}`)
+        .on(
+            'postgres_changes',
+            {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'drafts',
+                filter: `id=eq.${id}`,
+            },
+            (payload) => {
+                callback(payload.new as DraftState);
+            }
+        )
+        .subscribe();
 };
 
 // --- NEWS FEED ---
@@ -346,6 +492,17 @@ export const saveCustomAudio = async (key: string, base64: string, pack: number)
 export const loadCustomAudio = async (key: string, pack: number) => {
     const cached = await get<CachedAudio>(`audio_pack${pack}_${key}`);
     return cached?.data;
+};
+
+// OPTIMIZED CHECK: Checks for key existence without loading value
+export const hasCustomAudio = async (key: string, pack: number): Promise<boolean> => {
+    try {
+        const allKeys = await keys();
+        const targetKey = `audio_pack${pack}_${key}`;
+        return allKeys.includes(targetKey);
+    } catch (e) {
+        return false;
+    }
 };
 
 export const deleteCustomAudio = async (key: string, pack: number) => {

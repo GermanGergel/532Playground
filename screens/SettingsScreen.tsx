@@ -41,7 +41,6 @@ export const SettingsScreen: React.FC = () => {
         setIsRefreshing(false);
     };
 
-    // ФУНКЦИЯ ОЧИСТКИ ГРАФИКОВ ОТ ПУСТЫХ ДАТ
     const handleNuclearCleanup = async () => {
         if (isRepairing) return;
         if (!window.confirm("ОЧИСТКА ГРАФИКОВ: Это удалит точки за дни, когда игроков НЕ БЫЛО на поле. Исправит фантомные даты (10.02 и т.д.). Продолжить?")) return;
@@ -50,18 +49,23 @@ export const SettingsScreen: React.FC = () => {
         try {
             const cleanedPlayers = allPlayers.map(p => {
                 const historyData = p.historyData || [];
-                // Оставляем только те точки, где была хоть какая-то активность
                 const newHistory = historyData.filter((h, idx) => {
-                    if (idx === 0 || h.date === 'Start') return true; // Оставляем начало
+                    if (idx === 0 || h.date === 'Start') return true;
+                    // Оставляем только дни с реальной активностью
                     return (h.goals || 0) > 0 || (h.assists || 0) > 0 || (h.winRate || 0) > 0;
                 });
 
-                return { ...p, historyData: newHistory };
+                return { 
+                    ...p, 
+                    historyData: newHistory,
+                    // Если текущий анализ ссылается на пустоту, тоже чистим
+                    lastRatingChange: (p.lastRatingChange && p.lastRatingChange.teamPerformance === 0 && p.lastRatingChange.individualPerformance === 0) ? undefined : p.lastRatingChange
+                };
             });
 
             setAllPlayers(cleanedPlayers);
             await savePlayersToDB(cleanedPlayers);
-            alert("ГРАФИКИ ОЧИЩЕНЫ. Проверьте профили игроков.");
+            alert("ГРАФИКИ ОЧИЩЕНЫ.");
         } catch (e) {
             console.error(e);
             alert("Ошибка при очистке.");
@@ -72,7 +76,7 @@ export const SettingsScreen: React.FC = () => {
 
     const handleRollback1702 = async () => {
         if (isRepairing) return;
-        if (!window.confirm("NUCLEAR ROLLBACK 17.02: Это удалит данные за 17 февраля и ПРИНУДИТЕЛЬНО очистит виджеты анализа. Продолжить?")) return;
+        if (!window.confirm("NUCLEAR ROLLBACK 17.02: Это УДАЛИТ данные за 17 февраля и ПРИНУДИТЕЛЬНО ОЧИСТИТ плашки анализа в Хабе. Продолжить?")) return;
 
         setIsRepairing(true);
         try {
@@ -107,9 +111,12 @@ export const SettingsScreen: React.FC = () => {
                     totalSess = Math.max(0, totalSess - 1);
                 }
 
-                // СОЗДАЕМ ЧИСТЫЙ ОБЪЕКТ БЕЗ lastRatingChange
-                const cleanedPlayer: any = {
-                    ...p,
+                // ВАЖНО: Мы создаем объект, где lastRatingChange явно отсутствует или null
+                // Чтобы при сохранении в базу данных это поле затерлось
+                const { lastRatingChange, ...playerWithoutAnalysis } = p;
+
+                return {
+                    ...playerWithoutAnalysis,
                     rating: restoredRating,
                     totalGoals: totalG,
                     totalAssists: totalA,
@@ -118,18 +125,14 @@ export const SettingsScreen: React.FC = () => {
                     totalSessionsPlayed: totalSess,
                     historyData: newHistory,
                     form: 'stable' as const,
-                    consecutiveMissedSessions: Math.max(0, (p.consecutiveMissedSessions || 0) - 1)
-                };
-                
-                // Явно удаляем поле анализа, чтобы плашка исчезла
-                delete cleanedPlayer.lastRatingChange;
-                
-                return cleanedPlayer as Player;
+                    consecutiveMissedSessions: Math.max(0, (p.consecutiveMissedSessions || 0) - 1),
+                    lastRatingChange: null // Явно затираем для Хаба
+                } as any;
             });
 
             setAllPlayers(rolledBackPlayers);
             await savePlayersToDB(rolledBackPlayers);
-            alert("ОТКАТ ЗАВЕРШЕН. Виджеты за 17.02 должны исчезнуть.");
+            alert("ОТКАТ ЗАВЕРШЕН. Ошибочные плашки в Хабе должны исчезнуть.");
         } catch (e) {
             console.error(e);
             alert("Ошибка при откате.");
@@ -242,7 +245,7 @@ export const SettingsScreen: React.FC = () => {
                 
                 <div className="text-center opacity-40 hover:opacity-100 transition-opacity duration-500">
                     <p className="font-orbitron font-bold text-sm tracking-widest text-dark-accent-start uppercase">UNIT</p>
-                    <p className="text-[10px] text-dark-text-secondary font-mono mt-1">v4.0.5 • SYSTEM READY</p>
+                    <p className="text-[10px] text-dark-text-secondary font-mono mt-1">v4.0.6 • SYSTEM READY</p>
                 </div>
             </div>
         </div>

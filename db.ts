@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { Player, Session, NewsItem, PromoData, DraftState } from './types';
 import { Language } from './translations/index';
@@ -61,13 +60,20 @@ const blobToBase64 = (blob: Blob): Promise<string> => {
 };
 
 const sanitizeObject = (obj: any): any => {
-    if (obj === null || obj === undefined) return obj;
+    if (obj === null || obj === undefined) return null; // Изменено: возвращаем null вместо исходного obj
     if (typeof obj === 'number') return isNaN(obj) ? 0 : obj;
     if (Array.isArray(obj)) return obj.map(v => sanitizeObject(v));
     if (typeof obj === 'object') {
         const newObj: any = {};
         for (const key in obj) {
             if (key === 'syncStatus' || key === 'isTestMode' || key === 'isManual') continue;
+            
+            // Специальная обработка для зануления анализа
+            if (key === 'lastRatingChange' && obj[key] === null) {
+                newObj[key] = null;
+                continue;
+            }
+
             const isImageKey = ['photo', 'playerCard', 'logo', 'playerPhoto'].includes(key);
             if (isImageKey && typeof obj[key] === 'string' && obj[key].startsWith('data:')) {
                 newObj[key] = null; 
@@ -373,6 +379,59 @@ export const retrySyncPendingSessions = async () => {
     return h.filter(s => s.syncStatus === 'pending').length;
 };
 
+// --- DRAFT MANAGEMENT ---
+export const createDraftSession = async (state: DraftState) => {
+    if (!isSupabaseConfigured()) return;
+    try {
+        const { error } = await supabase!.from('drafts').upsert(sanitizeObject(state), { onConflict: 'id' });
+        if (error) throw error;
+    } catch (e) {
+        console.error("Error creating draft", e);
+    }
+};
+
+export const getDraftSession = async (id: string): Promise<DraftState | null> => {
+    if (!isSupabaseConfigured()) return null;
+    try {
+        const { data, error } = await supabase!.from('drafts').select('*').eq('id', id).maybeSingle();
+        if (error) throw error;
+        return data as DraftState;
+    } catch (e) {
+        console.error("Error getting draft", e);
+        return null;
+    }
+};
+
+export const updateDraftState = async (state: DraftState) => {
+    if (!isSupabaseConfigured()) return;
+    try {
+        const { error } = await supabase!.from('drafts').upsert(sanitizeObject(state), { onConflict: 'id' });
+        if (error) throw error;
+    } catch (e) {
+        console.error("Error updating draft", e);
+    }
+};
+
+export const subscribeToDraft = (id: string, callback: (state: DraftState) => void) => {
+    if (!isSupabaseConfigured()) return null;
+
+    return supabase!
+        .channel(`draft_${id}`)
+        .on(
+            'postgres_changes',
+            {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'drafts',
+                filter: `id=eq.${id}`,
+            },
+            (payload) => {
+                callback(payload.new as DraftState);
+            }
+        )
+        .subscribe();
+};
+
 // --- NEWS FEED ---
 export const saveNewsToDB = async (news: NewsItem[]) => {
     const freshNews = news;
@@ -575,94 +634,4 @@ export const getAnalyticsSummary = async (): Promise<{ total: Record<string, num
     } catch (e) {
         return { total: {}, recent: {} };
     }
-};
-
-// --- DRAFT DB LOGIC (LOCAL & CLOUD) ---
-
-export const createDraftSession = async (draft: DraftState): Promise<boolean> => {
-    // 1. Always save locally first for quick access / offline mode
-    await set(`draft_${draft.id}`, draft);
-    
-    if (!isSupabaseConfigured()) {
-        console.log("Draft created locally (Offline Mode)");
-        return true; 
-    }
-
-    try {
-        const { error } = await supabase!
-            .from('draft_sessions')
-            .upsert({ 
-                id: draft.id, 
-                pin: draft.pin,
-                state: draft 
-            }, { onConflict: 'id' });
-        if (error) throw error;
-        return true;
-    } catch (error) {
-        console.error("Draft cloud create error (falling back to local):", error);
-        return true; // Return true to allow navigation even if cloud fails
-    }
-};
-
-export const updateDraftState = async (draft: DraftState): Promise<boolean> => {
-    // 1. Always update local
-    await set(`draft_${draft.id}`, draft);
-
-    if (!isSupabaseConfigured()) return true;
-
-    try {
-        const { error } = await supabase!
-            .from('draft_sessions')
-            .update({ state: draft })
-            .eq('id', draft.id);
-        if (error) throw error;
-        return true;
-    } catch (error) {
-        console.error("Draft cloud update error", error);
-        return true; // Assume local success is enough to proceed
-    }
-};
-
-export const getDraftSession = async (draftId: string): Promise<DraftState | null> => {
-    // 1. Try local first
-    const local = await get<DraftState>(`draft_${draftId}`);
-    
-    if (!isSupabaseConfigured()) return local || null;
-
-    try {
-        const { data, error } = await supabase!
-            .from('draft_sessions')
-            .select('state')
-            .eq('id', draftId)
-            .maybeSingle();
-        if (error) throw error;
-        // Merge strategy: Server wins if available, else local
-        return data?.state || local || null;
-    } catch (error) {
-        return local || null;
-    }
-};
-
-export const subscribeToDraft = (draftId: string, callback: (draft: DraftState) => void) => {
-    if (!isSupabaseConfigured()) {
-        // LOCAL POLLING FALLBACK: simulates realtime for local dev
-        const interval = setInterval(async () => {
-             const local = await get<DraftState>(`draft_${draftId}`);
-             if (local) callback(local);
-        }, 1000);
-        return { unsubscribe: () => clearInterval(interval) };
-    }
-    
-    return supabase!
-        .channel(`draft_room_${draftId}`)
-        .on(
-            'postgres_changes',
-            { event: 'UPDATE', schema: 'public', table: 'draft_sessions', filter: `id=eq.${draftId}` },
-            (payload) => {
-                if (payload.new && payload.new.state) {
-                    callback(payload.new.state as DraftState);
-                }
-            }
-        )
-        .subscribe();
 };
