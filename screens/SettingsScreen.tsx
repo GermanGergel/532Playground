@@ -44,12 +44,12 @@ export const SettingsScreen: React.FC = () => {
     const handleRecalculate17Feb = async () => {
         if (isRecalculating) return;
         
-        // Поиск сессии за 17.02.2025
-        const targetDate = "2025-02-17";
+        // Поиск сессии за 17.02.2026 (Исправлено с 2025)
+        const targetDate = "2026-02-17";
         const session = history.find(s => s.date.includes(targetDate));
         
         if (!session) {
-            alert("Session from 17.02.2025 not found in history.");
+            alert(`Session from 17.02.2026 not found in history.`);
             return;
         }
 
@@ -59,7 +59,7 @@ export const SettingsScreen: React.FC = () => {
                 const updatedPlayers = recalculateHistoricalSession(session, allPlayers);
                 setAllPlayers(updatedPlayers);
                 await savePlayersToDB(updatedPlayers);
-                alert("Recalculation complete! All players from 17.02 updated.");
+                alert("Recalculation complete! All players from 17.02.2026 updated.");
             } catch (e) {
                 console.error(e);
                 alert("Recalculation failed.");
@@ -224,7 +224,7 @@ export const SettingsScreen: React.FC = () => {
                             <Activity className="w-5 h-5" />
                         )}
                         <div className="flex flex-col items-start">
-                            <span className="text-sm font-black uppercase tracking-wider leading-none">Recalculate 17.02 Session</span>
+                            <span className="text-sm font-black uppercase tracking-wider leading-none">Recalculate 17.02.2026 Session</span>
                             <span className="text-[8px] font-mono text-yellow-500/50 mt-1">FORCE STATISTICS RECOVERY</span>
                         </div>
                     </Button>
