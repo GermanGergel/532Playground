@@ -373,6 +373,9 @@ export const PublicHubScreen: React.FC = () => {
     const [isTotmOpen, setIsTotmOpen] = useState(false);
     const [dashboardView, setDashboardView] = useState<DashboardViewType>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
+    
+    // Ссылка на основной прокручиваемый контейнер
+    const mainScrollRef = useRef<HTMLDivElement>(null);
 
     const t = useTranslation();
 
@@ -397,13 +400,13 @@ export const PublicHubScreen: React.FC = () => {
         const sortedArchitects = [...confirmed].sort((a, b) => { if (b.totalAssists !== a.totalAssists) return b.totalAssists - a.totalAssists; return b.rating - a.rating; });
         const sortedGrandMasters = [...confirmed].sort((a, b) => { const gaA = (a.totalGoals || 0) + (a.totalAssists || 0); const gaB = (b.totalGoals || 0) + (b.totalAssists || 0); if (gaB !== gaA) return gaB - gaA; return b.rating - a.rating; });
         const eligibleWinRate = confirmed.filter(p => (p.totalSessionsPlayed || 0) >= 10);
-        const sortedConquerors = [...eligibleWinRate].sort((a, b) => { const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0; const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0; if (wrB !== wrA) return wrB - wrA; return b.totalGames - a.totalGames; });
+        const sortedConquerors = [...eligibleWinRate].sort((a, b) => { const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0; const wrB = b.totalWins / b.totalGames; if (wrB !== wrA) return wrB - wrA; return b.totalGames - a.totalGames; });
         return { scorers: sortedScorers, architects: sortedArchitects, grandMasters: sortedGrandMasters, conquerors: sortedConquerors };
     }, [allPlayers]);
 
     const displayData = useMemo(() => {
         const confirmedRealPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
-        const sorted = [...confirmedRealPlayers].sort((a, b) => { if (b.rating !== a.rating) return b.rating - a.rating; const scoreA = (a.totalGoals || 0) + (a.totalAssists || 0); const scoreB = (b.totalGoals || 0) + (b.totalAssists || 0); if (scoreB !== scoreA) return scoreB - scoreA; const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0; const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0; if (wrB !== wrA) return wrB - wrA; return (b.totalGames || 0) - (a.totalGames || 0); });
+        const sorted = [...confirmedRealPlayers].sort((a, b) => { if (b.rating !== a.rating) return b.rating - a.rating; const scoreA = (a.totalGoals || 0) + (a.totalAssists || 0); const scoreB = (b.totalGoals || 0) + (b.totalAssists || 0); if (scoreB !== scoreA) return scoreB - scoreA; const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0; const wrB = b.totalWins / b.totalGames; if (wrB !== wrA) return wrB - wrA; return (b.totalGames || 0) - (a.totalGames || 0); });
         return { top: sorted.slice(0, 3) };
     }, [allPlayers]);
     
@@ -435,7 +438,14 @@ export const PublicHubScreen: React.FC = () => {
                 activeTab={dashboardView} 
                 onTabChange={handleTabChange} 
                 archiveViewDate={archiveViewDate} 
-                onHomeClick={() => { setIsDashboardOpen(false); setDashboardView('dashboard'); }} 
+                onHomeClick={() => { 
+                    setIsDashboardOpen(false); 
+                    setDashboardView('dashboard'); 
+                    // Принудительный скролл в начало основного меню
+                    if (mainScrollRef.current) {
+                        mainScrollRef.current.scrollTop = 0;
+                    }
+                }} 
                 onOpenTotm={() => setIsTotmOpen(true)} 
             />
 
@@ -444,7 +454,10 @@ export const PublicHubScreen: React.FC = () => {
                 <div className="fixed bottom-0 left-0 right-0 h-16 z-[110] pointer-events-none opacity-0 transition-all duration-700 delay-300" style={{ opacity: isDashboardOpen ? 1 : 0, background: `linear-gradient(to top, ${getBottomPatchColor()} 50%, ${getBottomPatchColor()}cc 80%, transparent 100%)` }}></div>
             </div>
 
-            <div className={`absolute inset-0 overflow-y-auto overscroll-none touch-pan-y z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}>
+            <div 
+                ref={mainScrollRef}
+                className={`absolute inset-0 overflow-y-auto overscroll-none touch-pan-y z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}
+            >
                 <HeaderAtmosphere />
                 
                 <div className="relative z-10">
