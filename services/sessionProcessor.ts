@@ -14,7 +14,6 @@ interface ProcessedSessionResult {
 
 /**
  * Принудительный пересчет статистики для исторической сессии.
- * Используется для восстановления данных, если автоматический расчет не сработал.
  */
 export const recalculateHistoricalSession = (
     session: Session,
@@ -27,7 +26,6 @@ export const recalculateHistoricalSession = (
         const sessionStats = playerStatsMap.get(player.id);
         if (!sessionStats) return player;
 
-        // 1. Вычисляем бейджи и дельту рейтинга
         const badgesEarned = calculateEarnedBadges(player, sessionStats, session, allPlayersStats);
         const { breakdown } = calculateRatingUpdate(player, sessionStats, session, badgesEarned);
         
@@ -35,13 +33,11 @@ export const recalculateHistoricalSession = (
         const unifiedNewRating = Math.max(floor, Math.round(breakdown.newRating));
         const finalChange = unifiedNewRating - player.rating;
 
-        // 2. Обновляем бейджи (инкрементально)
         const updatedBadges = { ...player.badges };
         badgesEarned.forEach(badge => {
             updatedBadges[badge] = (updatedBadges[badge] || 0) + 1;
         });
 
-        // 3. Обновляем историю рейтинга
         const dateStr = new Date(session.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
         const historyEntry: PlayerHistoryEntry = {
             date: dateStr,
@@ -52,7 +48,6 @@ export const recalculateHistoricalSession = (
         };
 
         const updatedHistory = [...(player.historyData || [])];
-        // Проверяем, нет ли уже записи за эту дату, чтобы не дублировать при повторном нажатии
         if (!updatedHistory.find(h => h.date === dateStr)) {
             updatedHistory.push(historyEntry);
         }
@@ -99,6 +94,7 @@ export const processFinishedSession = ({
     const sessionDate = new Date(session.date);
     const sessionMonthKey = `${sessionDate.getFullYear()}-${sessionDate.getMonth()}`;
 
+    // 1. Сначала подготавливаем базовые инкременты (голы, ассисты, пропуски)
     let playersWithUpdatedStats = oldPlayers.map(player => {
         const sessionStats = playerStatsMap.get(player.id);
         const floor = player.initialRating || 68;
@@ -115,14 +111,10 @@ export const processFinishedSession = ({
                 wins: player.monthlyWins,
                 sessions: player.monthlySessionsPlayed || 0
             } : {
-                goals: 0,
-                assists: 0,
-                games: 0,
-                wins: 0,
-                sessions: 0
+                goals: 0, assists: 0, games: 0, wins: 0, sessions: 0
             };
 
-            const updatedPlayer: Player = {
+            return {
                 ...player,
                 totalGames: player.totalGames + sessionStats.gamesPlayed,
                 totalGoals: player.totalGoals + sessionStats.goals,
@@ -141,7 +133,6 @@ export const processFinishedSession = ({
                 lastPlayedAt: session.date,
                 consecutiveMissedSessions: 0,
             };
-            return updatedPlayer;
         } else {
             const currentMissed = (player.consecutiveMissedSessions || 0) + 1;
             let newRating = player.rating;
@@ -166,23 +157,18 @@ export const processFinishedSession = ({
             if (actualPenaltyDelta < 0) {
                 updatedPlayer.lastRatingChange = {
                     previousRating: player.rating,
-                    teamPerformance: 0,
-                    individualPerformance: 0,
-                    badgeBonus: 0,
+                    teamPerformance: 0, individualPerformance: 0, badgeBonus: 0,
                     finalChange: actualPenaltyDelta,
                     newRating: Math.round(newRating),
                     badgesEarned: []
                 };
 
                 penaltyNews.push({
-                    id: newId(),
-                    playerId: player.id,
-                    playerName: player.nickname,
+                    id: newId(), playerId: player.id, playerName: player.nickname,
                     type: 'penalty',
                     message: `${player.nickname} received inactivity penalty (${actualPenaltyDelta.toFixed(1)} OVR)`,
                     subMessage: `#Inactive #${currentMissed}Missed`,
-                    timestamp: timestamp,
-                    isHot: false,
+                    timestamp: timestamp, isHot: false,
                     statsSnapshot: { rating: Math.round(newRating), tier: getTierForRating(Math.round(newRating)) },
                     priority: 5
                 });
@@ -190,12 +176,8 @@ export const processFinishedSession = ({
                 const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
                 const currentWinRate = player.totalGames > 0 ? Math.round((player.totalWins / player.totalGames) * 100) : 0;
                 
-                const penaltyHistoryEntry: PlayerHistoryEntry = {
-                    date: dateStr,
-                    rating: Math.round(newRating),
-                    winRate: currentWinRate,
-                    goals: 0,
-                    assists: 0
+                const penaltyHistoryEntry = {
+                    date: dateStr, rating: Math.round(newRating), winRate: currentWinRate, goals: 0, assists: 0
                 };
                 
                 const historyData = [...(player.historyData || [])];
@@ -208,50 +190,46 @@ export const processFinishedSession = ({
         }
     });
 
-    let playersWithCalculatedRatings = playersWithUpdatedStats.map(player => {
-        const sessionStats = playerStatsMap.get(player.id);
-        if (sessionStats) {
-            const badgesEarnedThisSession = calculateEarnedBadges(player, sessionStats, session, allPlayersStats);
-            const { delta, breakdown } = calculateRatingUpdate(player, sessionStats, session, badgesEarnedThisSession);
+    // 2. Рассчитываем рейтинг, используя данные игрока ДО сессии (из oldPlayers)
+    // Это гарантирует, что 3-я сессия калибровки будет посчитана как калибровочная.
+    let playersWithCalculatedRatings = playersWithUpdatedStats.map(updatedPlayer => {
+        const sessionStats = playerStatsMap.get(updatedPlayer.id);
+        const originalPlayer = oldPlayers.find(p => p.id === updatedPlayer.id);
+        
+        if (sessionStats && originalPlayer) {
+            const badgesEarnedThisSession = calculateEarnedBadges(originalPlayer, sessionStats, session, allPlayersStats);
             
-            const floor = player.initialRating || 68;
-            const rawNewRating = Math.round(breakdown.newRating);
-            const unifiedNewRating = Math.max(floor, rawNewRating);
-            const finalChange = unifiedNewRating - player.rating;
+            // КЛЮЧЕВОЙ МОМЕНТ: Используем originalPlayer (у которого счетчик сессий еще старый)
+            const { breakdown } = calculateRatingUpdate(originalPlayer, sessionStats, session, badgesEarnedThisSession);
+            
+            const floor = originalPlayer.initialRating || 68;
+            const unifiedNewRating = Math.max(floor, Math.round(breakdown.newRating));
+            const finalChange = unifiedNewRating - originalPlayer.rating;
             
             let newForm: 'hot_streak' | 'stable' | 'cold_streak' = 'stable';
             if (finalChange >= 0.5) newForm = 'hot_streak';
             else if (finalChange <= -0.5) newForm = 'cold_streak';
             
-            const newTier = getTierForRating(unifiedNewRating);
-
-            const updatedBadges: Partial<Record<BadgeType, number>> = { ...player.badges };
+            const updatedBadges = { ...updatedPlayer.badges };
             badgesEarnedThisSession.forEach(badge => {
                 updatedBadges[badge] = (updatedBadges[badge] || 0) + 1;
             });
             
-            const sessionHistory = [...(player.sessionHistory || [])];
+            const sessionHistory = [...(updatedPlayer.sessionHistory || [])];
             const sessionWinRate = sessionStats.gamesPlayed > 0 ? Math.round((sessionStats.wins / sessionStats.gamesPlayed) * 100) : 0;
-            if (sessionStats.gamesPlayed > 0) {
-                sessionHistory.push({ winRate: sessionWinRate });
-            }
+            if (sessionStats.gamesPlayed > 0) sessionHistory.push({ winRate: sessionWinRate });
             if (sessionHistory.length > 5) sessionHistory.shift();
             
-            const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
-            
-            const newHistoryEntry: PlayerHistoryEntry = {
-                date: dateStr,
-                rating: unifiedNewRating,
-                winRate: sessionWinRate,
-                goals: sessionStats.goals,
-                assists: sessionStats.assists
+            const dateStr = new Date(session.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
+            const newHistoryEntry = {
+                date: dateStr, rating: unifiedNewRating, winRate: sessionWinRate, goals: sessionStats.goals, assists: sessionStats.assists
             };
             
-            const historyData = [...(player.historyData || [])];
+            const historyData = [...(updatedPlayer.historyData || [])];
             historyData.push(newHistoryEntry);
             if (historyData.length > 12) historyData.shift();
 
-            const safePlayerRecords = (player.records || {}) as any;
+            const safePlayerRecords = (updatedPlayer.records || {}) as any;
             const getSafeValue = (rec: any) => (rec && typeof rec.value === 'number') ? rec : { value: 0, sessionId: '' };
 
             const newRecords: PlayerRecords = {
@@ -267,9 +245,9 @@ export const processFinishedSession = ({
             };
 
             return { 
-                ...player, 
+                ...updatedPlayer, 
                 rating: unifiedNewRating, 
-                tier: newTier, 
+                tier: getTierForRating(unifiedNewRating), 
                 form: newForm,
                 badges: updatedBadges,
                 sessionHistory,
@@ -278,7 +256,7 @@ export const processFinishedSession = ({
                 records: newRecords,
             };
         }
-        return player;
+        return updatedPlayer;
     });
 
     const newGameplayNews = generateNewsUpdates(oldPlayers, playersWithCalculatedRatings, participatedIds);
