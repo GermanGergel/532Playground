@@ -153,20 +153,38 @@ const ChaseList: React.FC<{
     );
 };
 
-// --- UNIT SIGNATURE TACTICAL OVERLAY ---
+// --- UNIT SIGNATURE TACTICAL OVERLAY (MATCHING REFERENCE) ---
 const TacticalShardOverlay = ({ color }: { color: string }) => (
-    <div className="absolute inset-0 z-0 opacity-[0.25] pointer-events-none overflow-hidden">
+    <div className="absolute inset-0 z-0 opacity-[0.4] pointer-events-none overflow-hidden">
         <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-            {/* LARGE Aggressive Shards matching requested style */}
-            <path d="M-10 40 L40 0 L60 30 L-10 80 Z" fill={color} opacity="0.6" />
-            <path d="M110 20 L70 0 L40 50 L110 90 Z" fill={color} opacity="0.4" />
-            <path d="M-20 100 L30 60 L80 110 Z" fill={color} opacity="0.5" />
-            <path d="M120 100 L70 50 L40 120 Z" fill={color} opacity="0.3" />
+            <defs>
+                <linearGradient id="shardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor={color} stopOpacity="0.8" />
+                    <stop offset="100%" stopColor={color} stopOpacity="0.2" />
+                </linearGradient>
+            </defs>
             
-            {/* Slash lines */}
-            <rect x="-20" y="30" width="140" height="2" fill={color} transform="rotate(-40 50 50)" />
-            <rect x="-20" y="55" width="140" height="4" fill={color} transform="rotate(-40 50 50)" />
-            <rect x="-20" y="75" width="140" height="1" fill={color} transform="rotate(-40 50 50)" />
+            {/* AGGRESSIVE INTERSECTING SHARDS */}
+            {/* Top right large shard */}
+            <path d="M110 0 L60 0 L40 60 L110 40 Z" fill="url(#shardGrad)" opacity="0.6" />
+            
+            {/* Long diagonal slash */}
+            <path d="M-10 20 L80 110 L90 100 L0 10 Z" fill={color} opacity="0.3" />
+            
+            {/* Left large spike */}
+            <path d="M0 30 L50 45 L0 85 Z" fill="url(#shardGrad)" opacity="0.5" />
+            
+            {/* Bottom right dark wedge */}
+            <path d="M70 100 L100 60 L100 100 Z" fill={color} opacity="0.4" />
+            
+            {/* Top left small spike */}
+            <path d="M0 0 L30 0 L0 40 Z" fill={color} opacity="0.3" />
+            
+            {/* Horizontal aggressive line */}
+            <path d="M20 50 L80 52 L75 58 L25 56 Z" fill={color} opacity="0.2" />
+            
+            {/* Center cross-shatter */}
+            <path d="M45 45 L55 35 L60 55 L40 60 Z" fill="white" opacity="0.1" />
         </svg>
     </div>
 );
@@ -181,7 +199,8 @@ const LegendCard: React.FC<{
     accentColor?: string;
     className?: string; 
 }> = ({ title, player, value, icon, label, accentColor = "#FFD700", className = "" }) => {
-    // Dynamic Font Size logic to prevent truncation
+    
+    // Dynamic Font Size logic to prevent truncation (as requested)
     const getNicknameSize = (name: string) => {
         const len = name.length;
         if (len > 14) return 'text-[9px] md:text-[11px]';
@@ -192,7 +211,7 @@ const LegendCard: React.FC<{
     return (
         <div className={`relative group w-full h-36 md:h-40 rounded-2xl overflow-hidden bg-black border transition-all duration-500 active:scale-95 ${className}`} style={{ borderColor: `${accentColor}33`, boxShadow: `0 10px 30px -15px rgba(0,0,0,1)` }}>
             
-            {/* BRAND SIGNATURE OVERLAY */}
+            {/* BRAND SIGNATURE OVERLAY (MATCHING REFERENCE) */}
             <TacticalShardOverlay color={accentColor} />
             
             <div className="absolute top-0 right-0 w-28 md:w-36 h-full z-0 pointer-events-none">
