@@ -1,10 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Card, Button, useTranslation } from '../ui';
-import { isSupabaseConfigured, getCloudPlayerCount } from '../db';
-import { Wand, Activity } from '../icons';
+import { isSupabaseConfigured, getCloudPlayerCount, savePlayersToDB } from '../db';
+import { Wand, Activity, RefreshCw, Trash2 } from '../icons';
+import { calculateAllStats } from '../services/statistics';
+import { Player } from '../types';
 
 const WalletIcon = ({ className }: { className?: string }) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -17,11 +18,11 @@ const WalletIcon = ({ className }: { className?: string }) => (
 export const SettingsScreen: React.FC = () => {
     const t = useTranslation();
     const navigate = useNavigate();
-    const { language, setLanguage, allPlayers } = useApp();
+    const { language, setLanguage, allPlayers, history, setAllPlayers } = useApp();
     const [cloudStatus, setCloudStatus] = React.useState<{ connected: boolean, count: number } | null>(null);
     const [isRefreshing, setIsRefreshing] = React.useState(false);
+    const [isRepairing, setIsRepairing] = React.useState(false);
     
-    // Определение текущего эндпоинта Supabase для отображения
     const dbEndpoint = (process.env.VITE_SUPABASE_URL || '').split('//')[1]?.split('.')[0]?.toUpperCase() || 'LOCAL';
 
     const checkCloud = async () => {
@@ -38,6 +39,106 @@ export const SettingsScreen: React.FC = () => {
             setCloudStatus({ connected: false, count: 0 });
         }
         setIsRefreshing(false);
+    };
+
+    const handleRollback1702 = async () => {
+        if (isRepairing) return;
+        if (!window.confirm("NUCLEAR ROLLBACK 17.02: This will aggressively purge all Feb 17th data. Ratings will revert to Feb 16th state and Analysis widgets will be cleared. Continue?")) return;
+
+        setIsRepairing(true);
+        try {
+            // 1. Find the target session
+            const targetSession = history.find(s => s.date.includes('2026-02-17') || s.date.includes('17/02/2026'));
+            if (!targetSession) {
+                alert("Session 17.02 not found in your local history records.");
+                setIsRepairing(false);
+                return;
+            }
+
+            // 2. Calculate what needs to be subtracted
+            const { allPlayersStats } = calculateAllStats(targetSession, allPlayers);
+            
+            // 3. Transform all players
+            const rolledBackPlayers = allPlayers.map(p => {
+                const sessionStats = allPlayersStats.find(s => s.player.id === p.id);
+                const historyData = p.historyData || [];
+                const has1702Entry = historyData.some(h => h.date === '17/02');
+
+                // If player wasn't in the session and has no graph point, ignore
+                if (!sessionStats && !has1702Entry) return p;
+
+                console.log(`Rollback: Processing ${p.nickname}...`);
+
+                // Restore OVR and History Graph
+                const targetIdx = historyData.findIndex(h => h.date === '17/02');
+                let restoredRating = p.rating;
+                let newHistory = [...historyData];
+
+                if (targetIdx !== -1) {
+                    const prevPoint = historyData[targetIdx - 1];
+                    restoredRating = prevPoint ? prevPoint.rating : (p.initialRating || 68);
+                    newHistory = historyData.filter(h => h.date !== '17/02');
+                }
+
+                // Restore Career Totals
+                let totalGames = p.totalGames;
+                let totalGoals = p.totalGoals;
+                let totalAssists = p.totalAssists;
+                let totalWins = p.totalWins;
+                let totalDraws = p.totalDraws;
+                let totalLosses = p.totalLosses;
+                let totalSessions = p.totalSessionsPlayed;
+                let monthlyGames = p.monthlyGames;
+                let monthlyGoals = p.monthlyGoals;
+                let monthlyAssists = p.monthlyAssists;
+                let monthlyWins = p.monthlyWins;
+                let monthlySessions = p.monthlySessionsPlayed;
+
+                if (sessionStats && has1702Entry) {
+                    totalGames = Math.max(0, totalGames - sessionStats.gamesPlayed);
+                    totalGoals = Math.max(0, totalGoals - sessionStats.goals);
+                    totalAssists = Math.max(0, totalAssists - sessionStats.assists);
+                    totalWins = Math.max(0, totalWins - sessionStats.wins);
+                    totalDraws = Math.max(0, totalDraws - sessionStats.draws);
+                    totalLosses = Math.max(0, totalLosses - sessionStats.losses);
+                    totalSessions = Math.max(0, totalSessions - 1);
+                    
+                    monthlyGames = Math.max(0, monthlyGames - sessionStats.gamesPlayed);
+                    monthlyGoals = Math.max(0, monthlyGoals - sessionStats.goals);
+                    monthlyAssists = Math.max(0, monthlyAssists - sessionStats.assists);
+                    monthlyWins = Math.max(0, monthlyWins - sessionStats.wins);
+                    monthlySessions = Math.max(0, monthlySessions - 1);
+                }
+
+                // Clear visual trend bars
+                const sessionHistory = [...(p.sessionHistory || [])];
+                if (has1702Entry && sessionHistory.length > 0) sessionHistory.pop();
+
+                return { 
+                    ...p, 
+                    rating: restoredRating,
+                    totalGames, totalGoals, totalAssists, totalWins, totalDraws, totalLosses,
+                    totalSessionsPlayed: totalSessions,
+                    monthlyGames, monthlyGoals, monthlyAssists, monthlyWins,
+                    monthlySessionsPlayed: monthlySessions,
+                    historyData: newHistory,
+                    sessionHistory,
+                    form: 'stable' as const,
+                    lastRatingChange: undefined, // CRITICAL: This wipes the mismatched analysis widget
+                    consecutiveMissedSessions: Math.max(0, (p.consecutiveMissedSessions || 0) - 1)
+                };
+            });
+
+            setAllPlayers(rolledBackPlayers);
+            await savePlayersToDB(rolledBackPlayers);
+            alert("FULL ROLLBACK COMPLETE. Check Hub now - ratings should be back to 82/72/etc.");
+
+        } catch (e) {
+            console.error(e);
+            alert("Error during rollback sequence.");
+        } finally {
+            setIsRepairing(false);
+        }
     };
 
     useEffect(() => {
@@ -185,6 +286,16 @@ export const SettingsScreen: React.FC = () => {
             <div className="p-4 shrink-0 space-y-4">
                 <Button 
                     variant="ghost" 
+                    onClick={handleRollback1702}
+                    disabled={isRepairing}
+                    className="w-full !py-3 border border-orange-500/20 bg-orange-500/5 hover:bg-orange-500/10 text-orange-500 text-[10px] tracking-widest uppercase flex items-center justify-center gap-2"
+                >
+                    <Trash2 className={`w-3 h-3 ${isRepairing ? 'animate-bounce' : ''}`} /> 
+                    {isRepairing ? 'CLEANING DATABASE...' : 'FULL ROLLBACK 17.02'}
+                </Button>
+
+                <Button 
+                    variant="ghost" 
                     onClick={() => navigate('/settings/promo-admin')}
                     className="w-full !py-3 border border-white/5 bg-black/20 hover:bg-white/5 text-dark-text-secondary text-[10px] tracking-widest uppercase flex items-center justify-center gap-2"
                 >
@@ -195,7 +306,7 @@ export const SettingsScreen: React.FC = () => {
                 
                 <div className="text-center opacity-40 hover:opacity-100 transition-opacity duration-500">
                     <p className="font-orbitron font-bold text-sm tracking-widest text-dark-accent-start uppercase">UNIT</p>
-                    <p className="text-[10px] text-dark-text-secondary font-mono mt-1">v4.0.2 • SYSTEM READY</p>
+                    <p className="text-[10px] text-dark-text-secondary font-mono mt-1">v4.0.3 • SYSTEM READY</p>
                 </div>
             </div>
         </div>
