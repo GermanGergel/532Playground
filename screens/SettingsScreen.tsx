@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Card, Button, useTranslation } from '../ui';
 import { isSupabaseConfigured, getCloudPlayerCount, savePlayersToDB } from '../db';
-import { Wand, Activity, RefreshCw, Trash2 } from '../icons';
+import { Wand, Activity, Trash2, Zap } from '../icons';
 import { calculateAllStats } from '../services/statistics';
 import { Player } from '../types';
 
@@ -41,44 +41,58 @@ export const SettingsScreen: React.FC = () => {
         setIsRefreshing(false);
     };
 
-    const handleRollback1702 = async () => {
+    // ФУНКЦИЯ ОЧИСТКИ ГРАФИКОВ ОТ ПУСТЫХ ДАТ
+    const handleNuclearCleanup = async () => {
         if (isRepairing) return;
-        if (!window.confirm("NUCLEAR ROLLBACK 17.02: Это действие удалит все данные за 17 февраля из профилей игроков и очистит виджеты анализа. Продолжить?")) return;
+        if (!window.confirm("ОЧИСТКА ГРАФИКОВ: Это удалит точки за дни, когда игроков НЕ БЫЛО на поле. Исправит фантомные даты (10.02 и т.д.). Продолжить?")) return;
 
         setIsRepairing(true);
         try {
-            // 1. Ищем сессию в истории
+            const cleanedPlayers = allPlayers.map(p => {
+                const historyData = p.historyData || [];
+                // Оставляем только те точки, где была хоть какая-то активность
+                const newHistory = historyData.filter((h, idx) => {
+                    if (idx === 0 || h.date === 'Start') return true; // Оставляем начало
+                    return (h.goals || 0) > 0 || (h.assists || 0) > 0 || (h.winRate || 0) > 0;
+                });
+
+                return { ...p, historyData: newHistory };
+            });
+
+            setAllPlayers(cleanedPlayers);
+            await savePlayersToDB(cleanedPlayers);
+            alert("ГРАФИКИ ОЧИЩЕНЫ. Проверьте профили игроков.");
+        } catch (e) {
+            console.error(e);
+            alert("Ошибка при очистке.");
+        } finally {
+            setIsRepairing(false);
+        }
+    };
+
+    const handleRollback1702 = async () => {
+        if (isRepairing) return;
+        if (!window.confirm("NUCLEAR ROLLBACK 17.02: Это удалит данные за 17 февраля и ПРИНУДИТЕЛЬНО очистит виджеты анализа. Продолжить?")) return;
+
+        setIsRepairing(true);
+        try {
             const targetSession = history.find(s => s.date.includes('17/02') || s.date.includes('2026-02-17'));
-            
-            if (!targetSession) {
-                alert("Сессия 17.02 не найдена.");
-                setIsRepairing(false);
-                return;
-            }
+            const { allPlayersStats: sessionStats } = targetSession ? calculateAllStats(targetSession, allPlayers) : { allPlayersStats: [] };
 
-            // 2. Считаем статистику ЭТОЙ сессии
-            const { allPlayersStats: sessionStats } = calculateAllStats(targetSession, allPlayers);
-
-            // 3. Обновляем игроков
             const rolledBackPlayers = allPlayers.map(p => {
                 const playerStatsInSession = sessionStats.find(s => s.player.id === p.id);
                 const historyData = [...(p.historyData || [])];
-                
-                // Находим точку 17/02 в истории графика
                 const entryIdx = historyData.findIndex(h => h.date === '17/02');
                 
                 let restoredRating = p.rating;
                 let newHistory = [...historyData];
 
                 if (entryIdx !== -1) {
-                    // Возвращаем рейтинг к тому, что был ДО сессии 17.02
                     const prevEntry = historyData[entryIdx - 1];
                     restoredRating = prevEntry ? prevEntry.rating : (p.initialRating || 68);
-                    // УДАЛЯЕМ ТОЧКУ ИЗ ГРАФИКА
                     newHistory = historyData.filter((_, i) => i !== entryIdx);
                 }
 
-                // Вычитаем показатели сессии из карьеры
                 let totalG = p.totalGoals;
                 let totalA = p.totalAssists;
                 let totalW = p.totalWins;
@@ -93,7 +107,8 @@ export const SettingsScreen: React.FC = () => {
                     totalSess = Math.max(0, totalSess - 1);
                 }
 
-                return {
+                // СОЗДАЕМ ЧИСТЫЙ ОБЪЕКТ БЕЗ lastRatingChange
+                const cleanedPlayer: any = {
                     ...p,
                     rating: restoredRating,
                     totalGoals: totalG,
@@ -102,16 +117,19 @@ export const SettingsScreen: React.FC = () => {
                     totalGames: totalGP,
                     totalSessionsPlayed: totalSess,
                     historyData: newHistory,
-                    // КРИТИЧЕСКИ: Удаляем анализ, чтобы плашка 84 OVR исчезла
-                    lastRatingChange: undefined,
                     form: 'stable' as const,
                     consecutiveMissedSessions: Math.max(0, (p.consecutiveMissedSessions || 0) - 1)
                 };
+                
+                // Явно удаляем поле анализа, чтобы плашка исчезла
+                delete cleanedPlayer.lastRatingChange;
+                
+                return cleanedPlayer as Player;
             });
 
             setAllPlayers(rolledBackPlayers);
             await savePlayersToDB(rolledBackPlayers);
-            alert("ОТКАТ 17.02 ЗАВЕРШЕН. Теперь в Хабе и карточках должны быть верные данные.");
+            alert("ОТКАТ ЗАВЕРШЕН. Виджеты за 17.02 должны исчезнуть.");
         } catch (e) {
             console.error(e);
             alert("Ошибка при откате.");
@@ -127,7 +145,6 @@ export const SettingsScreen: React.FC = () => {
     const langClasses = (lang: string) => `px-3 py-1 rounded-full font-bold transition-colors text-base ${language === lang ? 'gradient-bg text-dark-bg' : 'bg-dark-surface hover:bg-white/10'}`;
 
     const NetworkHud = () => {
-        const isLoading = cloudStatus === null || isRefreshing;
         const isOnline = cloudStatus?.connected === true;
         const themeColor = isOnline ? '#00F2FE' : '#A9B1BD';
         
@@ -135,7 +152,6 @@ export const SettingsScreen: React.FC = () => {
             <div 
                 onClick={checkCloud}
                 className="relative overflow-hidden rounded-xl border border-white/10 bg-black/60 p-5 transition-all duration-300 cursor-pointer active:scale-95 group select-none"
-                style={{ boxShadow: isOnline ? '0 0 20px rgba(0, 242, 254, 0.15)' : 'none' }}
             >
                 <div className="relative z-10 flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -144,9 +160,7 @@ export const SettingsScreen: React.FC = () => {
                             <span className="relative w-4 h-4 rounded-full" style={{ backgroundColor: themeColor, boxShadow: `0 0 10px ${themeColor}` }}></span>
                         </div>
                         <div className="flex flex-col">
-                            <h3 className="text-[10px] font-bold tracking-[0.2em] text-dark-text-secondary uppercase mb-0.5 group-hover:text-white transition-colors">
-                                DATABASE UPLINK
-                            </h3>
+                            <h3 className="text-[10px] font-bold tracking-[0.2em] text-dark-text-secondary uppercase mb-0.5 group-hover:text-white transition-colors">DATABASE UPLINK</h3>
                             <span className="text-xl font-black italic tracking-wider leading-none" style={{ color: themeColor }}>
                                 {isOnline ? 'SYSTEM ONLINE' : 'LOCAL MODE'}
                             </span>
@@ -154,9 +168,7 @@ export const SettingsScreen: React.FC = () => {
                     </div>
                     <div className="text-right">
                         <div className="flex items-baseline gap-1 mt-1">
-                            <span className="text-2xl font-bold font-mono text-white">
-                                {cloudStatus?.count || 0}
-                            </span>
+                            <span className="text-2xl font-bold font-mono text-white">{cloudStatus?.count || 0}</span>
                             <span className="text-[9px] text-dark-text-secondary font-bold">/ {allPlayers.length}</span>
                         </div>
                     </div>
@@ -194,14 +206,6 @@ export const SettingsScreen: React.FC = () => {
                         </Card>
                     </Link>
 
-                    <Link to="/settings/voice" className="block">
-                         <Card className={`${cardNeonClasses} !p-3`}>
-                             <div className="flex justify-center items-center">
-                                <h2 className="font-chakra font-bold text-xl text-white tracking-wider">{t.voiceAssistant}</h2>
-                            </div>
-                        </Card>
-                    </Link>
-
                     <Link to="/settings/analytics" className="block">
                          <Card className={`${cardNeonClasses} !p-3`}>
                              <div className="flex justify-center items-center gap-3">
@@ -216,6 +220,16 @@ export const SettingsScreen: React.FC = () => {
             <div className="p-4 shrink-0 space-y-4">
                 <Button 
                     variant="ghost" 
+                    onClick={handleNuclearCleanup}
+                    disabled={isRepairing}
+                    className="w-full !py-3 border border-cyan-500/20 bg-cyan-500/5 hover:bg-cyan-500/10 text-cyan-400 text-[10px] tracking-widest uppercase flex items-center justify-center gap-2"
+                >
+                    <Zap className={`w-3 h-3 ${isRepairing ? 'animate-pulse' : ''}`} /> 
+                    {isRepairing ? 'FIXING CHARTS...' : 'FIX PHANTOM DATES'}
+                </Button>
+
+                <Button 
+                    variant="ghost" 
                     onClick={handleRollback1702}
                     disabled={isRepairing}
                     className="w-full !py-3 border border-orange-500/20 bg-orange-500/5 hover:bg-orange-500/10 text-orange-500 text-[10px] tracking-widest uppercase flex items-center justify-center gap-2"
@@ -224,19 +238,11 @@ export const SettingsScreen: React.FC = () => {
                     {isRepairing ? 'CLEANING DATABASE...' : 'FULL ROLLBACK 17.02'}
                 </Button>
 
-                <Button 
-                    variant="ghost" 
-                    onClick={() => navigate('/settings/promo-admin')}
-                    className="w-full !py-3 border border-white/5 bg-black/20 hover:bg-white/5 text-dark-text-secondary text-[10px] tracking-widest uppercase flex items-center justify-center gap-2"
-                >
-                    <Wand className="w-3 h-3 opacity-50" /> Config Promo
-                </Button>
-
                 <NetworkHud />
                 
                 <div className="text-center opacity-40 hover:opacity-100 transition-opacity duration-500">
                     <p className="font-orbitron font-bold text-sm tracking-widest text-dark-accent-start uppercase">UNIT</p>
-                    <p className="text-[10px] text-dark-text-secondary font-mono mt-1">v4.0.3 • SYSTEM READY</p>
+                    <p className="text-[10px] text-dark-text-secondary font-mono mt-1">v4.0.5 • SYSTEM READY</p>
                 </div>
             </div>
         </div>

@@ -1,4 +1,4 @@
-import { Session, Player, NewsItem, BadgeType, SessionStatus, PlayerRecords, PlayerHistoryEntry } from '../types';
+import { Session, Player, NewsItem, BadgeType, SessionStatus } from '../types';
 import { calculateAllStats } from './statistics';
 import { calculateEarnedBadges, calculateRatingUpdate, getTierForRating } from './rating';
 import { generateNewsUpdates, manageNewsFeedSize } from './news';
@@ -36,7 +36,8 @@ export const processFinishedSession = ({
         const sessionStats = playerStatsMap.get(player.id);
         const floor = player.initialRating || 68;
         
-        if (sessionStats) {
+        // Если игрок был в сессии и РЕАЛЬНО играл
+        if (sessionStats && sessionStats.gamesPlayed > 0) {
             const lastPlayedDate = player.lastPlayedAt ? new Date(player.lastPlayedAt) : new Date(0);
             const lastPlayedMonthKey = `${lastPlayedDate.getFullYear()}-${lastPlayedDate.getMonth()}`;
             const isSameMonth = sessionMonthKey === lastPlayedMonthKey;
@@ -69,6 +70,7 @@ export const processFinishedSession = ({
                 consecutiveMissedSessions: 0,
             };
         } else {
+            // Игрока не было
             const currentMissed = (player.consecutiveMissedSessions || 0) + 1;
             let newRating = player.rating;
             let actualPenaltyDelta = 0;
@@ -89,6 +91,7 @@ export const processFinishedSession = ({
                 tier: getTierForRating(Math.round(newRating)),
             };
 
+            // Добавляем точку в историю ТОЛЬКО если был штраф (чтобы график отразил падение)
             if (actualPenaltyDelta < 0) {
                 updatedPlayer.lastRatingChange = {
                     previousRating: player.rating,
@@ -100,24 +103,9 @@ export const processFinishedSession = ({
                     badgesEarned: []
                 };
 
-                penaltyNews.push({
-                    id: newId(),
-                    playerId: player.id,
-                    playerName: player.nickname,
-                    type: 'penalty',
-                    message: `${player.nickname} received inactivity penalty (${actualPenaltyDelta.toFixed(1)} OVR)`,
-                    subMessage: `#Inactive #${currentMissed}Missed`,
-                    timestamp: timestamp,
-                    isHot: false,
-                    statsSnapshot: { rating: Math.round(newRating), tier: getTierForRating(Math.round(newRating)) },
-                    priority: 5
-                });
-
                 const dateStr = new Date(session.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
-                const currentWinRate = player.totalGames > 0 ? Math.round((player.totalWins / player.totalGames) * 100) : 0;
-                
                 const historyData = [...(player.historyData || [])];
-                historyData.push({ date: dateStr, rating: Math.round(newRating), winRate: currentWinRate, goals: 0, assists: 0 });
+                historyData.push({ date: dateStr, rating: Math.round(newRating), winRate: 0, goals: 0, assists: 0 });
                 if (historyData.length > 12) historyData.shift();
                 updatedPlayer.historyData = historyData;
             }
@@ -126,10 +114,10 @@ export const processFinishedSession = ({
         }
     });
 
-    // 2. CALCULATE RATINGS & BADGES
+    // 2. CALCULATE RATINGS & BADGES (Только для активных участников)
     let playersWithCalculatedRatings = playersWithUpdatedStats.map(player => {
         const sessionStats = playerStatsMap.get(player.id);
-        if (sessionStats) {
+        if (sessionStats && sessionStats.gamesPlayed > 0) {
             const badgesEarnedThisSession = calculateEarnedBadges(player, sessionStats, session, allPlayersStats);
             const { breakdown } = calculateRatingUpdate(player, sessionStats, session, badgesEarnedThisSession);
             
@@ -165,11 +153,6 @@ export const processFinishedSession = ({
                 sessionHistory,
                 historyData,
                 lastRatingChange: { ...breakdown, finalChange, newRating: unifiedNewRating, badgesEarned: badgesEarnedThisSession },
-                records: {
-                    bestGoalsInSession: sessionStats.goals >= (player.records?.bestGoalsInSession?.value || 0) ? { value: sessionStats.goals, sessionId: session.id } : player.records.bestGoalsInSession,
-                    bestAssistsInSession: sessionStats.assists >= (player.records?.bestAssistsInSession?.value || 0) ? { value: sessionStats.assists, sessionId: session.id } : player.records.bestAssistsInSession,
-                    bestWinRateInSession: sessionWinRate >= (player.records?.bestWinRateInSession?.value || 0) ? { value: sessionWinRate, sessionId: session.id } : player.records.bestWinRateInSession,
-                },
             };
         }
         return player;
