@@ -29,11 +29,10 @@ interface TeamStats {
     cleanSheets: number; // Helper to track team clean sheets
 }
 
-const getPlayerById = (id: string, sessionPool: Player[], globalPool: Player[]) => {
-    return sessionPool.find(p => p.id === id) || globalPool.find(p => p.id === id);
-};
+const getPlayerById = (id: string, players: Player[]) => players.find(p => p.id === id);
 
-export const calculateAllStats = (session: Session, globalPlayers: Player[] = []) => {
+export const calculateAllStats = (session: Session) => {
+    // Safeguard: ensure teams exists (handle corrupted legacy data)
     const teams = session.teams || [];
     const playerPool = session.playerPool || [];
     const games = session.games || [];
@@ -45,11 +44,7 @@ export const calculateAllStats = (session: Session, globalPlayers: Player[] = []
         });
     });
 
-    const allUniqueParticipantIds = Array.from(new Set(teams.flatMap(t => t.playerIds)));
-    
-    const allPlayersInSession = allUniqueParticipantIds
-        .map(pid => getPlayerById(pid, playerPool, globalPlayers))
-        .filter(Boolean) as Player[];
+    const allPlayersInSession = teams.flatMap(t => t.playerIds).map(pid => getPlayerById(pid, playerPool)).filter(Boolean) as Player[];
 
     const playerStats: PlayerStats[] = allPlayersInSession.map(player => {
         const team = playerTeamMap.get(player.id);
@@ -91,11 +86,14 @@ export const calculateAllStats = (session: Session, globalPlayers: Player[] = []
         if (team1Stat && team2Stat) {
             team1Stat.gamesPlayed++;
             team2Stat.gamesPlayed++;
+            
             team1Stat.goalsFor += game.team1Score;
             team2Stat.goalsFor += game.team2Score;
+            
             team1Stat.goalsAgainst += game.team2Score;
             team2Stat.goalsAgainst += game.team1Score;
 
+            // Track Clean Sheets (Score against is 0)
             if (game.team2Score === 0) team1Stat.cleanSheets++;
             if (game.team1Score === 0) team2Stat.cleanSheets++;
 
@@ -118,6 +116,7 @@ export const calculateAllStats = (session: Session, globalPlayers: Player[] = []
         game.goals.forEach(goal => {
             const scorerStat = playerStats.find(ps => ps.player.id === goal.scorerId);
             const assistantStat = playerStats.find(ps => ps.player.id === goal.assistantId);
+
             if (goal.isOwnGoal) {
                 if (scorerStat) scorerStat.ownGoals++;
             } else {
@@ -126,32 +125,30 @@ export const calculateAllStats = (session: Session, globalPlayers: Player[] = []
             }
         });
         
-        // --- UPDATED: Individual Wins/Losses logic with Legionnaire support ---
+        // Update Individual Stats based on Game Result
+        const team1 = teams.find(t => t.id === game.team1Id);
+        const team2 = teams.find(t => t.id === game.team2Id);
+        if (!team1 || !team2) return;
+        
+        const participatingPlayerIds = new Set([...team1.playerIds, ...team2.playerIds]);
+        
         playerStats.forEach(ps => {
-            // Determine which team the player actually played for in THIS match
-            let playedForTeamId = ps.team.id;
-            const move = game.legionnaireMoves?.find(m => m.playerId === ps.player.id);
-            if (move) {
-                playedForTeamId = move.toTeamId;
-            }
-
-            // Only count if their active team was playing
-            if (game.team1Id === playedForTeamId || game.team2Id === playedForTeamId) {
+            if (participatingPlayerIds.has(ps.player.id)) {
                 ps.gamesPlayed++;
                 
-                const isTeam1 = playedForTeamId === game.team1Id;
+                // Add Clean Sheet to individual stats if their team kept a clean sheet in this game
+                const isTeam1 = ps.team.id === game.team1Id;
                 const conceded = isTeam1 ? game.team2Score : game.team1Score;
-                
                 if (conceded === 0) ps.cleanSheets++;
 
-                if (game.winnerTeamId === playedForTeamId) {
+                if(game.winnerTeamId === ps.team.id) {
                     ps.wins++;
-                    if (conceded === 0) ps.cleanSheetWins++;
-                } else if (game.isDraw) {
-                    ps.draws++;
-                } else {
-                    ps.losses++;
+                    if (conceded === 0) {
+                        ps.cleanSheetWins++;
+                    }
                 }
+                else if (game.isDraw) ps.draws++;
+                else ps.losses++;
             }
         });
     });
@@ -160,62 +157,106 @@ export const calculateAllStats = (session: Session, globalPlayers: Player[] = []
         ts.goalDifference = ts.goalsFor - ts.goalsAgainst;
     });
 
+    // Sort stats
     teamStats.sort((a, b) => b.points - a.points || b.goalDifference - a.goalDifference || b.goalsFor - a.goalsFor);
     
     return { teamStats, allPlayersStats: playerStats };
 };
 
-// ... (Other functions getPlayerKeyStats, calculatePlayerMonthlyStats, getTotmPlayerIds remain unchanged)
+// KEY STATS CALCULATION
 export const getPlayerKeyStats = (player: Player): { isTopScorer: boolean; isTopWinner: boolean } => {
-    if (player.totalGames < 10) { return { isTopScorer: false, isTopWinner: false }; }
+    if (player.totalGames < 10) { // Require more games for key stats
+        return { isTopScorer: false, isTopWinner: false };
+    }
+
     const avgOffense = (player.totalGoals + player.totalAssists) / player.totalGames;
     const winRate = (player.totalWins / player.totalGames) * 100;
-    return { isTopScorer: avgOffense >= 1.5, isTopWinner: winRate >= 75 };
+
+    // Thresholds for what is considered "elite" or a "key stat"
+    const isTopScorer = avgOffense >= 1.5; // e.g., averages 1.5 goal contributions per game
+    const isTopWinner = winRate >= 75; // e.g., wins 75% or more of their games
+
+    return { isTopScorer, isTopWinner };
 };
 
+// --- DYNAMIC MONTHLY STATS CALCULATION ---
+// Calculates true monthly stats from history logs, ignoring dirty cached data
 export const calculatePlayerMonthlyStats = (playerId: string, history: Session[]) => {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
+
     const stats = { goals: 0, assists: 0, wins: 0, games: 0, sessions: 0 };
+
     history.forEach(session => {
         const sDate = new Date(session.date);
+        // Strict check: Must be same Month AND Year, and session must be completed
         if (sDate.getMonth() === currentMonth && sDate.getFullYear() === currentYear && session.status === 'completed') {
-            const playerInSession = session.playerPool.some(p => p.id === playerId) || session.teams.some(t => t.playerIds.includes(playerId));
+            
+            // Check if player exists in the pool (participated in session)
+            const playerInSession = session.playerPool.some(p => p.id === playerId);
+            
             if (playerInSession) {
                 stats.sessions++;
+                
+                // Identify default team (if any) - used as fallback
                 const defaultTeam = session.teams.find(t => t.playerIds.includes(playerId));
+                
+                // Iterate through finished games in this session
                 session.games.forEach(game => {
                     if (game.status === 'finished') {
+                        
+                        // 1. COUNT INDIVIDUAL STATS (Independent of team association)
+                        // This fixes the "Missing Assist" bug when playing as Legionnaire
                         game.goals.forEach(g => {
                             if (g.scorerId === playerId && !g.isOwnGoal) stats.goals++;
                             if (g.assistantId === playerId) stats.assists++;
                         });
+
+                        // 2. DETERMINE IF PLAYER PLAYED THIS MATCH (For Wins/Games)
                         let playedForTeamId: string | undefined;
-                        const legionnaireMove = game.legionnaireMoves?.find(m => m.playerId === playerId && (m.toTeamId === game.team1Id || m.toTeamId === game.team2Id));
-                        if (legionnaireMove) playedForTeamId = legionnaireMove.toTeamId;
-                        else if (defaultTeam) {
+
+                        // Priority A: Explicit Legionnaire Move
+                        const legionnaireMove = game.legionnaireMoves?.find(m => 
+                            m.playerId === playerId && (m.toTeamId === game.team1Id || m.toTeamId === game.team2Id)
+                        );
+
+                        if (legionnaireMove) {
+                            playedForTeamId = legionnaireMove.toTeamId;
+                        } else if (defaultTeam) {
+                            // Priority B: Default Team (only if that team played)
                             if (game.team1Id === defaultTeam.id) playedForTeamId = defaultTeam.id;
                             else if (game.team2Id === defaultTeam.id) playedForTeamId = defaultTeam.id;
                         }
+                        
+                        // If we identified a team they played for, count game/win
                         if (playedForTeamId) {
                             stats.games++;
-                            if (game.winnerTeamId === playedForTeamId) stats.wins++;
+                            if (game.winnerTeamId === playedForTeamId) {
+                                stats.wins++;
+                            }
                         }
                     }
                 });
             }
         }
     });
+
     return stats;
 };
 
+// --- NEW: TEAM OF THE MONTH CALCULATOR ---
+// Optimized for quick lookup
 export const getTotmPlayerIds = (history: Session[], allPlayers: Player[]): Set<string> => {
     if (!history || history.length === 0 || allPlayers.length < 5) return new Set();
+
+    // 1. Determine "Previous Full Month"
     const today = new Date();
     const lastDayOfPrevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
     const tMonth = lastDayOfPrevMonth.getMonth();
     const tYear = lastDayOfPrevMonth.getFullYear();
+
+    // 2. Filter Sessions
     const targetSessions = history.filter(s => {
         if (!s || !s.date) return false;
         try {
@@ -223,23 +264,32 @@ export const getTotmPlayerIds = (history: Session[], allPlayers: Player[]): Set<
             return d.getMonth() === tMonth && d.getFullYear() === tYear;
         } catch { return false; }
     }).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
     if (targetSessions.length === 0) return new Set();
+
+    // 3. Aggregate Stats & Capture Historical Rating
     const stats: Record<string, { goals: number, assists: number, wins: number, games: number, cleanSheets: number, lastOvr: number }> = {};
+
     targetSessions.forEach(session => {
         const teams = session.teams || [];
         const games = session.games || [];
+        
         session.playerPool.forEach(p => {
             if (!stats[p.id]) stats[p.id] = { goals: 0, assists: 0, wins: 0, games: 0, cleanSheets: 0, lastOvr: 0 };
+            // Capture the OVR from this session. Since we sort sessions by date, the latest session's OVR will stick.
             stats[p.id].lastOvr = p.rating;
         });
+
         games.forEach(game => {
             if (game.status !== 'finished') return;
             const score1 = game.team1Score;
             const score2 = game.team2Score;
             const t1 = teams.find(t => t.id === game.team1Id);
             const t2 = teams.find(t => t.id === game.team2Id);
+            
             t1?.playerIds?.forEach(pid => { if(stats[pid]) stats[pid].games++ });
             t2?.playerIds?.forEach(pid => { if(stats[pid]) stats[pid].games++ });
+
             if (score1 > score2) {
                 t1?.playerIds?.forEach(pid => { if(stats[pid]) stats[pid].wins++ });
                 if (score2 === 0) t1?.playerIds?.forEach(pid => { if(stats[pid]) stats[pid].cleanSheets++ });
@@ -247,16 +297,21 @@ export const getTotmPlayerIds = (history: Session[], allPlayers: Player[]): Set<
                 t2?.playerIds?.forEach(pid => { if(stats[pid]) stats[pid].wins++ });
                 if (score1 === 0) t2?.playerIds?.forEach(pid => { if(stats[pid]) stats[pid].cleanSheets++ });
             }
+
             game.goals.forEach(g => {
                 if (!g.isOwnGoal && g.scorerId && stats[g.scorerId]) stats[g.scorerId].goals++;
                 if (g.assistantId && stats[g.assistantId]) stats[g.assistantId].assists++;
             });
         });
     });
+
+    // 4. Select Winners using Historical Stats
     const candidates = allPlayers.filter(p => stats[p.id] && stats[p.id].games >= 2);
     if (candidates.length < 3) return new Set();
+
     const corePool = candidates.filter(p => stats[p.id].games >= 4);
     const reservePool = candidates.filter(p => stats[p.id].games < 4);
+
     const pickBest = (criteriaFn: (pid: string) => number, tieBreakerFn: (pid: string) => number, excludeIds: Set<string>): string | null => {
         let pool = corePool.filter(p => !excludeIds.has(p.id));
         if (pool.length === 0) pool = reservePool.filter(p => !excludeIds.has(p.id));
@@ -269,22 +324,31 @@ export const getTotmPlayerIds = (history: Session[], allPlayers: Player[]): Set<
         })[0];
         return winner ? winner.id : null;
     };
+
     const winners = new Set<string>();
+    
+    // Getters now use the captured monthly stats including OVR
     const getHistOvr = (pid: string) => stats[pid].lastOvr;
     const getG = (pid: string) => stats[pid].goals;
     const getA = (pid: string) => stats[pid].assists;
     const getW = (pid: string) => stats[pid].wins;
     const getCS = (pid: string) => stats[pid].cleanSheets;
     const getGP = (pid: string) => stats[pid].games;
+
     const mvpId = pickBest(getHistOvr, pid => getG(pid) + getA(pid), winners);
     if (mvpId) winners.add(mvpId);
+
     const sniperId = pickBest(getG, pid => -getGP(pid), winners);
     if (sniperId) winners.add(sniperId);
+
     const architectId = pickBest(getA, getG, winners);
     if (architectId) winners.add(architectId);
+
     const winnerId = pickBest(getW, getGP, winners);
     if (winnerId) winners.add(winnerId);
+
     const fortressId = pickBest(getCS, getGP, winners);
     if (fortressId) winners.add(fortressId);
+
     return winners;
 };

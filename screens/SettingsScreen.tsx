@@ -1,11 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Card, Button, useTranslation } from '../ui';
-import { isSupabaseConfigured, getCloudPlayerCount, savePlayersToDB } from '../db';
-import { Wand, Activity, RefreshCw, Trash2 } from '../icons';
-import { calculateAllStats } from '../services/statistics';
-import { Player } from '../types';
+import { isSupabaseConfigured, getCloudPlayerCount } from '../db';
+import { Wand, Activity } from '../icons';
 
 const WalletIcon = ({ className }: { className?: string }) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -18,11 +17,11 @@ const WalletIcon = ({ className }: { className?: string }) => (
 export const SettingsScreen: React.FC = () => {
     const t = useTranslation();
     const navigate = useNavigate();
-    const { language, setLanguage, allPlayers, history, setAllPlayers } = useApp();
+    const { language, setLanguage, allPlayers } = useApp();
     const [cloudStatus, setCloudStatus] = React.useState<{ connected: boolean, count: number } | null>(null);
     const [isRefreshing, setIsRefreshing] = React.useState(false);
-    const [isRepairing, setIsRepairing] = React.useState(false);
     
+    // Определение текущего эндпоинта Supabase для отображения
     const dbEndpoint = (process.env.VITE_SUPABASE_URL || '').split('//')[1]?.split('.')[0]?.toUpperCase() || 'LOCAL';
 
     const checkCloud = async () => {
@@ -39,107 +38,6 @@ export const SettingsScreen: React.FC = () => {
             setCloudStatus({ connected: false, count: 0 });
         }
         setIsRefreshing(false);
-    };
-
-    const handleRollback1702 = async () => {
-        if (isRepairing) return;
-        if (!window.confirm("NUCLEAR ROLLBACK: This will WIPЕ all 17.02 data for ALL players and restore OVR to Feb 16th state. Continue?")) return;
-
-        setIsRepairing(true);
-        try {
-            // 1. Находим проблемную сессию
-            const targetSession = history.find(s => s.date.includes('2026-02-17') || s.date.includes('17/02/2026'));
-            if (!targetSession) {
-                alert("Session 17.02 not found in history.");
-                setIsRepairing(false);
-                return;
-            }
-
-            // 2. Считаем чистую статистику этой сессии (включая "пропавших" капитанов через fallback)
-            const { allPlayersStats } = calculateAllStats(targetSession, allPlayers);
-            
-            // 3. Выполняем откат для каждого игрока
-            const rolledBackPlayers = allPlayers.map(p => {
-                const sessionStats = allPlayersStats.find(s => s.player.id === p.id);
-                const has1702Entry = p.historyData?.some(h => h.date === '17/02');
-
-                // Если игрока не было в сессии И у него нет точки 17/02 — не трогаем его
-                if (!sessionStats && !has1702Entry) return p;
-
-                console.log(`Rolling back ${p.nickname}...`);
-
-                // А. Вычитаем вклад сессии из карьеры (только если точка была на графике, значит мы ее прибавляли)
-                let totalGames = p.totalGames;
-                let totalGoals = p.totalGoals;
-                let totalAssists = p.totalAssists;
-                let totalWins = p.totalWins;
-                let totalDraws = p.totalDraws;
-                let totalLosses = p.totalLosses;
-                let totalSessionsPlayed = p.totalSessionsPlayed;
-                let monthlySessionsPlayed = p.monthlySessionsPlayed;
-                let monthlyGoals = p.monthlyGoals;
-                let monthlyAssists = p.monthlyAssists;
-                let monthlyWins = p.monthlyWins;
-                let monthlyGames = p.monthlyGames;
-
-                if (sessionStats && has1702Entry) {
-                    totalGames = Math.max(0, totalGames - sessionStats.gamesPlayed);
-                    totalGoals = Math.max(0, totalGoals - sessionStats.goals);
-                    totalAssists = Math.max(0, totalAssists - sessionStats.assists);
-                    totalWins = Math.max(0, totalWins - sessionStats.wins);
-                    totalDraws = Math.max(0, totalDraws - sessionStats.draws);
-                    totalLosses = Math.max(0, totalLosses - sessionStats.losses);
-                    totalSessionsPlayed = Math.max(0, totalSessionsPlayed - 1);
-                    monthlySessionsPlayed = Math.max(0, monthlySessionsPlayed - 1);
-                    monthlyGoals = Math.max(0, monthlyGoals - sessionStats.goals);
-                    monthlyAssists = Math.max(0, monthlyAssists - sessionStats.assists);
-                    monthlyWins = Math.max(0, monthlyWins - sessionStats.wins);
-                    monthlyGames = Math.max(0, monthlyGames - sessionStats.gamesPlayed);
-                }
-
-                // Б. Восстанавливаем рейтинг из ПРЕДЫДУЩЕЙ точки графика
-                const historyData = p.historyData || [];
-                const targetIdx = historyData.findIndex(h => h.date === '17/02');
-                
-                let restoredRating = p.rating;
-                let newHistory = [...historyData];
-
-                if (targetIdx !== -1) {
-                    // Берем рейтинг из точки ПЕРЕД 17.02
-                    const prevPoint = historyData[targetIdx - 1];
-                    restoredRating = prevPoint ? prevPoint.rating : (p.initialRating || 68);
-                    
-                    // Удаляем ВСЕ точки за 17.02 (на случай если нажали много раз)
-                    newHistory = historyData.filter(h => h.date !== '17/02');
-                }
-
-                // В. Чистим визуальные элементы
-                const sessionHistory = [...(p.sessionHistory || [])];
-                if (has1702Entry) sessionHistory.pop(); // Удаляем последний столбик
-
-                return { 
-                    ...p, 
-                    rating: restoredRating,
-                    totalGames, totalGoals, totalAssists, totalWins, totalDraws, totalLosses, totalSessionsPlayed,
-                    monthlyGames, monthlyGoals, monthlyAssists, monthlyWins, monthlySessionsPlayed,
-                    historyData: newHistory,
-                    sessionHistory,
-                    form: 'stable' as const,
-                    lastRatingChange: undefined, // Сбрасываем плашку анализа
-                    consecutiveMissedSessions: Math.max(0, (p.consecutiveMissedSessions || 0) - 1)
-                };
-            });
-
-            setAllPlayers(rolledBackPlayers);
-            await savePlayersToDB(rolledBackPlayers);
-            alert("ROLLBACK COMPLETE. All 17.02 data removed. Check Hub/Profiles now.");
-
-        } catch (e) {
-            console.error(e);
-            alert("Rollback failed.");
-        } finally {
-            setIsRepairing(false);
-        }
     };
 
     useEffect(() => {
@@ -285,16 +183,6 @@ export const SettingsScreen: React.FC = () => {
             </div>
 
             <div className="p-4 shrink-0 space-y-4">
-                <Button 
-                    variant="ghost" 
-                    onClick={handleRollback1702}
-                    disabled={isRepairing}
-                    className="w-full !py-3 border border-orange-500/20 bg-orange-500/5 hover:bg-orange-500/10 text-orange-500 text-[10px] tracking-widest uppercase flex items-center justify-center gap-2"
-                >
-                    <Trash2 className={`w-3 h-3 ${isRepairing ? 'animate-bounce' : ''}`} /> 
-                    {isRepairing ? 'ROLLING BACK...' : 'ROLLBACK ALL 17.02 DATA'}
-                </Button>
-
                 <Button 
                     variant="ghost" 
                     onClick={() => navigate('/settings/promo-admin')}
