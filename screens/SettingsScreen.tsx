@@ -3,10 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Card, Button, useTranslation } from '../ui';
 import { isSupabaseConfigured, getCloudPlayerCount, savePlayersToDB } from '../db';
-import { Wand, Activity, RefreshCw } from '../icons';
+import { Wand, Activity, RefreshCw, Trash2 } from '../icons';
 import { calculateAllStats } from '../services/statistics';
-import { calculateRatingUpdate, calculateEarnedBadges, getTierForRating } from '../services/rating';
-import { Player, PlayerHistoryEntry } from '../types';
+import { Player } from '../types';
 
 const WalletIcon = ({ className }: { className?: string }) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -42,103 +41,102 @@ export const SettingsScreen: React.FC = () => {
         setIsRefreshing(false);
     };
 
-    const handleRepair1702Stats = async () => {
+    const handleRollback1702 = async () => {
         if (isRepairing) return;
-        if (!window.confirm("IDEMPOTENT REPAIR: This will reset any previous 17.02 fixes and apply the correct stats/rating once. Proceed?")) return;
+        if (!window.confirm("NUCLEAR ROLLBACK: This will WIPЕ all 17.02 data for ALL players and restore OVR to Feb 16th state. Continue?")) return;
 
         setIsRepairing(true);
         try {
+            // 1. Находим проблемную сессию
             const targetSession = history.find(s => s.date.includes('2026-02-17') || s.date.includes('17/02/2026'));
             if (!targetSession) {
-                alert("Session from 17.02 not found.");
+                alert("Session 17.02 not found in history.");
                 setIsRepairing(false);
                 return;
             }
 
+            // 2. Считаем чистую статистику этой сессии (включая "пропавших" капитанов через fallback)
             const { allPlayersStats } = calculateAllStats(targetSession, allPlayers);
             
-            const updatedPlayers = allPlayers.map(p => {
+            // 3. Выполняем откат для каждого игрока
+            const rolledBackPlayers = allPlayers.map(p => {
                 const sessionStats = allPlayersStats.find(s => s.player.id === p.id);
-                if (!sessionStats) return p;
+                const has1702Entry = p.historyData?.some(h => h.date === '17/02');
 
-                // --- 1. ROLLBACK PREVIOUS ATTEMPTS (Strict Normalization) ---
-                let normalizedPlayer = { ...p };
-                const history1702 = p.historyData?.find(h => h.date === '17/02');
+                // Если игрока не было в сессии И у него нет точки 17/02 — не трогаем его
+                if (!sessionStats && !has1702Entry) return p;
 
-                // If they already have a 17/02 point, we subtract its contribution before recalculating
-                // This prevents +1 +1 rating bloat.
-                if (history1702 && p.lastRatingChange?.newRating === p.rating) {
-                    console.log(`Normalizing ${p.nickname} before repair...`);
-                    const oldDelta = p.lastRatingChange.finalChange || 0;
-                    normalizedPlayer.rating = Math.max(p.initialRating || 68, p.rating - oldDelta);
-                    normalizedPlayer.totalGames -= sessionStats.gamesPlayed;
-                    normalizedPlayer.totalGoals -= sessionStats.goals;
-                    normalizedPlayer.totalAssists -= sessionStats.assists;
-                    normalizedPlayer.totalWins -= sessionStats.wins;
-                    normalizedPlayer.totalSessionsPlayed -= 1;
-                    normalizedPlayer.monthlySessionsPlayed -= 1;
-                    // Remove the old 17/02 graph point
-                    normalizedPlayer.historyData = (p.historyData || []).filter(h => h.date !== '17/02');
-                    // Remove the last bar from visual history if it was from this attempt
-                    normalizedPlayer.sessionHistory = (p.sessionHistory || []).slice(0, -1);
+                console.log(`Rolling back ${p.nickname}...`);
+
+                // А. Вычитаем вклад сессии из карьеры (только если точка была на графике, значит мы ее прибавляли)
+                let totalGames = p.totalGames;
+                let totalGoals = p.totalGoals;
+                let totalAssists = p.totalAssists;
+                let totalWins = p.totalWins;
+                let totalDraws = p.totalDraws;
+                let totalLosses = p.totalLosses;
+                let totalSessionsPlayed = p.totalSessionsPlayed;
+                let monthlySessionsPlayed = p.monthlySessionsPlayed;
+                let monthlyGoals = p.monthlyGoals;
+                let monthlyAssists = p.monthlyAssists;
+                let monthlyWins = p.monthlyWins;
+                let monthlyGames = p.monthlyGames;
+
+                if (sessionStats && has1702Entry) {
+                    totalGames = Math.max(0, totalGames - sessionStats.gamesPlayed);
+                    totalGoals = Math.max(0, totalGoals - sessionStats.goals);
+                    totalAssists = Math.max(0, totalAssists - sessionStats.assists);
+                    totalWins = Math.max(0, totalWins - sessionStats.wins);
+                    totalDraws = Math.max(0, totalDraws - sessionStats.draws);
+                    totalLosses = Math.max(0, totalLosses - sessionStats.losses);
+                    totalSessionsPlayed = Math.max(0, totalSessionsPlayed - 1);
+                    monthlySessionsPlayed = Math.max(0, monthlySessionsPlayed - 1);
+                    monthlyGoals = Math.max(0, monthlyGoals - sessionStats.goals);
+                    monthlyAssists = Math.max(0, monthlyAssists - sessionStats.assists);
+                    monthlyWins = Math.max(0, monthlyWins - sessionStats.wins);
+                    monthlyGames = Math.max(0, monthlyGames - sessionStats.gamesPlayed);
                 }
 
-                // --- 2. APPLY CORRECT DEEP REPAIR ---
-                console.log(`Re-calculating correct 17.02 data for ${p.nickname}...`);
-                const badgesEarned = calculateEarnedBadges(normalizedPlayer, sessionStats, targetSession, allPlayersStats);
-                const { breakdown } = calculateRatingUpdate(normalizedPlayer, sessionStats, targetSession, badgesEarned);
+                // Б. Восстанавливаем рейтинг из ПРЕДЫДУЩЕЙ точки графика
+                const historyData = p.historyData || [];
+                const targetIdx = historyData.findIndex(h => h.date === '17/02');
+                
+                let restoredRating = p.rating;
+                let newHistory = [...historyData];
 
-                const finalRating = Math.max(p.initialRating || 68, Math.round(breakdown.newRating));
-                const finalChange = finalRating - normalizedPlayer.rating;
+                if (targetIdx !== -1) {
+                    // Берем рейтинг из точки ПЕРЕД 17.02
+                    const prevPoint = historyData[targetIdx - 1];
+                    restoredRating = prevPoint ? prevPoint.rating : (p.initialRating || 68);
+                    
+                    // Удаляем ВСЕ точки за 17.02 (на случай если нажали много раз)
+                    newHistory = historyData.filter(h => h.date !== '17/02');
+                }
 
-                // FIX FORM (Arrow)
-                let newForm: 'hot_streak' | 'stable' | 'cold_streak' = 'stable';
-                if (finalChange >= 0.5) newForm = 'hot_streak';
-                else if (finalChange <= -0.5) newForm = 'cold_streak';
-
-                // FIX BARS (Winrate for 17.02)
-                const sessionWinRate = sessionStats.gamesPlayed > 0 ? Math.round((sessionStats.wins / sessionStats.gamesPlayed) * 100) : 0;
-                const sessionHistory = [...(normalizedPlayer.sessionHistory || [])];
-                sessionHistory.push({ winRate: sessionWinRate });
-                if (sessionHistory.length > 5) sessionHistory.shift();
-
-                // ADD GRAPH POINT
-                const newHistoryPoint: PlayerHistoryEntry = {
-                    date: '17/02',
-                    rating: finalRating,
-                    winRate: sessionWinRate,
-                    goals: sessionStats.goals,
-                    assists: sessionStats.assists
-                };
-                const historyData = [...(normalizedPlayer.historyData || [])];
-                historyData.push(newHistoryPoint);
-                if (historyData.length > 12) historyData.shift();
+                // В. Чистим визуальные элементы
+                const sessionHistory = [...(p.sessionHistory || [])];
+                if (has1702Entry) sessionHistory.pop(); // Удаляем последний столбик
 
                 return { 
-                    ...normalizedPlayer, 
-                    rating: finalRating,
-                    tier: getTierForRating(finalRating),
-                    form: newForm,
+                    ...p, 
+                    rating: restoredRating,
+                    totalGames, totalGoals, totalAssists, totalWins, totalDraws, totalLosses, totalSessionsPlayed,
+                    monthlyGames, monthlyGoals, monthlyAssists, monthlyWins, monthlySessionsPlayed,
+                    historyData: newHistory,
                     sessionHistory,
-                    historyData,
-                    totalGames: normalizedPlayer.totalGames + sessionStats.gamesPlayed,
-                    totalGoals: normalizedPlayer.totalGoals + sessionStats.goals,
-                    totalAssists: normalizedPlayer.totalAssists + sessionStats.assists,
-                    totalWins: normalizedPlayer.totalWins + sessionStats.wins,
-                    totalSessionsPlayed: normalizedPlayer.totalSessionsPlayed + 1,
-                    monthlySessionsPlayed: (normalizedPlayer.monthlySessionsPlayed || 0) + 1,
-                    lastRatingChange: { ...breakdown, newRating: finalRating, badgesEarned, finalChange },
-                    lastPlayedAt: targetSession.date
+                    form: 'stable' as const,
+                    lastRatingChange: undefined, // Сбрасываем плашку анализа
+                    consecutiveMissedSessions: Math.max(0, (p.consecutiveMissedSessions || 0) - 1)
                 };
             });
 
-            setAllPlayers(updatedPlayers);
-            await savePlayersToDB(updatedPlayers);
-            alert("STRICT REPAIR COMPLETE. Career data normalized, OVR corrected, and bars are now accurate.");
+            setAllPlayers(rolledBackPlayers);
+            await savePlayersToDB(rolledBackPlayers);
+            alert("ROLLBACK COMPLETE. All 17.02 data removed. Check Hub/Profiles now.");
 
         } catch (e) {
             console.error(e);
-            alert("Repair failed.");
+            alert("Rollback failed.");
         } finally {
             setIsRepairing(false);
         }
@@ -289,12 +287,12 @@ export const SettingsScreen: React.FC = () => {
             <div className="p-4 shrink-0 space-y-4">
                 <Button 
                     variant="ghost" 
-                    onClick={handleRepair1702Stats}
+                    onClick={handleRollback1702}
                     disabled={isRepairing}
-                    className="w-full !py-3 border border-yellow-500/20 bg-yellow-500/5 hover:bg-yellow-500/10 text-yellow-500 text-[10px] tracking-widest uppercase flex items-center justify-center gap-2"
+                    className="w-full !py-3 border border-orange-500/20 bg-orange-500/5 hover:bg-orange-500/10 text-orange-500 text-[10px] tracking-widest uppercase flex items-center justify-center gap-2"
                 >
-                    <RefreshCw className={`w-3 h-3 ${isRepairing ? 'animate-spin' : ''}`} /> 
-                    {isRepairing ? 'CLEANING & FIXING...' : 'STRICT FIX 17.02 STATS'}
+                    <Trash2 className={`w-3 h-3 ${isRepairing ? 'animate-bounce' : ''}`} /> 
+                    {isRepairing ? 'ROLLING BACK...' : 'ROLLBACK ALL 17.02 DATA'}
                 </Button>
 
                 <Button 
