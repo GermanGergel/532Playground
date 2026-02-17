@@ -1,4 +1,3 @@
-
 export { HomeScreen } from './HomeScreen';
 export { NewGameSetupScreen } from './NewGameSetupScreen';
 export { AssignPlayersScreen } from './AssignPlayersScreen';
@@ -20,5 +19,6 @@ export { LedgerScreen } from './LedgerScreen';
 export { PublicHubScreen } from './PublicHubScreen';
 export { HubAnalyticsScreen } from './HubAnalyticsScreen';
 export { DraftScreen } from './DraftScreen'; 
+export { TournamentListScreen } from './TournamentListScreen';
 export { BrandedHeader, hexToRgba, newId } from './utils';
 export type { ShareableReportProps } from './StatisticsScreen';

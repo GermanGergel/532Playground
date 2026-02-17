@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route, useLocation, matchPath, Navigate } from 'react-router-dom';
 import { BottomNav, Page } from './components';
@@ -8,7 +7,7 @@ import {
     PlayerHubScreen, PlayerDatabaseScreen, PlayerProfileScreen,
     NewsFeedScreen, VoiceSettingsScreen, AnnouncementScreen, PublicProfileScreen,
     PromoScreen, PromoAdminScreen, LedgerScreen, PublicHubScreen,
-    HubAnalyticsScreen, DraftScreen
+    HubAnalyticsScreen, DraftScreen, TournamentListScreen
 } from './screens';
 import { useApp } from './context';
 
@@ -80,6 +79,7 @@ const App: React.FC = () => {
           <Route path="/promo" element={<PromoScreen />} />
           <Route path="/hub" element={<PublicHubScreen />} />
           <Route path="/draft/:id" element={<DraftScreen />} />
+          <Route path="/tournaments" element={<TournamentListScreen />} />
           {/* Fallback for web routing */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -13,7 +13,7 @@ import { ClubIntelligenceDashboard } from '../components/ClubIntelligenceDashboa
 import { RadioPlayer } from '../components/RadioPlayer';
 import { SquadOfTheMonthBadge } from '../components/SquadOfTheMonthBadge';
 import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
-import { MiniSquadBadge } from '../components/MiniSquadBadge';
+import { MiniSquadBadge } from './MiniSquadBadge';
 import { BallDecorations } from '../components/BallDecorations';
 import { CinematicCard, HeaderAtmosphere } from '../components/PublicHubScreen';
 
@@ -153,6 +153,26 @@ const ChaseList: React.FC<{
     );
 };
 
+// --- UNIT SIGNATURE TACTICAL OVERLAY ---
+const TacticalShardOverlay = ({ color }: { color: string }) => (
+    <div className="absolute inset-0 z-0 opacity-[0.18] pointer-events-none overflow-hidden">
+        <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Chaotic Shards inspired by requested style */}
+            <path d="M-5 15 L35 0 L45 25 Z" fill={color} />
+            <path d="M55 -5 L105 45 L75 5 Z" fill={color} />
+            <path d="M-10 70 L25 95 L-5 105 Z" fill={color} />
+            <path d="M105 75 L65 105 L110 110 Z" fill={color} />
+            {/* Slashed lines */}
+            <rect x="0" y="20" width="100" height="0.5" fill={color} transform="rotate(-35 50 50)" />
+            <rect x="0" y="40" width="100" height="1.5" fill={color} transform="rotate(-35 50 50)" />
+            <rect x="0" y="60" width="100" height="0.8" fill={color} transform="rotate(-35 50 50)" />
+            {/* Rectangular shards */}
+            <rect x="10" y="10" width="40" height="4" fill={color} transform="rotate(15 10 10)" />
+            <rect x="60" y="80" width="30" height="2" fill={color} transform="rotate(-10 60 80)" />
+        </svg>
+    </div>
+);
+
 // --- LEGEND CARD ---
 const LegendCard: React.FC<{ 
     title: string; 
@@ -164,11 +184,9 @@ const LegendCard: React.FC<{
     className?: string; 
 }> = ({ title, player, value, icon, label, accentColor = "#FFD700", className = "" }) => (
     <div className={`relative group w-full h-36 md:h-40 rounded-2xl overflow-hidden bg-black border transition-all duration-500 active:scale-95 ${className}`} style={{ borderColor: `${accentColor}33`, boxShadow: `0 10px 30px -15px rgba(0,0,0,1)` }}>
-        {/* PIXEL GRID OVERLAY */}
-        <div className="absolute inset-0 opacity-[0.15] pointer-events-none z-0" style={{ 
-            backgroundImage: `radial-gradient(${accentColor} 0.5px, transparent 0)`,
-            backgroundSize: '2px 2px'
-        }}></div>
+        
+        {/* BRAND SIGNATURE OVERLAY (Replaces old pixel grid) */}
+        <TacticalShardOverlay color={accentColor} />
         
         <div className="absolute top-0 right-0 w-28 md:w-36 h-full z-0 pointer-events-none">
             {player.playerCard ? (

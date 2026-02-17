@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -289,6 +288,14 @@ export const HomeScreen: React.FC = () => {
                     </Button>
                 </div>
              )}
+
+             <Button 
+                variant="secondary" 
+                onClick={() => navigate('/tournaments')} 
+                className="w-full font-chakra font-bold text-xl tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5"
+             >
+                {t.navTournaments}
+             </Button>
              
              <Button variant="secondary" onClick={() => navigate('/player-hub')} className="w-full font-chakra font-bold text-xl tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5">
                 {t.playerHub}
