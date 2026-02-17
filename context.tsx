@@ -235,15 +235,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
                 <div className="flex flex-col items-center justify-center z-10">
                     <h1 
-                      className="text-6xl font-black uppercase leading-none font-russo tracking-[0.1em] animate-pulse"
+                      className="text-6xl font-black uppercase leading-none font-blackops tracking-[0.15em] animate-pulse"
                       style={{ 
-                          background: 'linear-gradient(180deg, #48CFCB 0%, #083344 100%)',
+                          background: 'linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.4) 100%)',
                           WebkitBackgroundClip: 'text',
                           WebkitTextFillColor: 'transparent',
                           filter: `
-                              drop-shadow(1px 1px 0px #0E7490) 
-                              drop-shadow(2px 2px 0px #000000) 
-                              drop-shadow(0 0 20px rgba(72, 207, 203, 0.3))
+                              drop-shadow(2px 4px 8px rgba(0, 0, 0, 0.6))
+                              drop-shadow(0 0 20px rgba(0, 242, 254, 0.2))
                           `,
                       }}
                     >
