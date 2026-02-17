@@ -43,87 +43,78 @@ export const SettingsScreen: React.FC = () => {
 
     const handleRollback1702 = async () => {
         if (isRepairing) return;
-        if (!window.confirm("NUCLEAR ROLLBACK 17.02: Это полностью удалит данные за 17 февраля и очистит виджеты анализа. Рейтинги вернутся к состоянию на 16-е число. Продолжить?")) return;
+        if (!window.confirm("NUCLEAR ROLLBACK 17.02: Это действие удалит все данные за 17 февраля из профилей игроков и очистит виджеты анализа. Продолжить?")) return;
 
         setIsRepairing(true);
         try {
-            // 1. Ищем сессию
-            const targetSession = history.find(s => s.date.includes('2026-02-17') || s.date.includes('17/02/2026'));
+            // 1. Ищем сессию в истории
+            const targetSession = history.find(s => s.date.includes('17/02') || s.date.includes('2026-02-17'));
+            
             if (!targetSession) {
-                alert("Сессия 17.02 не найдена в истории этого устройства.");
+                alert("Сессия 17.02 не найдена.");
                 setIsRepairing(false);
                 return;
             }
 
-            // 2. Считаем статистику этой сессии для вычитания
-            const { allPlayersStats } = calculateAllStats(targetSession, allPlayers);
-            
-            // 3. Трансформируем игроков
+            // 2. Считаем статистику ЭТОЙ сессии
+            const { allPlayersStats: sessionStats } = calculateAllStats(targetSession, allPlayers);
+
+            // 3. Обновляем игроков
             const rolledBackPlayers = allPlayers.map(p => {
-                const sessionStats = allPlayersStats.find(s => s.player.id === p.id);
-                const historyData = p.historyData || [];
-                const has1702Entry = historyData.some(h => h.date === '17/02');
-
-                // Если игрока не было в ту дату, не трогаем
-                if (!sessionStats && !has1702Entry) return p;
-
-                // Откатываем график и OVR
-                const targetIdx = historyData.findIndex(h => h.date === '17/02');
+                const playerStatsInSession = sessionStats.find(s => s.player.id === p.id);
+                const historyData = [...(p.historyData || [])];
+                
+                // Находим точку 17/02 в истории графика
+                const entryIdx = historyData.findIndex(h => h.date === '17/02');
+                
                 let restoredRating = p.rating;
                 let newHistory = [...historyData];
 
-                if (targetIdx !== -1) {
-                    const prevPoint = historyData[targetIdx - 1];
-                    // Если есть точка ДО 17-го — берем её рейтинг, иначе берем начальный (floor)
-                    restoredRating = prevPoint ? prevPoint.rating : (p.initialRating || 68);
-                    newHistory = historyData.filter(h => h.date !== '17/02');
+                if (entryIdx !== -1) {
+                    // Возвращаем рейтинг к тому, что был ДО сессии 17.02
+                    const prevEntry = historyData[entryIdx - 1];
+                    restoredRating = prevEntry ? prevEntry.rating : (p.initialRating || 68);
+                    // УДАЛЯЕМ ТОЧКУ ИЗ ГРАФИКА
+                    newHistory = historyData.filter((_, i) => i !== entryIdx);
                 }
 
-                // Вычитаем голы/пассы/победы за 17-е
-                let totalGames = p.totalGames;
-                let totalGoals = p.totalGoals;
-                let totalAssists = p.totalAssists;
-                let totalWins = p.totalWins;
-                let totalDraws = p.totalDraws;
-                let totalLosses = p.totalLosses;
-                let totalSessions = p.totalSessionsPlayed;
+                // Вычитаем показатели сессии из карьеры
+                let totalG = p.totalGoals;
+                let totalA = p.totalAssists;
+                let totalW = p.totalWins;
+                let totalGP = p.totalGames;
+                let totalSess = p.totalSessionsPlayed;
 
-                if (sessionStats) {
-                    totalGames = Math.max(0, totalGames - sessionStats.gamesPlayed);
-                    totalGoals = Math.max(0, totalGoals - sessionStats.goals);
-                    totalAssists = Math.max(0, totalAssists - sessionStats.assists);
-                    totalWins = Math.max(0, totalWins - sessionStats.wins);
-                    totalDraws = Math.max(0, totalDraws - sessionStats.draws);
-                    totalLosses = Math.max(0, totalLosses - sessionStats.losses);
-                    totalSessions = Math.max(0, totalSessions - 1);
+                if (playerStatsInSession) {
+                    totalG = Math.max(0, totalG - playerStatsInSession.goals);
+                    totalA = Math.max(0, totalA - playerStatsInSession.assists);
+                    totalW = Math.max(0, totalW - playerStatsInSession.wins);
+                    totalGP = Math.max(0, totalGP - playerStatsInSession.gamesPlayed);
+                    totalSess = Math.max(0, totalSess - 1);
                 }
 
-                // Откатываем индикаторы формы
-                const sessionHistory = [...(p.sessionHistory || [])];
-                if (has1702Entry && sessionHistory.length > 0) sessionHistory.pop();
-
-                // ВОЗВРАЩАЕМ ЧИСТОГО ИГРОКА
-                return { 
-                    ...p, 
+                return {
+                    ...p,
                     rating: restoredRating,
-                    totalGames, totalGoals, totalAssists, totalWins, totalDraws, totalLosses,
-                    totalSessionsPlayed: totalSessions,
+                    totalGoals: totalG,
+                    totalAssists: totalA,
+                    totalWins: totalW,
+                    totalGames: totalGP,
+                    totalSessionsPlayed: totalSess,
                     historyData: newHistory,
-                    sessionHistory,
+                    // КРИТИЧЕСКИ: Удаляем анализ, чтобы плашка 84 OVR исчезла
+                    lastRatingChange: undefined,
                     form: 'stable' as const,
-                    // КРИТИЧЕСКИЙ МОМЕНТ: Удаляем объект анализа, чтобы убрать цифру 84
-                    lastRatingChange: undefined, 
                     consecutiveMissedSessions: Math.max(0, (p.consecutiveMissedSessions || 0) - 1)
                 };
             });
 
             setAllPlayers(rolledBackPlayers);
             await savePlayersToDB(rolledBackPlayers);
-            alert("ОТКАТ ЗАВЕРШЕН. Проверьте Хаб - блоки анализа за 17.02 должны исчезнуть.");
-
+            alert("ОТКАТ 17.02 ЗАВЕРШЕН. Теперь в Хабе и карточках должны быть верные данные.");
         } catch (e) {
             console.error(e);
-            alert("Ошибка при выполнении отката.");
+            alert("Ошибка при откате.");
         } finally {
             setIsRepairing(false);
         }
@@ -143,7 +134,8 @@ export const SettingsScreen: React.FC = () => {
         return (
             <div 
                 onClick={checkCloud}
-                className={`relative overflow-hidden rounded-xl border ${isOnline ? 'border-dark-accent-start/50' : 'border-gray-600/50'} bg-black/60 p-5 transition-all duration-300 cursor-pointer active:scale-95 group select-none`}
+                className="relative overflow-hidden rounded-xl border border-white/10 bg-black/60 p-5 transition-all duration-300 cursor-pointer active:scale-95 group select-none"
+                style={{ boxShadow: isOnline ? '0 0 20px rgba(0, 242, 254, 0.15)' : 'none' }}
             >
                 <div className="relative z-10 flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -151,7 +143,6 @@ export const SettingsScreen: React.FC = () => {
                             <span className={`absolute w-full h-full rounded-full opacity-20 ${isOnline ? 'animate-ping' : ''}`} style={{ backgroundColor: themeColor }}></span>
                             <span className="relative w-4 h-4 rounded-full" style={{ backgroundColor: themeColor, boxShadow: `0 0 10px ${themeColor}` }}></span>
                         </div>
-
                         <div className="flex flex-col">
                             <h3 className="text-[10px] font-bold tracking-[0.2em] text-dark-text-secondary uppercase mb-0.5 group-hover:text-white transition-colors">
                                 DATABASE UPLINK
@@ -162,7 +153,7 @@ export const SettingsScreen: React.FC = () => {
                         </div>
                     </div>
                     <div className="text-right">
-                        <div className="flex flex-baseline gap-1 mt-1">
+                        <div className="flex items-baseline gap-1 mt-1">
                             <span className="text-2xl font-bold font-mono text-white">
                                 {cloudStatus?.count || 0}
                             </span>
