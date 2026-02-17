@@ -1,14 +1,12 @@
-
 import React from 'react';
 
 interface MiniSquadBadgeProps {
     onClick?: () => void;
     className?: string;
     size?: string; // e.g. "w-10 h-10"
-    isAnimated?: boolean;
 }
 
-export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, className = "", size = "w-9 h-9", isAnimated = false }) => {
+export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, className = "", size = "w-9 h-9" }) => {
     // Radius fixed for the SVG coordinate system
     const radius = 39;
     const circumference = 2 * Math.PI * radius; 
@@ -20,8 +18,8 @@ export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, classNa
             className={`relative flex items-center justify-center ${size} transition-all duration-300 group shrink-0 ${onClick ? 'cursor-pointer hover:scale-105' : 'cursor-default'} ${className}`}
             title="Team of the Month"
         >
-            {/* TEXT RING (Conditional Spin) */}
-            <div className={`absolute inset-0 opacity-100 ${isAnimated ? 'animate-spin-slow' : ''}`}>
+            {/* TEXT RING (Animated Spin) */}
+            <div className="absolute inset-0 opacity-100 animate-spin-slow">
                 <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
                     <defs>
                         <path id="miniCirclePathShared" d={`M 50, 50 m -${radius}, 0 a ${radius},${radius} 0 1,1 ${radius * 2},0 a ${radius},${radius} 0 1,1 -${radius * 2},0`} />

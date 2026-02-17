@@ -42,6 +42,7 @@ const StaticSoccerBall: React.FC = () => {
             <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] overflow-visible">
                 <defs>
                     <radialGradient id="ballShading" cx="40%" cy="35%" r="65%"><stop offset="0%" stopColor="#ffffff" /><stop offset="50%" stopColor="#e2e8f0" /><stop offset="85%" stopColor="#94a3b8" /><stop offset="100%" stopColor="#1e293b" /></radialGradient>
+                    <filter id="hatShadow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.5" /><feOffset dx="0" dy="2" result="offsetblur" /><feComponentTransfer><feFuncA type="linear" slope="0.4" /></feComponentTransfer><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                 </defs>
                 <circle cx="50" cy="50" r="48" fill="url(#ballShading)" />
                 <g stroke="#000" strokeWidth="0.8" fill="none" opacity="0.25">
@@ -152,45 +153,22 @@ const ChaseList: React.FC<{
     );
 };
 
-// --- UNIT BRANDED TACTICAL OVERLAY (MATCHES IMAGE REFERENCE) ---
+// --- UNIT SIGNATURE TACTICAL OVERLAY ---
 const TacticalShardOverlay = ({ color }: { color: string }) => (
-    <div className="absolute inset-0 z-0 opacity-[0.8] pointer-events-none overflow-hidden">
+    <div className="absolute inset-0 z-0 opacity-[0.18] pointer-events-none overflow-hidden">
         <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-                <pattern id="stripes" width="2" height="2" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-                    <line x1="0" y1="0" x2="0" y2="2" stroke="white" strokeWidth="0.5" opacity="0.1" />
-                </pattern>
-                <filter id="distort">
-                    <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="3" result="noise" />
-                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="2" />
-                </filter>
-                <linearGradient id="mainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor={color} stopOpacity="0.4" />
-                    <stop offset="100%" stopColor={color} stopOpacity="0.1" />
-                </linearGradient>
-            </defs>
-            
-            {/* Background Accent Fill */}
-            <rect width="100" height="100" fill="url(#mainGrad)" />
-
-            <g filter="url(#distort)">
-                {/* LARGE AGGRESSIVE SLASHES (The "Black Shards" from the image) */}
-                <path d="M-10,20 L40,10 L60,110 L-20,90 Z" fill="#000" opacity="0.9" />
-                <path d="M110,0 L70,0 L30,60 L110,40 Z" fill="#000" opacity="0.8" />
-                <path d="M40,30 L80,110 L120,90 L60,20 Z" fill="#000" opacity="0.7" />
-                <path d="M0,40 L50,45 L10,85 Z" fill="#000" opacity="0.6" />
-                
-                {/* Thin sharp tactical needles */}
-                <rect x="20" y="-10" width="1" height="120" fill="#000" transform="rotate(25 20 -10)" />
-                <rect x="70" y="-20" width="0.5" height="140" fill="#000" transform="rotate(-15 70 -20)" />
-                <rect x="0" y="50" width="120" height="0.8" fill="#000" transform="rotate(5 0 50)" />
-            </g>
-
-            {/* Branded "Grit" texture overlay */}
-            <rect width="100" height="100" fill="url(#stripes)" />
-            
-            {/* Bottom Glow reflecting accent color upwards */}
-            <rect y="80" width="100" height="20" fill={`linear-gradient(to top, ${color}22, transparent)`} />
+            {/* Chaotic Shards inspired by requested style */}
+            <path d="M-5 15 L35 0 L45 25 Z" fill={color} />
+            <path d="M55 -5 L105 45 L75 5 Z" fill={color} />
+            <path d="M-10 70 L25 95 L-5 105 Z" fill={color} />
+            <path d="M105 75 L65 105 L110 110 Z" fill={color} />
+            {/* Slashed lines */}
+            <rect x="0" y="20" width="100" height="0.5" fill={color} transform="rotate(-35 50 50)" />
+            <rect x="0" y="40" width="100" height="1.5" fill={color} transform="rotate(-35 50 50)" />
+            <rect x="0" y="60" width="100" height="0.8" fill={color} transform="rotate(-35 50 50)" />
+            {/* Rectangular shards */}
+            <rect x="10" y="10" width="40" height="4" fill={color} transform="rotate(15 10 10)" />
+            <rect x="60" y="80" width="30" height="2" fill={color} transform="rotate(-10 60 80)" />
         </svg>
     </div>
 );
@@ -204,68 +182,52 @@ const LegendCard: React.FC<{
     label: string;
     accentColor?: string;
     className?: string; 
-}> = ({ title, player, value, icon, label, accentColor = "#FFD700", className = "" }) => {
-    
-    // Dynamic Font Size logic (Improved to ensure NO truncation)
-    const getNicknameSize = (name: string) => {
-        const len = name.length;
-        if (len > 16) return 'text-[10px] md:text-[11px]';
-        if (len > 12) return 'text-[12px] md:text-[14px]';
-        return 'text-lg md:text-xl';
-    };
-
-    return (
-        <div className={`relative group w-full h-36 md:h-44 rounded-2xl overflow-hidden bg-black border transition-all duration-500 active:scale-95 ${className}`} style={{ borderColor: `${accentColor}44`, boxShadow: `0 15px 35px -15px rgba(0,0,0,1)` }}>
-            
-            {/* BRAND SIGNATURE OVERLAY (MATCHING IMAGE REFERENCE) */}
-            <TacticalShardOverlay color={accentColor} />
-            
-            {/* Inner Glow / Vignette */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,_transparent_30%,_rgba(0,0,0,0.85)_95%)] pointer-events-none z-10"></div>
-
-            <div className="absolute top-0 right-0 w-32 md:w-40 h-full z-0 pointer-events-none">
-                {player.playerCard ? (
-                    <div 
-                        className="w-full h-full bg-cover bg-top opacity-60"
-                        style={{ backgroundImage: `url(${player.playerCard})` }}
-                    />
-                ) : (
-                    <div className="w-full h-full bg-gradient-to-b from-gray-900 to-black"></div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent"></div>
-            </div>
-
-            <div className="absolute inset-0 pointer-events-none z-10" style={{ background: `linear-gradient(to bottom right, ${accentColor}10, transparent)` }}></div>
-
-            <div className="relative z-20 p-4 h-full flex flex-col justify-between">
-                <div className="flex justify-between items-start">
-                    <div className="flex flex-col relative z-20 max-w-[80%]">
-                        <span className="text-[6px] md:text-[7px] font-black tracking-[0.25em] uppercase mb-1 opacity-90" style={{ color: accentColor }}>{title}</span>
-                        <h3 className={`font-russo ${getNicknameSize(player.nickname)} text-white uppercase tracking-tighter drop-shadow-[0_3px_8px_rgba(0,0,0,1)] leading-none whitespace-nowrap`}>
-                            {player.nickname}
-                        </h3>
-                    </div>
-                </div>
-
-                <div className="flex items-end justify-between">
-                    <div className="flex flex-col">
-                        <span className="font-russo text-3xl md:text-4xl text-white tracking-widest leading-none drop-shadow-[0_3px_8px_rgba(0,0,0,1)]">
-                            {value}
-                        </span>
-                        <span className="text-[6px] md:text-[8px] font-black text-white/50 uppercase tracking-[0.3em] mt-1.5">{label}</span>
-                    </div>
-                </div>
-                
-                <div className="absolute bottom-2 right-2 opacity-[0.1] scale-150 text-white z-10 pointer-events-none">
-                    {icon}
-                </div>
-            </div>
-            
-            {/* Top edge highlight */}
-            <div className="absolute top-0 left-0 right-0 h-[1.5px] z-30" style={{ background: `linear-gradient(90deg, transparent, ${accentColor}88, transparent)` }}></div>
+}> = ({ title, player, value, icon, label, accentColor = "#FFD700", className = "" }) => (
+    <div className={`relative group w-full h-36 md:h-40 rounded-2xl overflow-hidden bg-black border transition-all duration-500 active:scale-95 ${className}`} style={{ borderColor: `${accentColor}33`, boxShadow: `0 10px 30px -15px rgba(0,0,0,1)` }}>
+        
+        {/* BRAND SIGNATURE OVERLAY (Replaces old pixel grid) */}
+        <TacticalShardOverlay color={accentColor} />
+        
+        <div className="absolute top-0 right-0 w-28 md:w-36 h-full z-0 pointer-events-none">
+            {player.playerCard ? (
+                <div 
+                    className="w-full h-full bg-cover bg-top"
+                    style={{ backgroundImage: `url(${player.playerCard})` }}
+                />
+            ) : (
+                <div className="w-full h-full bg-gradient-to-b from-gray-800 to-black"></div>
+            )}
+            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent"></div>
         </div>
-    );
-};
+
+        <div className="absolute inset-0 pointer-events-none z-10" style={{ background: `linear-gradient(to bottom right, ${accentColor}10, transparent)` }}></div>
+        <div className="absolute top-0 left-0 right-0 h-px z-10" style={{ background: `linear-gradient(to right, transparent, ${accentColor}66, transparent)` }}></div>
+
+        <div className="relative z-20 p-4 h-full flex flex-col justify-between">
+            <div className="flex justify-between items-start">
+                <div className="flex flex-col relative z-20 max-w-[70%]">
+                    <span className="text-[5px] md:text-[6px] font-black tracking-[0.2em] uppercase mb-0.5 opacity-90 truncate" style={{ color: accentColor }}>{title}</span>
+                    <h3 className="font-russo text-sm md:text-base text-white uppercase tracking-tighter truncate drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] leading-none">
+                        {player.nickname}
+                    </h3>
+                </div>
+            </div>
+
+            <div className="flex items-end justify-between">
+                <div className="flex flex-col">
+                    <span className="font-russo text-2xl md:text-3xl text-white tracking-widest leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                        {value}
+                    </span>
+                    <span className="text-[6px] md:text-[7px] font-black text-white/50 uppercase tracking-[0.3em] mt-1">{label}</span>
+                </div>
+            </div>
+            
+            <div className="absolute bottom-2 right-2 opacity-10 scale-125 text-white z-10">
+                {icon}
+            </div>
+        </div>
+    </div>
+);
 
 const NoLeadersPlaceholder: React.FC = () => { const t = useTranslation(); return (<div className="w-full max-w-2xl mx-auto py-20 flex flex-col items-center justify-center relative"><div className="absolute inset-0 bg-[#00F2FE]/5 blur-[60px] rounded-full animate-pulse"></div><div className="relative z-10 flex flex-col items-center gap-6 opacity-30"><div className="w-20 h-20 rounded-full border-2 border-dashed border-[#00F2FE] animate-spin-slow flex items-center justify-center"><TrophyIcon className="w-10 h-10 text-[#00F2FE]" /></div><div className="text-center"><h3 className="font-orbitron text-lg font-black text-white tracking-[0.4em] uppercase">{t.hubAwaitingStats}</h3><p className="font-chakra text-[10px] text-white/50 tracking-[0.2em] mt-2 uppercase">{t.hubAnalyzingPerformance}</p></div></div><style dangerouslySetInnerHTML={{ __html: ` @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .animate-spin-slow { animation: spin-slow 15s linear infinite; } `}} /></div>); };
 
@@ -348,7 +310,7 @@ const HubNav: React.FC<{
                     </div>
                 ) : (
                     <div className="flex items-center justify-center animate-in fade-in zoom-in duration-700">
-                        <MiniSquadBadge onClick={onOpenTotm} className="w-[42px] h-[42px] md:w-[50px] md:h-[50px]" isAnimated />
+                        <MiniSquadBadge onClick={onOpenTotm} className="w-[42px] h-[42px] md:w-[50px] md:h-[50px]" />
                     </div>
                 )}
             </div>
@@ -407,14 +369,12 @@ type DashboardViewType = 'info' | 'dashboard' | 'roster' | 'archive' | 'duel' | 
 export const PublicHubScreen: React.FC = () => {
     const navigate = useNavigate();
     const { allPlayers, history } = useApp();
-    const t = useTranslation();
     const [isDashboardOpen, setIsDashboardOpen] = useState(false);
     const [isTotmOpen, setIsTotmOpen] = useState(false);
     const [dashboardView, setDashboardView] = useState<DashboardViewType>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
-    
-    // Scroll Reset Refs
-    const mainContainerRef = useRef<HTMLDivElement>(null);
+
+    const t = useTranslation();
 
     useEffect(() => {
         if (isDashboardOpen) {
@@ -456,21 +416,10 @@ export const PublicHubScreen: React.FC = () => {
     }, [allPlayers, history]);
     
     const SOCIAL_LINKS = { whatsapp: "https://chat.whatsapp.com/CAJnChuM4lQFf3s2YUnhQr", youtube: "https://www.youtube.com/@UnitFootball", tiktok: "https://www.tiktok.com/@532club?_r=1", };
-    
     const handleTabChange = (tab: DashboardViewType) => { 
         setDashboardView(tab); 
         setIsDashboardOpen(true);
     };
-
-    const handleHomeClick = () => {
-        setIsDashboardOpen(false);
-        setDashboardView('dashboard');
-        // Reset scroll to top of cinematic screen
-        if (mainContainerRef.current) {
-            mainContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    };
-
     const getBottomPatchColor = () => { if (dashboardView === 'archive' || dashboardView === 'dashboard' || dashboardView === 'roster' || dashboardView === 'info') return '#01040a'; return '#0a0c10'; };
 
     return (
@@ -486,7 +435,7 @@ export const PublicHubScreen: React.FC = () => {
                 activeTab={dashboardView} 
                 onTabChange={handleTabChange} 
                 archiveViewDate={archiveViewDate} 
-                onHomeClick={handleHomeClick} 
+                onHomeClick={() => { setIsDashboardOpen(false); setDashboardView('dashboard'); }} 
                 onOpenTotm={() => setIsTotmOpen(true)} 
             />
 
@@ -495,10 +444,7 @@ export const PublicHubScreen: React.FC = () => {
                 <div className="fixed bottom-0 left-0 right-0 h-16 z-[110] pointer-events-none opacity-0 transition-all duration-700 delay-300" style={{ opacity: isDashboardOpen ? 1 : 0, background: `linear-gradient(to top, ${getBottomPatchColor()} 50%, ${getBottomPatchColor()}cc 80%, transparent 100%)` }}></div>
             </div>
 
-            <div 
-                ref={mainContainerRef}
-                className={`absolute inset-0 overflow-y-auto overscroll-none touch-pan-y z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}
-            >
+            <div className={`absolute inset-0 overflow-y-auto overscroll-none touch-pan-y z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}>
                 <HeaderAtmosphere />
                 
                 <div className="relative z-10">
