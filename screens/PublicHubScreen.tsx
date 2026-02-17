@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -12,7 +13,7 @@ import { ClubIntelligenceDashboard } from '../components/ClubIntelligenceDashboa
 import { RadioPlayer } from '../components/RadioPlayer';
 import { SquadOfTheMonthBadge } from '../components/SquadOfTheMonthBadge';
 import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
-import { MiniSquadBadge } from './MiniSquadBadge';
+import { MiniSquadBadge } from '../components/MiniSquadBadge';
 import { BallDecorations } from '../components/BallDecorations';
 import { CinematicCard, HeaderAtmosphere } from '../components/PublicHubScreen';
 
@@ -202,11 +203,13 @@ const LegendCard: React.FC<{
 
         <div className="relative z-20 p-4 h-full flex flex-col justify-between">
             <div className="flex justify-between items-start">
-                <div className="flex flex-col relative z-20 max-w-[70%]">
-                    <span className="text-[5px] md:text-[6px] font-black tracking-[0.2em] uppercase mb-0.5 opacity-90 truncate" style={{ color: accentColor }}>{title}</span>
-                    <h3 className="font-russo text-sm md:text-base text-white uppercase tracking-tighter truncate drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] leading-none">
-                        {player.nickname}
-                    </h3>
+                <div className="flex justify-between items-start">
+                    <div className="flex flex-col relative z-20 max-w-[70%]">
+                        <span className="text-[5px] md:text-[6px] font-black tracking-[0.2em] uppercase mb-0.5 opacity-90 truncate" style={{ color: accentColor }}>{title}</span>
+                        <h3 className="font-russo text-sm md:text-base text-white uppercase tracking-tighter truncate drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] leading-none">
+                            {player.nickname}
+                        </h3>
+                    </div>
                 </div>
             </div>
 
@@ -366,7 +369,6 @@ type DashboardViewType = 'info' | 'dashboard' | 'roster' | 'archive' | 'duel' | 
 export const PublicHubScreen: React.FC = () => {
     const navigate = useNavigate();
     const { allPlayers, history } = useApp();
-    // FIX: Added missing useTranslation hook to fix "Cannot find name 't'" errors
     const t = useTranslation();
     const [isDashboardOpen, setIsDashboardOpen] = useState(false);
     const [isTotmOpen, setIsTotmOpen] = useState(false);
