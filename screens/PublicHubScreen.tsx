@@ -180,54 +180,62 @@ const LegendCard: React.FC<{
     label: string;
     accentColor?: string;
     className?: string; 
-}> = ({ title, player, value, icon, label, accentColor = "#FFD700", className = "" }) => (
-    <div className={`relative group w-full h-36 md:h-40 rounded-2xl overflow-hidden bg-black border transition-all duration-500 active:scale-95 ${className}`} style={{ borderColor: `${accentColor}33`, boxShadow: `0 10px 30px -15px rgba(0,0,0,1)` }}>
-        
-        {/* BRAND SIGNATURE OVERLAY (Replaces old pixel grid) */}
-        <TacticalShardOverlay color={accentColor} />
-        
-        <div className="absolute top-0 right-0 w-28 md:w-36 h-full z-0 pointer-events-none">
-            {player.playerCard ? (
-                <div 
-                    className="w-full h-full bg-cover bg-top"
-                    style={{ backgroundImage: `url(${player.playerCard})` }}
-                />
-            ) : (
-                <div className="w-full h-full bg-gradient-to-b from-gray-800 to-black"></div>
-            )}
-            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent"></div>
-        </div>
+}> = ({ title, player, value, icon, label, accentColor = "#FFD700", className = "" }) => {
+    // Dynamic Font Size logic to prevent truncation
+    const getNicknameSize = (name: string) => {
+        const len = name.length;
+        if (len > 14) return 'text-[9px] md:text-[11px]';
+        if (len > 10) return 'text-[11px] md:text-[13px]';
+        return 'text-sm md:text-base';
+    };
 
-        <div className="absolute inset-0 pointer-events-none z-10" style={{ background: `linear-gradient(to bottom right, ${accentColor}10, transparent)` }}></div>
-        <div className="absolute top-0 left-0 right-0 h-px z-10" style={{ background: `linear-gradient(to right, transparent, ${accentColor}66, transparent)` }}></div>
+    return (
+        <div className={`relative group w-full h-36 md:h-40 rounded-2xl overflow-hidden bg-black border transition-all duration-500 active:scale-95 ${className}`} style={{ borderColor: `${accentColor}33`, boxShadow: `0 10px 30px -15px rgba(0,0,0,1)` }}>
+            
+            {/* BRAND SIGNATURE OVERLAY */}
+            <TacticalShardOverlay color={accentColor} />
+            
+            <div className="absolute top-0 right-0 w-28 md:w-36 h-full z-0 pointer-events-none">
+                {player.playerCard ? (
+                    <div 
+                        className="w-full h-full bg-cover bg-top"
+                        style={{ backgroundImage: `url(${player.playerCard})` }}
+                    />
+                ) : (
+                    <div className="w-full h-full bg-gradient-to-b from-gray-800 to-black"></div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent"></div>
+            </div>
 
-        <div className="relative z-20 p-4 h-full flex flex-col justify-between">
-            <div className="flex justify-between items-start">
+            <div className="absolute inset-0 pointer-events-none z-10" style={{ background: `linear-gradient(to bottom right, ${accentColor}10, transparent)` }}></div>
+            <div className="absolute top-0 left-0 right-0 h-px z-10" style={{ background: `linear-gradient(to right, transparent, ${accentColor}66, transparent)` }}></div>
+
+            <div className="relative z-20 p-4 h-full flex flex-col justify-between">
                 <div className="flex justify-between items-start">
-                    <div className="flex flex-col relative z-20 max-w-[70%]">
-                        <span className="text-[5px] md:text-[6px] font-black tracking-[0.2em] uppercase mb-0.5 opacity-90 truncate" style={{ color: accentColor }}>{title}</span>
-                        <h3 className="font-russo text-sm md:text-base text-white uppercase tracking-tighter truncate drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] leading-none">
+                    <div className="flex flex-col relative z-20 max-w-[75%]">
+                        <span className="text-[5px] md:text-[6px] font-black tracking-[0.2em] uppercase mb-0.5 opacity-90" style={{ color: accentColor }}>{title}</span>
+                        <h3 className={`font-russo ${getNicknameSize(player.nickname)} text-white uppercase tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] leading-none whitespace-nowrap`}>
                             {player.nickname}
                         </h3>
                     </div>
                 </div>
-            </div>
 
-            <div className="flex items-end justify-between">
-                <div className="flex flex-col">
-                    <span className="font-russo text-2xl md:text-3xl text-white tracking-widest leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
-                        {value}
-                    </span>
-                    <span className="text-[6px] md:text-[7px] font-black text-white/50 uppercase tracking-[0.3em] mt-1">{label}</span>
+                <div className="flex items-end justify-between">
+                    <div className="flex flex-col">
+                        <span className="font-russo text-2xl md:text-3xl text-white tracking-widest leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                            {value}
+                        </span>
+                        <span className="text-[6px] md:text-[7px] font-black text-white/50 uppercase tracking-[0.3em] mt-1">{label}</span>
+                    </div>
+                </div>
+                
+                <div className="absolute bottom-2 right-2 opacity-10 scale-125 text-white z-10">
+                    {icon}
                 </div>
             </div>
-            
-            <div className="absolute bottom-2 right-2 opacity-10 scale-125 text-white z-10">
-                {icon}
-            </div>
         </div>
-    </div>
-);
+    );
+};
 
 const NoLeadersPlaceholder: React.FC = () => { const t = useTranslation(); return (<div className="w-full max-w-2xl mx-auto py-20 flex flex-col items-center justify-center relative"><div className="absolute inset-0 bg-[#00F2FE]/5 blur-[60px] rounded-full animate-pulse"></div><div className="relative z-10 flex flex-col items-center gap-6 opacity-30"><div className="w-20 h-20 rounded-full border-2 border-dashed border-[#00F2FE] animate-spin-slow flex items-center justify-center"><TrophyIcon className="w-10 h-10 text-[#00F2FE]" /></div><div className="text-center"><h3 className="font-orbitron text-lg font-black text-white tracking-[0.4em] uppercase">{t.hubAwaitingStats}</h3><p className="font-chakra text-[10px] text-white/50 tracking-[0.2em] mt-2 uppercase">{t.hubAnalyzingPerformance}</p></div></div><style dangerouslySetInnerHTML={{ __html: ` @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .animate-spin-slow { animation: spin-slow 15s linear infinite; } `}} /></div>); };
 
