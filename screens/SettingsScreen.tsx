@@ -3,8 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Card, Button, useTranslation } from '../ui';
-import { isSupabaseConfigured, getCloudPlayerCount } from '../db';
-import { Wand, Activity } from '../icons';
+import { isSupabaseConfigured, getCloudPlayerCount, savePlayersToDB } from '../db';
+import { Wand, Activity, RefreshCw } from '../icons';
+import { recalculateHistoricalSession } from '../services/sessionProcessor';
 
 const WalletIcon = ({ className }: { className?: string }) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -17,11 +18,11 @@ const WalletIcon = ({ className }: { className?: string }) => (
 export const SettingsScreen: React.FC = () => {
     const t = useTranslation();
     const navigate = useNavigate();
-    const { language, setLanguage, allPlayers } = useApp();
+    const { language, setLanguage, allPlayers, history, setAllPlayers } = useApp();
     const [cloudStatus, setCloudStatus] = React.useState<{ connected: boolean, count: number } | null>(null);
     const [isRefreshing, setIsRefreshing] = React.useState(false);
+    const [isRecalculating, setIsRecalculating] = React.useState(false);
     
-    // Определение текущего эндпоинта Supabase для отображения
     const dbEndpoint = (process.env.VITE_SUPABASE_URL || '').split('//')[1]?.split('.')[0]?.toUpperCase() || 'LOCAL';
 
     const checkCloud = async () => {
@@ -38,6 +39,34 @@ export const SettingsScreen: React.FC = () => {
             setCloudStatus({ connected: false, count: 0 });
         }
         setIsRefreshing(false);
+    };
+
+    const handleRecalculate17Feb = async () => {
+        if (isRecalculating) return;
+        
+        // Поиск сессии за 17.02.2025
+        const targetDate = "2025-02-17";
+        const session = history.find(s => s.date.includes(targetDate));
+        
+        if (!session) {
+            alert("Session from 17.02.2025 not found in history.");
+            return;
+        }
+
+        if (window.confirm(`Recalculate stats for session: ${session.sessionName}? This will update OVR and totals for all participants.`)) {
+            setIsRecalculating(true);
+            try {
+                const updatedPlayers = recalculateHistoricalSession(session, allPlayers);
+                setAllPlayers(updatedPlayers);
+                await savePlayersToDB(updatedPlayers);
+                alert("Recalculation complete! All players from 17.02 updated.");
+            } catch (e) {
+                console.error(e);
+                alert("Recalculation failed.");
+            } finally {
+                setIsRecalculating(false);
+            }
+        }
     };
 
     useEffect(() => {
@@ -180,6 +209,26 @@ export const SettingsScreen: React.FC = () => {
                         </Card>
                     </Link>
                 </div>
+
+                <div className="pt-6">
+                    <h3 className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-3 ml-1">Maintenance Tools</h3>
+                    <Button 
+                        variant="secondary" 
+                        onClick={handleRecalculate17Feb}
+                        disabled={isRecalculating}
+                        className="w-full flex items-center justify-center gap-3 !py-4 border border-yellow-500/20 text-yellow-400 hover:bg-yellow-500/10 transition-all"
+                    >
+                        {isRecalculating ? (
+                            <RefreshCw className="w-5 h-5 animate-spin" />
+                        ) : (
+                            <Activity className="w-5 h-5" />
+                        )}
+                        <div className="flex flex-col items-start">
+                            <span className="text-sm font-black uppercase tracking-wider leading-none">Recalculate 17.02 Session</span>
+                            <span className="text-[8px] font-mono text-yellow-500/50 mt-1">FORCE STATISTICS RECOVERY</span>
+                        </div>
+                    </Button>
+                </div>
             </div>
 
             <div className="p-4 shrink-0 space-y-4">
@@ -195,7 +244,7 @@ export const SettingsScreen: React.FC = () => {
                 
                 <div className="text-center opacity-40 hover:opacity-100 transition-opacity duration-500">
                     <p className="font-orbitron font-bold text-sm tracking-widest text-dark-accent-start uppercase">UNIT</p>
-                    <p className="text-[10px] text-dark-text-secondary font-mono mt-1">v4.0.2 • SYSTEM READY</p>
+                    <p className="text-[10px] text-dark-text-secondary font-mono mt-1">v4.0.3 • SYSTEM READY</p>
                 </div>
             </div>
         </div>

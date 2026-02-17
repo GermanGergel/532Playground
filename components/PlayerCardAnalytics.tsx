@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { Player, PlayerStatus, PlayerHistoryEntry } from '../types';
 import { Card, useTranslation } from '../ui';
@@ -25,16 +26,19 @@ const RatingChangePill: React.FC<{ value: number, label: string }> = ({ value, l
 };
 
 export const LastSessionBreakdown: React.FC<{ player: Player; usePromoStyle?: boolean }> = ({ player, usePromoStyle = false }) => {
-    // FIX: Cast translation object to any to bypass strict type checking for potentially out-of-sync translation keys
     const t = useTranslation() as any;
     const location = useLocation();
     const breakdown = player.lastRatingChange;
 
     if (!breakdown) return null;
 
-    // Detect if we are in the Club Hub
+    // СИНХРОНИЗАЦИЯ: Чтобы не было расхождений с карточкой, берем player.rating как источник истины
+    // Если в breakdown записано 84, а у игрока реально 82, мы показываем 82 (текущий) и 82 - дельта (предыдущий)
+    const currentOvr = player.rating;
+    const deltaValue = breakdown.finalChange;
+    const calculatedPrevOvr = Math.round(currentOvr - deltaValue);
+
     const isHub = location.pathname.includes('/hub');
-    // UPDATED: Threshold changed from 3 to 5 missed sessions
     const isPenalty = player.consecutiveMissedSessions && player.consecutiveMissedSessions >= 5;
 
     const badgesEarned = breakdown.badgesEarned || [];
@@ -49,7 +53,7 @@ export const LastSessionBreakdown: React.FC<{ player: Player; usePromoStyle?: bo
                 }
             `}>
                 <span className={`font-black text-3xl leading-none ${isNew ? 'text-[#00F2FE]' : 'text-dark-text'}`} style={{ textShadow: 'none' }}>
-                    {rating.toFixed(0)}
+                    {rating}
                 </span>
             </div>
             <span className={`text-[9px] font-bold uppercase text-center leading-none tracking-tight ${isNew ? 'text-[#00F2FE]' : 'text-dark-text-secondary'}`}>
@@ -61,13 +65,13 @@ export const LastSessionBreakdown: React.FC<{ player: Player; usePromoStyle?: bo
     const Content = () => (
         <div className="flex flex-col gap-3 pt-5">
             <div className="flex items-center justify-between px-1">
-                <RatingCircle rating={breakdown.previousRating} />
+                {/* Используем вычисленные значения вместо захардкоженных в lastRatingChange */}
+                <RatingCircle rating={calculatedPrevOvr} />
                 
                 <div className="flex flex-col items-center justify-center gap-1.5 flex-grow px-2">
-                     {/* Check for penalty mode in Hub */}
                      {isHub && isPenalty ? (
                         <div className="flex flex-col items-center justify-center text-center">
-                            <span className="text-xl font-black text-red-500 leading-none">-{Math.abs(breakdown.finalChange).toFixed(1)}</span>
+                            <span className="text-xl font-black text-red-500 leading-none">-{Math.abs(deltaValue).toFixed(1)}</span>
                             <span className="text-[9px] text-red-400 font-bold uppercase mt-1">PENALTY</span>
                         </div>
                      ) : (
@@ -79,8 +83,8 @@ export const LastSessionBreakdown: React.FC<{ player: Player; usePromoStyle?: bo
                             </div>
                             <div className="w-full h-px bg-gradient-to-r from-transparent via-dark-accent-start to-transparent opacity-50 my-0.5"></div>
                             <div className="flex flex-col items-center justify-center text-center">
-                                <p className={`text-base font-bold leading-tight ${breakdown.finalChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                {breakdown.finalChange >= 0 ? '+' : ''}{breakdown.finalChange.toFixed(1)}
+                                <p className={`text-base font-bold leading-tight ${deltaValue >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                {deltaValue >= 0 ? '+' : ''}{deltaValue.toFixed(1)}
                                 </p>
                                 <p className="text-[9px] text-dark-text-secondary uppercase leading-none mt-0.5">{t.finalChange}</p>
                             </div>
@@ -88,19 +92,16 @@ export const LastSessionBreakdown: React.FC<{ player: Player; usePromoStyle?: bo
                      )}
                 </div>
 
-                <RatingCircle rating={breakdown.newRating} isNew />
+                <RatingCircle rating={currentOvr} isNew />
             </div>
 
-            {/* Penalty Alert Box for Hub */}
             {isHub && isPenalty ? (
                 <div className="pt-3 mt-3 border-t border-red-500/20">
                     <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 flex flex-col items-center gap-2">
                         <div className="flex items-center gap-2 text-red-500">
                             <ExclamationIcon className="w-5 h-5 shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
-                            {/* FIX: Access penalty_title via any-casted translation object */}
                             <span className="font-russo text-xs tracking-widest uppercase">{t.penalty_title}</span>
                         </div>
-                        {/* FIX: Access penalty_message via any-casted translation object */}
                         <p className="text-[10px] font-chakra font-bold text-red-200/60 uppercase leading-relaxed text-center">
                             {t.penalty_message?.replace('{n}', '1').replace('{m}', (player.consecutiveMissedSessions || 0).toString())}
                         </p>
@@ -157,7 +158,6 @@ export const ClubRankings: React.FC<{ player: Player; usePromoStyle?: boolean }>
 
         const getWR = (p: Player) => p.totalGames > 0 ? (p.totalWins / p.totalGames) : 0;
 
-        // TIE-BREAKER LOGIC MATCHING CLUB HUB LEADERS
         const sortedByGoals = [...confirmedPlayers].sort((a, b) => {
             if (b.totalGoals !== a.totalGoals) return b.totalGoals - a.totalGoals;
             if (b.rating !== a.rating) return b.rating - a.rating;
@@ -292,7 +292,6 @@ export const PlayerProgressChart: React.FC<{ history: PlayerHistoryEntry[], useP
     const chartData = useMemo(() => {
         if (!history || history.length === 0) return [];
         
-        // FIX: If only 1 entry (new player), generate a synthetic 'Start' point using initialRating
         if (history.length === 1) {
             const current = history[0];
             const startPoint: PlayerHistoryEntry = {
@@ -307,7 +306,6 @@ export const PlayerProgressChart: React.FC<{ history: PlayerHistoryEntry[], useP
         return history;
     }, [history, initialRating]);
 
-    // Enhanced scroll logic: ensure we see the pulsing dot immediately
     useEffect(() => {
         const scrollToLatest = () => {
             if (scrollContainerRef.current) {
@@ -316,7 +314,6 @@ export const PlayerProgressChart: React.FC<{ history: PlayerHistoryEntry[], useP
             }
         };
 
-        // Execute immediately and after a short delay to account for view transitions
         scrollToLatest();
         const timer = setTimeout(scrollToLatest, 50);
         return () => clearTimeout(timer);

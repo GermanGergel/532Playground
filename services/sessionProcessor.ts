@@ -12,6 +12,73 @@ interface ProcessedSessionResult {
     updatedNewsFeed: NewsItem[];
 }
 
+/**
+ * Принудительный пересчет статистики для исторической сессии.
+ * Используется для восстановления данных, если автоматический расчет не сработал.
+ */
+export const recalculateHistoricalSession = (
+    session: Session,
+    currentPlayers: Player[]
+): Player[] => {
+    const { allPlayersStats } = calculateAllStats(session);
+    const playerStatsMap = new Map(allPlayersStats.map(stat => [stat.player.id, stat]));
+    
+    return currentPlayers.map(player => {
+        const sessionStats = playerStatsMap.get(player.id);
+        if (!sessionStats) return player;
+
+        // 1. Вычисляем бейджи и дельту рейтинга
+        const badgesEarned = calculateEarnedBadges(player, sessionStats, session, allPlayersStats);
+        const { breakdown } = calculateRatingUpdate(player, sessionStats, session, badgesEarned);
+        
+        const floor = player.initialRating || 68;
+        const unifiedNewRating = Math.max(floor, Math.round(breakdown.newRating));
+        const finalChange = unifiedNewRating - player.rating;
+
+        // 2. Обновляем бейджи (инкрементально)
+        const updatedBadges = { ...player.badges };
+        badgesEarned.forEach(badge => {
+            updatedBadges[badge] = (updatedBadges[badge] || 0) + 1;
+        });
+
+        // 3. Обновляем историю рейтинга
+        const dateStr = new Date(session.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
+        const historyEntry: PlayerHistoryEntry = {
+            date: dateStr,
+            rating: unifiedNewRating,
+            winRate: sessionStats.gamesPlayed > 0 ? Math.round((sessionStats.wins / sessionStats.gamesPlayed) * 100) : 0,
+            goals: sessionStats.goals,
+            assists: sessionStats.assists
+        };
+
+        const updatedHistory = [...(player.historyData || [])];
+        // Проверяем, нет ли уже записи за эту дату, чтобы не дублировать при повторном нажатии
+        if (!updatedHistory.find(h => h.date === dateStr)) {
+            updatedHistory.push(historyEntry);
+        }
+        if (updatedHistory.length > 12) updatedHistory.shift();
+
+        return {
+            ...player,
+            totalGoals: player.totalGoals + sessionStats.goals,
+            totalAssists: player.totalAssists + sessionStats.assists,
+            totalGames: player.totalGames + sessionStats.gamesPlayed,
+            totalWins: player.totalWins + sessionStats.wins,
+            totalSessionsPlayed: (player.totalSessionsPlayed || 0) + 1,
+            rating: unifiedNewRating,
+            tier: getTierForRating(unifiedNewRating),
+            badges: updatedBadges,
+            historyData: updatedHistory,
+            lastRatingChange: {
+                ...breakdown,
+                finalChange,
+                newRating: unifiedNewRating,
+                badgesEarned
+            }
+        };
+    });
+};
+
 export const processFinishedSession = ({
     session,
     oldPlayers,
@@ -29,22 +96,18 @@ export const processFinishedSession = ({
     const penaltyNews: NewsItem[] = [];
     const timestamp = new Date().toISOString();
     
-    // Get session month key to compare with player's last activity
     const sessionDate = new Date(session.date);
     const sessionMonthKey = `${sessionDate.getFullYear()}-${sessionDate.getMonth()}`;
 
-    // --- 1. UPDATE PLAYERS (Participation & Inactivity Logic) ---
     let playersWithUpdatedStats = oldPlayers.map(player => {
         const sessionStats = playerStatsMap.get(player.id);
         const floor = player.initialRating || 68;
         
         if (sessionStats) {
-            // Check if this session is in the same month as the player's last game
             const lastPlayedDate = player.lastPlayedAt ? new Date(player.lastPlayedAt) : new Date(0);
             const lastPlayedMonthKey = `${lastPlayedDate.getFullYear()}-${lastPlayedDate.getMonth()}`;
             const isSameMonth = sessionMonthKey === lastPlayedMonthKey;
 
-            // Reset monthly stats if it's a new month, otherwise keep accumulating
             const baseMonthly = isSameMonth ? {
                 goals: player.monthlyGoals,
                 assists: player.monthlyAssists,
@@ -59,7 +122,6 @@ export const processFinishedSession = ({
                 sessions: 0
             };
 
-            // PLAYER PLAYED
             const updatedPlayer: Player = {
                 ...player,
                 totalGames: player.totalGames + sessionStats.gamesPlayed,
@@ -70,25 +132,22 @@ export const processFinishedSession = ({
                 totalLosses: player.totalLosses + sessionStats.losses,
                 totalSessionsPlayed: (player.totalSessionsPlayed || 0) + 1,
                 
-                // Monthly Stats (Reset logic applied via baseMonthly)
                 monthlyGames: baseMonthly.games + sessionStats.gamesPlayed,
                 monthlyGoals: baseMonthly.goals + sessionStats.goals,
                 monthlyAssists: baseMonthly.assists + sessionStats.assists,
                 monthlyWins: baseMonthly.wins + sessionStats.wins,
                 monthlySessionsPlayed: baseMonthly.sessions + 1,
                 
-                lastPlayedAt: session.date, // Use session date instead of 'now' to be consistent
+                lastPlayedAt: session.date,
                 consecutiveMissedSessions: 0,
             };
             return updatedPlayer;
         } else {
-            // PLAYER MISSED
             const currentMissed = (player.consecutiveMissedSessions || 0) + 1;
             let newRating = player.rating;
             let actualPenaltyDelta = 0;
             const isImmune = !!player.isImmuneToPenalty;
 
-            // Apply penalty every 5th missed session IF not immune (Changed from 3 to 5)
             if (!isImmune && currentMissed > 0 && currentMissed % 5 === 0) {
                 if (newRating > floor) {
                     const targetRating = Math.max(floor, newRating - 1);
@@ -97,8 +156,6 @@ export const processFinishedSession = ({
                 }
             }
 
-            // Note: We do NOT reset monthly stats here. They are reset visually in UI if date is old,
-            // or reset permanently when they play their next game in a new month.
             const updatedPlayer = {
                 ...player,
                 consecutiveMissedSessions: currentMissed,
@@ -130,8 +187,6 @@ export const processFinishedSession = ({
                     priority: 5
                 });
 
-                // --- CRITICAL FIX FOR CHART ---
-                // Add a history entry for the penalty so the graph shows the drop
                 const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
                 const currentWinRate = player.totalGames > 0 ? Math.round((player.totalWins / player.totalGames) * 100) : 0;
                 
@@ -153,14 +208,12 @@ export const processFinishedSession = ({
         }
     });
 
-    // --- 2. CALCULATE RATINGS, BADGES, and FORM ---
     let playersWithCalculatedRatings = playersWithUpdatedStats.map(player => {
         const sessionStats = playerStatsMap.get(player.id);
         if (sessionStats) {
             const badgesEarnedThisSession = calculateEarnedBadges(player, sessionStats, session, allPlayersStats);
             const { delta, breakdown } = calculateRatingUpdate(player, sessionStats, session, badgesEarnedThisSession);
             
-            // PROTECT FLOOR
             const floor = player.initialRating || 68;
             const rawNewRating = Math.round(breakdown.newRating);
             const unifiedNewRating = Math.max(floor, rawNewRating);
