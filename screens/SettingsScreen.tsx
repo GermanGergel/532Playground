@@ -1,10 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Card, Button, useTranslation } from '../ui';
-import { isSupabaseConfigured, getCloudPlayerCount } from '../db';
-import { Wand, Activity } from '../icons';
+import { isSupabaseConfigured, getCloudPlayerCount, savePlayersToDB } from '../db';
+import { Wand, Activity, RefreshCw } from '../icons';
+import { calculateAllStats } from '../services/statistics';
+import { calculateRatingUpdate, calculateEarnedBadges, getTierForRating } from '../services/rating';
+import { Player, PlayerHistoryEntry, PlayerHistoryEntry as HistoryData } from '../types';
 
 const WalletIcon = ({ className }: { className?: string }) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -17,11 +19,11 @@ const WalletIcon = ({ className }: { className?: string }) => (
 export const SettingsScreen: React.FC = () => {
     const t = useTranslation();
     const navigate = useNavigate();
-    const { language, setLanguage, allPlayers } = useApp();
+    const { language, setLanguage, allPlayers, history, setAllPlayers } = useApp();
     const [cloudStatus, setCloudStatus] = React.useState<{ connected: boolean, count: number } | null>(null);
     const [isRefreshing, setIsRefreshing] = React.useState(false);
+    const [isRepairing, setIsRepairing] = React.useState(false);
     
-    // Определение текущего эндпоинта Supabase для отображения
     const dbEndpoint = (process.env.VITE_SUPABASE_URL || '').split('//')[1]?.split('.')[0]?.toUpperCase() || 'LOCAL';
 
     const checkCloud = async () => {
@@ -38,6 +40,97 @@ export const SettingsScreen: React.FC = () => {
             setCloudStatus({ connected: false, count: 0 });
         }
         setIsRefreshing(false);
+    };
+
+    const handleRepair1702Stats = async () => {
+        if (isRepairing) return;
+        if (!window.confirm("CRITICAL REPAIR: This will perform a FULL recalculation for 17.02 session (Goals, Wins, Rating). Proceed?")) return;
+
+        setIsRepairing(true);
+        try {
+            // 1. Find session from 17.02
+            const targetSession = history.find(s => s.date.includes('2026-02-17') || s.date.includes('17/02/2026'));
+            if (!targetSession) {
+                alert("Session from 17.02 not found in history.");
+                setIsRepairing(false);
+                return;
+            }
+
+            // 2. Get true stats using global players as fallback (This finds the "missing" captains)
+            const { allPlayersStats } = calculateAllStats(targetSession, allPlayers);
+            
+            // 3. Process each affected player
+            const updatedPlayers = allPlayers.map(p => {
+                const sessionStats = allPlayersStats.find(s => s.player.id === p.id);
+                if (!sessionStats) return p;
+
+                // Check if they already have history for this date to avoid double counting
+                const hasHistory = p.historyData?.some(h => h.date === '17/02');
+                if (hasHistory) return p;
+
+                console.log(`Deep repairing all stats for ${p.nickname}...`);
+
+                // A. Calculate Rating Delta & Badges
+                const badgesEarned = calculateEarnedBadges(p, sessionStats, targetSession, allPlayersStats);
+                const { breakdown } = calculateRatingUpdate(p, sessionStats, targetSession, badgesEarned);
+
+                // B. Apply deltas to CAREER totals
+                const totalGames = p.totalGames + sessionStats.gamesPlayed;
+                const totalGoals = p.totalGoals + sessionStats.goals;
+                const totalAssists = p.totalAssists + sessionStats.assists;
+                const totalWins = p.totalWins + sessionStats.wins;
+                const totalDraws = p.totalDraws + sessionStats.draws;
+                const totalLosses = p.totalLosses + sessionStats.losses;
+                const totalSessionsPlayed = (p.totalSessionsPlayed || 0) + 1;
+
+                // C. Update Rating and Tier
+                const newRating = Math.max(p.initialRating || 68, Math.round(breakdown.newRating));
+                const newTier = getTierForRating(newRating);
+
+                // D. Update Monthly Stats (Assuming Feb 2026)
+                const monthlyGames = p.monthlyGames + sessionStats.gamesPlayed;
+                const monthlyGoals = p.monthlyGoals + sessionStats.goals;
+                const monthlyAssists = p.monthlyAssists + sessionStats.assists;
+                const monthlyWins = p.monthlyWins + sessionStats.wins;
+                const monthlySessionsPlayed = (p.monthlySessionsPlayed || 0) + 1;
+
+                // E. Construct history entry for chart
+                const winRate = sessionStats.gamesPlayed > 0 ? Math.round((sessionStats.wins / sessionStats.gamesPlayed) * 100) : 0;
+                const newEntry: PlayerHistoryEntry = {
+                    date: '17/02',
+                    rating: newRating,
+                    winRate,
+                    goals: sessionStats.goals,
+                    assists: sessionStats.assists
+                };
+
+                const historyData = [...(p.historyData || [])];
+                historyData.push(newEntry);
+                if (historyData.length > 12) historyData.shift();
+
+                return { 
+                    ...p, 
+                    rating: newRating,
+                    tier: newTier,
+                    totalGames, totalGoals, totalAssists, totalWins, totalDraws, totalLosses, totalSessionsPlayed,
+                    monthlyGames, monthlyGoals, monthlyAssists, monthlyWins, monthlySessionsPlayed,
+                    historyData,
+                    lastRatingChange: { ...breakdown, newRating, badgesEarned, finalChange: newRating - p.rating },
+                    consecutiveMissedSessions: 0,
+                    lastPlayedAt: targetSession.date
+                };
+            });
+
+            setAllPlayers(updatedPlayers);
+            await savePlayersToDB(updatedPlayers);
+            alert("FULL REPAIR COMPLETE. Career totals, rating and graph points have been restored.");
+
+        } catch (e) {
+            console.error(e);
+            alert("Repair failed.");
+        } finally {
+            setIsRepairing(false);
+        }
     };
 
     useEffect(() => {
@@ -183,6 +276,16 @@ export const SettingsScreen: React.FC = () => {
             </div>
 
             <div className="p-4 shrink-0 space-y-4">
+                <Button 
+                    variant="ghost" 
+                    onClick={handleRepair1702Stats}
+                    disabled={isRepairing}
+                    className="w-full !py-3 border border-yellow-500/20 bg-yellow-500/5 hover:bg-yellow-500/10 text-yellow-500 text-[10px] tracking-widest uppercase flex items-center justify-center gap-2"
+                >
+                    <RefreshCw className={`w-3 h-3 ${isRepairing ? 'animate-spin' : ''}`} /> 
+                    {isRepairing ? 'DEEP REPAIRING...' : 'FULL FIX 17.02 STATS'}
+                </Button>
+
                 <Button 
                     variant="ghost" 
                     onClick={() => navigate('/settings/promo-admin')}

@@ -1,4 +1,3 @@
-
 import { Session, Player, NewsItem, BadgeType, SessionStatus, PlayerRecords, PlayerHistoryEntry } from '../types';
 import { calculateAllStats } from './statistics';
 import { calculateEarnedBadges, calculateRatingUpdate, getTierForRating } from './rating';
@@ -22,7 +21,8 @@ export const processFinishedSession = ({
     newsFeed: NewsItem[];
 }): ProcessedSessionResult => {
 
-    const { allPlayersStats } = calculateAllStats(session);
+    // CRITICAL: Pass oldPlayers to calculateAllStats so it can find participants missing from session pool
+    const { allPlayersStats } = calculateAllStats(session, oldPlayers);
     const playerStatsMap = new Map(allPlayersStats.map(stat => [stat.player.id, stat]));
     
     const participatedIds = new Set(allPlayersStats.map(s => s.player.id));

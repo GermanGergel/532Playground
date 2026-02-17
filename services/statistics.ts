@@ -29,9 +29,11 @@ interface TeamStats {
     cleanSheets: number; // Helper to track team clean sheets
 }
 
-const getPlayerById = (id: string, players: Player[]) => players.find(p => p.id === id);
+const getPlayerById = (id: string, sessionPool: Player[], globalPool: Player[]) => {
+    return sessionPool.find(p => p.id === id) || globalPool.find(p => p.id === id);
+};
 
-export const calculateAllStats = (session: Session) => {
+export const calculateAllStats = (session: Session, globalPlayers: Player[] = []) => {
     // Safeguard: ensure teams exists (handle corrupted legacy data)
     const teams = session.teams || [];
     const playerPool = session.playerPool || [];
@@ -44,7 +46,12 @@ export const calculateAllStats = (session: Session) => {
         });
     });
 
-    const allPlayersInSession = teams.flatMap(t => t.playerIds).map(pid => getPlayerById(pid, playerPool)).filter(Boolean) as Player[];
+    // FIX: Get all unique IDs from teams and find their profile objects
+    const allUniqueParticipantIds = Array.from(new Set(teams.flatMap(t => t.playerIds)));
+    
+    const allPlayersInSession = allUniqueParticipantIds
+        .map(pid => getPlayerById(pid, playerPool, globalPlayers))
+        .filter(Boolean) as Player[];
 
     const playerStats: PlayerStats[] = allPlayersInSession.map(player => {
         const team = playerTeamMap.get(player.id);
@@ -194,7 +201,8 @@ export const calculatePlayerMonthlyStats = (playerId: string, history: Session[]
         if (sDate.getMonth() === currentMonth && sDate.getFullYear() === currentYear && session.status === 'completed') {
             
             // Check if player exists in the pool (participated in session)
-            const playerInSession = session.playerPool.some(p => p.id === playerId);
+            const playerInSession = session.playerPool.some(p => p.id === playerId) || 
+                                   session.teams.some(t => t.playerIds.includes(playerId));
             
             if (playerInSession) {
                 stats.sessions++;
