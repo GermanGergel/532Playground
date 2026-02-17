@@ -10,28 +10,29 @@ export const hexToRgba = (hex: string, alpha: number) => {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
-// UPDATED: Standardized "UNIT" style with stencil font (Black Ops One) for "torn" look
+// UPDATED: Standardized "UNIT" style with white-to-faded gradient as per Club Hub "Define Your" style
+// FIX: Conditional style for Export to avoid html2canvas "background-clip: text" rendering artifacts (black/colored boxes behind text)
 export const BrandedHeader: React.FC<{className?: string; isExport?: boolean; short?: boolean}> = ({ className, isExport }) => {
     
-    // Style for live viewing (Gradient + Stencil Font)
+    // Style for live viewing (Gradient Text)
     const displayStyle: React.CSSProperties = {
-        background: 'linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.4) 100%)',
+        background: 'linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.2) 100%)',
         WebkitBackgroundClip: 'text',
         WebkitTextFillColor: 'transparent',
-        filter: 'drop-shadow(2px 4px 8px rgba(0, 0, 0, 0.5))',
+        filter: 'drop-shadow(4px 10px 15px rgba(0, 0, 0, 0.8))',
     };
 
-    // Style for Export
+    // Style for Export/Image Generation (Solid Text to prevent artifacts)
     const exportStyle: React.CSSProperties = {
         color: '#FFFFFF',
         background: 'none',
         WebkitTextFillColor: 'initial',
-        filter: 'drop-shadow(2px 4px 8px rgba(0, 0, 0, 0.5))',
+        filter: 'drop-shadow(4px 10px 15px rgba(0, 0, 0, 0.8))',
     };
 
     return React.createElement('header', { className: `text-center ${className} ${isExport ? '-mt-4' : ''}` },
         React.createElement('h1', { 
-            className: `text-5xl font-black uppercase leading-none font-blackops tracking-[0.1em]`, 
+            className: `text-5xl font-black uppercase leading-none font-russo tracking-[0.2em]`, 
             style: isExport ? exportStyle : displayStyle
         }, "UNIT")
     );
