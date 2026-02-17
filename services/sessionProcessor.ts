@@ -21,7 +21,8 @@ export const processFinishedSession = ({
     newsFeed: NewsItem[];
 }): ProcessedSessionResult => {
 
-    // CRITICAL: Pass oldPlayers to calculateAllStats so it can find participants missing from session pool
+    // FUTURE FIX: Pass oldPlayers (Global Base) to calculateAllStats 
+    // This allows the engine to find participants that were added via ID but missing from the session pool.
     const { allPlayersStats } = calculateAllStats(session, oldPlayers);
     const playerStatsMap = new Map(allPlayersStats.map(stat => [stat.player.id, stat]));
     
@@ -97,8 +98,6 @@ export const processFinishedSession = ({
                 }
             }
 
-            // Note: We do NOT reset monthly stats here. They are reset visually in UI if date is old,
-            // or reset permanently when they play their next game in a new month.
             const updatedPlayer = {
                 ...player,
                 consecutiveMissedSessions: currentMissed,
@@ -130,8 +129,6 @@ export const processFinishedSession = ({
                     priority: 5
                 });
 
-                // --- CRITICAL FIX FOR CHART ---
-                // Add a history entry for the penalty so the graph shows the drop
                 const dateStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
                 const currentWinRate = player.totalGames > 0 ? Math.round((player.totalWins / player.totalGames) * 100) : 0;
                 
@@ -160,7 +157,6 @@ export const processFinishedSession = ({
             const badgesEarnedThisSession = calculateEarnedBadges(player, sessionStats, session, allPlayersStats);
             const { delta, breakdown } = calculateRatingUpdate(player, sessionStats, session, badgesEarnedThisSession);
             
-            // PROTECT FLOOR
             const floor = player.initialRating || 68;
             const rawNewRating = Math.round(breakdown.newRating);
             const unifiedNewRating = Math.max(floor, rawNewRating);

@@ -6,7 +6,7 @@ import { isSupabaseConfigured, getCloudPlayerCount, savePlayersToDB } from '../d
 import { Wand, Activity, RefreshCw } from '../icons';
 import { calculateAllStats } from '../services/statistics';
 import { calculateRatingUpdate, calculateEarnedBadges, getTierForRating } from '../services/rating';
-import { Player, PlayerHistoryEntry, PlayerHistoryEntry as HistoryData } from '../types';
+import { Player, PlayerHistoryEntry } from '../types';
 
 const WalletIcon = ({ className }: { className?: string }) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -44,7 +44,7 @@ export const SettingsScreen: React.FC = () => {
 
     const handleRepair1702Stats = async () => {
         if (isRepairing) return;
-        if (!window.confirm("CRITICAL REPAIR: This will perform a FULL recalculation for 17.02 session (Goals, Wins, Rating). Proceed?")) return;
+        if (!window.confirm("CRITICAL DEEP REPAIR: This will fix Ratings, Arrows (Form), and Trend Bars for 17.02. Proceed?")) return;
 
         setIsRepairing(true);
         try {
@@ -56,66 +56,101 @@ export const SettingsScreen: React.FC = () => {
                 return;
             }
 
-            // 2. Get true stats using global players as fallback (This finds the "missing" captains)
+            // 2. Get true stats using global players as fallback
             const { allPlayersStats } = calculateAllStats(targetSession, allPlayers);
             
-            // 3. Process each affected player
+            // 3. Process each player
             const updatedPlayers = allPlayers.map(p => {
                 const sessionStats = allPlayersStats.find(s => s.player.id === p.id);
                 if (!sessionStats) return p;
 
-                // Check if they already have history for this date to avoid double counting
-                const hasHistory = p.historyData?.some(h => h.date === '17/02');
-                if (hasHistory) return p;
-
-                console.log(`Deep repairing all stats for ${p.nickname}...`);
+                // Important: We allow re-running this if they have history but the FORM is wrong
+                const hasEntry = p.historyData?.some(h => h.date === '17/02');
+                
+                console.log(`Deep repairing Form & Stats for ${p.nickname}...`);
 
                 // A. Calculate Rating Delta & Badges
                 const badgesEarned = calculateEarnedBadges(p, sessionStats, targetSession, allPlayersStats);
                 const { breakdown } = calculateRatingUpdate(p, sessionStats, targetSession, badgesEarned);
 
-                // B. Apply deltas to CAREER totals
-                const totalGames = p.totalGames + sessionStats.gamesPlayed;
-                const totalGoals = p.totalGoals + sessionStats.goals;
-                const totalAssists = p.totalAssists + sessionStats.assists;
-                const totalWins = p.totalWins + sessionStats.wins;
-                const totalDraws = p.totalDraws + sessionStats.draws;
-                const totalLosses = p.totalLosses + sessionStats.losses;
-                const totalSessionsPlayed = (p.totalSessionsPlayed || 0) + 1;
+                // B. Apply deltas to CAREER totals (only if entry wasn't already there)
+                let totalGames = p.totalGames;
+                let totalGoals = p.totalGoals;
+                let totalAssists = p.totalAssists;
+                let totalWins = p.totalWins;
+                let totalDraws = p.totalDraws;
+                let totalLosses = p.totalLosses;
+                let totalSessionsPlayed = p.totalSessionsPlayed || 0;
+                let monthlyGames = p.monthlyGames;
+                let monthlyGoals = p.monthlyGoals;
+                let monthlyAssists = p.monthlyAssists;
+                let monthlyWins = p.monthlyWins;
+                let monthlySessionsPlayed = p.monthlySessionsPlayed || 0;
 
-                // C. Update Rating and Tier
+                if (!hasEntry) {
+                    totalGames += sessionStats.gamesPlayed;
+                    totalGoals += sessionStats.goals;
+                    totalAssists += sessionStats.assists;
+                    totalWins += sessionStats.wins;
+                    totalDraws += sessionStats.draws;
+                    totalLosses += sessionStats.losses;
+                    totalSessionsPlayed += 1;
+                    monthlyGames += sessionStats.gamesPlayed;
+                    monthlyGoals += sessionStats.goals;
+                    monthlyAssists += sessionStats.assists;
+                    monthlyWins += sessionStats.wins;
+                    monthlySessionsPlayed += 1;
+                }
+
+                // C. Rating and Tier
                 const newRating = Math.max(p.initialRating || 68, Math.round(breakdown.newRating));
                 const newTier = getTierForRating(newRating);
+                const finalChange = newRating - p.rating;
 
-                // D. Update Monthly Stats (Assuming Feb 2026)
-                const monthlyGames = p.monthlyGames + sessionStats.gamesPlayed;
-                const monthlyGoals = p.monthlyGoals + sessionStats.goals;
-                const monthlyAssists = p.monthlyAssists + sessionStats.assists;
-                const monthlyWins = p.monthlyWins + sessionStats.wins;
-                const monthlySessionsPlayed = (p.monthlySessionsPlayed || 0) + 1;
+                // D. FIX FORM (The Arrow)
+                let newForm: 'hot_streak' | 'stable' | 'cold_streak' = 'stable';
+                if (finalChange >= 0.5) newForm = 'hot_streak';
+                else if (finalChange <= -0.5) newForm = 'cold_streak';
 
-                // E. Construct history entry for chart
-                const winRate = sessionStats.gamesPlayed > 0 ? Math.round((sessionStats.wins / sessionStats.gamesPlayed) * 100) : 0;
+                // E. FIX SESSION HISTORY (The Bars)
+                const sessionWinRate = sessionStats.gamesPlayed > 0 ? Math.round((sessionStats.wins / sessionStats.gamesPlayed) * 100) : 0;
+                const sessionHistory = [...(p.sessionHistory || [])];
+                
+                // Add the new result to bars if not already present
+                if (!hasEntry) {
+                    sessionHistory.push({ winRate: sessionWinRate });
+                    if (sessionHistory.length > 5) sessionHistory.shift();
+                }
+
+                // F. Update Graph Point
                 const newEntry: PlayerHistoryEntry = {
                     date: '17/02',
                     rating: newRating,
-                    winRate,
+                    winRate: sessionWinRate,
                     goals: sessionStats.goals,
                     assists: sessionStats.assists
                 };
 
                 const historyData = [...(p.historyData || [])];
-                historyData.push(newEntry);
-                if (historyData.length > 12) historyData.shift();
+                if (!hasEntry) {
+                    historyData.push(newEntry);
+                    if (historyData.length > 12) historyData.shift();
+                } else {
+                    // Update existing entry if date matches
+                    const idx = historyData.findIndex(h => h.date === '17/02');
+                    if (idx !== -1) historyData[idx] = newEntry;
+                }
 
                 return { 
                     ...p, 
                     rating: newRating,
                     tier: newTier,
+                    form: newForm, // FIX: APPLY THE NEW ARROW
+                    sessionHistory, // FIX: APPLY THE NEW BARS
                     totalGames, totalGoals, totalAssists, totalWins, totalDraws, totalLosses, totalSessionsPlayed,
                     monthlyGames, monthlyGoals, monthlyAssists, monthlyWins, monthlySessionsPlayed,
                     historyData,
-                    lastRatingChange: { ...breakdown, newRating, badgesEarned, finalChange: newRating - p.rating },
+                    lastRatingChange: { ...breakdown, newRating, badgesEarned, finalChange },
                     consecutiveMissedSessions: 0,
                     lastPlayedAt: targetSession.date
                 };
@@ -123,7 +158,7 @@ export const SettingsScreen: React.FC = () => {
 
             setAllPlayers(updatedPlayers);
             await savePlayersToDB(updatedPlayers);
-            alert("FULL REPAIR COMPLETE. Career totals, rating and graph points have been restored.");
+            alert("DEEP REPAIR SUCCESSFUL. Arrows and Bars updated.");
 
         } catch (e) {
             console.error(e);
@@ -283,7 +318,7 @@ export const SettingsScreen: React.FC = () => {
                     className="w-full !py-3 border border-yellow-500/20 bg-yellow-500/5 hover:bg-yellow-500/10 text-yellow-500 text-[10px] tracking-widest uppercase flex items-center justify-center gap-2"
                 >
                     <RefreshCw className={`w-3 h-3 ${isRepairing ? 'animate-spin' : ''}`} /> 
-                    {isRepairing ? 'DEEP REPAIRING...' : 'FULL FIX 17.02 STATS'}
+                    {isRepairing ? 'REPAIRING...' : 'DEEP FIX 17.02 STATS'}
                 </Button>
 
                 <Button 
