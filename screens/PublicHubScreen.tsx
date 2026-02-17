@@ -42,7 +42,6 @@ const StaticSoccerBall: React.FC = () => {
             <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] overflow-visible">
                 <defs>
                     <radialGradient id="ballShading" cx="40%" cy="35%" r="65%"><stop offset="0%" stopColor="#ffffff" /><stop offset="50%" stopColor="#e2e8f0" /><stop offset="85%" stopColor="#94a3b8" /><stop offset="100%" stopColor="#1e293b" /></radialGradient>
-                    <filter id="hatShadow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.5" /><feOffset dx="0" dy="2" result="offsetblur" /><feComponentTransfer><feFuncA type="linear" slope="0.4" /></feComponentTransfer><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                 </defs>
                 <circle cx="50" cy="50" r="48" fill="url(#ballShading)" />
                 <g stroke="#000" strokeWidth="0.8" fill="none" opacity="0.25">
@@ -153,38 +152,44 @@ const ChaseList: React.FC<{
     );
 };
 
-// --- UNIT SIGNATURE TACTICAL OVERLAY (MATCHING REFERENCE) ---
+// --- UNIT SIGNATURE TACTICAL OVERLAY (BRANDED SHARDS) ---
 const TacticalShardOverlay = ({ color }: { color: string }) => (
-    <div className="absolute inset-0 z-0 opacity-[0.4] pointer-events-none overflow-hidden">
+    <div className="absolute inset-0 z-0 opacity-[0.55] pointer-events-none overflow-hidden">
         <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-                <linearGradient id="shardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor={color} stopOpacity="0.8" />
-                    <stop offset="100%" stopColor={color} stopOpacity="0.2" />
+                {/* Grunge filter to make shards look aggressive and ink-like */}
+                <filter id="grungeFilter">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.15" numOctaves="4" result="noise" />
+                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" />
+                </filter>
+                <linearGradient id="shardGradMain" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor={color} stopOpacity="0.9" />
+                    <stop offset="100%" stopColor={color} stopOpacity="0.1" />
                 </linearGradient>
             </defs>
             
-            {/* AGGRESSIVE INTERSECTING SHARDS */}
-            {/* Top right large shard */}
-            <path d="M110 0 L60 0 L40 60 L110 40 Z" fill="url(#shardGrad)" opacity="0.6" />
-            
-            {/* Long diagonal slash */}
-            <path d="M-10 20 L80 110 L90 100 L0 10 Z" fill={color} opacity="0.3" />
-            
-            {/* Left large spike */}
-            <path d="M0 30 L50 45 L0 85 Z" fill="url(#shardGrad)" opacity="0.5" />
-            
-            {/* Bottom right dark wedge */}
-            <path d="M70 100 L100 60 L100 100 Z" fill={color} opacity="0.4" />
-            
-            {/* Top left small spike */}
-            <path d="M0 0 L30 0 L0 40 Z" fill={color} opacity="0.3" />
-            
-            {/* Horizontal aggressive line */}
-            <path d="M20 50 L80 52 L75 58 L25 56 Z" fill={color} opacity="0.2" />
-            
-            {/* Center cross-shatter */}
-            <path d="M45 45 L55 35 L60 55 L40 60 Z" fill="white" opacity="0.1" />
+            <g filter="url(#grungeFilter)">
+                {/* LARGE BACKGROUND SHARDS (Like the reference image) */}
+                {/* Top Main Wedge */}
+                <path d="M-10,-10 L60,0 L35,55 L-20,40 Z" fill={color} opacity="0.4" />
+                
+                {/* Bottom Diagonal Strike */}
+                <path d="M20,110 L90,30 L110,45 L40,120 Z" fill={color} opacity="0.6" />
+                
+                {/* Left Aggressive Spike */}
+                <path d="M-5,25 L55,45 L-5,95 Z" fill="url(#shardGradMain)" opacity="0.7" />
+                
+                {/* Right Darker Wedge */}
+                <path d="M80,0 L110,0 L110,70 L65,30 Z" fill={color} opacity="0.5" />
+                
+                {/* Mid-Crossing Strike */}
+                <path d="M40,40 L120,60 L110,75 L30,55 Z" fill={color} opacity="0.3" />
+            </g>
+
+            {/* Tactical Markers (Small details) */}
+            <circle cx="20" cy="20" r="0.5" fill="white" opacity="0.2" />
+            <circle cx="80" cy="80" r="0.5" fill="white" opacity="0.2" />
+            <rect x="45" y="45" width="10" height="0.2" fill="white" opacity="0.1" transform="rotate(45 50 50)" />
         </svg>
     </div>
 );
@@ -200,40 +205,42 @@ const LegendCard: React.FC<{
     className?: string; 
 }> = ({ title, player, value, icon, label, accentColor = "#FFD700", className = "" }) => {
     
-    // Dynamic Font Size logic to prevent truncation (as requested)
+    // Dynamic Font Size logic (Improved to ensure NO truncation)
     const getNicknameSize = (name: string) => {
         const len = name.length;
-        if (len > 14) return 'text-[9px] md:text-[11px]';
-        if (len > 10) return 'text-[11px] md:text-[13px]';
-        return 'text-sm md:text-base';
+        if (len > 16) return 'text-[10px] md:text-[11px]';
+        if (len > 12) return 'text-[12px] md:text-[14px]';
+        return 'text-base md:text-lg';
     };
 
     return (
-        <div className={`relative group w-full h-36 md:h-40 rounded-2xl overflow-hidden bg-black border transition-all duration-500 active:scale-95 ${className}`} style={{ borderColor: `${accentColor}33`, boxShadow: `0 10px 30px -15px rgba(0,0,0,1)` }}>
+        <div className={`relative group w-full h-36 md:h-42 rounded-2xl overflow-hidden bg-black border transition-all duration-500 active:scale-95 ${className}`} style={{ borderColor: `${accentColor}44`, boxShadow: `0 15px 35px -15px rgba(0,0,0,1)` }}>
             
-            {/* BRAND SIGNATURE OVERLAY (MATCHING REFERENCE) */}
+            {/* BRAND SIGNATURE OVERLAY (The actual cool shards from reference) */}
             <TacticalShardOverlay color={accentColor} />
             
-            <div className="absolute top-0 right-0 w-28 md:w-36 h-full z-0 pointer-events-none">
+            {/* Inner Glow / Vignette */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,_transparent_20%,_rgba(0,0,0,0.8)_90%)] pointer-events-none z-10"></div>
+
+            <div className="absolute top-0 right-0 w-32 md:w-40 h-full z-0 pointer-events-none">
                 {player.playerCard ? (
                     <div 
                         className="w-full h-full bg-cover bg-top"
                         style={{ backgroundImage: `url(${player.playerCard})` }}
                     />
                 ) : (
-                    <div className="w-full h-full bg-gradient-to-b from-gray-800 to-black"></div>
+                    <div className="w-full h-full bg-gradient-to-b from-gray-900 to-black"></div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-black via-black/30 to-transparent"></div>
             </div>
 
-            <div className="absolute inset-0 pointer-events-none z-10" style={{ background: `linear-gradient(to bottom right, ${accentColor}10, transparent)` }}></div>
-            <div className="absolute top-0 left-0 right-0 h-px z-10" style={{ background: `linear-gradient(to right, transparent, ${accentColor}66, transparent)` }}></div>
+            <div className="absolute inset-0 pointer-events-none z-10" style={{ background: `linear-gradient(to bottom right, ${accentColor}15, transparent)` }}></div>
 
             <div className="relative z-20 p-4 h-full flex flex-col justify-between">
                 <div className="flex justify-between items-start">
-                    <div className="flex flex-col relative z-20 max-w-[75%]">
-                        <span className="text-[5px] md:text-[6px] font-black tracking-[0.2em] uppercase mb-0.5 opacity-90" style={{ color: accentColor }}>{title}</span>
-                        <h3 className={`font-russo ${getNicknameSize(player.nickname)} text-white uppercase tracking-tighter drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] leading-none whitespace-nowrap`}>
+                    <div className="flex flex-col relative z-20 max-w-[78%]">
+                        <span className="text-[6px] md:text-[7px] font-black tracking-[0.25em] uppercase mb-1 opacity-90" style={{ color: accentColor }}>{title}</span>
+                        <h3 className={`font-russo ${getNicknameSize(player.nickname)} text-white uppercase tracking-tighter drop-shadow-[0_3px_6px_rgba(0,0,0,1)] leading-none whitespace-nowrap`}>
                             {player.nickname}
                         </h3>
                     </div>
@@ -241,17 +248,20 @@ const LegendCard: React.FC<{
 
                 <div className="flex items-end justify-between">
                     <div className="flex flex-col">
-                        <span className="font-russo text-2xl md:text-3xl text-white tracking-widest leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                        <span className="font-russo text-3xl md:text-4xl text-white tracking-widest leading-none drop-shadow-[0_3px_6px_rgba(0,0,0,1)]">
                             {value}
                         </span>
-                        <span className="text-[6px] md:text-[7px] font-black text-white/50 uppercase tracking-[0.3em] mt-1">{label}</span>
+                        <span className="text-[6px] md:text-[8px] font-black text-white/50 uppercase tracking-[0.3em] mt-1.5">{label}</span>
                     </div>
                 </div>
                 
-                <div className="absolute bottom-2 right-2 opacity-10 scale-125 text-white z-10">
+                <div className="absolute bottom-2 right-2 opacity-[0.08] scale-150 text-white z-10 pointer-events-none">
                     {icon}
                 </div>
             </div>
+            
+            {/* Top edge highlight */}
+            <div className="absolute top-0 left-0 right-0 h-[1.5px] z-30" style={{ background: `linear-gradient(90deg, transparent, ${accentColor}66, transparent)` }}></div>
         </div>
     );
 };
