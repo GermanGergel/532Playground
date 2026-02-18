@@ -1,3 +1,4 @@
+
 import { Session, Player, NewsItem, BadgeType, PlayerRecords, PlayerHistoryEntry } from '../types';
 import { Language } from '../translations/index';
 import {
@@ -11,6 +12,7 @@ import {
     savePlayersToDB
 } from '../db';
 import { getTierForRating } from './rating';
+import { auditLifetimeWinRates } from './statistics';
 
 interface InitialAppState {
     session: Session | null;
@@ -23,10 +25,32 @@ interface InitialAppState {
 
 export const initializeAppState = async (): Promise<InitialAppState> => {
     const loadedSession = await loadActiveSessionFromDB() || null;
+    const loadedHistoryData = await loadHistoryFromDB() || [];
     const loadedPlayersData = await loadPlayersFromDB();
     let initialPlayers: Player[] = Array.isArray(loadedPlayersData) ? loadedPlayersData : [];
     
     let dataRepaired = false;
+
+    // 1. ПРИМЕНЯЕМ АУДИТ ВИНРЕЙТА (ТИХИЙ ПЕРЕСЧЕТ)
+    // Мы пересчитываем Wins/Draws/Losses, но НЕ МЕНЯЕМ totalGames.
+    const historyToAudit = Array.isArray(loadedHistoryData) ? loadedHistoryData : [];
+    if (initialPlayers.length > 0 && historyToAudit.length > 0) {
+        const auditedPlayers = auditLifetimeWinRates(initialPlayers, historyToAudit);
+        
+        // Сравниваем только Wins, Draws и Losses. 
+        // totalGames в аудите зафиксирован на старом значении, поэтому сравнивать его нет смысла.
+        const needsUpdate = auditedPlayers.some((p, i) => 
+            p.totalWins !== initialPlayers[i].totalWins || 
+            p.totalDraws !== initialPlayers[i].totalDraws ||
+            p.totalLosses !== initialPlayers[i].totalLosses
+        );
+        
+        if (needsUpdate) {
+            console.log("App Init: WinRT Audit completed. Victory counts synchronized with history logs.");
+            initialPlayers = auditedPlayers;
+            dataRepaired = true;
+        }
+    }
 
     initialPlayers = initialPlayers.map(p => {
         const migratedPlayer = { ...p } as any;
@@ -46,11 +70,8 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
         }
 
         // 3. RULE MIGRATION: REVERSE PENALTY (3 -> 5)
-        // Check if player has 3 or 4 misses and HAS NOT been migrated to v5 rule yet
         if (!migratedPlayer.migrated_penalty_v5 && (migratedPlayer.consecutiveMissedSessions === 3 || migratedPlayer.consecutiveMissedSessions === 4)) {
             const lastChange = migratedPlayer.lastRatingChange;
-            
-            // Check if last change looks like an inactivity penalty (OVR drop with no match stats)
             const isPenaltyEntry = lastChange && 
                 lastChange.finalChange < 0 && 
                 lastChange.teamPerformance === 0 && 
@@ -58,19 +79,10 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
 
             if (isPenaltyEntry) {
                 console.log(`Migration v5: Reversing penalty for ${migratedPlayer.nickname}`);
-                
-                // Return 1 point (standard penalty amount)
                 migratedPlayer.rating += 1;
-                
-                // Reset last change so it doesn't show "Penalty applied" in card analysis
                 migratedPlayer.lastRatingChange = undefined; 
-
-                // Adjust tier based on new rating
                 migratedPlayer.tier = getTierForRating(migratedPlayer.rating);
-
-                // Mark as migrated so we don't add +1 again on next app start
                 migratedPlayer.migrated_penalty_v5 = true;
-                
                 dataRepaired = true;
             }
         }
@@ -94,7 +106,6 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
         savePlayersToDB(initialPlayers).catch(e => console.warn("Background repair sync failed", e));
     }
 
-    const loadedHistoryData = await loadHistoryFromDB();
     const loadedNews = await loadNewsFromDB(10);
     const loadedLang = await loadLanguageFromDB() || 'en';
     const loadedPack = await loadActiveVoicePackFromDB() || 1;
@@ -102,7 +113,7 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
     return {
         session: loadedSession,
         players: initialPlayers,
-        history: Array.isArray(loadedHistoryData) ? loadedHistoryData : [],
+        history: historyToAudit,
         newsFeed: Array.isArray(loadedNews) ? loadedNews : [],
         language: loadedLang,
         activeVoicePack: loadedPack,
