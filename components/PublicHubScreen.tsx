@@ -12,20 +12,40 @@ const skillAbbreviations: Record<SkillType, string> = {
     playmaker: 'PM', finisher: 'FN', versatile: 'VS', tireless_motor: 'TM', leader: 'LD',
 };
 
-const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
+const FormArrowIndicator: React.FC<{ player: Player }> = ({ player }) => {
+    const { history } = useApp();
+    
+    // 1. Determine if the player participated in the latest club session
+    const latestSessionDate = history[0]?.date ? history[0].date.split('T')[0] : null;
+    const playerLastPlayedDate = player.lastPlayedAt ? player.lastPlayedAt.split('T')[0] : null;
+    const hasPlayedRecently = latestSessionDate && playerLastPlayedDate === latestSessionDate;
+
+    const b = player.lastRatingChange;
+    const delta = b?.finalChange || 0;
+    
+    // 2. Define trend based on real performance delta
+    // Threshold of 0.1 to ignore negligible fluctuations
+    const isUp = hasPlayedRecently && delta > 0.1;
+    const isDown = hasPlayedRecently && delta < -0.1;
+    
     const config = {
-        hot_streak: { color: '#4CFF5F' }, stable: { color: '#A9B1BD' }, cold_streak: { color: '#FF4136' },
+        up: { color: '#4CFF5F' },
+        down: { color: '#FF4136' },
+        stable: { color: '#A9B1BD' },
     };
-    const currentForm = config[form] || config.stable;
+    
+    const activeConfig = isUp ? config.up : isDown ? config.down : config.stable;
+
     const commonProps: React.SVGProps<SVGSVGElement> = {
-        width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: currentForm.color,
+        width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: activeConfig.color,
         strokeWidth: "3", strokeLinecap: "round", strokeLinejoin: "round",
+        style: { filter: (isUp || isDown) ? `drop-shadow(0 0 5px ${activeConfig.color}66)` : 'none' }
     };
-    switch (form) {
-        case 'hot_streak': return <svg {...commonProps}><path d="M12 19V5m-6 7l6-6 6 6"/></svg>;
-        case 'cold_streak': return <svg {...commonProps}><path d="M12 5v14M5 12l7 7 7-7"/></svg>;
-        default: return <svg {...commonProps}><path d="M5 12h14m-6-6l6 6-6 6"/></svg>;
-    }
+
+    if (isUp) return <svg {...commonProps}><path d="M12 19V5m-6 7l6-6 6 6"/></svg>;
+    if (isDown) return <svg {...commonProps}><path d="M12 5v14M5 12l7 7 7-7"/></svg>;
+    // Sideways arrow for stable or players who didn't play in the last session
+    return <svg {...commonProps} className="opacity-40"><path d="M5 12h14m-6-6l6 6-6 6"/></svg>;
 };
 
 // Эффект "атмосферы" хедера, теперь без кругов света (Top Glow)
@@ -113,7 +133,7 @@ export const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ play
                         <div className="flex flex-col items-center max-w-[50%]">
                             <div className="text-4xl font-black leading-none" style={{color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
                             <p className="font-bold text-white tracking-widest text-sm mt-2">OVR</p>
-                            <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
+                            <div className="mt-1"><FormArrowIndicator player={player} /></div>
                             
                             {topBadges.length > 0 && (
                                 <div className="mt-3 flex flex-col items-center gap-1">
