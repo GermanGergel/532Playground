@@ -2,9 +2,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-import { Button, Page, useTranslation, SessionModeIndicator } from '../ui';
+import { Button, Page, useTranslation, SessionModeIndicator, Modal } from '../ui';
 import { TeamAvatar } from '../components/avatars';
-import { StarIcon, Plus, Pause, Play, Edit3, TransferIcon, Users, UserMinus } from '../icons';
+import { StarIcon, Plus, Pause, Play, Edit3, TransferIcon, Users, UserMinus, Trash2 } from '../icons';
 import { Session, GameStatus, Team, Player } from '../types';
 import { audioManager, playAnnouncement, initAudioContext } from '../lib';
 import { GoalModal, EditGoalModal, SelectWinnerModal, SubstitutionModal, LegionnaireModal, SessionSummaryModal, TeamSwapModal, RosterEditModal } from '../modals';
@@ -157,13 +157,16 @@ export const LiveMatchScreen: React.FC = () => {
         setScoringTeamForModal, setIsEndSessionModalOpen, setGoalToEdit, setSubModalState, setLegionnaireModalState,
         finishCurrentGameAndSetupNext, handleStartGame, handleTogglePause,
         handleGoalSave, handleGoalUpdate, handleSubstitution, handleFinishSession, handleLegionnaireSwap,
-        swapTeams, removePlayerFromSession, replacePlayerInSession, swapPlayerTeam, addPlayerToSession
+        swapTeams, removePlayerFromSession, replacePlayerInSession, swapPlayerTeam, addPlayerToSession, deleteGoal
     } = gameManager;
     
     const [transferModeTeamId, setTransferModeTeamId] = React.useState<string | null>(null);
     const [transferPlayerOutId, setTransferPlayerOutId] = React.useState<string | null>(null);
     const [teamSwapState, setTeamSwapState] = React.useState<{ isOpen: boolean; side?: 'left' | 'right' }>({ isOpen: false });
     const [isRosterEditOpen, setIsRosterEditOpen] = React.useState(false);
+    
+    // State for delete confirmation
+    const [goalToDelete, setGoalToDelete] = React.useState<string | null>(null);
 
     React.useEffect(() => {
         if (activeSession?.numTeams && activeSession.numTeams >= 3) audioManager.preloadPack(activeVoicePack);
@@ -221,6 +224,13 @@ export const LiveMatchScreen: React.FC = () => {
     const handleAvatarClick = (side: 'left' | 'right') => { if (isGamePending && activeSession.numTeams >= 3) setTeamSwapState({ isOpen: true, side }); };
     const performTeamSwap = (newTeamId: string) => { if (teamSwapState.side) swapTeams(teamSwapState.side, newTeamId); setTeamSwapState({ isOpen: false }); };
 
+    const handleConfirmDelete = () => {
+        if (goalToDelete) {
+            deleteGoal(goalToDelete);
+            setGoalToDelete(null);
+        }
+    };
+
     return (
         <div className="pb-28 flex flex-col min-h-screen">
             <GoalModal isOpen={!!scoringTeamForModal} onClose={() => setScoringTeamForModal(null)} onSave={handleGoalSave} game={currentGame} session={activeSession} scoringTeamId={scoringTeamForModal} />
@@ -250,6 +260,24 @@ export const LiveMatchScreen: React.FC = () => {
                 onSwap={swapPlayerTeam}
                 onAdd={addPlayerToSession}
             />
+
+            {/* DELETE GOAL CONFIRMATION MODAL */}
+            <Modal
+                isOpen={!!goalToDelete}
+                onClose={() => setGoalToDelete(null)}
+                size="xs"
+                hideCloseButton
+                containerClassName="border border-red-500/40 shadow-[0_0_20px_rgba(239,68,68,0.2)]"
+            >
+                <div className="flex flex-col gap-4 text-center">
+                    <h3 className="text-xl font-bold text-white uppercase">{t.confirmDeletion}</h3>
+                    <p className="text-xs text-white/60">This action will remove the goal and update the score.</p>
+                    <div className="flex gap-3">
+                        <Button variant="secondary" onClick={() => setGoalToDelete(null)} className="flex-1">{t.cancel}</Button>
+                        <Button variant="danger" onClick={handleConfirmDelete} className="flex-1">{t.delete}</Button>
+                    </div>
+                </div>
+            </Modal>
 
             <header className="text-center shrink-0 pt-4">
                 <div className="flex items-center justify-center gap-3">
@@ -298,7 +326,25 @@ export const LiveMatchScreen: React.FC = () => {
                                 const team = activeSession.teams.find(t => t.id === goal.teamId);
                                 const scorer = activeSession.playerPool.find(p => p.id === goal.scorerId);
                                 const assistant = activeSession.playerPool.find(p => p.id === goal.assistantId);
-                                return (<li key={goal.id} className="flex items-center justify-between p-1.5 bg-dark-bg/60 rounded-md text-sm"><div className="flex items-center gap-2 overflow-hidden"><div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: team?.color }}></div><p className="truncate"><span className="font-semibold">{scorer?.nickname || t.ownGoal}</span>{assistant && <span className="text-xs text-dark-text-secondary"> (A: {assistant.nickname})</span>}</p></div><Button variant="ghost" className="!p-1 !rounded-md flex-shrink-0" onClick={() => setGoalToEdit(goal)}><Edit3 className="w-3.5 h-3.5" /></Button></li>);
+                                return (
+                                    <li key={goal.id} className="flex items-center justify-between p-1.5 bg-dark-bg/60 rounded-md text-sm">
+                                        <div className="flex items-center gap-2 overflow-hidden">
+                                            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: team?.color }}></div>
+                                            <p className="truncate">
+                                                <span className="font-semibold">{scorer?.nickname || t.ownGoal}</span>
+                                                {assistant && <span className="text-xs text-dark-text-secondary"> (A: {assistant.nickname})</span>}
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <Button variant="ghost" className="!p-1 !rounded-md flex-shrink-0" onClick={() => setGoalToEdit(goal)}>
+                                                <Edit3 className="w-3.5 h-3.5" />
+                                            </Button>
+                                            <Button variant="ghost" className="!p-1 !rounded-md flex-shrink-0 text-red-400 hover:text-red-500 hover:bg-red-500/10" onClick={() => setGoalToDelete(goal.id)}>
+                                                <Trash2 className="w-3.5 h-3.5" />
+                                            </Button>
+                                        </div>
+                                    </li>
+                                );
                             })}
                         </ul>
                     </div>
