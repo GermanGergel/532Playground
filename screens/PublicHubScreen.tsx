@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -20,10 +21,7 @@ import { CinematicCard, HeaderAtmosphere } from '../components/PublicHubScreen';
 
 const CinematicBackground: React.FC = () => (
     <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#0a0c10]">
-        {/* 1. Base Layer - Deep Obsidian */}
         <div className="absolute inset-0 bg-[#0a0c10]"></div>
-        
-        {/* 2. Static Noise for texture (stays fixed) */}
         <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none">
             <svg className='w-full h-full'>
                 <filter id='hubNoise'>
@@ -41,7 +39,6 @@ const StaticSoccerBall: React.FC = () => {
             <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)] overflow-visible">
                 <defs>
                     <radialGradient id="ballShading" cx="40%" cy="35%" r="65%"><stop offset="0%" stopColor="#ffffff" /><stop offset="50%" stopColor="#e2e8f0" /><stop offset="85%" stopColor="#94a3b8" /><stop offset="100%" stopColor="#1e293b" /></radialGradient>
-                    <filter id="hatShadow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.5" /><feOffset dx="0" dy="2" result="offsetblur" /><feComponentTransfer><feFuncA type="linear" slope="0.4" /></feComponentTransfer><feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                 </defs>
                 <circle cx="50" cy="50" r="48" fill="url(#ballShading)" />
                 <g stroke="#000" strokeWidth="0.8" fill="none" opacity="0.25">
@@ -55,19 +52,35 @@ const StaticSoccerBall: React.FC = () => {
     );
 };
 
-// --- TREND INDICATOR (UPDATED: DYNAMIC ARROWS) ---
+// --- ТРЕНД (СТРЕЛКИ) — УЛУЧШЕННАЯ ЛОГИКА ---
 const TrendArrow: React.FC<{ player: Player }> = ({ player }) => {
-    // We use the actual rating change from the last session to determine the trend
-    const change = player.lastRatingChange?.finalChange || 0;
+    const { history } = useApp();
     
-    if (change > 0) {
+    // 1. Берем дату самой последней сессии клуба
+    const latestSessionDate = history[0]?.date ? history[0].date.split('T')[0] : null;
+    const playerLastPlayedDate = player.lastPlayedAt ? player.lastPlayedAt.split('T')[0] : null;
+
+    // 2. Если игрок не играл в последнюю сессию — показываем прочерк
+    if (!latestSessionDate || playerLastPlayedDate !== latestSessionDate) {
+        return <span className="text-white/10 text-[12px] font-bold tracking-tighter">―</span>;
+    }
+
+    const b = player.lastRatingChange;
+    if (!b) return <span className="text-white/10 text-[12px] font-bold tracking-tighter">―</span>;
+
+    // 3. Считаем "микро-тренд" (сумма всех факторов эффективности)
+    // Это позволит показать стрелку, даже если целое число OVR не изменилось
+    const rawImpact = (b.teamPerformance || 0) + (b.individualPerformance || 0) + (b.badgeBonus || 0);
+    
+    // Используем порог 0.1, чтобы отсечь совсем незначительные колебания
+    if (rawImpact > 0.1) {
         return <span className="text-[#4CFF5F] text-[10px] drop-shadow-[0_0_5px_rgba(76,255,95,0.8)] font-bold">▲</span>;
     }
-    if (change < 0) {
+    if (rawImpact < -0.1) {
         return <span className="text-[#FF4136] text-[10px] drop-shadow-[0_0_5px_rgba(255,65,54,0.8)] font-bold">▼</span>;
     }
-    // Static arrow / side arrow style as requested
-    return <span className="text-white/20 text-[12px] font-bold tracking-tighter">―</span>;
+
+    return <span className="text-white/10 text-[12px] font-bold tracking-tighter">―</span>;
 };
 
 // --- CHASE LIST COMPONENT (THE 4-PLAYER TAIL) ---
@@ -75,7 +88,7 @@ const ChaseList: React.FC<{
     players: Player[]; 
     valueKey: keyof Player | 'grandMaster' | 'winRate'; 
     accentColor: string; 
- }> = ({ players, valueKey, accentColor }) => {
+}> = ({ players, valueKey, accentColor }) => {
     
     const scrollRef = useRef<HTMLDivElement>(null);
     const [showTopFade, setShowTopFade] = useState(false);
@@ -109,12 +122,10 @@ const ChaseList: React.FC<{
             className="w-full bg-[#0a0c10]/95 backdrop-blur-md rounded-b-2xl border-l border-r border-b overflow-hidden relative group/list"
             style={{ borderColor: `${accentColor}33` }}
         >
-            {/* Top Fade Gradient */}
             <div 
                 className={`absolute top-0 left-0 right-0 h-6 bg-gradient-to-b from-[#0a0c10] to-transparent z-20 pointer-events-none transition-opacity duration-300 ${showTopFade ? 'opacity-100' : 'opacity-0'}`}
             ></div>
 
-            {/* Scrollable container with fixed max height */}
             <div 
                 ref={scrollRef}
                 onScroll={handleScroll}
@@ -152,7 +163,6 @@ const ChaseList: React.FC<{
                 )}
             </div>
 
-            {/* Bottom Fade Gradient */}
             <div 
                 className={`absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[#0a0c10] to-transparent z-20 pointer-events-none transition-opacity duration-300 ${showBottomFade ? 'opacity-100' : 'opacity-0'}`}
             ></div>
@@ -164,16 +174,13 @@ const ChaseList: React.FC<{
 const TacticalShardOverlay = ({ color }: { color: string }) => (
     <div className="absolute inset-0 z-0 opacity-[0.18] pointer-events-none overflow-hidden">
         <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-            {/* Chaotic Shards inspired by requested style */}
             <path d="M-5 15 L35 0 L45 25 Z" fill={color} />
             <path d="M55 -5 L105 45 L75 5 Z" fill={color} />
             <path d="M-10 70 L25 95 L-5 105 Z" fill={color} />
             <path d="M105 75 L65 105 L110 110 Z" fill={color} />
-            {/* Slashed lines */}
             <rect x="0" y="20" width="100" height="0.5" fill={color} transform="rotate(-35 50 50)" />
             <rect x="0" y="40" width="100" height="1.5" fill={color} transform="rotate(-35 50 50)" />
             <rect x="0" y="60" width="100" height="0.8" fill={color} transform="rotate(-35 50 50)" />
-            {/* Rectangular shards */}
             <rect x="10" y="10" width="40" height="4" fill={color} transform="rotate(15 10 10)" />
             <rect x="60" y="80" width="30" height="2" fill={color} transform="rotate(-10 60 80)" />
         </svg>
@@ -191,10 +198,7 @@ const LegendCard: React.FC<{
     className?: string; 
 }> = ({ title, player, value, icon, label, accentColor = "#FFD700", className = "" }) => (
     <div className={`relative group w-full h-36 md:h-40 rounded-2xl overflow-hidden bg-black border transition-all duration-500 active:scale-95 ${className}`} style={{ borderColor: `${accentColor}33`, boxShadow: `0 10px 30px -15px rgba(0,0,0,1)` }}>
-        
-        {/* BRAND SIGNATURE OVERLAY (Replaces old pixel grid) */}
         <TacticalShardOverlay color={accentColor} />
-        
         <div className="absolute top-0 right-0 w-28 md:w-36 h-full z-0 pointer-events-none">
             {player.playerCard ? (
                 <div 
@@ -206,10 +210,7 @@ const LegendCard: React.FC<{
             )}
             <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent"></div>
         </div>
-
         <div className="absolute inset-0 pointer-events-none z-10" style={{ background: `linear-gradient(to bottom right, ${accentColor}10, transparent)` }}></div>
-        <div className="absolute top-0 left-0 right-0 h-px z-10" style={{ background: `linear-gradient(to right, transparent, ${accentColor}66, transparent)` }}></div>
-
         <div className="relative z-20 p-4 h-full flex flex-col justify-between">
             <div className="flex justify-between items-start">
                 <div className="flex flex-col relative z-20 max-w-[70%]">
@@ -219,7 +220,6 @@ const LegendCard: React.FC<{
                     </h3>
                 </div>
             </div>
-
             <div className="flex items-end justify-between">
                 <div className="flex flex-col">
                     <span className="font-russo text-2xl md:text-3xl text-white tracking-widest leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
@@ -228,7 +228,6 @@ const LegendCard: React.FC<{
                     <span className="text-[6px] md:text-[7px] font-black text-white/50 uppercase tracking-[0.3em] mt-1">{label}</span>
                 </div>
             </div>
-            
             <div className="absolute bottom-2 right-2 opacity-10 scale-125 text-white z-10">
                 {icon}
             </div>
@@ -236,7 +235,7 @@ const LegendCard: React.FC<{
     </div>
 );
 
-const NoLeadersPlaceholder: React.FC = () => { const t = useTranslation(); return (<div className="w-full max-w-2xl mx-auto py-20 flex flex-col items-center justify-center relative"><div className="absolute inset-0 bg-[#00F2FE]/5 blur-[60px] rounded-full animate-pulse"></div><div className="relative z-10 flex flex-col items-center gap-6 opacity-30"><div className="w-20 h-20 rounded-full border-2 border-dashed border-[#00F2FE] animate-spin-slow flex items-center justify-center"><TrophyIcon className="w-10 h-10 text-[#00F2FE]" /></div><div className="text-center"><h3 className="font-orbitron text-lg font-black text-white tracking-[0.4em] uppercase">{t.hubAwaitingStats}</h3><p className="font-chakra text-[10px] text-white/50 tracking-[0.2em] mt-2 uppercase">{t.hubAnalyzingPerformance}</p></div></div><style dangerouslySetInnerHTML={{ __html: ` @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .animate-spin-slow { animation: spin-slow 15s linear infinite; } `}} /></div>); };
+const NoLeadersPlaceholder: React.FC = () => { const t = useTranslation(); return (<div className="w-full max-w-2xl mx-auto py-20 flex flex-col items-center justify-center relative"><div className="absolute inset-0 bg-[#00F2FE]/5 blur-[60px] rounded-full animate-pulse"></div><div className="relative z-10 flex flex-col items-center gap-6 opacity-30"><div className="w-20 h-20 rounded-full border-2 border-dashed border-[#00F2FE] animate-spin-slow flex items-center justify-center"><TrophyIcon className="w-10 h-10 text-[#00F2FE]" /></div><div className="text-center"><h3 className="font-orbitron text-lg font-black text-white tracking-[0.4em] uppercase">{t.hubAwaitingStats}</h3><p className="font-chakra text-[10px] text-white/50 tracking-[0.2em] mt-2 uppercase">{t.hubAnalyzingPerformance}</p></div></div></div>); };
 
 const NavHubButton: React.FC<{ title: string; icon: React.ReactNode; isActive: boolean; onClick: () => void; isDisabled?: boolean; }> = ({ title, icon, isActive, onClick, isDisabled }) => (
     <button 
@@ -270,7 +269,6 @@ const HubNav: React.FC<{
     useEffect(() => { 
         const handleClickOutside = (event: MouseEvent) => { if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) { setIsLangOpen(false); } }; 
         document.addEventListener('mousedown', handleClickOutside); 
-        // FIX: Replaced incorrect 'removeOverlayListener' with 'removeEventListener'
         return () => document.removeEventListener('mousedown', handleClickOutside); 
     }, []); 
 
@@ -324,7 +322,6 @@ const HubNav: React.FC<{
             </div>
 
             <div className="flex items-center gap-3 md:gap-5 shrink-0 h-full py-1">
-                {/* Всегда видимые кнопки навигации */}
                 <div className="flex items-center gap-2 md:gap-5 mr-2 h-full">
                     {isDashboardOpen && (
                         <div className="mr-2 flex items-center border-r border-white/10 pr-3 h-full">
@@ -369,7 +366,7 @@ const HubNav: React.FC<{
     ); 
 };
 
-const DispersingWord: React.FC<{ words: string[] }> = ({ words }) => { const [index, setIndex] = useState(0); const [state, setState] = useState<'entering' | 'active' | 'exiting'>('entering'); useEffect(() => { const cycle = async () => { setState('entering'); setTimeout(() => setState('active'), 1200); setTimeout(() => { setState('exiting'); setTimeout(() => { setIndex((prev) => (prev + 1) % words.length); }, 1200); }, 5000); }; cycle(); const interval = setInterval(cycle, 6500); return () => clearInterval(interval); }, [words.length]); const getStyles = () => { switch (state) { case 'entering': return "scale-[0.4] opacity-0 blur-[40px] translate-z-[-200px]"; case 'active': return "scale-[1.1] opacity-100 blur-0 translate-z-0"; case 'exiting': return "scale-[0.8] opacity-0 blur-[30px] translate-z-[-100px]"; default: return ""; } }; return (<span className="relative inline-block h-[1.1em] min-w-[280px] md:min-w-[500px] align-top text-center perspective-1000 px-10"><span className={`block px-4 text-transparent bg-clip-text bg-gradient-to-b from-[#00F2FE] to-[#00F2FE]/30 transition-all duration-[1200ms] ease-[cubic-bezier(0.2,0,0.2,1)] ${getStyles()}`} style={{ textShadow: state === 'active' ? '0 0 30px rgba(0, 242, 254, 0.5)' : 'none' }}>{words[index]}</span>{state === 'active' && (<span className="absolute inset-0 px-4 text-transparent bg-clip-text bg-gradient-to-b from-[#00F2FE] to-transparent pointer-events-none z-0 opacity-20" style={{ filter: 'blur(20px)', WebkitMaskImage: 'transparent' }}>{words[index]}</span>)}</span>); };
+const DispersingWord: React.FC<{ words: string[] }> = ({ words }) => { const [index, setIndex] = useState(0); const [state, setState] = useState<'entering' | 'active' | 'exiting'>('entering'); useEffect(() => { const cycle = async () => { setState('entering'); setTimeout(() => setState('active'), 1200); setTimeout(() => { setState('exiting'); setTimeout(() => { setIndex((prev) => (prev + 1) % words.length); }, 1200); }, 5000); }; cycle(); const interval = setInterval(cycle, 6500); return () => clearInterval(interval); }, [words.length]); const getStyles = () => { switch (state) { case 'entering': return "scale-[0.4] opacity-0 blur-[40px] translate-z-[-200px]"; case 'active': return "scale-[1.1] opacity-100 blur-0 translate-z-0"; case 'exiting': return "scale-[0.8] opacity-0 blur-[30px] translate-z-[-100px]"; default: return ""; } }; return (<span className="relative inline-block h-[1.1em] min-w-[280px] md:min-w-[500px] align-top text-center perspective-1000 px-10"><span className={`block px-4 text-transparent bg-clip-text bg-gradient-to-b from-[#00F2FE] to-[#00F2FE]/30 transition-all duration-[1200ms] ease-[cubic-bezier(0.2,0,0.2,1)] ${getStyles()}`} style={{ textShadow: state === 'active' ? '0 0 30px rgba(0, 242, 254, 0.5)' : 'none' }}>{words[index]}</span></span>); };
 const HeroTitle: React.FC = () => { const t = useTranslation(); const words = ["GAME", "LEGACY", "VICTORY"]; return (<div className="text-center mt-32 md:mt-44 mb-12 md:mb-16 relative"><div className="inline-block relative"><h1 className="font-russo text-4xl md:text-[9rem] leading-[1.1] uppercase tracking-tighter drop-shadow-2xl"><span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/20">DEFINE YOUR</span> <br /><DispersingWord words={words} /></h1><div className="mt-8 mb-10 max-w-lg mx-auto px-4"><p className="font-chakra text-[10px] md:text-xs text-white/50 font-medium uppercase tracking-[0.3em] lifestyle-relaxed leading-loose">{t.hubWelcomeText}</p></div><div className="mt-6 h-px w-48 md:w-64 bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent mx-auto opacity-60 shadow-[0_0_10px_#00F2FE]"></div></div></div>); };
 const CinematicStatCard: React.FC<{ value: string | number; label: string; }> = ({ value, label }) => (<div className="w-full md:flex-1 max-w-xs md:max-w-none h-40"><div className="relative rounded-3xl overflow-hidden bg-white/[0.03] border border-white/10 shadow-2xl h-full backdrop-blur-md"><div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-40"></div><div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-white/5 to-transparent blur-xl"></div><div className="relative h-full z-10 flex flex-col items-center justify-center gap-2"><span className="font-russo font-black text-6xl md:text-7xl text-white tracking-widest leading-none">{value}</span><span className="font-chakra font-bold text-xs text-white/50 uppercase tracking-[0.2em]">{label}</span></div></div></div>);
 type DashboardViewType = 'info' | 'dashboard' | 'roster' | 'archive' | 'duel' | 'tournaments' | 'league';
@@ -381,10 +378,7 @@ export const PublicHubScreen: React.FC = () => {
     const [isTotmOpen, setIsTotmOpen] = useState(false);
     const [dashboardView, setDashboardView] = useState<DashboardViewType>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
-    
-    // Ссылка на основной прокручиваемый контейнер
     const mainScrollRef = useRef<HTMLDivElement>(null);
-
     const t = useTranslation();
 
     useEffect(() => {
@@ -449,7 +443,6 @@ export const PublicHubScreen: React.FC = () => {
                 onHomeClick={() => { 
                     setIsDashboardOpen(false); 
                     setDashboardView('dashboard'); 
-                    // Принудительный скролл в начало основного меню
                     if (mainScrollRef.current) {
                         mainScrollRef.current.scrollTop = 0;
                     }
