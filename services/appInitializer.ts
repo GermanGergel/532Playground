@@ -12,7 +12,7 @@ import {
     savePlayersToDB
 } from '../db';
 import { getTierForRating } from './rating';
-import { auditLifetimeWinRates } from './statistics';
+import { performDeepStatsAudit } from './statistics';
 
 interface InitialAppState {
     session: Session | null;
@@ -31,22 +31,22 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
     
     let dataRepaired = false;
 
-    // 1. ПРИМЕНЯЕМ АУДИТ ВИНРЕЙТА (ТИХИЙ ПЕРЕСЧЕТ)
-    // Мы пересчитываем Wins/Draws/Losses, но НЕ МЕНЯЕМ totalGames.
+    // 1. ПРИМЕНЯЕМ DEEP INTEL AUDIT (ТИХИЙ ПЕРЕСЧЕТ)
+    // Полностью пересобираем Totals на основе истории игр
     const historyToAudit = Array.isArray(loadedHistoryData) ? loadedHistoryData : [];
     if (initialPlayers.length > 0 && historyToAudit.length > 0) {
-        const auditedPlayers = auditLifetimeWinRates(initialPlayers, historyToAudit);
+        const auditedPlayers = performDeepStatsAudit(initialPlayers, historyToAudit);
         
-        // Сравниваем только Wins, Draws и Losses. 
-        // totalGames в аудите зафиксирован на старом значении, поэтому сравнивать его нет смысла.
+        // Сравнение для лога изменений
         const needsUpdate = auditedPlayers.some((p, i) => 
             p.totalWins !== initialPlayers[i].totalWins || 
-            p.totalDraws !== initialPlayers[i].totalDraws ||
-            p.totalLosses !== initialPlayers[i].totalLosses
+            p.totalGames !== initialPlayers[i].totalGames ||
+            p.totalGoals !== initialPlayers[i].totalGoals ||
+            p.totalSessionsPlayed !== initialPlayers[i].totalSessionsPlayed
         );
         
         if (needsUpdate) {
-            console.log("App Init: WinRT Audit completed. Victory counts synchronized with history logs.");
+            console.log("App Init: Deep Intel Audit completed. All player totals synced with history.");
             initialPlayers = auditedPlayers;
             dataRepaired = true;
         }

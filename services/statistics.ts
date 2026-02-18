@@ -33,26 +33,35 @@ interface TeamStats {
 const getPlayerById = (id: string, players: Player[]) => players.find(p => p.id === id);
 
 /**
- * АУДИТ ПОЖИЗНЕННОГО ВИНРЕЙТА (WinRT Precision Audit)
- * Гарантирует точность процента побед без изменения общего количества игр.
+ * ГЛУБОКИЙ АУДИТ ИНТЕЛЛЕКТА (Deep Intel Audit v2)
+ * Полностью пересобирает статистику игрока на основе истории сессий.
+ * Источник истины — массив history.
  */
-export const auditLifetimeWinRates = (players: Player[], history: Session[]): Player[] => {
+export const performDeepStatsAudit = (players: Player[], history: Session[]): Player[] => {
     return players.map(player => {
-        let historyWins = 0;
-        let historyDraws = 0;
+        let wins = 0;
+        let draws = 0;
+        let losses = 0;
+        let goals = 0;
+        let assists = 0;
+        let gamesCount = 0;
+        let sessionsCount = 0;
 
-        // Сканируем всю историю только для подсчета Wins и Draws
+        // Фильтруем историю: только завершенные сессии, где этот игрок был в пуле
         history.forEach(session => {
-            if (!session.playerPool.some(p => p.id === player.id)) return;
+            const isParticipant = session.playerPool.some(p => p.id === player.id);
+            if (!isParticipant) return;
+
+            sessionsCount++;
             const defaultTeam = session.teams.find(t => t.playerIds.includes(player.id));
 
             session.games.forEach(game => {
                 if (game.status !== GameStatus.Finished) return;
 
+                // 1. Проверяем участие и за какую команду играл
                 let playedInThisRound = false;
                 let representTeamId: string | undefined = undefined;
 
-                // Учет легионеров
                 const legMove = game.legionnaireMoves?.find(m => m.playerId === player.id);
                 if (legMove) {
                     representTeamId = legMove.toTeamId;
@@ -64,31 +73,35 @@ export const auditLifetimeWinRates = (players: Player[], history: Session[]): Pl
                 }
 
                 if (playedInThisRound && representTeamId) {
+                    gamesCount++;
                     if (game.isDraw) {
-                        historyDraws++;
+                        draws++;
                     } else if (game.winnerTeamId === representTeamId) {
-                        historyWins++;
+                        wins++;
+                    } else {
+                        losses++;
                     }
+
+                    // 2. Считаем голы и ассисты в этой конкретной игре
+                    game.goals.forEach(goal => {
+                        if (goal.scorerId === player.id && !goal.isOwnGoal) goals++;
+                        if (goal.assistantId === player.id) assists++;
+                    });
                 }
             });
         });
 
-        // totalGames - НЕ ТРОГАЕМ (Константа)
-        const totalGames = player.totalGames || 0;
-        
-        // Пересчитываем Wins и Draws на основе фактов из истории
-        const totalWins = historyWins;
-        const totalDraws = historyDraws;
-        
-        // Losses вычисляем как остаток, чтобы сумма (W+D+L) всегда была равна totalGames
-        // Это предотвращает "раздувание" или "схлопывание" счетчика матчей
-        const totalLosses = Math.max(0, totalGames - totalWins - totalDraws);
-
+        // Если у игрока 0 игр, но он был в базе, оставляем текущий OVR, 
+        // иначе обновляем Totals на основе аудита
         return {
             ...player,
-            totalWins,
-            totalDraws,
-            totalLosses
+            totalSessionsPlayed: sessionsCount,
+            totalGames: gamesCount,
+            totalWins: wins,
+            totalDraws: draws,
+            totalLosses: losses,
+            totalGoals: goals,
+            totalAssists: assists
         };
     });
 };
