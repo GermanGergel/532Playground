@@ -124,34 +124,17 @@ const TerminalLastSession = ({ player }: { player: Player }) => {
     );
 };
 
-const TerminalSessionTrend = ({ player }: { player: Player }) => {
-    const history = player.sessionHistory || [];
-    const delta = player.lastRatingChange?.finalChange || 0;
-    
+const TerminalSessionTrend = ({ history }: { history?: Player['sessionHistory'] }) => {
+    const safeHistory = history || [];
     const displayData = Array.from({ length: 5 }).map((_, i) => {
-        const index = history.length - 5 + i;
-        const realItem = history[index];
-        return realItem 
-            ? { winRate: realItem.winRate, isPlaceholder: false, isLast: index === history.length - 1 } 
-            : { winRate: 0, isPlaceholder: true, isLast: false };
+        const realItem = safeHistory[safeHistory.length - (5 - i)];
+        return realItem ? { winRate: realItem.winRate, isPlaceholder: false } : { winRate: 0, isPlaceholder: true };
     });
-
-    const getBarColor = (winRate: number, isLast: boolean) => {
-        // УМНАЯ ЛОГИКА UNIT (v5.0):
-        // Если это последний столбик и рейтинг вырос (delta > 0.1),
-        // красим в бирюзовый, даже если команда играла плохо.
-        if (isLast && delta > 0.1) return '#00F2FE'; 
-        
-        if (winRate > 60) return '#4CFF5F';
-        if (winRate < 40) return '#FF4136';
-        return '#A9B1BD';
-    };
-
     return (
         <div className="flex justify-between items-end h-14 px-6 relative">
             <div className="absolute left-6 right-6 bottom-0 h-px bg-white/5"></div>
             {displayData.map((s, i) => {
-                const color = getBarColor(s.winRate, s.isLast);
+                const color = s.winRate > 60 ? '#4CFF5F' : s.winRate < 40 ? '#FF4136' : '#A9B1BD';
                 const barHeight = s.isPlaceholder ? 5 : Math.max(s.winRate, 15); 
                 return (
                     <div key={i} className="flex flex-col items-center gap-1.5 h-full justify-end group/bar relative">
@@ -161,7 +144,6 @@ const TerminalSessionTrend = ({ player }: { player: Player }) => {
                                 height: `${barHeight}%`, 
                                 background: `linear-gradient(to top, ${color}22, ${color})`, 
                                 borderTop: `1px solid ${color}88`, 
-                                boxShadow: s.isLast && delta > 0.1 ? `0 0 10px ${color}44` : 'none'
                             } : { height: `${barHeight}%` }}
                         >
                              {!s.isPlaceholder && (<div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20"><span className="text-[8px] font-black text-white bg-black/90 px-1.5 py-0.5 rounded border border-white/10">{s.winRate}%</span></div>)}
@@ -175,8 +157,6 @@ const TerminalSessionTrend = ({ player }: { player: Player }) => {
         </div>
     );
 };
-
-// ... (Остальной код компонента без изменений) ...
 
 export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; isEmbedded?: boolean }> = ({ playerId, onBack, isEmbedded = false }) => {
     const { allPlayers, language, totmPlayerIds, history } = useApp();
@@ -311,7 +291,7 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                                         <TerminalStat label="Current Form" value={formText} color={formColor} />
                                         <TerminalStat label="Trend WR" value={trendWinRate} color="#00F2FE" />
                                         <div className="flex justify-center"><FormArrowIndicator delta={preciseDelta} /></div>
-                                    </div><div className="py-1 bg-black/30 rounded-2xl border border-white/5 mt-auto shadow-inner"><TerminalSessionTrend player={player} /></div>{player.skills && player.skills.length > 0 && (<div className="pt-2"><div className="flex wrap justify-center gap-3 mt-1 pb-1">{player.skills.slice(0,3).map(skill => (<div key={skill} className="flex items-center gap-1 transition-all"><StarIcon className="w-2.5 h-2.5 text-[#00F2FE]" /><span className="text-[8px] font-black text-white/80 uppercase tracking-tight">{t[`skill_${skill}` as keyof typeof t]}</span></div>))}</div></div>)}</div></BentoBox>
+                                    </div><div className="py-1 bg-black/30 rounded-2xl border border-white/5 mt-auto shadow-inner"><TerminalSessionTrend history={player.sessionHistory} /></div>{player.skills && player.skills.length > 0 && (<div className="pt-2"><div className="flex wrap justify-center gap-3 mt-1 pb-1">{player.skills.slice(0,3).map(skill => (<div key={skill} className="flex items-center gap-1 transition-all"><StarIcon className="w-2.5 h-2.5 text-[#00F2FE]" /><span className="text-[8px] font-black text-white/80 uppercase tracking-tight">{t[`skill_${skill}` as keyof typeof t]}</span></div>))}</div></div>)}</div></BentoBox>
                                     <BentoBox className="!p-2 h-full" contentClassName="h-full flex flex-col"><IntelHeader title={t?.clubRankings} icon={Users} accent="#FF00D6" /><div className="flex-grow flex flex-col justify-center pt-1 pb-1 px-1"><div className="grid grid-cols-3 gap-0.5 text-center w-full"><TerminalStat label="SCORER" value={rankings.goals} subValue={`/${rankings.total}`} color="#fff" /><TerminalStat label="ASSISTANT" value={rankings.assists} subValue={`/${rankings.total}`} color="#fff" /><TerminalStat label="RATING" value={rankings.rating} subValue={`/${rankings.total}`} color="#fff" /></div></div></BentoBox>
                                     <BentoBox className="!p-2 h-full" contentClassName="h-full flex flex-col justify-center"><IntelHeader title={t?.monthlyStatsTitle} icon={Calendar} /><div className="flex-grow flex flex-col justify-center"><div className="grid grid-cols-2 gap-y-1.5 gap-x-1 pt-1 pb-1 h-full items-center"><TerminalStat size="text-lg" label={t?.monthlyWins} value={monthlyStats.wins} color="#fff" /><TerminalStat size="text-lg" label={t?.monthlyGoals} value={monthlyStats.goals} /><TerminalStat size="text-lg" label={t?.monthlyAssists} value={monthlyStats.assists} /><TerminalStat size="text-lg" label={t?.session} value={monthlyStats.sessions} /></div></div></BentoBox>
                                 </div>

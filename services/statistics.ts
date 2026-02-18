@@ -1,5 +1,5 @@
 
-import { Session, Player, Team, GameStatus, PlayerTier } from '../types';
+import { Session, Player, Team, GameStatus } from '../types';
 
 // Statistics Calculation Utilities
 
@@ -32,23 +32,15 @@ interface TeamStats {
 
 const getPlayerById = (id: string, players: Player[]) => players.find(p => p.id === id);
 
-const getTierForRating = (rating: number): PlayerTier => {
-    if (rating >= 87) return PlayerTier.Legend;
-    if (rating >= 79) return PlayerTier.Elite;
-    if (rating >= 73) return PlayerTier.Pro;
-    return PlayerTier.Regular;
-};
-
 /**
- * ГЛУБОКИЙ АУДИТ ИНТЕЛЛЕКТА (Deep Intel Audit v5.0)
- * Восстанавливает хронологию и синхронизирует состояние формы (form)
+ * ГЛУБОКИЙ АУДИТ ИНТЕЛЛЕКТА (Deep Intel Audit v3.0)
+ * Этот метод — "Золотой Стандарт" точности.
+ * Он полностью пересобирает КАРЬЕРНУЮ статистику игрока (Total...), 
+ * проходя по каждому матчу в истории клуба.
  */
 export const performDeepStatsAudit = (players: Player[], history: Session[]): Player[] => {
-    const sortedHistory = [...history]
-        .filter(s => s.status === 'completed')
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
     return players.map(player => {
+        // Обнуляем временные переменные для пересчета КАРЬЕРЫ
         let totalWins = 0;
         let totalDraws = 0;
         let totalLosses = 0;
@@ -56,21 +48,21 @@ export const performDeepStatsAudit = (players: Player[], history: Session[]): Pl
         let totalAssists = 0;
         let totalGames = 0;
         let totalSessions = 0;
-        
-        const reconstructedSessionHistory: { winRate: number }[] = [];
 
-        sortedHistory.forEach(session => {
-            // Улучшенный поиск: проверяем пулы, команды И участие в голах (на случай старых багов)
+        // Идем по каждой сессии в истории
+        history.forEach(session => {
+            // Сессия учитывается, только если она завершена
+            if (session.status !== 'completed') return;
+
+            // Был ли игрок участником этой сессии?
             const inPool = session.playerPool.some(p => p.id === player.id);
             const inTeams = session.teams.some(t => t.playerIds.includes(player.id));
-            const inGoals = session.games.some(g => g.goals.some(gl => gl.scorerId === player.id || gl.assistantId === player.id));
             
-            if (inPool || inTeams || inGoals) {
+            if (inPool || inTeams) {
                 totalSessions++;
+
+                // Определяем "домашнюю" команду игрока в этой сессии
                 const homeTeam = session.teams.find(t => t.playerIds.includes(player.id));
-                
-                let sessionGames = 0;
-                let sessionWins = 0;
 
                 session.games.forEach(game => {
                     if (game.status !== GameStatus.Finished) return;
@@ -78,55 +70,40 @@ export const performDeepStatsAudit = (players: Player[], history: Session[]): Pl
                     let playedInGame = false;
                     let currentTeamId = "";
 
+                    // Проверяем, играл ли он как легионер
                     const legMove = game.legionnaireMoves?.find(m => m.playerId === player.id);
                     if (legMove) {
                         playedInGame = true;
                         currentTeamId = legMove.toTeamId;
                     } 
+                    // Если нет, проверяем, играла ли его основная команда
                     else if (homeTeam && (game.team1Id === homeTeam.id || game.team2Id === homeTeam.id)) {
                         playedInGame = true;
                         currentTeamId = homeTeam.id;
                     }
-                    // Fallback: если забил гол, значит точно играл
-                    else if (game.goals.some(gl => gl.scorerId === player.id || gl.assistantId === player.id)) {
-                        playedInGame = true;
-                        currentTeamId = game.goals.find(gl => gl.scorerId === player.id || gl.assistantId === player.id)?.teamId || "";
-                    }
 
                     if (playedInGame) {
                         totalGames++;
-                        sessionGames++;
                         if (game.isDraw) {
                             totalDraws++;
                         } else if (game.winnerTeamId === currentTeamId) {
                             totalWins++;
-                            sessionWins++;
                         } else {
                             totalLosses++;
                         }
                     }
 
+                    // Голы и ассисты считаем по логам голов (независимо от команды)
                     game.goals.forEach(goal => {
                         if (goal.scorerId === player.id && !goal.isOwnGoal) totalGoals++;
                         if (goal.assistantId === player.id) totalAssists++;
                     });
                 });
-
-                if (sessionGames > 0) {
-                    reconstructedSessionHistory.push({
-                        winRate: Math.round((sessionWins / sessionGames) * 100)
-                    });
-                }
             }
         });
 
-        // СИНХРОНИЗАЦИЯ ФОРМЫ (form)
-        // Чтобы избежать красных столбиков при "HOT" статусе
-        let currentForm: 'hot_streak' | 'stable' | 'cold_streak' = 'stable';
-        const delta = player.lastRatingChange?.finalChange || 0;
-        if (delta > 0.1) currentForm = 'hot_streak';
-        else if (delta < -0.1) currentForm = 'cold_streak';
-
+        // Если у игрока есть история, обновляем его Totals. 
+        // Если истории нет (новый игрок), оставляем как есть.
         return {
             ...player,
             totalSessionsPlayed: totalSessions,
@@ -135,10 +112,7 @@ export const performDeepStatsAudit = (players: Player[], history: Session[]): Pl
             totalDraws: totalDraws,
             totalLosses: totalLosses,
             totalGoals: totalGoals,
-            totalAssists: totalAssists,
-            sessionHistory: reconstructedSessionHistory.slice(-5),
-            form: currentForm,
-            tier: getTierForRating(player.rating)
+            totalAssists: totalAssists
         };
     });
 };
