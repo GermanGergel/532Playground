@@ -126,6 +126,8 @@ const TerminalLastSession = ({ player }: { player: Player }) => {
 
 const TerminalSessionTrend = ({ player }: { player: Player }) => {
     const history = player.sessionHistory || [];
+    const delta = player.lastRatingChange?.finalChange || 0;
+    
     const displayData = Array.from({ length: 5 }).map((_, i) => {
         const index = history.length - 5 + i;
         const realItem = history[index];
@@ -135,10 +137,10 @@ const TerminalSessionTrend = ({ player }: { player: Player }) => {
     });
 
     const getBarColor = (winRate: number, isLast: boolean) => {
-        // УМНАЯ ЛОГИКА UNIT:
-        // Если это последний столбик и у игрока форма "Hot" (рейтинг вырос), 
-        // красим в бирюзовый, даже если винрейт плохой.
-        if (isLast && player.form === 'hot_streak') return '#00F2FE'; 
+        // УМНАЯ ЛОГИКА UNIT (v5.0):
+        // Если это последний столбик и рейтинг вырос (delta > 0.1),
+        // красим в бирюзовый, даже если команда играла плохо.
+        if (isLast && delta > 0.1) return '#00F2FE'; 
         
         if (winRate > 60) return '#4CFF5F';
         if (winRate < 40) return '#FF4136';
@@ -159,7 +161,7 @@ const TerminalSessionTrend = ({ player }: { player: Player }) => {
                                 height: `${barHeight}%`, 
                                 background: `linear-gradient(to top, ${color}22, ${color})`, 
                                 borderTop: `1px solid ${color}88`, 
-                                boxShadow: s.isLast && player.form === 'hot_streak' ? `0 0 10px ${color}44` : 'none'
+                                boxShadow: s.isLast && delta > 0.1 ? `0 0 10px ${color}44` : 'none'
                             } : { height: `${barHeight}%` }}
                         >
                              {!s.isPlaceholder && (<div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20"><span className="text-[8px] font-black text-white bg-black/90 px-1.5 py-0.5 rounded border border-white/10">{s.winRate}%</span></div>)}
@@ -173,6 +175,8 @@ const TerminalSessionTrend = ({ player }: { player: Player }) => {
         </div>
     );
 };
+
+// ... (Остальной код компонента без изменений) ...
 
 export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; isEmbedded?: boolean }> = ({ playerId, onBack, isEmbedded = false }) => {
     const { allPlayers, language, totmPlayerIds, history } = useApp();

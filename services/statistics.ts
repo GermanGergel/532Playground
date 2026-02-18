@@ -1,5 +1,5 @@
 
-import { Session, Player, Team, GameStatus } from '../types';
+import { Session, Player, Team, GameStatus, PlayerTier } from '../types';
 
 // Statistics Calculation Utilities
 
@@ -32,12 +32,18 @@ interface TeamStats {
 
 const getPlayerById = (id: string, players: Player[]) => players.find(p => p.id === id);
 
+const getTierForRating = (rating: number): PlayerTier => {
+    if (rating >= 87) return PlayerTier.Legend;
+    if (rating >= 79) return PlayerTier.Elite;
+    if (rating >= 73) return PlayerTier.Pro;
+    return PlayerTier.Regular;
+};
+
 /**
- * ГЛУБОКИЙ АУДИТ ИНТЕЛЛЕКТА (Deep Intel Audit v4.0)
- * Теперь восстанавливает не только итоги, но и хронологию (sessionHistory)
+ * ГЛУБОКИЙ АУДИТ ИНТЕЛЛЕКТА (Deep Intel Audit v5.0)
+ * Восстанавливает хронологию и синхронизирует состояние формы (form)
  */
 export const performDeepStatsAudit = (players: Player[], history: Session[]): Player[] => {
-    // Сортируем историю от старых к новым, чтобы правильно построить sessionHistory
     const sortedHistory = [...history]
         .filter(s => s.status === 'completed')
         .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -51,14 +57,15 @@ export const performDeepStatsAudit = (players: Player[], history: Session[]): Pl
         let totalGames = 0;
         let totalSessions = 0;
         
-        // Массив для хранения винрейтов каждой сессии (для графиков)
         const reconstructedSessionHistory: { winRate: number }[] = [];
 
         sortedHistory.forEach(session => {
+            // Улучшенный поиск: проверяем пулы, команды И участие в голах (на случай старых багов)
             const inPool = session.playerPool.some(p => p.id === player.id);
             const inTeams = session.teams.some(t => t.playerIds.includes(player.id));
+            const inGoals = session.games.some(g => g.goals.some(gl => gl.scorerId === player.id || gl.assistantId === player.id));
             
-            if (inPool || inTeams) {
+            if (inPool || inTeams || inGoals) {
                 totalSessions++;
                 const homeTeam = session.teams.find(t => t.playerIds.includes(player.id));
                 
@@ -80,6 +87,11 @@ export const performDeepStatsAudit = (players: Player[], history: Session[]): Pl
                         playedInGame = true;
                         currentTeamId = homeTeam.id;
                     }
+                    // Fallback: если забил гол, значит точно играл
+                    else if (game.goals.some(gl => gl.scorerId === player.id || gl.assistantId === player.id)) {
+                        playedInGame = true;
+                        currentTeamId = game.goals.find(gl => gl.scorerId === player.id || gl.assistantId === player.id)?.teamId || "";
+                    }
 
                     if (playedInGame) {
                         totalGames++;
@@ -100,7 +112,6 @@ export const performDeepStatsAudit = (players: Player[], history: Session[]): Pl
                     });
                 });
 
-                // Записываем винрейт этой конкретной сессии в историю тренда
                 if (sessionGames > 0) {
                     reconstructedSessionHistory.push({
                         winRate: Math.round((sessionWins / sessionGames) * 100)
@@ -109,8 +120,12 @@ export const performDeepStatsAudit = (players: Player[], history: Session[]): Pl
             }
         });
 
-        // Ограничиваем историю 5 последними сессиями
-        const finalSessionHistory = reconstructedSessionHistory.slice(-5);
+        // СИНХРОНИЗАЦИЯ ФОРМЫ (form)
+        // Чтобы избежать красных столбиков при "HOT" статусе
+        let currentForm: 'hot_streak' | 'stable' | 'cold_streak' = 'stable';
+        const delta = player.lastRatingChange?.finalChange || 0;
+        if (delta > 0.1) currentForm = 'hot_streak';
+        else if (delta < -0.1) currentForm = 'cold_streak';
 
         return {
             ...player,
@@ -121,7 +136,9 @@ export const performDeepStatsAudit = (players: Player[], history: Session[]): Pl
             totalLosses: totalLosses,
             totalGoals: totalGoals,
             totalAssists: totalAssists,
-            sessionHistory: finalSessionHistory
+            sessionHistory: reconstructedSessionHistory.slice(-5),
+            form: currentForm,
+            tier: getTierForRating(player.rating)
         };
     });
 };
