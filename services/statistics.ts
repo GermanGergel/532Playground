@@ -33,111 +33,119 @@ interface TeamStats {
 const getPlayerById = (id: string, players: Player[]) => players.find(p => p.id === id);
 
 /**
- * ГЛУБОКИЙ АУДИТ ИНТЕЛЛЕКТА (Deep Intel Audit v4.0)
- * Этот метод — "Золотой Стандарт" точности.
- * Он полностью пересобирает КАРЬЕРНУЮ статистику игрока (Total...), 
- * проходя по каждому матчу в истории клуба.
+ * DEEP INTEL AUDIT v6.0 (Score-Based Authority)
  * 
- * UPDATE v4.0: Теперь также пересобирает sessionHistory (последние 5 сессий)
- * чтобы график формы соответствовал реальности.
+ * Основная задача: Восстановить справедливость в исторических данных.
+ * 
+ * 1. Игнорирует старые метки победителей, если они ошибочны.
+ * 2. Пересчитывает исход КАЖДОЙ игры по счету (Goals1 vs Goals2).
+ * 3. Формирует массив sessionHistory заново, чтобы графики (столбики)
+ *    отражали реальный Win Rate, а не ошибки базы данных.
  */
 export const performDeepStatsAudit = (players: Player[], history: Session[]): Player[] => {
+    // Сортируем историю от старой к новой для хронологии
+    const sortedHistory = [...history].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
     return players.map(player => {
-        // Обнуляем временные переменные для пересчета КАРЬЕРЫ
-        let totalWins = 0;
-        let totalDraws = 0;
-        let totalLosses = 0;
-        let totalGoals = 0;
-        let totalAssists = 0;
-        let totalGames = 0;
-        let totalSessions = 0;
+        // Сброс счетчиков карьеры
+        let careerWins = 0;
+        let careerDraws = 0;
+        let careerLosses = 0;
+        let careerGoals = 0;
+        let careerAssists = 0;
+        let careerGames = 0;
+        let careerSessions = 0;
 
-        // Временное хранилище для истории сессий (будет собираться от Новых к Старым)
-        const tempSessionHistory: { winRate: number }[] = [];
+        // История сессий для графиков
+        const fullSessionHistory: { winRate: number }[] = [];
 
-        // Идем по каждой сессии в истории (предполагаем, что history отсортирована Newest -> Oldest)
-        history.forEach(session => {
-            // Сессия учитывается, только если она завершена
+        sortedHistory.forEach(session => {
             if (session.status !== 'completed') return;
 
-            // Был ли игрок участником этой сессии?
+            // 1. Проверяем, был ли игрок в заявке на эту сессию
             const inPool = session.playerPool.some(p => p.id === player.id);
             const inTeams = session.teams.some(t => t.playerIds.includes(player.id));
             
-            if (inPool || inTeams) {
-                totalSessions++;
+            if (!inPool && !inTeams) return; // Игрок не был в этой сессии
 
-                // Определяем "домашнюю" команду игрока в этой сессии
-                const homeTeam = session.teams.find(t => t.playerIds.includes(player.id));
-                
-                // Переменные для расчета WinRate конкретно этой сессии
-                let sessionWins = 0;
-                let sessionGamesPlayed = 0;
+            // Переменные конкретно для ЭТОЙ сессии (для расчета столбика)
+            let sessionWins = 0;
+            let sessionGamesPlayed = 0;
+            let playedInSession = false; // Флаг: выходил ли на поле
 
-                session.games.forEach(game => {
-                    if (game.status !== GameStatus.Finished) return;
+            // Определяем "родную" команду игрока в этой сессии
+            const defaultTeam = session.teams.find(t => t.playerIds.includes(player.id));
 
-                    let playedInGame = false;
-                    let currentTeamId = "";
+            session.games.forEach(game => {
+                if (game.status !== GameStatus.Finished) return;
 
-                    // Проверяем, играл ли он как легионер
-                    const legMove = game.legionnaireMoves?.find(m => m.playerId === player.id);
-                    if (legMove) {
-                        playedInGame = true;
-                        currentTeamId = legMove.toTeamId;
-                    } 
-                    // Если нет, проверяем, играла ли его основная команда
-                    else if (homeTeam && (game.team1Id === homeTeam.id || game.team2Id === homeTeam.id)) {
-                        playedInGame = true;
-                        currentTeamId = homeTeam.id;
-                    }
+                // --- ЛОГИКА ОПРЕДЕЛЕНИЯ КОМАНДЫ (С учетом легионеров) ---
+                let myTeamId: string | null = null;
 
-                    if (playedInGame) {
-                        totalGames++;
-                        sessionGamesPlayed++;
+                // А. Проверяем, переходил ли игрок в другую команду в этой игре (Legionnaire)
+                const legMove = game.legionnaireMoves?.find(m => m.playerId === player.id);
+                if (legMove) {
+                    // Если есть запись о переходе, верим ей
+                    myTeamId = legMove.toTeamId;
+                } 
+                // Б. Если перехода нет, проверяем, играла ли его "родная" команда
+                else if (defaultTeam && (game.team1Id === defaultTeam.id || game.team2Id === defaultTeam.id)) {
+                    myTeamId = defaultTeam.id;
+                }
 
-                        if (game.isDraw) {
-                            totalDraws++;
-                        } else if (game.winnerTeamId === currentTeamId) {
-                            totalWins++;
-                            sessionWins++;
-                        } else {
-                            totalLosses++;
-                        }
-                    }
-
-                    // Голы и ассисты считаем по логам голов (независимо от команды)
-                    game.goals.forEach(goal => {
-                        if (goal.scorerId === player.id && !goal.isOwnGoal) totalGoals++;
-                        if (goal.assistantId === player.id) totalAssists++;
-                    });
+                // Считаем личную статистику (Голы/Ассисты) - она не зависит от команды
+                game.goals.forEach(goal => {
+                    if (goal.scorerId === player.id && !goal.isOwnGoal) careerGoals++;
+                    if (goal.assistantId === player.id) careerAssists++;
                 });
 
-                // Если в этой сессии были сыграны игры, записываем результат в историю
-                if (sessionGamesPlayed > 0) {
-                    const winRate = Math.round((sessionWins / sessionGamesPlayed) * 100);
-                    tempSessionHistory.push({ winRate });
+                // Если игрок участвовал в матче (команда определена)
+                if (myTeamId) {
+                    playedInSession = true;
+                    careerGames++;
+                    sessionGamesPlayed++;
+
+                    // --- ОПРЕДЕЛЕНИЕ ПОБЕДИТЕЛЯ ПО СЧЕТУ (Самый надежный метод) ---
+                    const isTeam1 = game.team1Id === myTeamId;
+                    const myScore = isTeam1 ? game.team1Score : game.team2Score;
+                    const oppScore = isTeam1 ? game.team2Score : game.team1Score;
+
+                    if (myScore > oppScore) {
+                        careerWins++;
+                        sessionWins++;
+                    } else if (myScore === oppScore) {
+                        careerDraws++;
+                    } else {
+                        careerLosses++;
+                    }
                 }
+            });
+
+            // Если игрок сыграл хотя бы один матч в сессии
+            if (playedInSession) {
+                careerSessions++;
+                // Расчет WinRate для столбика
+                const winRate = sessionGamesPlayed > 0 
+                    ? Math.round((sessionWins / sessionGamesPlayed) * 100) 
+                    : 0;
+                
+                fullSessionHistory.push({ winRate });
             }
         });
 
-        // Формируем финальный sessionHistory для графика
-        // tempSessionHistory сейчас: [Newest, 2nd Newest, ..., Oldest]
-        // Нам нужно взять 5 последних (то есть 5 первых в массиве) и перевернуть их,
-        // чтобы график рисовался слева направо (Oldest -> Newest).
-        const finalSessionHistory = tempSessionHistory.slice(0, 5).reverse();
+        // Берем последние 5 сессий для графика
+        const newSessionHistory = fullSessionHistory.slice(-5);
 
-        // Если у игрока есть история, обновляем его Totals и Историю Сессий.
         return {
             ...player,
-            totalSessionsPlayed: totalSessions,
-            totalGames: totalGames,
-            totalWins: totalWins,
-            totalDraws: totalDraws,
-            totalLosses: totalLosses,
-            totalGoals: totalGoals,
-            totalAssists: totalAssists,
-            sessionHistory: finalSessionHistory
+            totalSessionsPlayed: careerSessions,
+            totalGames: careerGames,
+            totalWins: careerWins,
+            totalDraws: careerDraws,
+            totalLosses: careerLosses,
+            totalGoals: careerGoals,
+            totalAssists: careerAssists,
+            sessionHistory: newSessionHistory
         };
     });
 };

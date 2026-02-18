@@ -38,15 +38,17 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
         const auditedPlayers = performDeepStatsAudit(initialPlayers, historyToAudit);
         
         // Сравнение для лога изменений
+        // UPDATE: Теперь проверяем и sessionHistory (столбики) через JSON.stringify
         const needsUpdate = auditedPlayers.some((p, i) => 
             p.totalWins !== initialPlayers[i].totalWins || 
             p.totalGames !== initialPlayers[i].totalGames ||
             p.totalGoals !== initialPlayers[i].totalGoals ||
-            p.totalSessionsPlayed !== initialPlayers[i].totalSessionsPlayed
+            p.totalSessionsPlayed !== initialPlayers[i].totalSessionsPlayed ||
+            JSON.stringify(p.sessionHistory) !== JSON.stringify(initialPlayers[i].sessionHistory)
         );
         
         if (needsUpdate) {
-            console.log("App Init: Deep Intel Audit completed. All player totals synced with history.");
+            console.log("App Init: Deep Intel Audit completed. Stats & Charts synced with history.");
             initialPlayers = auditedPlayers;
             dataRepaired = true;
         }
