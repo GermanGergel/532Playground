@@ -17,18 +17,10 @@ const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
         hot_streak: { color: '#4CFF5F' }, stable: { color: '#A9B1BD' }, cold_streak: { color: '#FF4136' },
     };
     const currentForm = config[form] || config.stable;
-    
-    // Добавляем свечение для активных состояний
-    const glowStyle = form !== 'stable' 
-        ? { filter: `drop-shadow(0 0 6px ${currentForm.color})` }
-        : {};
-
     const commonProps: React.SVGProps<SVGSVGElement> = {
         width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: currentForm.color,
         strokeWidth: "3", strokeLinecap: "round", strokeLinejoin: "round",
-        style: glowStyle
     };
-
     switch (form) {
         case 'hot_streak': return <svg {...commonProps}><path d="M12 19V5m-6 7l6-6 6 6"/></svg>;
         case 'cold_streak': return <svg {...commonProps}><path d="M12 5v14M5 12l7 7 7-7"/></svg>;

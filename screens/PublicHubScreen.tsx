@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -51,25 +52,35 @@ const StaticSoccerBall: React.FC = () => {
     );
 };
 
-// --- ТРЕНД (СТРЕЛКИ) — ИСПРАВЛЕННАЯ ЛОГИКА ---
+// --- ТРЕНД (СТРЕЛКИ) — УЛУЧШЕННАЯ ЛОГИКА ---
 const TrendArrow: React.FC<{ player: Player }> = ({ player }) => {
-    // 1. Используем историю для определения направления последнего изменения
+    const { history } = useApp();
+    
+    // 1. Берем дату самой последней сессии клуба
+    const latestSessionDate = history[0]?.date ? history[0].date.split('T')[0] : null;
+    const playerLastPlayedDate = player.lastPlayedAt ? player.lastPlayedAt.split('T')[0] : null;
+
+    // 2. Если игрок не играл в последнюю сессию — показываем прочерк
+    if (!latestSessionDate || playerLastPlayedDate !== latestSessionDate) {
+        return <span className="text-white/10 text-[12px] font-bold tracking-tighter">―</span>;
+    }
+
     const b = player.lastRatingChange;
     if (!b) return <span className="text-white/10 text-[12px] font-bold tracking-tighter">―</span>;
 
-    // 2. Считаем "микро-тренд" (сумма всех факторов эффективности)
-    // Используем raw-значения, чтобы показать динамику даже при отсутствии изменения целого OVR
+    // 3. Считаем "микро-тренд" (сумма всех факторов эффективности)
+    // Это позволит показать стрелку, даже если целое число OVR не изменилось
     const rawImpact = (b.teamPerformance || 0) + (b.individualPerformance || 0) + (b.badgeBonus || 0);
     
-    // Исключаем штрафы за неявку из "позитивного" тренда
-    if (rawImpact > 0.05) {
+    // Используем порог 0.1, чтобы отсечь совсем незначительные колебания
+    if (rawImpact > 0.1) {
         return <span className="text-[#4CFF5F] text-[10px] drop-shadow-[0_0_5px_rgba(76,255,95,0.8)] font-bold">▲</span>;
     }
-    if (rawImpact < -0.05 || b.finalChange < 0) {
+    if (rawImpact < -0.1) {
         return <span className="text-[#FF4136] text-[10px] drop-shadow-[0_0_5px_rgba(255,65,54,0.8)] font-bold">▼</span>;
     }
 
-    return <span className="text-white/20 text-[10px] font-bold tracking-tighter">▶</span>;
+    return <span className="text-white/10 text-[12px] font-bold tracking-tighter">―</span>;
 };
 
 // --- CHASE LIST COMPONENT (THE 4-PLAYER TAIL) ---
@@ -343,7 +354,7 @@ const HubNav: React.FC<{
                             <div className="py-1 flex flex-col items-center gap-1">
                                 {languages.map((lang) => (
                                     <button key={lang.code} onClick={() => { setLanguage(lang.code); setIsLangOpen(false); }} className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300 ${language === lang.code ? 'bg-[#00F2FE]/10 text-[#00F2FE] border border-[#00F2FE]/30 shadow-[0_0_8px_rgba(0,242,254,0.2)]' : 'text-white/40 hover:text-white hover:bg-white/10' }`}>
-                                        <span className="text-8px] font-black uppercase leading-none">{lang.label}</span>
+                                        <span className="text-[8px] font-black uppercase leading-none">{lang.label}</span>
                                     </button>
                                 ))}
                             </div>

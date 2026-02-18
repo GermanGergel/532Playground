@@ -1,3 +1,4 @@
+
 import { Session, Player, NewsItem, BadgeType, SessionStatus, PlayerRecords, PlayerHistoryEntry } from '../types';
 import { calculateAllStats } from './statistics';
 import { calculateEarnedBadges, calculateRatingUpdate, getTierForRating } from './rating';
@@ -190,6 +191,7 @@ export const processFinishedSession = ({
     });
 
     // 2. Рассчитываем рейтинг, используя данные игрока ДО сессии (из oldPlayers)
+    // Это гарантирует, что 3-я сессия калибровки будет посчитана как калибровочная.
     let playersWithCalculatedRatings = playersWithUpdatedStats.map(updatedPlayer => {
         const sessionStats = playerStatsMap.get(updatedPlayer.id);
         const originalPlayer = oldPlayers.find(p => p.id === updatedPlayer.id);
@@ -197,17 +199,16 @@ export const processFinishedSession = ({
         if (sessionStats && originalPlayer) {
             const badgesEarnedThisSession = calculateEarnedBadges(originalPlayer, sessionStats, session, allPlayersStats);
             
+            // КЛЮЧЕВОЙ МОМЕНТ: Используем originalPlayer (у которого счетчик сессий еще старый)
             const { breakdown } = calculateRatingUpdate(originalPlayer, sessionStats, session, badgesEarnedThisSession);
             
             const floor = originalPlayer.initialRating || 68;
             const unifiedNewRating = Math.max(floor, Math.round(breakdown.newRating));
             const finalChange = unifiedNewRating - originalPlayer.rating;
             
-            // УЛУЧШЕННАЯ ЛОГИКА ФОРМЫ: Используем дробное значение из расчета (breakdown.finalChange)
-            // Это позволит форме реагировать на "вклад", даже если OVR не округлился вверх
             let newForm: 'hot_streak' | 'stable' | 'cold_streak' = 'stable';
-            if (breakdown.finalChange >= 0.2) newForm = 'hot_streak';
-            else if (breakdown.finalChange <= -0.2) newForm = 'cold_streak';
+            if (finalChange >= 0.5) newForm = 'hot_streak';
+            else if (finalChange <= -0.5) newForm = 'cold_streak';
             
             const updatedBadges = { ...updatedPlayer.badges };
             badgesEarnedThisSession.forEach(badge => {

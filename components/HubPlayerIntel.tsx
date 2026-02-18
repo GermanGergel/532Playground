@@ -19,18 +19,10 @@ const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
         hot_streak: { color: '#4CFF5F' }, stable: { color: '#A9B1BD' }, cold_streak: { color: '#FF4136' },
     };
     const currentForm = config[form] || config.stable;
-    
-    // Добавляем свечение для активных состояний
-    const glowStyle = form !== 'stable' 
-        ? { filter: `drop-shadow(0 0 6px ${currentForm.color})` }
-        : {};
-
     const commonProps: React.SVGProps<SVGSVGElement> = {
         width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: currentForm.color,
         strokeWidth: "3", strokeLinecap: "round", strokeLinejoin: "round",
-        style: glowStyle
     };
-
     switch (form) {
         case 'hot_streak': return <svg {...commonProps}><path d="M12 19V5m-6 7l6-6 6 6"/></svg>;
         case 'cold_streak': return <svg {...commonProps}><path d="M12 5v14M5 12l7 7 7-7"/></svg>;
@@ -333,7 +325,7 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
 
                                 <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <BentoBox className="h-full" contentClassName="h-full flex flex-col justify-center"><IntelHeader title={t?.lastSessionAnalysis} icon={BarChartDynamic} /><div className="flex-grow flex flex-col justify-center"><TerminalLastSession player={player} /></div></BentoBox>
-                                    <BentoBox className="h-full" contentClassName="h-full flex flex-col"><IntelHeader title={t?.sessionTrend} icon={Zap} accent="#4CFF5F" /><div className="flex-grow flex flex-col justify-start space-y-1"><div className="grid grid-cols-3 gap-2 items-center bg-black/30 p-1.5 rounded-2xl border border-white/5 shadow-inner"><TerminalStat label="Current Form" value={player.form.split('_')[0].toUpperCase()} color={player.form === 'hot_streak' ? '#4CFF5F' : player.form === 'cold_streak' ? '#FF4136' : '#fff'} /><TerminalStat label="Win Ratio" value={winRate} color="#00F2FE" /><div className="flex justify-center"><FormArrowIndicator form={player.form} /></div></div><div className="py-1 bg-black/30 rounded-2xl border border-white/5 mt-auto shadow-inner"><TerminalSessionTrend history={player.sessionHistory} /></div>{player.skills && player.skills.length > 0 && (<div className="pt-2"><div className="flex wrap justify-center gap-3 mt-1 pb-1">{player.skills.slice(0,3).map(skill => (<div key={skill} className="flex items-center gap-1 transition-all"><StarIcon className="w-2.5 h-2.5 text-[#00F2FE]" /><span className="text-[8px] font-black text-white/80 uppercase tracking-tight">{t[`skill_${skill}` as keyof typeof t] || skill}</span></div>))}</div></div>)}</div></BentoBox>
+                                    <BentoBox className="h-full" contentClassName="h-full flex flex-col"><IntelHeader title={t?.sessionTrend} icon={Zap} accent="#4CFF5F" /><div className="flex-grow flex flex-col justify-start space-y-1"><div className="grid grid-cols-3 gap-2 items-center bg-black/30 p-1.5 rounded-2xl border border-white/5 shadow-inner"><TerminalStat label="Current Form" value={player.form.split('_')[0].toUpperCase()} color={player.form === 'hot_streak' ? '#4CFF5F' : player.form === 'cold_streak' ? '#FF4136' : '#fff'} /><TerminalStat label="Win Ratio" value={winRate} color="#00F2FE" /><div className="flex justify-center"><FormArrowIndicator form={player.form} /></div></div><div className="py-1 bg-black/30 rounded-2xl border border-white/5 mt-auto shadow-inner"><TerminalSessionTrend history={player.sessionHistory} /></div>{player.skills && player.skills.length > 0 && (<div className="pt-2"><div className="flex wrap justify-center gap-3 mt-1 pb-1">{player.skills.slice(0,3).map(skill => (<div key={skill} className="flex items-center gap-1 transition-all"><StarIcon className="w-2.5 h-2.5 text-[#00F2FE]" /><span className="text-[8px] font-black text-white/80 uppercase tracking-tight">{t[`skill_${skill}` as keyof typeof t]}</span></div>))}</div></div>)}</div></BentoBox>
                                     <BentoBox className="!p-2 h-full" contentClassName="h-full flex flex-col"><IntelHeader title={t?.clubRankings} icon={Users} accent="#FF00D6" /><div className="flex-grow flex flex-col justify-center pt-1 pb-1 px-1"><div className="grid grid-cols-3 gap-0.5 text-center w-full"><TerminalStat label="SCORER" value={rankings.goals} subValue={`/${rankings.total}`} color="#fff" /><TerminalStat label="ASSISTANT" value={rankings.assists} subValue={`/${rankings.total}`} color="#fff" /><TerminalStat label="RATING" value={rankings.rating} subValue={`/${rankings.total}`} color="#fff" /></div></div></BentoBox>
                                     <BentoBox className="!p-2 h-full" contentClassName="h-full flex flex-col justify-center"><IntelHeader title={t?.monthlyStatsTitle} icon={Calendar} /><div className="flex-grow flex flex-col justify-center"><div className="grid grid-cols-2 gap-y-1.5 gap-x-1 pt-1 pb-1 h-full items-center"><TerminalStat size="text-lg" label={t?.monthlyWins} value={displayMonthlyWins} color="#fff" /><TerminalStat size="text-lg" label={t?.monthlyGoals} value={displayMonthlyGoals} /><TerminalStat size="text-lg" label={t?.monthlyAssists} value={displayMonthlyAssists} /><TerminalStat size="text-lg" label={t?.session} value={displayMonthlySessions} /></div></div></BentoBox>
                                 </div>
@@ -342,6 +334,7 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                             <div className="w-full">
                                 <BentoBox noPadding className="h-[280px] w-full" contentClassName="h-full">
                                     <div className="h-full w-full">
+                                        {/* FIX: Ensure new players see a trend line by passing initialRating */}
                                         <HubProgressChart 
                                             headerTitle={t?.statistics} 
                                             history={player.historyData || []} 
@@ -362,6 +355,7 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                             <BentoBox className="mb-12"><IntelHeader title={t?.awards} icon={AwardIcon} accent="#FF00D6" /><div className="grid grid-cols-8 sm:grid-cols-10 lg:grid-cols-12 gap-3">{ALL_BADGES.map(badge => { const isEarned = !!(player.badges && player.badges[badge]); return (<div key={badge} title={t[`badge_${badge}_desc` as keyof typeof t] || t[`badge_${badge}` as keyof typeof t]} className={`transition-all duration-500 transform hover:scale-125 cursor-help ${!isEarned ? 'opacity-[0.03] grayscale' : ''}`}><BadgeIcon badge={badge} count={player.badges?.[badge]} className="w-8 h-8" /></div>); })}</div></BentoBox>
                         </div>
                     </div>
+                    {/* SPACER FOR EXTRA SCROLL */}
                     <div className="h-14 shrink-0 w-full"></div>
                 </div>
             </div>
