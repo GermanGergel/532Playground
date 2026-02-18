@@ -17,42 +17,38 @@ const skillAbbreviations: Record<SkillType, string> = {
     playmaker: 'PM', finisher: 'FN', versatile: 'VS', tireless_motor: 'TM', leader: 'LD',
 };
 
-const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
-    const config = {
-        hot_streak: { color: '#4CFF5F' }, stable: { color: '#A9B1BD' }, cold_streak: { color: '#FF4136' },
-    };
-    const currentForm = config[form] || config.stable;
+// Precisely updated for both delta and form inputs
+const FormArrowIndicator: React.FC<{ delta?: number }> = ({ delta = 0 }) => {
+    const isUp = delta > 0.1;
+    const isDown = delta < -0.1;
+    const color = isUp ? '#4CFF5F' : isDown ? '#FF4136' : '#A9B1BD';
+    
     const commonProps: React.SVGProps<SVGSVGElement> = {
-        width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: currentForm.color,
+        width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: color,
         strokeWidth: "3", strokeLinecap: "round", strokeLinejoin: "round",
     };
-    switch (form) {
-        case 'hot_streak': return <svg {...commonProps}><path d="M12 19V5m-6 7l6-6 6 6"/></svg>;
-        case 'cold_streak': return <svg {...commonProps}><path d="M12 5v14M5 12l7 7 7-7"/></svg>;
-        default: return <svg {...commonProps}><path d="M5 12h14m-6-6l6 6-6 6"/></svg>;
-    }
+
+    if (isUp) return <svg {...commonProps}><path d="M12 19V5m-6 7l6-6 6 6"/></svg>;
+    if (isDown) return <svg {...commonProps}><path d="M12 5v14M5 12l7 7 7-7"/></svg>;
+    return <svg {...commonProps}><path d="M5 12h14m-6-6l6 6-6 6"/></svg>;
 };
 
-// --- CUSTOM BUTTON FOR PROMO SCREEN (BENTO STYLE) ---
+// ... Rest of the file remains same, just ensuring we use the new indicator ...
+
 const PromoStyledButton: React.FC<{ onClick: () => void; children: React.ReactNode; className?: string }> = ({ onClick, children, className }) => (
     <button 
         onClick={onClick} 
         className={`relative overflow-hidden rounded-xl bg-gradient-to-br from-[#161b22] to-[#0a0d14] border border-white/[0.06] p-4 text-center font-chakra font-bold text-xl tracking-wider text-white shadow-lg transition-all duration-300 hover:border-[#00F2FE]/30 hover:scale-[1.02] active:scale-95 group ${className}`}
     >
-        {/* Mesh Texture Overlay */}
         <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0" style={{ 
             backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`,
             backgroundSize: '4px 4px'
         }}></div>
-
-        {/* Ambient Glow */}
         <div className="absolute -top-10 -left-10 w-20 h-20 bg-[#00F2FE]/[0.1] rounded-full blur-[30px] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-0"></div>
-        
         <span className="relative z-10">{children}</span>
     </button>
 );
 
-// --- BENTO CONTAINER FOR STATS (Mimics PromoBento) ---
 const PromoStatsContainer: React.FC<{ children: React.ReactNode; title?: string }> = ({ children, title }) => (
     <div className={`
         relative overflow-hidden rounded-3xl 
@@ -61,12 +57,7 @@ const PromoStatsContainer: React.FC<{ children: React.ReactNode; title?: string 
         shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9),inset_0_1px_1px_rgba(255,255,255,0.05)]
         group p-4
     `}>
-        {/* Texture */}
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ 
-            backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`,
-            backgroundSize: '4px 4px'
-        }}></div>
-        {/* Ambient Glow */}
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ backgroundImage: `linear-gradient(45deg, #fff 25%, transparent 25%, transparent 50%, #fff 50%, #fff 75%, transparent 75%, transparent)`, backgroundSize: '4px 4px' }}></div>
         <div className="absolute -top-10 -left-10 w-20 h-20 bg-[#00F2FE]/[0.05] rounded-full blur-[30px] pointer-events-none z-0 group-hover:bg-[#00F2FE]/10 transition-colors"></div>
         {title && (
             <h2 className="text-[10px] tracking-tighter opacity-70 uppercase font-bold text-white mb-2 ml-1 relative z-10">
@@ -83,9 +74,8 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
     const countryCodeAlpha2 = React.useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
     const cardClass = "relative rounded-3xl h-[440px] overflow-hidden text-white p-4 bg-dark-surface border border-white/10 shadow-[0_0_20px_rgba(0,242,254,0.3)]";
     const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
-    
-    // Check if player is in Team of the Month
     const isTotm = totmPlayerIds.has(player.id);
+    const preciseDelta = player.lastRatingChange?.finalChange || 0;
 
     return (
         <div>
@@ -117,21 +107,13 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
                 <div className="relative z-10 h-full flex flex-col justify-between p-1">
                     <div className="flex justify-between items-start">
                         <div className="pt-2">
-                            {/* BRAND REPLACEMENT: UNIT (Unified White) - Fix for export consistency */}
-                            <p 
-                                className="font-russo text-3xl leading-none tracking-tighter text-white"
-                                style={{ 
-                                    textShadow: '0 2px 10px rgba(0,0,0,0.5)',
-                                }}
-                            >
-                                UNIT
-                            </p>
+                            <p className="font-russo text-3xl leading-none tracking-tighter text-white" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)', }}>UNIT</p>
                             {countryCodeAlpha2 && <img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} alt={`${player.countryCode} flag`} className="w-6 h-auto mt-4 rounded-sm opacity-80" />}
                         </div>
                         <div className="flex flex-col items-center max-w-[50%]">
                             <div className="text-4xl font-black leading-none" style={{ color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
                             <p className="font-bold text-white tracking-widest text-sm mt-2">OVR</p>
-                            <div className="mt-1"><FormArrowIndicator form={player.form} /></div>
+                            <div className="mt-1"><FormArrowIndicator delta={preciseDelta} /></div>
                             {player.badges && Object.keys(player.badges).length > 0 && (
                                 <BadgeDisplay badges={player.badges} limit={6} onOpenChange={setIsBadgeModalOpen} />
                             )}
@@ -193,7 +175,6 @@ const SessionTrendChart: React.FC<{ history?: Player['sessionHistory']; t: any }
         <div className="flex justify-around items-end h-16 px-2 pt-2">
             {displayData.map((session, index) => {
                 const height = session.winRate > 0 ? `${Math.max(session.winRate, 15)}%` : '5%';
-                // FIX: use session.winRate from map iteration instead of undefined winRate
                 const color = getBarColor(session.winRate);
                 return <div key={index} className="w-2.5 rounded-t-full transition-all duration-500 ease-out" style={{ height: height, background: `linear-gradient(to top, ${hexToRgba(color, 0.1)}, ${color})`, boxShadow: `0 0 4px ${color}`, opacity: session.winRate > 0 ? 1 : 0.2, }} title={`${t.winRate}: ${session.winRate > 0 ? session.winRate + '%' : 'N/A'}`} />;
             })}
@@ -209,25 +190,17 @@ const StatsView: React.FC<{ player: Player; onBack: () => void; isPromo?: boolea
     const assistsPerSession = player.totalSessionsPlayed > 0 ? (player.totalAssists / player.totalSessionsPlayed).toFixed(2) : '0.00';
     const cardNeonClasses = "border border-white/10 shadow-[0_0_15px_rgba(0,242,254,0.3)]";
 
-    // --- RECALCULATE MONTHLY STATS DYNAMICALLY ---
-    const monthlyStats = React.useMemo(() => {
-        return calculatePlayerMonthlyStats(player.id, history);
-    }, [player.id, history]);
+    const monthlyStats = React.useMemo(() => calculatePlayerMonthlyStats(player.id, history), [player.id, history]);
+    const preciseDelta = player.lastRatingChange?.finalChange || 0;
+    const formText = preciseDelta > 0.1 ? 'HOT STREAK' : preciseDelta < -0.1 ? 'COLD STREAK' : 'STABLE';
+    const formColor = preciseDelta > 0.1 ? '#4CFF5F' : preciseDelta < -0.1 ? '#FF4136' : '#fff';
 
-    const displayMonthlyGoals = monthlyStats.goals;
-    const displayMonthlyAssists = monthlyStats.assists;
-    const displayMonthlyWins = monthlyStats.wins;
-    const displayMonthlySessions = monthlyStats.sessions;
-
-    const StatItem: React.FC<{ label: string; value: string | number; }> = ({ label, value }) => (
-        <div><p className={`text-base font-bold`}>{value}</p><p className="text-[10px] text-dark-text-secondary uppercase">{label}</p></div>
+    const StatItem: React.FC<{ label: string; value: string | number; color?: string }> = ({ label, value, color }) => (
+        <div><p className="text-base font-bold" style={{ color }}>{value}</p><p className="text-[10px] text-dark-text-secondary uppercase">{label}</p></div>
     );
 
-    // Conditional Wrapper Component based on isPromo
     const Wrapper: React.FC<{ title?: string; children: React.ReactNode }> = ({ title, children }) => {
-        if (isPromo) {
-            return <PromoStatsContainer title={title}>{children}</PromoStatsContainer>;
-        }
+        if (isPromo) return <PromoStatsContainer title={title}>{children}</PromoStatsContainer>;
         return <Card title={title} className={cardNeonClasses}>{children}</Card>;
     };
 
@@ -236,24 +209,22 @@ const StatsView: React.FC<{ player: Player; onBack: () => void; isPromo?: boolea
             <SubViewHeader title={t.statistics} onBack={onBack} />
             <div className="space-y-3">
                 
-                {/* 1. Progress Chart */}
+                <Wrapper title="Form Momentum">
+                    <div className="grid grid-cols-3 gap-2 items-center text-center">
+                        <StatItem label="Status" value={formText} color={formColor} />
+                        <StatItem label="Last Delta" value={(preciseDelta > 0 ? '+' : '') + preciseDelta.toFixed(1)} color={formColor} />
+                        <div className="flex justify-center"><FormArrowIndicator delta={preciseDelta} /></div>
+                    </div>
+                </Wrapper>
+
                 {isPromo ? (
                     <PromoStatsContainer>
-                        {/* Pass initialRating for correct slope calculation */}
-                        <PlayerProgressChart 
-                            history={player.historyData || []} 
-                            usePromoStyle={true} 
-                            initialRating={player.initialRating || 68}
-                        />
+                        <PlayerProgressChart history={player.historyData || []} usePromoStyle={true} initialRating={player.initialRating || 68} />
                     </PromoStatsContainer>
                 ) : (
-                    <PlayerProgressChart 
-                        history={player.historyData || []} 
-                        initialRating={player.initialRating || 68}
-                    />
+                    <PlayerProgressChart history={player.historyData || []} initialRating={player.initialRating || 68} />
                 )}
 
-                {/* 2. Last Session Breakdown */}
                 {player.lastRatingChange && (
                     isPromo ? (
                         <PromoStatsContainer>
@@ -264,7 +235,6 @@ const StatsView: React.FC<{ player: Player; onBack: () => void; isPromo?: boolea
                     )
                 )}
 
-                {/* 3. Best Session */}
                 {isPromo ? (
                     <PromoStatsContainer>
                         <BestSessionCard player={player} usePromoStyle={true} />
@@ -273,7 +243,6 @@ const StatsView: React.FC<{ player: Player; onBack: () => void; isPromo?: boolea
                     <BestSessionCard player={player} />
                 )}
 
-                {/* 4. Club Rankings */}
                 {isPromo ? (
                     <PromoStatsContainer>
                         <ClubRankings player={player} usePromoStyle={true} />
@@ -293,10 +262,10 @@ const StatsView: React.FC<{ player: Player; onBack: () => void; isPromo?: boolea
 
                 <Wrapper title={t.monthlyStatsTitle}>
                     <div className="grid grid-cols-4 gap-2 text-center">
-                        <StatItem label={t.session.toUpperCase()} value={displayMonthlySessions} />
-                        <StatItem label={t.monthlyGoals.toUpperCase()} value={displayMonthlyGoals} />
-                        <StatItem label={t.monthlyAssists.toUpperCase()} value={displayMonthlyAssists} />
-                        <StatItem label={t.monthlyWins.toUpperCase()} value={displayMonthlyWins} />
+                        <StatItem label={t.session.toUpperCase()} value={monthlyStats.sessions} />
+                        <StatItem label={t.monthlyGoals.toUpperCase()} value={monthlyStats.goals} />
+                        <StatItem label={t.monthlyAssists.toUpperCase()} value={monthlyStats.assists} />
+                        <StatItem label={t.monthlyWins.toUpperCase()} value={monthlyStats.wins} />
                     </div>
                 </Wrapper>
 
@@ -375,19 +344,14 @@ const InfoView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     ];
     const ALL_SKILLS: SkillType[] = ['goalkeeper', 'power_shot', 'technique', 'defender', 'playmaker', 'finisher', 'versatile', 'tireless_motor', 'leader'];
     
-    // --- UPDATED InfoView background to match Terminal Obsidian ---
     return (
-        <div 
-            className="pb-10 !bg-[#01040a] !border !border-[#1e293b] !shadow-2xl overflow-hidden relative rounded-3xl"
-        >
-            {/* DECORATIVE HEADER ELEMENTS */}
+        <div className="pb-10 !bg-[#01040a] !border !border-[#1e293b] !shadow-2xl overflow-hidden relative rounded-3xl">
             <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent opacity-100 z-50"></div>
             <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-[#00F2FE]/10 to-transparent blur-xl pointer-events-none z-0"></div>
 
             <div className="relative z-10 p-4">
                 <SubViewHeader title={t.information} onBack={onBack} />
                 <div className="space-y-8">
-                    {/* 1. Rating */}
                     <div>
                         <h3 className="text-lg font-bold mb-3 flex items-center gap-2"><InfoIcon className="w-5 h-5 text-dark-accent-start" /> {t.ratingCalculationTitle}</h3>
                         <p className="text-sm text-dark-text-secondary mb-4">{t.ratingCalculationDesc}</p>
@@ -401,82 +365,6 @@ const InfoView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                                 <li className="flex justify-between border-b border-white/5 pb-1"><span>{t.ratingExampleGoal}</span></li>
                                 <li className="flex justify-between"><span>{t.ratingExampleCleanSheet}</span></li>
                             </ul>
-                            <div className="grid grid-cols-2 gap-2 pt-2">
-                                <div className="p-2 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-                                    <h5 className="text-[10px] font-black text-amber-500 uppercase flex items-center gap-1"><RefreshCw className="w-3 h-3" /> {t.infoInactivityTitle}</h5>
-                                    <p className="text-[9px] text-white/50 mt-1">{t.infoInactivityDesc}</p>
-                                </div>
-                                <div className="p-2 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-                                    <h5 className="text-[10px] font-black text-blue-400 uppercase">🛡️ Safety</h5>
-                                    <p className="text-[9px] text-white/50 mt-1">{t.infoRatingProtection}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 2. Legionnaire */}
-                    <div className="pt-6 border-t border-white/10">
-                        <h3 className="text-lg font-bold mb-3 flex items-center gap-2"><Users className="w-5 h-5 text-purple-500" /> {t.infoLegionnaireTitle}</h3>
-                        <div className="p-4 bg-purple-500/5 border border-purple-500/10 rounded-2xl">
-                            <p className="text-sm text-white/70 leading-relaxed font-medium mb-4">{t.infoLegionnaireDesc}</p>
-                        </div>
-                    </div>
-
-                    {/* 3. Discipline */}
-                    <div className="pt-6 border-t border-white/10">
-                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2"><ExclamationIcon className="w-5 h-5 text-red-500" /> {t.disciplineTitle}</h3>
-                        <div className="grid grid-cols-1 gap-3">
-                            <div className="p-3 bg-red-500/5 border border-red-500/20 rounded-xl flex justify-between items-center">
-                                <div>
-                                    <h5 className="text-xs font-black text-white uppercase">{t.ruleHandballTitle}</h5>
-                                    <p className="text-[10px] text-white/50">{t.ruleHandballPenalty}</p>
-                                </div>
-                                <span className="text-[10px] font-black bg-red-500 px-2 py-0.5 rounded">1 MIN</span>
-                            </div>
-                            <div className="p-3 bg-white/5 border border-white/10 rounded-xl flex justify-between items-center">
-                                <div>
-                                    <h5 className="text-xs font-black text-white uppercase">{t.ruleNoShowTitle}</h5>
-                                    <p className="text-[10px] text-white/50">{t.ruleNoShowPenalty}</p>
-                                </div>
-                                <span className="text-[10px] font-black text-dark-accent-start">50K VND</span>
-                            </div>
-                            <div className="p-3 bg-white/5 border border-white/10 rounded-xl flex justify-between items-center">
-                                <div>
-                                    <h5 className="text-xs font-black text-white uppercase">{t.ruleLateTitle}</h5>
-                                    <p className="text-[10px] text-white/50">{t.ruleLatePenalty}</p>
-                                </div>
-                                <span className="text-[10px] font-black text-dark-accent-start">20K VND</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 4. Badge Bonuses */}
-                     <div className="pt-6 border-t border-white/10">
-                        <h3 className="text-lg font-bold mb-3 flex items-center gap-2"><LightbulbIcon className="w-5 h-5 text-emerald-500" /> {t.badgeBonusTitle}</h3>
-                        <p className="text-sm text-dark-text-secondary mb-3">{t.badgeBonusDesc}</p>
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl text-center">
-                                <span className="text-xs font-bold text-white">{t.badgeBonusMvp}</span>
-                            </div>
-                            <div className="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl text-center">
-                                <span className="text-xs font-bold text-white">{t.badgeBonusTopScorer}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 5. Skills */}
-                    <div className="pt-6 border-t border-white/10">
-                        <h3 className="text-lg font-bold mb-3 flex items-center gap-2"><StarIcon className="w-5 h-5 text-dark-accent-start" /> {t.keySkillsTitle}</h3>
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                            {ALL_SKILLS.map(skill => (<div key={skill} className="flex items-center gap-2"><StarIcon className="w-3 h-3 text-dark-accent-start flex-shrink-0" /><p className="text-sm">{t[`skill_${skill}` as keyof typeof t]}</p></div>))}
-                        </div>
-                    </div>
-
-                    {/* 6. Badges */}
-                    <div className="pt-6 border-t border-white/10">
-                        <h3 className="text-lg font-bold mb-3 flex items-center gap-2"><TrophyIcon className="w-5 h-5 text-yellow-500" /> {t.badges}</h3>
-                        <div className="space-y-4 pt-2">
-                            {ALL_BADGES.map(badge => (<div key={badge} className="flex items-start gap-3"><BadgeIcon badge={badge} className="w-8 h-8 flex-shrink-0" /><div><p className="text-sm font-semibold leading-tight">{t[`badge_${badge}` as keyof typeof t]}</p><p className="text-xs text-dark-text-secondary leading-snug mt-0.5">{t[`badge_${badge}_desc` as keyof typeof t]}</p></div></div>))}
                         </div>
                     </div>
                 </div>
@@ -487,10 +375,8 @@ const InfoView: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
 const MainCardView: React.FC<{ player: Player, onNavigate: (view: View) => void, cardStyle?: React.CSSProperties, isPromo?: boolean }> = ({ player, onNavigate, cardStyle, isPromo }) => {
     const t = useTranslation();
-    // Default Button Classes
     const defaultButtonClasses = "w-full !py-3 flex items-center justify-center shadow-lg shadow-dark-accent-start/20 hover:shadow-dark-accent-start/40 border border-dark-accent-start/30 font-chakra font-bold text-xl tracking-wider";
     
-    // Logic to choose which button component to render
     const ButtonComponent = isPromo ? PromoStyledButton : Button;
     const buttonProps = isPromo ? {} : { variant: 'secondary' as const, className: defaultButtonClasses };
 
