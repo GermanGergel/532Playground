@@ -128,20 +128,30 @@ const TerminalSessionTrend = ({ history }: { history?: Player['sessionHistory'] 
     const safeHistory = history || [];
     const displayData = Array.from({ length: 5 }).map((_, i) => {
         const realItem = safeHistory[safeHistory.length - (5 - i)];
-        return realItem ? { winRate: realItem.winRate, isDemo: false } : { winRate: 0, iDemo: true };
+        return realItem ? { winRate: realItem.winRate, isPlaceholder: false } : { winRate: 0, isPlaceholder: true };
     });
     return (
         <div className="flex justify-between items-end h-14 px-6 relative">
             <div className="absolute left-6 right-6 bottom-0 h-px bg-white/5"></div>
             {displayData.map((s, i) => {
                 const color = s.winRate > 60 ? '#4CFF5F' : s.winRate < 40 ? '#FF4136' : '#A9B1BD';
-                const barHeight = Math.max(s.winRate, 15); 
+                // Placeholder bars have a small fixed height and very low opacity
+                const barHeight = s.isPlaceholder ? 5 : Math.max(s.winRate, 15); 
                 return (
                     <div key={i} className="flex flex-col items-center gap-1.5 h-full justify-end group/bar relative">
-                        <div className={`w-6 rounded-t-sm transition-all duration-1000 ease-out relative ${s.iDemo ? 'opacity-0' : 'opacity-100'}`} style={{ height: `${barHeight}%`, background: `linear-gradient(to top, ${color}22, ${color})`, borderTop: `1px solid ${color}88`, }}>
-                             {!s.iDemo && (<div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20"><span className="text-[8px] font-black text-white bg-black/90 px-1.5 py-0.5 rounded border border-white/10">{s.winRate}%</span></div>)}
+                        <div 
+                            className={`w-6 rounded-t-sm transition-all duration-1000 ease-out relative ${s.isPlaceholder ? 'bg-white/[0.03] border-t border-white/5' : 'opacity-100'}`} 
+                            style={!s.isPlaceholder ? { 
+                                height: `${barHeight}%`, 
+                                background: `linear-gradient(to top, ${color}22, ${color})`, 
+                                borderTop: `1px solid ${color}88`, 
+                            } : { height: `${barHeight}%` }}
+                        >
+                             {!s.isPlaceholder && (<div className="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20"><span className="text-[8px] font-black text-white bg-black/90 px-1.5 py-0.5 rounded border border-white/10">{s.winRate}%</span></div>)}
                         </div>
-                        <span className={`text-[6px] font-black tracking-tighter transition-colors ${s.iDemo ? 'text-white/0' : 'text-white/30'}`}>{s.iDemo ? '' : `S${safeHistory.length - (4 - i)}`}</span>
+                        <span className={`text-[6px] font-black tracking-tighter transition-colors ${s.isPlaceholder ? 'text-white/5' : 'text-white/30'}`}>
+                            {`S${i + 1}`}
+                        </span>
                     </div>
                 );
             })}

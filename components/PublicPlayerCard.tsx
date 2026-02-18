@@ -156,7 +156,7 @@ const SessionTrendChart: React.FC<{ history?: Player['sessionHistory']; t: any }
     const safeHistory = history || [];
     const displayData = Array.from({ length: 5 }).map((_, i) => {
         const item = safeHistory[safeHistory.length - 5 + i];
-        return item ? { winRate: item.winRate } : { winRate: 0 };
+        return item ? { winRate: item.winRate, isPlaceholder: false } : { winRate: 0, isPlaceholder: true };
     });
     const getBarColor = (winRate: number) => {
         if (winRate > 60) return '#4CFF5F';
@@ -172,9 +172,20 @@ const SessionTrendChart: React.FC<{ history?: Player['sessionHistory']; t: any }
     return (
         <div className="flex justify-around items-end h-16 px-2 pt-2">
             {displayData.map((session, index) => {
-                const height = session.winRate > 0 ? `${Math.max(session.winRate, 15)}%` : '5%';
+                const height = session.isPlaceholder ? '5%' : `${Math.max(session.winRate, 15)}%`;
                 const color = getBarColor(session.winRate);
-                return <div key={index} className="w-2.5 rounded-t-full transition-all duration-500 ease-out" style={{ height: height, background: `linear-gradient(to top, ${hexToRgba(color, 0.1)}, ${color})`, boxShadow: `0 0 4px ${color}`, opacity: session.winRate > 0 ? 1 : 0.2, }} title={`${t.winRate}: ${session.winRate > 0 ? session.winRate + '%' : 'N/A'}`} />;
+                return (
+                    <div 
+                        key={index} 
+                        className={`w-2.5 rounded-t-full transition-all duration-500 ease-out ${session.isPlaceholder ? 'bg-white/5 opacity-30' : 'opacity-100'}`} 
+                        style={!session.isPlaceholder ? { 
+                            height: height, 
+                            background: `linear-gradient(to top, ${hexToRgba(color, 0.1)}, ${color})`, 
+                            boxShadow: `0 0 4px ${color}`
+                        } : { height: height }} 
+                        title={`${t.winRate}: ${!session.isPlaceholder ? session.winRate + '%' : 'N/A'}`} 
+                    />
+                );
             })}
         </div>
     );
