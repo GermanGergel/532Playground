@@ -33,75 +33,86 @@ interface TeamStats {
 const getPlayerById = (id: string, players: Player[]) => players.find(p => p.id === id);
 
 /**
- * ГЛУБОКИЙ АУДИТ ИНТЕЛЛЕКТА (Deep Intel Audit v2)
- * Полностью пересобирает статистику игрока на основе истории сессий.
- * Источник истины — массив history.
+ * ГЛУБОКИЙ АУДИТ ИНТЕЛЛЕКТА (Deep Intel Audit v3.0)
+ * Этот метод — "Золотой Стандарт" точности.
+ * Он полностью пересобирает КАРЬЕРНУЮ статистику игрока (Total...), 
+ * проходя по каждому матчу в истории клуба.
  */
 export const performDeepStatsAudit = (players: Player[], history: Session[]): Player[] => {
     return players.map(player => {
-        let wins = 0;
-        let draws = 0;
-        let losses = 0;
-        let goals = 0;
-        let assists = 0;
-        let gamesCount = 0;
-        let sessionsCount = 0;
+        // Обнуляем временные переменные для пересчета КАРЬЕРЫ
+        let totalWins = 0;
+        let totalDraws = 0;
+        let totalLosses = 0;
+        let totalGoals = 0;
+        let totalAssists = 0;
+        let totalGames = 0;
+        let totalSessions = 0;
 
-        // Фильтруем историю: только завершенные сессии, где этот игрок был в пуле
+        // Идем по каждой сессии в истории
         history.forEach(session => {
-            const isParticipant = session.playerPool.some(p => p.id === player.id);
-            if (!isParticipant) return;
+            // Сессия учитывается, только если она завершена
+            if (session.status !== 'completed') return;
 
-            sessionsCount++;
-            const defaultTeam = session.teams.find(t => t.playerIds.includes(player.id));
+            // Был ли игрок участником этой сессии?
+            const inPool = session.playerPool.some(p => p.id === player.id);
+            const inTeams = session.teams.some(t => t.playerIds.includes(player.id));
+            
+            if (inPool || inTeams) {
+                totalSessions++;
 
-            session.games.forEach(game => {
-                if (game.status !== GameStatus.Finished) return;
+                // Определяем "домашнюю" команду игрока в этой сессии
+                const homeTeam = session.teams.find(t => t.playerIds.includes(player.id));
 
-                // 1. Проверяем участие и за какую команду играл
-                let playedInThisRound = false;
-                let representTeamId: string | undefined = undefined;
+                session.games.forEach(game => {
+                    if (game.status !== GameStatus.Finished) return;
 
-                const legMove = game.legionnaireMoves?.find(m => m.playerId === player.id);
-                if (legMove) {
-                    representTeamId = legMove.toTeamId;
-                    playedInThisRound = true;
-                } 
-                else if (defaultTeam && (game.team1Id === defaultTeam.id || game.team2Id === defaultTeam.id)) {
-                    representTeamId = defaultTeam.id;
-                    playedInThisRound = true;
-                }
+                    let playedInGame = false;
+                    let currentTeamId = "";
 
-                if (playedInThisRound && representTeamId) {
-                    gamesCount++;
-                    if (game.isDraw) {
-                        draws++;
-                    } else if (game.winnerTeamId === representTeamId) {
-                        wins++;
-                    } else {
-                        losses++;
+                    // Проверяем, играл ли он как легионер
+                    const legMove = game.legionnaireMoves?.find(m => m.playerId === player.id);
+                    if (legMove) {
+                        playedInGame = true;
+                        currentTeamId = legMove.toTeamId;
+                    } 
+                    // Если нет, проверяем, играла ли его основная команда
+                    else if (homeTeam && (game.team1Id === homeTeam.id || game.team2Id === homeTeam.id)) {
+                        playedInGame = true;
+                        currentTeamId = homeTeam.id;
                     }
 
-                    // 2. Считаем голы и ассисты в этой конкретной игре
+                    if (playedInGame) {
+                        totalGames++;
+                        if (game.isDraw) {
+                            totalDraws++;
+                        } else if (game.winnerTeamId === currentTeamId) {
+                            totalWins++;
+                        } else {
+                            totalLosses++;
+                        }
+                    }
+
+                    // Голы и ассисты считаем по логам голов (независимо от команды)
                     game.goals.forEach(goal => {
-                        if (goal.scorerId === player.id && !goal.isOwnGoal) goals++;
-                        if (goal.assistantId === player.id) assists++;
+                        if (goal.scorerId === player.id && !goal.isOwnGoal) totalGoals++;
+                        if (goal.assistantId === player.id) totalAssists++;
                     });
-                }
-            });
+                });
+            }
         });
 
-        // Если у игрока 0 игр, но он был в базе, оставляем текущий OVR, 
-        // иначе обновляем Totals на основе аудита
+        // Если у игрока есть история, обновляем его Totals. 
+        // Если истории нет (новый игрок), оставляем как есть.
         return {
             ...player,
-            totalSessionsPlayed: sessionsCount,
-            totalGames: gamesCount,
-            totalWins: wins,
-            totalDraws: draws,
-            totalLosses: losses,
-            totalGoals: goals,
-            totalAssists: assists
+            totalSessionsPlayed: totalSessions,
+            totalGames: totalGames,
+            totalWins: totalWins,
+            totalDraws: totalDraws,
+            totalLosses: totalLosses,
+            totalGoals: totalGoals,
+            totalAssists: totalAssists
         };
     });
 };
