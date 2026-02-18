@@ -31,7 +31,6 @@ export const recalculateHistoricalSession = (
         
         const floor = player.initialRating || 68;
         const unifiedNewRating = Math.max(floor, Math.round(breakdown.newRating));
-        const finalChange = unifiedNewRating - player.rating;
 
         const updatedBadges = { ...player.badges };
         badgesEarned.forEach(badge => {
@@ -66,7 +65,6 @@ export const recalculateHistoricalSession = (
             historyData: updatedHistory,
             lastRatingChange: {
                 ...breakdown,
-                finalChange,
                 newRating: unifiedNewRating,
                 badgesEarned
             }
@@ -191,7 +189,6 @@ export const processFinishedSession = ({
     });
 
     // 2. Рассчитываем рейтинг, используя данные игрока ДО сессии (из oldPlayers)
-    // Это гарантирует, что 3-я сессия калибровки будет посчитана как калибровочная.
     let playersWithCalculatedRatings = playersWithUpdatedStats.map(updatedPlayer => {
         const sessionStats = playerStatsMap.get(updatedPlayer.id);
         const originalPlayer = oldPlayers.find(p => p.id === updatedPlayer.id);
@@ -199,16 +196,15 @@ export const processFinishedSession = ({
         if (sessionStats && originalPlayer) {
             const badgesEarnedThisSession = calculateEarnedBadges(originalPlayer, sessionStats, session, allPlayersStats);
             
-            // КЛЮЧЕВОЙ МОМЕНТ: Используем originalPlayer (у которого счетчик сессий еще старый)
             const { breakdown } = calculateRatingUpdate(originalPlayer, sessionStats, session, badgesEarnedThisSession);
             
             const floor = originalPlayer.initialRating || 68;
             const unifiedNewRating = Math.max(floor, Math.round(breakdown.newRating));
-            const finalChange = unifiedNewRating - originalPlayer.rating;
             
+            // FIX: Form determination based on floating-point delta from breakdown
             let newForm: 'hot_streak' | 'stable' | 'cold_streak' = 'stable';
-            if (finalChange >= 0.5) newForm = 'hot_streak';
-            else if (finalChange <= -0.5) newForm = 'cold_streak';
+            if (breakdown.finalChange > 0.1) newForm = 'hot_streak';
+            else if (breakdown.finalChange < -0.1) newForm = 'cold_streak';
             
             const updatedBadges = { ...updatedPlayer.badges };
             badgesEarnedThisSession.forEach(badge => {
@@ -252,7 +248,8 @@ export const processFinishedSession = ({
                 badges: updatedBadges,
                 sessionHistory,
                 historyData,
-                lastRatingChange: { ...breakdown, finalChange, newRating: unifiedNewRating, badgesEarned: badgesEarnedThisSession },
+                // Preservation of floating point delta in lastRatingChange for UI trend indicators
+                lastRatingChange: { ...breakdown, newRating: unifiedNewRating, badgesEarned: badgesEarnedThisSession },
                 records: newRecords,
             };
         }

@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { useApp } from '../context';
 import { HubProgressChart } from './HubAnalytics';
@@ -16,16 +17,19 @@ const skillAbbreviations: Record<SkillType, string> = {
 
 const FormArrowIndicator: React.FC<{ form: PlayerForm }> = ({ form }) => {
     const config = {
-        hot_streak: { color: '#4CFF5F' }, stable: { color: '#A9B1BD' }, cold_streak: { color: '#FF4136' },
+        hot_streak: { color: '#4CFF5F', glow: 'rgba(76, 255, 95, 0.4)' }, 
+        stable: { color: '#A9B1BD', glow: 'transparent' }, 
+        cold_streak: { color: '#FF4136', glow: 'rgba(255, 65, 54, 0.4)' },
     };
     const currentForm = config[form] || config.stable;
     const commonProps: React.SVGProps<SVGSVGElement> = {
         width: "22", height: "22", viewBox: "0 0 24 24", fill: "none", stroke: currentForm.color,
-        strokeWidth: "3", strokeLinecap: "round", strokeLinejoin: "round",
+        strokeWidth: "3.5", strokeLinecap: "round", strokeLinejoin: "round",
+        style: { filter: `drop-shadow(0 0 5px ${currentForm.glow})` }
     };
     switch (form) {
-        case 'hot_streak': return <svg {...commonProps}><path d="M12 19V5m-6 7l6-6 6 6"/></svg>;
-        case 'cold_streak': return <svg {...commonProps}><path d="M12 5v14M5 12l7 7 7-7"/></svg>;
+        case 'hot_streak': return <svg {...commonProps}><path d="M12 19V5m-7 7l7-7 7 7"/></svg>;
+        case 'cold_streak': return <svg {...commonProps}><path d="M12 5v14m-7-7l7 7 7-7"/></svg>;
         default: return <svg {...commonProps}><path d="M5 12h14m-6-6l6 6-6 6"/></svg>;
     }
 };
