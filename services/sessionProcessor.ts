@@ -1,4 +1,3 @@
-
 import { Session, Player, NewsItem, BadgeType, SessionStatus, PlayerRecords, PlayerHistoryEntry } from '../types';
 import { calculateAllStats } from './statistics';
 import { calculateEarnedBadges, calculateRatingUpdate, getTierForRating } from './rating';
@@ -31,6 +30,7 @@ export const recalculateHistoricalSession = (
         
         const floor = player.initialRating || 68;
         const unifiedNewRating = Math.max(floor, Math.round(breakdown.newRating));
+        const finalChange = unifiedNewRating - player.rating;
 
         const updatedBadges = { ...player.badges };
         badgesEarned.forEach(badge => {
@@ -65,6 +65,7 @@ export const recalculateHistoricalSession = (
             historyData: updatedHistory,
             lastRatingChange: {
                 ...breakdown,
+                finalChange,
                 newRating: unifiedNewRating,
                 badgesEarned
             }
@@ -200,11 +201,13 @@ export const processFinishedSession = ({
             
             const floor = originalPlayer.initialRating || 68;
             const unifiedNewRating = Math.max(floor, Math.round(breakdown.newRating));
+            const finalChange = unifiedNewRating - originalPlayer.rating;
             
-            // FIX: Form determination based on floating-point delta from breakdown
+            // УЛУЧШЕННАЯ ЛОГИКА ФОРМЫ: Используем дробное значение из расчета (breakdown.finalChange)
+            // Это позволит форме реагировать на "вклад", даже если OVR не округлился вверх
             let newForm: 'hot_streak' | 'stable' | 'cold_streak' = 'stable';
-            if (breakdown.finalChange > 0.1) newForm = 'hot_streak';
-            else if (breakdown.finalChange < -0.1) newForm = 'cold_streak';
+            if (breakdown.finalChange >= 0.2) newForm = 'hot_streak';
+            else if (breakdown.finalChange <= -0.2) newForm = 'cold_streak';
             
             const updatedBadges = { ...updatedPlayer.badges };
             badgesEarnedThisSession.forEach(badge => {
@@ -248,8 +251,7 @@ export const processFinishedSession = ({
                 badges: updatedBadges,
                 sessionHistory,
                 historyData,
-                // Preservation of floating point delta in lastRatingChange for UI trend indicators
-                lastRatingChange: { ...breakdown, newRating: unifiedNewRating, badgesEarned: badgesEarnedThisSession },
+                lastRatingChange: { ...breakdown, finalChange, newRating: unifiedNewRating, badgesEarned: badgesEarnedThisSession },
                 records: newRecords,
             };
         }
