@@ -52,25 +52,35 @@ const StaticSoccerBall: React.FC = () => {
     );
 };
 
-// --- ТРЕНД (СТРЕЛКИ) — УЛУЧШЕННАЯ АКТИВНАЯ ЛОГИКА ---
+// --- ТРЕНД (СТРЕЛКИ) — УЛУЧШЕННАЯ ЛОГИКА ---
 const TrendArrow: React.FC<{ player: Player }> = ({ player }) => {
-    const b = player.lastRatingChange;
+    const { history } = useApp();
     
-    // Если данных об изменениях нет — нейтральный прочерк
+    // 1. Берем дату самой последней сессии клуба
+    const latestSessionDate = history[0]?.date ? history[0].date.split('T')[0] : null;
+    const playerLastPlayedDate = player.lastPlayedAt ? player.lastPlayedAt.split('T')[0] : null;
+
+    // 2. Если игрок не играл в последнюю сессию — показываем прочерк
+    if (!latestSessionDate || playerLastPlayedDate !== latestSessionDate) {
+        return <span className="text-white/10 text-[12px] font-bold tracking-tighter">―</span>;
+    }
+
+    const b = player.lastRatingChange;
     if (!b) return <span className="text-white/10 text-[12px] font-bold tracking-tighter">―</span>;
 
-    // Считаем дельту. Мы используем порог 0.1, чтобы игнорировать математические погрешности.
-    const delta = b.finalChange || 0;
+    // 3. Считаем "микро-тренд" (сумма всех факторов эффективности)
+    // Это позволит показать стрелку, даже если целое число OVR не изменилось
+    const rawImpact = (b.teamPerformance || 0) + (b.individualPerformance || 0) + (b.badgeBonus || 0);
     
-    if (delta > 0.1) {
+    // Используем порог 0.1, чтобы отсечь совсем незначительные колебания
+    if (rawImpact > 0.1) {
         return <span className="text-[#4CFF5F] text-[10px] drop-shadow-[0_0_5px_rgba(76,255,95,0.8)] font-bold">▲</span>;
     }
-    if (delta < -0.1) {
+    if (rawImpact < -0.1) {
         return <span className="text-[#FF4136] text-[10px] drop-shadow-[0_0_5px_rgba(255,65,54,0.8)] font-bold">▼</span>;
     }
 
-    // "В сторону" (стабильно)
-    return <span className="text-white/40 text-[10px] font-bold">▶</span>;
+    return <span className="text-white/10 text-[12px] font-bold tracking-tighter">―</span>;
 };
 
 // --- CHASE LIST COMPONENT (THE 4-PLAYER TAIL) ---
