@@ -33,10 +33,13 @@ interface TeamStats {
 const getPlayerById = (id: string, players: Player[]) => players.find(p => p.id === id);
 
 /**
- * ГЛУБОКИЙ АУДИТ ИНТЕЛЛЕКТА (Deep Intel Audit v3.0)
+ * ГЛУБОКИЙ АУДИТ ИНТЕЛЛЕКТА (Deep Intel Audit v4.0)
  * Этот метод — "Золотой Стандарт" точности.
  * Он полностью пересобирает КАРЬЕРНУЮ статистику игрока (Total...), 
  * проходя по каждому матчу в истории клуба.
+ * 
+ * UPDATE v4.0: Теперь также пересобирает sessionHistory (последние 5 сессий)
+ * чтобы график формы соответствовал реальности.
  */
 export const performDeepStatsAudit = (players: Player[], history: Session[]): Player[] => {
     return players.map(player => {
@@ -49,7 +52,10 @@ export const performDeepStatsAudit = (players: Player[], history: Session[]): Pl
         let totalGames = 0;
         let totalSessions = 0;
 
-        // Идем по каждой сессии в истории
+        // Временное хранилище для истории сессий (будет собираться от Новых к Старым)
+        const tempSessionHistory: { winRate: number }[] = [];
+
+        // Идем по каждой сессии в истории (предполагаем, что history отсортирована Newest -> Oldest)
         history.forEach(session => {
             // Сессия учитывается, только если она завершена
             if (session.status !== 'completed') return;
@@ -63,6 +69,10 @@ export const performDeepStatsAudit = (players: Player[], history: Session[]): Pl
 
                 // Определяем "домашнюю" команду игрока в этой сессии
                 const homeTeam = session.teams.find(t => t.playerIds.includes(player.id));
+                
+                // Переменные для расчета WinRate конкретно этой сессии
+                let sessionWins = 0;
+                let sessionGamesPlayed = 0;
 
                 session.games.forEach(game => {
                     if (game.status !== GameStatus.Finished) return;
@@ -84,10 +94,13 @@ export const performDeepStatsAudit = (players: Player[], history: Session[]): Pl
 
                     if (playedInGame) {
                         totalGames++;
+                        sessionGamesPlayed++;
+
                         if (game.isDraw) {
                             totalDraws++;
                         } else if (game.winnerTeamId === currentTeamId) {
                             totalWins++;
+                            sessionWins++;
                         } else {
                             totalLosses++;
                         }
@@ -99,11 +112,22 @@ export const performDeepStatsAudit = (players: Player[], history: Session[]): Pl
                         if (goal.assistantId === player.id) totalAssists++;
                     });
                 });
+
+                // Если в этой сессии были сыграны игры, записываем результат в историю
+                if (sessionGamesPlayed > 0) {
+                    const winRate = Math.round((sessionWins / sessionGamesPlayed) * 100);
+                    tempSessionHistory.push({ winRate });
+                }
             }
         });
 
-        // Если у игрока есть история, обновляем его Totals. 
-        // Если истории нет (новый игрок), оставляем как есть.
+        // Формируем финальный sessionHistory для графика
+        // tempSessionHistory сейчас: [Newest, 2nd Newest, ..., Oldest]
+        // Нам нужно взять 5 последних (то есть 5 первых в массиве) и перевернуть их,
+        // чтобы график рисовался слева направо (Oldest -> Newest).
+        const finalSessionHistory = tempSessionHistory.slice(0, 5).reverse();
+
+        // Если у игрока есть история, обновляем его Totals и Историю Сессий.
         return {
             ...player,
             totalSessionsPlayed: totalSessions,
@@ -112,7 +136,8 @@ export const performDeepStatsAudit = (players: Player[], history: Session[]): Pl
             totalDraws: totalDraws,
             totalLosses: totalLosses,
             totalGoals: totalGoals,
-            totalAssists: totalAssists
+            totalAssists: totalAssists,
+            sessionHistory: finalSessionHistory
         };
     });
 };
