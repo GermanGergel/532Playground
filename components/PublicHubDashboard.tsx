@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
@@ -409,34 +408,9 @@ export const PublicHubDashboard: React.FC = () => {
     const t = useTranslation();
     const [activeRightTab, setActiveRightTab] = useState<'players' | 'games'>('players');
     const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
-    const [isAutoSwitching, setIsAutoSwitching] = useState(true);
-    const [autoSwitchProgress, setAutoSwitchProgress] = useState(0);
     const session = history[0];
 
-    useEffect(() => {
-        if (!isAutoSwitching || !session) return;
-        let phaseStartTime = Date.now() + 3000; 
-        const DURATION = 10000; 
-        const timer = setInterval(() => {
-            const now = Date.now();
-            if (now < phaseStartTime) return;
-            let elapsed = now - phaseStartTime;
-            let progress = (elapsed / DURATION) * 100;
-            if (progress >= 100) {
-                setActiveRightTab(prev => {
-                    const next = prev === 'players' ? 'games' : 'players';
-                    phaseStartTime = Date.now();
-                    return next;
-                });
-                setAutoSwitchProgress(0);
-                setExpandedMatchId(null);
-            } else { setAutoSwitchProgress(progress); }
-        }, 50);
-        return () => clearInterval(timer);
-    }, [isAutoSwitching, session]);
-
-    const handleManualTabChange = (tab: 'players' | 'games') => {
-        setIsAutoSwitching(false); 
+    const handleTabChange = (tab: 'players' | 'games') => {
         setActiveRightTab(tab);
         setExpandedMatchId(null);
     };
@@ -465,7 +439,6 @@ export const PublicHubDashboard: React.FC = () => {
 
     const finishedGames = [...session.games].filter(g => g.status === 'finished').sort((a, b) => a.gameNumber - b.gameNumber);
     
-    // Updated header style: Z-index adjusted, sticky behavior preserved
     const thStandings = "py-2 text-white/40 uppercase tracking-tighter text-[8px] font-black text-center sticky top-0 bg-[#01040a] z-20 border-b border-white/5";
     const tdBase = "py-1.5 text-center text-[10px] font-bold transition-colors";
 
@@ -496,7 +469,6 @@ export const PublicHubDashboard: React.FC = () => {
                 </div>
                 <div className="col-span-12 md:col-span-3 flex flex-col gap-4 h-full min-h-[600px] overflow-hidden">
                     <HubCard title={t.teamStandings} icon={<TrophyIcon />} variant="standings" className="shrink-0" bodyClassName="flex flex-col">
-                        {/* UPDATE: Conditional overflow to lock scroll if <= 3 teams */}
                         <div className={`p-1 h-[140px] overscroll-contain touch-pan-y ${teamStats.length > 3 ? 'overflow-y-auto custom-hub-scrollbar' : 'overflow-hidden'}`}>
                             <table className="w-full table-fixed border-collapse">
                                 <thead>
@@ -533,8 +505,8 @@ export const PublicHubDashboard: React.FC = () => {
                         </div>
                     </HubCard>
                     <HubCard 
-                        title={ <div className="relative group/tab"><button onClick={() => handleManualTabChange('players')} className={`font-russo text-[10px] uppercase tracking-widest transition-all duration-300 ${activeRightTab === 'players' ? 'text-[#00F2FE]' : 'opacity-20 hover:opacity-50'}`}>{t.hubPlayers}</button>{isAutoSwitching && activeRightTab === 'players' && ( <div className="absolute -bottom-1 left-0 h-[1.5px] bg-[#00F2FE] transition-all duration-75 shadow-[0_0_5px_#00F2FE]" style={{ width: `${autoSwitchProgress}%` }} /> )}</div> } 
-                        headerExtra={ <div className="relative group/tab"><button onClick={() => handleManualTabChange('games')} className={`font-russo text-[10px] uppercase tracking-widest transition-all duration-300 ${activeRightTab === 'games' ? 'text-[#00F2FE]' : 'opacity-20 hover:opacity-50'}`}>{t.hubGames}</button>{isAutoSwitching && activeRightTab === 'games' && ( <div className="absolute -bottom-1 left-0 h-[1.5px] bg-[#00F2FE] transition-all duration-75 shadow-[0_0_5px_#00F2FE]" style={{ width: `${autoSwitchProgress}%` }} /> )}</div> }
+                        title={ <button onClick={() => handleTabChange('players')} className={`font-russo text-[10px] uppercase tracking-widest transition-all duration-300 ${activeRightTab === 'players' ? 'text-[#00F2FE]' : 'opacity-20 hover:opacity-50'}`}>{t.hubPlayers}</button> } 
+                        headerExtra={ <button onClick={() => handleTabChange('games')} className={`font-russo text-[10px] uppercase tracking-widest transition-all duration-300 ${activeRightTab === 'games' ? 'text-[#00F2FE]' : 'opacity-20 hover:opacity-50'}`}>{t.hubGames}</button> }
                         icon={activeRightTab === 'players' ? <Users /> : <HistoryIcon />} 
                         variant="standings" accent="#00F2FE" className="flex-grow min-h-0" bodyClassName="flex flex-col h-full min-h-0 relative"
                     >
