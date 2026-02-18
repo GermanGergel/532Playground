@@ -4,6 +4,7 @@ import { calculateAllStats } from './statistics';
 import { calculateEarnedBadges, calculateRatingUpdate, getTierForRating } from './rating';
 import { generateNewsUpdates, manageNewsFeedSize } from './news';
 import { newId } from '../screens/utils';
+import { performDeepStatsAudit } from './statistics';
 
 interface ProcessedSessionResult {
     updatedPlayers: Player[];
@@ -11,68 +12,6 @@ interface ProcessedSessionResult {
     finalSession: Session;
     updatedNewsFeed: NewsItem[];
 }
-
-/**
- * Принудительный пересчет статистики для исторической сессии.
- */
-export const recalculateHistoricalSession = (
-    session: Session,
-    currentPlayers: Player[]
-): Player[] => {
-    const { allPlayersStats } = calculateAllStats(session);
-    const playerStatsMap = new Map(allPlayersStats.map(stat => [stat.player.id, stat]));
-    
-    return currentPlayers.map(player => {
-        const sessionStats = playerStatsMap.get(player.id);
-        if (!sessionStats) return player;
-
-        const badgesEarned = calculateEarnedBadges(player, sessionStats, session, allPlayersStats);
-        const { breakdown } = calculateRatingUpdate(player, sessionStats, session, badgesEarned);
-        
-        const floor = player.initialRating || 68;
-        const unifiedNewRating = Math.max(floor, Math.round(breakdown.newRating));
-        const finalChange = unifiedNewRating - player.rating;
-
-        const updatedBadges = { ...player.badges };
-        badgesEarned.forEach(badge => {
-            updatedBadges[badge] = (updatedBadges[badge] || 0) + 1;
-        });
-
-        const dateStr = new Date(session.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' });
-        const historyEntry: PlayerHistoryEntry = {
-            date: dateStr,
-            rating: unifiedNewRating,
-            winRate: sessionStats.gamesPlayed > 0 ? Math.round((sessionStats.wins / sessionStats.gamesPlayed) * 100) : 0,
-            goals: sessionStats.goals,
-            assists: sessionStats.assists
-        };
-
-        const updatedHistory = [...(player.historyData || [])];
-        if (!updatedHistory.find(h => h.date === dateStr)) {
-            updatedHistory.push(historyEntry);
-        }
-        if (updatedHistory.length > 12) updatedHistory.shift();
-
-        return {
-            ...player,
-            totalGoals: player.totalGoals + sessionStats.goals,
-            totalAssists: player.totalAssists + sessionStats.assists,
-            totalGames: player.totalGames + sessionStats.gamesPlayed,
-            totalWins: player.totalWins + sessionStats.wins,
-            totalSessionsPlayed: (player.totalSessionsPlayed || 0) + 1,
-            rating: unifiedNewRating,
-            tier: getTierForRating(unifiedNewRating),
-            badges: updatedBadges,
-            historyData: updatedHistory,
-            lastRatingChange: {
-                ...breakdown,
-                finalChange,
-                newRating: unifiedNewRating,
-                badgesEarned
-            }
-        };
-    });
-};
 
 export const processFinishedSession = ({
     session,
@@ -94,8 +33,8 @@ export const processFinishedSession = ({
     const sessionDate = new Date(session.date);
     const sessionMonthKey = `${sessionDate.getFullYear()}-${sessionDate.getMonth()}`;
 
-    // 1. Сначала подготавливаем базовые инкременты (голы, ассисты, пропуски)
-    let playersWithUpdatedStats = oldPlayers.map(player => {
+    // 1. Сначала подготавливаем базовые инкременты (Месячная статка и пропуски)
+    let playersWithUpdatedStats: Player[] = oldPlayers.map(player => {
         const sessionStats = playerStatsMap.get(player.id);
         const floor = player.initialRating || 68;
         
@@ -116,14 +55,6 @@ export const processFinishedSession = ({
 
             return {
                 ...player,
-                totalGames: player.totalGames + sessionStats.gamesPlayed,
-                totalGoals: player.totalGoals + sessionStats.goals,
-                totalAssists: player.totalAssists + sessionStats.assists,
-                totalWins: player.totalWins + sessionStats.wins,
-                totalDraws: player.totalDraws + sessionStats.draws,
-                totalLosses: player.totalLosses + sessionStats.losses,
-                totalSessionsPlayed: (player.totalSessionsPlayed || 0) + 1,
-                
                 monthlyGames: baseMonthly.games + sessionStats.gamesPlayed,
                 monthlyGoals: baseMonthly.goals + sessionStats.goals,
                 monthlyAssists: baseMonthly.assists + sessionStats.assists,
@@ -190,16 +121,13 @@ export const processFinishedSession = ({
         }
     });
 
-    // 2. Рассчитываем рейтинг, используя данные игрока ДО сессии (из oldPlayers)
-    // Это гарантирует, что 3-я сессия калибровки будет посчитана как калибровочная.
-    let playersWithCalculatedRatings = playersWithUpdatedStats.map(updatedPlayer => {
+    // 2. Рассчитываем рейтинг и награды
+    let playersWithCalculatedRatings: Player[] = playersWithUpdatedStats.map(updatedPlayer => {
         const sessionStats = playerStatsMap.get(updatedPlayer.id);
         const originalPlayer = oldPlayers.find(p => p.id === updatedPlayer.id);
         
         if (sessionStats && originalPlayer) {
             const badgesEarnedThisSession = calculateEarnedBadges(originalPlayer, sessionStats, session, allPlayersStats);
-            
-            // КЛЮЧЕВОЙ МОМЕНТ: Используем originalPlayer (у которого счетчик сессий еще старый)
             const { breakdown } = calculateRatingUpdate(originalPlayer, sessionStats, session, badgesEarnedThisSession);
             
             const floor = originalPlayer.initialRating || 68;
@@ -258,6 +186,10 @@ export const processFinishedSession = ({
         }
         return updatedPlayer;
     });
+
+    // 3. КРИТИЧЕСКИЙ МОМЕНТ: ПРИМЕНЯЕМ DEEP AUDIT ДЛЯ TOTALS
+    const tempHistory = [{ ...session, status: SessionStatus.Completed }, ...(JSON.parse(localStorage.getItem('history') || '[]'))];
+    playersWithCalculatedRatings = performDeepStatsAudit(playersWithCalculatedRatings, tempHistory);
 
     const newGameplayNews = generateNewsUpdates(oldPlayers, playersWithCalculatedRatings, participatedIds);
     const allNewNews = [...newGameplayNews, ...penaltyNews];

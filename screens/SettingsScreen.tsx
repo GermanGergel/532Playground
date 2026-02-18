@@ -3,10 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Card, Button, useTranslation } from '../ui';
-import { isSupabaseConfigured, getCloudPlayerCount, savePlayersToDB } from '../db';
-import { Wand, Activity, RefreshCw } from '../icons';
-import { recalculateHistoricalSession } from '../services/sessionProcessor';
-import { performDeepStatsAudit } from '../services/statistics';
+import { isSupabaseConfigured, getCloudPlayerCount } from '../db';
+import { Wand, Activity } from '../icons';
 
 const WalletIcon = ({ className }: { className?: string }) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -19,11 +17,9 @@ const WalletIcon = ({ className }: { className?: string }) => (
 export const SettingsScreen: React.FC = () => {
     const t = useTranslation();
     const navigate = useNavigate();
-    const { language, setLanguage, allPlayers, history, setAllPlayers } = useApp();
+    const { language, setLanguage, allPlayers } = useApp();
     const [cloudStatus, setCloudStatus] = React.useState<{ connected: boolean, count: number } | null>(null);
     const [isRefreshing, setIsRefreshing] = React.useState(false);
-    const [isRecalculating, setIsRecalculating] = React.useState(false);
-    const [isAuditing, setIsAuditing] = React.useState(false);
     
     const dbEndpoint = (process.env.VITE_SUPABASE_URL || '').split('//')[1]?.split('.')[0]?.toUpperCase() || 'LOCAL';
 
@@ -41,50 +37,6 @@ export const SettingsScreen: React.FC = () => {
             setCloudStatus({ connected: false, count: 0 });
         }
         setIsRefreshing(false);
-    };
-
-    const handleForceAudit = async () => {
-        if (isAuditing) return;
-        if (window.confirm("Run Deep Intel Audit? This will recalculate every player's lifetime wins, goals, and sessions based strictly on match logs. Recommended if you see data inconsistencies.")) {
-            setIsAuditing(true);
-            try {
-                const auditedPlayers = performDeepStatsAudit(allPlayers, history);
-                setAllPlayers(auditedPlayers);
-                await savePlayersToDB(auditedPlayers);
-                alert("Audit complete! All player records are now perfectly synced with history.");
-            } catch (e) {
-                console.error(e);
-                alert("Audit failed.");
-            } finally {
-                setIsAuditing(false);
-            }
-        }
-    };
-
-    const handleRecalculate17Feb = async () => {
-        if (isRecalculating) return;
-        const targetDate = "2026-02-17";
-        const session = history.find(s => s.date.includes(targetDate));
-        
-        if (!session) {
-            alert(`Session from 17.02.2026 not found in history.`);
-            return;
-        }
-
-        if (window.confirm(`Recalculate stats for session: ${session.sessionName}? This will update OVR and totals for all participants.`)) {
-            setIsRecalculating(true);
-            try {
-                const updatedPlayers = recalculateHistoricalSession(session, allPlayers);
-                setAllPlayers(updatedPlayers);
-                await savePlayersToDB(updatedPlayers);
-                alert("Recalculation complete! All players from 17.02.2026 updated.");
-            } catch (e) {
-                console.error(e);
-                alert("Recalculation failed.");
-            } finally {
-                setIsRecalculating(false);
-            }
-        }
     };
 
     useEffect(() => {
@@ -226,44 +178,6 @@ export const SettingsScreen: React.FC = () => {
                             </div>
                         </Card>
                     </Link>
-                </div>
-
-                <div className="pt-6 space-y-3">
-                    <h3 className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-1 ml-1">Maintenance Tools</h3>
-                    
-                    <Button 
-                        variant="secondary" 
-                        onClick={handleForceAudit}
-                        disabled={isAuditing}
-                        className="w-full flex items-center justify-center gap-3 !py-4 border border-[#00F2FE]/20 text-[#00F2FE] hover:bg-[#00F2FE]/10 transition-all"
-                    >
-                        {isAuditing ? (
-                            <RefreshCw className="w-5 h-5 animate-spin" />
-                        ) : (
-                            <Activity className="w-5 h-5" />
-                        )}
-                        <div className="flex flex-col items-start">
-                            <span className="text-sm font-black uppercase tracking-wider leading-none">Deep Intel Audit</span>
-                            <span className="text-[8px] font-mono text-[#00F2FE]/50 mt-1">SYNC ALL TOTALS WITH HISTORY</span>
-                        </div>
-                    </Button>
-
-                    <Button 
-                        variant="secondary" 
-                        onClick={handleRecalculate17Feb}
-                        disabled={isRecalculating}
-                        className="w-full flex items-center justify-center gap-3 !py-4 border border-yellow-500/20 text-yellow-400 hover:bg-yellow-500/10 transition-all"
-                    >
-                        {isRecalculating ? (
-                            <RefreshCw className="w-5 h-5 animate-spin" />
-                        ) : (
-                            <Activity className="w-5 h-5" />
-                        )}
-                        <div className="flex flex-col items-start">
-                            <span className="text-sm font-black uppercase tracking-wider leading-none">Recalculate 17.02.2026 Session</span>
-                            <span className="text-[8px] font-mono text-yellow-500/50 mt-1">FORCE STATISTICS RECOVERY</span>
-                        </div>
-                    </Button>
                 </div>
             </div>
 
