@@ -33,8 +33,6 @@ const FormArrowIndicator: React.FC<{ delta?: number }> = ({ delta = 0 }) => {
     return <svg {...commonProps}><path d="M5 12h14m-6-6l6 6-6 6"/></svg>;
 };
 
-// ... Rest of the file remains same, just ensuring we use the new indicator ...
-
 const PromoStyledButton: React.FC<{ onClick: () => void; children: React.ReactNode; className?: string }> = ({ onClick, children, className }) => (
     <button 
         onClick={onClick} 
@@ -192,7 +190,7 @@ const StatsView: React.FC<{ player: Player; onBack: () => void; isPromo?: boolea
 
     const monthlyStats = React.useMemo(() => calculatePlayerMonthlyStats(player.id, history), [player.id, history]);
     const preciseDelta = player.lastRatingChange?.finalChange || 0;
-    const formText = preciseDelta > 0.1 ? 'HOT STREAK' : preciseDelta < -0.1 ? 'COLD STREAK' : 'STABLE';
+    const formText = preciseDelta > 0.1 ? 'HOT' : preciseDelta < -0.1 ? 'COLD' : 'STABLE';
     const formColor = preciseDelta > 0.1 ? '#4CFF5F' : preciseDelta < -0.1 ? '#FF4136' : '#fff';
 
     const StatItem: React.FC<{ label: string; value: string | number; color?: string }> = ({ label, value, color }) => (

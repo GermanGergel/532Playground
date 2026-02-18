@@ -172,7 +172,6 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
         const getWR = (p: Player) => p.totalGames > 0 ? (p.totalWins / p.totalGames) : 0;
         const sortedByGoals = [...confirmedPlayers].sort((a, b) => b.totalGoals - a.totalGoals || b.rating - a.rating);
         const sortedByAssists = [...confirmedPlayers].sort((a, b) => b.totalAssists - a.totalAssists || b.rating - a.rating);
-        // FIX: totalAssists was incorrectly referenced as assists on Player object
         const sortedByRating = [...confirmedPlayers].sort((a, b) => b.rating - a.rating || (b.totalGoals + b.totalAssists) - (a.totalGoals + a.totalAssists));
 
         return {
@@ -195,7 +194,7 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
 
     // --- FORM CALCULATIONS ---
     const preciseDelta = player.lastRatingChange?.finalChange || 0;
-    const formText = preciseDelta > 0.1 ? 'HOT STREAK' : preciseDelta < -0.1 ? 'COLD STREAK' : 'STABLE';
+    const formText = preciseDelta > 0.1 ? 'HOT' : preciseDelta < -0.1 ? 'COLD' : 'STABLE';
     const formColor = preciseDelta > 0.1 ? '#4CFF5F' : preciseDelta < -0.1 ? '#FF4136' : '#fff';
 
     const tierColor = TIER_COLORS[player.tier] || '#00F2FE';
