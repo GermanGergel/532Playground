@@ -190,22 +190,22 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
         };
     }, [allPlayers, player]);
 
-    if (!player) return null;
-    
-    const monthlyStats = useMemo(() => calculatePlayerMonthlyStats(player.id, history), [player.id, history]);
-    const countryCodeAlpha2 = player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : 'VN';
+    const monthlyStats = useMemo(() => player ? calculatePlayerMonthlyStats(player.id, history) : null, [player?.id, history]);
+    const countryCodeAlpha2 = player?.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : 'VN';
     
     // Career Win Rate based on audited totals
-    const careerWinRate = player.totalGames > 0 ? `${Math.round((player.totalWins / player.totalGames) * 100)}%` : '0%';
-    const goalsPerSession = player.totalSessionsPlayed > 0 ? (player.totalGoals / player.totalSessionsPlayed).toFixed(2) : '0.00';
-    const assistsPerSession = player.totalSessionsPlayed > 0 ? (player.totalAssists / player.totalSessionsPlayed).toFixed(2) : '0.00';
+    const careerWinRate = player && player.totalGames > 0 ? `${Math.round((player.totalWins / player.totalGames) * 100)}%` : '0%';
+    const goalsPerSession = player && player.totalSessionsPlayed > 0 ? (player.totalGoals / player.totalSessionsPlayed).toFixed(2) : '0.00';
+    const assistsPerSession = player && player.totalSessionsPlayed > 0 ? (player.totalAssists / player.totalSessionsPlayed).toFixed(2) : '0.00';
 
     // Form Trend Win Rate (average of visible bars)
     const trendWinRate = useMemo(() => {
-        if (!player.sessionHistory || player.sessionHistory.length === 0) return '0%';
+        if (!player || !player.sessionHistory || player.sessionHistory.length === 0) return '0%';
         const sum = player.sessionHistory.reduce((acc, s) => acc + s.winRate, 0);
         return `${Math.round(sum / player.sessionHistory.length)}%`;
-    }, [player.sessionHistory]);
+    }, [player?.sessionHistory]);
+
+    if (!player) return null;
 
     // --- FORM CALCULATIONS ---
     const preciseDelta = player.lastRatingChange?.finalChange || 0;
@@ -293,7 +293,7 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                                         <div className="flex justify-center"><FormArrowIndicator delta={preciseDelta} /></div>
                                     </div><div className="py-1 bg-black/30 rounded-2xl border border-white/5 mt-auto shadow-inner"><TerminalSessionTrend history={player.sessionHistory} /></div>{player.skills && player.skills.length > 0 && (<div className="pt-2"><div className="flex wrap justify-center gap-3 mt-1 pb-1">{player.skills.slice(0,3).map(skill => (<div key={skill} className="flex items-center gap-1 transition-all"><StarIcon className="w-2.5 h-2.5 text-[#00F2FE]" /><span className="text-[8px] font-black text-white/80 uppercase tracking-tight">{t[`skill_${skill}` as keyof typeof t]}</span></div>))}</div></div>)}</div></BentoBox>
                                     <BentoBox className="!p-2 h-full" contentClassName="h-full flex flex-col"><IntelHeader title={t?.clubRankings} icon={Users} accent="#FF00D6" /><div className="flex-grow flex flex-col justify-center pt-1 pb-1 px-1"><div className="grid grid-cols-3 gap-0.5 text-center w-full"><TerminalStat label="SCORER" value={rankings.goals} subValue={`/${rankings.total}`} color="#fff" /><TerminalStat label="ASSISTANT" value={rankings.assists} subValue={`/${rankings.total}`} color="#fff" /><TerminalStat label="RATING" value={rankings.rating} subValue={`/${rankings.total}`} color="#fff" /></div></div></BentoBox>
-                                    <BentoBox className="!p-2 h-full" contentClassName="h-full flex flex-col justify-center"><IntelHeader title={t?.monthlyStatsTitle} icon={Calendar} /><div className="flex-grow flex flex-col justify-center"><div className="grid grid-cols-2 gap-y-1.5 gap-x-1 pt-1 pb-1 h-full items-center"><TerminalStat size="text-lg" label={t?.monthlyWins} value={monthlyStats.wins} color="#fff" /><TerminalStat size="text-lg" label={t?.monthlyGoals} value={monthlyStats.goals} /><TerminalStat size="text-lg" label={t?.monthlyAssists} value={monthlyStats.assists} /><TerminalStat size="text-lg" label={t?.session} value={monthlyStats.sessions} /></div></div></BentoBox>
+                                    <BentoBox className="!p-2 h-full" contentClassName="h-full flex flex-col justify-center"><IntelHeader title={t?.monthlyStatsTitle} icon={Calendar} /><div className="flex-grow flex flex-col justify-center"><div className="grid grid-cols-2 gap-y-1.5 gap-x-1 pt-1 pb-1 h-full items-center"><TerminalStat size="text-lg" label={t?.monthlyWins} value={monthlyStats!.wins} color="#fff" /><TerminalStat size="text-lg" label={t?.monthlyGoals} value={monthlyStats!.goals} /><TerminalStat size="text-lg" label={t?.monthlyAssists} value={monthlyStats!.assists} /><TerminalStat size="text-lg" label={t?.session} value={monthlyStats!.sessions} /></div></div></BentoBox>
                                 </div>
                             </div>
 

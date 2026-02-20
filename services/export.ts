@@ -194,7 +194,7 @@ export const shareOrDownloadImages = async (elementId: string, sessionName: stri
             files: [file],
         };
 
-        const canShare = navigator.share && typeof navigator.canShare === 'function' && navigator.canShare(shareData);
+        const canShare = typeof navigator.share === 'function' && typeof navigator.canShare === 'function' && navigator.canShare(shareData);
 
         if (canShare) {
             await navigator.share(shareData);

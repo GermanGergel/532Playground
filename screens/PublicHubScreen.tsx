@@ -1,20 +1,14 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
-import { Player, PlayerStatus, PlayerForm, SkillType, PlayerTier } from '../types';
-import { TrophyIcon, Users, History as HistoryIcon, BarChartDynamic, StarIcon, ChevronLeft, Zap, WhatsApp, YouTubeIcon, TikTokIcon, XCircle, Home, LayoutDashboard, AwardIcon, Target, InfoIcon, GoleadorBadgeIcon, AssistantBadgeIcon, VeteranBadgeIcon, MvpBadgeIcon, WinLeaderBadgeIcon } from '../icons';
-import { PlayerAvatar, TeamAvatar } from '../components/avatars';
-import { Language } from '../translations/index';
-import { BadgeIcon, sortBadgesByPriority } from '../features';
 import { useTranslation } from '../ui';
-import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
+import { Player, PlayerStatus } from '../types';
+import { TrophyIcon, Users, History as HistoryIcon, WhatsApp, YouTubeIcon, TikTokIcon, Home, LayoutDashboard, InfoIcon, GoleadorBadgeIcon, AssistantBadgeIcon, MvpBadgeIcon, WinLeaderBadgeIcon } from '../icons';
+import { Language } from '../translations/index';
 import { ClubIntelligenceDashboard } from '../components/ClubIntelligenceDashboard';
 import { RadioPlayer } from '../components/RadioPlayer';
-import { SquadOfTheMonthBadge } from '../components/SquadOfTheMonthBadge';
 import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
 import { MiniSquadBadge } from '../components/MiniSquadBadge';
-import { BallDecorations } from '../components/BallDecorations';
 import { CinematicCard, HeaderAtmosphere } from '../components/PublicHubScreen';
 
 // --- SUB-COMPONENTS ---
@@ -255,7 +249,7 @@ const HubNav: React.FC<{
     isDashboardOpen: boolean; 
     sessionDate?: string; 
     activeTab: string; 
-    onTabChange: (tab: any) => void; 
+    onTabChange: (tab: DashboardViewType) => void; 
     archiveViewDate: string | null; 
     onHomeClick: () => void; 
     onOpenTotm: () => void; 
@@ -372,7 +366,6 @@ const CinematicStatCard: React.FC<{ value: string | number; label: string; }> = 
 type DashboardViewType = 'info' | 'dashboard' | 'roster' | 'archive' | 'duel' | 'tournaments' | 'league';
 
 export const PublicHubScreen: React.FC = () => {
-    const navigate = useNavigate();
     const { allPlayers, history } = useApp();
     const [isDashboardOpen, setIsDashboardOpen] = useState(false);
     const [isTotmOpen, setIsTotmOpen] = useState(false);
@@ -396,19 +389,70 @@ export const PublicHubScreen: React.FC = () => {
     }, [history]);
 
     const legends = useMemo(() => {
-        const confirmed = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
+        // Filter: Must be confirmed, NOT a demo player, and must have played at least one game
+        const confirmed = allPlayers.filter(p => 
+            p.status === PlayerStatus.Confirmed && 
+            !p.id.startsWith('demo_') && 
+            p.surname?.toLowerCase() !== 'demo' &&
+            p.surname?.toLowerCase() !== 'demo unit' &&
+            (p.totalGames || 0) > 0
+        );
+
         if (confirmed.length === 0) return null;
-        const sortedScorers = [...confirmed].sort((a, b) => { if (b.totalGoals !== a.totalGoals) return b.totalGoals - a.totalGoals; return b.rating - a.rating; });
-        const sortedArchitects = [...confirmed].sort((a, b) => { if (b.totalAssists !== a.totalAssists) return b.totalAssists - a.totalAssists; return b.rating - a.rating; });
-        const sortedGrandMasters = [...confirmed].sort((a, b) => { const gaA = (a.totalGoals || 0) + (a.totalAssists || 0); const gaB = (b.totalGoals || 0) + (b.totalAssists || 0); if (gaB !== gaA) return gaB - gaA; return b.rating - a.rating; });
-        const eligibleWinRate = confirmed.filter(p => (p.totalSessionsPlayed || 0) >= 10);
-        const sortedConquerors = [...eligibleWinRate].sort((a, b) => { const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0; const wrB = b.totalWins / b.totalGames; if (wrB !== wrA) return wrB - wrA; return b.totalGames - a.totalGames; });
+
+        const sortedScorers = [...confirmed].sort((a, b) => { 
+            const valA = a.totalGoals || 0;
+            const valB = b.totalGoals || 0;
+            if (valB !== valA) return valB - valA; 
+            return (b.rating || 0) - (a.rating || 0); 
+        });
+
+        const sortedArchitects = [...confirmed].sort((a, b) => { 
+            const valA = a.totalAssists || 0;
+            const valB = b.totalAssists || 0;
+            if (valB !== valA) return valB - valA; 
+            return (b.rating || 0) - (a.rating || 0); 
+        });
+
+        const sortedGrandMasters = [...confirmed].sort((a, b) => { 
+            const gaA = (a.totalGoals || 0) + (a.totalAssists || 0); 
+            const gaB = (b.totalGoals || 0) + (b.totalAssists || 0); 
+            if (gaB !== gaA) return gaB - gaA; 
+            return (b.rating || 0) - (a.rating || 0); 
+        });
+
+        // Threshold for Win Rate: Lowered from 10 to 3 sessions to be more inclusive for newer clubs
+        const eligibleWinRate = confirmed.filter(p => (p.totalSessionsPlayed || 0) >= 3);
+        const sortedConquerors = [...eligibleWinRate].sort((a, b) => { 
+            const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0; 
+            const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0; 
+            if (wrB !== wrA) return wrB - wrA; 
+            return (b.totalGames || 0) - (a.totalGames || 0); 
+        });
+
         return { scorers: sortedScorers, architects: sortedArchitects, grandMasters: sortedGrandMasters, conquerors: sortedConquerors };
     }, [allPlayers]);
 
     const displayData = useMemo(() => {
-        const confirmedRealPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
-        const sorted = [...confirmedRealPlayers].sort((a, b) => { if (b.rating !== a.rating) return b.rating - a.rating; const scoreA = (a.totalGoals || 0) + (a.totalAssists || 0); const scoreB = (b.totalGoals || 0) + (b.totalAssists || 0); if (scoreB !== scoreA) return scoreB - scoreA; const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0; const wrB = b.totalWins / b.totalGames; if (wrB !== wrA) return wrB - wrA; return (b.totalGames || 0) - (a.totalGames || 0); });
+        // Filter: Must be confirmed, NOT a demo player, and must have played at least one game
+        const confirmedRealPlayers = allPlayers.filter(p => 
+            p.status === PlayerStatus.Confirmed && 
+            !p.id.startsWith('demo_') &&
+            p.surname?.toLowerCase() !== 'demo' &&
+            p.surname?.toLowerCase() !== 'demo unit' &&
+            (p.totalGames || 0) > 0
+        );
+
+        const sorted = [...confirmedRealPlayers].sort((a, b) => { 
+            if (b.rating !== a.rating) return b.rating - a.rating; 
+            const scoreA = (a.totalGoals || 0) + (a.totalAssists || 0); 
+            const scoreB = (b.totalGoals || 0) + (b.totalAssists || 0); 
+            if (scoreB !== scoreA) return scoreB - scoreA; 
+            const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0; 
+            const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0; 
+            if (wrB !== wrA) return wrB - wrA; 
+            return (b.totalGames || 0) - (a.totalGames || 0); 
+        });
         return { top: sorted.slice(0, 3) };
     }, [allPlayers]);
     

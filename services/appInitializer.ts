@@ -1,5 +1,5 @@
 
-import { Session, Player, NewsItem, BadgeType, PlayerRecords, PlayerHistoryEntry } from '../types';
+import { Session, Player, NewsItem } from '../types';
 import { Language } from '../translations/index';
 import {
     loadPlayersFromDB,
@@ -7,12 +7,10 @@ import {
     loadHistoryFromDB,
     loadLanguageFromDB,
     loadNewsFromDB,
-    saveNewsToDB,
     loadActiveVoicePackFromDB,
     savePlayersToDB
 } from '../db';
 import { getTierForRating } from './rating';
-import { performDeepStatsAudit } from './statistics';
 
 interface InitialAppState {
     session: Session | null;
@@ -31,27 +29,10 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
     
     let dataRepaired = false;
 
-    // 1. ПРИМЕНЯЕМ DEEP INTEL AUDIT (ТИХИЙ ПЕРЕСЧЕТ)
-    // Полностью пересобираем Totals на основе истории игр
-    const historyToAudit = Array.isArray(loadedHistoryData) ? loadedHistoryData : [];
-    if (initialPlayers.length > 0 && historyToAudit.length > 0) {
-        const auditedPlayers = performDeepStatsAudit(initialPlayers, historyToAudit);
-        
-        // Сравнение для лога изменений
-        const needsUpdate = auditedPlayers.some((p, i) => 
-            p.totalWins !== initialPlayers[i].totalWins || 
-            p.totalGames !== initialPlayers[i].totalGames ||
-            p.totalGoals !== initialPlayers[i].totalGoals ||
-            p.totalSessionsPlayed !== initialPlayers[i].totalSessionsPlayed
-        );
-        
-        if (needsUpdate) {
-            console.log("App Init: Deep Intel Audit completed. All player totals synced with history.");
-            initialPlayers = auditedPlayers;
-            dataRepaired = true;
-        }
-    }
-
+    // 1. ПРОВЕРКА ЦЕЛОСТНОСТИ ДАННЫХ (БЕЗ АВТО-ПЕРЕСЧЕТА)
+    // Мы больше не пересчитываем Totals автоматически при запуске, 
+    // так как это может привести к потере данных, если история загружена не полностью.
+    
     initialPlayers = initialPlayers.map(p => {
         const migratedPlayer = { ...p } as any;
 
@@ -113,7 +94,7 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
     return {
         session: loadedSession,
         players: initialPlayers,
-        history: historyToAudit,
+        history: Array.isArray(loadedHistoryData) ? loadedHistoryData : [],
         newsFeed: Array.isArray(loadedNews) ? loadedNews : [],
         language: loadedLang,
         activeVoicePack: loadedPack,

@@ -319,8 +319,6 @@ export const PlayerProgressChart: React.FC<{ history: PlayerHistoryEntry[], useP
         return () => clearTimeout(timer);
     }, [chartData, activeMetric]);
 
-    if (chartData.length === 0) return null;
-
     const height = 160; 
     const paddingY = 30; 
     const pointSpacing = 60; 
@@ -383,6 +381,8 @@ export const PlayerProgressChart: React.FC<{ history: PlayerHistoryEntry[], useP
             case 'goals': return { color: '#FFD700', gradientStart: '#FFD700', gradientEnd: 'rgba(255, 215, 0, 0)' };
         }
     }, [activeMetric]);
+
+    if (chartData.length === 0) return null;
 
     const currentValue = values[values.length - 1];
     

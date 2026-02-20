@@ -1,10 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { Card, Button, useTranslation } from '../ui';
 import { isSupabaseConfigured, getCloudPlayerCount } from '../db';
-import { Wand, Activity } from '../icons';
+import { Wand, Activity, RefreshCw } from '../icons';
+import { performDeepStatsAudit } from '../services/statistics';
+import { savePlayersToDB } from '../db';
+import { loadHistoryFromDB } from '../db';
 
 const WalletIcon = ({ className }: { className?: string }) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -20,28 +23,94 @@ export const SettingsScreen: React.FC = () => {
     const { language, setLanguage, allPlayers } = useApp();
     const [cloudStatus, setCloudStatus] = React.useState<{ connected: boolean, count: number } | null>(null);
     const [isRefreshing, setIsRefreshing] = React.useState(false);
+    const [isRepairing, setIsRepairing] = React.useState(false);
+    const [repairMessage, setRepairMessage] = React.useState<string | null>(null);
+    const [isSelectingPlayers, setIsSelectingPlayers] = React.useState(false);
+    const [selectedPlayerIds, setSelectedPlayerIds] = React.useState<Set<string>>(new Set());
     
     const dbEndpoint = (process.env.VITE_SUPABASE_URL || '').split('//')[1]?.split('.')[0]?.toUpperCase() || 'LOCAL';
 
-    const checkCloud = async () => {
+    const checkCloud = useCallback(async () => {
         if (isRefreshing) return;
         setIsRefreshing(true);
         if (isSupabaseConfigured()) {
-            const count = await getCloudPlayerCount();
-            if (count !== null) {
-                setCloudStatus({ connected: true, count });
-            } else {
+            try {
+                const count = await getCloudPlayerCount();
+                if (count !== null) {
+                    setCloudStatus({ connected: true, count });
+                } else {
+                    setCloudStatus({ connected: false, count: 0 });
+                }
+            } catch {
                 setCloudStatus({ connected: false, count: 0 });
             }
         } else {
             setCloudStatus({ connected: false, count: 0 });
         }
         setIsRefreshing(false);
-    };
+    }, [isRefreshing]);
 
     useEffect(() => {
         checkCloud();
-    }, []);
+    }, [checkCloud]);
+
+    const handleRepairData = async () => {
+        if (isRepairing) return;
+        if (selectedPlayerIds.size === 0) {
+            alert("Please select at least one player.");
+            return;
+        }
+        
+        if (!window.confirm(`WARNING: This will recalculate career statistics for ${selectedPlayerIds.size} selected player(s) based on match history. Proceed?`)) return;
+        
+        setIsRepairing(true);
+        setRepairMessage("Fetching full history...");
+        
+        try {
+            const fullHistory = await loadHistoryFromDB();
+            if (!fullHistory || fullHistory.length === 0) {
+                setRepairMessage("Error: No history found.");
+                setTimeout(() => setRepairMessage(null), 3000);
+                setIsRepairing(false);
+                return;
+            }
+            
+            setRepairMessage(`Auditing ${fullHistory.length} sessions...`);
+            
+            // Only audit selected players
+            const playersToAudit = allPlayers.filter(p => selectedPlayerIds.has(p.id));
+            const auditedPlayers = performDeepStatsAudit(playersToAudit, fullHistory);
+            
+            // Merge audited players back into the full list
+            const updatedAllPlayers = allPlayers.map(p => {
+                const audited = auditedPlayers.find(ap => ap.id === p.id);
+                return audited || p;
+            });
+
+            setRepairMessage("Saving repaired data...");
+            await savePlayersToDB(updatedAllPlayers);
+            
+            setRepairMessage("Success! Stats repaired.");
+            setTimeout(() => {
+                setRepairMessage(null);
+                window.location.reload();
+            }, 2000);
+        } catch {
+            setRepairMessage("Error during repair.");
+            setTimeout(() => setRepairMessage(null), 3000);
+        }
+        setIsRepairing(false);
+    };
+
+    const togglePlayerSelection = (id: string) => {
+        const next = new Set(selectedPlayerIds);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        setSelectedPlayerIds(next);
+    };
+
+    const selectAll = () => setSelectedPlayerIds(new Set(allPlayers.map(p => p.id)));
+    const deselectAll = () => setSelectedPlayerIds(new Set());
 
     const langClasses = (lang: string) => `px-3 py-1 rounded-full font-bold transition-colors text-base ${language === lang ? 'gradient-bg text-dark-bg' : 'bg-dark-surface hover:bg-white/10'}`;
 
@@ -178,6 +247,86 @@ export const SettingsScreen: React.FC = () => {
                             </div>
                         </Card>
                     </Link>
+
+                    <div className="pt-4">
+                        <h3 className="text-[10px] font-bold tracking-[0.2em] text-dark-text-secondary uppercase mb-2 px-1">Maintenance</h3>
+                        <Card className="bg-red-500/5 border border-red-500/20 !p-3">
+                            <div className="flex flex-col gap-3">
+                                <p className="text-[10px] text-red-200/60 font-medium leading-relaxed">
+                                    If career stats are incorrect for specific players, select them and recalculate from history.
+                                </p>
+                                
+                                {!isSelectingPlayers ? (
+                                    <Button 
+                                        variant="ghost" 
+                                        onClick={() => setIsSelectingPlayers(true)}
+                                        className="w-full !py-2 border border-red-500/30 hover:bg-red-500/10 text-red-400 text-[10px] tracking-widest uppercase flex items-center justify-center gap-2"
+                                    >
+                                        <RefreshCw className="w-3 h-3" />
+                                        Repair Career Stats
+                                    </Button>
+                                ) : (
+                                    <div className="space-y-3">
+                                        <div className="flex justify-between items-center px-1">
+                                            <span className="text-[9px] text-white/40 uppercase font-bold tracking-wider">
+                                                Selected: {selectedPlayerIds.size}
+                                            </span>
+                                            <div className="flex gap-2">
+                                                <button onClick={selectAll} className="text-[9px] text-dark-accent-start hover:underline uppercase font-bold">All</button>
+                                                <button onClick={deselectAll} className="text-[9px] text-white/40 hover:underline uppercase font-bold">None</button>
+                                            </div>
+                                        </div>
+
+                                        <div className="max-h-48 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                                            {allPlayers.sort((a, b) => a.nickname.localeCompare(b.nickname)).map(player => (
+                                                <div 
+                                                    key={player.id}
+                                                    onClick={() => togglePlayerSelection(player.id)}
+                                                    className={`flex items-center justify-between p-2 rounded border transition-colors cursor-pointer ${
+                                                        selectedPlayerIds.has(player.id) 
+                                                            ? 'bg-red-500/20 border-red-500/40' 
+                                                            : 'bg-black/20 border-white/5 hover:border-white/10'
+                                                    }`}
+                                                >
+                                                    <span className={`text-xs font-bold ${selectedPlayerIds.has(player.id) ? 'text-white' : 'text-white/60'}`}>
+                                                        {player.nickname}
+                                                    </span>
+                                                    <div className={`w-3 h-3 rounded-sm border ${
+                                                        selectedPlayerIds.has(player.id) 
+                                                            ? 'bg-red-500 border-red-500' 
+                                                            : 'border-white/20'
+                                                    } flex items-center justify-center`}>
+                                                        {selectedPlayerIds.has(player.id) && (
+                                                            <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="flex gap-2 pt-1">
+                                            <Button 
+                                                variant="ghost" 
+                                                onClick={() => setIsSelectingPlayers(false)}
+                                                className="flex-1 !py-2 border border-white/10 text-white/40 text-[9px] tracking-widest uppercase"
+                                            >
+                                                Cancel
+                                            </Button>
+                                            <Button 
+                                                variant="primary" 
+                                                onClick={handleRepairData}
+                                                disabled={isRepairing || selectedPlayerIds.size === 0}
+                                                className="flex-[2] !py-2 gradient-bg text-dark-bg text-[9px] tracking-widest uppercase font-black flex items-center justify-center gap-2"
+                                            >
+                                                <RefreshCw className={`w-3 h-3 ${isRepairing ? 'animate-spin' : ''}`} />
+                                                {isRepairing ? (repairMessage || 'Repairing...') : `Repair ${selectedPlayerIds.size} Players`}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </Card>
+                    </div>
                 </div>
             </div>
 

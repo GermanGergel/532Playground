@@ -68,7 +68,7 @@ export const HomeScreen: React.FC = () => {
           url: hubUrl,
       };
       try {
-          const canShare = navigator.share && typeof navigator.canShare === 'function' && navigator.canShare(shareData);
+          const canShare = typeof navigator.share === 'function' && typeof navigator.canShare === 'function' && navigator.canShare(shareData);
           if (canShare) {
               await navigator.share(shareData);
           } else {
@@ -106,7 +106,7 @@ export const HomeScreen: React.FC = () => {
               text: `Join the project: ${promoUrl}`
           };
 
-          const canShare = navigator.share && typeof navigator.canShare === 'function' && navigator.canShare(shareData);
+          const canShare = typeof navigator.share === 'function' && typeof navigator.canShare === 'function' && navigator.canShare(shareData);
 
           if (canShare) {
               await navigator.share(shareData);

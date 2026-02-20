@@ -1,10 +1,9 @@
 
-import { Session, Player, NewsItem, BadgeType, SessionStatus, PlayerRecords, PlayerHistoryEntry } from '../types';
+import { Session, Player, NewsItem, SessionStatus, PlayerRecords } from '../types';
 import { calculateAllStats } from './statistics';
 import { calculateEarnedBadges, calculateRatingUpdate, getTierForRating } from './rating';
 import { generateNewsUpdates, manageNewsFeedSize } from './news';
 import { newId } from '../screens/utils';
-import { performDeepStatsAudit } from './statistics';
 
 interface ProcessedSessionResult {
     updatedPlayers: Player[];
@@ -34,7 +33,7 @@ export const processFinishedSession = ({
     const sessionMonthKey = `${sessionDate.getFullYear()}-${sessionDate.getMonth()}`;
 
     // 1. Сначала подготавливаем базовые инкременты (Месячная статка и пропуски)
-    let playersWithUpdatedStats: Player[] = oldPlayers.map(player => {
+    const playersWithUpdatedStats: Player[] = oldPlayers.map(player => {
         const sessionStats = playerStatsMap.get(player.id);
         const floor = player.initialRating || 68;
         
@@ -187,9 +186,25 @@ export const processFinishedSession = ({
         return updatedPlayer;
     });
 
-    // 3. КРИТИЧЕСКИЙ МОМЕНТ: ПРИМЕНЯЕМ DEEP AUDIT ДЛЯ TOTALS
-    const tempHistory = [{ ...session, status: SessionStatus.Completed }, ...(JSON.parse(localStorage.getItem('history') || '[]'))];
-    playersWithCalculatedRatings = performDeepStatsAudit(playersWithCalculatedRatings, tempHistory);
+    // 3. ОБНОВЛЯЕМ КАРЬЕРНУЮ СТАТИСТИКУ (INCREMENTAL UPDATE)
+    // Вместо полной пересборки из истории (которая может быть неполной), 
+    // мы просто прибавляем результаты текущей сессии к существующим итогам.
+    playersWithCalculatedRatings = playersWithCalculatedRatings.map(player => {
+        const sessionStats = playerStatsMap.get(player.id);
+        if (sessionStats) {
+            return {
+                ...player,
+                totalGoals: (player.totalGoals || 0) + sessionStats.goals,
+                totalAssists: (player.totalAssists || 0) + sessionStats.assists,
+                totalGames: (player.totalGames || 0) + sessionStats.gamesPlayed,
+                totalWins: (player.totalWins || 0) + sessionStats.wins,
+                totalDraws: (player.totalDraws || 0) + sessionStats.draws,
+                totalLosses: (player.totalLosses || 0) + sessionStats.losses,
+                totalSessionsPlayed: (player.totalSessionsPlayed || 0) + 1
+            };
+        }
+        return player;
+    });
 
     const newGameplayNews = generateNewsUpdates(oldPlayers, playersWithCalculatedRatings, participatedIds);
     const allNewNews = [...newGameplayNews, ...penaltyNews];
