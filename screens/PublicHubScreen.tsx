@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useApp } from '../context';
 import { useTranslation } from '../ui';
 import { Player, PlayerStatus } from '../types';
-import { TrophyIcon, Users, History as HistoryIcon, WhatsApp, YouTubeIcon, TikTokIcon, Home, LayoutDashboard, InfoIcon, GoleadorBadgeIcon, AssistantBadgeIcon, MvpBadgeIcon, WinLeaderBadgeIcon } from '../icons';
+import { TrophyIcon, Users, History as HistoryIcon, WhatsApp, YouTubeIcon, TikTokIcon, Home, LayoutDashboard, InfoIcon, GoleadorBadgeIcon, AssistantBadgeIcon, MvpBadgeIcon, WinLeaderBadgeIcon, MessageCircle } from '../icons';
 import { Language } from '../translations/index';
 import { ClubIntelligenceDashboard } from '../components/ClubIntelligenceDashboard';
 import { RadioPlayer } from '../components/RadioPlayer';
@@ -287,6 +287,15 @@ const HubNav: React.FC<{
                         <span className="font-black text-[7px] tracking-[0.15em] text-white/30 uppercase leading-none">Center</span>
                     </div>
                     <StaticSoccerBall />
+                    
+                    {/* Chat Button - Fixed in Nav */}
+                    <button 
+                        className="ml-4 w-8 h-8 rounded-full bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shadow-[0_0_10px_rgba(0,242,254,0.2)] hover:bg-[#00F2FE]/20 hover:scale-105 transition-all duration-300 group relative overflow-hidden"
+                        title="Locker Room"
+                    >
+                        <div className="absolute inset-0 bg-[#00F2FE]/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <MessageCircle className="w-4 h-4 relative z-10" />
+                    </button>
                 </div>
             </div>
 
