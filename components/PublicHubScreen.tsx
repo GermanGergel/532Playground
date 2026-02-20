@@ -78,6 +78,7 @@ export const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ play
     
     const topBadges = useMemo(() => sortBadgesByPriority(player.badges || {}).slice(0, 5), [player.badges]);
     const isTotm = totmPlayerIds.has(player.id);
+    const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
 
     const fullName = `${player.nickname} ${player.surname}`.trim();
 
@@ -94,8 +95,9 @@ export const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ play
                 {player.playerCard && (<div className="absolute inset-0 w-full h-full bg-cover bg-no-repeat" style={{ backgroundImage: `url(${player.playerCard})`, backgroundPosition: 'center 5%' }}/>)}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
                 
-                <div className="absolute top-24 left-4 z-20 flex flex-col gap-4">
-                    <div className="space-y-4">
+                {!isBadgeModalOpen && (
+                    <div className="absolute top-24 left-4 z-20 flex flex-col gap-4">
+                        <div className="space-y-4">
                             {(player.skills || []).map(skill => (
                                 <div key={skill} className="flex items-center gap-2" title={t[`skill_${skill}` as keyof typeof t] || skill}>
                                     <StarIcon className="w-4 h-4 text-[#00F2FE]" />
@@ -109,6 +111,7 @@ export const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ play
                             </div>
                         )}
                     </div>
+                )}
 
                 <div className="relative z-10 h-full p-1">
                      <div className="flex justify-between items-start">

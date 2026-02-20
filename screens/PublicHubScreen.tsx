@@ -514,36 +514,15 @@ export const PublicHubScreen: React.FC = () => {
                 ref={mainScrollRef}
                 className={`absolute inset-0 overflow-y-auto overscroll-none touch-pan-y z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}
             >
-                {/* Floating Chat Widget for Main Screen */}
+                {/* Floating Chat Button for Main Screen (Cover) - Top Right Pill */}
                 {!isDashboardOpen && (
                     <button 
-                        className="fixed top-28 right-5 z-[200] group animate-in fade-in slide-in-from-top-8 duration-1000"
+                        className="fixed top-24 md:top-28 right-6 z-[200] h-10 md:h-12 px-4 md:px-6 rounded-full bg-[#00F2FE]/10 border border-[#00F2FE]/40 flex items-center justify-center gap-2 md:gap-3 text-[#00F2FE] shadow-[0_0_20px_rgba(0,242,254,0.2)] hover:bg-[#00F2FE]/20 hover:scale-105 hover:shadow-[0_0_30px_rgba(0,242,254,0.4)] transition-all duration-300 group animate-in fade-in slide-in-from-top-4 duration-700 backdrop-blur-sm"
                         title="Locker Room"
                     >
-                        <div className="relative">
-                            {/* Speech Bubble Tail */}
-                            <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-[#00F2FE] transform rotate-45 z-0 rounded-sm"></div>
-                            
-                            {/* Main Container - Rounded Square */}
-                            <div className="relative z-10 w-14 h-14 bg-[#0a0c10] border-2 border-[#00F2FE] rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(0,242,254,0.3)] group-hover:shadow-[0_0_30px_rgba(0,242,254,0.6)] group-hover:scale-105 transition-all duration-300">
-                                {/* Inner Ball */}
-                                <div className="w-10 h-10 relative flex items-center justify-center">
-                                    <div className="w-full h-full opacity-90 group-hover:opacity-100 transition-opacity">
-                                        <StaticSoccerBall />
-                                    </div>
-                                    {/* "Voice" / Signal Waves Overlay */}
-                                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#00F2FE] rounded-full animate-ping opacity-75"></div>
-                                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#00F2FE] rounded-full border-2 border-black"></div>
-                                </div>
-                            </div>
-
-                            {/* Label */}
-                            <div className="absolute top-1/2 right-16 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0 pointer-events-none">
-                                <div className="bg-black/80 backdrop-blur-md border border-[#00F2FE]/30 px-3 py-1.5 rounded-lg whitespace-nowrap">
-                                    <span className="font-russo text-xs text-[#00F2FE] tracking-wider uppercase">Locker Room</span>
-                                </div>
-                            </div>
-                        </div>
+                        <div className="absolute inset-0 rounded-full bg-[#00F2FE]/10 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <MessageCircle className="w-4 h-4 md:w-5 md:h-5 relative z-10 drop-shadow-[0_0_5px_rgba(0,242,254,0.8)]" />
+                        <span className="font-russo text-[10px] md:text-xs tracking-widest uppercase relative z-10">Locker Room</span>
                     </button>
                 )}
 
