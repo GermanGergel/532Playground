@@ -421,8 +421,8 @@ export const PublicHubScreen: React.FC = () => {
             return (b.rating || 0) - (a.rating || 0); 
         });
 
-        // Threshold for Win Rate: Lowered from 10 to 3 sessions to be more inclusive for newer clubs
-        const eligibleWinRate = confirmed.filter(p => (p.totalSessionsPlayed || 0) >= 3);
+        // Threshold for Win Rate: Increased to 10 sessions as requested
+        const eligibleWinRate = confirmed.filter(p => (p.totalSessionsPlayed || 0) >= 10);
         const sortedConquerors = [...eligibleWinRate].sort((a, b) => { 
             const wrA = a.totalGames > 0 ? (a.totalWins / a.totalGames) : 0; 
             const wrB = b.totalGames > 0 ? (b.totalWins / b.totalGames) : 0; 
