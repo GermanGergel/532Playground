@@ -28,6 +28,8 @@ export const SettingsScreen: React.FC = () => {
     const [isSelectingPlayers, setIsSelectingPlayers] = React.useState(false);
     const [selectedPlayerIds, setSelectedPlayerIds] = React.useState<Set<string>>(new Set());
     
+    const [repairedPlayerIds, setRepairedPlayerIds] = React.useState<Set<string>>(new Set());
+    
     const dbEndpoint = (process.env.VITE_SUPABASE_URL || '').split('//')[1]?.split('.')[0]?.toUpperCase() || 'LOCAL';
 
     const checkCloud = useCallback(async () => {
@@ -48,7 +50,7 @@ export const SettingsScreen: React.FC = () => {
             setCloudStatus({ connected: false, count: 0 });
         }
         setIsRefreshing(false);
-    }, [isRefreshing]);
+    }, []); // Removed isRefreshing from dependencies to stop the loop
 
     useEffect(() => {
         checkCloud();
@@ -90,10 +92,16 @@ export const SettingsScreen: React.FC = () => {
             setRepairMessage("Saving repaired data...");
             await savePlayersToDB(updatedAllPlayers);
             
+            // Add to repaired list instead of immediate reload
+            const newRepaired = new Set(repairedPlayerIds);
+            selectedPlayerIds.forEach(id => newRepaired.add(id));
+            setRepairedPlayerIds(newRepaired);
+            setSelectedPlayerIds(new Set());
+            
             setRepairMessage("Success! Stats repaired.");
             setTimeout(() => {
                 setRepairMessage(null);
-                window.location.reload();
+                // We don't reload here so the user can see players disappearing from list
             }, 2000);
         } catch {
             setRepairMessage("Error during repair.");
@@ -278,7 +286,10 @@ export const SettingsScreen: React.FC = () => {
                                         </div>
 
                                         <div className="max-h-48 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
-                                            {allPlayers.sort((a, b) => a.nickname.localeCompare(b.nickname)).map(player => (
+                                            {allPlayers
+                                                .filter(p => !repairedPlayerIds.has(p.id))
+                                                .sort((a, b) => a.nickname.localeCompare(b.nickname))
+                                                .map(player => (
                                                 <div 
                                                     key={player.id}
                                                     onClick={() => togglePlayerSelection(player.id)}
