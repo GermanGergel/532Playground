@@ -288,14 +288,16 @@ const HubNav: React.FC<{
                     </div>
                     <StaticSoccerBall />
                     
-                    {/* Chat Button - Fixed in Nav */}
-                    <button 
-                        className="ml-4 w-8 h-8 rounded-full bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shadow-[0_0_10px_rgba(0,242,254,0.2)] hover:bg-[#00F2FE]/20 hover:scale-105 transition-all duration-300 group relative overflow-hidden"
-                        title="Locker Room"
-                    >
-                        <div className="absolute inset-0 bg-[#00F2FE]/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        <MessageCircle className="w-4 h-4 relative z-10" />
-                    </button>
+                    {/* Chat Button - Fixed in Nav (Only visible when NOT on dashboard) */}
+                    {activeTab !== 'dashboard' && (
+                        <button 
+                            className="ml-4 w-8 h-8 rounded-full bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shadow-[0_0_10px_rgba(0,242,254,0.2)] hover:bg-[#00F2FE]/20 hover:scale-105 transition-all duration-300 group relative overflow-hidden animate-in fade-in zoom-in duration-300"
+                            title="Locker Room"
+                        >
+                            <div className="absolute inset-0 bg-[#00F2FE]/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <MessageCircle className="w-4 h-4 relative z-10" />
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -378,7 +380,7 @@ export const PublicHubScreen: React.FC = () => {
     const { allPlayers, history } = useApp();
     const [isDashboardOpen, setIsDashboardOpen] = useState(false);
     const [isTotmOpen, setIsTotmOpen] = useState(false);
-    const [dashboardView, setDashboardView] = useState<DashboardViewType>('dashboard');
+    const [activeTab, setActiveTab] = useState<DashboardViewType>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
     const mainScrollRef = useRef<HTMLDivElement>(null);
     const t = useTranslation();
@@ -475,10 +477,10 @@ export const PublicHubScreen: React.FC = () => {
     
     const SOCIAL_LINKS = { whatsapp: "https://chat.whatsapp.com/CAJnChuM4lQFf3s2YUnhQr", youtube: "https://www.youtube.com/@UnitFootball", tiktok: "https://www.tiktok.com/@532club?_r=1", };
     const handleTabChange = (tab: DashboardViewType) => { 
-        setDashboardView(tab); 
+        setActiveTab(tab); 
         setIsDashboardOpen(true);
     };
-    const getBottomPatchColor = () => { if (dashboardView === 'archive' || dashboardView === 'dashboard' || dashboardView === 'roster' || dashboardView === 'info') return '#01040a'; return '#0a0c10'; };
+    const getBottomPatchColor = () => { if (activeTab === 'archive' || activeTab === 'dashboard' || activeTab === 'roster' || activeTab === 'info') return '#01040a'; return '#0a0c10'; };
 
     return (
         <div className="fixed inset-0 w-full h-full bg-[#0a0c10] text-white selection:bg-[#00F2FE] selection:text-black overflow-hidden overscroll-none">
@@ -490,12 +492,12 @@ export const PublicHubScreen: React.FC = () => {
             <HubNav 
                 isDashboardOpen={isDashboardOpen} 
                 sessionDate={latestSessionDate} 
-                activeTab={dashboardView} 
+                activeTab={activeTab} 
                 onTabChange={handleTabChange} 
                 archiveViewDate={archiveViewDate} 
                 onHomeClick={() => { 
                     setIsDashboardOpen(false); 
-                    setDashboardView('dashboard'); 
+                    setActiveTab('dashboard'); 
                     if (mainScrollRef.current) {
                         mainScrollRef.current.scrollTop = 0;
                     }
@@ -504,7 +506,7 @@ export const PublicHubScreen: React.FC = () => {
             />
 
             <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none touch-pan-y ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'} `} style={{ backgroundColor: getBottomPatchColor() }}>
-                <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10"><ClubIntelligenceDashboard currentView={dashboardView} setView={setDashboardView} onArchiveViewChange={setArchiveViewDate} /></div>
+                <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10"><ClubIntelligenceDashboard currentView={activeTab} setView={setActiveTab} onArchiveViewChange={setArchiveViewDate} /></div>
                 <div className="fixed bottom-0 left-0 right-0 h-16 z-[110] pointer-events-none opacity-0 transition-all duration-700 delay-300" style={{ opacity: isDashboardOpen ? 1 : 0, background: `linear-gradient(to top, ${getBottomPatchColor()} 50%, ${getBottomPatchColor()}cc 80%, transparent 100%)` }}></div>
             </div>
 
@@ -512,6 +514,17 @@ export const PublicHubScreen: React.FC = () => {
                 ref={mainScrollRef}
                 className={`absolute inset-0 overflow-y-auto overscroll-none touch-pan-y z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}
             >
+                {/* Floating Chat Button for Dashboard */}
+                {activeTab === 'dashboard' && !isDashboardOpen && (
+                    <button 
+                        className="fixed bottom-8 right-8 z-[200] w-14 h-14 rounded-full bg-[#00F2FE]/10 border border-[#00F2FE]/40 flex items-center justify-center text-[#00F2FE] shadow-[0_0_20px_rgba(0,242,254,0.3)] hover:bg-[#00F2FE]/20 hover:scale-110 hover:shadow-[0_0_30px_rgba(0,242,254,0.5)] transition-all duration-300 group animate-in fade-in slide-in-from-bottom-4 duration-700"
+                        title="Locker Room"
+                    >
+                        <div className="absolute inset-0 rounded-full bg-[#00F2FE]/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
+                        <MessageCircle className="w-7 h-7 relative z-10 drop-shadow-[0_0_5px_rgba(0,242,254,0.8)]" />
+                    </button>
+                )}
+
                 <HeaderAtmosphere />
                 
                 <div className="relative z-10">
