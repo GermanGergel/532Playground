@@ -183,16 +183,22 @@ export const loadSinglePlayerFromDB = async (id: string, skipCache: boolean = fa
     return null;
 };
 
-export const savePlayersToDB = async (players: Player[]) => {
+export const savePlayersToDB = async (players: Player[]): Promise<boolean> => {
     const real = players; 
+    let success = true;
     if (isSupabaseConfigured()) {
         try {
-            for (const player of real) {
-                await supabase!.from('players').upsert(sanitizeObject(player), { onConflict: 'id' });
-            }
-        } catch (e) {}
+            // Bulk upsert is much faster and more reliable than individual requests
+            const sanitizedPlayers = real.map(p => sanitizeObject(p));
+            const { error } = await supabase!.from('players').upsert(sanitizedPlayers, { onConflict: 'id' });
+            if (error) throw error;
+        } catch (e) {
+            console.error("Failed to save players to cloud", e);
+            success = false;
+        }
     }
     await set('players', real);
+    return success;
 };
 
 export const loadPlayersFromDB = async () => {

@@ -39,6 +39,10 @@ const getPlayerById = (id: string, players: Player[]) => players.find(p => p.id 
  * проходя по каждому матчу в истории клуба.
  */
 export const performDeepStatsAudit = (players: Player[], history: Session[]): Player[] => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
     return players.map(player => {
         // Обнуляем временные переменные для пересчета КАРЬЕРЫ
         let totalWins = 0;
@@ -49,10 +53,20 @@ export const performDeepStatsAudit = (players: Player[], history: Session[]): Pl
         let totalGames = 0;
         let totalSessions = 0;
 
+        // Переменные для ТЕКУЩЕГО МЕСЯЦА
+        let monthlyWins = 0;
+        let monthlyGoals = 0;
+        let monthlyAssists = 0;
+        let monthlyGames = 0;
+        let monthlySessions = 0;
+
         // Идем по каждой сессии в истории
         history.forEach(session => {
             // Сессия учитывается, только если она завершена
             if (session.status !== 'completed') return;
+
+            const sessionDate = new Date(session.date);
+            const isCurrentMonth = sessionDate.getFullYear() === currentYear && sessionDate.getMonth() === currentMonth;
 
             // Был ли игрок участником этой сессии?
             const inPool = session.playerPool.some(p => p.id === player.id);
@@ -60,6 +74,7 @@ export const performDeepStatsAudit = (players: Player[], history: Session[]): Pl
             
             if (inPool || inTeams) {
                 totalSessions++;
+                if (isCurrentMonth) monthlySessions++;
 
                 // Определяем "домашнюю" команду игрока в этой сессии
                 const homeTeam = session.teams.find(t => t.playerIds.includes(player.id));
@@ -84,10 +99,13 @@ export const performDeepStatsAudit = (players: Player[], history: Session[]): Pl
 
                     if (playedInGame) {
                         totalGames++;
+                        if (isCurrentMonth) monthlyGames++;
+
                         if (game.isDraw) {
                             totalDraws++;
                         } else if (game.winnerTeamId === currentTeamId) {
                             totalWins++;
+                            if (isCurrentMonth) monthlyWins++;
                         } else {
                             totalLosses++;
                         }
@@ -95,14 +113,20 @@ export const performDeepStatsAudit = (players: Player[], history: Session[]): Pl
 
                     // Голы и ассисты считаем по логам голов (независимо от команды)
                     game.goals.forEach(goal => {
-                        if (goal.scorerId === player.id && !goal.isOwnGoal) totalGoals++;
-                        if (goal.assistantId === player.id) totalAssists++;
+                        if (goal.scorerId === player.id && !goal.isOwnGoal) {
+                            totalGoals++;
+                            if (isCurrentMonth) monthlyGoals++;
+                        }
+                        if (goal.assistantId === player.id) {
+                            totalAssists++;
+                            if (isCurrentMonth) monthlyAssists++;
+                        }
                     });
                 });
             }
         });
 
-        // Если у игрока есть история, обновляем его Totals. 
+        // Если у игрока есть история, обновляем его Totals и Monthly. 
         // Если истории нет (новый игрок), оставляем как есть.
         return {
             ...player,
@@ -112,7 +136,13 @@ export const performDeepStatsAudit = (players: Player[], history: Session[]): Pl
             totalDraws: totalDraws,
             totalLosses: totalLosses,
             totalGoals: totalGoals,
-            totalAssists: totalAssists
+            totalAssists: totalAssists,
+            // Обновляем месячную статистику
+            monthlyGoals: monthlyGoals,
+            monthlyAssists: monthlyAssists,
+            monthlyGames: monthlyGames,
+            monthlyWins: monthlyWins,
+            monthlySessionsPlayed: monthlySessions
         };
     });
 };

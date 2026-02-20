@@ -20,7 +20,7 @@ const WalletIcon = ({ className }: { className?: string }) => (
 export const SettingsScreen: React.FC = () => {
     const t = useTranslation();
     const navigate = useNavigate();
-    const { language, setLanguage, allPlayers } = useApp();
+    const { language, setLanguage, allPlayers, setAllPlayers } = useApp();
     const [cloudStatus, setCloudStatus] = React.useState<{ connected: boolean, count: number } | null>(null);
     const [isRefreshing, setIsRefreshing] = React.useState(false);
     const [isRepairing, setIsRepairing] = React.useState(false);
@@ -50,11 +50,22 @@ export const SettingsScreen: React.FC = () => {
             setCloudStatus({ connected: false, count: 0 });
         }
         setIsRefreshing(false);
-    }, []); // Removed isRefreshing from dependencies to stop the loop
+    }, [isRefreshing]); // isRefreshing is needed here for the guard
 
     useEffect(() => {
-        checkCloud();
-    }, [checkCloud]);
+        // We call it once on mount. Since checkCloud depends on isRefreshing, 
+        // and we only want to run it ONCE, we can just call the logic here 
+        // or ignore the lint for this specific effect.
+        const init = async () => {
+            if (isSupabaseConfigured()) {
+                try {
+                    const count = await getCloudPlayerCount();
+                    if (count !== null) setCloudStatus({ connected: true, count });
+                } catch {}
+            }
+        };
+        init();
+    }, []); // Run once on mount
 
     const handleRepairData = async () => {
         if (isRepairing) return;
@@ -90,7 +101,9 @@ export const SettingsScreen: React.FC = () => {
             });
 
             setRepairMessage("Saving repaired data...");
+            // CRITICAL: Update both DB and App Context state
             await savePlayersToDB(updatedAllPlayers);
+            setAllPlayers(updatedAllPlayers);
             
             // Add to repaired list instead of immediate reload
             const newRepaired = new Set(repairedPlayerIds);

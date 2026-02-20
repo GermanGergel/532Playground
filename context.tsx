@@ -91,14 +91,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             // Remove Loading Screen quickly for UX
             setTimeout(() => setIsLoading(false), 500);
 
-            // 2. BACKGROUND SYNC (Crucial for fixing the "65 vs 68" issue)
-            // We do NOT enable saving yet. We wait for Cloud data.
+            // 2. BACKGROUND SYNC
             setTimeout(async () => {
                 try {
                     const remotePlayers = await fetchRemotePlayers();
                     if (remotePlayers && remotePlayers.length > 0) {
-                        console.log("Context: Overwriting local players with fresh Cloud data.");
-                        setAllPlayers(remotePlayers);
+                        console.log("Context: Merging local players with fresh Cloud data.");
+                        
+                        setAllPlayers(prevPlayers => {
+                            // If we have local players, we merge them to preserve local-only data (like photos)
+                            if (prevPlayers.length === 0) return remotePlayers;
+                            
+                            return prevPlayers.map(localPlayer => {
+                                const remotePlayer = remotePlayers.find(rp => rp.id === localPlayer.id);
+                                if (!remotePlayer) return localPlayer;
+                                
+                                // Merge: Remote data wins for stats, but we keep local photos if remote is null
+                                return {
+                                    ...remotePlayer,
+                                    photo: localPlayer.photo || remotePlayer.photo,
+                                    playerCard: localPlayer.playerCard || remotePlayer.playerCard
+                                };
+                            });
+                        });
                     }
                 } catch (e) {
                     console.error("Background sync failed", e);
