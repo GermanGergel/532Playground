@@ -594,7 +594,11 @@ export const PublicHubScreen: React.FC = () => {
                     {displayData.top.length > 0 ? (<div className="flex flex-wrap items-end justify-center gap-4 md:gap-8 w-full"><div className="order-2 md:order-1">{displayData.top[1] && <CinematicCard player={displayData.top[1]} rank={2} />}</div><div className="order-1 md:order-2">{displayData.top[0] && <CinematicCard player={displayData.top[0]} rank={1} />}</div><div className="order-3 md:order-3">{displayData.top[2] && <CinematicCard player={displayData.top[2]} rank={3} />}</div></div>) : (<NoLeadersPlaceholder />)}
                     {legends && (
                         <div className="mt-24 md:mt-32">
-                            <div className="text-center mb-12 md:mb-20"><p className="font-orbitron text-sm md:text-base font-black text-[#FFD700] tracking-[0.5em] uppercase" style={{ textShadow: '0 0 15px rgba(255, 215, 0, 0.4)'}}>Hall of Fame Records</p></div>
+                            <div className="text-center mb-12 md:mb-20">
+                                <p className="font-orbitron text-sm md:text-base font-black text-white/80 tracking-[0.5em] uppercase" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>
+                                    Hall of Fame Records
+                                </p>
+                            </div>
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 w-full max-w-[1400px] mx-auto px-2 md:px-4 items-start">
                                 <div className="flex flex-col w-full">
                                     {legends.scorers[0] && (<LegendCard title="ETERNAL GOLDEN BOOT" player={legends.scorers[0]} value={legends.scorers[0].totalGoals} icon={<GoleadorBadgeIcon />} label="CAREER GOALS" accentColor="#FFD700" className="rounded-b-none border-b-0" />)}
@@ -622,8 +626,8 @@ export const PublicHubScreen: React.FC = () => {
                         >
                             {customTotm ? (
                                 <div className="w-24 h-24 md:w-32 md:h-32 relative">
-                                    {/* Subtle Neon Glow behind custom emblem */}
-                                    <div className="absolute inset-0 rounded-full blur-[20px] bg-[#00F2FE]/15 shadow-[0_0_30px_rgba(0,242,254,0.2)]"></div>
+                                    {/* Subtle Neon Glow behind custom emblem - Reduced */}
+                                    <div className="absolute inset-0 rounded-full blur-[15px] bg-[#00F2FE]/10 shadow-[0_0_20px_rgba(0,242,254,0.15)]"></div>
                                     <img src={customTotm} alt="TOTM" className="w-full h-full object-contain relative z-10" />
                                 </div>
                             ) : (
