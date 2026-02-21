@@ -338,7 +338,7 @@ const HubNav: React.FC<{
                         )}
                     </div>
                 ) : (
-                    <div className="flex items-center justify-center animate-in fade-in zoom-in duration-700 w-full h-full">
+                    <div className="flex items-center justify-center animate-in fade-in zoom-in duration-700 w-full h-full relative">
                         {customNavBanner && (
                             <img 
                                 src={customNavBanner} 
