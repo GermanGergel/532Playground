@@ -5,7 +5,11 @@ import { Button, useTranslation, Modal } from '../ui';
 import { homeScreenBackground } from '../assets';
 import { Globe, QrCode } from '../icons'; 
 import html2canvas from 'html2canvas';
-import { uploadChatIcon, saveChatIconUrl } from '../db';
+import { 
+    uploadChatIcon, saveChatIconUrl, 
+    uploadBallIcon, saveBallIconUrl,
+    uploadTrophyIcon, saveTrophyIconUrl
+} from '../db';
 
 export const HomeScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -43,6 +47,52 @@ export const HomeScreen: React.FC = () => {
                   alert("Cloud upload failed. Saved locally.");
               }
               
+              setIsUploading(false);
+              setIsHubModalOpen(false);
+          };
+          reader.readAsDataURL(file);
+      }
+  };
+
+  const handleUploadBall = async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file) {
+          setIsUploading(true);
+          const reader = new FileReader();
+          reader.onloadend = async () => {
+              const base64String = reader.result as string;
+              const cloudUrl = await uploadBallIcon(base64String);
+              if (cloudUrl) {
+                  await saveBallIconUrl(cloudUrl);
+                  localStorage.setItem('customBallIcon', cloudUrl);
+                  alert("Ball icon uploaded to cloud!");
+              } else {
+                  localStorage.setItem('customBallIcon', base64String);
+                  alert("Saved locally.");
+              }
+              setIsUploading(false);
+              setIsHubModalOpen(false);
+          };
+          reader.readAsDataURL(file);
+      }
+  };
+
+  const handleUploadTrophy = async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file) {
+          setIsUploading(true);
+          const reader = new FileReader();
+          reader.onloadend = async () => {
+              const base64String = reader.result as string;
+              const cloudUrl = await uploadTrophyIcon(base64String);
+              if (cloudUrl) {
+                  await saveTrophyIconUrl(cloudUrl);
+                  localStorage.setItem('customTrophyIcon', cloudUrl);
+                  alert("Trophy icon uploaded to cloud!");
+              } else {
+                  localStorage.setItem('customTrophyIcon', base64String);
+                  alert("Saved locally.");
+              }
               setIsUploading(false);
               setIsHubModalOpen(false);
           };
@@ -275,7 +325,39 @@ export const HomeScreen: React.FC = () => {
                             disabled={isUploading}
                             className="w-full !py-4 !text-lg font-chakra font-bold tracking-widest uppercase border border-white/10"
                         >
-                            {isUploading ? "UPLOADING..." : "UPLOAD ICON"}
+                            {isUploading ? "UPLOADING..." : "UPLOAD CHAT ICON"}
+                        </Button>
+                    </div>
+
+                    <div className="relative w-full">
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleUploadBall}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        />
+                        <Button 
+                            variant="secondary" 
+                            disabled={isUploading}
+                            className="w-full !py-4 !text-lg font-chakra font-bold tracking-widest uppercase border border-white/10"
+                        >
+                            {isUploading ? "UPLOADING..." : "UPLOAD BALL ICON"}
+                        </Button>
+                    </div>
+
+                    <div className="relative w-full">
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleUploadTrophy}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        />
+                        <Button 
+                            variant="secondary" 
+                            disabled={isUploading}
+                            className="w-full !py-4 !text-lg font-chakra font-bold tracking-widest uppercase border border-white/10"
+                        >
+                            {isUploading ? "UPLOADING..." : "UPLOAD TROPHY ICON"}
                         </Button>
                     </div>
 

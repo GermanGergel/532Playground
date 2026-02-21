@@ -10,7 +10,7 @@ import { RadioPlayer } from '../components/RadioPlayer';
 import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
 import { MiniSquadBadge } from '../components/MiniSquadBadge';
 import { CinematicCard, HeaderAtmosphere } from '../components/PublicHubScreen';
-import { loadChatIconUrl } from '../db';
+import { loadChatIconUrl, loadBallIconUrl, loadTrophyIconUrl } from '../db';
 
 // --- SUB-COMPONENTS ---
 
@@ -254,7 +254,9 @@ const HubNav: React.FC<{
     archiveViewDate: string | null; 
     onHomeClick: () => void; 
     customIcon?: string | null;
-}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, customIcon }) => { 
+    customBall?: string | null;
+    customTrophy?: string | null;
+}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, customIcon, customBall, customTrophy }) => { 
     const { language, setLanguage } = useApp(); 
     const t = useTranslation(); 
     const [isLangOpen, setIsLangOpen] = useState(false); 
@@ -287,7 +289,13 @@ const HubNav: React.FC<{
                         <span className="font-black text-[9px] tracking-[0.15em] text-white uppercase leading-none">Club</span>
                         <span className="font-black text-[7px] tracking-[0.15em] text-white/30 uppercase leading-none">Center</span>
                     </div>
-                    <StaticSoccerBall />
+                    <div className="flex items-center justify-center w-10 h-10 md:w-12 md:h-12">
+                        {customBall ? (
+                            <img src={customBall} alt="Ball" className="w-full h-full object-contain" />
+                        ) : (
+                            <StaticSoccerBall />
+                        )}
+                    </div>
                     
                     {/* Chat Button - Minimalist (Only Icon) */}
                     {isDashboardOpen && (
@@ -389,23 +397,43 @@ export const PublicHubScreen: React.FC = () => {
     const [activeTab, setActiveTab] = useState<DashboardViewType>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
     const [customIcon, setCustomIcon] = useState<string | null>(null);
+    const [customBall, setCustomBall] = useState<string | null>(null);
+    const [customTrophy, setCustomTrophy] = useState<string | null>(null);
     const mainScrollRef = useRef<HTMLDivElement>(null);
     const t = useTranslation();
 
     useEffect(() => {
-        const loadIcon = async () => {
-            // 1. Try local storage first (fast)
-            const localIcon = localStorage.getItem('customChatIcon');
-            if (localIcon) setCustomIcon(localIcon);
+        const loadIcons = async () => {
+            // 1. Local storage first
+            const localChat = localStorage.getItem('customChatIcon');
+            const localBall = localStorage.getItem('customBallIcon');
+            const localTrophy = localStorage.getItem('customTrophyIcon');
+            
+            if (localChat) setCustomIcon(localChat);
+            if (localBall) setCustomBall(localBall);
+            if (localTrophy) setCustomTrophy(localTrophy);
 
-            // 2. Try cloud storage (authoritative)
-            const cloudIcon = await loadChatIconUrl();
-            if (cloudIcon && cloudIcon !== localIcon) {
-                setCustomIcon(cloudIcon);
-                localStorage.setItem('customChatIcon', cloudIcon);
+            // 2. Cloud storage
+            const [cloudChat, cloudBall, cloudTrophy] = await Promise.all([
+                loadChatIconUrl(),
+                loadBallIconUrl(),
+                loadTrophyIconUrl()
+            ]);
+
+            if (cloudChat && cloudChat !== localChat) {
+                setCustomIcon(cloudChat);
+                localStorage.setItem('customChatIcon', cloudChat);
+            }
+            if (cloudBall && cloudBall !== localBall) {
+                setCustomBall(cloudBall);
+                localStorage.setItem('customBallIcon', cloudBall);
+            }
+            if (cloudTrophy && cloudTrophy !== localTrophy) {
+                setCustomTrophy(cloudTrophy);
+                localStorage.setItem('customTrophyIcon', cloudTrophy);
             }
         };
-        loadIcon();
+        loadIcons();
     }, []);
 
     useEffect(() => {
@@ -526,6 +554,8 @@ export const PublicHubScreen: React.FC = () => {
                     }
                 }} 
                 customIcon={customIcon}
+                customBall={customBall}
+                customTrophy={customTrophy}
             />
 
             <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none touch-pan-y ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'} `} style={{ backgroundColor: getBottomPatchColor() }}>
@@ -541,7 +571,14 @@ export const PublicHubScreen: React.FC = () => {
                 
                 <div className="relative z-10">
                     <HeroTitle />
-                    <div className="text-center mb-12 md:mb-20"><TrophyIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-4 text-[#00F2FE]" /><h2 className="font-orbitron text-xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubLeadersTitle}</h2></div>
+                    <div className="text-center mb-12 md:mb-20">
+                        {customTrophy ? (
+                            <img src={customTrophy} alt="Trophy" className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-4 object-contain" />
+                        ) : (
+                            <TrophyIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-4 text-[#00F2FE]" />
+                        )}
+                        <h2 className="font-orbitron text-xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubLeadersTitle}</h2>
+                    </div>
                     {displayData.top.length > 0 ? (<div className="flex flex-wrap items-end justify-center gap-4 md:gap-8 w-full"><div className="order-2 md:order-1">{displayData.top[1] && <CinematicCard player={displayData.top[1]} rank={2} />}</div><div className="order-1 md:order-2">{displayData.top[0] && <CinematicCard player={displayData.top[0]} rank={1} />}</div><div className="order-3 md:order-3">{displayData.top[2] && <CinematicCard player={displayData.top[2]} rank={3} />}</div></div>) : (<NoLeadersPlaceholder />)}
                     {legends && (
                         <div className="mt-24 md:mt-32">

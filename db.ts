@@ -134,12 +134,14 @@ export const uploadPromoImage = async (base64Image: string): Promise<string | nu
 
 // --- CHAT ICON MANAGEMENT ---
 const CHAT_ICON_KEY = 'club_chat_icon';
+const BALL_ICON_KEY = 'club_ball_icon';
+const TROPHY_ICON_KEY = 'club_trophy_icon';
 
-export const uploadChatIcon = async (base64Image: string): Promise<string | null> => {
+export const uploadCustomAsset = async (base64Image: string, prefix: string): Promise<string | null> => {
     if (!isSupabaseConfigured() || !base64Image) return null;
     try {
         const blob = base64ToBlob(base64Image);
-        const filePath = `club_assets/chat_icon_${Date.now()}.png`; 
+        const filePath = `club_assets/${prefix}_${Date.now()}.png`; 
         const { error: uploadError } = await supabase!.storage.from('player_images').upload(filePath, blob, { cacheControl: '3600', upsert: true });
         if (uploadError) throw uploadError;
         const { data } = supabase!.storage.from('player_images').getPublicUrl(filePath);
@@ -149,12 +151,12 @@ export const uploadChatIcon = async (base64Image: string): Promise<string | null
     }
 };
 
-export const saveChatIconUrl = async (url: string): Promise<boolean> => {
+export const saveAssetUrl = async (key: string, url: string): Promise<boolean> => {
     if (!isSupabaseConfigured()) return false;
     try {
         const { error } = await supabase!
             .from('settings')
-            .upsert({ key: CHAT_ICON_KEY, value: { url } }, { onConflict: 'key' });
+            .upsert({ key, value: { url } }, { onConflict: 'key' });
         if (error) throw error;
         return true;
     } catch (error) {
@@ -162,16 +164,28 @@ export const saveChatIconUrl = async (url: string): Promise<boolean> => {
     }
 };
 
-export const loadChatIconUrl = async (): Promise<string | null> => {
+export const loadAssetUrl = async (key: string): Promise<string | null> => {
     if (!isSupabaseConfigured()) return null;
     try {
-        const { data, error } = await supabase!.from('settings').select('value').eq('key', CHAT_ICON_KEY).maybeSingle();
+        const { data, error } = await supabase!.from('settings').select('value').eq('key', key).maybeSingle();
         if (error || !data) return null;
         return (data.value as any)?.url || null;
     } catch (error) {
         return null;
     }
 };
+
+export const uploadChatIcon = async (base64Image: string): Promise<string | null> => uploadCustomAsset(base64Image, 'chat_icon');
+export const saveChatIconUrl = async (url: string): Promise<boolean> => saveAssetUrl(CHAT_ICON_KEY, url);
+export const loadChatIconUrl = async (): Promise<string | null> => loadAssetUrl(CHAT_ICON_KEY);
+
+export const uploadBallIcon = async (base64Image: string): Promise<string | null> => uploadCustomAsset(base64Image, 'ball_icon');
+export const saveBallIconUrl = async (url: string): Promise<boolean> => saveAssetUrl(BALL_ICON_KEY, url);
+export const loadBallIconUrl = async (): Promise<string | null> => loadAssetUrl(BALL_ICON_KEY);
+
+export const uploadTrophyIcon = async (base64Image: string): Promise<string | null> => uploadCustomAsset(base64Image, 'trophy_icon');
+export const saveTrophyIconUrl = async (url: string): Promise<boolean> => saveAssetUrl(TROPHY_ICON_KEY, url);
+export const loadTrophyIconUrl = async (): Promise<string | null> => loadAssetUrl(TROPHY_ICON_KEY);
 
 // --- PLAYER MANAGEMENT ---
 const BUCKET_NAME = 'player_images';

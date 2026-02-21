@@ -20,7 +20,10 @@ export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, classNa
         >
             {/* TEXT RING (Animated Spin) */}
             <div className="absolute inset-0 opacity-100 animate-spin-slow">
-                <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
+                {/* Subtle Neon Glow behind text */}
+                <div className="absolute inset-0 rounded-full blur-[15px] bg-[#00F2FE]/10"></div>
+                
+                <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible relative z-10">
                     <defs>
                         <path id="miniCirclePathShared" d={`M 50, 50 m -${radius}, 0 a ${radius},${radius} 0 1,1 ${radius * 2},0 a ${radius},${radius} 0 1,1 -${radius * 2},0`} />
                     </defs>
