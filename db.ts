@@ -136,6 +136,7 @@ export const uploadPromoImage = async (base64Image: string): Promise<string | nu
 const CHAT_ICON_KEY = 'club_chat_icon';
 const BALL_ICON_KEY = 'club_ball_icon';
 const TROPHY_ICON_KEY = 'club_trophy_icon';
+const TOTM_EMBLEM_KEY = 'club_totm_emblem';
 
 export const uploadCustomAsset = async (base64Image: string, prefix: string): Promise<string | null> => {
     if (!isSupabaseConfigured() || !base64Image) return null;
@@ -186,6 +187,10 @@ export const loadBallIconUrl = async (): Promise<string | null> => loadAssetUrl(
 export const uploadTrophyIcon = async (base64Image: string): Promise<string | null> => uploadCustomAsset(base64Image, 'trophy_icon');
 export const saveTrophyIconUrl = async (url: string): Promise<boolean> => saveAssetUrl(TROPHY_ICON_KEY, url);
 export const loadTrophyIconUrl = async (): Promise<string | null> => loadAssetUrl(TROPHY_ICON_KEY);
+
+export const uploadTotmEmblem = async (base64Image: string): Promise<string | null> => uploadCustomAsset(base64Image, 'totm_emblem');
+export const saveTotmEmblemUrl = async (url: string): Promise<boolean> => saveAssetUrl(TOTM_EMBLEM_KEY, url);
+export const loadTotmEmblemUrl = async (): Promise<string | null> => loadAssetUrl(TOTM_EMBLEM_KEY);
 
 // --- PLAYER MANAGEMENT ---
 const BUCKET_NAME = 'player_images';

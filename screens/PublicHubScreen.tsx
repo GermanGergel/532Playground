@@ -10,7 +10,7 @@ import { RadioPlayer } from '../components/RadioPlayer';
 import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
 import { MiniSquadBadge } from '../components/MiniSquadBadge';
 import { CinematicCard, HeaderAtmosphere } from '../components/PublicHubScreen';
-import { loadChatIconUrl, loadBallIconUrl, loadTrophyIconUrl } from '../db';
+import { loadChatIconUrl, loadBallIconUrl, loadTrophyIconUrl, loadTotmEmblemUrl } from '../db';
 
 // --- SUB-COMPONENTS ---
 
@@ -256,7 +256,8 @@ const HubNav: React.FC<{
     customIcon?: string | null;
     customBall?: string | null;
     customTrophy?: string | null;
-}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, customIcon, customBall, customTrophy }) => { 
+    customTotm?: string | null;
+}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, customIcon, customBall, customTrophy, customTotm }) => { 
     const { language, setLanguage } = useApp(); 
     const t = useTranslation(); 
     const [isLangOpen, setIsLangOpen] = useState(false); 
@@ -388,7 +389,7 @@ const HubNav: React.FC<{
 };
 
 const DispersingWord: React.FC<{ words: string[] }> = ({ words }) => { const [index, setIndex] = useState(0); const [state, setState] = useState<'entering' | 'active' | 'exiting'>('entering'); useEffect(() => { const cycle = async () => { setState('entering'); setTimeout(() => setState('active'), 1200); setTimeout(() => { setState('exiting'); setTimeout(() => { setIndex((prev) => (prev + 1) % words.length); }, 1200); }, 5000); }; cycle(); const interval = setInterval(cycle, 6500); return () => clearInterval(interval); }, [words.length]); const getStyles = () => { switch (state) { case 'entering': return "scale-[0.4] opacity-0 blur-[40px] translate-z-[-200px]"; case 'active': return "scale-[1.1] opacity-100 blur-0 translate-z-0"; case 'exiting': return "scale-[0.8] opacity-0 blur-[30px] translate-z-[-100px]"; default: return ""; } }; return (<span className="relative inline-block h-[1.1em] min-w-[280px] md:min-w-[500px] align-top text-center perspective-1000 px-10"><span className={`block px-4 text-transparent bg-clip-text bg-gradient-to-b from-[#00F2FE] to-[#00F2FE]/30 transition-all duration-[1200ms] ease-[cubic-bezier(0.2,0,0.2,1)] ${getStyles()}`} style={{ textShadow: state === 'active' ? '0 0 30px rgba(0, 242, 254, 0.5)' : 'none' }}>{words[index]}</span></span>); };
-const HeroTitle: React.FC = () => { const t = useTranslation(); const words = ["GAME", "LEGACY", "VICTORY"]; return (<div className="text-center mt-32 md:mt-44 mb-6 md:mb-8 relative"><div className="inline-block relative"><h1 className="font-russo text-4xl md:text-[9rem] leading-[1.1] uppercase tracking-tighter drop-shadow-2xl"><span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/20">DEFINE YOUR</span> <br /><DispersingWord words={words} /></h1><div className="mt-8 mb-10 max-w-lg mx-auto px-4"><p className="font-chakra text-[10px] md:text-xs text-white/50 font-medium uppercase tracking-[0.3em] lifestyle-relaxed leading-loose">{t.hubWelcomeText}</p></div><div className="mt-6 h-px w-48 md:w-64 bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent mx-auto opacity-60 shadow-[0_0_10px_#00F2FE]"></div></div></div>); };
+const HeroTitle: React.FC = () => { const t = useTranslation(); const words = ["GAME", "LEGACY", "VICTORY"]; return (<div className="text-center mt-32 md:mt-44 mb-2 md:mb-4 relative"><div className="inline-block relative"><h1 className="font-russo text-4xl md:text-[9rem] leading-[1.1] uppercase tracking-tighter drop-shadow-2xl"><span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/20">DEFINE YOUR</span> <br /><DispersingWord words={words} /></h1><div className="mt-8 mb-10 max-w-lg mx-auto px-4"><p className="font-chakra text-[10px] md:text-xs text-white/50 font-medium uppercase tracking-[0.3em] lifestyle-relaxed leading-loose">{t.hubWelcomeText}</p></div><div className="mt-6 h-px w-48 md:w-64 bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent mx-auto opacity-60 shadow-[0_0_10px_#00F2FE]"></div></div></div>); };
 const CinematicStatCard: React.FC<{ value: string | number; label: string; }> = ({ value, label }) => (<div className="w-full md:flex-1 max-w-xs md:max-w-none h-40"><div className="relative rounded-3xl overflow-hidden bg-white/[0.03] border border-white/10 shadow-2xl h-full backdrop-blur-md"><div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-40"></div><div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-white/5 to-transparent blur-xl"></div><div className="relative h-full z-10 flex flex-col items-center justify-center gap-2"><span className="font-russo font-black text-6xl md:text-7xl text-white tracking-widest leading-none">{value}</span><span className="font-chakra font-bold text-xs text-white/50 uppercase tracking-[0.2em]">{label}</span></div></div></div>);
 type DashboardViewType = 'info' | 'dashboard' | 'roster' | 'archive' | 'duel' | 'tournaments' | 'league';
 
@@ -401,6 +402,7 @@ export const PublicHubScreen: React.FC = () => {
     const [customIcon, setCustomIcon] = useState<string | null>(null);
     const [customBall, setCustomBall] = useState<string | null>(null);
     const [customTrophy, setCustomTrophy] = useState<string | null>(null);
+    const [customTotm, setCustomTotm] = useState<string | null>(null);
     const mainScrollRef = useRef<HTMLDivElement>(null);
     const t = useTranslation();
 
@@ -410,16 +412,19 @@ export const PublicHubScreen: React.FC = () => {
             const localChat = localStorage.getItem('customChatIcon');
             const localBall = localStorage.getItem('customBallIcon');
             const localTrophy = localStorage.getItem('customTrophyIcon');
+            const localTotm = localStorage.getItem('customTotmEmblem');
             
             if (localChat) setCustomIcon(localChat);
             if (localBall) setCustomBall(localBall);
             if (localTrophy) setCustomTrophy(localTrophy);
+            if (localTotm) setCustomTotm(localTotm);
 
             // 2. Cloud storage
-            const [cloudChat, cloudBall, cloudTrophy] = await Promise.all([
+            const [cloudChat, cloudBall, cloudTrophy, cloudTotm] = await Promise.all([
                 loadChatIconUrl(),
                 loadBallIconUrl(),
-                loadTrophyIconUrl()
+                loadTrophyIconUrl(),
+                loadTotmEmblemUrl()
             ]);
 
             if (cloudChat && cloudChat !== localChat) {
@@ -433,6 +438,10 @@ export const PublicHubScreen: React.FC = () => {
             if (cloudTrophy && cloudTrophy !== localTrophy) {
                 setCustomTrophy(cloudTrophy);
                 localStorage.setItem('customTrophyIcon', cloudTrophy);
+            }
+            if (cloudTotm && cloudTotm !== localTotm) {
+                setCustomTotm(cloudTotm);
+                localStorage.setItem('customTotmEmblem', cloudTotm);
             }
         };
         loadIcons();
@@ -558,6 +567,7 @@ export const PublicHubScreen: React.FC = () => {
                 customIcon={customIcon}
                 customBall={customBall}
                 customTrophy={customTrophy}
+                customTotm={customTotm}
             />
 
             <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none touch-pan-y ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'} `} style={{ backgroundColor: getBottomPatchColor() }}>
@@ -573,7 +583,7 @@ export const PublicHubScreen: React.FC = () => {
                 
                 <div className="relative z-10">
                     <HeroTitle />
-                    <div className="text-center mb-8 md:mb-12 -mt-4 md:-mt-6">
+                    <div className="text-center mb-8 md:mb-12 -mt-8 md:-mt-12">
                         {customTrophy ? (
                             <img src={customTrophy} alt="Trophy" className="w-48 h-48 md:w-72 md:h-72 mx-auto mb-2 object-contain" />
                         ) : (
@@ -606,11 +616,26 @@ export const PublicHubScreen: React.FC = () => {
                         </div>
                     )}
                     <div className="mt-12 md:mt-16 flex flex-col items-center">
-                        <div className="mb-8 transform hover:scale-110 transition-transform duration-500 cursor-pointer">
-                            <MiniSquadBadge 
-                                onClick={() => setIsTotmOpen(true)} 
-                                className="w-24 h-24 md:w-32 md:h-32" 
-                            />
+                        <div 
+                            className="mb-8 transform hover:scale-110 transition-transform duration-500 cursor-pointer relative group"
+                            onClick={() => setIsTotmOpen(true)}
+                        >
+                            {customTotm ? (
+                                <div className="w-24 h-24 md:w-32 md:h-32 relative">
+                                    {/* Subtle Neon Glow behind custom emblem */}
+                                    <div className="absolute inset-0 rounded-full blur-[20px] bg-[#00F2FE]/15 shadow-[0_0_30px_rgba(0,242,254,0.2)]"></div>
+                                    <img src={customTotm} alt="TOTM" className="w-full h-full object-contain relative z-10" />
+                                </div>
+                            ) : (
+                                <div className="w-24 h-24 md:w-32 md:h-32 flex items-center justify-center relative">
+                                    {/* Placeholder Shield */}
+                                    <div className="absolute inset-0 rounded-full border border-[#00F2FE]/10 bg-[#00F2FE]/5 backdrop-blur-sm"></div>
+                                    <svg viewBox="0 0 24 24" className="w-12 h-12 text-[#00F2FE]/20 fill-none stroke-current stroke-1">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                                    </svg>
+                                    <div className="absolute inset-0 rounded-full blur-[15px] bg-[#00F2FE]/5"></div>
+                                </div>
+                            )}
                         </div>
                         <div className="text-center mb-8 md:mb-12">
                             <h2 className="font-orbitron text-lg md:text-2xl font-black uppercase tracking-[0.15em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>
