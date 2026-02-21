@@ -566,14 +566,14 @@ export const PublicHubScreen: React.FC = () => {
                             </div>
                         </div>
                     )}
-                    <div className="mt-24 md:mt-32 flex flex-col items-center">
+                    <div className="mt-12 md:mt-16 flex flex-col items-center">
                         <div className="mb-8 transform hover:scale-110 transition-transform duration-500 cursor-pointer">
                             <MiniSquadBadge 
                                 onClick={() => setIsTotmOpen(true)} 
                                 className="w-24 h-24 md:w-32 md:h-32" 
                             />
                         </div>
-                        <div className="text-center mb-12 md:mb-20">
+                        <div className="text-center mb-8 md:mb-12">
                             <h2 className="font-orbitron text-lg md:text-2xl font-black uppercase tracking-[0.15em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>
                                 {t.hubVitalsTitle}
                             </h2>
@@ -585,7 +585,7 @@ export const PublicHubScreen: React.FC = () => {
                         </div>
                     </div>
                     
-                    <div className="relative z-10 bg-transparent pb-8 mt-20">
+                    <div className="relative z-10 bg-transparent pb-8 mt-12">
                         <footer className="relative pb-8 pt-0 bg-transparent">
                             <div className="text-center px-4">
                                 <h2 className="font-orbitron text-2xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/90" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubJoinSquad}</h2>
