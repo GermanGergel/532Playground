@@ -343,7 +343,7 @@ const HubNav: React.FC<{
                             <img 
                                 src={customNavBanner} 
                                 alt="Banner" 
-                                className="w-full h-[160%] md:h-[200%] object-fill opacity-90 absolute top-1/2 -translate-y-1/2" 
+                                className="w-full h-[220%] md:h-[300%] object-fill opacity-90 absolute top-[45%] -translate-y-1/2" 
                             />
                         )}
                     </div>
