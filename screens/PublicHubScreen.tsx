@@ -328,7 +328,7 @@ const HubNav: React.FC<{
                     </div>
                 ) : (
                     <div className="flex items-center justify-center animate-in fade-in zoom-in duration-700">
-                        <MiniSquadBadge onClick={onOpenTotm} className="w-[42px] h-[42px] md:w-[50px] md:h-[50px]" />
+                        {/* TOTM Badge moved to main content */}
                     </div>
                 )}
             </div>
@@ -568,9 +568,23 @@ export const PublicHubScreen: React.FC = () => {
                             </div>
                         </div>
                     )}
-                    <div className="mt-24 md:mt-32">
-                        <div className="text-center mb-12 md:mb-20"><h2 className="font-orbitron text-lg md:text-2xl font-black uppercase tracking-[0.15em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubVitalsTitle}</h2></div>
-                        <div className="flex flex-col md:flex-row items-center justify-center gap-6 w-full max-w-4xl mx-auto"><CinematicStatCard value={clubStats.totalPlayers} label={t.hubStatsMembers} /><CinematicStatCard value={clubStats.totalSessions} label={t.hubSessionsPlayed} /><CinematicStatCard value={clubStats.avgRating} label={t.hubAvgRating} /></div>
+                    <div className="mt-24 md:mt-32 flex flex-col items-center">
+                        <div className="mb-8 transform hover:scale-110 transition-transform duration-500 cursor-pointer">
+                            <MiniSquadBadge 
+                                onClick={() => setIsTotmOpen(true)} 
+                                className="w-24 h-24 md:w-32 md:h-32 shadow-[0_0_50px_rgba(0,242,254,0.2)]" 
+                            />
+                        </div>
+                        <div className="text-center mb-12 md:mb-20">
+                            <h2 className="font-orbitron text-lg md:text-2xl font-black uppercase tracking-[0.15em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>
+                                {t.hubVitalsTitle}
+                            </h2>
+                        </div>
+                        <div className="flex flex-col md:flex-row items-center justify-center gap-6 w-full max-w-4xl mx-auto">
+                            <CinematicStatCard value={clubStats.totalPlayers} label={t.hubStatsMembers} />
+                            <CinematicStatCard value={clubStats.totalSessions} label={t.hubSessionsPlayed} />
+                            <CinematicStatCard value={clubStats.avgRating} label={t.hubAvgRating} />
+                        </div>
                     </div>
                     
                     <div className="relative z-10 bg-transparent pb-8 mt-20">
