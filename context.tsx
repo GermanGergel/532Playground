@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect, useContext, createContext, useMemo, useCallback } from 'react';
 import { Session, Player, GameStatus, RotationMode, Team, Game, Goal, SessionStatus, EventLogEntry, EventType, StartRoundPayload, GoalPayload, PlayerStatus, PlayerTier, BadgeType, NewsItem } from './types';
 import { Language } from './translations/index';
 import { 
@@ -47,36 +47,36 @@ interface AppContextType {
   totmPlayerIds: Set<string>;
 }
 
-const AppContext = React.createContext<AppContextType | undefined>(undefined);
+const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Safety lock: Don't auto-save to DB until we have confirmed sync with cloud
-  const [isSaveEnabled, setIsSaveEnabled] = React.useState(false);
+  const [isSaveEnabled, setIsSaveEnabled] = useState(false);
 
-  const [activeSession, setActiveSession] = React.useState<Session | null>(null);
-  const [allPlayers, setAllPlayers] = React.useState<Player[]>([]);
-  const [history, setHistory] = React.useState<Session[]>([]);
-  const [newsFeed, setNewsFeed] = React.useState<NewsItem[]>([]);
-  const [language, setLanguageState] = React.useState<Language>('en');
-  const [activeVoicePack, setActiveVoicePackState] = React.useState<number>(1);
+  const [activeSession, setActiveSession] = useState<Session | null>(null);
+  const [allPlayers, setAllPlayers] = useState<Player[]>([]);
+  const [history, setHistory] = useState<Session[]>([]);
+  const [newsFeed, setNewsFeed] = useState<NewsItem[]>([]);
+  const [language, setLanguageState] = useState<Language>('en');
+  const [activeVoicePack, setActiveVoicePackState] = useState<number>(1);
 
   // Persistent UI State for Player Database
-  const [playerDbSort, setPlayerDbSort] = React.useState<SortBy>('date');
-  const [playerDbSearch, setPlayerDbSearch] = React.useState<string>('');
+  const [playerDbSort, setPlayerDbSort] = useState<SortBy>('date');
+  const [playerDbSearch, setPlayerDbSearch] = useState<string>('');
 
   // --- GLOBAL timer LOGIC ---
   const { displayTime } = useMatchTimer(activeSession, setActiveSession, activeVoicePack);
 
   // --- CALCULATE TOTM ONCE (Optimized) ---
-  const totmPlayerIds = React.useMemo(() => {
+  const totmPlayerIds = useMemo(() => {
       if (allPlayers.length < 5 || history.length === 0) return new Set<string>();
       return getTotmPlayerIds(history, allPlayers);
   }, [history, allPlayers]); // Only recalculate when history/players change
 
   // --- INITIAL DATA LOAD ---
-  React.useEffect(() => {
+  useEffect(() => {
     const initApp = async () => {
         try {
             // 1. Initial Load (Likely Local Cache)
@@ -135,7 +135,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   // --- LAZY LOADING METHODS ---
-  const fetchHistory = React.useCallback(async (limit?: number) => {
+  const fetchHistory = useCallback(async (limit?: number) => {
       const dbHistory = await loadHistoryFromDB(limit);
       if (dbHistory) {
           setHistory(prev => {
@@ -149,7 +149,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
   }, []);
 
-  const fetchFullNews = React.useCallback(async () => {
+  const fetchFullNews = useCallback(async () => {
       const fullNews = await loadNewsFromDB(); // No limit = full fetch
       if (fullNews) {
           setNewsFeed(prev => {
@@ -164,25 +164,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   // --- PERSISTENCE EFFECT HOOKS (Save to DB) ---
-  React.useEffect(() => {
+  useEffect(() => {
     if(!isLoading && isSaveEnabled) {
         savePlayersToDB(allPlayers);
     }
   }, [allPlayers, isLoading, isSaveEnabled]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if(!isLoading && isSaveEnabled) {
         saveActiveSessionToDB(activeSession);
     }
   }, [activeSession, isLoading, isSaveEnabled]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if(!isLoading && isSaveEnabled) {
         saveHistoryToDB(history);
     }
   }, [history, isLoading, isSaveEnabled]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if(!isLoading && isSaveEnabled) {
         saveNewsToDB(newsFeed);
     }
@@ -274,7 +274,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 };
 
 export const useApp = (): AppContextType => {
-  const context = React.useContext(AppContext);
+  const context = useContext(AppContext);
   if (context === undefined) {
     throw new Error('useApp must be used within an AppProvider');
   }

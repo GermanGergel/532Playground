@@ -132,6 +132,47 @@ export const uploadPromoImage = async (base64Image: string): Promise<string | nu
     }
 };
 
+// --- CHAT ICON MANAGEMENT ---
+const CHAT_ICON_KEY = 'club_chat_icon';
+
+export const uploadChatIcon = async (base64Image: string): Promise<string | null> => {
+    if (!isSupabaseConfigured() || !base64Image) return null;
+    try {
+        const blob = base64ToBlob(base64Image);
+        const filePath = `club_assets/chat_icon_${Date.now()}.png`; 
+        const { error: uploadError } = await supabase!.storage.from('player_images').upload(filePath, blob, { cacheControl: '3600', upsert: true });
+        if (uploadError) throw uploadError;
+        const { data } = supabase!.storage.from('player_images').getPublicUrl(filePath);
+        return data.publicUrl;
+    } catch (error) {
+        return null;
+    }
+};
+
+export const saveChatIconUrl = async (url: string): Promise<boolean> => {
+    if (!isSupabaseConfigured()) return false;
+    try {
+        const { error } = await supabase!
+            .from('settings')
+            .upsert({ key: CHAT_ICON_KEY, value: { url } }, { onConflict: 'key' });
+        if (error) throw error;
+        return true;
+    } catch (error) {
+        return false;
+    }
+};
+
+export const loadChatIconUrl = async (): Promise<string | null> => {
+    if (!isSupabaseConfigured()) return null;
+    try {
+        const { data, error } = await supabase!.from('settings').select('value').eq('key', CHAT_ICON_KEY).maybeSingle();
+        if (error || !data) return null;
+        return (data.value as any)?.url || null;
+    } catch (error) {
+        return null;
+    }
+};
+
 // --- PLAYER MANAGEMENT ---
 const BUCKET_NAME = 'player_images';
 

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Session, GameStatus } from '../types';
 import { playAnnouncement } from '../lib';
 
@@ -8,16 +8,16 @@ export const useMatchTimer = (
     setActiveSession: React.Dispatch<React.SetStateAction<Session | null>>,
     activeVoicePack: number
 ) => {
-    const [displayTime, setDisplayTime] = React.useState(0);
-    const animationFrameRef = React.useRef<number | null>(null);
-    const lastAnnouncedSecondRef = React.useRef<number | null>(null);
+    const [displayTime, setDisplayTime] = useState(0);
+    const animationFrameRef = useRef<number | null>(null);
+    const lastAnnouncedSecondRef = useRef<number | null>(null);
 
     const currentGame = activeSession?.games[activeSession.games.length - 1];
     // FIX: Работаем с таймером для всех режимов, где есть ротация (3 и 4 команды)
     const isTimerBasedGame = activeSession?.numTeams && activeSession.numTeams >= 3;
 
     // --- TIMER LOGIC ---
-    React.useEffect(() => {
+    useEffect(() => {
         const getGlobalTime = () => {
             if (!activeSession || !currentGame) return 0;
 
@@ -56,7 +56,7 @@ export const useMatchTimer = (
     }, [activeSession, currentGame]);
 
     // --- VOICE ASSISTANT LOGIC ---
-    React.useEffect(() => {
+    useEffect(() => {
         if (!activeSession || !currentGame || currentGame.status !== GameStatus.Active || !isTimerBasedGame) {
             return;
         }

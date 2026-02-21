@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, useLocation, matchPath, Navigate } from 'react-router-dom';
 import { BottomNav, Page } from './components';
 import { 
@@ -24,7 +24,7 @@ const App: React.FC = () => {
   const { activeSession, setPlayerDbSort, setPlayerDbSearch } = useApp();
 
   // Глобальная защита от случайной перезагрузки во время активной сессии
-  React.useEffect(() => {
+  useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
         if (activeSession) {
             event.preventDefault();
@@ -36,7 +36,7 @@ const App: React.FC = () => {
   }, [activeSession]);
 
   // Сброс фильтров базы игроков при выходе из раздела управления
-  React.useEffect(() => {
+  useEffect(() => {
       const isPlayerSection = location.pathname.includes('/player-database') || location.pathname.includes('/player/'); 
       if (!isPlayerSection) {
           setPlayerDbSort('date');

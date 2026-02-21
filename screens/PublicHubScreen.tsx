@@ -10,6 +10,7 @@ import { RadioPlayer } from '../components/RadioPlayer';
 import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
 import { MiniSquadBadge } from '../components/MiniSquadBadge';
 import { CinematicCard, HeaderAtmosphere } from '../components/PublicHubScreen';
+import { loadChatIconUrl } from '../db';
 
 // --- SUB-COMPONENTS ---
 
@@ -252,8 +253,9 @@ const HubNav: React.FC<{
     onTabChange: (tab: DashboardViewType) => void; 
     archiveViewDate: string | null; 
     onHomeClick: () => void; 
-    onOpenTotm: () => void; 
-}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, onOpenTotm }) => { 
+    onOpenTotm: () => void;
+    customIcon?: string | null;
+}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, onOpenTotm, customIcon }) => { 
     const { language, setLanguage } = useApp(); 
     const t = useTranslation(); 
     const [isLangOpen, setIsLangOpen] = useState(false); 
@@ -295,7 +297,11 @@ const HubNav: React.FC<{
                             title="Locker Room"
                         >
                             <div className="absolute inset-0 bg-[#00F2FE]/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                            <MessageCircle className="w-5 h-5 md:w-6 md:h-6 relative z-10" />
+                            {customIcon ? (
+                                <img src={customIcon} alt="Chat" className="w-full h-full object-cover rounded-full relative z-10" />
+                            ) : (
+                                <MessageCircle className="w-5 h-5 md:w-6 md:h-6 relative z-10" />
+                            )}
                         </button>
                     )}
                 </div>
@@ -382,8 +388,25 @@ export const PublicHubScreen: React.FC = () => {
     const [isTotmOpen, setIsTotmOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<DashboardViewType>('dashboard');
     const [archiveViewDate, setArchiveViewDate] = useState<string | null>(null);
+    const [customIcon, setCustomIcon] = useState<string | null>(null);
     const mainScrollRef = useRef<HTMLDivElement>(null);
     const t = useTranslation();
+
+    useEffect(() => {
+        const loadIcon = async () => {
+            // 1. Try local storage first (fast)
+            const localIcon = localStorage.getItem('customChatIcon');
+            if (localIcon) setCustomIcon(localIcon);
+
+            // 2. Try cloud storage (authoritative)
+            const cloudIcon = await loadChatIconUrl();
+            if (cloudIcon && cloudIcon !== localIcon) {
+                setCustomIcon(cloudIcon);
+                localStorage.setItem('customChatIcon', cloudIcon);
+            }
+        };
+        loadIcon();
+    }, []);
 
     useEffect(() => {
         if (isDashboardOpen) {
@@ -502,7 +525,8 @@ export const PublicHubScreen: React.FC = () => {
                         mainScrollRef.current.scrollTop = 0;
                     }
                 }} 
-                onOpenTotm={() => setIsTotmOpen(true)} 
+                onOpenTotm={() => setIsTotmOpen(true)}
+                customIcon={customIcon}
             />
 
             <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none touch-pan-y ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'} `} style={{ backgroundColor: getBottomPatchColor() }}>
@@ -521,7 +545,11 @@ export const PublicHubScreen: React.FC = () => {
                         title="Locker Room"
                     >
                         <div className="absolute inset-0 rounded-full bg-[#00F2FE]/10 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        <MessageCircle className="w-4 h-4 md:w-5 md:h-5 relative z-10 drop-shadow-[0_0_5px_rgba(0,242,254,0.8)]" />
+                        {customIcon ? (
+                            <img src={customIcon} alt="Chat" className="w-6 h-6 md:w-8 md:h-8 object-cover rounded-full relative z-10" />
+                        ) : (
+                            <MessageCircle className="w-4 h-4 md:w-5 md:h-5 relative z-10 drop-shadow-[0_0_5px_rgba(0,242,254,0.8)]" />
+                        )}
                         <span className="font-russo text-[10px] md:text-xs tracking-widest uppercase relative z-10">Locker Room</span>
                     </button>
                 )}

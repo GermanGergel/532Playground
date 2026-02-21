@@ -5,18 +5,50 @@ import { Button, useTranslation, Modal } from '../ui';
 import { homeScreenBackground } from '../assets';
 import { Globe, QrCode } from '../icons'; 
 import html2canvas from 'html2canvas';
+import { uploadChatIcon, saveChatIconUrl } from '../db';
 
 export const HomeScreen: React.FC = () => {
   const navigate = useNavigate();
   const t = useTranslation();
   const { activeSession } = useApp();
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [isHubModalOpen, setIsHubModalOpen] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [hubUrl, setHubUrl] = useState('');
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   
   const promoCardRef = useRef<HTMLDivElement>(null);
+
+  const handleUploadIcon = async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file) {
+          setIsUploading(true);
+          const reader = new FileReader();
+          reader.onloadend = async () => {
+              const base64String = reader.result as string;
+              
+              // 1. Try to upload to cloud
+              const cloudUrl = await uploadChatIcon(base64String);
+              
+              if (cloudUrl) {
+                  // 2. Save URL to settings
+                  await saveChatIconUrl(cloudUrl);
+                  localStorage.setItem('customChatIcon', cloudUrl); // Cache URL locally
+                  alert("Icon uploaded to cloud successfully!");
+              } else {
+                  // Fallback: Local storage only (if cloud fails or not configured)
+                  localStorage.setItem('customChatIcon', base64String);
+                  alert("Cloud upload failed. Saved locally.");
+              }
+              
+              setIsUploading(false);
+              setIsHubModalOpen(false);
+          };
+          reader.readAsDataURL(file);
+      }
+  };
 
   useEffect(() => {
       const baseUrl = window.location.origin;
@@ -209,6 +241,54 @@ export const HomeScreen: React.FC = () => {
                 </div>
             </div>
         </Modal>
+
+        <Modal
+            isOpen={isHubModalOpen}
+            onClose={() => setIsHubModalOpen(false)}
+            size="xs"
+            hideCloseButton
+            containerClassName="!p-4 !bg-dark-bg border border-[#00F2FE]/20"
+        >
+            <div className="flex flex-col items-center gap-6 p-4">
+                <h2 className="font-russo text-2xl text-white uppercase tracking-tight leading-none text-center">
+                    CLUB HUB ACCESS
+                </h2>
+                
+                <div className="w-full flex flex-col gap-4">
+                    <Button 
+                        variant="primary" 
+                        onClick={() => navigate('/hub')} 
+                        className="w-full !py-4 !text-lg font-chakra font-black tracking-widest uppercase shadow-[0_0_20px_rgba(0,242,254,0.4)]"
+                    >
+                        ENTER HUB
+                    </Button>
+                    
+                    <div className="relative w-full">
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleUploadIcon}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        />
+                        <Button 
+                            variant="secondary" 
+                            disabled={isUploading}
+                            className="w-full !py-4 !text-lg font-chakra font-bold tracking-widest uppercase border border-white/10"
+                        >
+                            {isUploading ? "UPLOADING..." : "UPLOAD ICON"}
+                        </Button>
+                    </div>
+
+                    <Button 
+                        variant="ghost" 
+                        onClick={() => setIsHubModalOpen(false)} 
+                        className="w-full !py-2 !text-xs font-chakra font-bold text-white/30 uppercase tracking-widest"
+                    >
+                        {t.cancel}
+                    </Button>
+                </div>
+            </div>
+        </Modal>
         
         {/* --- TOP SECTION (HEADER + CONTROLS) --- */}
         <div className="flex-none pt-16 px-6 pb-2 z-10">
@@ -271,7 +351,7 @@ export const HomeScreen: React.FC = () => {
         <div className="flex-none px-6 pb-28 w-full max-w-md mx-auto z-10 flex flex-col gap-4">
              <Button 
                 variant="secondary" 
-                onClick={() => navigate('/hub')} 
+                onClick={() => setIsHubModalOpen(true)} 
                 className="w-full font-chakra font-bold text-xl tracking-wider !py-4 shadow-lg shadow-dark-accent-start/10 hover:shadow-dark-accent-start/20 border border-white/5 active:scale-[0.98] transition-all"
              >
                 {t.hubTitle}
