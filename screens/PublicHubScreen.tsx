@@ -281,20 +281,22 @@ const HubNav: React.FC<{
 
     return (
         <nav className={navContainerClass}>
-            <div className="flex items-center gap-4 shrink-0 h-full">
+            <div className="flex items-center gap-2 md:gap-4 shrink-0 h-full">
                 <div className="flex items-center">
-                    <span className="font-blackops text-2xl md:text-3xl text-[#00F2FE] tracking-tighter leading-none" style={{ textShadow: '0 0 10px rgba(0,242,254,0.6)' }}>UNIT</span>
-                    <div className="h-4 w-px bg-white/15 ml-3 md:ml-4"></div>
-                    <div className="flex flex-col space-y-0.5 ml-2">
-                        <span className="font-black text-[9px] tracking-[0.15em] text-white uppercase leading-none">Club</span>
-                        <span className="font-black text-[7px] tracking-[0.15em] text-white/30 uppercase leading-none">Center</span>
-                    </div>
-                    <div className="flex items-center justify-center w-14 h-14 md:w-16 md:h-16">
+                    {/* Large Ball Icon replacing UNIT */}
+                    <div className="flex items-center justify-center w-16 h-16 md:w-20 md:h-20 -ml-2">
                         {customBall ? (
                             <img src={customBall} alt="Ball" className="w-full h-full object-contain" />
                         ) : (
                             <StaticSoccerBall />
                         )}
+                    </div>
+
+                    <div className="h-6 w-px bg-white/15 ml-1 md:ml-2"></div>
+                    
+                    <div className="flex flex-col space-y-0.5 ml-3 md:ml-4">
+                        <span className="font-black text-[10px] md:text-[11px] tracking-[0.15em] text-white uppercase leading-none">Club</span>
+                        <span className="font-black text-[8px] md:text-[9px] tracking-[0.15em] text-white/30 uppercase leading-none">Center</span>
                     </div>
                     
                     {/* Chat Button - Minimalist (Only Icon) */}
@@ -573,7 +575,7 @@ export const PublicHubScreen: React.FC = () => {
                     <HeroTitle />
                     <div className="text-center mb-12 md:mb-20">
                         {customTrophy ? (
-                            <img src={customTrophy} alt="Trophy" className="w-36 h-36 md:w-48 md:h-48 mx-auto mb-4 object-contain" />
+                            <img src={customTrophy} alt="Trophy" className="w-48 h-48 md:w-72 md:h-72 mx-auto mb-4 object-contain" />
                         ) : (
                             <TrophyIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-4 text-[#00F2FE]" />
                         )}
