@@ -15,7 +15,7 @@ export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, classNa
         <button
             onClick={onClick}
             disabled={!onClick}
-            className={`relative flex items-center justify-center ${size} transition-all duration-300 group shrink-0 ${onClick ? 'cursor-pointer hover:scale-105' : 'cursor-default'} ${className}`}
+            className={`relative flex items-center justify-center ${size} bg-transparent rounded-full transition-all duration-300 group shrink-0 ${onClick ? 'cursor-pointer hover:scale-105' : 'cursor-default'} ${className}`}
             title="Team of the Month"
         >
             {/* TEXT RING (Animated Spin) */}
@@ -29,8 +29,7 @@ export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, classNa
                         className="font-chakra font-black uppercase"
                         style={{ 
                             fontSize: '8.5px', 
-                            letterSpacing: '0.15em',
-                            textShadow: '0 0 3px rgba(0, 0, 0, 1), 0 0 5px rgba(0, 242, 254, 0.4)' 
+                            letterSpacing: '0.15em'
                         }}
                     >
                         <textPath 
@@ -46,7 +45,7 @@ export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, classNa
             </div>
             
             {/* CORE SHIELD */}
-            <div className="absolute inset-0 flex items-center justify-center filter drop-shadow-[0_3px_6px_rgba(0,0,0,0.7)]">
+            <div className="absolute inset-0 flex items-center justify-center">
                 <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
                     <defs>
                         <linearGradient id="miniShieldBorderShared" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -65,8 +64,6 @@ export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, classNa
                         </radialGradient>
                         <path id="miniStarItemShared" d="M 0,-5 L 1.2,-1.5 L 4.8,-1.5 L 1.8,0.8 L 2.9,4.3 L 0,2.2 L -2.9,4.3 L -1.8,0.8 L -4.8,-1.5 L -1.2,-1.5 Z" />
                     </defs>
-  
-                    <circle cx="50" cy="50" r="42" fill="url(#miniInnerGlowShared)" />
   
                     <g transform="translate(50, 62) scale(0.5) translate(-50, -50)">
                         <path 
@@ -91,7 +88,7 @@ export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, classNa
                         </g>
                     </g>
   
-                    <g style={{ filter: 'drop-shadow(0 0 5px rgba(0,242,254,0.6))' }}>
+                    <g>
                         <text 
                             x="50" 
                             y="36" 

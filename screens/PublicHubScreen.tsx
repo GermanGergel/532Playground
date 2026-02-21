@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useApp } from '../context';
 import { useTranslation } from '../ui';
 import { Player, PlayerStatus } from '../types';
@@ -253,9 +253,8 @@ const HubNav: React.FC<{
     onTabChange: (tab: DashboardViewType) => void; 
     archiveViewDate: string | null; 
     onHomeClick: () => void; 
-    onOpenTotm: () => void;
     customIcon?: string | null;
-}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, onOpenTotm, customIcon }) => { 
+}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, customIcon }) => { 
     const { language, setLanguage } = useApp(); 
     const t = useTranslation(); 
     const [isLangOpen, setIsLangOpen] = useState(false); 
@@ -526,7 +525,6 @@ export const PublicHubScreen: React.FC = () => {
                         mainScrollRef.current.scrollTop = 0;
                     }
                 }} 
-                onOpenTotm={() => setIsTotmOpen(true)}
                 customIcon={customIcon}
             />
 
@@ -572,7 +570,7 @@ export const PublicHubScreen: React.FC = () => {
                         <div className="mb-8 transform hover:scale-110 transition-transform duration-500 cursor-pointer">
                             <MiniSquadBadge 
                                 onClick={() => setIsTotmOpen(true)} 
-                                className="w-24 h-24 md:w-32 md:h-32 shadow-[0_0_50px_rgba(0,242,254,0.2)]" 
+                                className="w-24 h-24 md:w-32 md:h-32" 
                             />
                         </div>
                         <div className="text-center mb-12 md:mb-20">
