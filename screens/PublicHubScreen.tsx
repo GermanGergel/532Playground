@@ -539,22 +539,6 @@ export const PublicHubScreen: React.FC = () => {
                 ref={mainScrollRef}
                 className={`absolute inset-0 overflow-y-auto overscroll-none touch-pan-y z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}
             >
-                {/* Floating Chat Button - Minimalist (Only Icon) */}
-                {!isDashboardOpen && (
-                    <button 
-                        className="fixed top-24 md:top-28 right-6 z-[200] w-12 h-12 md:w-14 md:h-14 flex items-center justify-center hover:scale-110 transition-all duration-300 group animate-in fade-in slide-in-from-top-4 duration-700"
-                        title="Chat"
-                    >
-                        {customIcon ? (
-                            <img src={customIcon} alt="Chat" className="w-full h-full object-cover rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)]" />
-                        ) : (
-                            <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm flex items-center justify-center text-white/20">
-                                <MessageCircle className="w-6 h-6 md:w-7 md:h-7" />
-                            </div>
-                        )}
-                    </button>
-                )}
-
                 <HeaderAtmosphere />
                 
                 <div className="relative z-10">
@@ -601,6 +585,22 @@ export const PublicHubScreen: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Floating Chat Button - Truly Floating (Fixed to Viewport) */}
+            {!isDashboardOpen && (
+                <button 
+                    className="fixed bottom-8 right-6 md:bottom-12 md:right-12 z-[200] w-14 h-14 md:w-16 md:h-16 flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 group animate-in fade-in slide-in-from-bottom-10 duration-700"
+                    title="Chat"
+                >
+                    {customIcon ? (
+                        <img src={customIcon} alt="Chat" className="w-full h-full object-cover rounded-full shadow-[0_10px_25px_rgba(0,0,0,0.5)] border border-white/10" />
+                    ) : (
+                        <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-white/5 border border-white/10 backdrop-blur-md flex items-center justify-center text-white/20 shadow-xl">
+                            <MessageCircle className="w-7 h-7 md:w-8 md:h-8" />
+                        </div>
+                    )}
+                </button>
+            )}
         </div>
     );
 };
