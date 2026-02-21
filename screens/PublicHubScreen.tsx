@@ -626,8 +626,8 @@ export const PublicHubScreen: React.FC = () => {
                         >
                             {customTotm ? (
                                 <div className="w-24 h-24 md:w-32 md:h-32 relative">
-                                    {/* Subtle Neon Glow behind custom emblem - Reduced */}
-                                    <div className="absolute inset-0 rounded-full blur-[15px] bg-[#00F2FE]/10 shadow-[0_0_20px_rgba(0,242,254,0.15)]"></div>
+                                    {/* Subtle Neon Glow behind custom emblem - Minimal */}
+                                    <div className="absolute inset-0 rounded-full blur-[10px] bg-[#00F2FE]/5 shadow-[0_0_10px_rgba(0,242,254,0.1)]"></div>
                                     <img src={customTotm} alt="TOTM" className="w-full h-full object-contain relative z-10" />
                                 </div>
                             ) : (
