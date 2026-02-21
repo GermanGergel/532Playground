@@ -583,11 +583,11 @@ export const PublicHubScreen: React.FC = () => {
                 
                 <div className="relative z-10">
                     <HeroTitle />
-                    <div className="text-center mb-8 md:mb-12 -mt-8 md:-mt-12">
+                    <div className="text-center mb-4 md:mb-6 -mt-8 md:-mt-12">
                         {customTrophy ? (
-                            <img src={customTrophy} alt="Trophy" className="w-48 h-48 md:w-72 md:h-72 mx-auto mb-2 object-contain" />
+                            <img src={customTrophy} alt="Trophy" className="w-48 h-48 md:w-72 md:h-72 mx-auto mb-0 object-contain" />
                         ) : (
-                            <TrophyIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-2 text-[#00F2FE]" />
+                            <TrophyIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-0 text-[#00F2FE]" />
                         )}
                         <h2 className="font-orbitron text-xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubLeadersTitle}</h2>
                     </div>
