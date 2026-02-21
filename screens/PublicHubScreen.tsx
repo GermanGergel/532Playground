@@ -289,7 +289,7 @@ const HubNav: React.FC<{
                         <span className="font-black text-[9px] tracking-[0.15em] text-white uppercase leading-none">Club</span>
                         <span className="font-black text-[7px] tracking-[0.15em] text-white/30 uppercase leading-none">Center</span>
                     </div>
-                    <div className="flex items-center justify-center w-10 h-10 md:w-12 md:h-12">
+                    <div className="flex items-center justify-center w-14 h-14 md:w-16 md:h-16">
                         {customBall ? (
                             <img src={customBall} alt="Ball" className="w-full h-full object-contain" />
                         ) : (
@@ -573,7 +573,7 @@ export const PublicHubScreen: React.FC = () => {
                     <HeroTitle />
                     <div className="text-center mb-12 md:mb-20">
                         {customTrophy ? (
-                            <img src={customTrophy} alt="Trophy" className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-4 object-contain" />
+                            <img src={customTrophy} alt="Trophy" className="w-36 h-36 md:w-48 md:h-48 mx-auto mb-4 object-contain" />
                         ) : (
                             <TrophyIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-4 text-[#00F2FE]" />
                         )}

@@ -21,7 +21,7 @@ export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, classNa
             {/* TEXT RING (Animated Spin) */}
             <div className="absolute inset-0 opacity-100 animate-spin-slow">
                 {/* Subtle Neon Glow behind text */}
-                <div className="absolute inset-0 rounded-full blur-[15px] bg-[#00F2FE]/10"></div>
+                <div className="absolute inset-0 rounded-full blur-[20px] bg-[#00F2FE]/15 shadow-[0_0_30px_rgba(0,242,254,0.2)]"></div>
                 
                 <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible relative z-10">
                     <defs>
