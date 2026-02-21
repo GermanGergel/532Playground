@@ -290,17 +290,18 @@ const HubNav: React.FC<{
                     </div>
                     <StaticSoccerBall />
                     
-                    {/* Chat Button - Fixed in Nav (Only visible when Dashboard is OPEN - Inner Pages) */}
+                    {/* Chat Button - Minimalist (Only Icon) */}
                     {isDashboardOpen && (
                         <button 
-                            className="ml-4 w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#00F2FE]/10 border border-[#00F2FE]/30 flex items-center justify-center text-[#00F2FE] shadow-[0_0_10px_rgba(0,242,254,0.2)] hover:bg-[#00F2FE]/20 hover:scale-105 transition-all duration-300 group relative overflow-hidden animate-in fade-in zoom-in duration-300"
-                            title="Locker Room"
+                            className="ml-4 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center hover:scale-110 transition-all duration-300 group relative"
+                            title="Chat"
                         >
-                            <div className="absolute inset-0 bg-[#00F2FE]/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             {customIcon ? (
-                                <img src={customIcon} alt="Chat" className="w-full h-full object-cover rounded-full relative z-10" />
+                                <img src={customIcon} alt="Chat" className="w-full h-full object-cover rounded-full shadow-lg" />
                             ) : (
-                                <MessageCircle className="w-5 h-5 md:w-6 md:h-6 relative z-10" />
+                                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40">
+                                    <MessageCircle className="w-5 h-5 md:w-6 md:h-6" />
+                                </div>
                             )}
                         </button>
                     )}
@@ -538,19 +539,19 @@ export const PublicHubScreen: React.FC = () => {
                 ref={mainScrollRef}
                 className={`absolute inset-0 overflow-y-auto overscroll-none touch-pan-y z-10 w-full px-6 md:px-12 transition-all duration-1000 ${isDashboardOpen ? 'opacity-0 scale-95 translate-y-[-100px] pointer-events-none' : 'opacity-100 scale-100 translate-y-0'}`}
             >
-                {/* Floating Chat Button for Main Screen (Cover) - Top Right Pill */}
+                {/* Floating Chat Button - Minimalist (Only Icon) */}
                 {!isDashboardOpen && (
                     <button 
-                        className="fixed top-24 md:top-28 right-6 z-[200] h-10 md:h-12 px-4 md:px-6 rounded-full bg-[#00F2FE]/10 border border-[#00F2FE]/40 flex items-center justify-center gap-2 md:gap-3 text-[#00F2FE] shadow-[0_0_20px_rgba(0,242,254,0.2)] hover:bg-[#00F2FE]/20 hover:scale-105 hover:shadow-[0_0_30px_rgba(0,242,254,0.4)] transition-all duration-300 group animate-in fade-in slide-in-from-top-4 duration-700 backdrop-blur-sm"
-                        title="Locker Room"
+                        className="fixed top-24 md:top-28 right-6 z-[200] w-12 h-12 md:w-14 md:h-14 flex items-center justify-center hover:scale-110 transition-all duration-300 group animate-in fade-in slide-in-from-top-4 duration-700"
+                        title="Chat"
                     >
-                        <div className="absolute inset-0 rounded-full bg-[#00F2FE]/10 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         {customIcon ? (
-                            <img src={customIcon} alt="Chat" className="w-6 h-6 md:w-8 md:h-8 object-cover rounded-full relative z-10" />
+                            <img src={customIcon} alt="Chat" className="w-full h-full object-cover rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)]" />
                         ) : (
-                            <MessageCircle className="w-4 h-4 md:w-5 md:h-5 relative z-10 drop-shadow-[0_0_5px_rgba(0,242,254,0.8)]" />
+                            <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm flex items-center justify-center text-white/20">
+                                <MessageCircle className="w-6 h-6 md:w-7 md:h-7" />
+                            </div>
                         )}
-                        <span className="font-russo text-[10px] md:text-xs tracking-widest uppercase relative z-10">Locker Room</span>
                     </button>
                 )}
 
