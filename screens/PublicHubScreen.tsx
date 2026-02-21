@@ -284,7 +284,7 @@ const HubNav: React.FC<{
             <div className="flex items-center gap-2 md:gap-4 shrink-0 h-full">
                 <div className="flex items-center">
                     {/* Large Ball Icon replacing UNIT */}
-                    <div className="flex items-center justify-center w-14 h-14 md:w-18 md:h-18 -ml-2">
+                    <div className="flex items-center justify-center w-14 h-14 md:w-[76px] md:h-[76px] -ml-2">
                         {customBall ? (
                             <img src={customBall} alt="Ball" className="w-full h-full object-contain" />
                         ) : (
@@ -388,7 +388,7 @@ const HubNav: React.FC<{
 };
 
 const DispersingWord: React.FC<{ words: string[] }> = ({ words }) => { const [index, setIndex] = useState(0); const [state, setState] = useState<'entering' | 'active' | 'exiting'>('entering'); useEffect(() => { const cycle = async () => { setState('entering'); setTimeout(() => setState('active'), 1200); setTimeout(() => { setState('exiting'); setTimeout(() => { setIndex((prev) => (prev + 1) % words.length); }, 1200); }, 5000); }; cycle(); const interval = setInterval(cycle, 6500); return () => clearInterval(interval); }, [words.length]); const getStyles = () => { switch (state) { case 'entering': return "scale-[0.4] opacity-0 blur-[40px] translate-z-[-200px]"; case 'active': return "scale-[1.1] opacity-100 blur-0 translate-z-0"; case 'exiting': return "scale-[0.8] opacity-0 blur-[30px] translate-z-[-100px]"; default: return ""; } }; return (<span className="relative inline-block h-[1.1em] min-w-[280px] md:min-w-[500px] align-top text-center perspective-1000 px-10"><span className={`block px-4 text-transparent bg-clip-text bg-gradient-to-b from-[#00F2FE] to-[#00F2FE]/30 transition-all duration-[1200ms] ease-[cubic-bezier(0.2,0,0.2,1)] ${getStyles()}`} style={{ textShadow: state === 'active' ? '0 0 30px rgba(0, 242, 254, 0.5)' : 'none' }}>{words[index]}</span></span>); };
-const HeroTitle: React.FC = () => { const t = useTranslation(); const words = ["GAME", "LEGACY", "VICTORY"]; return (<div className="text-center mt-32 md:mt-44 mb-12 md:mb-16 relative"><div className="inline-block relative"><h1 className="font-russo text-4xl md:text-[9rem] leading-[1.1] uppercase tracking-tighter drop-shadow-2xl"><span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/20">DEFINE YOUR</span> <br /><DispersingWord words={words} /></h1><div className="mt-8 mb-10 max-w-lg mx-auto px-4"><p className="font-chakra text-[10px] md:text-xs text-white/50 font-medium uppercase tracking-[0.3em] lifestyle-relaxed leading-loose">{t.hubWelcomeText}</p></div><div className="mt-6 h-px w-48 md:w-64 bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent mx-auto opacity-60 shadow-[0_0_10px_#00F2FE]"></div></div></div>); };
+const HeroTitle: React.FC = () => { const t = useTranslation(); const words = ["GAME", "LEGACY", "VICTORY"]; return (<div className="text-center mt-32 md:mt-44 mb-6 md:mb-8 relative"><div className="inline-block relative"><h1 className="font-russo text-4xl md:text-[9rem] leading-[1.1] uppercase tracking-tighter drop-shadow-2xl"><span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/20">DEFINE YOUR</span> <br /><DispersingWord words={words} /></h1><div className="mt-8 mb-10 max-w-lg mx-auto px-4"><p className="font-chakra text-[10px] md:text-xs text-white/50 font-medium uppercase tracking-[0.3em] lifestyle-relaxed leading-loose">{t.hubWelcomeText}</p></div><div className="mt-6 h-px w-48 md:w-64 bg-gradient-to-r from-transparent via-[#00F2FE] to-transparent mx-auto opacity-60 shadow-[0_0_10px_#00F2FE]"></div></div></div>); };
 const CinematicStatCard: React.FC<{ value: string | number; label: string; }> = ({ value, label }) => (<div className="w-full md:flex-1 max-w-xs md:max-w-none h-40"><div className="relative rounded-3xl overflow-hidden bg-white/[0.03] border border-white/10 shadow-2xl h-full backdrop-blur-md"><div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-40"></div><div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-white/5 to-transparent blur-xl"></div><div className="relative h-full z-10 flex flex-col items-center justify-center gap-2"><span className="font-russo font-black text-6xl md:text-7xl text-white tracking-widest leading-none">{value}</span><span className="font-chakra font-bold text-xs text-white/50 uppercase tracking-[0.2em]">{label}</span></div></div></div>);
 type DashboardViewType = 'info' | 'dashboard' | 'roster' | 'archive' | 'duel' | 'tournaments' | 'league';
 
@@ -573,11 +573,11 @@ export const PublicHubScreen: React.FC = () => {
                 
                 <div className="relative z-10">
                     <HeroTitle />
-                    <div className="text-center mb-12 md:mb-20">
+                    <div className="text-center mb-8 md:mb-12 -mt-4 md:-mt-6">
                         {customTrophy ? (
-                            <img src={customTrophy} alt="Trophy" className="w-48 h-48 md:w-72 md:h-72 mx-auto mb-4 object-contain" />
+                            <img src={customTrophy} alt="Trophy" className="w-48 h-48 md:w-72 md:h-72 mx-auto mb-2 object-contain" />
                         ) : (
-                            <TrophyIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-4 text-[#00F2FE]" />
+                            <TrophyIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-2 text-[#00F2FE]" />
                         )}
                         <h2 className="font-orbitron text-xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubLeadersTitle}</h2>
                     </div>
