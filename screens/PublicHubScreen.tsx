@@ -286,7 +286,7 @@ const HubNav: React.FC<{
             <div className="flex items-center gap-2 md:gap-4 shrink-0 h-full">
                 <div className="flex items-center">
                     {/* Large Ball Icon replacing UNIT */}
-                    <div className="flex items-center justify-center w-14 h-14 md:w-[76px] md:h-[76px] -ml-2">
+                    <div className="flex items-center justify-center w-14 h-14 md:w-[75px] md:h-[75px] -ml-2">
                         {customBall ? (
                             <img src={customBall} alt="Ball" className="w-full h-full object-contain" />
                         ) : (
@@ -548,7 +548,13 @@ export const PublicHubScreen: React.FC = () => {
         const confirmedPlayers = allPlayers.filter(p => p.status === PlayerStatus.Confirmed);
         const totalPlayers = confirmedPlayers.length;
         const totalSessions = (history.length || 0);
-        const avgRating = totalPlayers > 0 ? Math.round(confirmedPlayers.reduce((sum, p) => sum + p.rating, 0) / totalPlayers) : 0;
+        
+        // Only include players with more than 3 sessions for the average rating calculation
+        const ratingPlayers = confirmedPlayers.filter(p => (p.totalSessionsPlayed || 0) > 3);
+        const avgRating = ratingPlayers.length > 0 
+            ? Math.round(ratingPlayers.reduce((sum, p) => sum + p.rating, 0) / ratingPlayers.length) 
+            : 0;
+            
         return { totalPlayers, totalSessions, avgRating };
     }, [allPlayers, history]);
     
@@ -599,11 +605,11 @@ export const PublicHubScreen: React.FC = () => {
                 
                 <div className="relative z-10">
                     <HeroTitle />
-                    <div className="text-center mb-10 md:mb-16 -mt-8 md:-mt-12">
+                    <div className="text-center mb-6 md:mb-10 -mt-8 md:-mt-12">
                         {customTrophy ? (
-                            <img src={customTrophy} alt="Trophy" className="w-48 h-48 md:w-72 md:h-72 mx-auto mb-2 object-contain" />
+                            <img src={customTrophy} alt="Trophy" className="w-48 h-48 md:w-72 md:h-72 mx-auto mb-1 object-contain" />
                         ) : (
-                            <TrophyIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-2 text-[#00F2FE]" />
+                            <TrophyIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-1 text-[#00F2FE]" />
                         )}
                         <h2 className="font-orbitron text-xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/80" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubLeadersTitle}</h2>
                     </div>
