@@ -9,8 +9,7 @@ import {
     uploadChatIcon, saveChatIconUrl, 
     uploadBallIcon, saveBallIconUrl,
     uploadTrophyIcon, saveTrophyIconUrl,
-    uploadTotmEmblem, saveTotmEmblemUrl,
-    uploadNavBanner, saveNavBannerUrl
+    uploadTotmEmblem, saveTotmEmblemUrl
 } from '../db';
 
 export const HomeScreen: React.FC = () => {
@@ -116,29 +115,6 @@ export const HomeScreen: React.FC = () => {
                   alert("TOTM Emblem uploaded to cloud!");
               } else {
                   localStorage.setItem('customTotmEmblem', base64String);
-                  alert("Saved locally.");
-              }
-              setIsUploading(false);
-              setIsHubModalOpen(false);
-          };
-          reader.readAsDataURL(file);
-      }
-  };
-
-  const handleUploadNavBanner = async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      if (file) {
-          setIsUploading(true);
-          const reader = new FileReader();
-          reader.onloadend = async () => {
-              const base64String = reader.result as string;
-              const cloudUrl = await uploadNavBanner(base64String);
-              if (cloudUrl) {
-                  await saveNavBannerUrl(cloudUrl);
-                  localStorage.setItem('customNavBanner', cloudUrl);
-                  alert("Nav Banner uploaded to cloud!");
-              } else {
-                  localStorage.setItem('customNavBanner', base64String);
                   alert("Saved locally.");
               }
               setIsUploading(false);
@@ -422,22 +398,6 @@ export const HomeScreen: React.FC = () => {
                             className="w-full !py-4 !text-lg font-chakra font-bold tracking-widest uppercase border border-white/10"
                         >
                             {isUploading ? "UPLOADING..." : "UPLOAD TOTM EMBLEM"}
-                        </Button>
-                    </div>
-
-                    <div className="relative w-full">
-                        <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleUploadNavBanner}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                        />
-                        <Button 
-                            variant="secondary" 
-                            disabled={isUploading}
-                            className="w-full !py-4 !text-lg font-chakra font-bold tracking-widest uppercase border border-white/10"
-                        >
-                            {isUploading ? "UPLOADING..." : "UPLOAD NAV BANNER"}
                         </Button>
                     </div>
 

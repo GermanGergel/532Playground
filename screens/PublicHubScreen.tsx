@@ -10,7 +10,7 @@ import { RadioPlayer } from '../components/RadioPlayer';
 import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
 import { MiniSquadBadge } from '../components/MiniSquadBadge';
 import { CinematicCard, HeaderAtmosphere } from '../components/PublicHubScreen';
-import { loadChatIconUrl, loadBallIconUrl, loadTrophyIconUrl, loadTotmEmblemUrl, loadNavBannerUrl } from '../db';
+import { loadChatIconUrl, loadBallIconUrl, loadTrophyIconUrl, loadTotmEmblemUrl } from '../db';
 
 // --- SUB-COMPONENTS ---
 
@@ -258,7 +258,7 @@ const HubNav: React.FC<{
     customTrophy?: string | null;
     customTotm?: string | null;
     customNavBanner?: string | null;
-}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, customIcon, customBall, customTrophy, customTotm, customNavBanner }) => { 
+}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, customIcon, customBall, customTrophy, customTotm }) => { 
     const { language, setLanguage } = useApp(); 
     const t = useTranslation(); 
     const [isLangOpen, setIsLangOpen] = useState(false); 
@@ -339,13 +339,6 @@ const HubNav: React.FC<{
                     </div>
                 ) : (
                     <div className="flex items-center justify-center animate-in fade-in zoom-in duration-700 w-full h-full relative">
-                        {customNavBanner && (
-                            <img 
-                                src={customNavBanner} 
-                                alt="Banner" 
-                                className="w-full h-[220%] md:h-[300%] object-fill opacity-90 absolute top-[75%] -translate-y-1/2" 
-                            />
-                        )}
                     </div>
                 )}
             </div>
@@ -410,7 +403,6 @@ export const PublicHubScreen: React.FC = () => {
     const [customBall, setCustomBall] = useState<string | null>(null);
     const [customTrophy, setCustomTrophy] = useState<string | null>(null);
     const [customTotm, setCustomTotm] = useState<string | null>(null);
-    const [customNavBanner, setCustomNavBanner] = useState<string | null>(null);
     const mainScrollRef = useRef<HTMLDivElement>(null);
     const t = useTranslation();
 
@@ -421,21 +413,18 @@ export const PublicHubScreen: React.FC = () => {
             const localBall = localStorage.getItem('customBallIcon');
             const localTrophy = localStorage.getItem('customTrophyIcon');
             const localTotm = localStorage.getItem('customTotmEmblem');
-            const localNavBanner = localStorage.getItem('customNavBanner');
             
             if (localChat) setCustomIcon(localChat);
             if (localBall) setCustomBall(localBall);
             if (localTrophy) setCustomTrophy(localTrophy);
             if (localTotm) setCustomTotm(localTotm);
-            if (localNavBanner) setCustomNavBanner(localNavBanner);
 
             // 2. Cloud storage
-            const [cloudChat, cloudBall, cloudTrophy, cloudTotm, cloudNavBanner] = await Promise.all([
+            const [cloudChat, cloudBall, cloudTrophy, cloudTotm] = await Promise.all([
                 loadChatIconUrl(),
                 loadBallIconUrl(),
                 loadTrophyIconUrl(),
-                loadTotmEmblemUrl(),
-                loadNavBannerUrl()
+                loadTotmEmblemUrl()
             ]);
 
             if (cloudChat && cloudChat !== localChat) {
@@ -453,10 +442,6 @@ export const PublicHubScreen: React.FC = () => {
             if (cloudTotm && cloudTotm !== localTotm) {
                 setCustomTotm(cloudTotm);
                 localStorage.setItem('customTotmEmblem', cloudTotm);
-            }
-            if (cloudNavBanner && cloudNavBanner !== localNavBanner) {
-                setCustomNavBanner(cloudNavBanner);
-                localStorage.setItem('customNavBanner', cloudNavBanner);
             }
         };
         loadIcons();
@@ -589,7 +574,6 @@ export const PublicHubScreen: React.FC = () => {
                 customBall={customBall}
                 customTrophy={customTrophy}
                 customTotm={customTotm}
-                customNavBanner={customNavBanner}
             />
 
             <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none touch-pan-y ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'} `} style={{ backgroundColor: getBottomPatchColor() }}>
