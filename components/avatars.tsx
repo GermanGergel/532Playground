@@ -12,9 +12,10 @@ interface TeamAvatarProps {
   countText?: string;
   isLight?: boolean;
   hollow?: boolean;
+  customEmblem?: string;
 }
 
-export const TeamAvatar: React.FC<TeamAvatarProps> = ({ team, size = 'sm', onClick, className = '', playerCount, countText, isLight = false, hollow = false }) => {
+export const TeamAvatar: React.FC<TeamAvatarProps> = ({ team, size = 'sm', onClick, className = '', playerCount, countText, isLight = false, hollow = false, customEmblem }) => {
     const sizeClassesMap = {
         xxs: { container: 'w-6 h-6', fontSize: 'text-[4px]', labelPos: '-top-1' },
         xs: { container: 'w-8 h-8', fontSize: 'text-[5px]', labelPos: '-top-1' },
@@ -38,6 +39,7 @@ export const TeamAvatar: React.FC<TeamAvatarProps> = ({ team, size = 'sm', onCli
 
     const borderWidth = size === 'xxs' ? '2px' : '3px';
     const containerStyle = { border: `${borderWidth} solid ${teamColor}` };
+    const logo = customEmblem || team.logo;
 
     return (
         <div 
@@ -45,9 +47,9 @@ export const TeamAvatar: React.FC<TeamAvatarProps> = ({ team, size = 'sm', onCli
             className={`relative ${selectedSize.container} ${className} ${onClick ? 'cursor-pointer' : ''} rounded-full`}
             style={containerStyle}
         >
-            {team.logo ? (
+            {logo ? (
                  <img 
-                    src={team.logo} 
+                    src={logo} 
                     alt={team.name || 'Team logo'} 
                     className={`${baseClasses} w-full h-full object-cover`}
                 />

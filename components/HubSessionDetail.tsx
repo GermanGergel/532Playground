@@ -276,7 +276,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                                 <tr key={stat.team.id} className="group border-b border-white/5 last:border-0 transition-all duration-300">
                                                     <td className={`${tdBase} text-white/30 bg-white/[0.02]`}>{idx + 1}</td>
                                                     <td className="py-1.5 flex justify-center">
-                                                        <SubtleDashboardAvatar team={stat.team} size="xxs" isLight={true} />
+                                                        <SubtleDashboardAvatar team={stat.team} size="xxs" isLight={true} customEmblem={customTeamEmblems[stat.team.color || '']} />
                                                     </td>
                                                     <td className={`${tdBase} text-slate-300`}>{stat.gamesPlayed}</td>
                                                     <td className={`${tdBase} text-slate-300`}>{stat.wins}</td>
@@ -360,10 +360,8 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                                             <td className="py-2 text-center">
                                                                 <div className="flex justify-center">
                                                                     <TeamAvatar 
-                                                                        team={{ 
-                                                                            ...(session.teams.find(t => t.id === game.team1Id) || {}),
-                                                                        logo: customTeamEmblems[(session.teams.find(t => t.id === game.team1Id)?.color || '')] || (session.teams.find(t => t.id === game.team1Id)?.logo)
-                                                                        }} 
+                                                                        team={session.teams.find(t => t.id === game.team1Id) || {}} 
+                                                                        customEmblem={customTeamEmblems[session.teams.find(t => t.id === game.team1Id)?.color || '']}
                                                                         size="xxs" 
                                                                         isLight={true} 
                                                                     />
@@ -375,10 +373,8 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                                             <td className="py-2 text-center">
                                                                 <div className="flex justify-center">
                                                                     <TeamAvatar 
-                                                                        team={{ 
-                                                                            ...(session.teams.find(t => t.id === game.team2Id) || {}),
-                                                                        logo: customTeamEmblems[(session.teams.find(t => t.id === game.team2Id)?.color || '')] || (session.teams.find(t => t.id === game.team2Id)?.logo)
-                                                                        }} 
+                                                                        team={session.teams.find(t => t.id === game.team2Id) || {}} 
+                                                                        customEmblem={customTeamEmblems[session.teams.find(t => t.id === game.team2Id)?.color || '']}
                                                                         size="xxs" 
                                                                         isLight={true} 
                                                                     />

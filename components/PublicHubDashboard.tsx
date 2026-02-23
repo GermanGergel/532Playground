@@ -109,13 +109,14 @@ const StandbyScreen: React.FC = () => {
 
 // --- DASHBOARD UI HELPERS ---
 
-const SubtleDashboardAvatar: React.FC<{ team: any; size?: string; isLight?: boolean }> = ({ team }) => {
+const SubtleDashboardAvatar: React.FC<{ team: any; size?: string; isLight?: boolean; customEmblem?: string }> = ({ team, customEmblem }) => {
     const color = team?.color || '#A9B1BD';
+    const logo = customEmblem || team?.logo;
     return (
         <div className="relative flex items-center justify-center shrink-0">
             <div className="w-6 h-6 rounded-full flex items-center justify-center transition-all duration-500 bg-black/40 opacity-90" style={{ border: `1px solid ${color}`, boxShadow: `0 0 5px ${color}66, 0 0 1.5px ${color}`, }}>
-                {team?.logo ? (
-                    <img src={team.logo} className="w-full h-full rounded-full object-cover" alt="" />
+                {logo ? (
+                    <img src={logo} className="w-full h-full rounded-full object-cover" alt="" />
                 ) : (
                     <svg className="w-[55%] h-[55%]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M20.38 3.46L16 2a4 4 0 0 0-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99 .84H6v10c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" fill={color} fillOpacity="0.35" stroke={color} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
@@ -488,7 +489,7 @@ export const PublicHubDashboard: React.FC<{ customTeamEmblems?: Record<string, s
                                     {teamStats.map((stat, idx) => (
                                         <tr key={stat.team.id} className="group border-b border-white/5 last:border-0 transition-all duration-300">
                                             <td className="py-1.5 text-center text-[9px] font-bold text-white/30 bg-white/[0.02] relative overflow-hidden">{idx + 1}</td>
-                                            <td className="py-1.5 flex justify-center"><SubtleDashboardAvatar team={stat.team} size="xxs" isLight /></td>
+                                            <td className="py-1.5 flex justify-center"><SubtleDashboardAvatar team={stat.team} size="xxs" isLight customEmblem={customTeamEmblems[stat.team.color || '']} /></td>
                                             <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.gamesPlayed}</td>
                                             <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.wins}</td>
                                             <td className="py-1.5 text-center text-[10px] font-bold text-slate-300">{stat.draws}</td>
@@ -540,10 +541,8 @@ export const PublicHubDashboard: React.FC<{ customTeamEmblems?: Record<string, s
                                                         <td className="py-2.5 text-center">
                                                             <div className="flex justify-center">
                                                                 <TeamAvatar 
-                                                                    team={{ 
-                                                                        ...(session.teams.find(t => t.id === game.team1Id) || {}),
-                                                                        logo: customTeamEmblems[(session.teams.find(t => t.id === game.team1Id)?.color || '')] || (session.teams.find(t => t.id === game.team1Id)?.logo)
-                                                                    }} 
+                                                                    team={session.teams.find(t => t.id === game.team1Id) || {}} 
+                                                                    customEmblem={customTeamEmblems[session.teams.find(t => t.id === game.team1Id)?.color || '']}
                                                                     size="xxs" 
                                                                     isLight={true} 
                                                                 />
@@ -553,10 +552,8 @@ export const PublicHubDashboard: React.FC<{ customTeamEmblems?: Record<string, s
                                                         <td className="py-2.5 text-center">
                                                             <div className="flex justify-center">
                                                                 <TeamAvatar 
-                                                                    team={{ 
-                                                                        ...(session.teams.find(t => t.id === game.team2Id) || {}),
-                                                                        logo: customTeamEmblems[(session.teams.find(t => t.id === game.team2Id)?.color || '')] || (session.teams.find(t => t.id === game.team2Id)?.logo)
-                                                                    }} 
+                                                                    team={session.teams.find(t => t.id === game.team2Id) || {}} 
+                                                                    customEmblem={customTeamEmblems[session.teams.find(t => t.id === game.team2Id)?.color || '']}
                                                                     size="xxs" 
                                                                     isLight={true} 
                                                                 />
