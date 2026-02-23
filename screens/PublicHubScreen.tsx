@@ -258,8 +258,7 @@ const HubNav: React.FC<{
     onHomeClick: () => void; 
     customIcon?: string | null;
     customBall?: string | null;
-    customTotm?: string | null;
-}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, customIcon, customBall, customTotm }) => { 
+}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, customIcon, customBall }) => { 
     const { language, setLanguage } = useApp(); 
     const t = useTranslation(); 
     const [isLangOpen, setIsLangOpen] = useState(false); 
@@ -360,7 +359,7 @@ const HubNav: React.FC<{
                     <RadioPlayer />
                     
                     <NavHubButton title={t.hubDashboardBtn} icon={<LayoutDashboard />} isActive={isDashboardOpen && activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} />
-                    <NavHubButton title={t.playerHub} icon={<Users />} customImage={customTotm} isActive={isDashboardOpen && (activeTab === 'roster' || activeTab === 'duel')} onClick={() => onTabChange('roster')} />
+                    <NavHubButton title={t.playerHub} icon={<Users />} isActive={isDashboardOpen && (activeTab === 'roster' || activeTab === 'duel')} onClick={() => onTabChange('roster')} />
                     <NavHubButton title={t.navTournaments} icon={<TrophyIcon />} isActive={isDashboardOpen && activeTab === 'tournaments'} onClick={() => onTabChange('tournaments')} />
                     <NavHubButton title={t.navHistory} icon={<HistoryIcon />} isActive={isDashboardOpen && activeTab === 'archive'} onClick={() => onTabChange('archive')} />
                     <NavHubButton title={t.information} icon={<InfoIcon />} isActive={isDashboardOpen && activeTab === 'info'} onClick={() => onTabChange('info')} />
@@ -595,7 +594,6 @@ export const PublicHubScreen: React.FC = () => {
                 }} 
                 customIcon={customIcon}
                 customBall={customBall}
-                customTotm={customTotm}
             />
 
             <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none touch-pan-y ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'} `} style={{ backgroundColor: getBottomPatchColor() }}>
