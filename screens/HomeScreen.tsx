@@ -9,7 +9,8 @@ import {
     uploadChatIcon, saveChatIconUrl, 
     uploadBallIcon, saveBallIconUrl,
     uploadTrophyIcon, saveTrophyIconUrl,
-    uploadTotmEmblem, saveTotmEmblemUrl
+    uploadTotmEmblem, saveTotmEmblemUrl,
+    uploadTeamEmblem, saveTeamEmblemUrl
 } from '../db';
 
 export const HomeScreen: React.FC = () => {
@@ -18,6 +19,7 @@ export const HomeScreen: React.FC = () => {
   const { activeSession } = useApp();
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isHubModalOpen, setIsHubModalOpen] = useState(false);
+  const [isTeamEmblemsOpen, setIsTeamEmblemsOpen] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -119,6 +121,28 @@ export const HomeScreen: React.FC = () => {
               }
               setIsUploading(false);
               setIsHubModalOpen(false);
+          };
+          reader.readAsDataURL(file);
+      }
+  };
+
+  const handleUploadTeamEmblem = async (color: string, event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file) {
+          setIsUploading(true);
+          const reader = new FileReader();
+          reader.onloadend = async () => {
+              const base64String = reader.result as string;
+              const cloudUrl = await uploadTeamEmblem(color, base64String);
+              if (cloudUrl) {
+                  await saveTeamEmblemUrl(color, cloudUrl);
+                  localStorage.setItem(`customTeamEmblem_${color.replace('#', '')}`, cloudUrl);
+                  alert(`Emblem uploaded successfully!`);
+              } else {
+                  localStorage.setItem(`customTeamEmblem_${color.replace('#', '')}`, base64String);
+                  alert("Saved locally.");
+              }
+              setIsUploading(false);
           };
           reader.readAsDataURL(file);
       }
@@ -399,6 +423,44 @@ export const HomeScreen: React.FC = () => {
                         >
                             {isUploading ? "UPLOADING..." : "UPLOAD TOTM EMBLEM"}
                         </Button>
+                    </div>
+
+                    <div className="w-full flex flex-col gap-1">
+                        <Button 
+                            variant="secondary" 
+                            onClick={() => setIsTeamEmblemsOpen(!isTeamEmblemsOpen)}
+                            className="w-full !py-2.5 !text-xs font-chakra font-bold tracking-widest uppercase border border-white/10"
+                        >
+                            {isTeamEmblemsOpen ? "HIDE TEAM EMBLEMS" : "UPLOAD TEAM EMBLEMS"}
+                        </Button>
+
+                        {isTeamEmblemsOpen && (
+                            <div className="grid grid-cols-2 gap-2 w-full mt-1">
+                                {[
+                                    { color: '#FF851B', label: 'ORANGE' },
+                                    { color: '#2ECC40', label: 'LIME' },
+                                    { color: '#0074D9', label: 'BLUE' },
+                                    { color: '#FF4136', label: 'RED' }
+                                ].map((team) => (
+                                    <div key={team.color} className="relative">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => handleUploadTeamEmblem(team.color, e)}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                        />
+                                        <Button 
+                                            variant="secondary" 
+                                            disabled={isUploading}
+                                            className="w-full !py-2 !text-[10px] font-chakra font-bold tracking-tight uppercase border border-white/5 flex items-center justify-center gap-2"
+                                        >
+                                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: team.color }} />
+                                            {team.label}
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     <Button 

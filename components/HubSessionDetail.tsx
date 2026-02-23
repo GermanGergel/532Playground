@@ -3,13 +3,14 @@ import React, { useMemo, useState } from 'react';
 import { Session, WeatherCondition } from '../types';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
 import { TeamAvatar } from './avatars'; 
-import { ChevronLeft, TrophyIcon, Users, History as HistoryIcon, Target, AwardIcon, YouTubeIcon } from '../icons';
+import { ChevronLeft, TrophyIcon, Users, History as HistoryIcon, Target, YouTubeIcon } from '../icons';
 import { useTranslation } from '../ui';
 
 interface HubSessionDetailProps {
     session: Session;
     onBack: () => void;
     isEmbedded?: boolean;
+    customTeamEmblems?: Record<string, string>;
 }
 
 const MapPinIcon = ({ className }: { className?: string }) => (
@@ -28,8 +29,9 @@ const MoonIcon = ({ className }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
 );
 
-const SubtleDashboardAvatar: React.FC<{ team: any; size?: string; isLight?: boolean }> = ({ team }) => {
+const SubtleDashboardAvatar: React.FC<{ team: any; size?: string; isLight?: boolean; customEmblem?: string }> = ({ team, customEmblem }) => {
     const color = team?.color || '#A9B1BD';
+    const logo = customEmblem || team?.logo;
     return (
         <div className="relative flex items-center justify-center shrink-0">
             <div 
@@ -39,8 +41,8 @@ const SubtleDashboardAvatar: React.FC<{ team: any; size?: string; isLight?: bool
                     boxShadow: `0 0 5px ${color}66, 0 0 1.5px ${color}`, 
                 }}
             >
-                {team?.logo ? (
-                    <img src={team.logo} className="w-full h-full rounded-full object-cover" alt="" />
+                {logo ? (
+                    <img src={logo} className="w-full h-full rounded-full object-cover" alt="" />
                 ) : (
                     <svg className="w-[55%] h-[55%]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M20.38 3.46L16 2a4 4 0 0 0-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99 .84H6v10c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" fill={color} fillOpacity="0.35" stroke={color} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
@@ -212,7 +214,7 @@ const HubCard: React.FC<{ title: React.ReactNode; icon: React.ReactNode; childre
     );
 };
 
-export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onBack, isEmbedded = false }) => {
+export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onBack, isEmbedded = false, customTeamEmblems = {} }) => {
     const t = useTranslation();
     const [activeTab, setActiveTab] = useState<'players' | 'matches'>('players');
     const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
@@ -356,13 +358,31 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                                         >
                                                             <td className={`${tdBase} text-white/30 font-mono`}>{game.gameNumber}</td>
                                                             <td className="py-2 text-center">
-                                                                <div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team1Id) || {}} size="xxs" isLight={true} /></div>
+                                                                <div className="flex justify-center">
+                                                                    <TeamAvatar 
+                                                                        team={{ 
+                                                                            ...(session.teams.find(t => t.id === game.team1Id) || {}),
+                                                                        logo: customTeamEmblems[(session.teams.find(t => t.id === game.team1Id)?.color || '')] || (session.teams.find(t => t.id === game.team1Id)?.logo)
+                                                                        }} 
+                                                                        size="xxs" 
+                                                                        isLight={true} 
+                                                                    />
+                                                                </div>
                                                             </td>
                                                             <td className="py-2 text-center">
                                                                 <span className="font-bold text-[11px] md:text-[12px] text-slate-200 tabular-nums tracking-tighter bg-white/5 px-2 py-1 rounded transition-colors group-hover:text-white group-hover:bg-[#00F2FE]/10">{game.team1Score} : {game.team2Score}</span>
                                                             </td>
                                                             <td className="py-2 text-center">
-                                                                <div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team2Id) || {}} size="xxs" isLight={true} /></div>
+                                                                <div className="flex justify-center">
+                                                                    <TeamAvatar 
+                                                                        team={{ 
+                                                                            ...(session.teams.find(t => t.id === game.team2Id) || {}),
+                                                                        logo: customTeamEmblems[(session.teams.find(t => t.id === game.team2Id)?.color || '')] || (session.teams.find(t => t.id === game.team2Id)?.logo)
+                                                                        }} 
+                                                                        size="xxs" 
+                                                                        isLight={true} 
+                                                                    />
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                         {expandedMatchId === game.id && (
@@ -370,7 +390,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                                                 <td colSpan={4} className="p-3">
                                                                     <div className="flex flex-col gap-2">
                                                                         {game.goals.length > 0 ? (
-                                                                            game.goals.map((goal, gIdx) => {
+                                                                            game.goals.map((goal) => {
                                                                                 const scorer = session.playerPool.find(p => p.id === goal.scorerId);
                                                                                 const assistant = session.playerPool.find(p => p.id === goal.assistantId);
                                                                                 const team = session.teams.find(t => t.id === goal.teamId);

@@ -8,9 +8,8 @@ import { Language } from '../translations/index';
 import { ClubIntelligenceDashboard } from '../components/ClubIntelligenceDashboard';
 import { RadioPlayer } from '../components/RadioPlayer';
 import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
-import { MiniSquadBadge } from '../components/MiniSquadBadge';
 import { CinematicCard, HeaderAtmosphere } from '../components/PublicHubScreen';
-import { loadChatIconUrl, loadBallIconUrl, loadTrophyIconUrl, loadTotmEmblemUrl } from '../db';
+import { loadChatIconUrl, loadBallIconUrl, loadTrophyIconUrl, loadTotmEmblemUrl, loadTeamEmblemUrl } from '../db';
 
 // --- SUB-COMPONENTS ---
 
@@ -238,7 +237,7 @@ const NavHubButton: React.FC<{ title: string; icon: React.ReactNode; isActive: b
         className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 h-full min-w-[64px] group ${isDisabled ? 'opacity-10 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-110'}`}
     >
         <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isActive ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 shadow-[0_0_15px_rgba(0,242,254,0.5),inset_0_0_6px_rgba(0,242,254,0.2)]' : 'text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/40 hover:text-white'}`}>
-            {React.cloneElement(icon as React.ReactElement<any>, { className: "w-4 h-4" })}
+            {React.cloneElement(icon as React.ReactElement<React.SVGProps<SVGSVGElement>>, { className: "w-4 h-4" })}
         </div>
         <span className={`text-[6px] font-black tracking-widest uppercase transition-colors text-center px-1 truncate w-full ${isActive ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>
             {title}
@@ -255,10 +254,7 @@ const HubNav: React.FC<{
     onHomeClick: () => void; 
     customIcon?: string | null;
     customBall?: string | null;
-    customTrophy?: string | null;
-    customTotm?: string | null;
-    customNavBanner?: string | null;
-}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, customIcon, customBall, customTrophy, customTotm }) => { 
+}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, customIcon, customBall }) => { 
     const { language, setLanguage } = useApp(); 
     const t = useTranslation(); 
     const [isLangOpen, setIsLangOpen] = useState(false); 
@@ -403,6 +399,7 @@ export const PublicHubScreen: React.FC = () => {
     const [customBall, setCustomBall] = useState<string | null>(null);
     const [customTrophy, setCustomTrophy] = useState<string | null>(null);
     const [customTotm, setCustomTotm] = useState<string | null>(null);
+    const [customTeamEmblems, setCustomTeamEmblems] = useState<Record<string, string>>({});
     const mainScrollRef = useRef<HTMLDivElement>(null);
     const t = useTranslation();
 
@@ -443,6 +440,27 @@ export const PublicHubScreen: React.FC = () => {
                 setCustomTotm(cloudTotm);
                 localStorage.setItem('customTotmEmblem', cloudTotm);
             }
+
+            // 3. Team Emblems
+            const colors = ['#FF851B', '#2ECC40', '#0074D9', '#FF4136'];
+            const emblems: Record<string, string> = {};
+            
+            // Local
+            colors.forEach(color => {
+                const local = localStorage.getItem(`customTeamEmblem_${color.replace('#', '')}`);
+                if (local) emblems[color] = local;
+            });
+            setCustomTeamEmblems(prev => ({ ...prev, ...emblems }));
+
+            // Cloud
+            const cloudEmblems = await Promise.all(colors.map(color => loadTeamEmblemUrl(color)));
+            cloudEmblems.forEach((url, idx) => {
+                const color = colors[idx];
+                if (url && url !== emblems[color]) {
+                    setCustomTeamEmblems(prev => ({ ...prev, [color]: url }));
+                    localStorage.setItem(`customTeamEmblem_${color.replace('#', '')}`, url);
+                }
+            });
         };
         loadIcons();
     }, []);
@@ -572,12 +590,17 @@ export const PublicHubScreen: React.FC = () => {
                 }} 
                 customIcon={customIcon}
                 customBall={customBall}
-                customTrophy={customTrophy}
-                customTotm={customTotm}
             />
 
             <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none touch-pan-y ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'} `} style={{ backgroundColor: getBottomPatchColor() }}>
-                <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10"><ClubIntelligenceDashboard currentView={activeTab} setView={setActiveTab} onArchiveViewChange={setArchiveViewDate} /></div>
+                <div className="relative max-w-[1450px] w-full mx-auto px-0 z-10">
+                    <ClubIntelligenceDashboard 
+                        currentView={activeTab} 
+                        setView={setActiveTab} 
+                        onArchiveViewChange={setArchiveViewDate} 
+                        customTeamEmblems={customTeamEmblems}
+                    />
+                </div>
                 <div className="fixed bottom-0 left-0 right-0 h-16 z-[110] pointer-events-none opacity-0 transition-all duration-700 delay-300" style={{ opacity: isDashboardOpen ? 1 : 0, background: `linear-gradient(to top, ${getBottomPatchColor()} 50%, ${getBottomPatchColor()}cc 80%, transparent 100%)` }}></div>
             </div>
 

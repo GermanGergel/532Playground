@@ -192,6 +192,15 @@ export const uploadTotmEmblem = async (base64Image: string): Promise<string | nu
 export const saveTotmEmblemUrl = async (url: string): Promise<boolean> => saveAssetUrl(TOTM_EMBLEM_KEY, url);
 export const loadTotmEmblemUrl = async (): Promise<string | null> => loadAssetUrl(TOTM_EMBLEM_KEY);
 
+export const uploadTeamEmblem = async (color: string, base64Image: string): Promise<string | null> => 
+    uploadCustomAsset(base64Image, `team_emblem_${color.replace('#', '')}`);
+
+export const saveTeamEmblemUrl = async (color: string, url: string): Promise<boolean> => 
+    saveAssetUrl(`team_emblem_${color.replace('#', '')}`, url);
+
+export const loadTeamEmblemUrl = async (color: string): Promise<string | null> => 
+    loadAssetUrl(`team_emblem_${color.replace('#', '')}`);
+
 // --- PLAYER MANAGEMENT ---
 const BUCKET_NAME = 'player_images';
 

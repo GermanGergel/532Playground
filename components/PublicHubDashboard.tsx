@@ -1,5 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useMemo, useState } from 'react';
 import { useApp } from '../context';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
 import { NewsItem, Player, Team, WeatherCondition } from '../types';
@@ -403,7 +402,7 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
 
 // --- MAIN DASHBOARD EXPORT ---
 
-export const PublicHubDashboard: React.FC = () => {
+export const PublicHubDashboard: React.FC<{ customTeamEmblems?: Record<string, string> }> = ({ customTeamEmblems = {} }) => {
     const { history, newsFeed, allPlayers } = useApp();
     const t = useTranslation();
     const [activeRightTab, setActiveRightTab] = useState<'players' | 'games'>('players');
@@ -538,9 +537,31 @@ export const PublicHubDashboard: React.FC = () => {
                                                 <React.Fragment key={game.id}>
                                                     <tr className={`group border-b border-white/5 last:border-0 transition-all duration-300 ${totalScore > 0 ? 'hover:bg-white/[0.04] cursor-pointer' : 'cursor-default'} ${expandedMatchId === game.id ? 'bg-[#00F2FE]/5' : ''}`} onClick={() => (totalScore > 0 && setExpandedMatchId(expandedMatchId === game.id ? null : game.id))} >
                                                         <td className={`${tdBase} text-white/30 font-mono relative overflow-hidden`}>{game.gameNumber}</td>
-                                                        <td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team1Id) || {}} size="xxs" isLight={true} /></div></td>
+                                                        <td className="py-2.5 text-center">
+                                                            <div className="flex justify-center">
+                                                                <TeamAvatar 
+                                                                    team={{ 
+                                                                        ...(session.teams.find(t => t.id === game.team1Id) || {}),
+                                                                        logo: customTeamEmblems[(session.teams.find(t => t.id === game.team1Id)?.color || '')] || (session.teams.find(t => t.id === game.team1Id)?.logo)
+                                                                    }} 
+                                                                    size="xxs" 
+                                                                    isLight={true} 
+                                                                />
+                                                            </div>
+                                                        </td>
                                                         <td className="py-2.5 text-center"><span className="font-bold text-[11px] md:text-[12px] text-slate-200 tabular-nums tracking-tighter bg-white/5 px-2 py-1 rounded transition-colors group-hover:text-white group-hover:bg-[#00F2FE]/10">{game.team1Score} : {game.team2Score}</span></td>
-                                                        <td className="py-2.5 text-center"><div className="flex justify-center"><TeamAvatar team={session.teams.find(t => t.id === game.team2Id) || {}} size="xxs" isLight={true} /></div></td>
+                                                        <td className="py-2.5 text-center">
+                                                            <div className="flex justify-center">
+                                                                <TeamAvatar 
+                                                                    team={{ 
+                                                                        ...(session.teams.find(t => t.id === game.team2Id) || {}),
+                                                                        logo: customTeamEmblems[(session.teams.find(t => t.id === game.team2Id)?.color || '')] || (session.teams.find(t => t.id === game.team2Id)?.logo)
+                                                                    }} 
+                                                                    size="xxs" 
+                                                                    isLight={true} 
+                                                                />
+                                                            </div>
+                                                        </td>
                                                     </tr>
                                                     {expandedMatchId === game.id && (
                                                         <tr className="bg-white/[0.03] animate-in slide-in-from-top-2 fade-in duration-300">

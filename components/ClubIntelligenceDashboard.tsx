@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HubRoster } from './HubRoster';
 import { HubArchive } from './HubArchive';
 import { HubInfo } from './HubInfo';
@@ -10,9 +10,10 @@ interface ClubIntelligenceDashboardProps {
     currentView: 'dashboard' | 'roster' | 'archive' | 'tournaments' | 'league' | 'info' | 'duel';
     setView: (view: any) => void;
     onArchiveViewChange?: (date: string | null) => void;
+    customTeamEmblems?: Record<string, string>;
 }
 
-export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps> = ({ currentView, setView, onArchiveViewChange }) => {
+export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps> = ({ currentView, onArchiveViewChange, customTeamEmblems = {} }) => {
     const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
     const [hubSortBy, setHubSortBy] = useState<'name' | 'rating' | 'date'>('rating');
     const [hubSearch, setHubSearch] = useState('');
@@ -31,7 +32,7 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
         <div className="w-full h-full animate-in fade-in duration-700 relative">
             {/* Main Content Area */}
             <div className="w-full h-full relative overflow-hidden">
-                {currentView === 'dashboard' && <PublicHubDashboard />}
+                {currentView === 'dashboard' && <PublicHubDashboard customTeamEmblems={customTeamEmblems} />}
                 
                 {(currentView === 'roster' || currentView === 'duel') && (
                     <HubRoster 
@@ -48,7 +49,7 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
                     />
                 )}
                 
-                {currentView === 'archive' && <HubArchive onViewSession={onArchiveViewChange} />}
+                {currentView === 'archive' && <HubArchive onViewSession={onArchiveViewChange} customTeamEmblems={customTeamEmblems} />}
                 {currentView === 'info' && <HubInfo />}
                 
                 {(currentView === 'tournaments' || currentView === 'league') && (

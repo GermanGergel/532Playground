@@ -2,16 +2,15 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context';
 import { Calendar, History as HistoryIcon, Search, RefreshCw } from '../icons';
 import { HubSessionDetail } from './HubSessionDetail';
-import { useTranslation } from '../ui';
 import { Session } from '../types';
 
 interface HubArchiveProps {
     onViewSession?: (date: string | null) => void;
+    customTeamEmblems?: Record<string, string>;
 }
 
-export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
+export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession, customTeamEmblems = {} }) => {
     const { history, fetchHistory } = useApp();
-    const t = useTranslation();
     const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(true);
@@ -174,6 +173,7 @@ export const HubArchive: React.FC<HubArchiveProps> = ({ onViewSession }) => {
                             session={selectedSession} 
                             isEmbedded={true}
                             onBack={() => {}} 
+                            customTeamEmblems={customTeamEmblems}
                         />
                     </div>
                 ) : !isLoading && (
