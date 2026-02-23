@@ -321,18 +321,18 @@ export const HomeScreen: React.FC = () => {
             onClose={() => setIsHubModalOpen(false)}
             size="xs"
             hideCloseButton
-            containerClassName="!p-4 !bg-dark-bg border border-[#00F2FE]/20"
+            containerClassName="!p-3 !bg-dark-bg border border-[#00F2FE]/20"
         >
-            <div className="flex flex-col items-center gap-6 p-4">
-                <h2 className="font-russo text-2xl text-white uppercase tracking-tight leading-none text-center">
+            <div className="flex flex-col items-center gap-4 p-2">
+                <h2 className="font-russo text-lg text-white uppercase tracking-tight leading-none text-center">
                     CLUB HUB ACCESS
                 </h2>
                 
-                <div className="w-full flex flex-col gap-4">
+                <div className="w-full flex flex-col gap-2">
                     <Button 
                         variant="primary" 
                         onClick={() => navigate('/hub')} 
-                        className="w-full !py-4 !text-lg font-chakra font-black tracking-widest uppercase shadow-[0_0_20px_rgba(0,242,254,0.4)]"
+                        className="w-full !py-3 !text-base font-chakra font-black tracking-widest uppercase shadow-[0_0_20px_rgba(0,242,254,0.4)]"
                     >
                         ENTER HUB
                     </Button>
@@ -347,7 +347,7 @@ export const HomeScreen: React.FC = () => {
                         <Button 
                             variant="secondary" 
                             disabled={isUploading}
-                            className="w-full !py-4 !text-lg font-chakra font-bold tracking-widest uppercase border border-white/10"
+                            className="w-full !py-2.5 !text-xs font-chakra font-bold tracking-widest uppercase border border-white/10"
                         >
                             {isUploading ? "UPLOADING..." : "UPLOAD CHAT ICON"}
                         </Button>
@@ -363,7 +363,7 @@ export const HomeScreen: React.FC = () => {
                         <Button 
                             variant="secondary" 
                             disabled={isUploading}
-                            className="w-full !py-4 !text-lg font-chakra font-bold tracking-widest uppercase border border-white/10"
+                            className="w-full !py-2.5 !text-xs font-chakra font-bold tracking-widest uppercase border border-white/10"
                         >
                             {isUploading ? "UPLOADING..." : "UPLOAD BALL ICON"}
                         </Button>
@@ -379,7 +379,7 @@ export const HomeScreen: React.FC = () => {
                         <Button 
                             variant="secondary" 
                             disabled={isUploading}
-                            className="w-full !py-4 !text-lg font-chakra font-bold tracking-widest uppercase border border-white/10"
+                            className="w-full !py-2.5 !text-xs font-chakra font-bold tracking-widest uppercase border border-white/10"
                         >
                             {isUploading ? "UPLOADING..." : "UPLOAD TROPHY ICON"}
                         </Button>
@@ -395,7 +395,7 @@ export const HomeScreen: React.FC = () => {
                         <Button 
                             variant="secondary" 
                             disabled={isUploading}
-                            className="w-full !py-4 !text-lg font-chakra font-bold tracking-widest uppercase border border-white/10"
+                            className="w-full !py-2.5 !text-xs font-chakra font-bold tracking-widest uppercase border border-white/10"
                         >
                             {isUploading ? "UPLOADING..." : "UPLOAD TOTM EMBLEM"}
                         </Button>
