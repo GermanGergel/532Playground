@@ -102,7 +102,7 @@ export const RadioPlayer: React.FC<{ customIcon?: string }> = ({ customIcon }) =
                 <img 
                     src={customIcon} 
                     alt="Radio" 
-                    className={`w-20 h-20 md:w-24 md:h-24 object-contain transition-all duration-300 ${isPlaying ? 'drop-shadow-[0_0_8px_rgba(0,242,254,0.8)]' : 'opacity-90 hover:opacity-100'}`} 
+                    className={`w-28 h-28 md:w-36 md:h-36 object-contain transition-all duration-300 ${isPlaying ? 'drop-shadow-[0_0_8px_rgba(0,242,254,0.8)]' : 'opacity-90 hover:opacity-100'}`} 
                 />
             </button>
         );
