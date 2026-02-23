@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Player, SkillType, PlayerForm } from '../types';
+import React, { useEffect, useRef, useMemo } from 'react';
+import { Player, SkillType } from '../types';
 import { useApp } from '../context';
 import { useTranslation } from '../ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
@@ -105,7 +105,7 @@ export const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ play
                         </div>
                         {isTotm && (
                             <div className="animate-in fade-in zoom-in duration-500">
-                                <MiniSquadBadge size="w-10 h-10" customEmblem={totmEmblem} />
+                                <MiniSquadBadge size="w-10 h-10" customEmblem={totmEmblem} noGlow={true} />
                             </div>
                         )}
                     </div>

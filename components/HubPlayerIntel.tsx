@@ -2,18 +2,13 @@
 import React, { useMemo } from 'react';
 import { useApp } from '../context';
 import { HubProgressChart } from './HubAnalytics';
-import { StarIcon, TrophyIcon, BarChartDynamic, History as HistoryIcon, Zap, Users, ChevronLeft, AwardIcon, Target, Calendar, ExclamationIcon } from '../icons';
-import { PlayerForm, SkillType, Player, PlayerStatus, BadgeType, PlayerTier, PlayerRecords } from '../types';
+import { StarIcon, TrophyIcon, BarChartDynamic, History as HistoryIcon, Zap, Users, ChevronLeft, AwardIcon, Calendar, ExclamationIcon } from '../icons';
+import { SkillType, Player, PlayerStatus, BadgeType, PlayerTier } from '../types';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { BadgeIcon } from '../features';
 import { translations } from '../translations/index';
 import { MiniSquadBadge } from './MiniSquadBadge';
 import { calculatePlayerMonthlyStats } from '../services/statistics';
-
-const skillAbbreviations: Record<SkillType, string> = {
-    goalkeeper: 'GK', power_shot: 'PS', technique: 'TQ', defender: 'DF', 
-    playmaker: 'PM', finisher: 'FN', versatile: 'VS', tireless_motor: 'TM', leader: 'LD',
-};
 
 // Precise Arrow logic based on float delta
 const FormArrowIndicator: React.FC<{ delta?: number }> = ({ delta = 0 }) => {
@@ -159,7 +154,7 @@ const TerminalSessionTrend = ({ history }: { history?: Player['sessionHistory'] 
 };
 
 export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; isEmbedded?: boolean }> = ({ playerId, onBack, isEmbedded = false }) => {
-    const { allPlayers, language, totmPlayerIds, history } = useApp();
+    const { allPlayers, language, totmPlayerIds, history, totmEmblem } = useApp();
     const t = translations[language] as any;
 
     const player = useMemo(() => (allPlayers.find(p => p.id === playerId)) as Player, [allPlayers, playerId]);
@@ -258,7 +253,7 @@ export const HubPlayerIntel: React.FC<{ playerId: string; onBack: () => void; is
                                                     {countryCodeAlpha2 && <img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} className="w-5 h-auto mt-4 rounded-sm opacity-80" alt="flag" />}
                                                     {isTotm && (
                                                         <div className="mt-3 -ml-1 animate-in fade-in zoom-in duration-700">
-                                                            <MiniSquadBadge size="w-8 h-8" className="opacity-90" />
+                                                            <MiniSquadBadge size="w-8 h-8" className="opacity-90" customEmblem={totmEmblem} noGlow={true} />
                                                         </div>
                                                     )}
                                                 </div>

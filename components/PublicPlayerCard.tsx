@@ -97,7 +97,7 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
                         </div>
                         {isTotm && (
                             <div className="animate-in fade-in zoom-in duration-500">
-                                <MiniSquadBadge size="w-10 h-10" customEmblem={totmEmblem} />
+                                <MiniSquadBadge size="w-10 h-10" customEmblem={totmEmblem} noGlow={true} />
                             </div>
                         )}
                     </div>

@@ -231,13 +231,17 @@ const LegendCard: React.FC<{
 
 const NoLeadersPlaceholder: React.FC = () => { const t = useTranslation(); return (<div className="w-full max-w-2xl mx-auto py-20 flex flex-col items-center justify-center relative"><div className="absolute inset-0 bg-[#00F2FE]/5 blur-[60px] rounded-full animate-pulse"></div><div className="relative z-10 flex flex-col items-center gap-6 opacity-30"><div className="w-20 h-20 rounded-full border-2 border-dashed border-[#00F2FE] animate-spin-slow flex items-center justify-center"><TrophyIcon className="w-10 h-10 text-[#00F2FE]" /></div><div className="text-center"><h3 className="font-orbitron text-lg font-black text-white tracking-[0.4em] uppercase">{t.hubAwaitingStats}</h3><p className="font-chakra text-[10px] text-white/50 tracking-[0.2em] mt-2 uppercase">{t.hubAnalyzingPerformance}</p></div></div></div>); };
 
-const NavHubButton: React.FC<{ title: string; icon: React.ReactNode; isActive: boolean; onClick: () => void; isDisabled?: boolean; }> = ({ title, icon, isActive, onClick, isDisabled }) => (
+const NavHubButton: React.FC<{ title: string; icon: React.ReactNode; isActive: boolean; onClick: () => void; isDisabled?: boolean; customImage?: string | null; }> = ({ title, icon, isActive, onClick, isDisabled, customImage }) => (
     <button 
         onClick={isDisabled ? undefined : onClick} 
         className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 h-full min-w-[64px] group ${isDisabled ? 'opacity-10 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-110'}`}
     >
         <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isActive ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 shadow-[0_0_15px_rgba(0,242,254,0.5),inset_0_0_6px_rgba(0,242,254,0.2)]' : 'text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/40 hover:text-white'}`}>
-            {React.cloneElement(icon as React.ReactElement<React.SVGProps<SVGSVGElement>>, { className: "w-4 h-4" })}
+            {customImage ? (
+                <img src={customImage} alt={title} className="w-5 h-5 object-contain" />
+            ) : (
+                React.cloneElement(icon as React.ReactElement<React.SVGProps<SVGSVGElement>>, { className: "w-4 h-4" })
+            )}
         </div>
         <span className={`text-[6px] font-black tracking-widest uppercase transition-colors text-center px-1 truncate w-full ${isActive ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>
             {title}
@@ -254,7 +258,8 @@ const HubNav: React.FC<{
     onHomeClick: () => void; 
     customIcon?: string | null;
     customBall?: string | null;
-}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, customIcon, customBall }) => { 
+    customTotm?: string | null;
+}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, customIcon, customBall, customTotm }) => { 
     const { language, setLanguage } = useApp(); 
     const t = useTranslation(); 
     const [isLangOpen, setIsLangOpen] = useState(false); 
@@ -355,7 +360,7 @@ const HubNav: React.FC<{
                     <RadioPlayer />
                     
                     <NavHubButton title={t.hubDashboardBtn} icon={<LayoutDashboard />} isActive={isDashboardOpen && activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} />
-                    <NavHubButton title={t.playerHub} icon={<Users />} isActive={isDashboardOpen && (activeTab === 'roster' || activeTab === 'duel')} onClick={() => onTabChange('roster')} />
+                    <NavHubButton title={t.playerHub} icon={<Users />} customImage={customTotm} isActive={isDashboardOpen && (activeTab === 'roster' || activeTab === 'duel')} onClick={() => onTabChange('roster')} />
                     <NavHubButton title={t.navTournaments} icon={<TrophyIcon />} isActive={isDashboardOpen && activeTab === 'tournaments'} onClick={() => onTabChange('tournaments')} />
                     <NavHubButton title={t.navHistory} icon={<HistoryIcon />} isActive={isDashboardOpen && activeTab === 'archive'} onClick={() => onTabChange('archive')} />
                     <NavHubButton title={t.information} icon={<InfoIcon />} isActive={isDashboardOpen && activeTab === 'info'} onClick={() => onTabChange('info')} />
@@ -590,6 +595,7 @@ export const PublicHubScreen: React.FC = () => {
                 }} 
                 customIcon={customIcon}
                 customBall={customBall}
+                customTotm={customTotm}
             />
 
             <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none touch-pan-y ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'} `} style={{ backgroundColor: getBottomPatchColor() }}>

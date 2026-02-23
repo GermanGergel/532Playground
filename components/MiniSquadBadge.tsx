@@ -5,9 +5,10 @@ interface MiniSquadBadgeProps {
     className?: string;
     size?: string; // e.g. "w-10 h-10"
     customEmblem?: string | null;
+    noGlow?: boolean;
 }
 
-export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, className = "", size = "w-9 h-9", customEmblem }) => {
+export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, className = "", size = "w-9 h-9", customEmblem, noGlow = false }) => {
     // Radius fixed for the SVG coordinate system
     const radius = 39;
     const circumference = 2 * Math.PI * radius; 
@@ -23,7 +24,7 @@ export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, classNa
             {!customEmblem && (
                 <div className="absolute inset-0 opacity-100 animate-spin-slow pointer-events-none">
                     {/* Subtle Neon Glow behind text */}
-                    <div className="absolute inset-0 rounded-full blur-[20px] bg-[#00F2FE]/15 shadow-[0_0_30px_rgba(0,242,254,0.2)]"></div>
+                    {!noGlow && <div className="absolute inset-0 rounded-full blur-[20px] bg-[#00F2FE]/15 shadow-[0_0_30px_rgba(0,242,254,0.2)]"></div>}
                     
                     <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible relative z-10">
                         <defs>
@@ -54,8 +55,8 @@ export const MiniSquadBadge: React.FC<MiniSquadBadgeProps> = ({ onClick, classNa
             <div className={`absolute inset-0 flex items-center justify-center ${customEmblem ? 'p-0' : 'p-[18%]'}`}>
                 {customEmblem ? (
                     <div className="w-full h-full relative">
-                         <div className="absolute inset-0 rounded-full blur-[8px] bg-[#00F2FE]/10"></div>
-                         <img src={customEmblem} alt="TOTM" className="w-full h-full object-contain relative z-10 drop-shadow-[0_0_8px_rgba(0,242,254,0.4)]" />
+                         {!noGlow && <div className="absolute inset-0 rounded-full blur-[8px] bg-[#00F2FE]/10"></div>}
+                         <img src={customEmblem} alt="TOTM" className={`w-full h-full object-contain relative z-10 ${!noGlow ? 'drop-shadow-[0_0_8px_rgba(0,242,254,0.4)]' : ''}`} />
                     </div>
                 ) : (
                     <svg viewBox="0 0 100 100" className="w-full h-full overflow-visible">
