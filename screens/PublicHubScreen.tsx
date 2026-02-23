@@ -237,12 +237,11 @@ const NavHubButton: React.FC<{ title: string; icon: React.ReactNode; isActive: b
             <button 
                 onClick={isDisabled ? undefined : onClick} 
                 className={`flex items-center justify-center transition-all duration-300 h-full min-w-[64px] group ${isDisabled ? 'opacity-10 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-110'}`}
-                title={title}
             >
                 <img 
                     src={customImage} 
                     alt={title} 
-                    className={`w-28 h-28 md:w-[122px] md:h-[122px] object-contain transition-all duration-300 translate-y-1 ${isActive ? 'drop-shadow-[0_0_8px_rgba(0,242,254,0.8)]' : 'opacity-90 hover:opacity-100'}`} 
+                    className={`w-28 h-28 md:w-[122px] md:h-[122px] object-contain transition-all duration-300 translate-y-1 ${isActive ? 'drop-shadow-[0_0_3px_rgba(0,242,254,0.6)]' : 'opacity-90 hover:opacity-100'}`} 
                 />
             </button>
         );
@@ -253,7 +252,7 @@ const NavHubButton: React.FC<{ title: string; icon: React.ReactNode; isActive: b
             onClick={isDisabled ? undefined : onClick} 
             className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 h-full min-w-[64px] group ${isDisabled ? 'opacity-10 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-110'}`}
         >
-            <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isActive ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 shadow-[0_0_15px_rgba(0,242,254,0.5),inset_0_0_6px_rgba(0,242,254,0.2)]' : 'text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/40 hover:text-white'}`}>
+            <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isActive ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 shadow-[0_0_8px_rgba(0,242,254,0.4),inset_0_0_3px_rgba(0,242,254,0.2)]' : 'text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/40 hover:text-white'}`}>
                 {React.cloneElement(icon as React.ReactElement<React.SVGProps<SVGSVGElement>>, { className: "w-4 h-4" })}
             </div>
             <span className={`text-[6px] font-black tracking-widest uppercase transition-colors text-center px-1 truncate w-full ${isActive ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>
@@ -363,11 +362,11 @@ const HubNav: React.FC<{
                     {isDashboardOpen && (
                         <div className="mr-2 flex items-center border-r border-white/10 pr-3 h-full">
                             {customNavIcons['home'] ? (
-                                <button onClick={onHomeClick} className="flex items-center justify-center transition-all duration-300 group cursor-pointer hover:scale-110 h-full min-w-[50px]" title="Home">
+                                <button onClick={onHomeClick} className="flex items-center justify-center transition-all duration-300 group cursor-pointer hover:scale-110 h-full min-w-[50px]">
                                     <img src={customNavIcons['home']} alt="Home" className="w-28 h-28 md:w-[122px] md:h-[122px] object-contain transition-all duration-300 opacity-90 hover:opacity-100 translate-y-1" />
                                 </button>
                             ) : (
-                                <button onClick={onHomeClick} className="flex flex-col items-center justify-center gap-1 transition-all duration-300 group cursor-pointer hover:scale-110 h-full min-w-[50px]" title="Home">
+                                <button onClick={onHomeClick} className="flex flex-col items-center justify-center gap-1 transition-all duration-300 group cursor-pointer hover:scale-110 h-full min-w-[50px]">
                                     <div className="w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/40 hover:text-white">
                                         <Home className="w-4 h-4" />
                                     </div>

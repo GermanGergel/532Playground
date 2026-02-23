@@ -97,12 +97,11 @@ export const RadioPlayer: React.FC<{ customIcon?: string }> = ({ customIcon }) =
                 onClick={toggleRadio}
                 disabled={isLoading && !isPlaying}
                 className="flex items-center justify-center transition-all duration-300 group cursor-pointer hover:scale-110 h-full min-w-[64px]"
-                title={isPlaying ? "Stop Radio" : "Play Indie Radio"}
             >
                 <img 
                     src={customIcon} 
                     alt="Radio" 
-                    className={`w-28 h-28 md:w-[122px] md:h-[122px] object-contain transition-all duration-300 translate-y-1 ${isPlaying ? 'drop-shadow-[0_0_8px_rgba(0,242,254,0.8)]' : 'opacity-90 hover:opacity-100'}`} 
+                    className={`w-28 h-28 md:w-[122px] md:h-[122px] object-contain transition-all duration-300 translate-y-1 ${isPlaying ? 'drop-shadow-[0_0_3px_rgba(0,242,254,0.6)]' : 'opacity-90 hover:opacity-100'}`} 
                 />
             </button>
         );
@@ -113,7 +112,6 @@ export const RadioPlayer: React.FC<{ customIcon?: string }> = ({ customIcon }) =
             onClick={toggleRadio}
             disabled={isLoading && !isPlaying}
             className="flex flex-col items-center justify-center gap-1.5 transition-all duration-300 group cursor-pointer hover:scale-110"
-            title={isPlaying ? "Stop Radio" : "Play Indie Radio"}
         >
             {/* CSS for Equalizer Animation */}
             <style dangerouslySetInnerHTML={{ __html: `
@@ -136,7 +134,7 @@ export const RadioPlayer: React.FC<{ customIcon?: string }> = ({ customIcon }) =
             <div className={`
                 relative flex items-center justify-center w-8 h-8 rounded-full border transition-all duration-300
                 ${isPlaying 
-                    ? `bg-[#00F2FE]/10 border-[#00F2FE] shadow-[0_0_15px_rgba(0,242,254,0.4)]` 
+                    ? `bg-[#00F2FE]/10 border-[#00F2FE] shadow-[0_0_8px_rgba(0,242,254,0.3)]` 
                     : 'text-white/60 border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/30 hover:text-white hover:shadow-[0_0_12px_rgba(255,255,255,0.15)]'
                 }
             `}>
