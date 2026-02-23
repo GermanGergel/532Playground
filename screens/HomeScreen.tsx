@@ -461,7 +461,7 @@ export const HomeScreen: React.FC = () => {
                         {isNavMenuOpen && (
                             <div className="grid grid-cols-2 gap-2 w-full mt-1">
                                 {[
-                                    'home', 'radio', 'dashboard', 'playerHub', 'history', 'information', 'language'
+                                    'home', 'radio', 'dashboard', 'playerHub', 'tournaments', 'history', 'information', 'language'
                                 ].map((type) => (
                                     <div key={type} className="relative">
                                         <input

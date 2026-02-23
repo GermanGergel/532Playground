@@ -381,7 +381,7 @@ const HubNav: React.FC<{
                     
                     <NavHubButton title={t.hubDashboardBtn} icon={<LayoutDashboard />} isActive={isDashboardOpen && activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} customImage={customNavIcons['dashboard']} />
                     <NavHubButton title={t.playerHub} icon={<Users />} isActive={isDashboardOpen && (activeTab === 'roster' || activeTab === 'duel')} onClick={() => onTabChange('roster')} customImage={customNavIcons['playerHub']} />
-                    <NavHubButton title={t.navTournaments} icon={<TrophyIcon />} isActive={isDashboardOpen && activeTab === 'tournaments'} onClick={() => onTabChange('tournaments')} />
+                    <NavHubButton title={t.navTournaments} icon={<TrophyIcon />} isActive={isDashboardOpen && activeTab === 'tournaments'} onClick={() => onTabChange('tournaments')} customImage={customNavIcons['tournaments']} />
                     <NavHubButton title={t.navHistory} icon={<HistoryIcon />} isActive={isDashboardOpen && activeTab === 'archive'} onClick={() => onTabChange('archive')} customImage={customNavIcons['history']} />
                     <NavHubButton title={t.information} icon={<InfoIcon />} isActive={isDashboardOpen && activeTab === 'info'} onClick={() => onTabChange('info')} customImage={customNavIcons['information']} />
                 </div>
@@ -493,7 +493,7 @@ export const PublicHubScreen: React.FC = () => {
             });
 
             // 4. Nav Icons
-            const navTypes = ['home', 'radio', 'dashboard', 'playerHub', 'history', 'information', 'language'];
+            const navTypes = ['home', 'radio', 'dashboard', 'playerHub', 'tournaments', 'history', 'information', 'language'];
             const navIcons: Record<string, string> = {};
 
             // Local
