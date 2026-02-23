@@ -91,6 +91,23 @@ export const RadioPlayer: React.FC<{ customIcon?: string }> = ({ customIcon }) =
 
     const cyanColor = '#00F2FE';
 
+    if (customIcon) {
+        return (
+            <button 
+                onClick={toggleRadio}
+                disabled={isLoading && !isPlaying}
+                className="flex items-center justify-center transition-all duration-300 group cursor-pointer hover:scale-110 h-full min-w-[64px]"
+                title={isPlaying ? "Stop Radio" : "Play Indie Radio"}
+            >
+                <img 
+                    src={customIcon} 
+                    alt="Radio" 
+                    className={`w-10 h-10 md:w-12 md:h-12 object-cover rounded-full shadow-lg transition-all duration-300 ${isPlaying ? 'ring-2 ring-[#00F2FE] shadow-[0_0_15px_rgba(0,242,254,0.5)]' : 'border border-white/10 opacity-80 hover:opacity-100'}`} 
+                />
+            </button>
+        );
+    }
+
     return (
         <button 
             onClick={toggleRadio}

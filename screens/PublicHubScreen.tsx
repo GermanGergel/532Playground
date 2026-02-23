@@ -231,23 +231,37 @@ const LegendCard: React.FC<{
 
 const NoLeadersPlaceholder: React.FC = () => { const t = useTranslation(); return (<div className="w-full max-w-2xl mx-auto py-20 flex flex-col items-center justify-center relative"><div className="absolute inset-0 bg-[#00F2FE]/5 blur-[60px] rounded-full animate-pulse"></div><div className="relative z-10 flex flex-col items-center gap-6 opacity-30"><div className="w-20 h-20 rounded-full border-2 border-dashed border-[#00F2FE] animate-spin-slow flex items-center justify-center"><TrophyIcon className="w-10 h-10 text-[#00F2FE]" /></div><div className="text-center"><h3 className="font-orbitron text-lg font-black text-white tracking-[0.4em] uppercase">{t.hubAwaitingStats}</h3><p className="font-chakra text-[10px] text-white/50 tracking-[0.2em] mt-2 uppercase">{t.hubAnalyzingPerformance}</p></div></div></div>); };
 
-const NavHubButton: React.FC<{ title: string; icon: React.ReactNode; isActive: boolean; onClick: () => void; isDisabled?: boolean; customImage?: string | null; }> = ({ title, icon, isActive, onClick, isDisabled, customImage }) => (
-    <button 
-        onClick={isDisabled ? undefined : onClick} 
-        className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 h-full min-w-[64px] group ${isDisabled ? 'opacity-10 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-110'}`}
-    >
-        <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isActive ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 shadow-[0_0_15px_rgba(0,242,254,0.5),inset_0_0_6px_rgba(0,242,254,0.2)]' : 'text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/40 hover:text-white'}`}>
-            {customImage ? (
-                <img src={customImage} alt={title} className="w-full h-full object-cover rounded-full" />
-            ) : (
-                React.cloneElement(icon as React.ReactElement<React.SVGProps<SVGSVGElement>>, { className: "w-4 h-4" })
-            )}
-        </div>
-        <span className={`text-[6px] font-black tracking-widest uppercase transition-colors text-center px-1 truncate w-full ${isActive ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>
-            {title}
-        </span>
-    </button>
-);
+const NavHubButton: React.FC<{ title: string; icon: React.ReactNode; isActive: boolean; onClick: () => void; isDisabled?: boolean; customImage?: string | null; }> = ({ title, icon, isActive, onClick, isDisabled, customImage }) => {
+    if (customImage) {
+        return (
+            <button 
+                onClick={isDisabled ? undefined : onClick} 
+                className={`flex items-center justify-center transition-all duration-300 h-full min-w-[64px] group ${isDisabled ? 'opacity-10 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-110'}`}
+                title={title}
+            >
+                <img 
+                    src={customImage} 
+                    alt={title} 
+                    className={`w-10 h-10 md:w-12 md:h-12 object-cover rounded-full shadow-lg transition-all duration-300 ${isActive ? 'ring-2 ring-[#00F2FE] shadow-[0_0_15px_rgba(0,242,254,0.5)]' : 'border border-white/10 opacity-80 hover:opacity-100'}`} 
+                />
+            </button>
+        );
+    }
+
+    return (
+        <button 
+            onClick={isDisabled ? undefined : onClick} 
+            className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 h-full min-w-[64px] group ${isDisabled ? 'opacity-10 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-110'}`}
+        >
+            <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isActive ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 shadow-[0_0_15px_rgba(0,242,254,0.5),inset_0_0_6px_rgba(0,242,254,0.2)]' : 'text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/40 hover:text-white'}`}>
+                {React.cloneElement(icon as React.ReactElement<React.SVGProps<SVGSVGElement>>, { className: "w-4 h-4" })}
+            </div>
+            <span className={`text-[6px] font-black tracking-widest uppercase transition-colors text-center px-1 truncate w-full ${isActive ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>
+                {title}
+            </span>
+        </button>
+    );
+};
 
 const HubNav: React.FC<{ 
     isDashboardOpen: boolean; 
@@ -348,16 +362,18 @@ const HubNav: React.FC<{
                 <div className="flex items-center gap-2 md:gap-5 mr-2 h-full">
                     {isDashboardOpen && (
                         <div className="mr-2 flex items-center border-r border-white/10 pr-3 h-full">
-                            <button onClick={onHomeClick} className="flex flex-col items-center justify-center gap-1 transition-all duration-300 group cursor-pointer hover:scale-110 h-full min-w-[50px]" title="Home">
-                                <div className="w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/40 hover:text-white">
-                                    {customNavIcons['home'] ? (
-                                        <img src={customNavIcons['home']} alt="Home" className="w-full h-full object-cover rounded-full" />
-                                    ) : (
+                            {customNavIcons['home'] ? (
+                                <button onClick={onHomeClick} className="flex items-center justify-center transition-all duration-300 group cursor-pointer hover:scale-110 h-full min-w-[50px]" title="Home">
+                                    <img src={customNavIcons['home']} alt="Home" className="w-10 h-10 md:w-12 md:h-12 object-cover rounded-full border border-white/10 opacity-80 hover:opacity-100 shadow-lg" />
+                                </button>
+                            ) : (
+                                <button onClick={onHomeClick} className="flex flex-col items-center justify-center gap-1 transition-all duration-300 group cursor-pointer hover:scale-110 h-full min-w-[50px]" title="Home">
+                                    <div className="w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/40 hover:text-white">
                                         <Home className="w-4 h-4" />
-                                    )}
-                                </div>
-                                <span className="text-[6px] font-black tracking-widest uppercase text-white/30 group-hover:text-white/60 transition-colors">{t.navHome}</span>
-                            </button>
+                                    </div>
+                                    <span className="text-[6px] font-black tracking-widest uppercase text-white/30 group-hover:text-white/60 transition-colors">{t.navHome}</span>
+                                </button>
+                            )}
                         </div>
                     )}
                     
