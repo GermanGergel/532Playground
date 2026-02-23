@@ -32,27 +32,22 @@ const MoonIcon = ({ className }: { className?: string }) => (
 const SubtleDashboardAvatar: React.FC<{ team: any; size?: string; isLight?: boolean; customEmblem?: string }> = ({ team, customEmblem }) => {
     const color = team?.color || '#A9B1BD';
     const logo = customEmblem || team?.logo;
-    
-    if (logo) {
-        return (
-            <div className="relative flex items-center justify-center shrink-0">
-                <img src={logo} className="w-10 h-10 object-contain" alt="" />
-            </div>
-        );
-    }
-
     return (
         <div className="relative flex items-center justify-center shrink-0">
             <div 
-                className="w-7 h-7 rounded-full flex items-center justify-center transition-all duration-500 bg-black/40 opacity-90"
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 bg-black/40 opacity-90"
                 style={{ 
                     border: `1px solid ${color}`,
-                    boxShadow: `0 0 5px ${color}66, 0 0 1.5px ${color}`, 
+                    boxShadow: `0 0 8px ${color}66, 0 0 2px ${color}`, 
                 }}
             >
-                <svg className="w-[55%] h-[55%]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M20.38 3.46L16 2a4 4 0 0 0-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99 .84H6v10c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" fill={color} fillOpacity="0.35" stroke={color} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+                {logo ? (
+                    <img src={logo} className="w-full h-full rounded-full object-cover" alt="" />
+                ) : (
+                    <svg className="w-[55%] h-[55%]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20.38 3.46L16 2a4 4 0 0 0-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99 .84H6v10c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" fill={color} fillOpacity="0.35" stroke={color} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                )}
             </div>
         </div>
     );
@@ -280,7 +275,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                             {teamStats.map((stat, idx) => (
                                                 <tr key={stat.team.id} className="group border-b border-white/5 last:border-0 transition-all duration-300">
                                                     <td className={`${tdBase} text-white/30 bg-white/[0.02]`}>{idx + 1}</td>
-                                                    <td className="py-1.5 flex justify-center">
+                                                    <td className="py-0.5 flex justify-center">
                                                         <SubtleDashboardAvatar team={stat.team} size="xxs" isLight={true} customEmblem={customTeamEmblems[stat.team.color || '']} />
                                                     </td>
                                                     <td className={`${tdBase} text-slate-300`}>{stat.gamesPlayed}</td>
@@ -367,8 +362,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                                                     <TeamAvatar 
                                                                         team={session.teams.find(t => t.id === game.team1Id) || {}} 
                                                                         customEmblem={customTeamEmblems[session.teams.find(t => t.id === game.team1Id)?.color || '']}
-                                                                        size="xs" 
-                                                                        minimal={true}
+                                                                        size="xxs" 
                                                                         isLight={true} 
                                                                     />
                                                                 </div>
@@ -381,8 +375,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                                                     <TeamAvatar 
                                                                         team={session.teams.find(t => t.id === game.team2Id) || {}} 
                                                                         customEmblem={customTeamEmblems[session.teams.find(t => t.id === game.team2Id)?.color || '']}
-                                                                        size="xs" 
-                                                                        minimal={true}
+                                                                        size="xxs" 
                                                                         isLight={true} 
                                                                     />
                                                                 </div>
