@@ -2,7 +2,6 @@
 import React, { useMemo, useState } from 'react';
 import { Session, WeatherCondition } from '../types';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
-import { TeamAvatar } from './avatars'; 
 import { ChevronLeft, TrophyIcon, Users, History as HistoryIcon, Target, YouTubeIcon } from '../icons';
 import { useTranslation } from '../ui';
 
@@ -34,7 +33,7 @@ const SubtleDashboardAvatar: React.FC<{ team: any; size?: string; isLight?: bool
     const logo = customEmblem || team?.logo;
     return (
         <div className="relative flex items-center justify-center shrink-0">
-            <div className="w-[30px] h-[30px] rounded-full flex items-center justify-center overflow-hidden">
+            <div className="w-[36px] h-[36px] rounded-full flex items-center justify-center overflow-hidden">
                 {logo ? (
                     <img src={logo} className="w-full h-full object-cover" alt="" />
                 ) : (
@@ -269,7 +268,7 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                             {teamStats.map((stat, idx) => (
                                                 <tr key={stat.team.id} className="group border-b border-white/5 last:border-0 transition-all duration-300">
                                                     <td className={`${tdBase} text-white/30 bg-white/[0.02]`}>{idx + 1}</td>
-                                                    <td className="py-0.5 flex justify-center">
+                                                    <td className="py-0 flex justify-center">
                                                         <SubtleDashboardAvatar team={stat.team} size="xxs" isLight={true} customEmblem={customTeamEmblems[stat.team.color || '']} />
                                                     </td>
                                                     <td className={`${tdBase} text-slate-300`}>{stat.gamesPlayed}</td>
@@ -351,26 +350,22 @@ export const HubSessionDetail: React.FC<HubSessionDetailProps> = ({ session, onB
                                                             onClick={() => totalScore > 0 && setExpandedMatchId(expandedMatchId === game.id ? null : game.id)}
                                                         >
                                                             <td className={`${tdBase} text-white/30 font-mono`}>{game.gameNumber}</td>
-                                                            <td className="py-2 text-center">
+                                                            <td className="py-0 text-center">
                                                                 <div className="flex justify-center">
-                                                                    <TeamAvatar 
+                                                                    <SubtleDashboardAvatar 
                                                                         team={session.teams.find(t => t.id === game.team1Id) || {}} 
                                                                         customEmblem={customTeamEmblems[session.teams.find(t => t.id === game.team1Id)?.color || '']}
-                                                                        size="xxs" 
-                                                                        isLight={true} 
                                                                     />
                                                                 </div>
                                                             </td>
                                                             <td className="py-2 text-center">
                                                                 <span className="font-bold text-[11px] md:text-[12px] text-slate-200 tabular-nums tracking-tighter bg-white/5 px-2 py-1 rounded transition-colors group-hover:text-white group-hover:bg-[#00F2FE]/10">{game.team1Score} : {game.team2Score}</span>
                                                             </td>
-                                                            <td className="py-2 text-center">
+                                                            <td className="py-0 text-center">
                                                                 <div className="flex justify-center">
-                                                                    <TeamAvatar 
+                                                                    <SubtleDashboardAvatar 
                                                                         team={session.teams.find(t => t.id === game.team2Id) || {}} 
                                                                         customEmblem={customTeamEmblems[session.teams.find(t => t.id === game.team2Id)?.color || '']}
-                                                                        size="xxs" 
-                                                                        isLight={true} 
                                                                     />
                                                                 </div>
                                                             </td>
