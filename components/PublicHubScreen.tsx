@@ -67,7 +67,7 @@ export const HeaderAtmosphere: React.FC = () => (
 
 export const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ player, rank }) => {
     const cardRef = useRef<HTMLDivElement>(null);
-    const { totmPlayerIds } = useApp();
+    const { totmPlayerIds, totmEmblem } = useApp();
     const t = useTranslation();
     const isFirst = rank === 1;
     const countryCodeAlpha2 = useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
@@ -105,7 +105,7 @@ export const CinematicCard: React.FC<{ player: Player, rank: number }> = ({ play
                         </div>
                         {isTotm && (
                             <div className="animate-in fade-in zoom-in duration-500">
-                                <MiniSquadBadge size="w-10 h-10" />
+                                <MiniSquadBadge size="w-10 h-10" customEmblem={totmEmblem} />
                             </div>
                         )}
                     </div>

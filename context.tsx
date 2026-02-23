@@ -11,7 +11,8 @@ import {
     saveActiveVoicePackToDB,
     loadHistoryFromDB,
     loadNewsFromDB,
-    fetchRemotePlayers
+    fetchRemotePlayers,
+    loadTotmEmblemUrl
 } from './db';
 import { initializeAppState } from './services/appInitializer';
 import { useMatchTimer } from './hooks/useMatchTimer';
@@ -45,6 +46,8 @@ interface AppContextType {
 
   // Global TOTM Cache
   totmPlayerIds: Set<string>;
+  totmEmblem: string | null;
+  setTotmEmblem: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -65,6 +68,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Persistent UI State for Player Database
   const [playerDbSort, setPlayerDbSort] = useState<SortBy>('date');
   const [playerDbSearch, setPlayerDbSearch] = useState<string>('');
+  const [totmEmblem, setTotmEmblem] = useState<string | null>(null);
 
   // --- GLOBAL timer LOGIC ---
   const { displayTime } = useMatchTimer(activeSession, setActiveSession, activeVoicePack);
@@ -87,6 +91,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setNewsFeed(initialState.newsFeed);
             setLanguageState(initialState.language);
             setActiveVoicePackState(initialState.activeVoicePack);
+            
+            // Load TOTM Emblem
+            const emblem = await loadTotmEmblemUrl();
+            setTotmEmblem(emblem);
             
             // Remove Loading Screen quickly for UX
             setTimeout(() => setIsLoading(false), 500);
@@ -219,7 +227,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setPlayerDbSort,
     playerDbSearch,
     setPlayerDbSearch,
-    totmPlayerIds // Exposed to all components
+    totmPlayerIds, // Exposed to all components
+    totmEmblem,
+    setTotmEmblem
   };
 
   if(isLoading) {

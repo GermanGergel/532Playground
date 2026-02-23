@@ -68,7 +68,7 @@ const PromoStatsContainer: React.FC<{ children: React.ReactNode; title?: string 
 
 const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties }> = ({ player, style }) => {
     const t = useTranslation();
-    const { totmPlayerIds } = useApp();
+    const { totmPlayerIds, totmEmblem } = useApp();
     const countryCodeAlpha2 = React.useMemo(() => player.countryCode ? convertCountryCodeAlpha3ToAlpha2(player.countryCode) : null, [player.countryCode]);
     const cardClass = "relative rounded-3xl h-[440px] overflow-hidden text-white p-4 bg-dark-surface border border-white/10 shadow-[0_0_20px_rgba(0,242,254,0.3)]";
     const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
@@ -97,7 +97,7 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
                         </div>
                         {isTotm && (
                             <div className="animate-in fade-in zoom-in duration-500">
-                                <MiniSquadBadge size="w-10 h-10" />
+                                <MiniSquadBadge size="w-10 h-10" customEmblem={totmEmblem} />
                             </div>
                         )}
                     </div>
