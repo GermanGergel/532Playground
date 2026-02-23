@@ -136,7 +136,7 @@ export const RadioPlayer: React.FC<{ customIcon?: string }> = ({ customIcon }) =
                 ) : (
                     // Play / Radio Icon
                     customIcon ? (
-                        <img src={customIcon} alt="Radio" className="w-5 h-5 object-contain" />
+                        <img src={customIcon} alt="Radio" className="w-full h-full object-cover rounded-full" />
                     ) : (
                         <svg className="w-4 h-4 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <polygon points="5 3 19 12 5 21 5 3"></polygon>

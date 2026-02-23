@@ -238,7 +238,7 @@ const NavHubButton: React.FC<{ title: string; icon: React.ReactNode; isActive: b
     >
         <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isActive ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 shadow-[0_0_15px_rgba(0,242,254,0.5),inset_0_0_6px_rgba(0,242,254,0.2)]' : 'text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/40 hover:text-white'}`}>
             {customImage ? (
-                <img src={customImage} alt={title} className="w-5 h-5 object-contain" />
+                <img src={customImage} alt={title} className="w-full h-full object-cover rounded-full" />
             ) : (
                 React.cloneElement(icon as React.ReactElement<React.SVGProps<SVGSVGElement>>, { className: "w-4 h-4" })
             )}
@@ -351,7 +351,7 @@ const HubNav: React.FC<{
                             <button onClick={onHomeClick} className="flex flex-col items-center justify-center gap-1 transition-all duration-300 group cursor-pointer hover:scale-110 h-full min-w-[50px]" title="Home">
                                 <div className="w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/40 hover:text-white">
                                     {customNavIcons['home'] ? (
-                                        <img src={customNavIcons['home']} alt="Home" className="w-5 h-5 object-contain" />
+                                        <img src={customNavIcons['home']} alt="Home" className="w-full h-full object-cover rounded-full" />
                                     ) : (
                                         <Home className="w-4 h-4" />
                                     )}
