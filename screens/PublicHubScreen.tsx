@@ -301,7 +301,7 @@ const HubNav: React.FC<{
             <div className="flex items-center gap-2 md:gap-4 shrink-0 h-full">
                 <div className="flex items-center">
                     {/* Large Ball Icon replacing UNIT */}
-                    <div className="flex items-center justify-center w-14 h-14 md:w-[75px] md:h-[75px] -ml-2">
+                    <div className="flex items-center justify-center w-14 h-14 md:w-[78px] md:h-[78px] -ml-2">
                         {customBall ? (
                             <img src={customBall} alt="Ball" className="w-full h-full object-contain" />
                         ) : (
