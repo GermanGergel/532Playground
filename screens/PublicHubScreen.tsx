@@ -413,6 +413,7 @@ export const PublicHubScreen: React.FC = () => {
     const [customTrophy, setCustomTrophy] = useState<string | null>(null);
     const [customTotm, setCustomTotm] = useState<string | null>(null);
     const [customTeamEmblems, setCustomTeamEmblems] = useState<Record<string, string>>({});
+    const [customNavIcons, setCustomNavIcons] = useState<Record<string, string>>({});
     const mainScrollRef = useRef<HTMLDivElement>(null);
     const t = useTranslation();
 
@@ -472,6 +473,27 @@ export const PublicHubScreen: React.FC = () => {
                 if (url && url !== emblems[color]) {
                     setCustomTeamEmblems(prev => ({ ...prev, [color]: url }));
                     localStorage.setItem(`customTeamEmblem_${color.replace('#', '')}`, url);
+                }
+            });
+
+            // 4. Nav Icons
+            const navTypes = ['home', 'radio', 'dashboard', 'playerHub', 'history', 'information', 'language'];
+            const navIcons: Record<string, string> = {};
+
+            // Local
+            navTypes.forEach(type => {
+                const local = localStorage.getItem(`customNavIcon_${type}`);
+                if (local) navIcons[type] = local;
+            });
+            setCustomNavIcons(prev => ({ ...prev, ...navIcons }));
+
+            // Cloud
+            const cloudNavIcons = await Promise.all(navTypes.map(type => loadNavIconUrl(type)));
+            cloudNavIcons.forEach((url, idx) => {
+                const type = navTypes[idx];
+                if (url && url !== navIcons[type]) {
+                    setCustomNavIcons(prev => ({ ...prev, [type]: url }));
+                    localStorage.setItem(`customNavIcon_${type}`, url);
                 }
             });
         };
@@ -603,6 +625,7 @@ export const PublicHubScreen: React.FC = () => {
                 }} 
                 customIcon={customIcon}
                 customBall={customBall}
+                customNavIcons={customNavIcons}
             />
 
             <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none touch-pan-y ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'} `} style={{ backgroundColor: getBottomPatchColor() }}>
