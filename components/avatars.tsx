@@ -13,9 +13,10 @@ interface TeamAvatarProps {
   isLight?: boolean;
   hollow?: boolean;
   customEmblem?: string;
+  minimal?: boolean;
 }
 
-export const TeamAvatar: React.FC<TeamAvatarProps> = ({ team, size = 'sm', onClick, className = '', playerCount, countText, isLight = false, hollow = false, customEmblem }) => {
+export const TeamAvatar: React.FC<TeamAvatarProps> = ({ team, size = 'sm', onClick, className = '', playerCount, countText, isLight = false, hollow = false, customEmblem, minimal }) => {
     const sizeClassesMap = {
         xxs: { container: 'w-6 h-6', fontSize: 'text-[4px]', labelPos: '-top-1' },
         xs: { container: 'w-8 h-8', fontSize: 'text-[5px]', labelPos: '-top-1' },
@@ -38,25 +39,25 @@ export const TeamAvatar: React.FC<TeamAvatarProps> = ({ team, size = 'sm', onCli
     const clickableProps = onClick ? { onClick, role: 'button', tabIndex: 0, onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => { if (e.key === 'Enter' && onClick) onClick(); } } : {};
 
     const borderWidth = size === 'xxs' ? '2px' : '3px';
-    const containerStyle = { border: `${borderWidth} solid ${teamColor}` };
+    const containerStyle = minimal ? {} : { border: `${borderWidth} solid ${teamColor}` };
     const logo = customEmblem || team.logo;
 
     return (
         <div 
             {...clickableProps} 
-            className={`relative ${selectedSize.container} ${className} ${onClick ? 'cursor-pointer' : ''} rounded-full`}
+            className={`relative ${selectedSize.container} ${className} ${onClick ? 'cursor-pointer' : ''} ${minimal ? '' : 'rounded-full'}`}
             style={containerStyle}
         >
             {logo ? (
                  <img 
                     src={logo} 
                     alt={team.name || 'Team logo'} 
-                    className={`${baseClasses} w-full h-full object-cover`}
+                    className={`w-full h-full ${minimal ? 'object-contain' : 'object-cover rounded-full ' + baseClasses}`}
                 />
             ) : (
                 <div className="relative w-full h-full">
                     <div 
-                        className={`${baseClasses} w-full h-full flex items-center justify-center`}
+                        className={`w-full h-full flex items-center justify-center ${minimal ? '' : baseClasses}`}
                     >
                          <svg className="w-2/3 h-2/3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: teamColor }}>
                             <path d="M20.38 3.46L16 2a4 4 0 0 0-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99 .84H6v10c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" fill={teamColor} fillOpacity={hollow ? "0" : "0.35"} stroke={teamColor} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
