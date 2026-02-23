@@ -242,7 +242,7 @@ const NavHubButton: React.FC<{ title: string; icon: React.ReactNode; isActive: b
                 <img 
                     src={customImage} 
                     alt={title} 
-                    className={`w-10 h-10 md:w-12 md:h-12 object-cover rounded-full shadow-lg transition-all duration-300 ${isActive ? 'ring-2 ring-[#00F2FE] shadow-[0_0_15px_rgba(0,242,254,0.5)]' : 'border border-white/10 opacity-80 hover:opacity-100'}`} 
+                    className={`w-20 h-20 md:w-24 md:h-24 object-contain transition-all duration-300 ${isActive ? 'drop-shadow-[0_0_8px_rgba(0,242,254,0.8)]' : 'opacity-90 hover:opacity-100'}`} 
                 />
             </button>
         );
@@ -364,7 +364,7 @@ const HubNav: React.FC<{
                         <div className="mr-2 flex items-center border-r border-white/10 pr-3 h-full">
                             {customNavIcons['home'] ? (
                                 <button onClick={onHomeClick} className="flex items-center justify-center transition-all duration-300 group cursor-pointer hover:scale-110 h-full min-w-[50px]" title="Home">
-                                    <img src={customNavIcons['home']} alt="Home" className="w-10 h-10 md:w-12 md:h-12 object-cover rounded-full border border-white/10 opacity-80 hover:opacity-100 shadow-lg" />
+                                    <img src={customNavIcons['home']} alt="Home" className="w-20 h-20 md:w-24 md:h-24 object-contain transition-all duration-300 opacity-90 hover:opacity-100" />
                                 </button>
                             ) : (
                                 <button onClick={onHomeClick} className="flex flex-col items-center justify-center gap-1 transition-all duration-300 group cursor-pointer hover:scale-110 h-full min-w-[50px]" title="Home">
