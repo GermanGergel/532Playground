@@ -10,7 +10,8 @@ import {
     uploadBallIcon, saveBallIconUrl,
     uploadTrophyIcon, saveTrophyIconUrl,
     uploadTotmEmblem, saveTotmEmblemUrl,
-    uploadTeamEmblem, saveTeamEmblemUrl
+    uploadTeamEmblem, saveTeamEmblemUrl,
+    uploadNavIcon, saveNavIconUrl
 } from '../db';
 
 export const HomeScreen: React.FC = () => {
@@ -20,6 +21,7 @@ export const HomeScreen: React.FC = () => {
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isHubModalOpen, setIsHubModalOpen] = useState(false);
   const [isTeamEmblemsOpen, setIsTeamEmblemsOpen] = useState(false);
+  const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -27,6 +29,28 @@ export const HomeScreen: React.FC = () => {
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   
   const promoCardRef = useRef<HTMLDivElement>(null);
+
+  const handleUploadNavIcon = async (type: string, event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file) {
+          setIsUploading(true);
+          const reader = new FileReader();
+          reader.onloadend = async () => {
+              const base64String = reader.result as string;
+              const cloudUrl = await uploadNavIcon(type, base64String);
+              if (cloudUrl) {
+                  await saveNavIconUrl(type, cloudUrl);
+                  localStorage.setItem(`customNavIcon_${type}`, cloudUrl);
+                  alert(`${type.toUpperCase()} icon uploaded!`);
+              } else {
+                  localStorage.setItem(`customNavIcon_${type}`, base64String);
+                  alert("Saved locally.");
+              }
+              setIsUploading(false);
+          };
+          reader.readAsDataURL(file);
+      }
+  };
 
   const handleUploadIcon = async (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
@@ -423,6 +447,40 @@ export const HomeScreen: React.FC = () => {
                         >
                             {isUploading ? "UPLOADING..." : "UPLOAD TOTM EMBLEM"}
                         </Button>
+                    </div>
+
+                    <div className="w-full flex flex-col gap-1">
+                        <Button 
+                            variant="secondary" 
+                            onClick={() => setIsNavMenuOpen(!isNavMenuOpen)}
+                            className="w-full !py-2.5 !text-xs font-chakra font-bold tracking-widest uppercase border border-white/10"
+                        >
+                            {isNavMenuOpen ? "HIDE NAV ICONS" : "UPLOAD NAV ICONS"}
+                        </Button>
+
+                        {isNavMenuOpen && (
+                            <div className="grid grid-cols-2 gap-2 w-full mt-1">
+                                {[
+                                    'home', 'radio', 'dashboard', 'playerHub', 'history', 'information', 'language'
+                                ].map((type) => (
+                                    <div key={type} className="relative">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => handleUploadNavIcon(type, e)}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                        />
+                                        <Button 
+                                            variant="secondary" 
+                                            disabled={isUploading}
+                                            className="w-full !py-2 !text-[10px] font-chakra font-bold tracking-tight uppercase border border-white/5 flex items-center justify-center"
+                                        >
+                                            {type.toUpperCase()}
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     <div className="w-full flex flex-col gap-1">

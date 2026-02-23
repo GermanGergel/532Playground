@@ -4,7 +4,7 @@ import { logAnalyticsEvent } from '../db';
 
 const STREAM_URL = "https://oxygenmusic.hu:8443/oxygenindie";
 
-export const RadioPlayer: React.FC = () => {
+export const RadioPlayer: React.FC<{ customIcon?: string }> = ({ customIcon }) => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -135,9 +135,13 @@ export const RadioPlayer: React.FC = () => {
                     </div>
                 ) : (
                     // Play / Radio Icon
-                    <svg className="w-4 h-4 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                    </svg>
+                    customIcon ? (
+                        <img src={customIcon} alt="Radio" className="w-5 h-5 object-contain" />
+                    ) : (
+                        <svg className="w-4 h-4 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                    )
                 )}
             </div>
 

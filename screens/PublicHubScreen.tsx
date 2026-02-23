@@ -9,7 +9,7 @@ import { ClubIntelligenceDashboard } from '../components/ClubIntelligenceDashboa
 import { RadioPlayer } from '../components/RadioPlayer';
 import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
 import { CinematicCard, HeaderAtmosphere } from '../components/PublicHubScreen';
-import { loadChatIconUrl, loadBallIconUrl, loadTrophyIconUrl, loadTotmEmblemUrl, loadTeamEmblemUrl } from '../db';
+import { loadChatIconUrl, loadBallIconUrl, loadTrophyIconUrl, loadTotmEmblemUrl, loadTeamEmblemUrl, loadNavIconUrl } from '../db';
 
 // --- SUB-COMPONENTS ---
 
@@ -258,7 +258,8 @@ const HubNav: React.FC<{
     onHomeClick: () => void; 
     customIcon?: string | null;
     customBall?: string | null;
-}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, customIcon, customBall }) => { 
+    customNavIcons?: Record<string, string>;
+}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, customIcon, customBall, customNavIcons = {} }) => { 
     const { language, setLanguage } = useApp(); 
     const t = useTranslation(); 
     const [isLangOpen, setIsLangOpen] = useState(false); 
@@ -349,25 +350,33 @@ const HubNav: React.FC<{
                         <div className="mr-2 flex items-center border-r border-white/10 pr-3 h-full">
                             <button onClick={onHomeClick} className="flex flex-col items-center justify-center gap-1 transition-all duration-300 group cursor-pointer hover:scale-110 h-full min-w-[50px]" title="Home">
                                 <div className="w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/40 hover:text-white">
-                                    <Home className="w-4 h-4" />
+                                    {customNavIcons['home'] ? (
+                                        <img src={customNavIcons['home']} alt="Home" className="w-5 h-5 object-contain" />
+                                    ) : (
+                                        <Home className="w-4 h-4" />
+                                    )}
                                 </div>
                                 <span className="text-[6px] font-black tracking-widest uppercase text-white/30 group-hover:text-white/60 transition-colors">{t.navHome}</span>
                             </button>
                         </div>
                     )}
                     
-                    <RadioPlayer />
+                    <RadioPlayer customIcon={customNavIcons['radio']} />
                     
-                    <NavHubButton title={t.hubDashboardBtn} icon={<LayoutDashboard />} isActive={isDashboardOpen && activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} />
-                    <NavHubButton title={t.playerHub} icon={<Users />} isActive={isDashboardOpen && (activeTab === 'roster' || activeTab === 'duel')} onClick={() => onTabChange('roster')} />
+                    <NavHubButton title={t.hubDashboardBtn} icon={<LayoutDashboard />} isActive={isDashboardOpen && activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} customImage={customNavIcons['dashboard']} />
+                    <NavHubButton title={t.playerHub} icon={<Users />} isActive={isDashboardOpen && (activeTab === 'roster' || activeTab === 'duel')} onClick={() => onTabChange('roster')} customImage={customNavIcons['playerHub']} />
                     <NavHubButton title={t.navTournaments} icon={<TrophyIcon />} isActive={isDashboardOpen && activeTab === 'tournaments'} onClick={() => onTabChange('tournaments')} />
-                    <NavHubButton title={t.navHistory} icon={<HistoryIcon />} isActive={isDashboardOpen && activeTab === 'archive'} onClick={() => onTabChange('archive')} />
-                    <NavHubButton title={t.information} icon={<InfoIcon />} isActive={isDashboardOpen && activeTab === 'info'} onClick={() => onTabChange('info')} />
+                    <NavHubButton title={t.navHistory} icon={<HistoryIcon />} isActive={isDashboardOpen && activeTab === 'archive'} onClick={() => onTabChange('archive')} customImage={customNavIcons['history']} />
+                    <NavHubButton title={t.information} icon={<InfoIcon />} isActive={isDashboardOpen && activeTab === 'info'} onClick={() => onTabChange('info')} customImage={customNavIcons['information']} />
                 </div>
                 
                 <div className="flex flex-col items-center justify-center group h-full relative" ref={dropdownRef}>
                     <button onClick={() => setIsLangOpen(!isLangOpen)} className="w-8 h-8 rounded-full border border-white/20 bg-black/60 flex items-center justify-center transition-all shadow-[0_0_10px_rgba(255,255,255,0.15)] hover:border-white/60 hover:bg-white/5 group/lang">
-                        <span className="text-[9px] font-black text-white/80 group-hover/lang:text-white uppercase leading-none">{language}</span>
+                        {customNavIcons['language'] ? (
+                            <img src={customNavIcons['language']} alt="Lang" className="w-full h-full object-cover rounded-full" />
+                        ) : (
+                            <span className="text-[9px] font-black text-white/80 group-hover/lang:text-white uppercase leading-none">{language}</span>
+                        )}
                     </button>
                     <span className="text-[6px] font-black tracking-widest text-white/30 uppercase group-hover:text-white/60 transition-colors cursor-default leading-none mt-1 text-center truncate max-w-[50px]">{t.language}</span>
 
@@ -659,8 +668,6 @@ export const PublicHubScreen: React.FC = () => {
                         >
                             {customTotm ? (
                                 <div className="w-24 h-24 md:w-32 md:h-32 relative">
-                                    {/* Subtle Neon Glow behind custom emblem - Minimal */}
-                                    <div className="absolute inset-0 rounded-full blur-[10px] bg-[#00F2FE]/5 shadow-[0_0_10px_rgba(0,242,254,0.1)]"></div>
                                     <img src={customTotm} alt="TOTM" className="w-full h-full object-contain relative z-10" />
                                 </div>
                             ) : (

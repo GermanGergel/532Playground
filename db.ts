@@ -201,6 +201,15 @@ export const saveTeamEmblemUrl = async (color: string, url: string): Promise<boo
 export const loadTeamEmblemUrl = async (color: string): Promise<string | null> => 
     loadAssetUrl(`team_emblem_${color.replace('#', '')}`);
 
+export const uploadNavIcon = async (type: string, base64Image: string): Promise<string | null> => 
+    uploadCustomAsset(base64Image, `nav_icon_${type}`);
+
+export const saveNavIconUrl = async (type: string, url: string): Promise<boolean> => 
+    saveAssetUrl(`nav_icon_${type}`, url);
+
+export const loadNavIconUrl = async (type: string): Promise<string | null> => 
+    loadAssetUrl(`nav_icon_${type}`);
+
 // --- PLAYER MANAGEMENT ---
 const BUCKET_NAME = 'player_images';
 
