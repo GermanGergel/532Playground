@@ -114,11 +114,11 @@ const SubtleDashboardAvatar: React.FC<{ team: any; size?: string; isLight?: bool
     const logo = customEmblem || team?.logo;
     return (
         <div className="relative flex items-center justify-center shrink-0">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-500 bg-black/40 opacity-90" style={{ border: `1px solid ${color}`, boxShadow: `0 0 8px ${color}66, 0 0 2px ${color}`, }}>
+            <div className="w-[30px] h-[30px] rounded-full flex items-center justify-center overflow-hidden">
                 {logo ? (
-                    <img src={logo} className="w-full h-full rounded-full object-cover" alt="" />
+                    <img src={logo} className="w-full h-full object-cover" alt="" />
                 ) : (
-                    <svg className="w-[55%] h-[55%]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg className="w-[70%] h-[70%]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M20.38 3.46L16 2a4 4 0 0 0-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99 .84H6v10c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z" fill={color} fillOpacity="0.35" stroke={color} strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                 )}
