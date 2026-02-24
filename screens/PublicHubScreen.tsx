@@ -9,7 +9,7 @@ import { ClubIntelligenceDashboard } from '../components/ClubIntelligenceDashboa
 import { RadioPlayer } from '../components/RadioPlayer';
 import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
 import { CinematicCard, HeaderAtmosphere } from '../components/PublicHubScreen';
-import { loadChatIconUrl, loadBallIconUrl, loadTrophyIconUrl, loadTotmEmblemUrl, loadTeamEmblemUrl, loadNavIconUrl } from '../db';
+import { loadChatIconUrl, loadBallIconUrl, loadTrophyIconUrl, loadTotmEmblemUrl, loadTeamEmblemUrl } from '../db';
 
 // --- SUB-COMPONENTS ---
 
@@ -231,36 +231,19 @@ const LegendCard: React.FC<{
 
 const NoLeadersPlaceholder: React.FC = () => { const t = useTranslation(); return (<div className="w-full max-w-2xl mx-auto py-20 flex flex-col items-center justify-center relative"><div className="absolute inset-0 bg-[#00F2FE]/5 blur-[60px] rounded-full animate-pulse"></div><div className="relative z-10 flex flex-col items-center gap-6 opacity-30"><div className="w-20 h-20 rounded-full border-2 border-dashed border-[#00F2FE] animate-spin-slow flex items-center justify-center"><TrophyIcon className="w-10 h-10 text-[#00F2FE]" /></div><div className="text-center"><h3 className="font-orbitron text-lg font-black text-white tracking-[0.4em] uppercase">{t.hubAwaitingStats}</h3><p className="font-chakra text-[10px] text-white/50 tracking-[0.2em] mt-2 uppercase">{t.hubAnalyzingPerformance}</p></div></div></div>); };
 
-const NavHubButton: React.FC<{ title: string; icon: React.ReactNode; isActive: boolean; onClick: () => void; isDisabled?: boolean; customImage?: string | null; }> = ({ title, icon, isActive, onClick, isDisabled, customImage }) => {
-    if (customImage) {
-        return (
-            <button 
-                onClick={isDisabled ? undefined : onClick} 
-                className={`flex items-center justify-center transition-all duration-300 h-full min-w-[64px] group ${isDisabled ? 'opacity-10 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-110'}`}
-            >
-                <img 
-                    src={customImage} 
-                    alt={title} 
-                    className={`w-28 h-28 md:w-[122px] md:h-[122px] object-contain transition-all duration-300 translate-y-1 ${isActive ? 'drop-shadow-[0_0_3px_rgba(0,242,254,0.6)]' : 'opacity-90 hover:opacity-100'}`} 
-                />
-            </button>
-        );
-    }
-
-    return (
-        <button 
-            onClick={isDisabled ? undefined : onClick} 
-            className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 h-full min-w-[64px] group ${isDisabled ? 'opacity-10 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-110'}`}
-        >
-            <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isActive ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 shadow-[0_0_8px_rgba(0,242,254,0.4),inset_0_0_3px_rgba(0,242,254,0.2)]' : 'text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/40 hover:text-white'}`}>
-                {React.cloneElement(icon as React.ReactElement<React.SVGProps<SVGSVGElement>>, { className: "w-4 h-4" })}
-            </div>
-            <span className={`text-[6px] font-black tracking-widest uppercase transition-colors text-center px-1 truncate w-full ${isActive ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>
-                {title}
-            </span>
-        </button>
-    );
-};
+const NavHubButton: React.FC<{ title: string; icon: React.ReactNode; isActive: boolean; onClick: () => void; isDisabled?: boolean; }> = ({ title, icon, isActive, onClick, isDisabled }) => (
+    <button 
+        onClick={isDisabled ? undefined : onClick} 
+        className={`flex flex-col items-center justify-center gap-1 transition-all duration-300 h-full min-w-[64px] group ${isDisabled ? 'opacity-10 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-110'}`}
+    >
+        <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isActive ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 shadow-[0_0_8px_rgba(0,242,254,0.4),inset_0_0_3px_rgba(0,242,254,0.2)]' : 'text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/40 hover:text-white'}`}>
+            {React.cloneElement(icon as React.ReactElement<React.SVGProps<SVGSVGElement>>, { className: "w-4 h-4" })}
+        </div>
+        <span className={`text-[6px] font-black tracking-widest uppercase transition-colors text-center px-1 truncate w-full ${isActive ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>
+            {title}
+        </span>
+    </button>
+);
 
 const HubNav: React.FC<{ 
     isDashboardOpen: boolean; 
@@ -271,8 +254,7 @@ const HubNav: React.FC<{
     onHomeClick: () => void; 
     customIcon?: string | null;
     customBall?: string | null;
-    customNavIcons?: Record<string, string>;
-}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, customIcon, customBall, customNavIcons = {} }) => { 
+}> = ({ isDashboardOpen, sessionDate, activeTab, onTabChange, archiveViewDate, onHomeClick, customIcon, customBall }) => { 
     const { language, setLanguage } = useApp(); 
     const t = useTranslation(); 
     const [isLangOpen, setIsLangOpen] = useState(false); 
@@ -361,37 +343,27 @@ const HubNav: React.FC<{
                 <div className="flex items-center gap-2 md:gap-5 mr-2 h-full">
                     {isDashboardOpen && (
                         <div className="mr-2 flex items-center border-r border-white/10 pr-3 h-full">
-                            {customNavIcons['home'] ? (
-                                <button onClick={onHomeClick} className="flex items-center justify-center transition-all duration-300 group cursor-pointer hover:scale-110 h-full min-w-[50px]">
-                                    <img src={customNavIcons['home']} alt="Home" className="w-28 h-28 md:w-[122px] md:h-[122px] object-contain transition-all duration-300 opacity-90 hover:opacity-100 translate-y-1" />
-                                </button>
-                            ) : (
-                                <button onClick={onHomeClick} className="flex flex-col items-center justify-center gap-1 transition-all duration-300 group cursor-pointer hover:scale-110 h-full min-w-[50px]">
-                                    <div className="w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/40 hover:text-white">
-                                        <Home className="w-4 h-4" />
-                                    </div>
-                                    <span className="text-[6px] font-black tracking-widest uppercase text-white/30 group-hover:text-white/60 transition-colors">{t.navHome}</span>
-                                </button>
-                            )}
+                            <button onClick={onHomeClick} className="flex flex-col items-center justify-center gap-1 transition-all duration-300 group cursor-pointer hover:scale-110 h-full min-w-[50px]">
+                                <div className="w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/40 hover:text-white">
+                                    <Home className="w-4 h-4" />
+                                </div>
+                                <span className="text-[6px] font-black tracking-widest uppercase text-white/30 group-hover:text-white/60 transition-colors">{t.navHome}</span>
+                            </button>
                         </div>
                     )}
                     
-                    <RadioPlayer customIcon={customNavIcons['radio']} />
+                    <RadioPlayer />
                     
-                    <NavHubButton title={t.hubDashboardBtn} icon={<LayoutDashboard />} isActive={isDashboardOpen && activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} customImage={customNavIcons['dashboard']} />
-                    <NavHubButton title={t.playerHub} icon={<Users />} isActive={isDashboardOpen && (activeTab === 'roster' || activeTab === 'duel')} onClick={() => onTabChange('roster')} customImage={customNavIcons['playerHub']} />
-                    <NavHubButton title={t.navTournaments} icon={<TrophyIcon />} isActive={isDashboardOpen && activeTab === 'tournaments'} onClick={() => onTabChange('tournaments')} customImage={customNavIcons['tournaments']} />
-                    <NavHubButton title={t.navHistory} icon={<HistoryIcon />} isActive={isDashboardOpen && activeTab === 'archive'} onClick={() => onTabChange('archive')} customImage={customNavIcons['history']} />
-                    <NavHubButton title={t.information} icon={<InfoIcon />} isActive={isDashboardOpen && activeTab === 'info'} onClick={() => onTabChange('info')} customImage={customNavIcons['information']} />
+                    <NavHubButton title={t.hubDashboardBtn} icon={<LayoutDashboard />} isActive={isDashboardOpen && activeTab === 'dashboard'} onClick={() => onTabChange('dashboard')} />
+                    <NavHubButton title={t.playerHub} icon={<Users />} isActive={isDashboardOpen && (activeTab === 'roster' || activeTab === 'duel')} onClick={() => onTabChange('roster')} />
+                    <NavHubButton title={t.navTournaments} icon={<TrophyIcon />} isActive={isDashboardOpen && activeTab === 'tournaments'} onClick={() => onTabChange('tournaments')} />
+                    <NavHubButton title={t.navHistory} icon={<HistoryIcon />} isActive={isDashboardOpen && activeTab === 'archive'} onClick={() => onTabChange('archive')} />
+                    <NavHubButton title={t.information} icon={<InfoIcon />} isActive={isDashboardOpen && activeTab === 'info'} onClick={() => onTabChange('info')} />
                 </div>
                 
                 <div className="flex flex-col items-center justify-center group h-full relative" ref={dropdownRef}>
                     <button onClick={() => setIsLangOpen(!isLangOpen)} className="w-8 h-8 rounded-full border border-white/20 bg-black/60 flex items-center justify-center transition-all shadow-[0_0_10px_rgba(255,255,255,0.15)] hover:border-white/60 hover:bg-white/5 group/lang">
-                        {customNavIcons['language'] ? (
-                            <img src={customNavIcons['language']} alt="Lang" className="w-full h-full object-cover rounded-full" />
-                        ) : (
-                            <span className="text-[9px] font-black text-white/80 group-hover/lang:text-white uppercase leading-none">{language}</span>
-                        )}
+                        <span className="text-[9px] font-black text-white/80 group-hover/lang:text-white uppercase leading-none">{language}</span>
                     </button>
                     <span className="text-[6px] font-black tracking-widest text-white/30 uppercase group-hover:text-white/60 transition-colors cursor-default leading-none mt-1 text-center truncate max-w-[50px]">{t.language}</span>
 
@@ -428,7 +400,6 @@ export const PublicHubScreen: React.FC = () => {
     const [customTrophy, setCustomTrophy] = useState<string | null>(null);
     const [customTotm, setCustomTotm] = useState<string | null>(null);
     const [customTeamEmblems, setCustomTeamEmblems] = useState<Record<string, string>>({});
-    const [customNavIcons, setCustomNavIcons] = useState<Record<string, string>>({});
     const mainScrollRef = useRef<HTMLDivElement>(null);
     const t = useTranslation();
 
@@ -488,27 +459,6 @@ export const PublicHubScreen: React.FC = () => {
                 if (url && url !== emblems[color]) {
                     setCustomTeamEmblems(prev => ({ ...prev, [color]: url }));
                     localStorage.setItem(`customTeamEmblem_${color.replace('#', '')}`, url);
-                }
-            });
-
-            // 4. Nav Icons
-            const navTypes = ['home', 'radio', 'dashboard', 'playerHub', 'tournaments', 'history', 'information', 'language'];
-            const navIcons: Record<string, string> = {};
-
-            // Local
-            navTypes.forEach(type => {
-                const local = localStorage.getItem(`customNavIcon_${type}`);
-                if (local) navIcons[type] = local;
-            });
-            setCustomNavIcons(prev => ({ ...prev, ...navIcons }));
-
-            // Cloud
-            const cloudNavIcons = await Promise.all(navTypes.map(type => loadNavIconUrl(type)));
-            cloudNavIcons.forEach((url, idx) => {
-                const type = navTypes[idx];
-                if (url && url !== navIcons[type]) {
-                    setCustomNavIcons(prev => ({ ...prev, [type]: url }));
-                    localStorage.setItem(`customNavIcon_${type}`, url);
                 }
             });
         };
@@ -640,7 +590,6 @@ export const PublicHubScreen: React.FC = () => {
                 }} 
                 customIcon={customIcon}
                 customBall={customBall}
-                customNavIcons={customNavIcons}
             />
 
             <div className={`fixed inset-0 z-[60] transform transition-all duration-700 ease-in-out flex pt-20 pb-8 md:pb-12 overflow-y-auto overscroll-none touch-pan-y ${isDashboardOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'} `} style={{ backgroundColor: getBottomPatchColor() }}>

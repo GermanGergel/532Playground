@@ -4,7 +4,7 @@ import { logAnalyticsEvent } from '../db';
 
 const STREAM_URL = "https://oxygenmusic.hu:8443/oxygenindie";
 
-export const RadioPlayer: React.FC<{ customIcon?: string }> = ({ customIcon }) => {
+export const RadioPlayer: React.FC = () => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -91,22 +91,6 @@ export const RadioPlayer: React.FC<{ customIcon?: string }> = ({ customIcon }) =
 
     const cyanColor = '#00F2FE';
 
-    if (customIcon) {
-        return (
-            <button 
-                onClick={toggleRadio}
-                disabled={isLoading && !isPlaying}
-                className="flex items-center justify-center transition-all duration-300 group cursor-pointer hover:scale-110 h-full min-w-[64px]"
-            >
-                <img 
-                    src={customIcon} 
-                    alt="Radio" 
-                    className={`w-28 h-28 md:w-[122px] md:h-[122px] object-contain transition-all duration-300 translate-y-1 ${isPlaying ? 'drop-shadow-[0_0_3px_rgba(0,242,254,0.6)]' : 'opacity-90 hover:opacity-100'}`} 
-                />
-            </button>
-        );
-    }
-
     return (
         <button 
             onClick={toggleRadio}
@@ -150,13 +134,9 @@ export const RadioPlayer: React.FC<{ customIcon?: string }> = ({ customIcon }) =
                     </div>
                 ) : (
                     // Play / Radio Icon
-                    customIcon ? (
-                        <img src={customIcon} alt="Radio" className="w-full h-full object-cover rounded-full" />
-                    ) : (
-                        <svg className="w-4 h-4 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                        </svg>
-                    )
+                    <svg className="w-4 h-4 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
                 )}
             </div>
 
