@@ -1,6 +1,6 @@
 
 import { createClient } from '@supabase/supabase-js';
-import { Player, Session, NewsItem, PromoData, DraftState } from './types';
+import { Player, Session, NewsItem, PromoData, DraftState, ClubNewsItem } from './types';
 import { Language } from './translations/index';
 import { get, set, del, keys } from 'idb-keyval';
 
@@ -123,6 +123,55 @@ export const uploadPromoImage = async (base64Image: string): Promise<string | nu
     try {
         const blob = base64ToBlob(base64Image);
         const filePath = `promo/hero_card_v${Date.now()}.jpg`; 
+        const { error: uploadError } = await supabase!.storage.from('player_images').upload(filePath, blob, { cacheControl: '3600', upsert: true });
+        if (uploadError) throw uploadError;
+        const { data } = supabase!.storage.from('player_images').getPublicUrl(filePath);
+        return data.publicUrl;
+    } catch (error) {
+        return null;
+    }
+};
+
+// --- CLUB NEWS MANAGEMENT ---
+const CLUB_NEWS_KEY = 'custom_club_news';
+
+export const saveClubNews = async (news: ClubNewsItem[]): Promise<boolean> => {
+    // Save locally
+    await set(CLUB_NEWS_KEY, news);
+
+    if (!isSupabaseConfigured()) return true;
+    try {
+        const { error } = await supabase!
+            .from('settings')
+            .upsert({ key: CLUB_NEWS_KEY, value: news }, { onConflict: 'key' });
+        if (error) throw error;
+        return true;
+    } catch (error) {
+        return false;
+    }
+};
+
+export const loadClubNews = async (): Promise<ClubNewsItem[]> => {
+    // Try cloud first if configured
+    if (isSupabaseConfigured()) {
+        try {
+            const { data, error } = await supabase!.from('settings').select('value').eq('key', CLUB_NEWS_KEY).maybeSingle();
+            if (data?.value) {
+                const news = data.value as ClubNewsItem[];
+                await set(CLUB_NEWS_KEY, news); // Sync to local
+                return news;
+            }
+        } catch (error) {}
+    }
+    // Fallback to local
+    return (await get<ClubNewsItem[]>(CLUB_NEWS_KEY)) || [];
+};
+
+export const uploadClubNewsImage = async (base64Image: string): Promise<string | null> => {
+    if (!isSupabaseConfigured() || !base64Image) return null;
+    try {
+        const blob = base64ToBlob(base64Image);
+        const filePath = `club_news/news_${Date.now()}.jpg`; 
         const { error: uploadError } = await supabase!.storage.from('player_images').upload(filePath, blob, { cacheControl: '3600', upsert: true });
         if (uploadError) throw uploadError;
         const { data } = supabase!.storage.from('player_images').getPublicUrl(filePath);

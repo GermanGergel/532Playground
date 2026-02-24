@@ -10,8 +10,11 @@ import {
     uploadBallIcon, saveBallIconUrl,
     uploadTrophyIcon, saveTrophyIconUrl,
     uploadTotmEmblem, saveTotmEmblemUrl,
-    uploadTeamEmblem, saveTeamEmblemUrl
+    uploadTeamEmblem, saveTeamEmblemUrl,
+    uploadClubNewsImage, saveClubNews, loadClubNews
 } from '../db';
+import { ClubNewsItem } from '../types';
+import { Trash2 } from '../icons';
 
 export const HomeScreen: React.FC = () => {
   const navigate = useNavigate();
@@ -25,6 +28,55 @@ export const HomeScreen: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [hubUrl, setHubUrl] = useState('');
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
+  
+  // News Management State
+  const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
+  const [clubNews, setClubNews] = useState<ClubNewsItem[]>([]);
+  const [newNewsTitle, setNewNewsTitle] = useState('');
+
+  useEffect(() => {
+      if (isNewsModalOpen) {
+          loadClubNews().then(setClubNews);
+      }
+  }, [isNewsModalOpen]);
+
+  const handleUploadNewsImage = async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file) {
+          setIsUploading(true);
+          const reader = new FileReader();
+          reader.onloadend = async () => {
+              const base64String = reader.result as string;
+              const cloudUrl = await uploadClubNewsImage(base64String);
+              
+              if (cloudUrl) {
+                  const newItem: ClubNewsItem = {
+                      id: Date.now().toString(),
+                      imageUrl: cloudUrl,
+                      title: newNewsTitle,
+                      createdAt: new Date().toISOString()
+                  };
+                  const updatedNews = [newItem, ...clubNews];
+                  await saveClubNews(updatedNews);
+                  setClubNews(updatedNews);
+                  setNewNewsTitle(''); // Reset title
+                  alert("News item added!");
+              } else {
+                  alert("Failed to upload image.");
+              }
+              setIsUploading(false);
+          };
+          reader.readAsDataURL(file);
+      }
+  };
+
+  const handleDeleteNewsItem = async (id: string) => {
+      if (window.confirm("Are you sure you want to delete this news item?")) {
+          const updatedNews = clubNews.filter(item => item.id !== id);
+          await saveClubNews(updatedNews);
+          setClubNews(updatedNews);
+      }
+  };
   
   const promoCardRef = useRef<HTMLDivElement>(null);
 
@@ -464,6 +516,14 @@ export const HomeScreen: React.FC = () => {
                     </div>
 
                     <Button 
+                        variant="secondary" 
+                        onClick={() => setIsNewsModalOpen(true)}
+                        className="w-full !py-2.5 !text-xs font-chakra font-bold tracking-widest uppercase border border-white/10"
+                    >
+                        MANAGE NEWS
+                    </Button>
+
+                    <Button 
                         variant="ghost" 
                         onClick={() => setIsHubModalOpen(false)} 
                         className="w-full !py-2 !text-xs font-chakra font-bold text-white/30 uppercase tracking-widest"
@@ -471,6 +531,83 @@ export const HomeScreen: React.FC = () => {
                         {t.cancel}
                     </Button>
                 </div>
+            </div>
+        </Modal>
+
+        <Modal
+            isOpen={isNewsModalOpen}
+            onClose={() => setIsNewsModalOpen(false)}
+            size="md"
+            hideCloseButton
+            containerClassName="!p-4 !bg-dark-bg border border-[#00F2FE]/20"
+        >
+            <div className="flex flex-col gap-4">
+                <h2 className="font-russo text-lg text-white uppercase tracking-tight leading-none text-center">
+                    MANAGE CLUB NEWS
+                </h2>
+
+                {/* Add New Section */}
+                <div className="bg-white/5 p-3 rounded-xl border border-white/10 flex flex-col gap-3">
+                    <h3 className="text-xs font-bold text-white/60 uppercase tracking-wider">Add New Item</h3>
+                    <input 
+                        type="text" 
+                        placeholder="Optional Title / Message"
+                        value={newNewsTitle}
+                        onChange={(e) => setNewNewsTitle(e.target.value)}
+                        className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-[#00F2FE] outline-none"
+                    />
+                    <div className="relative w-full">
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleUploadNewsImage}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        />
+                        <Button 
+                            variant="primary" 
+                            disabled={isUploading}
+                            className="w-full !py-2 !text-xs font-chakra font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(0,242,254,0.2)]"
+                        >
+                            {isUploading ? "UPLOADING..." : "UPLOAD IMAGE & ADD"}
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Existing Items List */}
+                <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
+                    <h3 className="text-xs font-bold text-white/60 uppercase tracking-wider sticky top-0 bg-dark-bg py-1 z-10">Existing Items</h3>
+                    {clubNews.length === 0 ? (
+                        <div className="text-center py-8 text-white/20 text-xs uppercase tracking-widest">No news items</div>
+                    ) : (
+                        <div className="grid grid-cols-2 gap-3">
+                            {clubNews.map(item => (
+                                <div key={item.id} className="relative group bg-black/40 rounded-lg overflow-hidden border border-white/10">
+                                    <img src={item.imageUrl} alt={item.title} className="w-full h-32 object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent pointer-events-none" />
+                                    {item.title && (
+                                        <div className="absolute bottom-2 left-2 right-2 text-[10px] font-bold text-white truncate">
+                                            {item.title}
+                                        </div>
+                                    )}
+                                    <button 
+                                        onClick={() => handleDeleteNewsItem(item.id)}
+                                        className="absolute top-2 right-2 p-1.5 bg-red-500/80 hover:bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        <Trash2 className="w-3 h-3" />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                <Button 
+                    variant="ghost" 
+                    onClick={() => setIsNewsModalOpen(false)} 
+                    className="w-full !py-2 !text-xs font-chakra font-bold text-white/30 uppercase tracking-widest"
+                >
+                    CLOSE
+                </Button>
             </div>
         </Modal>
         

@@ -269,3 +269,10 @@ export interface DraftTeam {
     playerIds: string[]; // Including captain
     isCaptainReady?: boolean; // New Flag: Shows if captain has logged in
 }
+
+export interface ClubNewsItem {
+    id: string;
+    imageUrl: string;
+    title?: string;
+    createdAt: string;
+}
