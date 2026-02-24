@@ -1,11 +1,12 @@
 import React, { useMemo, useState } from 'react';
 import { useApp } from '../context';
 import { calculateAllStats, PlayerStats } from '../services/statistics';
-import { NewsItem, Player, Team, WeatherCondition } from '../types';
+import { NewsItem, Player, Team, WeatherCondition, ClubNewsItem } from '../types';
 import { TrophyIcon, Zap, History as HistoryIcon, Users, AwardIcon, Target, YouTubeIcon } from '../icons';
 import { useTranslation } from '../ui';
 import { convertCountryCodeAlpha3ToAlpha2 } from '../utils/countries';
 import { TeamAvatar } from './avatars';
+import { NewsCarousel } from './NewsCarousel';
 
 // --- LOCAL ICONS FOR WIDGET ---
 const MapPinIcon = ({ className }: { className?: string }) => (
@@ -403,7 +404,7 @@ const MatchEnvironmentWidget: React.FC<{ session: any, t: any }> = ({ session, t
 
 // --- MAIN DASHBOARD EXPORT ---
 
-export const PublicHubDashboard: React.FC<{ customTeamEmblems?: Record<string, string> }> = ({ customTeamEmblems = {} }) => {
+export const PublicHubDashboard: React.FC<{ customTeamEmblems?: Record<string, string>; clubNews?: ClubNewsItem[] }> = ({ customTeamEmblems = {}, clubNews = [] }) => {
     const { history, newsFeed, allPlayers } = useApp();
     const t = useTranslation();
     const [activeRightTab, setActiveRightTab] = useState<'players' | 'games'>('players');
@@ -448,7 +449,13 @@ export const PublicHubDashboard: React.FC<{ customTeamEmblems?: Record<string, s
                 <div className="col-span-12 md:col-span-9 flex flex-col gap-4 h-full min-h-[600px] overflow-hidden">
                     <div className="flex-[4] min-h-0 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200 flex gap-3">
                          <HubCard title={t.hubSessionLeaders} align="right" icon={<AwardIcon />} accent="#FFD700" variant="elite" className="flex-[2] h-full min-h-[350px]" bodyClassName="flex flex-col bg-transparent">
-                            <div className="flex-grow relative z-10"><SessionPodium players={top3PodiumPlayers} t={t} /></div>
+                            <div className="flex-grow relative z-10 w-full h-full">
+                                <NewsCarousel news={clubNews} className="h-full w-full">
+                                    <div className="w-full h-full flex items-end justify-center pb-2">
+                                        <SessionPodium players={top3PodiumPlayers} t={t} />
+                                    </div>
+                                </NewsCarousel>
+                            </div>
                         </HubCard>
                         <HubCard title={t.hubMatchReport} icon={<Target />} accent="#00F2FE" variant="standings" className="flex-1 h-full min-h-[350px]" bodyClassName="flex flex-col p-5"><MatchEnvironmentWidget session={session} t={t} /></HubCard>
                     </div>

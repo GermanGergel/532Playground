@@ -6,14 +6,17 @@ import { HubInfo } from './HubInfo';
 import { PublicHubDashboard } from './PublicHubDashboard';
 import { logAnalyticsEvent } from '../db';
 
+import { ClubNewsItem } from '../types';
+
 interface ClubIntelligenceDashboardProps {
     currentView: 'dashboard' | 'roster' | 'archive' | 'tournaments' | 'league' | 'info' | 'duel';
     setView: (view: any) => void;
     onArchiveViewChange?: (date: string | null) => void;
     customTeamEmblems?: Record<string, string>;
+    clubNews?: ClubNewsItem[];
 }
 
-export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps> = ({ currentView, onArchiveViewChange, customTeamEmblems = {} }) => {
+export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps> = ({ currentView, onArchiveViewChange, customTeamEmblems = {}, clubNews = [] }) => {
     const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
     const [hubSortBy, setHubSortBy] = useState<'name' | 'rating' | 'date'>('rating');
     const [hubSearch, setHubSearch] = useState('');
@@ -32,7 +35,7 @@ export const ClubIntelligenceDashboard: React.FC<ClubIntelligenceDashboardProps>
         <div className="w-full h-full animate-in fade-in duration-700 relative">
             {/* Main Content Area */}
             <div className="w-full h-full relative overflow-hidden">
-                {currentView === 'dashboard' && <PublicHubDashboard customTeamEmblems={customTeamEmblems} />}
+                {currentView === 'dashboard' && <PublicHubDashboard customTeamEmblems={customTeamEmblems} clubNews={clubNews} />}
                 
                 {(currentView === 'roster' || currentView === 'duel') && (
                     <HubRoster 

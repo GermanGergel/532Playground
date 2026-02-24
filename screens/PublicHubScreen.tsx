@@ -605,6 +605,7 @@ export const PublicHubScreen: React.FC = () => {
                         setView={setActiveTab} 
                         onArchiveViewChange={setArchiveViewDate} 
                         customTeamEmblems={customTeamEmblems}
+                        clubNews={clubNews}
                     />
                 </div>
                 <div className="fixed bottom-0 left-0 right-0 h-16 z-[110] pointer-events-none opacity-0 transition-all duration-700 delay-300" style={{ opacity: isDashboardOpen ? 1 : 0, background: `linear-gradient(to top, ${getBottomPatchColor()} 50%, ${getBottomPatchColor()}cc 80%, transparent 100%)` }}></div>
@@ -618,29 +619,15 @@ export const PublicHubScreen: React.FC = () => {
                 
                 <div className="relative z-10">
                     <HeroTitle />
-                    
-                    <NewsCarousel news={clubNews}>
-                        <div className="w-full flex flex-col items-center">
-                            <div className="text-center mb-10 md:mb-16 -mt-8 md:-mt-12">
-                                {customTrophy ? (
-                                    <img src={customTrophy} alt="Trophy" className="w-48 h-48 md:w-72 md:h-72 mx-auto mb-0 object-contain" />
-                                ) : (
-                                    <TrophyIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-0 text-[#00F2FE]" />
-                                )}
-                                <h2 className="font-orbitron text-xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/80 -mt-2 md:-mt-4" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubLeadersTitle}</h2>
-                            </div>
-                            {displayData.top.length > 0 ? (
-                                <div className="flex flex-wrap items-end justify-center gap-4 md:gap-8 w-full">
-                                    <div className="order-2 md:order-1">{displayData.top[1] && <CinematicCard player={displayData.top[1]} rank={2} />}</div>
-                                    <div className="order-1 md:order-2">{displayData.top[0] && <CinematicCard player={displayData.top[0]} rank={1} />}</div>
-                                    <div className="order-3 md:order-3">{displayData.top[2] && <CinematicCard player={displayData.top[2]} rank={3} />}</div>
-                                </div>
-                            ) : (
-                                <NoLeadersPlaceholder />
-                            )}
-                        </div>
-                    </NewsCarousel>
-
+                    <div className="text-center mb-10 md:mb-16 -mt-8 md:-mt-12">
+                        {customTrophy ? (
+                            <img src={customTrophy} alt="Trophy" className="w-48 h-48 md:w-72 md:h-72 mx-auto mb-0 object-contain" />
+                        ) : (
+                            <TrophyIcon className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-0 text-[#00F2FE]" />
+                        )}
+                        <h2 className="font-orbitron text-xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/80 -mt-2 md:-mt-4" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubLeadersTitle}</h2>
+                    </div>
+                    {displayData.top.length > 0 ? (<div className="flex flex-wrap items-end justify-center gap-4 md:gap-8 w-full"><div className="order-2 md:order-1">{displayData.top[1] && <CinematicCard player={displayData.top[1]} rank={2} />}</div><div className="order-1 md:order-2">{displayData.top[0] && <CinematicCard player={displayData.top[0]} rank={1} />}</div><div className="order-3 md:order-3">{displayData.top[2] && <CinematicCard player={displayData.top[2]} rank={3} />}</div></div>) : (<NoLeadersPlaceholder />)}
                     {legends && (
                         <div className="mt-24 md:mt-32">
                             <div className="text-center mb-12 md:mb-20">

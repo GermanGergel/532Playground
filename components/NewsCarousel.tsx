@@ -5,9 +5,10 @@ import { ChevronLeft } from '../icons';
 interface NewsCarouselProps {
     news: ClubNewsItem[];
     children: React.ReactNode;
+    className?: string;
 }
 
-export const NewsCarousel: React.FC<NewsCarouselProps> = ({ news, children }) => {
+export const NewsCarousel: React.FC<NewsCarouselProps> = ({ news, children, className }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     
     // Items: [0: Default View (Children), 1..N: News Items]
@@ -32,11 +33,11 @@ export const NewsCarousel: React.FC<NewsCarouselProps> = ({ news, children }) =>
     };
 
     if (totalItems === 1) {
-         return <>{children}</>;
+         return <div className={className}>{children}</div>;
     }
 
     return (
-        <div className="relative w-full max-w-5xl mx-auto mb-10 md:mb-16 -mt-8 md:-mt-12 group min-h-[400px] flex flex-col justify-center">
+        <div className={`relative group flex flex-col justify-center ${className || 'w-full max-w-5xl mx-auto mb-10 md:mb-16 -mt-8 md:-mt-12 min-h-[400px]'}`}>
              {/* Navigation Arrows */}
              <button 
                 onClick={handlePrev}
@@ -53,23 +54,23 @@ export const NewsCarousel: React.FC<NewsCarouselProps> = ({ news, children }) =>
              </button>
 
              {/* Content */}
-             <div className="transition-all duration-500 ease-in-out w-full">
+             <div className="transition-all duration-500 ease-in-out w-full h-full flex items-center justify-center">
                 {currentIndex === 0 ? (
-                    <div className="animate-in fade-in zoom-in duration-500 w-full">
+                    <div className="animate-in fade-in zoom-in duration-500 w-full h-full flex items-center justify-center">
                         {children}
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500 w-full px-8 md:px-16">
-                        <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.5)] group/image">
+                    <div className="flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500 w-full h-full px-8 md:px-12">
+                        <div className="relative w-full h-full rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.5)] group/image flex items-center justify-center bg-black/50 aspect-video">
                              <img 
                                 src={news[currentIndex - 1].imageUrl} 
                                 alt="News" 
-                                className="w-full h-full object-cover transition-transform duration-700 group-hover/image:scale-105"
+                                className="w-full h-full object-contain transition-transform duration-700 group-hover/image:scale-105"
                              />
-                             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent"></div>
+                             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent pointer-events-none"></div>
                              {news[currentIndex - 1].title && (
-                                 <div className="absolute bottom-0 left-0 right-0 p-6 text-center">
-                                     <h3 className="font-russo text-xl md:text-3xl text-white uppercase tracking-wide" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                                 <div className="absolute bottom-0 left-0 right-0 p-4 text-center z-10">
+                                     <h3 className="font-russo text-lg md:text-xl text-white uppercase tracking-wide" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
                                          {news[currentIndex - 1].title}
                                      </h3>
                                  </div>
@@ -80,12 +81,12 @@ export const NewsCarousel: React.FC<NewsCarouselProps> = ({ news, children }) =>
              </div>
              
              {/* Indicators */}
-             <div className="flex justify-center gap-2 mt-6">
+             <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-2 z-30">
                 {Array.from({ length: totalItems }).map((_, idx) => (
                     <button
                         key={idx}
                         onClick={() => setCurrentIndex(idx)}
-                        className={`w-2 h-2 rounded-full transition-all ${idx === currentIndex ? 'bg-[#00F2FE] w-6' : 'bg-white/20 hover:bg-white/40'}`}
+                        className={`w-1.5 h-1.5 rounded-full transition-all ${idx === currentIndex ? 'bg-[#00F2FE] w-4' : 'bg-white/20 hover:bg-white/40'}`}
                     />
                 ))}
              </div>
