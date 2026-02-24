@@ -45,7 +45,7 @@ export const NewsCarousel: React.FC<NewsCarouselProps> = ({ news, children, clas
                  
                  {/* Default Content (Index 0) */}
                  <div 
-                    className={`absolute inset-0 w-full h-full transition-all duration-1000 ease-in-out ${currentIndex === 0 ? 'opacity-100 z-10 visible' : 'opacity-0 z-0 invisible'}`}
+                    className={`absolute inset-0 w-full h-full transition-all duration-[2000ms] ease-in-out ${currentIndex === 0 ? 'opacity-100 z-10 visible' : 'opacity-0 z-0 invisible'}`}
                  >
                      {children}
                  </div>
@@ -57,7 +57,7 @@ export const NewsCarousel: React.FC<NewsCarouselProps> = ({ news, children, clas
                      return (
                          <div 
                             key={item.id}
-                            className={`absolute inset-0 w-full h-full bg-black transition-all duration-1000 ease-in-out ${isActive ? 'opacity-100 z-20 visible' : 'opacity-0 z-0 invisible'}`}
+                            className={`absolute inset-0 w-full h-full bg-black transition-all duration-[2000ms] ease-in-out ${isActive ? 'opacity-100 z-20 visible' : 'opacity-0 z-0 invisible'}`}
                          >
                             <img 
                                 src={item.imageUrl} 
@@ -100,7 +100,7 @@ export const NewsCarousel: React.FC<NewsCarouselProps> = ({ news, children, clas
                 {Array.from({ length: totalItems }).map((_, idx) => (
                     <div
                         key={idx}
-                        className={`h-1 rounded-full transition-all duration-500 ${idx === currentIndex ? 'bg-[#00F2FE] w-6' : 'bg-white/20 w-1.5'}`}
+                        className={`h-1 rounded-full transition-all duration-500 ${idx === currentIndex ? 'bg-white/40 w-6' : 'bg-white/10 w-1.5'}`}
                     />
                 ))}
              </div>
