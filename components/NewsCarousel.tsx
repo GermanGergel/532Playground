@@ -19,16 +19,18 @@ export const NewsCarousel: React.FC<NewsCarouselProps> = ({ news, children, clas
         
         const interval = setInterval(() => {
             setCurrentIndex((prev) => (prev + 1) % totalItems);
-        }, 8000); // 8 seconds rotation (slower for better readability)
+        }, 8000); 
         
         return () => clearInterval(interval);
     }, [totalItems]);
 
-    const handlePrev = () => {
+    const handlePrev = (e: React.MouseEvent) => {
+        e.stopPropagation();
         setCurrentIndex((prev) => (prev - 1 + totalItems) % totalItems);
     };
 
-    const handleNext = () => {
+    const handleNext = (e: React.MouseEvent) => {
+        e.stopPropagation();
         setCurrentIndex((prev) => (prev + 1) % totalItems);
     };
 
@@ -37,56 +39,68 @@ export const NewsCarousel: React.FC<NewsCarouselProps> = ({ news, children, clas
     }
 
     return (
-        <div className={`relative group flex flex-col justify-center ${className || 'w-full max-w-5xl mx-auto mb-10 md:mb-16 -mt-8 md:-mt-12 min-h-[400px]'}`}>
-             {/* Navigation Arrows */}
+        <div className={`relative group ${className}`}>
+             {/* Content Area - Using absolute positioning for crossfade */}
+             <div className="w-full h-full relative rounded-[1.5rem] overflow-hidden">
+                 
+                 {/* Default Content (Index 0) */}
+                 <div 
+                    className={`absolute inset-0 w-full h-full transition-all duration-1000 ease-in-out ${currentIndex === 0 ? 'opacity-100 z-10 visible' : 'opacity-0 z-0 invisible'}`}
+                 >
+                     {children}
+                 </div>
+
+                 {/* News Items (Index 1..N) */}
+                 {news.map((item, idx) => {
+                     const itemIndex = idx + 1;
+                     const isActive = currentIndex === itemIndex;
+                     return (
+                         <div 
+                            key={item.id}
+                            className={`absolute inset-0 w-full h-full bg-black transition-all duration-1000 ease-in-out ${isActive ? 'opacity-100 z-20 visible' : 'opacity-0 z-0 invisible'}`}
+                         >
+                            <img 
+                                src={item.imageUrl} 
+                                alt={item.title || 'News'} 
+                                className="w-full h-full object-cover"
+                            />
+                            {/* Gradient Overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent pointer-events-none"></div>
+                            
+                            {/* Title */}
+                            {item.title && (
+                                 <div className="absolute bottom-0 left-0 right-0 p-6 text-center z-30">
+                                     <h3 className="font-russo text-2xl md:text-3xl text-white uppercase tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                                         {item.title}
+                                     </h3>
+                                 </div>
+                             )}
+                         </div>
+                     );
+                 })}
+             </div>
+
+             {/* Navigation Arrows - Smaller and positioned */}
              <button 
                 onClick={handlePrev}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 p-2 text-white/20 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-30 p-1.5 text-white/40 hover:text-white transition-colors opacity-0 group-hover:opacity-100 bg-black/20 hover:bg-black/50 rounded-full backdrop-blur-sm"
              >
-                <ChevronLeft className="w-8 h-8 md:w-12 md:h-12" />
+                <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
              </button>
              
              <button 
                 onClick={handleNext}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 p-2 text-white/20 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-30 p-1.5 text-white/40 hover:text-white transition-colors opacity-0 group-hover:opacity-100 bg-black/20 hover:bg-black/50 rounded-full backdrop-blur-sm"
              >
-                <ChevronLeft className="w-8 h-8 md:w-12 md:h-12 rotate-180" />
+                <ChevronLeft className="w-4 h-4 md:w-5 md:h-5 rotate-180" />
              </button>
-
-             {/* Content */}
-             <div className="transition-all duration-500 ease-in-out w-full h-full flex items-center justify-center">
-                {currentIndex === 0 ? (
-                    <div className="animate-in fade-in zoom-in duration-500 w-full h-full flex items-center justify-center">
-                        {children}
-                    </div>
-                ) : (
-                    <div className="flex flex-col items-center justify-center animate-in fade-in zoom-in duration-500 w-full h-full px-8 md:px-12">
-                        <div className="relative w-full h-full rounded-2xl overflow-hidden border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.5)] group/image flex items-center justify-center bg-black/50 aspect-video">
-                             <img 
-                                src={news[currentIndex - 1].imageUrl} 
-                                alt="News" 
-                                className="w-full h-full object-contain transition-transform duration-700 group-hover/image:scale-105"
-                             />
-                             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent pointer-events-none"></div>
-                             {news[currentIndex - 1].title && (
-                                 <div className="absolute bottom-0 left-0 right-0 p-4 text-center z-10">
-                                     <h3 className="font-russo text-lg md:text-xl text-white uppercase tracking-wide" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
-                                         {news[currentIndex - 1].title}
-                                     </h3>
-                                 </div>
-                             )}
-                        </div>
-                    </div>
-                )}
-             </div>
              
              {/* Indicators */}
-             <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-2 z-30">
+             <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 z-30 pointer-events-none">
                 {Array.from({ length: totalItems }).map((_, idx) => (
-                    <button
+                    <div
                         key={idx}
-                        onClick={() => setCurrentIndex(idx)}
-                        className={`w-1.5 h-1.5 rounded-full transition-all ${idx === currentIndex ? 'bg-[#00F2FE] w-4' : 'bg-white/20 hover:bg-white/40'}`}
+                        className={`h-1 rounded-full transition-all duration-500 ${idx === currentIndex ? 'bg-[#00F2FE] w-6' : 'bg-white/20 w-1.5'}`}
                     />
                 ))}
              </div>

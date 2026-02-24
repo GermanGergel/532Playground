@@ -448,15 +448,11 @@ export const PublicHubDashboard: React.FC<{ customTeamEmblems?: Record<string, s
             <div className="flex-grow grid grid-cols-12 gap-4 min-h-0 items-stretch relative z-10 overflow-hidden">
                 <div className="col-span-12 md:col-span-9 flex flex-col gap-4 h-full min-h-[600px] overflow-hidden">
                     <div className="flex-[4] min-h-0 shrink-0 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-200 flex gap-3">
-                         <HubCard title={t.hubSessionLeaders} align="right" icon={<AwardIcon />} accent="#FFD700" variant="elite" className="flex-[2] h-full min-h-[350px]" bodyClassName="flex flex-col bg-transparent">
-                            <div className="flex-grow relative z-10 w-full h-full">
-                                <NewsCarousel news={clubNews} className="h-full w-full">
-                                    <div className="w-full h-full flex items-end justify-center pb-2">
-                                        <SessionPodium players={top3PodiumPlayers} t={t} />
-                                    </div>
-                                </NewsCarousel>
-                            </div>
-                        </HubCard>
+                         <NewsCarousel news={clubNews} className="flex-[2] h-full min-h-[350px]">
+                            <HubCard title={t.hubSessionLeaders} align="right" icon={<AwardIcon />} accent="#FFD700" variant="elite" className="w-full h-full" bodyClassName="flex flex-col bg-transparent">
+                                <div className="flex-grow relative z-10"><SessionPodium players={top3PodiumPlayers} t={t} /></div>
+                            </HubCard>
+                         </NewsCarousel>
                         <HubCard title={t.hubMatchReport} icon={<Target />} accent="#00F2FE" variant="standings" className="flex-1 h-full min-h-[350px]" bodyClassName="flex flex-col p-5"><MatchEnvironmentWidget session={session} t={t} /></HubCard>
                     </div>
                     <div className="flex-[3] min-h-0 shrink-0 grid grid-cols-1 sm:grid-cols-2 gap-4">
