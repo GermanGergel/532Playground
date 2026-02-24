@@ -239,7 +239,7 @@ const NavHubButton: React.FC<{ title: string; icon: React.ReactNode; isActive: b
         <div className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 ${isActive ? 'text-[#00F2FE] border-[#00F2FE] bg-[#00F2FE]/10 shadow-[0_0_8px_rgba(0,242,254,0.4),inset_0_0_3px_rgba(0,242,254,0.2)]' : 'text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/40 hover:text-white'}`}>
             {React.cloneElement(icon as React.ReactElement<React.SVGProps<SVGSVGElement>>, { className: "w-4 h-4" })}
         </div>
-        <span className={`text-[6px] font-black tracking-widest uppercase transition-colors text-center px-1 truncate w-full ${isActive ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>
+        <span className={`text-[8px] font-black tracking-widest uppercase transition-colors text-center px-1 truncate w-full ${isActive ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>
             {title}
         </span>
     </button>
@@ -347,7 +347,7 @@ const HubNav: React.FC<{
                                 <div className="w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-300 text-white/60 border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.05)] hover:border-white/40 hover:text-white">
                                     <Home className="w-4 h-4" />
                                 </div>
-                                <span className="text-[6px] font-black tracking-widest uppercase text-white/30 group-hover:text-white/60 transition-colors">{t.navHome}</span>
+                                <span className="text-[8px] font-black tracking-widest uppercase text-white/30 group-hover:text-white/60 transition-colors">{t.navHome}</span>
                             </button>
                         </div>
                     )}
@@ -365,7 +365,7 @@ const HubNav: React.FC<{
                     <button onClick={() => setIsLangOpen(!isLangOpen)} className="w-8 h-8 rounded-full border border-white/20 bg-black/60 flex items-center justify-center transition-all shadow-[0_0_10px_rgba(255,255,255,0.15)] hover:border-white/60 hover:bg-white/5 group/lang">
                         <span className="text-[9px] font-black text-white/80 group-hover/lang:text-white uppercase leading-none">{language}</span>
                     </button>
-                    <span className="text-[6px] font-black tracking-widest text-white/30 uppercase group-hover:text-white/60 transition-colors cursor-default leading-none mt-1 text-center truncate max-w-[50px]">{t.language}</span>
+                    <span className="text-[8px] font-black tracking-widest text-white/30 uppercase group-hover:text-white/60 transition-colors cursor-default leading-none mt-1 text-center truncate max-w-[50px]">{t.language}</span>
 
                     {isLangOpen && (
                         <div className="absolute left-1/2 -translate-x-1/2 w-9 bg-[#05070a] border border-white/10 rounded-full shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-1 duration-200 z-[250]" style={{ top: 'calc(100% + 4px)' }}>

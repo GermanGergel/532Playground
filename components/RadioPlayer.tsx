@@ -141,7 +141,7 @@ export const RadioPlayer: React.FC = () => {
             </div>
 
             {/* Label underneath */}
-            <span className={`text-[6px] font-black tracking-widest uppercase transition-colors ${isPlaying ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>
+            <span className={`text-[8px] font-black tracking-widest uppercase transition-colors ${isPlaying ? 'text-[#00F2FE]' : 'text-white/30 group-hover:text-white/60'}`}>
                 RADIO
             </span>
         </button>
