@@ -269,7 +269,19 @@ export const vn = {
   hubWelcomeText: "Chào mừng đến với Hub UNIT CLUB chính thức. Theo dõi chỉ số, so sánh kết quả và vươn tới đỉnh cao.",
   hubLeadersTitle: "Dẫn Đầu Mùa Giải",
   hubJoinSquad: "Tham Gia Đội Hình",
-  
+  hubHallOfFame: "Kỷ Lục Đại Sảnh Danh Vọng",
+  hubEternalGoldenBoot: "CHIẾC GIÀY VÀNG VĨNH CỬU",
+  hubCareerGoals: "BÀN THẮNG SỰ NGHIỆP",
+  hubLegacyArchitect: "KIẾN TRÚC SƯ DI SẢN",
+  hubCareerAssists: "KIẾN TẠO SỰ NGHIỆP",
+  hubGrandMaster: "ĐẠI KIỆN TƯỚNG",
+  hubGoalsAndAssists: "BÀN THẮNG + KIẾN TẠO",
+  hubTheConqueror: "KẺ CHINH PHỤC",
+  hubHighestWinRate: "TỶ LỆ THẮNG CAO NHẤT",
+  hubNoData: "KHÔNG CÓ DỮ LIỆU",
+  hubNoContenders: "KHÔNG CÓ ỨNG VIÊN",
+  hubConnectWhatsApp: "Liên hệ với chúng tôi trên WhatsApp để đặt chỗ.",
+
   // Duel
   duel_title: "Chọn Đối Thủ",
   duel_id_unit: "XÁC MINH CẦU THỦ...",

@@ -85,7 +85,7 @@ const ChaseList: React.FC<{
     valueKey: keyof Player | 'grandMaster' | 'winRate'; 
     accentColor: string; 
 }> = ({ players, valueKey, accentColor }) => {
-    
+    const t = useTranslation();
     const scrollRef = useRef<HTMLDivElement>(null);
     const [showTopFade, setShowTopFade] = useState(false);
     const [showBottomFade, setShowBottomFade] = useState(players.length > 4);
@@ -154,7 +154,7 @@ const ChaseList: React.FC<{
                 
                 {players.length === 0 && (
                     <div className="py-3 text-center">
-                        <span className="text-[8px] text-white/20 uppercase tracking-widest">No Contenders</span>
+                        <span className="text-[8px] text-white/20 uppercase tracking-widest">{t.hubNoContenders}</span>
                     </div>
                 )}
             </div>
@@ -632,24 +632,24 @@ export const PublicHubScreen: React.FC = () => {
                         <div className="mt-24 md:mt-32">
                             <div className="text-center mb-12 md:mb-20">
                                 <p className="font-orbitron text-sm md:text-base font-black text-white/80 tracking-[0.5em] uppercase" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>
-                                    Hall of Fame Records
+                                    {t.hubHallOfFame}
                                 </p>
                             </div>
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 w-full max-w-[1400px] mx-auto px-2 md:px-4 items-start">
                                 <div className="flex flex-col w-full">
-                                    {legends.scorers[0] && (<LegendCard title="ETERNAL GOLDEN BOOT" player={legends.scorers[0]} value={legends.scorers[0].totalGoals} icon={<GoleadorBadgeIcon />} label="CAREER GOALS" accentColor="#FFD700" className="rounded-b-none border-b-0" />)}
+                                    {legends.scorers[0] && (<LegendCard title={t.hubEternalGoldenBoot} player={legends.scorers[0]} value={legends.scorers[0].totalGoals} icon={<GoleadorBadgeIcon />} label={t.hubCareerGoals} accentColor="#FFD700" className="rounded-b-none border-b-0" />)}
                                     <ChaseList players={legends.scorers.slice(1, 10)} valueKey="totalGoals" accentColor="#FFD700" />
                                 </div>
                                 <div className="flex flex-col w-full">
-                                    {legends.architects[0] && (<LegendCard title="LEGACY ARCHITECT" player={legends.architects[0]} value={legends.architects[0].totalAssists} icon={<AssistantBadgeIcon />} label="CAREER ASSISTS" accentColor="#00BFFF" className="rounded-b-none border-b-0" />)}
+                                    {legends.architects[0] && (<LegendCard title={t.hubLegacyArchitect} player={legends.architects[0]} value={legends.architects[0].totalAssists} icon={<AssistantBadgeIcon />} label={t.hubCareerAssists} accentColor="#00BFFF" className="rounded-b-none border-b-0" />)}
                                     <ChaseList players={legends.architects.slice(1, 10)} valueKey="totalAssists" accentColor="#00BFFF" />
                                 </div>
                                 <div className="flex flex-col w-full">
-                                    {legends.grandMasters[0] && (<LegendCard title="GRAND MASTER" player={legends.grandMasters[0]} value={(legends.grandMasters[0].totalGoals || 0) + (legends.grandMasters[0].totalAssists || 0)} icon={<MvpBadgeIcon />} label="GOALS + ASSISTS" accentColor="#D946EF" className="rounded-b-none border-b-0" />)}
+                                    {legends.grandMasters[0] && (<LegendCard title={t.hubGrandMaster} player={legends.grandMasters[0]} value={(legends.grandMasters[0].totalGoals || 0) + (legends.grandMasters[0].totalAssists || 0)} icon={<MvpBadgeIcon />} label={t.hubGoalsAndAssists} accentColor="#D946EF" className="rounded-b-none border-b-0" />)}
                                     <ChaseList players={legends.grandMasters.slice(1, 10)} valueKey="grandMaster" accentColor="#D946EF" />
                                 </div>
                                 <div className="flex flex-col w-full">
-                                    {legends.conquerors[0] ? (<LegendCard title="THE CONQUEROR" player={legends.conquerors[0]} value={`${Math.round((legends.conquerors[0].totalWins / legends.conquerors[0].totalGames) * 100)}%`} icon={<WinLeaderBadgeIcon />} label="HIGHEST WIN RATE" accentColor="#4CFF5F" className="rounded-b-none border-b-0" />) : (<div className="h-40 bg-black/50 rounded-2xl border border-white/5 flex items-center justify-center"><span className="text-[10px] text-white/30 uppercase tracking-widest">NO DATA</span></div>)}
+                                    {legends.conquerors[0] ? (<LegendCard title={t.hubTheConqueror} player={legends.conquerors[0]} value={`${Math.round((legends.conquerors[0].totalWins / legends.conquerors[0].totalGames) * 100)}%`} icon={<WinLeaderBadgeIcon />} label={t.hubHighestWinRate} accentColor="#4CFF5F" className="rounded-b-none border-b-0" />) : (<div className="h-40 bg-black/50 rounded-2xl border border-white/5 flex items-center justify-center"><span className="text-[10px] text-white/30 uppercase tracking-widest">{t.hubNoData}</span></div>)}
                                     {legends.conquerors.length > 1 && (<ChaseList players={legends.conquerors.slice(1, 10)} valueKey="winRate" accentColor="#4CFF5F" />)}
                                 </div>
                             </div>
@@ -691,7 +691,7 @@ export const PublicHubScreen: React.FC = () => {
                         <footer className="relative pb-8 pt-0 bg-transparent">
                             <div className="text-center px-4">
                                 <h2 className="font-orbitron text-2xl md:text-3xl font-black uppercase tracking-[0.2em] text-white/90" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.2)'}}>{t.hubJoinSquad}</h2>
-                                <p className="font-chakra text-xs text-white/50 mt-2 mb-6">Connect with us on WhatsApp to book your slot.</p>
+                                <p className="font-chakra text-xs text-white/50 mt-2 mb-6">{t.hubConnectWhatsApp}</p>
                                 <a href={SOCIAL_LINKS.whatsapp} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-3 bg-transparent text-[#25D366] font-bold text-lg py-3 px-8 rounded-xl shadow-[0_0_15px_rgba(37,211,102,0.4)] hover:shadow-[0_0_25px_rgba(37,211,102,0.6)] hover:bg-[#25D366]/10 transition-all transform hover:scale-[1.02] active:scale-95 mb-8"><WhatsApp className="w-5 h-5 fill-current" />WhatsApp</a>
                                 <div className="flex justify-center gap-10"><a href={SOCIAL_LINKS.youtube} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><YouTubeIcon className="w-7 h-7" /></a><a href={SOCIAL_LINKS.tiktok} target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white transition-colors"><TikTokIcon className="w-7 h-7" /></a></div>
                             </div>

@@ -268,6 +268,18 @@ export const en = {
   hubWelcomeText: "Welcome to the official UNIT CLUB Hub. Track your stats, compare with others, and rise to the top.",
   hubLeadersTitle: "Season Leaders",
   hubJoinSquad: "Join the Squad",
+  hubHallOfFame: "Hall of Fame Records",
+  hubEternalGoldenBoot: "ETERNAL GOLDEN BOOT",
+  hubCareerGoals: "CAREER GOALS",
+  hubLegacyArchitect: "LEGACY ARCHITECT",
+  hubCareerAssists: "CAREER ASSISTS",
+  hubGrandMaster: "GRAND MASTER",
+  hubGoalsAndAssists: "GOALS + ASSISTS",
+  hubTheConqueror: "THE CONQUEROR",
+  hubHighestWinRate: "HIGHEST WIN RATE",
+  hubNoData: "NO DATA",
+  hubNoContenders: "NO CONTENDERS",
+  hubConnectWhatsApp: "Connect with us on WhatsApp to book your slot.",
 
   // Duel
   duel_title: "Duel Selection",
