@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { DraftState, Game, GameStatus, EventLogEntry, EventType, StartRoundPayload, Player, SessionStatus, SkillType } from '../types';
-import { getDraftSession, updateDraftState, subscribeToDraft, saveRemoteActiveSession } from '../db';
+import { getDraftSession, updateDraftState, subscribeToDraft, saveRemoteActiveSession, subscribeToDraftPresence } from '../db';
 import { PlayerAvatar } from '../components/avatars';
 import { Users, CheckCircle, Wand, Share2, Play, Key, RefreshCw, XCircle, Link as LinkIcon, Settings, StarIcon } from '../icons'; 
 import { newId, BrandedHeader } from './utils';
@@ -529,6 +529,10 @@ export const DraftScreen: React.FC = () => {
     const [teamToAuth, setTeamToAuth] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     
+    // --- SPECTATOR COUNT ---
+    const [spectatorCount, setSpectatorCount] = useState(0);
+    const presenceId = useMemo(() => newId(), []);
+
     // --- LOTTERY ANIMATION STATE ---
     const [revealedCount, setRevealedCount] = useState(0);
 
@@ -558,6 +562,24 @@ export const DraftScreen: React.FC = () => {
         // Ensure admin mode is strictly bound to creator status on mount
         setIsAdminMode(localStorage.getItem(`draft_admin_${draftId}`) === 'true');
     }, [draftId]);
+
+    // --- PRESENCE SUBSCRIPTION ---
+    useEffect(() => {
+        if (!draftId) return;
+
+        let role: 'admin' | 'captain' | 'spectator' = 'spectator';
+        if (isAdminMode) role = 'admin';
+        else if (currentUserTeamId) role = 'captain';
+
+        const subscription = subscribeToDraftPresence(draftId, presenceId, role, (count) => {
+            setSpectatorCount(count);
+        });
+
+        return () => {
+            // @ts-ignore
+            if (subscription && typeof subscription.unsubscribe === 'function') subscription.unsubscribe();
+        };
+    }, [draftId, isAdminMode, currentUserTeamId, presenceId]);
 
     // --- FORCE SYNC POLLING ---
     useEffect(() => {
@@ -922,6 +944,17 @@ export const DraftScreen: React.FC = () => {
             
             {/* HEADER */}
             <div className="relative z-10 p-6 pt-8 border-b border-white/5 bg-[#0a0c10] flex flex-col gap-4">
+                {/* SPECTATOR COUNT (TOP RIGHT) */}
+                <div className="absolute top-6 right-6 z-50 flex flex-col items-center gap-0.5 opacity-80 animate-in fade-in duration-1000">
+                    <div className="flex items-center gap-1.5 text-[#00F2FE]/70">
+                        <Users className="w-5 h-5" />
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <span className="font-mono text-[10px] font-bold text-[#00F2FE]/70">{spectatorCount}</span>
+                        <span className="text-[8px] font-black text-[#00F2FE]/50 uppercase tracking-widest">LIVE</span>
+                    </div>
+                </div>
+
                 <div className="flex justify-between items-start relative w-full">
                     {/* LEFT CONTROLS (ADMIN ONLY) */}
                     <div className="w-36 flex flex-col gap-2 items-stretch min-h-[60px]">

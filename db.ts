@@ -822,3 +822,42 @@ export const subscribeToDraft = (draftId: string, callback: (draft: DraftState) 
         )
         .subscribe();
 };
+
+export const subscribeToDraftPresence = (draftId: string, userId: string, role: 'admin' | 'captain' | 'spectator', onCountChange: (count: number) => void) => {
+    if (!isSupabaseConfigured()) return { unsubscribe: () => {} };
+
+    const channel = supabase!.channel(`draft_presence_${draftId}`, {
+        config: {
+            presence: {
+                key: userId,
+            },
+        },
+    });
+
+    channel
+        .on('presence', { event: 'sync' }, () => {
+            const state = channel.presenceState();
+            let count = 0;
+            // Iterate over all presence entries
+            Object.values(state).forEach((presences: any) => {
+                // Each key can have multiple presence objects (e.g. multiple tabs), but usually 1 per key if key is unique
+                presences.forEach((p: any) => {
+                    if (p.role === 'spectator') {
+                        count++;
+                    }
+                });
+            });
+            onCountChange(count);
+        })
+        .subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+                await channel.track({ role, online_at: new Date().toISOString() });
+            }
+        });
+
+    return {
+        unsubscribe: () => {
+            channel.unsubscribe();
+        }
+    };
+};
