@@ -421,11 +421,35 @@ export const PublicHubScreen: React.FC = () => {
 
             // 2. Team Emblems (Local)
             const colors = ['#FF851B', '#2ECC40', '#0074D9', '#FF4136', '#FFDC00'];
+            const legacyMapping: Record<string, string> = {
+                '#FF9500': '#FF851B', // Old Orange -> New Orange
+                '#D00000': '#FF4136', // Old Red -> New Red
+            };
+            const reverseLegacyMapping: Record<string, string> = {
+                '#FF851B': '#FF9500',
+                '#FF4136': '#D00000',
+            };
+
             const emblems: Record<string, string> = {};
             colors.forEach(color => {
-                const local = localStorage.getItem(`customTeamEmblem_${color.replace('#', '')}`);
+                // Check canonical key
+                let local = localStorage.getItem(`customTeamEmblem_${color.replace('#', '')}`);
+                
+                // Check legacy key if canonical is missing
+                if (!local && reverseLegacyMapping[color]) {
+                    local = localStorage.getItem(`customTeamEmblem_${reverseLegacyMapping[color].replace('#', '')}`);
+                }
+
                 if (local) emblems[color] = local;
             });
+            
+            // Apply legacy mappings locally (New -> Old) so old sessions work
+            Object.entries(legacyMapping).forEach(([oldColor, newColor]) => {
+                if (emblems[newColor]) {
+                    emblems[oldColor] = emblems[newColor];
+                }
+            });
+
             setCustomTeamEmblems(prev => ({ ...prev, ...emblems }));
 
             // 3. Cloud storage (Optimized: 1 request instead of 10)
@@ -461,10 +485,25 @@ export const PublicHubScreen: React.FC = () => {
 
                 // Team Emblems (Cloud Sync)
                 colors.forEach(color => {
-                    const key = `team_emblem_${color.replace('#', '')}`;
-                    const url = settingsMap[key]?.url;
+                    const newKey = `team_emblem_${color.replace('#', '')}`;
+                    let url = settingsMap[newKey]?.url;
+
+                    // Fallback to legacy key if canonical is missing
+                    if (!url && reverseLegacyMapping[color]) {
+                        const oldKey = `team_emblem_${reverseLegacyMapping[color].replace('#', '')}`;
+                        url = settingsMap[oldKey]?.url;
+                    }
+
                     if (url && url !== emblems[color]) {
-                        setCustomTeamEmblems(prev => ({ ...prev, [color]: url }));
+                        setCustomTeamEmblems(prev => {
+                            const updated = { ...prev, [color]: url };
+                            // Update legacy mapping (New -> Old)
+                            Object.entries(legacyMapping).forEach(([oldC, newC]) => {
+                                if (newC === color) updated[oldC] = url;
+                            });
+                            return updated;
+                        });
+                        // Save to canonical local storage
                         localStorage.setItem(`customTeamEmblem_${color.replace('#', '')}`, url);
                     }
                 });

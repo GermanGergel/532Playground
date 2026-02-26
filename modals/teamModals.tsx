@@ -9,7 +9,8 @@ interface TeamColorPickerModalProps {
     currentColor: string;
     usedColors: string[];
 }
-const PALETTE = ['#2ECC40', '#0074D9', '#FF9500', '#FFDC00', '#D00000'];
+// Updated to match Public Hub canonical colors
+const PALETTE = ['#2ECC40', '#0074D9', '#FF851B', '#FFDC00', '#FF4136'];
 
 export const TeamColorPickerModal: React.FC<TeamColorPickerModalProps> = ({ isOpen, onClose, onSelectColor, currentColor, usedColors }) => {
     return (
