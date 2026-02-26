@@ -944,17 +944,6 @@ export const DraftScreen: React.FC = () => {
             
             {/* HEADER */}
             <div className="relative z-10 p-6 pt-8 border-b border-white/5 bg-[#0a0c10] flex flex-col gap-4">
-                {/* SPECTATOR COUNT (TOP RIGHT) */}
-                <div className="absolute top-6 right-6 z-50 flex flex-col items-center gap-0.5 opacity-80 animate-in fade-in duration-1000">
-                    <div className="flex items-center gap-1.5 text-[#00F2FE]/70">
-                        <Users className="w-5 h-5" />
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <span className="font-mono text-[10px] font-bold text-[#00F2FE]/70">{spectatorCount}</span>
-                        <span className="text-[8px] font-black text-[#00F2FE]/50 uppercase tracking-widest">LIVE</span>
-                    </div>
-                </div>
-
                 <div className="flex justify-between items-start relative w-full">
                     {/* LEFT CONTROLS (ADMIN ONLY) */}
                     <div className="w-36 flex flex-col gap-2 items-stretch min-h-[60px]">
@@ -1000,6 +989,17 @@ export const DraftScreen: React.FC = () => {
                                 <button onClick={shareSpectatorLink} className={headerBtnStyle(false)}>PUB LINK</button>
                             </>
                         )}
+                        
+                        {/* SPECTATOR COUNT (MOVED HERE) */}
+                        <div className="flex flex-col items-center gap-1 mt-3 opacity-80 animate-in fade-in duration-1000">
+                            <div className="flex items-center gap-2 text-[#00F2FE]/70">
+                                <Users className="w-7 h-7" />
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <span className="font-mono text-xl font-bold text-[#00F2FE]/70 leading-none">{spectatorCount}</span>
+                                <span className="text-[10px] font-black text-[#00F2FE]/50 uppercase tracking-widest leading-none">LIVE</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
