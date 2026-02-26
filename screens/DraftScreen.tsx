@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context';
 import { DraftState, Game, GameStatus, EventLogEntry, EventType, StartRoundPayload, Player, SessionStatus, SkillType } from '../types';
-import { getDraftSession, updateDraftState, subscribeToDraft, saveRemoteActiveSession, isSupabaseConfigured, getSupabase } from '../db';
-import { Users, CheckCircle, Wand, Share2, Play, Key, Settings, StarIcon } from '../icons'; 
-import { newId } from './utils';
+import { getDraftSession, updateDraftState, subscribeToDraft, saveRemoteActiveSession } from '../db';
+import { PlayerAvatar } from '../components/avatars';
+import { Users, CheckCircle, Wand, Share2, Play, Key, RefreshCw, XCircle, Link as LinkIcon, Settings, StarIcon } from '../icons'; 
+import { newId, BrandedHeader } from './utils';
 import { Modal, Button } from '../ui';
 import html2canvas from 'html2canvas';
 
@@ -109,7 +110,7 @@ const FinalSplashScreen: React.FC<{ isCreator?: boolean; onAdminReentry?: () => 
 const InvalidLinkScreen: React.FC = () => (
     <div className="fixed inset-0 z-[9999] bg-[#05070a] flex flex-col items-center justify-center p-6 text-center select-none">
         <div className="w-24 h-24 rounded-full bg-red-900/10 border border-red-500/20 flex items-center justify-center mb-6 animate-pulse">
-            <Link className="w-10 h-10 text-red-500 opacity-50" />
+            <LinkIcon className="w-10 h-10 text-red-500 opacity-50" />
         </div>
         <h1 className="font-blackops text-3xl md:text-5xl text-red-500/80 tracking-widest uppercase mb-2">
             ACCESS DENIED
@@ -174,10 +175,11 @@ const CaptainDraftCard: React.FC<{
     player: Player; 
     teamColor: string; 
     isCaptain?: boolean;
+    isMyTeam?: boolean;
     isActive?: boolean;
     isReady?: boolean; // Prop to indicate if captain is logged in (colorful) or not (gray)
     onClick?: () => void;
-}> = ({ player, teamColor, isCaptain, isActive, isReady = false, onClick }) => {
+}> = ({ player, teamColor, isCaptain, isMyTeam, isActive, isReady = false, onClick }) => {
     
     // UPDATED: Font sizes reduced slightly to look less bulky
     const getNicknameSize = (name: string) => {
@@ -294,9 +296,10 @@ const MiniDraftCard: React.FC<{
     player: Player;
     onClick: () => void;
     disabled: boolean;
+    isActive: boolean;
     pickingColor?: string; 
     isManualMode?: boolean;
-}> = ({ player, onClick, disabled, pickingColor, isManualMode }) => {
+}> = ({ player, onClick, disabled, isActive, pickingColor, isManualMode }) => {
     
     let borderStyle = {};
     
@@ -458,7 +461,7 @@ const RecapView: React.FC<{ draft: DraftState, allPlayers: Player[], isExport?: 
             </div>
 
             <div className="flex flex-col gap-12 w-full">
-                {draft.teams.map((team) => {
+                {draft.teams.map((team, idx) => {
                     // --- SHUFFLE LOGIC TO HIDE PICK ORDER ---
                     const captain = allPlayers.find(p => p.id === team.captainId);
                     
@@ -544,53 +547,12 @@ export const DraftScreen: React.FC = () => {
 
     const [toastMessage, setToastMessage] = useState('');
     const [showToast, setShowToast] = useState(false);
-    const [viewerCount, setViewerCount] = useState(0);
 
     const notify = (msg: string) => {
         setToastMessage(msg);
         setShowToast(true);
         setTimeout(() => setShowToast(false), 2500);
     };
-
-    // --- LIVE VIEWER COUNT (SUPABASE PRESENCE) ---
-    useEffect(() => {
-        if (!draftId || !isSupabaseConfigured()) return;
-
-        const supabase = getSupabase();
-        if (!supabase) return;
-
-        const role = isCreator ? 'admin' : (currentUserTeamId ? 'captain' : 'spectator');
-        const userPresenceId = Math.random().toString(36).substring(7);
-        
-        const channel = supabase.channel(`presence_draft_${draftId}`);
-
-        channel
-            .on('presence', { event: 'sync' }, () => {
-                const state = channel.presenceState();
-                let count = 0;
-                Object.values(state).forEach((presences) => {
-                    (presences as { role: string }[]).forEach((p) => {
-                        if (p.role === 'spectator') {
-                            count++;
-                        }
-                    });
-                });
-                setViewerCount(count);
-            })
-            .subscribe(async (status) => {
-                if (status === 'SUBSCRIBED') {
-                    await channel.track({
-                        role: role,
-                        id: userPresenceId,
-                        joinedAt: new Date().toISOString()
-                    });
-                }
-            });
-
-        return () => {
-            channel.unsubscribe();
-        };
-    }, [draftId, isCreator, currentUserTeamId]);
 
     useEffect(() => {
         // Ensure admin mode is strictly bound to creator status on mount
@@ -628,10 +590,16 @@ export const DraftScreen: React.FC = () => {
 
         return () => {
             clearInterval(intervalId);
-            // @ts-expect-error - Supabase subscription object type mismatch
+            // @ts-ignore
             if (subscription && typeof subscription.unsubscribe === 'function') subscription.unsubscribe();
         };
     }, [draftId, draft]);
+
+    const handleStartDraft = async () => {
+        if (!draft) return;
+        const updatedDraft = { ...draft, status: 'active' as const };
+        await updateDraftState(updatedDraft);
+    };
 
     // --- LOTTERY ANIMATION EFFECT ---
     useEffect(() => {
@@ -662,7 +630,7 @@ export const DraftScreen: React.FC = () => {
             // Reset if not in lottery
             setRevealedCount(0);
         }
-    }, [draft?.status, draft?.teams.length, isAdminMode, handleStartDraft]);
+    }, [draft?.status, isAdminMode]);
 
     // --- SORT TEAMS BY PICK ORDER ---
     const sortedTeams = useMemo(() => {
@@ -675,7 +643,7 @@ export const DraftScreen: React.FC = () => {
             if (indexB === -1) return -1;
             return indexA - indexB;
         });
-    }, [draft]);
+    }, [draft?.teams, draft?.pickOrder]);
 
     const handleCaptainAuth = async () => {
         if (draft && teamToAuth && pinInput === draft.pin) {
@@ -694,7 +662,6 @@ export const DraftScreen: React.FC = () => {
         }
     };
 
-    // --- NEW: START LOTTERY LOGIC ---
     const handleStartLottery = async () => {
         if (!draft) return;
 
@@ -730,12 +697,6 @@ export const DraftScreen: React.FC = () => {
         
         await updateDraftState(updatedDraft);
     };
-
-    const handleStartDraft = useCallback(async () => {
-        if (!draft) return;
-        const updatedDraft = { ...draft, status: 'active' as const };
-        await updateDraftState(updatedDraft);
-    }, [draft]);
 
     const handleManualAssign = async (targetTeamId: string) => {
         if (!draft || !manualAssignPlayer || isProcessing) return;
@@ -887,7 +848,7 @@ export const DraftScreen: React.FC = () => {
             textArea.value = text;
             document.body.appendChild(textArea);
             textArea.select();
-            try { document.execCommand("copy"); notify(msg); } catch { notify("COPY FAILED"); }
+            try { document.execCommand("copy"); notify(msg); } catch (err) { notify("COPY FAILED"); }
             document.body.removeChild(textArea);
         }
     };
@@ -999,21 +960,7 @@ export const DraftScreen: React.FC = () => {
                     </div>
 
                     {/* RIGHT CONTROLS (ADMIN ONLY) */}
-                    <div className="w-36 flex flex-col gap-2 items-stretch min-h-[60px] relative">
-                        {/* LIVE VIEWER COUNT */}
-                        <div className="absolute -top-4 -right-2 flex flex-col items-center gap-0.5 group">
-                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#48CFCB]/10 border border-[#48CFCB]/20 shadow-[0_0_15px_rgba(72,207,203,0.1)] group-hover:bg-[#48CFCB]/20 transition-all duration-500">
-                                <Users className="w-4 h-4 text-[#48CFCB]" />
-                            </div>
-                            <div className="flex flex-col items-center leading-none">
-                                <span className="text-[10px] font-black text-[#48CFCB] tracking-tighter">{viewerCount}</span>
-                                <div className="flex items-center gap-1">
-                                    <div className="w-1 h-1 rounded-full bg-[#48CFCB] animate-pulse"></div>
-                                    <span className="text-[7px] font-black text-[#48CFCB]/60 uppercase tracking-[0.1em]">LIVE</span>
-                                </div>
-                            </div>
-                        </div>
-
+                    <div className="w-36 flex flex-col gap-2 items-stretch min-h-[60px]">
                         {isCreator && (
                             <>
                                 <button onClick={shareCaptainLink} className={headerBtnStyle(false)}>CPT LINK</button>
