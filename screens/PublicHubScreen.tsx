@@ -448,7 +448,7 @@ export const PublicHubScreen: React.FC = () => {
             }
 
             // 3. Team Emblems
-            const colors = ['#FF851B', '#2ECC40', '#0074D9', '#FF4136'];
+            const colors = ['#FF851B', '#2ECC40', '#0074D9', '#FF4136', '#FFDC00'];
             const emblems: Record<string, string> = {};
             
             // Local

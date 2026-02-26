@@ -492,7 +492,8 @@ export const HomeScreen: React.FC = () => {
                                     { color: '#FF851B', label: 'ORANGE' },
                                     { color: '#2ECC40', label: 'LIME' },
                                     { color: '#0074D9', label: 'BLUE' },
-                                    { color: '#FF4136', label: 'RED' }
+                                    { color: '#FF4136', label: 'RED' },
+                                    { color: '#FFDC00', label: 'YELLOW' }
                                 ].map((team) => (
                                     <div key={team.color} className="relative">
                                         <input
