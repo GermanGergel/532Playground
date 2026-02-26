@@ -259,6 +259,29 @@ export const saveNavIconUrl = async (type: string, url: string): Promise<boolean
 export const loadNavIconUrl = async (type: string): Promise<string | null> => 
     loadAssetUrl(`nav_icon_${type}`);
 
+export const loadClubHubSettings = async () => {
+    if (!isSupabaseConfigured()) return null;
+    try {
+        const keysToFetch = [
+            CHAT_ICON_KEY, 
+            BALL_ICON_KEY, 
+            TROPHY_ICON_KEY, 
+            TOTM_EMBLEM_KEY,
+            'team_emblem_FF851B', 'team_emblem_2ECC40', 'team_emblem_0074D9', 'team_emblem_FF4136', 'team_emblem_FFDC00'
+        ];
+        const { data, error } = await supabase!.from('settings').select('key, value').in('key', keysToFetch);
+        if (error) throw error;
+        
+        const settingsMap: Record<string, any> = {};
+        data?.forEach(item => {
+            settingsMap[item.key] = item.value;
+        });
+        return settingsMap;
+    } catch (error) {
+        return null;
+    }
+};
+
 // --- PLAYER MANAGEMENT ---
 const BUCKET_NAME = 'player_images';
 

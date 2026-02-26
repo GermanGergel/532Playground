@@ -446,8 +446,8 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
                                     <>
                                         {dreamTeam[3] && <PlayerPodium x="35%" y="32%" data={dreamTeam[3]} accentColor="#00F2FE" scale={0.9} />} 
                                         {dreamTeam[4] && <PlayerPodium x="65%" y="32%" data={dreamTeam[4]} accentColor="#4CFF5F" scale={0.9} />}
-                                        {dreamTeam[1] && <PlayerPodium x="20%" y="58%" data={dreamTeam[1]} accentColor="#FF4136" scale={1.0} />}
-                                        {dreamTeam[2] && <PlayerPodium x="80%" y="58%" data={dreamTeam[2]} accentColor="#FF851B" scale={1.0} />}
+                                        {dreamTeam[1] && <PlayerPodium x="20%" y="58%" data={dreamTeam[1]} accentColor="#D00000" scale={1.0} />}
+                                        {dreamTeam[2] && <PlayerPodium x="80%" y="58%" data={dreamTeam[2]} accentColor="#FF9500" scale={1.0} />}
                                         {dreamTeam[0] && <PlayerPodium x="50%" y="71%" data={dreamTeam[0]} accentColor="#00F2FE" scale={1.1} />}
                                     </>
                                 )}

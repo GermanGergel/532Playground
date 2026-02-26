@@ -489,10 +489,10 @@ export const HomeScreen: React.FC = () => {
                         {isTeamEmblemsOpen && (
                             <div className="grid grid-cols-2 gap-2 w-full mt-1">
                                 {[
-                                    { color: '#FF851B', label: 'ORANGE' },
+                                    { color: '#FF9500', label: 'ORANGE' },
                                     { color: '#2ECC40', label: 'LIME' },
                                     { color: '#0074D9', label: 'BLUE' },
-                                    { color: '#FF4136', label: 'RED' },
+                                    { color: '#D00000', label: 'RED' },
                                     { color: '#FFDC00', label: 'YELLOW' }
                                 ].map((team) => (
                                     <div key={team.color} className="relative">

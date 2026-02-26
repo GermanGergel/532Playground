@@ -28,7 +28,7 @@ export const useTeamAssignment = () => {
     React.useEffect(() => {
         if (activeSession) {
             if (activeSession.teams.length === 0 && activeSession.numTeams > 0) {
-                const defaultColors = ['#0074D9', '#FF4136', '#FF851B', '#2ECC40'].slice(0, activeSession.numTeams);
+                const defaultColors = ['#0074D9', '#D00000', '#FF9500', '#2ECC40'].slice(0, activeSession.numTeams);
                 const newTeams = Array.from({ length: activeSession.numTeams }, (_, i) => ({
                     id: newId(),
                     color: defaultColors[i] || COLORS[i % COLORS.length],

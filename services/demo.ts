@@ -16,7 +16,7 @@ const DEMO_NAMES = [
     "Cristiano", "Zlatan", "Kevin", "Luka", "Kylian"
 ];
 
-const COLORS = ['#FF4136', '#0074D9', '#2ECC40', '#FFDC00', '#FF851B'];
+const COLORS = ['#D00000', '#0074D9', '#2ECC40', '#FFDC00', '#FF9500'];
 
 const ALL_SKILLS: SkillType[] = ['goalkeeper', 'power_shot', 'technique', 'defender', 'playmaker', 'finisher', 'versatile', 'tireless_motor', 'leader'];
 

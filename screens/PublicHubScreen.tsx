@@ -9,7 +9,7 @@ import { ClubIntelligenceDashboard } from '../components/ClubIntelligenceDashboa
 import { RadioPlayer } from '../components/RadioPlayer';
 import { TeamOfTheMonthModal } from '../components/TeamOfTheMonthModal';
 import { CinematicCard, HeaderAtmosphere } from '../components/PublicHubScreen';
-import { loadChatIconUrl, loadBallIconUrl, loadTrophyIconUrl, loadTotmEmblemUrl, loadTeamEmblemUrl, loadClubNews } from '../db';
+import { loadClubHubSettings, loadClubNews } from '../db';
 import { ClubNewsItem } from '../types';
 import { NewsCarousel } from '../components/NewsCarousel';
 
@@ -419,54 +419,56 @@ export const PublicHubScreen: React.FC = () => {
             if (localTrophy) setCustomTrophy(localTrophy);
             if (localTotm) setCustomTotm(localTotm);
 
-            // 2. Cloud storage
-            const [cloudChat, cloudBall, cloudTrophy, cloudTotm, news] = await Promise.all([
-                loadChatIconUrl(),
-                loadBallIconUrl(),
-                loadTrophyIconUrl(),
-                loadTotmEmblemUrl(),
-                loadClubNews()
-            ]);
-
-            if (news) setClubNews(news);
-
-            if (cloudChat && cloudChat !== localChat) {
-                setCustomIcon(cloudChat);
-                localStorage.setItem('customChatIcon', cloudChat);
-            }
-            if (cloudBall && cloudBall !== localBall) {
-                setCustomBall(cloudBall);
-                localStorage.setItem('customBallIcon', cloudBall);
-            }
-            if (cloudTrophy && cloudTrophy !== localTrophy) {
-                setCustomTrophy(cloudTrophy);
-                localStorage.setItem('customTrophyIcon', cloudTrophy);
-            }
-            if (cloudTotm && cloudTotm !== localTotm) {
-                setCustomTotm(cloudTotm);
-                localStorage.setItem('customTotmEmblem', cloudTotm);
-            }
-
-            // 3. Team Emblems
+            // 2. Team Emblems (Local)
             const colors = ['#FF851B', '#2ECC40', '#0074D9', '#FF4136', '#FFDC00'];
             const emblems: Record<string, string> = {};
-            
-            // Local
             colors.forEach(color => {
                 const local = localStorage.getItem(`customTeamEmblem_${color.replace('#', '')}`);
                 if (local) emblems[color] = local;
             });
             setCustomTeamEmblems(prev => ({ ...prev, ...emblems }));
 
-            // Cloud
-            const cloudEmblems = await Promise.all(colors.map(color => loadTeamEmblemUrl(color)));
-            cloudEmblems.forEach((url, idx) => {
-                const color = colors[idx];
-                if (url && url !== emblems[color]) {
-                    setCustomTeamEmblems(prev => ({ ...prev, [color]: url }));
-                    localStorage.setItem(`customTeamEmblem_${color.replace('#', '')}`, url);
+            // 3. Cloud storage (Optimized: 1 request instead of 10)
+            const [settingsMap, news] = await Promise.all([
+                loadClubHubSettings(),
+                loadClubNews()
+            ]);
+
+            if (news) setClubNews(news);
+
+            if (settingsMap) {
+                const cloudChat = settingsMap['club_chat_icon']?.url;
+                const cloudBall = settingsMap['club_ball_icon']?.url;
+                const cloudTrophy = settingsMap['club_trophy_icon']?.url;
+                const cloudTotm = settingsMap['club_totm_emblem']?.url;
+
+                if (cloudChat && cloudChat !== localChat) {
+                    setCustomIcon(cloudChat);
+                    localStorage.setItem('customChatIcon', cloudChat);
                 }
-            });
+                if (cloudBall && cloudBall !== localBall) {
+                    setCustomBall(cloudBall);
+                    localStorage.setItem('customBallIcon', cloudBall);
+                }
+                if (cloudTrophy && cloudTrophy !== localTrophy) {
+                    setCustomTrophy(cloudTrophy);
+                    localStorage.setItem('customTrophyIcon', cloudTrophy);
+                }
+                if (cloudTotm && cloudTotm !== localTotm) {
+                    setCustomTotm(cloudTotm);
+                    localStorage.setItem('customTotmEmblem', cloudTotm);
+                }
+
+                // Team Emblems (Cloud Sync)
+                colors.forEach(color => {
+                    const key = `team_emblem_${color.replace('#', '')}`;
+                    const url = settingsMap[key]?.url;
+                    if (url && url !== emblems[color]) {
+                        setCustomTeamEmblems(prev => ({ ...prev, [color]: url }));
+                        localStorage.setItem(`customTeamEmblem_${color.replace('#', '')}`, url);
+                    }
+                });
+            }
         };
         loadIcons();
     }, []);
