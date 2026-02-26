@@ -326,8 +326,8 @@ const NewsVanguardCard: React.FC<{ item: NewsItem }> = ({ item }) => {
 const getImpactScore = (stats: PlayerStats): number => {
     let score = 0;
     const nonCleanSheetWins = stats.wins - (stats.cleanSheetWins || 0);
-    score += nonCleanSheetWins * 2.0;
-    score += (stats.cleanSheetWins || 0) * 2.5;
+    score += nonCleanSheetWins * 1.0;
+    score += (stats.cleanSheetWins || 0) * 1.5;
     score += stats.draws * 0.5;
     score += stats.goals * 1.0;
     score += stats.assists * 1.0;
