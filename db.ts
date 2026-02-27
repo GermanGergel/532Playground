@@ -105,8 +105,16 @@ const resizeImage = (base64Str: string, maxWidth = 1024, maxHeight = 1024): Prom
             canvas.width = width;
             canvas.height = height;
             const ctx = canvas.getContext('2d');
-            ctx?.drawImage(img, 0, 0, width, height);
-            resolve(canvas.toDataURL('image/jpeg', 0.8)); // 80% quality JPEG
+            if (ctx) {
+                ctx.drawImage(img, 0, 0, width, height);
+                // Detect format: if original was PNG (transparent), keep PNG. Else JPEG.
+                const isPng = base64Str.startsWith('data:image/png');
+                const format = isPng ? 'image/png' : 'image/jpeg';
+                const quality = isPng ? undefined : 0.8; // PNG is lossless, quality param ignored
+                resolve(canvas.toDataURL(format, quality));
+            } else {
+                resolve(base64Str);
+            }
         };
         img.onerror = () => resolve(base64Str); // Fallback to original if error
     });
