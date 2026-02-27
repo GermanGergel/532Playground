@@ -40,7 +40,18 @@ export const TeamAvatar: React.FC<TeamAvatarProps> = ({ team, size = 'sm', onCli
 
     const borderWidth = size === 'xxs' ? '2px' : '3px';
     const containerStyle = minimal ? {} : { border: `${borderWidth} solid ${teamColor}` };
-    const logo = customEmblem || team.logo;
+    const rawLogo = customEmblem || team.logo;
+
+    // Helper to append resize params (duplicated for now to keep components independent or could be moved out)
+    const getOptimizedUrl = (url: string | undefined, sizeStr: string) => {
+        if (!url) return undefined;
+        if (url.includes('base64')) return url;
+        const separator = url.includes('?') ? '&' : '?';
+        const pixelSize = sizeStr === 'xl' ? 200 : sizeStr === 'lg' ? 150 : 100;
+        return `${url}${separator}width=${pixelSize}&height=${pixelSize}&resize=contain&quality=80`;
+    };
+
+    const logo = React.useMemo(() => getOptimizedUrl(rawLogo, size), [rawLogo, size]);
 
     return (
         <div 
@@ -115,6 +126,16 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, className = 
 
     const baseShapeClasses = `w-full h-full rounded-full overflow-hidden`;
     
+    // Helper to append resize params to Supabase Storage URLs
+    const getOptimizedUrl = (url: string | undefined, size: number) => {
+        if (!url) return undefined;
+        if (url.includes('base64')) return url; // Skip base64
+        // Check if it's likely a Supabase URL (or any URL we can append params to)
+        // We append Supabase Image Transformation params. If not supported, they are ignored.
+        const separator = url.includes('?') ? '&' : '?';
+        return `${url}${separator}width=${size}&height=${size}&resize=cover&quality=80`;
+    };
+
     let imageUrl = player?.photo || player?.playerCard;
 
     if (player?.playerCard && player?.playerCard.includes('?t=')) {
@@ -127,6 +148,12 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, className = 
             }
         }
     }
+    
+    // Optimize the final URL
+    const optimizedUrl = React.useMemo(() => {
+        const pixelSize = size === 'xl' ? 200 : size === 'lg' ? 150 : 100;
+        return getOptimizedUrl(imageUrl, pixelSize);
+    }, [imageUrl, size]);
 
     const bgColor = React.useMemo(() => {
         if (!player?.id) return 'bg-gray-700';
@@ -142,12 +169,12 @@ export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({ player, className = 
     }, [player?.id]);
 
     return (
-        <div key={imageUrl} className={`relative group ${sizeClasses[size]} ${baseShapeClasses} ${className}`} draggable={draggable}>
-             {imageUrl ? (
+        <div key={optimizedUrl} className={`relative group ${sizeClasses[size]} ${baseShapeClasses} ${className}`} draggable={draggable}>
+             {optimizedUrl ? (
                 <div
                     className={`${baseShapeClasses} bg-cover bg-no-repeat`} 
                     style={{
-                        backgroundImage: `url(${imageUrl})`,
+                        backgroundImage: `url(${optimizedUrl})`,
                         backgroundPosition: 'center 20%',
                     }}
                 />

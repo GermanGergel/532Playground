@@ -80,6 +80,38 @@ const sanitizeObject = (obj: any): any => {
     return obj;
 };
 
+// --- IMAGE RESIZING HELPER ---
+const resizeImage = (base64Str: string, maxWidth = 1024, maxHeight = 1024): Promise<string> => {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.src = base64Str;
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+                if (width > maxWidth) {
+                    height *= maxWidth / width;
+                    width = maxWidth;
+                }
+            } else {
+                if (height > maxHeight) {
+                    width *= maxHeight / height;
+                    height = maxHeight;
+                }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx?.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.8)); // 80% quality JPEG
+        };
+        img.onerror = () => resolve(base64Str); // Fallback to original if error
+    });
+};
+
 // --- MAINTENANCE ---
 export const clearLocalHistory = async () => {
     await del('history');
@@ -121,7 +153,8 @@ export const loadPromoData = async (): Promise<PromoData | null> => {
 export const uploadPromoImage = async (base64Image: string): Promise<string | null> => {
     if (!isSupabaseConfigured() || !base64Image) return null;
     try {
-        const blob = base64ToBlob(base64Image);
+        const resizedBase64 = await resizeImage(base64Image, 1280, 720); // Hero card size
+        const blob = base64ToBlob(resizedBase64);
         const filePath = `promo/hero_card_v${Date.now()}.jpg`; 
         const { error: uploadError } = await supabase!.storage.from('player_images').upload(filePath, blob, { cacheControl: '3600', upsert: true });
         if (uploadError) throw uploadError;
@@ -170,7 +203,8 @@ export const loadClubNews = async (): Promise<ClubNewsItem[]> => {
 export const uploadClubNewsImage = async (base64Image: string): Promise<string | null> => {
     if (!isSupabaseConfigured() || !base64Image) return null;
     try {
-        const blob = base64ToBlob(base64Image);
+        const resizedBase64 = await resizeImage(base64Image, 800, 600); // News image size
+        const blob = base64ToBlob(resizedBase64);
         const filePath = `club_news/news_${Date.now()}.jpg`; 
         const { error: uploadError } = await supabase!.storage.from('player_images').upload(filePath, blob, { cacheControl: '3600', upsert: true });
         if (uploadError) throw uploadError;
@@ -190,7 +224,8 @@ const TOTM_EMBLEM_KEY = 'club_totm_emblem';
 export const uploadCustomAsset = async (base64Image: string, prefix: string): Promise<string | null> => {
     if (!isSupabaseConfigured() || !base64Image) return null;
     try {
-        const blob = base64ToBlob(base64Image);
+        const resizedBase64 = await resizeImage(base64Image, 512, 512); // Icon/Emblem size
+        const blob = base64ToBlob(resizedBase64);
         const filePath = `club_assets/${prefix}_${Date.now()}.png`; 
         const { error: uploadError } = await supabase!.storage.from('player_images').upload(filePath, blob, { cacheControl: '3600', upsert: true });
         if (uploadError) throw uploadError;
@@ -288,7 +323,9 @@ const BUCKET_NAME = 'player_images';
 export const uploadPlayerImage = async (playerId: string, base64Image: string, type: 'avatar' | 'card'): Promise<string | null> => {
     if (!isSupabaseConfigured() || !base64Image) return null;
     try {
-        const blob = base64ToBlob(base64Image);
+        // Resize before upload to save bandwidth
+        const resizedBase64 = await resizeImage(base64Image);
+        const blob = base64ToBlob(resizedBase64);
         const filePath = `${playerId}/${type}_${Date.now()}.jpeg`;
         const { error: uploadError } = await supabase!.storage.from(BUCKET_NAME).upload(filePath, blob, { cacheControl: '31536000', upsert: true });
         if (uploadError) throw uploadError;

@@ -603,7 +603,8 @@ export const DraftScreen: React.FC = () => {
         };
 
         syncDraft();
-        const intervalId = setInterval(syncDraft, 3000); 
+        // Fallback polling every 10s (Realtime handles immediate updates)
+        const intervalId = setInterval(syncDraft, 10000); 
 
         const subscription = subscribeToDraft(draftId, (newState) => {
             setDraft(newState);
