@@ -191,7 +191,7 @@ const TacticalRosters: React.FC<{ teams: Team[], players: Player[], session: any
     <div className="flex h-full w-full overflow-x-auto custom-hub-scrollbar bg-black/20">
         {teams.map((team) => {
             const teamPlayers = team.playerIds.map(pid => players.find(p => p.id === pid)).filter(Boolean) as Player[];
-            const avgOvr = teamPlayers.length > 0 ? Math.round(teamPlayers.reduce((sum, p) => sum + p.rating, 0) / teamPlayers.length) : 0;
+            const avgOvr = teamPlayers.length > 0 ? Math.floor(teamPlayers.reduce((sum, p) => sum + p.rating, 0) / teamPlayers.length) : 0;
             const stats = teamStats.find(ts => ts.team.id === team.id);
             const gf = stats?.goalsFor || 0;
             const ga = stats?.goalsAgainst || 0;
@@ -268,7 +268,7 @@ const SessionPodium = React.memo(({ players, t }: { players: TopPlayerStats[], t
                             <div className="flex justify-between items-start w-full">
                                 {p.player.countryCode && <img src={`https://flagcdn.com/w40/${convertCountryCodeAlpha3ToAlpha2(p.player.countryCode)?.toLowerCase()}.png`} className="w-3 h-auto rounded-sm opacity-90" alt="" />}
                                 <div className="flex flex-col items-end leading-none">
-                                    <span className="font-russo text-lg text-[#00F2FE]">{p.player.rating}</span>
+                                    <span className="font-russo text-lg text-[#00F2FE]">{Math.floor(p.player.rating)}</span>
                                     <span className="text-[5px] font-black text-white">OVR</span>
                                 </div>
                             </div>

@@ -201,7 +201,7 @@ export const HubRoster: React.FC<HubRosterProps> = ({ selectedPlayerId, onSelect
                                                         textShadow: isSelected ? `0 0 15px ${viewMode === 'duel' ? '#00F2FE' : tierColor}88` : 'none'
                                                     }}
                                                 >
-                                                    {person.rating}
+                                                    {Math.floor(person.rating)}
                                                 </span>
                                                 <span className="text-[6px] font-mono font-black text-white/10 uppercase">OVR</span>
                                             </div>

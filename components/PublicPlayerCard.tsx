@@ -111,6 +111,15 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
                         <div className="flex flex-col items-center max-w-[50%]">
                             <div className="text-4xl font-black leading-none" style={{ color: '#00F2FE', textShadow: 'none' }}>{Math.floor(player.rating)}</div>
                             <p className="font-bold text-white tracking-widest text-sm mt-2">OVR</p>
+                            
+                            {/* Progress Indicator on Main Card */}
+                            <div className="w-12 h-1 bg-white/10 rounded-full mt-2 overflow-hidden">
+                                <div 
+                                    className="h-full bg-[#00F2FE] transition-all duration-1000"
+                                    style={{ width: `${(player.rating % 1) * 100}%` }}
+                                />
+                            </div>
+
                             <div className="mt-1"><FormArrowIndicator delta={preciseDelta} /></div>
                             {player.badges && Object.keys(player.badges).length > 0 && (
                                 <BadgeDisplay badges={player.badges} limit={6} onOpenChange={setIsBadgeModalOpen} />

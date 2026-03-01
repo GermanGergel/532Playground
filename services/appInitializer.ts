@@ -69,12 +69,7 @@ export const initializeAppState = async (): Promise<InitialAppState> => {
         }
 
         // Стандартные миграции
-        if (typeof migratedPlayer.rating === 'number' && !Number.isInteger(migratedPlayer.rating)) {
-            migratedPlayer.rating = Math.round(migratedPlayer.rating);
-            dataRepaired = true;
-        }
-
-        const correctTier = getTierForRating(migratedPlayer.rating);
+        const correctTier = getTierForRating(Math.round(migratedPlayer.rating));
         if (migratedPlayer.tier !== correctTier) {
             migratedPlayer.tier = correctTier;
             dataRepaired = true;
