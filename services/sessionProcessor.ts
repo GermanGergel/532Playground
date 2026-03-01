@@ -80,7 +80,7 @@ export const processFinishedSession = ({
             const updatedPlayer = {
                 ...player,
                 consecutiveMissedSessions: currentMissed,
-                rating: Math.round(newRating),
+                rating: newRating,
                 tier: getTierForRating(Math.round(newRating)),
             };
 
@@ -89,7 +89,7 @@ export const processFinishedSession = ({
                     previousRating: player.rating,
                     teamPerformance: 0, individualPerformance: 0, badgeBonus: 0,
                     finalChange: actualPenaltyDelta,
-                    newRating: Math.round(newRating),
+                    newRating: newRating,
                     badgesEarned: []
                 };
 
@@ -99,7 +99,7 @@ export const processFinishedSession = ({
                     message: `${player.nickname} received inactivity penalty (${actualPenaltyDelta.toFixed(1)} OVR)`,
                     subMessage: `#Inactive #${currentMissed}Missed`,
                     timestamp: timestamp, isHot: false,
-                    statsSnapshot: { rating: Math.round(newRating), tier: getTierForRating(Math.round(newRating)) },
+                    statsSnapshot: { rating: newRating, tier: getTierForRating(Math.round(newRating)) },
                     priority: 5
                 });
 
@@ -107,7 +107,7 @@ export const processFinishedSession = ({
                 const currentWinRate = player.totalGames > 0 ? Math.round((player.totalWins / player.totalGames) * 100) : 0;
                 
                 const penaltyHistoryEntry = {
-                    date: dateStr, rating: Math.round(newRating), winRate: currentWinRate, goals: 0, assists: 0
+                    date: dateStr, rating: newRating, winRate: currentWinRate, goals: 0, assists: 0
                 };
                 
                 const historyData = [...(player.historyData || [])];
@@ -130,7 +130,7 @@ export const processFinishedSession = ({
             const { breakdown } = calculateRatingUpdate(originalPlayer, sessionStats, session, badgesEarnedThisSession);
             
             const floor = originalPlayer.initialRating || 68;
-            const unifiedNewRating = Math.max(floor, Math.round(breakdown.newRating));
+            const unifiedNewRating = Math.max(floor, breakdown.newRating);
             const finalChange = unifiedNewRating - originalPlayer.rating;
             
             let newForm: 'hot_streak' | 'stable' | 'cold_streak' = 'stable';
@@ -174,7 +174,7 @@ export const processFinishedSession = ({
             return { 
                 ...updatedPlayer, 
                 rating: unifiedNewRating, 
-                tier: getTierForRating(unifiedNewRating), 
+                tier: getTierForRating(Math.round(unifiedNewRating)), 
                 form: newForm,
                 badges: updatedBadges,
                 sessionHistory,
