@@ -20,5 +20,6 @@ export { PublicHubScreen } from './PublicHubScreen';
 export { HubAnalyticsScreen } from './HubAnalyticsScreen';
 export { DraftScreen } from './DraftScreen'; 
 export { TournamentListScreen } from './TournamentListScreen';
+export { MobileHubPreviewScreen } from './MobileHubPreviewScreen';
 export { BrandedHeader, hexToRgba, newId } from './utils';
 export type { ShareableReportProps } from './StatisticsScreen';

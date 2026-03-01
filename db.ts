@@ -736,6 +736,38 @@ export const getSessionAnthemUrl = async (): Promise<string | null> => {
     return null;
 };
 
+// --- NEXT GAME MANAGEMENT ---
+const NEXT_GAME_KEY = 'club_next_game';
+
+export const saveNextGame = async (gameData: any): Promise<boolean> => {
+    await set(NEXT_GAME_KEY, gameData); // Save locally
+    if (!isSupabaseConfigured()) return true;
+    try {
+        const { error } = await supabase!
+            .from('settings')
+            .upsert({ key: NEXT_GAME_KEY, value: gameData }, { onConflict: 'key' });
+        if (error) throw error;
+        return true;
+    } catch (error) {
+        return false;
+    }
+};
+
+export const loadNextGame = async (): Promise<any | null> => {
+    if (isSupabaseConfigured()) {
+        try {
+            const { data, error } = await supabase!.from('settings').select('value').eq('key', NEXT_GAME_KEY).maybeSingle();
+            if (!error && data) {
+                await set(NEXT_GAME_KEY, data.value); // Cache locally
+                return data.value;
+            }
+        } catch (error) {
+            // Fallback to local
+        }
+    }
+    return await get(NEXT_GAME_KEY) || null;
+};
+
 // --- ANALYTICS SAFEMODE ---
 export const logAnalyticsEvent = async (eventType: string, eventData?: string) => {
     if (!isSupabaseConfigured()) return;

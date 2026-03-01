@@ -268,6 +268,14 @@ export const SettingsScreen: React.FC = () => {
                             </div>
                         </Card>
                     </Link>
+
+                    <Link to="/mobile-preview" className="block">
+                         <Card className={`${cardNeonClasses} !p-3 border-yellow-500/30 shadow-yellow-500/10`}>
+                             <div className="flex justify-center items-center gap-3">
+                                <h2 className="font-chakra font-bold text-xl text-yellow-500 tracking-wider">MOBILE HUB PREVIEW</h2>
+                            </div>
+                        </Card>
+                    </Link>
                 </div>
             </div>
 

@@ -276,3 +276,15 @@ export interface ClubNewsItem {
     title?: string;
     createdAt: string;
 }
+
+export interface GameData {
+    date: string;
+    startTime?: string;
+    endTime?: string;
+    location?: string;
+    price?: string;
+    format?: string;
+    venue?: string;
+    maxPlayers?: string | number;
+    teams?: string | number;
+}

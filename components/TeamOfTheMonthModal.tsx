@@ -274,8 +274,18 @@ export const TeamOfTheMonthModal: React.FC<TeamOfTheMonthModalProps> = ({ isOpen
                 
                 if (!winner) return null;
                 
-                // RETURN CLONE WITH HISTORICAL RATING
-                return { ...winner, rating: playerStats[winner.id].lastOvr };
+                // CHECK IF PLAYER PLAYED LATER TO DECIDE RATING SOURCE
+                const nextMonthStart = new Date(tYear, tMonth + 1, 1);
+                const hasPlayedLater = history.some(s => {
+                    if (!s.date) return false;
+                    const sDate = new Date(s.date);
+                    return sDate >= nextMonthStart && s.playerPool.some(p => p.id === winner.id);
+                });
+
+                // If played later -> use historical snapshot. If not -> use current rating (allows manual edits).
+                const finalRating = hasPlayedLater ? playerStats[winner.id].lastOvr : winner.rating;
+                
+                return { ...winner, rating: finalRating };
             };
 
             const selectedIds = new Set<string>();

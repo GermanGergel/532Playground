@@ -7,7 +7,7 @@ import {
     PlayerHubScreen, PlayerDatabaseScreen, PlayerProfileScreen,
     NewsFeedScreen, VoiceSettingsScreen, AnnouncementScreen, PublicProfileScreen,
     PromoScreen, PromoAdminScreen, LedgerScreen, PublicHubScreen,
-    HubAnalyticsScreen, DraftScreen, TournamentListScreen
+    HubAnalyticsScreen, DraftScreen, TournamentListScreen, MobileHubPreviewScreen
 } from './screens';
 import { useApp } from './context';
 
@@ -48,7 +48,8 @@ const App: React.FC = () => {
     '/public-profile/:id',
     '/promo',
     '/hub',
-    '/draft/:id'
+    '/draft/:id',
+    '/mobile-preview'
   ];
 
   const showNav = !pathsWithoutNav.some(path => matchPath(path, location.pathname));
@@ -80,6 +81,7 @@ const App: React.FC = () => {
           <Route path="/hub" element={<PublicHubScreen />} />
           <Route path="/draft/:id" element={<DraftScreen />} />
           <Route path="/tournaments" element={<TournamentListScreen />} />
+          <Route path="/mobile-preview" element={<MobileHubPreviewScreen />} />
           {/* Fallback for web routing */}
           <Route path="*" element={<NotFound />} />
         </Routes>

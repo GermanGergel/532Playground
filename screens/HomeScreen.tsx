@@ -11,9 +11,10 @@ import {
     uploadTrophyIcon, saveTrophyIconUrl,
     uploadTotmEmblem, saveTotmEmblemUrl,
     uploadTeamEmblem, saveTeamEmblemUrl,
-    uploadClubNewsImage, saveClubNews, loadClubNews
+    uploadClubNewsImage, saveClubNews, loadClubNews,
+    saveNextGame, loadNextGame
 } from '../db';
-import { ClubNewsItem } from '../types';
+import { ClubNewsItem, GameData } from '../types';
 import { Trash2 } from '../icons';
 
 export const HomeScreen: React.FC = () => {
@@ -33,6 +34,55 @@ export const HomeScreen: React.FC = () => {
   const [isNewsModalOpen, setIsNewsModalOpen] = useState(false);
   const [clubNews, setClubNews] = useState<ClubNewsItem[]>([]);
   const [newNewsTitle, setNewNewsTitle] = useState('');
+
+  // Schedule Game State
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [scheduleData, setScheduleData] = useState({
+      date: '',
+      startTime: '19:30',
+      endTime: '21:30',
+      location: 'Sân bóng đá Phan Tứ',
+      format: '5v5',
+      teams: '3',
+      price: '40',
+      maxPlayers: '20'
+  });
+
+  const handleScheduleSubmit = async () => {
+      try {
+          setIsUploading(true); // Reuse uploading state for loading
+          const success = await saveNextGame(scheduleData);
+          if (success) {
+              alert("Game scheduled successfully!");
+              setIsScheduleModalOpen(false);
+              setIsHubModalOpen(false);
+          } else {
+              throw new Error("Failed to save game data");
+          }
+      } catch (error) {
+          console.error("Error saving game:", error);
+          alert("Failed to save game. Please try again.");
+      } finally {
+          setIsUploading(false);
+      }
+  };
+
+  useEffect(() => {
+      if (isScheduleModalOpen) {
+          loadNextGame().then((data: GameData | null) => {
+              if (data) {
+                  setScheduleData(prev => ({
+                      ...prev,
+                      ...data,
+                      startTime: data.startTime || prev.startTime,
+                      endTime: data.endTime || prev.endTime,
+                      maxPlayers: data.maxPlayers ? String(data.maxPlayers) : prev.maxPlayers,
+                      teams: data.teams ? String(data.teams) : prev.teams
+                  }));
+              }
+          });
+      }
+  }, [isScheduleModalOpen]);
 
   useEffect(() => {
       if (isNewsModalOpen) {
@@ -518,6 +568,14 @@ export const HomeScreen: React.FC = () => {
 
                     <Button 
                         variant="secondary" 
+                        onClick={() => setIsScheduleModalOpen(true)}
+                        className="w-full !py-2.5 !text-xs font-chakra font-bold tracking-widest uppercase border border-white/10 text-[#00F2FE]"
+                    >
+                        SCHEDULE NEXT GAME
+                    </Button>
+
+                    <Button 
+                        variant="secondary" 
                         onClick={() => setIsNewsModalOpen(true)}
                         className="w-full !py-2.5 !text-xs font-chakra font-bold tracking-widest uppercase border border-white/10"
                     >
@@ -609,6 +667,137 @@ export const HomeScreen: React.FC = () => {
                 >
                     CLOSE
                 </Button>
+            </div>
+        </Modal>
+        
+        <Modal
+            isOpen={isScheduleModalOpen}
+            onClose={() => setIsScheduleModalOpen(false)}
+            size="md"
+            hideCloseButton
+            containerClassName="!p-4 !bg-dark-bg border border-[#00F2FE]/20"
+        >
+            <div className="flex flex-col gap-4">
+                <h2 className="font-russo text-lg text-white uppercase tracking-tight leading-none text-center">
+                    SCHEDULE NEXT GAME
+                </h2>
+
+                <div className="bg-white/5 p-4 rounded-xl border border-white/10 flex flex-col gap-4">
+                    <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Date</label>
+                        <input 
+                            type="date" 
+                            value={scheduleData.date}
+                            onChange={(e) => {
+                                setScheduleData({...scheduleData, date: e.target.value});
+                                e.target.blur(); // Auto-close picker on some browsers
+                            }}
+                            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-[#00F2FE] outline-none"
+                        />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="flex flex-col gap-1">
+                            <label className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Start Time</label>
+                            <input 
+                                type="time" 
+                                value={scheduleData.startTime}
+                                onChange={(e) => setScheduleData({...scheduleData, startTime: e.target.value})}
+                                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-[#00F2FE] outline-none"
+                            />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <label className="text-[10px] font-bold text-white/60 uppercase tracking-wider">End Time</label>
+                            <input 
+                                type="time" 
+                                value={scheduleData.endTime}
+                                onChange={(e) => setScheduleData({...scheduleData, endTime: e.target.value})}
+                                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-[#00F2FE] outline-none"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Location</label>
+                        <select 
+                            value={scheduleData.location}
+                            onChange={(e) => setScheduleData({...scheduleData, location: e.target.value})}
+                            className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-[#00F2FE] outline-none appearance-none"
+                        >
+                            <option value="Sân bóng đá Phan Tứ">Sân bóng đá Phan Tứ</option>
+                            <option value="Le Quy Don Football Center">Le Quy Don Football Center</option>
+                        </select>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3">
+                        <div className="flex flex-col gap-1">
+                            <label className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Format</label>
+                            <select 
+                                value={scheduleData.format}
+                                onChange={(e) => setScheduleData({...scheduleData, format: e.target.value})}
+                                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-[#00F2FE] outline-none appearance-none"
+                            >
+                                <option value="5v5">5v5</option>
+                                <option value="7v7">7v7</option>
+                                <option value="11v11">11v11</option>
+                            </select>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <label className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Teams</label>
+                            <select 
+                                value={scheduleData.teams}
+                                onChange={(e) => setScheduleData({...scheduleData, teams: e.target.value})}
+                                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-[#00F2FE] outline-none appearance-none"
+                            >
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                            </select>
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <label className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Players</label>
+                            <input 
+                                type="number" 
+                                value={scheduleData.maxPlayers}
+                                onChange={(e) => setScheduleData({...scheduleData, maxPlayers: e.target.value})}
+                                className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-[#00F2FE] outline-none"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                        <label className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Price per Player</label>
+                        <div className="relative flex items-center">
+                            <input 
+                                type="number" 
+                                placeholder="40"
+                                value={scheduleData.price}
+                                onChange={(e) => setScheduleData({...scheduleData, price: e.target.value})}
+                                className="w-full bg-black/40 border border-white/10 rounded-lg pl-3 pr-20 py-2 text-sm text-white focus:border-[#00F2FE] outline-none"
+                            />
+                            <span className="absolute right-3 text-sm text-white/50 pointer-events-none">
+                                ,000 VND
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex flex-col gap-2 mt-2">
+                    <Button 
+                        variant="primary" 
+                        onClick={handleScheduleSubmit} 
+                        className="w-full !py-3 !text-sm font-chakra font-black tracking-widest uppercase shadow-[0_0_20px_rgba(0,242,254,0.4)]"
+                    >
+                        PUBLISH EVENT
+                    </Button>
+                    <Button 
+                        variant="ghost" 
+                        onClick={() => setIsScheduleModalOpen(false)} 
+                        className="w-full !py-2 !text-xs font-chakra font-bold text-white/30 uppercase tracking-widest"
+                    >
+                        CANCEL
+                    </Button>
+                </div>
             </div>
         </Modal>
         
