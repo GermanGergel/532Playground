@@ -162,7 +162,7 @@ export const PlayerDatabaseScreen: React.FC = () => {
                                             </span>
                                         )}
                                         {player.status === PlayerStatus.Confirmed && (
-                                            <span className="font-black text-lg text-dark-text mr-2">OVR {player.rating}</span>
+                                            <span className="font-black text-lg text-dark-text mr-2">OVR {Math.floor(player.rating)}</span>
                                         )}
                                     </div>
                                 </Card>

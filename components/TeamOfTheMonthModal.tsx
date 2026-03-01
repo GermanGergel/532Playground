@@ -64,7 +64,7 @@ const PlayerPodium: React.FC<{ x: string; y: string; data: DisplayPlayer; accent
                                 )}
                                 <div className="flex flex-col items-end leading-none">
                                     <span className="font-russo text-2xl drop-shadow-md" style={{ color: TURQUOISE_RATING }}>
-                                        {player.rating}
+                                        {Math.floor(player.rating)}
                                     </span>
                                     <span className="text-[7px] font-black text-white tracking-widest uppercase opacity-80">OVR</span>
                                 </div>

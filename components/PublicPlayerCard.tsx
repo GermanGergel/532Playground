@@ -109,7 +109,7 @@ const ReadOnlyPlayerCard: React.FC<{ player: Player; style?: React.CSSProperties
                             {countryCodeAlpha2 && <img src={`https://flagcdn.com/w40/${countryCodeAlpha2.toLowerCase()}.png`} alt={`${player.countryCode} flag`} className="w-6 h-auto mt-4 rounded-sm opacity-80" />}
                         </div>
                         <div className="flex flex-col items-center max-w-[50%]">
-                            <div className="text-4xl font-black leading-none" style={{ color: '#00F2FE', textShadow: 'none' }}>{player.rating}</div>
+                            <div className="text-4xl font-black leading-none" style={{ color: '#00F2FE', textShadow: 'none' }}>{Math.floor(player.rating)}</div>
                             <p className="font-bold text-white tracking-widest text-sm mt-2">OVR</p>
                             <div className="mt-1"><FormArrowIndicator delta={preciseDelta} /></div>
                             {player.badges && Object.keys(player.badges).length > 0 && (
@@ -219,10 +219,33 @@ const StatsView: React.FC<{ player: Player; onBack: () => void; isPromo?: boolea
             <div className="space-y-3">
                 
                 <Wrapper title="Form Momentum">
-                    <div className="grid grid-cols-3 gap-2 items-center text-center">
-                        <StatItem label="Status" value={formText} color={formColor} />
-                        <StatItem label="Last Delta" value={(preciseDelta > 0 ? '+' : '') + preciseDelta.toFixed(1)} color={formColor} />
-                        <div className="flex justify-center"><FormArrowIndicator delta={preciseDelta} /></div>
+                    <div className="flex flex-col gap-3">
+                        <div className="grid grid-cols-3 gap-2 items-center text-center">
+                            <StatItem label="Status" value={formText} color={formColor} />
+                            <StatItem label="Last Delta" value={(preciseDelta > 0 ? '+' : '') + preciseDelta.toFixed(1)} color={formColor} />
+                            <div className="flex justify-center"><FormArrowIndicator delta={preciseDelta} /></div>
+                        </div>
+                        
+                        <div className="mt-2 px-2">
+                            <div className="flex justify-between items-end mb-1">
+                                <span className="text-xs font-bold text-white">{Math.floor(player.rating)}</span>
+                                <span className="text-[10px] text-dark-text-secondary font-bold uppercase tracking-wider">Next Level</span>
+                                <span className="text-xs font-bold text-white/50">{Math.floor(player.rating) + 1}</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-dark-bg rounded-full overflow-hidden relative">
+                                <div 
+                                    className="absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out"
+                                    style={{ 
+                                        width: `${(player.rating % 1) * 100}%`,
+                                        background: 'linear-gradient(90deg, #00F2FE 0%, #4facfe 100%)',
+                                        boxShadow: '0 0 10px rgba(0, 242, 254, 0.5)'
+                                    }}
+                                />
+                            </div>
+                            <p className="text-center text-[9px] text-dark-text-secondary mt-1.5">
+                                {((1 - (player.rating % 1)) * 100).toFixed(0)}% to next rating
+                            </p>
+                        </div>
                     </div>
                 </Wrapper>
 

@@ -150,7 +150,7 @@ export const ExportPlayerCard: React.FC<{ player: Player; allPlayers: Player[] }
                     </div>
                     <div className="text-right flex flex-col items-end">
                         <p className="font-orbitron font-bold text-5xl text-dark-accent-start accent-text-glow leading-none" style={{ textShadow: '0 0 8px rgba(0, 242, 254, 0.8)' }}>
-                            {player.rating}
+                            {Math.floor(player.rating)}
                         </p>
                         <div className="mt-6 flex flex-col items-end">
                             <p className="text-xl tracking-widest leading-none font-bold">OVR</p>

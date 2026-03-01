@@ -20,7 +20,7 @@ export const calculateRatingUpdate = (player: Player, stats: PlayerStats, sessio
         } else if (stats.losses > stats.wins) {
             delta = -0.3; // Loss
         }
-        const newRating = Math.round(player.rating + delta);
+        const newRating = Number((player.rating + delta).toFixed(2));
         return {
             delta,
             breakdown: {
@@ -173,7 +173,7 @@ export const calculateRatingUpdate = (player: Player, stats: PlayerStats, sessio
         individualPerformance: avgIndividualPoints,
         badgeBonus: badgeBonusPoints,
         finalChange: finalDelta,
-        newRating: Math.round(player.rating + finalDelta),
+        newRating: Number((player.rating + finalDelta).toFixed(2)),
         badgesEarned: earnedBadges,
     };
 

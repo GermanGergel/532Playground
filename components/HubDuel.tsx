@@ -96,7 +96,7 @@ export const HubDuel: React.FC<HubDuelProps> = ({ p1Id, p2Id }) => {
         const getFormVal = (p: Player) => p.form === 'hot_streak' ? 3 : p.form === 'stable' ? 2 : 1;
 
         const rawData = [
-            { id: 'ovr', label: 'Overall Rating', v1: player1.rating, v2: player2.rating },
+            { id: 'ovr', label: 'Overall Rating', v1: Math.floor(player1.rating), v2: Math.floor(player2.rating) },
             { id: 'wr', label: 'Win Probability', v1: `${getWR(player1)}%`, v2: `${getWR(player2)}%`, r1: getWR(player1), r2: getWR(player2) },
             { id: 'exp', label: 'Battle Experience', v1: player1.totalSessionsPlayed, v2: player2.totalSessionsPlayed },
             { id: 'goals', label: 'Scoring Power', v1: player1.totalGoals, v2: player2.totalGoals },

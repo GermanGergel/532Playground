@@ -257,7 +257,7 @@ const CaptainDraftCard: React.FC<{
 
                     <div className="flex flex-col items-end">
                         <span className="font-russo text-3xl leading-none text-[#00F2FE] drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]">
-                            {player.rating}
+                            {Math.floor(player.rating)}
                         </span>
                         <span className="text-[7px] font-black text-white tracking-[0.2em] mt-1">OVR</span>
                     </div>
@@ -358,7 +358,7 @@ const MiniDraftCard: React.FC<{
             <div className="absolute inset-0 p-2 flex flex-col justify-between z-10 pointer-events-none">
                 <div className="flex justify-between items-start">
                     <span className="font-russo text-[10px] leading-none tracking-tighter text-white/50">UNIT</span>
-                    <span className="font-russo text-xl leading-none text-[#00F2FE] drop-shadow-md">{player.rating}</span>
+                    <span className="font-russo text-xl leading-none text-[#00F2FE] drop-shadow-md">{Math.floor(player.rating)}</span>
                 </div>
                 <div className="text-center w-full mb-1">
                     <span className="font-russo text-xs text-white uppercase leading-none tracking-tight block truncate drop-shadow-md w-full">
@@ -404,7 +404,7 @@ const RecapPlayerCard: React.FC<{
                             </div>
                         )}
                     </div>
-                    <span className="font-russo text-xl leading-none text-[#00F2FE] drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{player.rating}</span>
+                    <span className="font-russo text-xl leading-none text-[#00F2FE] drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{Math.floor(player.rating)}</span>
                 </div>
                 <div className="text-center w-full flex flex-col items-center">
                     <span className="font-russo text-xs uppercase leading-none tracking-tight block truncate w-full text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
@@ -1015,7 +1015,7 @@ export const DraftScreen: React.FC = () => {
                         const pickedIds = team.playerIds.slice(1);
                         const slotsTotal = draft.sessionConfig.playersPerTeam - 1;
                         const currentCount = team.playerIds.length;
-                        const avgRating = team.playerIds.length > 0 ? Math.round(team.playerIds.reduce((sum, pid) => sum + (allPlayers.find(p=>p.id===pid)?.rating||0), 0) / team.playerIds.length) : 0;
+                        const avgRating = team.playerIds.length > 0 ? Math.floor(team.playerIds.reduce((sum, pid) => sum + (allPlayers.find(p=>p.id===pid)?.rating||0), 0) / team.playerIds.length) : 0;
                         const isCardReady = draft.status !== 'waiting' || !!team.isCaptainReady;
 
                         // LOTTERY HIDE LOGIC
@@ -1055,7 +1055,7 @@ export const DraftScreen: React.FC = () => {
                                     <div className="flex flex-col gap-1.5 w-full">
                                         {pickedIds.map(pid => {
                                             const p = allPlayers.find(pl => pl.id === pid);
-                                            return <div key={pid} className="h-9 w-full bg-[#1A1D24] border-l-2 rounded-r-lg flex items-center justify-between px-3 shadow-md animate-in slide-in-from-left-2 fade-in duration-300" style={{ borderLeftColor: team.color }}><span className="font-chakra font-bold text-sm text-white truncate w-full uppercase tracking-wide">{p?.nickname}</span><span className="font-mono text-[10px] font-bold text-[#00F2FE] ml-2">{p?.rating}</span></div>;
+                                            return <div key={pid} className="h-9 w-full bg-[#1A1D24] border-l-2 rounded-r-lg flex items-center justify-between px-3 shadow-md animate-in slide-in-from-left-2 fade-in duration-300" style={{ borderLeftColor: team.color }}><span className="font-chakra font-bold text-sm text-white truncate w-full uppercase tracking-wide">{p?.nickname}</span><span className="font-mono text-[10px] font-bold text-[#00F2FE] ml-2">{p ? Math.floor(p.rating) : ''}</span></div>;
                                         })}
                                         {Array.from({ length: Math.max(0, slotsTotal - pickedIds.length) }).map((_, i) => <div key={`empty_${i}`} className="h-9 w-full bg-[#1A1D24]/50 border border-white/[0.05] rounded-lg flex items-center justify-center"></div>)}
                                     </div>

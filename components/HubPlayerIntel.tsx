@@ -94,9 +94,9 @@ const TerminalLastSession = ({ player }: { player: Player }) => {
     return (
         <div className="space-y-2.5 pb-1">
             <div className="flex justify-center items-center gap-8 bg-black/30 p-2 rounded-2xl border border-white/5 shadow-inner">
-                <div className="text-center w-16"><span className="text-2xl font-black text-white/30 block leading-none">{Math.round(b.previousRating)}</span><span className="text-[5px] text-white/20 uppercase font-black tracking-widest mt-1 block">PREV</span></div>
+                <div className="text-center w-16"><span className="text-2xl font-black text-white/30 block leading-none">{Math.floor(b.previousRating)}</span><span className="text-[5px] text-white/20 uppercase font-black tracking-widest mt-1 block">PREV</span></div>
                 <div className="flex flex-col items-center w-12"><span className={`text-lg font-black leading-none ${b.finalChange >= 0 ? 'text-green-400' : 'text-red-500'}`}>{b.finalChange > 0 ? '+' : ''}{b.finalChange.toFixed(1)}</span><span className={`text-[6px] uppercase font-black tracking-widest mt-1 block ${isPenalty ? 'text-red-400' : 'text-white/40'}`}>{isPenalty ? 'PENALTY' : 'DELTA'}</span></div>
-                <div className="text-center w-16"><span className="text-2xl font-black text-[#00F2FE] block leading-none">{Math.round(b.newRating)}</span><span className="text-[5px] text-[#00F2FE]/60 uppercase font-black tracking-widest mt-1 block">NEW</span></div>
+                <div className="text-center w-16"><span className="text-2xl font-black text-[#00F2FE] block leading-none">{Math.floor(b.newRating)}</span><span className="text-[5px] text-[#00F2FE]/60 uppercase font-black tracking-widest mt-1 block">NEW</span></div>
             </div>
             {isPenalty ? (
                 <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 flex flex-col items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-500">

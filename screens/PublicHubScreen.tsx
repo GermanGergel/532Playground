@@ -602,7 +602,7 @@ export const PublicHubScreen: React.FC = () => {
         // Only include players with more than 3 sessions for the average rating calculation
         const ratingPlayers = confirmedPlayers.filter(p => (p.totalSessionsPlayed || 0) > 3);
         const avgRating = ratingPlayers.length > 0 
-            ? Math.round(ratingPlayers.reduce((sum, p) => sum + p.rating, 0) / ratingPlayers.length) 
+            ? Math.floor(ratingPlayers.reduce((sum, p) => sum + p.rating, 0) / ratingPlayers.length) 
             : 0;
             
         return { totalPlayers, totalSessions, avgRating };

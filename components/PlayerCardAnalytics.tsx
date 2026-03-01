@@ -34,9 +34,9 @@ export const LastSessionBreakdown: React.FC<{ player: Player; usePromoStyle?: bo
 
     // СИНХРОНИЗАЦИЯ: Чтобы не было расхождений с карточкой, берем player.rating как источник истины
     // Если в breakdown записано 84, а у игрока реально 82, мы показываем 82 (текущий) и 82 - дельта (предыдущий)
-    const currentOvr = player.rating;
+    const currentOvr = Math.floor(player.rating);
     const deltaValue = breakdown.finalChange;
-    const calculatedPrevOvr = Math.round(currentOvr - deltaValue);
+    const calculatedPrevOvr = Math.floor(player.rating - deltaValue);
 
     const isHub = location.pathname.includes('/hub');
     const isPenalty = player.consecutiveMissedSessions && player.consecutiveMissedSessions >= 5;

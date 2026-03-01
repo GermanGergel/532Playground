@@ -427,7 +427,7 @@ const MobileDashboardDetail: React.FC<{ onBack: () => void }> = ({ onBack }) => 
 
                                         {/* Top Right: Rating + OVR (No Arrow) */}
                                         <div className="absolute top-1.5 right-1.5 z-10 flex flex-col items-center">
-                                            <span className="font-russo text-sm font-black text-[#00F2FE] leading-none drop-shadow-md">{player.rating}</span>
+                                            <span className="font-russo text-sm font-black text-[#00F2FE] leading-none drop-shadow-md">{Math.floor(player.rating)}</span>
                                             <span className="text-[5px] font-bold text-white uppercase tracking-widest leading-none mt-0.5 drop-shadow-md">OVR</span>
                                         </div>
 
